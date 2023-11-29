@@ -17,7 +17,7 @@ push: null
 pull:
     - prefect.projects.steps.git_clone_project:
         id: clone-step
-        repository: https://github.com/svburke/s3-CatchERRy-ValidationRy.git
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: main
     - prefect.projects.steps.pip_install_requirements:
         requirements_file: requirements.txt
