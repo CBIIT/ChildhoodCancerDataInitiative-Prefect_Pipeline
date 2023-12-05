@@ -12,7 +12,7 @@ from src.s3_ccdi_to_sra import CCDI_to_SRA
 from src.s3_ccdi_to_dbgap import CCDI_to_dbGaP
 from src.s3_catcherry import CatchERRy
 from src.s3_validationry import ValidationRy
-from src.utils import get_time, file_ul, file_dl, view_all_s3_objects, markdown_task, folder_ul
+from src.utils import get_time, file_ul, file_dl, view_all_s3_objects, markdown_task, markdown_output_task, folder_ul
 
 
 @flow(
@@ -64,7 +64,7 @@ def runner(
 
     instance = 1
     source_file_list = view_all_s3_objects(bucket)
-    markdown_task(bucket, source_file_list, instance)
+    markdown_output_task(bucket, source_file_list, instance)
 
 
 if __name__ == "__main__":

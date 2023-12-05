@@ -8,6 +8,7 @@ from datetime import datetime
 import logging
 import pandas as pd
 import boto3
+import re
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -109,6 +110,49 @@ def markdown_task(source_bucket, source_file_list, instance):
     ### List of files ({len(source_file_list)}):
 
     {source_file_list}
+    """
+    create_markdown_artifact(
+        key=f"bucket-check-{instance}",
+        markdown=markdown_report,
+        description=f"Bucket_check_{instance}",
+    )
+
+
+@task
+def markdown_output_task(source_bucket, source_file_list, instance):
+    """Creates markdown bucket artifacts using Prefect 
+    create_markdown_artifact()
+    """
+    list_wo_inputs = [i for i in source_file_list if "inputs" not in i]
+    catcherr_log = [k for k in list_wo_inputs if re.search("CatchERR[0-9]{8}\.txt$", k)]
+    catcherr_output = [j for j in list_wo_inputs if re.search("CatchERR[0-9]{8}\.xlsx$", j)]
+    validationry_output = [l for l in list_wo_inputs if re.search("Validate[0-9]{8}\.txt$", l)]
+    sra_log = [m for m in list_wo_inputs if re.search("CCDI_to_SRA_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", m)]
+    sra_submission = [o for o in list_wo_inputs if re.search("SRA_submission.xlsx$", o)]
+    dbgap_log = [n for n in list_wo_inputs if re.search("CCDI_to_dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", n)]
+    dbgap_folder =  [p for p in list_wo_inputs if re.search("dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}\/", p)]
+    #dbgap_folder_str =  "\n".join(dbgap_folder)
+    markdown_report = f"""
+    # S3 Viewer Run {instance}
+
+    ## Source Bucket: {source_bucket}
+
+    ### List of outputs
+
+    - CatchERRy output: {catcherr_output}
+
+    - CatchERRy log: {catcherr_log}
+
+    - ValidationRy report: {validationry_output}
+
+    - SRA submission file: {sra_submission}
+
+    - SRA file log: {sra_log}
+
+    - dbGaP submission file list in folder ({len(dbgap_folder)}):
+    {dbgap_folder}
+
+    - dbGaP file log: {dbgap_log}
     """
     create_markdown_artifact(
         key=f"bucket-check-{instance}",
