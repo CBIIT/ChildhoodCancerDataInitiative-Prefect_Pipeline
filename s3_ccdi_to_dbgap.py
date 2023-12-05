@@ -295,8 +295,8 @@ class Pre_dbGaP_combine(Task):
         return combined_subject_consent, combined_subject_sample, combined_sample_tumor
 
 
-@flow(name="CCDI_to_dbGaP_submission", flow_run_name="CCDI_to_dbGAP_submission_{date}")
-def CCDI_to_dbGaP(manifest: str, date: str, pre_submission=None) -> tuple:
+@flow(name="CCDI_to_dbGaP_submission", flow_run_name="CCDI_to_dbGAP_submission_{time}")
+def CCDI_to_dbGaP(manifest: str, time: str, pre_submission=None) -> tuple:
     logger = get_logger(loggername="CCDI_to_dbGaP_submission", log_level="info")
 
     try:

@@ -1,17 +1,142 @@
 from prefect import flow, task
+from prefect.artifacts import create_markdown_artifact
 from typing import List, TypeVar, Dict, Tuple
 import warnings
+import os
 from datetime import date
+from datetime import datetime
 import logging
 import pandas as pd
+import boto3
+
 
 ExcelFile = TypeVar("ExcelFile")
 
 
 def get_date() -> str:
-    """Returns the current date while the script is running"""
+    """Returns the current date"""
     date_obj = date.today()
     return date_obj.isoformat()
+
+
+def get_time() -> str:
+    """Returns the current time"""
+    now = datetime.now()
+    dt_string =  now.strftime("%Y/%m/%d*%H:%M:%S")
+    return dt_string
+
+def set_s3_resource():
+    """This method sets the s3_resource object to either use localstack
+    for local development if the LOCALSTACK_ENDPOINT_URL variable is
+    defined and returns the object
+    """
+    localstack_endpoint = os.environ.get("LOCALSTACK_ENDPOINT_URL")
+    if localstack_endpoint != None:
+        AWS_REGION = "us-east-1"
+        AWS_PROFILE = "localstack"
+        ENDPOINT_URL = localstack_endpoint
+        boto3.setup_default_session(profile_name=AWS_PROFILE)
+        s3_resource = boto3.resource(
+            "s3", region_name=AWS_REGION, endpoint_url=ENDPOINT_URL
+        )
+    else:
+        s3_resource = boto3.resource("s3")
+    return s3_resource
+
+def set_s3_session_client():
+    """This method sets the s3 session client object
+    to either use localstack for local development if the
+    LOCALSTACK_ENDPOINT_URL variable is defined
+    """
+    localstack_endpoint = os.environ.get("LOCALSTACK_ENDPOINT_URL")
+    if localstack_endpoint != None:
+        AWS_REGION = "us-east-1"
+        AWS_PROFILE = "localstack"
+        ENDPOINT_URL = localstack_endpoint
+        boto3.setup_default_session(profile_name=AWS_PROFILE)
+        s3_client = boto3.client("s3", region_name=AWS_REGION, endpoint_url=ENDPOINT_URL)
+    else:
+        s3_client = boto3.client("s3")
+    return s3_client
+
+@task
+def file_dl(bucket, filename):
+    """File download using bucket name and filename"""
+    # Set the s3 resource object for local or remote execution
+    s3 = set_s3_resource()
+    source = s3.Bucket(bucket)
+    file_key = filename
+    file = os.path.basename(filename)
+    source.download_file(file_key, file)
+
+
+@task
+def file_ul(bucket, file_path, newfile):
+    """File upload using bucket name and filename"""
+    # Set the s3 resource object for local or remote execution
+    s3 = set_s3_resource()
+    source = s3.Bucket(bucket)
+    # upload files outside inputs/ folder
+    file_key = os.path.join(os.path.dirname(os.path.dirname(file_path)), newfile)
+    # extra_args={'ACL': 'bucket-owner-full-control'}
+    source.upload_file(newfile, file_key)  # , extra_args)
+
+
+@task
+def view_all_s3_objects(source_bucket):
+    """List files from source bucket"""
+    # Set the s3 resource object for local or remote execution
+    s3 = set_s3_resource()
+    source = s3.Bucket(source_bucket)
+    # Print all objects in source bucket
+    source_file_list = []
+    for obj in source.objects.all():
+        source_file_list.append(obj.key)
+
+    return source_file_list
+
+
+@task
+def markdown_task(source_bucket, source_file_list, instance):
+    """Creates markdown bucket artifacts using Prefect
+    create_markdown_artifact()
+    """
+    markdown_report = f"""
+    # S3 Viewer Run {instance}
+
+    ## Source Bucket: {source_bucket}
+
+    ### List of files ({len(source_file_list)}):
+
+    {source_file_list}
+    """
+    create_markdown_artifact(
+        key=f"bucket-check-{instance}",
+        markdown=markdown_report,
+        description=f"Bucket_check_{instance}",
+    )
+
+
+@flow(name="Upload outputs", flow_run_name="upload_outputs_{time}")
+def folder_ul(local_folder: str, bucket, destination: str, time: str) -> None:
+    """This function uploads all the files from a folder
+    and preserves the original folder structure
+    """
+    s3 = set_s3_resource()
+    source = s3.Bucket(bucket)
+    for root, _, files in os.walk(local_folder):
+        for filename in files:
+            # construct local path
+            local_path = os.path.join(root, filename)
+
+            # construct the full dst path
+            relative_path = os.path.relpath(local_path, local_folder)
+            s3_path = os.path.join(destination, relative_path)
+
+            # upload file
+            # this should overwrite file if file exists in the bucket
+            source.upload_file(local_path, s3_path)
+
 
 
 def get_logger(loggername: str, log_level: str):
