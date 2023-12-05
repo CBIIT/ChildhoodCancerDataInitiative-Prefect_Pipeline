@@ -69,7 +69,7 @@ def runner(
 
 if __name__ == "__main__":
     bucket = "my-source-bucket"
-    file_path = "inputs/CCDI_Submission_Template_v1.7.1_15ExampleR20231205.xlsx"
+    file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231205.xlsx"
     template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     sra_template_path = "inputs/phsXXXXXX.xlsx"
 

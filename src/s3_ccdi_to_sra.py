@@ -529,6 +529,7 @@ def sra_value_verification(
         "instrument_model",
         "filetype",
         "filename",
+        "MD5_checksum",
     ]
     required_df = sra_df[required_fields]
     cols_missing_info = required_df.columns[required_df.isna().any()].tolist()
@@ -824,8 +825,9 @@ def spread_sra_df(sra_df: DataFrame, logger) -> DataFrame:
                 i_df_firstrow[j_filetype] = i_df.at[i_df.index[j], "filetype"]
                 i_df_firstrow[j_md5] = i_df.at[i_df.index[j], "MD5_checksum"]
             return_df = pd.concat([return_df, i_df_firstrow], axis=0, ignore_index=True)
-    # check missing values of the entire df
-    report_missing_library_id = return_df[return_df.isna().any(axis=1)][
+    # check if missing values of the certain columns ["active_location_URL","Bases","Reads","coverage","AvgReadLength"]
+    check_empty_df = return_df[["library_ID","active_location_URL","Bases","Reads","coverage","AvgReadLength"]]
+    report_missing_library_id = check_empty_df[check_empty_df.isna().any(axis=1)][
         "library_ID"
     ].tolist()
     if len(report_missing_library_id) > 0:

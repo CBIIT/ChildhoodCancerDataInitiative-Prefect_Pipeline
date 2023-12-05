@@ -1063,12 +1063,12 @@ def ValidationRy(file_path:str, template_path:str, time: str):  # removed profil
 
         # create bucket column from file data frame
         df_file["bucket"] = df_file["file_url_in_cds"].str.split("/").str[2]
-        print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
+        #print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
             
         # return the unique list of buckets
         #buckets = list(set(df_file["bucket"].values.tolist()))
         buckets = list(set(df_file["bucket"].dropna().values.tolist()))
-        print(buckets)
+        #print(buckets)
 
 
         # if there are more than one bucket, warning
