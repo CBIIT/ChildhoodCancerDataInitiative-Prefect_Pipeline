@@ -3,7 +3,7 @@
 # control along with your flow code.
 
 # Generic metadata about this project
-name: s3-CatchERRy
+name: s3-Prefect-Workflow
 prefect-version: 2.13.0
 
 # build section allows you to manage and build docker images
@@ -18,7 +18,7 @@ pull:
     - prefect.projects.steps.git_clone_project:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: main
+        branch: add_sra_dbgap
     - prefect.projects.steps.pip_install_requirements:
         requirements_file: requirements.txt
         directory: "{{ clone-step.directory }}"
@@ -27,14 +27,19 @@ pull:
 
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
-- name: s3-CatchERRy-ValidationRy
+- name: s3-prefect-workflow-ql
   version: null
   tags: []
   description: null
-  entrypoint: s3-CatchERRy-ValidationRy.py:runner
-  parameters: {}
+  entrypoint: s3-Prefect-Pipeline.py:runner
+  parameters: {
+    bucket: "my-source-bucket",
+    file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231205.xlsx",
+    template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx",
+    sra_template_path: "inputs/phsXXXXXX.xlsx"
+  }
   work_pool:
-    name: ccdi-curation
+    name: fnl-worker
     work_queue_name: null
     job_variables: {}
   schedule: null
