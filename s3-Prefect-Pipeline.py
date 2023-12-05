@@ -8,11 +8,11 @@ Authors: Sean Burke <sean.burke2@nih.gov>
 """
 from prefect import flow
 import os
-from s3_ccdi_to_sra import CCDI_to_SRA
-from s3_ccdi_to_dbgap import CCDI_to_dbGaP
-from s3_catcherry import CatchERRy
-from s3_validationry import ValidationRy
-from utils import get_time, file_ul, file_dl, view_all_s3_objects, markdown_task, folder_ul
+from src.s3_ccdi_to_sra import CCDI_to_SRA
+from src.s3_ccdi_to_dbgap import CCDI_to_dbGaP
+from src.s3_catcherry import CatchERRy
+from src.s3_validationry import ValidationRy
+from src.utils import get_time, file_ul, file_dl, view_all_s3_objects, markdown_task, folder_ul
 
 
 @flow(

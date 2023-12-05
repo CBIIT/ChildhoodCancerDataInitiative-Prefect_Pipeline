@@ -7,7 +7,7 @@ from shutil import copy
 import pandas as pd
 import json
 from pathlib import Path
-from utils import get_date, get_logger, ccdi_manifest_to_dict
+from src.utils import get_date, get_logger, ccdi_manifest_to_dict
 
 ExcelReader = TypeVar("ExcelReader")
 DataFrame = TypeVar("DataFrame")

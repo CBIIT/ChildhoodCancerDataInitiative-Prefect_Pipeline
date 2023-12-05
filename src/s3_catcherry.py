@@ -6,7 +6,7 @@ import numpy as np
 import boto3
 import re
 from datetime import date
-from utils import set_s3_session_client
+from src.utils import set_s3_session_client
 from botocore.exceptions import ClientError
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows

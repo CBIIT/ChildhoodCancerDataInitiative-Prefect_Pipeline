@@ -5,7 +5,7 @@ import pandas as pd
 import sys
 import os
 from shutil import copy
-from utils import get_date, get_time, get_logger, ccdi_manifest_to_dict
+from src.utils import get_date, get_logger, ccdi_manifest_to_dict
 
 
 ExcelReader = TypeVar("ExcelReader")

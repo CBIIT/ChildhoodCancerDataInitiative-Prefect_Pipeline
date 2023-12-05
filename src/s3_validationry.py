@@ -6,7 +6,7 @@ import sys
 import numpy as np
 import warnings
 import re
-from utils import set_s3_session_client
+from src.utils import set_s3_session_client
 import boto3
 from botocore.exceptions import ClientError
 
@@ -163,8 +163,9 @@ def ValidationRy(file_path:str, template_path:str, time: str):  # removed profil
             del meta_dfs[node]
             dict_nodes.remove(node)
         else:
-            if node in ["cytogenomic_file", "clinical_measure_file", "methylation_array_file", "radiology_file", "pathology_file"]:
-                print(test_df.to_markdown())
+            pass
+            #if node in ["cytogenomic_file", "clinical_measure_file", "methylation_array_file", "radiology_file", "pathology_file"]:
+            #    print(test_df.to_markdown())
 
     # Final reordering of present nodes to show up in tab order in the output.
     dict_nodes = sorted(
@@ -173,6 +174,7 @@ def ValidationRy(file_path:str, template_path:str, time: str):  # removed profil
         if x in dictionary_node_check
         else float("inf"),
     )
+    #print(dict_nodes)
 
     ##############
     #
@@ -944,6 +946,7 @@ def ValidationRy(file_path:str, template_path:str, time: str):  # removed profil
         df_file = pd.DataFrame(columns=file_node_props)
         df_file = df_file.sort_values("node").reset_index(drop=True)
 
+        #print(dict_nodes)
         for node in dict_nodes:
             if node in file_nodes:
                 df = meta_dfs[node]
@@ -1060,10 +1063,13 @@ def ValidationRy(file_path:str, template_path:str, time: str):  # removed profil
 
         # create bucket column from file data frame
         df_file["bucket"] = df_file["file_url_in_cds"].str.split("/").str[2]
-        #print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
+        print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
             
         # return the unique list of buckets
-        buckets = list(set(df_file["bucket"].values.tolist()))
+        #buckets = list(set(df_file["bucket"].values.tolist()))
+        buckets = list(set(df_file["bucket"].dropna().values.tolist()))
+        print(buckets)
+
 
         # if there are more than one bucket, warning
         if len(buckets) > 1:
