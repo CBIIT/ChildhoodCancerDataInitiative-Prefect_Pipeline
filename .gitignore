@@ -4,6 +4,9 @@ test_inputs/
 # prep bash file setting buckets and files ul
 prep.sh
 
+# a prefect.yaml file for local testing
+prefect-local.yaml
+
 # Byte-compiled / optimized / DLL files
 **/__pycache__
 __pycache__/

@@ -16,10 +16,10 @@ from src.utils import get_time, file_ul, file_dl, view_all_s3_objects, markdown_
 
 
 @flow(
-    name="S3 Prefect Pipeline test", log_prints=True, flow_run_name="{runner}_test_"+f"{get_time()}"
+    name="S3 Prefect Pipeline", log_prints=True, flow_run_name="{runner}_"+f"{get_time()}"
 )
 def runner(
-    bucket: str, file_path: str, template_path: str, sra_template_path: str, runner:str
+    bucket: str, file_path: str, template_path: str, sra_template_path: str, runner:str, output_folder="outputs"
 ):  
     # if not profile:
     profile = "default"
@@ -39,28 +39,27 @@ def runner(
         input_file, input_template, time=get_time()
     )
 
-    file_ul(bucket, file_path, catcherr_out_file)
-    file_ul(bucket, file_path, catcherr_out_log)
+    file_ul(bucket, output_folder, catcherr_out_file)
+    file_ul(bucket, output_folder, catcherr_out_log)
 
     validation_out_file = ValidationRy(catcherr_out_file, input_template, time=get_time())
 
-    file_ul(bucket, file_path, validation_out_file)
+    file_ul(bucket, output_folder, validation_out_file)
 
     (sra_out_file, sra_out_log) = CCDI_to_SRA(
         manifest=catcherr_out_file, template=input_sra_template, time=get_time()
     )
 
-    file_ul(bucket, file_path, sra_out_file)
-    file_ul(bucket, file_path, sra_out_log)
+    file_ul(bucket, output_folder, sra_out_file)
+    file_ul(bucket, output_folder, sra_out_log)
 
     (dbgap_output_folder, dbgap_out_log)= CCDI_to_dbGaP(manifest=catcherr_out_file, time=get_time())
     folder_ul(
         local_folder=dbgap_output_folder,
         bucket=bucket,
-        destination=dbgap_output_folder,
-        time=get_time(),
+        destination=output_folder,
     )
-    file_ul(bucket, file_path, dbgap_out_log)
+    file_ul(bucket, output_folder, dbgap_out_log)
 
     instance = 1
     source_file_list = view_all_s3_objects(bucket)
@@ -72,7 +71,8 @@ if __name__ == "__main__":
     file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231205.xlsx"
     template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     sra_template_path = "inputs/phsXXXXXX.xlsx"
+    output_folder = "test_out"
 
     runner(
-        bucket, file_path, template_path, sra_template_path=sra_template_path, runner="QL"
+        bucket, file_path, template_path, sra_template_path=sra_template_path, runner="QL", output_folder=output_folder
     ) 

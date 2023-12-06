@@ -23,7 +23,7 @@ def get_date() -> str:
 def get_time() -> str:
     """Returns the current time"""
     now = datetime.now()
-    dt_string =  now.strftime("%Y/%m/%d*%H:%M:%S")
+    dt_string =  now.strftime("%Y-%m-%d*%H:%M:%S")
     return dt_string
 
 def set_s3_resource():
@@ -72,15 +72,39 @@ def file_dl(bucket, filename):
 
 
 @task
-def file_ul(bucket, file_path, newfile):
-    """File upload using bucket name and filename"""
+def file_ul(bucket, output_folder, newfile):
+    """File upload using bucket name, output folder name
+    and filename
+    """
     # Set the s3 resource object for local or remote execution
     s3 = set_s3_resource()
     source = s3.Bucket(bucket)
     # upload files outside inputs/ folder
-    file_key = os.path.join(os.path.dirname(os.path.dirname(file_path)), newfile)
+    file_key = os.path.join(output_folder, newfile)
     # extra_args={'ACL': 'bucket-owner-full-control'}
     source.upload_file(newfile, file_key)  # , extra_args)
+
+
+@flow(name="Upload outputs", flow_run_name="upload_outputs_"+f"{get_time()}")
+def folder_ul(local_folder: str, bucket: str, destination: str) -> None:
+    """This function uploads all the files from a folder
+    and preserves the original folder structure
+    """
+    s3 = set_s3_resource()
+    source = s3.Bucket(bucket)
+    folder_basename = os.path.basename(local_folder)
+    for root, _, files in os.walk(local_folder):
+        for filename in files:
+            # construct local path
+            local_path = os.path.join(root, filename)
+
+            # construct the full dst path
+            relative_path = os.path.relpath(local_path, local_folder)
+            s3_path = os.path.join(destination, folder_basename, relative_path)
+
+            # upload file
+            # this should overwrite file if file exists in the bucket
+            source.upload_file(local_path, s3_path)
 
 
 @task
@@ -159,28 +183,6 @@ def markdown_output_task(source_bucket, source_file_list, instance):
         markdown=markdown_report,
         description=f"Bucket_check_{instance}",
     )
-
-
-@flow(name="Upload outputs", flow_run_name="upload_outputs_{time}")
-def folder_ul(local_folder: str, bucket, destination: str, time: str) -> None:
-    """This function uploads all the files from a folder
-    and preserves the original folder structure
-    """
-    s3 = set_s3_resource()
-    source = s3.Bucket(bucket)
-    for root, _, files in os.walk(local_folder):
-        for filename in files:
-            # construct local path
-            local_path = os.path.join(root, filename)
-
-            # construct the full dst path
-            relative_path = os.path.relpath(local_path, local_folder)
-            s3_path = os.path.join(destination, relative_path)
-
-            # upload file
-            # this should overwrite file if file exists in the bucket
-            source.upload_file(local_path, s3_path)
-
 
 
 def get_logger(loggername: str, log_level: str):
