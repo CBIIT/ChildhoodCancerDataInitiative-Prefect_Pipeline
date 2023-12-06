@@ -36,24 +36,24 @@ def runner(
     input_sra_template = os.path.basename(sra_template_path)
 
     (catcherr_out_file, catcherr_out_log) = CatchERRy(
-        input_file, input_template, time=get_time()
+        input_file, input_template
     )
 
     file_ul(bucket, output_folder, catcherr_out_file)
     file_ul(bucket, output_folder, catcherr_out_log)
 
-    validation_out_file = ValidationRy(catcherr_out_file, input_template, time=get_time())
+    validation_out_file = ValidationRy(catcherr_out_file, input_template)
 
     file_ul(bucket, output_folder, validation_out_file)
 
     (sra_out_file, sra_out_log) = CCDI_to_SRA(
-        manifest=catcherr_out_file, template=input_sra_template, time=get_time()
+        manifest=catcherr_out_file, template=input_sra_template
     )
 
     file_ul(bucket, output_folder, sra_out_file)
     file_ul(bucket, output_folder, sra_out_log)
 
-    (dbgap_output_folder, dbgap_out_log)= CCDI_to_dbGaP(manifest=catcherr_out_file, time=get_time())
+    (dbgap_output_folder, dbgap_out_log)= CCDI_to_dbGaP(manifest=catcherr_out_file)
     folder_ul(
         local_folder=dbgap_output_folder,
         bucket=bucket,

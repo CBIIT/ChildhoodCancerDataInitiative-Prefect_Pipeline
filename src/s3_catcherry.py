@@ -6,15 +6,15 @@ import numpy as np
 import boto3
 import re
 from datetime import date
-from src.utils import set_s3_session_client
+from src.utils import set_s3_session_client, get_time
 from botocore.exceptions import ClientError
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import uuid
 
 
-@flow(name="CCDI_CatchERRy", log_prints=True, flow_run_name="CCDI_CatchERRy_{time}" )
-def CatchERRy(file_path:str, template_path:str, time: str):  # removed profile
+@flow(name="CCDI_CatchERRy", log_prints=True, flow_run_name="CCDI_CatchERRy_" + f"{get_time()}" )
+def CatchERRy(file_path:str, template_path:str):  # removed profile
     ##############
     #
     # File name rework

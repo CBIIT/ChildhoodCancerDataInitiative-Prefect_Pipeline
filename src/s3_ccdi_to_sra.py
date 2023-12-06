@@ -5,7 +5,7 @@ import pandas as pd
 import sys
 import os
 from shutil import copy
-from src.utils import get_date, get_logger, ccdi_manifest_to_dict
+from src.utils import get_date, get_time, get_logger, ccdi_manifest_to_dict
 
 
 ExcelReader = TypeVar("ExcelReader")
@@ -898,8 +898,8 @@ def validate_sample_library(sra_df: DataFrame, logger) -> List:
     return index_rows_to_remove
 
 
-@flow(name="CCDI_to_SRA_submission", flow_run_name="CCDI_to_SRA_submission_{time}")
-def CCDI_to_SRA(manifest: str, template: str, time: str, pre_submission=None,) -> tuple:
+@flow(name="CCDI_to_SRA_submission", flow_run_name="CCDI_to_SRA_submission_"+f"{get_time()}")
+def CCDI_to_SRA(manifest: str, template: str, pre_submission=None,) -> tuple:
     manifest_base = os.path.splitext(os.path.basename(manifest))[0]
     logger = get_logger(loggername="CCDI_to_SRA_submission", log_level="info")
 

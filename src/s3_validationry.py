@@ -6,13 +6,13 @@ import sys
 import numpy as np
 import warnings
 import re
-from src.utils import set_s3_session_client
+from src.utils import set_s3_session_client, get_time
 import boto3
 from botocore.exceptions import ClientError
 
 
-@flow(name="CCDI_ValidationRy", log_prints=True, flow_run_name="CCDI_ValidationRy_{time}")
-def ValidationRy(file_path:str, template_path:str, time: str):  # removed profile
+@flow(name="CCDI_ValidationRy", log_prints=True, flow_run_name="CCDI_ValidationRy_" + f"{get_time()}")
+def ValidationRy(file_path:str, template_path:str):  # removed profile
     print("\nThe CCDI submission template is being checked for errors.\n\n")
 
     ##############
