@@ -36,7 +36,7 @@ deployments:
   schedule: null
   # flow-specific fields
   parameters: {
-    bucket: "s3://ccdi-validation",
+    bucket: "ccdi-validation",
     file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231205.xlsx",
     template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx",
     sra_template_path: "inputs/phsXXXXXX.xlsx",
