@@ -27,19 +27,25 @@ pull:
 
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
+  # base metadata
 - name: s3-prefect-workflow-ql
   version: null
   tags: []
   description: null
   entrypoint: s3-Prefect-Pipeline.py:runner
+  schedule: null
+  # flow-specific fields
   parameters: {
-    bucket: "my-source-bucket",
+    bucket: "s3://ccdi-validation",
     file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231205.xlsx",
     template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx",
-    sra_template_path: "inputs/phsXXXXXX.xlsx"
+    sra_template_path: "inputs/phsXXXXXX.xlsx",
+    runner: "QL",
+    time: "blahblah"
   }
+  # infra-specific fields
   work_pool:
-    name: fnl-worker
+    name: ccdi-curation
     work_queue_name: null
     job_variables: {}
-  schedule: null
+  
