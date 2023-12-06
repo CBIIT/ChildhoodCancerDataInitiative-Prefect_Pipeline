@@ -74,5 +74,5 @@ if __name__ == "__main__":
     sra_template_path = "inputs/phsXXXXXX.xlsx"
 
     runner(
-        bucket, file_path, template_path, sra_template_path=sra_template_path, time=get_time(), runner="QL"
+        bucket, file_path, template_path, sra_template_path=sra_template_path, runner="QL"
     ) 
