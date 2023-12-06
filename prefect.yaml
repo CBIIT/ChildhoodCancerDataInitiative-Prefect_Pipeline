@@ -41,9 +41,9 @@ deployments:
     template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     sra_template_path: "inputs/phsXXXXXX.xlsx"
     runner: "QL"
-    time: |
-      from src.utils import get_time
-      print(get_time())
+    #time: |
+    #  from src.utils import get_time
+    #  print(get_time())
   # infra-specific fields
   work_pool:
     name: ccdi-curation

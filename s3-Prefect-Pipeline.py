@@ -16,10 +16,10 @@ from src.utils import get_time, file_ul, file_dl, view_all_s3_objects, markdown_
 
 
 @flow(
-    name="S3 Prefect Pipeline test", log_prints=True, flow_run_name="{runner}_test_{time}"
+    name="S3 Prefect Pipeline test", log_prints=True, flow_run_name="{runner}_test_{get_time}"
 )
 def runner(
-    bucket: str, file_path: str, template_path: str, sra_template_path: str, time: str, runner:str
+    bucket: str, file_path: str, template_path: str, sra_template_path: str, runner:str
 ):  
     # if not profile:
     profile = "default"
