@@ -747,7 +747,6 @@ def sra_value_verification(
     return index_to_remove_verification_uniq
 
 
-@task
 def check_value_constancy(library_id: str, unit_df: DataFrame, logger) -> None:
     """This function checks if certain values are same between files sharing
     the same library_ID and report library_IDs if this issue is found
