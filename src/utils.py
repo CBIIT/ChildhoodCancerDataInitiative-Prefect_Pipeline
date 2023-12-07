@@ -22,7 +22,8 @@ def get_date() -> str:
 
 def get_time() -> str:
     """Returns the current time"""
-    now = datetime.now()
+    tz = timezone('EST')
+    now = datetime.now(tz)
     dt_string =  now.strftime("%Y-%m-%d*%H:%M:%S")
     return dt_string
 
