@@ -1,5 +1,6 @@
 from prefect import flow, task
 from prefect.artifacts import create_markdown_artifact
+from dataclasses import dataclass, field
 from typing import List, TypeVar, Dict, Tuple
 import warnings
 import os
@@ -10,9 +11,60 @@ import logging
 import pandas as pd
 import boto3
 import re
+import requests
 
 
 ExcelFile = TypeVar("ExcelFile")
+
+
+@dataclass
+class GithubURL:
+    """DataClass"""
+    ccdi_model_recent_release: str = field(default="https://api.github.com/repos/CBIIT/ccdi-model/releases/latest")
+    sra_template: str = field(default="https://raw.githubusercontent.com/CBIIT/ChildhoodCancerDataInitiative-CCDI_to_SRAy/main/doc/example_inputs/phsXXXXXX.xlsx")
+    ccdi_model_manifest: str =field(default="https://api.github.com/repos/CBIIT/ccdi-model/contents/metadata-manifest/")
+
+def get_ccdi_latest_release() -> str:
+    latest_url = GithubURL.ccdi_model_recent_release
+    response =  requests.get(latest_url)
+    tag_name  =  response.json()["tag_name"]
+    return tag_name
+
+@task
+def dl_sra_template() -> None:
+    sra_filename="phsXXXXXX.xlsx"
+    r = requests.get(GithubURL.sra_template)
+    f = open(sra_filename, "wb")
+    f.write(r.content)
+    return sra_filename
+
+@task
+def check_ccdi_version(ccdi_manifest: str) -> str:
+    warnings.simplefilter(action="ignore", category=UserWarning)
+    ccdi_dict = {}
+    ccdi_excel = pd.ExcelFile(ccdi_manifest)
+    ccdi_dict["instruction"] = pd.read_excel(
+        ccdi_excel, sheet_name="README and INSTRUCTIONS", header=0
+    )
+    manifest_version =  ccdi_dict["instruction"].columns[2][1:]
+    ccdi_excel.close()
+    return manifest_version
+
+
+@task
+def dl_ccdi_template() -> None:
+    manifest_page_response =  requests.get(GithubURL.ccdi_model_manifest)
+    manifest_dict_list = manifest_page_response.json()
+    manifest_names = [i["name"] for i in manifest_dict_list]
+    latest_release = get_ccdi_latest_release()
+    # There should be only one match in the list comprehension below
+    manifest =  [i for i in manifest_names if latest_release in i and re.search("v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\.xlsx$", i)]
+    manifest_response =  [j for j in manifest_dict_list if j["name"]==manifest[0]]
+    manifest_dl_url = requests.get(manifest_response[0]["url"]).json()["download_url"]
+    manifest_dl_res = requests.get(manifest_dl_url)
+    manifest_file = open(manifest[0], "wb")
+    manifest_file.write(manifest_dl_res.content)
+    return manifest[0]
 
 
 def get_date() -> str:
@@ -62,7 +114,7 @@ def set_s3_session_client():
         s3_client = boto3.client("s3")
     return s3_client
 
-@task
+@task(name="Download file", task_run_name="download_file_{filename}")
 def file_dl(bucket, filename):
     """File download using bucket name and filename"""
     # Set the s3 resource object for local or remote execution
@@ -73,8 +125,8 @@ def file_dl(bucket, filename):
     source.download_file(file_key, file)
 
 
-@task
-def file_ul(bucket, output_folder, newfile):
+@task(name="Upload file", task_run_name="upload_file_{newfile}")
+def file_ul(bucket: str, output_folder: str, sub_folder: str, newfile: str):
     """File upload using bucket name, output folder name
     and filename
     """
@@ -82,13 +134,13 @@ def file_ul(bucket, output_folder, newfile):
     s3 = set_s3_resource()
     source = s3.Bucket(bucket)
     # upload files outside inputs/ folder
-    file_key = os.path.join(output_folder, newfile)
+    file_key = os.path.join(output_folder, sub_folder, newfile)
     # extra_args={'ACL': 'bucket-owner-full-control'}
     source.upload_file(newfile, file_key)  # , extra_args)
 
 
-@flow(name="Upload outputs", flow_run_name="upload_outputs_"+f"{get_time()}")
-def folder_ul(local_folder: str, bucket: str, destination: str) -> None:
+@flow(name="Upload dbgap outputs", flow_run_name="upload_dbgap_outputs_{local_folder}")
+def folder_ul(local_folder: str, bucket: str, destination: str, sub_folder: str) -> None:
     """This function uploads all the files from a folder
     and preserves the original folder structure
     """
@@ -102,11 +154,36 @@ def folder_ul(local_folder: str, bucket: str, destination: str) -> None:
 
             # construct the full dst path
             relative_path = os.path.relpath(local_path, local_folder)
-            s3_path = os.path.join(destination, folder_basename, relative_path)
+            s3_path = os.path.join(destination, sub_folder, folder_basename, relative_path)
 
             # upload file
             # this should overwrite file if file exists in the bucket
             source.upload_file(local_path, s3_path)
+
+
+@flow(name="Upload outputs", flow_run_name="upload_workflow_outputs_" + f"{get_time()}")
+def outputs_ul(
+    bucket: str,
+    output_folder: str,
+    catcherr_file: str,
+    catcherr_log: str,
+    validation_log: str,
+    sra_file: str,
+    sra_log: str,
+    dbgap_folder: str,
+    dbgap_log: str, 
+    ) -> None:
+    # upload CatchERR outputs
+    file_ul(bucket, output_folder=output_folder, sub_folder="1_CatchERR_output", newfile=catcherr_file)
+    file_ul(bucket, output_folder=output_folder, sub_folder="1_CatchERR_output", newfile=catcherr_log)
+    # upload ValidationRy output
+    file_ul(bucket, output_folder=output_folder, sub_folder="2_ValidationRy_output", newfile=validation_log)
+    # upload SRA submission output
+    file_ul(bucket, output_folder=output_folder, sub_folder="3_SRA_submisison_output", newfile=sra_file)
+    file_ul(bucket, output_folder=output_folder, sub_folder="3_SRA_submisison_output", newfile=sra_log)
+    # upload dbgap submission output
+    file_ul(bucket, output_folder=output_folder, sub_folder="4_dbGaP_submisison_output", newfile=dbgap_log)
+    folder_ul(local_folder=dbgap_folder, bucket=bucket, destination=output_folder, sub_folder="4_dbGaP_submisison_output")
 
 
 @task
@@ -124,12 +201,12 @@ def view_all_s3_objects(source_bucket):
 
 
 @task
-def markdown_task(source_bucket, source_file_list, instance):
+def markdown_task(source_bucket, source_file_list):
     """Creates markdown bucket artifacts using Prefect
     create_markdown_artifact()
     """
     markdown_report = f"""
-    # S3 Viewer Run {instance}
+    # S3 Viewer Run
 
     ## Source Bucket: {source_bucket}
 
@@ -138,14 +215,14 @@ def markdown_task(source_bucket, source_file_list, instance):
     {source_file_list}
     """
     create_markdown_artifact(
-        key=f"bucket-check-{instance}",
+        key=f"bucket-check-before-workflow_{source_bucket}",
         markdown=markdown_report,
-        description=f"Bucket_check_{instance}",
+        description=f"Bucket_check_before_workflow_{source_bucket}",
     )
 
 
 @task
-def markdown_output_task(source_bucket, source_file_list, instance):
+def markdown_output_task(source_bucket, source_file_list):
     """Creates markdown bucket artifacts using Prefect 
     create_markdown_artifact()
     """
@@ -159,7 +236,7 @@ def markdown_output_task(source_bucket, source_file_list, instance):
     dbgap_folder =  [p for p in list_wo_inputs if re.search("dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}\/", p)]
     #dbgap_folder_str =  "\n".join(dbgap_folder)
     markdown_report = f"""
-    # S3 Viewer Run {instance}
+    # S3 Viewer Run
 
     ## Source Bucket: {source_bucket}
 
@@ -181,9 +258,9 @@ def markdown_output_task(source_bucket, source_file_list, instance):
     - dbGaP file log: {dbgap_log}
     """
     create_markdown_artifact(
-        key=f"bucket-check-{instance}",
+        key=f"bucket-check-after-workflow_{source_bucket}",
         markdown=markdown_report,
-        description=f"Bucket_check_{instance}",
+        description=f"Bucket_check_after_workflow_{source_bucket}",
     )
 
 
