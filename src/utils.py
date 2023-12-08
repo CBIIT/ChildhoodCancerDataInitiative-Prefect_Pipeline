@@ -222,19 +222,19 @@ def markdown_task(source_bucket, source_file_list):
 
 
 @task
-def markdown_output_task(source_bucket, source_file_list):
+def markdown_output_task(source_bucket: str, source_file_list: str, output_folder: str):
     """Creates markdown bucket artifacts using Prefect 
     create_markdown_artifact()
     """
     list_wo_inputs = [i for i in source_file_list if "inputs" not in i]
-    catcherr_log = [k for k in list_wo_inputs if re.search("CatchERR[0-9]{8}\.txt$", k)]
-    catcherr_output = [j for j in list_wo_inputs if re.search("CatchERR[0-9]{8}\.xlsx$", j)]
-    validationry_output = [l for l in list_wo_inputs if re.search("Validate[0-9]{8}\.txt$", l)]
-    sra_log = [m for m in list_wo_inputs if re.search("CCDI_to_SRA_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", m)]
-    sra_submission = [o for o in list_wo_inputs if re.search("SRA_submission.xlsx$", o)]
-    dbgap_log = [n for n in list_wo_inputs if re.search("CCDI_to_dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", n)]
-    dbgap_folder =  [p for p in list_wo_inputs if re.search("dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}\/", p)]
-    #dbgap_folder_str =  "\n".join(dbgap_folder)
+    catcherr_log = [k for k in list_wo_inputs if re.search("CatchERR[0-9]{8}\.txt$", k) and output_folder in k]
+    catcherr_output = [j for j in list_wo_inputs if re.search("CatchERR[0-9]{8}\.xlsx$", j) and output_folder in j]
+    validationry_output = [l for l in list_wo_inputs if re.search("Validate[0-9]{8}\.txt$", l) and output_folder in l]
+    sra_log = [m for m in list_wo_inputs if re.search("CCDI_to_SRA_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", m) and output_folder in m]
+    sra_submission = [o for o in list_wo_inputs if re.search("SRA_submission.xlsx$", o) and output_folder in o]
+    dbgap_log = [n for n in list_wo_inputs if re.search("CCDI_to_dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", n) and output_folder in n]
+    dbgap_folder =  [p for p in list_wo_inputs if re.search("dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}\/", p) and output_folder in p]
+    
     markdown_report = f"""
     # S3 Viewer Run
 

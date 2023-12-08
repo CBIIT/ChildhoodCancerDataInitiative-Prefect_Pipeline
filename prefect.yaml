@@ -28,7 +28,7 @@ pull:
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
   # base metadata
-- name: s3-prefect-workflow-ccdi-workspace-deployment
+- name: ccdi-workspace-deployment
   version: null
   tags: []
   description: null
