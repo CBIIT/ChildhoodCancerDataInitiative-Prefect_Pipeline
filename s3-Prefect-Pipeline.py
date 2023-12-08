@@ -87,7 +87,7 @@ def runner(
     )
 
     source_file_list = view_all_s3_objects(bucket)
-    markdown_output_task(bucket, source_file_list)
+    markdown_output_task(bucket, source_file_list, output_folder=output_folder)
 
 
 if __name__ == "__main__":
