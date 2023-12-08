@@ -18,7 +18,7 @@ pull:
     - prefect.projects.steps.git_clone_project:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: add_sra_dbgap
+        branch: remove_runner_parameters
     - prefect.projects.steps.pip_install_requirements:
         requirements_file: requirements.txt
         directory: "{{ clone-step.directory }}"
@@ -28,21 +28,23 @@ pull:
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
   # base metadata
-- name: s3-prefect-workflow-new-parameter
+- name: s3-prefect-workflow-ccdi-workspace-deployment
   version: null
   tags: []
   description: null
   entrypoint: s3-Prefect-Pipeline.py:runner
   schedule: null
-  # flow-specific fields
+
+  # flow-specific parameters
   parameters:
     bucket: "ccdi-validation"
     file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
-    runner: "qiongliu-test"
+    runner: "runner_name"
     #optional, uncomment the line below
     #output_folder: "output_folder_name"
     #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation
