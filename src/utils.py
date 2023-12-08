@@ -215,7 +215,7 @@ def markdown_task(source_bucket, source_file_list):
     {source_file_list}
     """
     create_markdown_artifact(
-        key=f"bucket-check-before-workflow_{source_bucket}",
+        key=f"bucket-check-before-workflow-{source_bucket}",
         markdown=markdown_report,
         description=f"Bucket_check_before_workflow_{source_bucket}",
     )
@@ -258,7 +258,7 @@ def markdown_output_task(source_bucket, source_file_list):
     - dbGaP file log: {dbgap_log}
     """
     create_markdown_artifact(
-        key=f"bucket-check-after-workflow_{source_bucket}",
+        key=f"bucket-check-after-workflow-{source_bucket}",
         markdown=markdown_report,
         description=f"Bucket_check_after_workflow_{source_bucket}",
     )

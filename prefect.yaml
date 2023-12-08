@@ -28,7 +28,7 @@ pull:
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
   # base metadata
-- name: s3-prefect-workflow-ql
+- name: s3-prefect-workflow-new-parameter
   version: null
   tags: []
   description: null
@@ -37,12 +37,12 @@ deployments:
   # flow-specific fields
   parameters:
     bucket: "ccdi-validation"
-    file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231205.xlsx"
-    template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
-    sra_template_path: "inputs/phsXXXXXX.xlsx"
+    file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
     runner: "qiongliu-test"
     #optional, uncomment the line below
     #output_folder: "output_folder_name"
+    #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+    #sra_template_path: "inputs/phsXXXXXX.xlsx"
   # infra-specific fields
   work_pool:
     name: ccdi-curation

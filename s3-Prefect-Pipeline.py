@@ -20,11 +20,12 @@ from src.utils import (get_time, outputs_ul, file_dl,
 
 
 @flow(
-    name="S3 Prefect Pipeline w less parameters", 
+    name="S3 Prefect Pipeline", 
     log_prints=True, flow_run_name="{runner}_"+f"{get_time()}"
 )
 def runner(
-    bucket: str, file_path: str, template_path: str = None, sra_template_path: str = None, runner: str, output_folder: str ="outputs"
+    bucket: str, file_path: str, runner: str, template_path: str = None, 
+    sra_template_path: str = None, output_folder: str ="outputs"
 ):  
     
     # if not profile:
@@ -92,13 +93,9 @@ def runner(
 if __name__ == "__main__":
     bucket = "my-source-bucket"
     file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
-    #template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
-    #sra_template_path = "inputs/phsXXXXXX.xlsx"
     output_folder = "test_out"
 
     runner(
         bucket, file_path, 
-        #template_path=template_path, 
-        #sra_template_path=sra_template_path, 
         runner="QL", output_folder=output_folder
     ) 
