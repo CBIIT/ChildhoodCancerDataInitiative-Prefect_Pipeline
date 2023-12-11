@@ -159,8 +159,10 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     # Go through each tab and remove completely empty tabs
     #
     ##############
-    print(dict_nodes)
-    print(meta_dfs.keys())
+    print(f"length of dict_node {len(dict_nodes)}")
+    print(f"length of meta_dfs keys {len(meta_dfs.keys())}")
+    node_to_remove =[]
+    """
     for node in dict_nodes:
         # see if the tab contain any data
         print(node)
@@ -173,12 +175,25 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
             del meta_dfs[node]
             dict_nodes.remove(node)
         else:
-            print(f"node is not empty")
             pass
-            #if node in ["cytogenomic_file", "clinical_measure_file", "methylation_array_file", "radiology_file", "pathology_file"]:
-            #    print(test_df.to_markdown())
-
-    print(dict_nodes)
+    """
+    for node in dict_nodes:
+        # see if the tab contain any data
+        print(node)
+        test_df = meta_dfs[node]
+        test_df = test_df.drop("type", axis=1)
+        test_df = test_df.dropna(how="all").dropna(how="all", axis=1)
+        # if there is no data, add the node name to the node_to_remove
+        if test_df.empty:
+            print(f"{node} is empty")
+            node_to_remove.append(node)
+        else:
+            pass
+    print(node_to_remove)
+    dict_nodes = [i for i in dict_nodes if i not in node_to_remove]
+    meta_dfs = {key: meta_dfs[key] for key in meta_dfs if key not in node_to_remove}
+    
+    print(f"length of dict_node {len(dict_nodes)}")
     print("reorder dict_nodes")
     # Final reordering of present nodes to show up in tab order in the output.
     dict_nodes = sorted(
