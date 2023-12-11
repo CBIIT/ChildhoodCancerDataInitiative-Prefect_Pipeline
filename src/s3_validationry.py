@@ -86,6 +86,9 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     # read in dfs and apply to dictionary
     for sheet_name in xlsx_model.sheet_names:
         model_dfs[sheet_name] = read_xlsx(xlsx_model, sheet_name)
+    
+    # close xlsx_model
+    xlsx_model.close()
 
     # pull out the non-metadata table and then remove them from the dictionary
     readme_df = model_dfs["README and INSTRUCTIONS"]

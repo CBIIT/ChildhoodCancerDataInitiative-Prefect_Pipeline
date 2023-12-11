@@ -93,6 +93,8 @@ def CatchERRy(file_path:str, template_path:str):  # removed profile
     # read in dfs and apply to dictionary
     for sheet_name in xlsx_data.sheet_names:
         meta_dfs[sheet_name] = read_xlsx(xlsx_data, sheet_name)
+    # close xlsx_data object
+    xlsx_data.close()
 
     # remove model tabs from the meta_dfs
     del meta_dfs["README and INSTRUCTIONS"]
@@ -580,6 +582,8 @@ def CatchERRy(file_path:str, template_path:str):  # removed profile
     # save out template
     catcherr_out_file = f"{output_file}.xlsx"
     template_workbook.save(f"{file_dir_path}/{catcherr_out_file}")
+    # close template_workbook object
+    template_workbook.close()
 
     print(
         f"\n\nProcess Complete.\n\nThe output file can be found here: {file_dir_path}/{catcherr_out_file}\n\n"
