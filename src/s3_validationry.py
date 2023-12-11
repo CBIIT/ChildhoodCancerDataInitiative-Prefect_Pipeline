@@ -160,7 +160,7 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     #
     ##############
     print(dict_nodes)
-    print(meta_dfs.keys)
+    print(meta_dfs.keys())
     for node in dict_nodes:
         # see if the tab contain any data
         print(node)
@@ -178,6 +178,8 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
             #if node in ["cytogenomic_file", "clinical_measure_file", "methylation_array_file", "radiology_file", "pathology_file"]:
             #    print(test_df.to_markdown())
 
+    print(dict_nodes)
+    print("reorder dict_nodes")
     # Final reordering of present nodes to show up in tab order in the output.
     dict_nodes = sorted(
         dict_nodes,
@@ -186,7 +188,7 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
         else float("inf"),
     )
     print(dict_nodes)
-    print(meta_dfs.keys)
+    print(meta_dfs.keys())
 
     ##############
     #
@@ -1075,7 +1077,7 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
 
         # create bucket column from file data frame
         df_file["bucket"] = df_file["file_url_in_cds"].str.split("/").str[2]
-        print(df_file[["file_name","node","bucket"]].to_makrdown())
+        print(df_file[["file_name","node","bucket"]].to_markdown())
         print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
 
         # return the unique list of buckets
