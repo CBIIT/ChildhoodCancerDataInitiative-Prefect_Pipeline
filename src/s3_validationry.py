@@ -123,6 +123,9 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     # read in dfs and apply to dictionary
     for sheet_name in xlsx_data.sheet_names:
         meta_dfs[sheet_name] = read_xlsx(xlsx_data, sheet_name)
+    
+    # close xlsx_data
+    xlsx_data.close()
 
     # remove model tabs from the meta_dfs
     not_needed_data_nodes = [
@@ -156,16 +159,21 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     # Go through each tab and remove completely empty tabs
     #
     ##############
+    print(dict_nodes)
+    print(meta_dfs.keys)
     for node in dict_nodes:
         # see if the tab contain any data
+        print(node)
         test_df = meta_dfs[node]
         test_df = test_df.drop("type", axis=1)
         test_df = test_df.dropna(how="all").dropna(how="all", axis=1)
         # if there is no data, drop the node/tab
         if test_df.empty:
+            print(f"{node} is empty")
             del meta_dfs[node]
             dict_nodes.remove(node)
         else:
+            print(f"node is not empty")
             pass
             #if node in ["cytogenomic_file", "clinical_measure_file", "methylation_array_file", "radiology_file", "pathology_file"]:
             #    print(test_df.to_markdown())
@@ -177,7 +185,8 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
         if x in dictionary_node_check
         else float("inf"),
     )
-    #print(dict_nodes)
+    print(dict_nodes)
+    print(meta_dfs.keys)
 
     ##############
     #
@@ -1066,6 +1075,7 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
 
         # create bucket column from file data frame
         df_file["bucket"] = df_file["file_url_in_cds"].str.split("/").str[2]
+        print(df_file[["file_name","node","bucket"]].to_makrdown())
         print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
 
         # return the unique list of buckets
