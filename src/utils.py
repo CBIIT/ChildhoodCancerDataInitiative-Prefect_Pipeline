@@ -139,7 +139,6 @@ def file_ul(bucket: str, output_folder: str, sub_folder: str, newfile: str):
     source.upload_file(newfile, file_key)  # , extra_args)
 
 
-@flow(name="Upload dbgap outputs", flow_run_name="upload_dbgap_outputs_{local_folder}")
 def folder_ul(local_folder: str, bucket: str, destination: str, sub_folder: str) -> None:
     """This function uploads all the files from a folder
     and preserves the original folder structure
@@ -165,6 +164,9 @@ def folder_ul(local_folder: str, bucket: str, destination: str, sub_folder: str)
 def outputs_ul(
     bucket: str,
     output_folder: str,
+    ccdi_manifest: str,
+    ccdi_template: str,
+    sra_template: str,
     catcherr_file: str,
     catcherr_log: str,
     validation_log: str,
@@ -173,6 +175,10 @@ def outputs_ul(
     dbgap_folder: str,
     dbgap_log: str, 
     ) -> None:
+    # upload input files
+    file_ul(bucket, output_folder=output_folder, sub_folder="workflow_inputs", newfile=ccdi_manifest)
+    file_ul(bucket, output_folder=output_folder, sub_folder="workflow_inputs", newfile=ccdi_template)
+    file_ul(bucket, output_folder=output_folder, sub_folder="workflow_inputs", newfile=sra_template)
     # upload CatchERR outputs
     file_ul(bucket, output_folder=output_folder, sub_folder="1_CatchERR_output", newfile=catcherr_file)
     file_ul(bucket, output_folder=output_folder, sub_folder="1_CatchERR_output", newfile=catcherr_log)
