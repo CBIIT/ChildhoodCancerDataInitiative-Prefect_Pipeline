@@ -129,34 +129,6 @@ if __name__ == "__main__":
     file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
     template_path="inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     sra_template_path="path_to/sra_template/in/ccdi-curation/bucket"
-    """
-    # test old version manifest and old version template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.0_40ExampleR20231207.xlsx"
-    template_path="inputs/CCDI_Submission_Template_v1.7.0.xlsx"
-    sra_template_path="path_to/sra_template/in/ccdi-curation/bucket"
-
-    # test old version manifest and new version template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.0_40ExampleR20231207.xlsx"
-    template_path="inputs/CCDI_Submission_Template_v1.7.1.xlsx"
-    sra_template_path="path_to/sra_template/in/ccdi-curation/bucket"
-
-    # test old version manifest and no template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.0_40ExampleR20231207.xlsx"
-    template_path="path_to/ccdi_template/in/ccdi-curation/bucket"
-    sra_template_path="path_to/sra_template/in/ccdi-curation/bucket"
-
-    # test new version manifest and old version template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
-    template_path="inputs/CCDI_Submission_Template_v1.7.0.xlsx"
-    sra_template_path="path_to/sra_template/in/ccdi-curation/bucket"
-
-    # test new version manifest and no template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
-    template_path="path_to/ccdi_template/in/ccdi-curation/bucket"
-    sra_template_path="path_to/sra_template/in/ccdi-curation/bucket"
-
-    
-    """
 
     runner(
         bucket=bucket, 
