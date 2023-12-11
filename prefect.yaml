@@ -50,4 +50,27 @@ deployments:
     name: ccdi-curation
     work_queue_name: null
     job_variables: {}
+
+- name: validation-troubleshoot
+  version: null
+  tags: []
+  description: null
+  entrypoint: s3-Prefect-Pipeline.py:runner
+  schedule: null
+
+  # flow-specific parameters
+  parameters:
+    bucket: "ccdi-validation"
+    file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
+    runner: "runner_name"
+    #optional, uncomment the line below
+    #output_folder: "output_folder_name"
+    #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+    #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
+  # infra-specific fields
+  work_pool:
+    name: ccdi-curation
+    work_queue_name: null
+    job_variables: {}
   
