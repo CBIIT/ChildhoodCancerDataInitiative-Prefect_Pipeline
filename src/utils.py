@@ -245,7 +245,7 @@ def markdown_input_task(source_bucket: str, runner: str, manifest: str, template
     ### SRA template: {sra_template}
     """
     create_markdown_artifact(
-        key=f"{runner}-workflow-input-{source_bucket}",
+        key=f"{runner.lower()}-workflow-input-{source_bucket}",
         markdown=markdown_report,
         description=f"{runner}_workflow_input_{source_bucket}",
     )
@@ -288,7 +288,7 @@ def markdown_output_task(source_bucket: str, source_file_list: str, output_folde
     - dbGaP file log: {dbgap_log}
     """
     create_markdown_artifact(
-        key=f"{runner}-workflow-output-{source_bucket}",
+        key=f"{runner.lower()}-workflow-output-{source_bucket}",
         markdown=markdown_report,
         description=f"{runner}_workflow_output_{source_bucket}",
     )
