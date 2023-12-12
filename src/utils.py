@@ -226,9 +226,33 @@ def markdown_task(source_bucket, source_file_list):
         description=f"Bucket_check_before_workflow_{source_bucket}",
     )
 
+@task
+def markdown_input_task(source_bucket: str, runner: str, manifest: str, template: str, sra_template: str):
+    """Creates markdown artifacts of workflow inputs using Prefect
+    create_markdown_artifact()
+    """
+    markdown_report = f"""
+    # CCDI Data Curation Flow Run
+
+    ### Source Bucket: {source_bucket}
+
+    ### Runner: {runner}
+
+    ### CCDI Manifest: {manifest}
+    
+    ### CCDI template: {template}
+
+    ### SRA template: {sra_template}
+    """
+    create_markdown_artifact(
+        key=f"{runner}-workflow-input-{source_bucket}",
+        markdown=markdown_report,
+        description=f"{runner}_workflow_input_{source_bucket}",
+    )
+
 
 @task
-def markdown_output_task(source_bucket: str, source_file_list: str, output_folder: str):
+def markdown_output_task(source_bucket: str, source_file_list: str, output_folder: str, runner: str):
     """Creates markdown bucket artifacts using Prefect 
     create_markdown_artifact()
     """
@@ -264,9 +288,9 @@ def markdown_output_task(source_bucket: str, source_file_list: str, output_folde
     - dbGaP file log: {dbgap_log}
     """
     create_markdown_artifact(
-        key=f"bucket-check-after-workflow-{source_bucket}",
+        key=f"{runner}-workflow-output-{source_bucket}",
         markdown=markdown_report,
-        description=f"Bucket_check_after_workflow_{source_bucket}",
+        description=f"{runner}_workflow_output_{source_bucket}",
     )
 
 
