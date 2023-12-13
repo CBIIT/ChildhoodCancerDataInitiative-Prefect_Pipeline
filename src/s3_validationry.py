@@ -159,21 +159,6 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     # Go through each tab and remove completely empty tabs
     #
     ##############
-    """
-    for node in dict_nodes:
-        # see if the tab contain any data
-        print(node)
-        test_df = meta_dfs[node]
-        test_df = test_df.drop("type", axis=1)
-        test_df = test_df.dropna(how="all").dropna(how="all", axis=1)
-        # if there is no data, drop the node/tab
-        if test_df.empty:
-            print(f"{node} is empty")
-            del meta_dfs[node]
-            dict_nodes.remove(node)
-        else:
-            pass
-    """
     node_to_remove =[]
     for node in dict_nodes:
         # see if the tab contain any data

@@ -30,9 +30,9 @@ def check_participant_unique(sub_df: DataFrame, logger) -> None:
 
 
 @task
-def create_meta_json(phs_id: str) -> Dict:
-    dict_name = phs_id + "_" + get_date()
-    file_name_pattern = phs_id + "_dbGaP_submission.txt"
+def create_meta_json(study_id: str) -> Dict:
+    dict_name = study_id + "_" + get_date()
+    file_name_pattern = study_id + "_dbGaP_submission.txt"
     sc_ds_filename = "SC_DS_" + file_name_pattern
     sa_ds_filename = "SA_DS_" + file_name_pattern
     ssm_ds_filename = "SSM_DS_" + file_name_pattern
@@ -295,7 +295,10 @@ class Pre_dbGaP_combine(Task):
         return combined_subject_consent, combined_subject_sample, combined_sample_tumor
 
 
-@flow(name="CCDI_to_dbGaP_submission", flow_run_name="CCDI_to_dbGAP_submission_"+f"{get_time()}")
+@flow(
+    name="CCDI_to_dbGaP_submission",
+    flow_run_name="CCDI_to_dbGAP_submission_" + f"{get_time()}",
+)
 def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger = get_logger(loggername="CCDI_to_dbGaP_submission", log_level="info")
 
@@ -396,14 +399,14 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     )
 
     # prepare meta json output
-    phs_id = participant_df["study.study_id"][0]
-    meta_dict = create_meta_json(phs_id)
+    study_id = participant_df["study.study_id"][0]
+    meta_dict = create_meta_json(study_id)
 
     # create output directory
     output_dir_path = os.path.join(
-        os.getcwd(), phs_id + "_dbGaP_submission_" + get_date()
+        os.getcwd(), study_id + "_dbGaP_submission_" + get_date()
     )
-    output_folder_name = phs_id + "_dbGaP_submission_" + get_date()
+    output_folder_name = study_id + "_dbGaP_submission_" + get_date()
     Path(output_dir_path).mkdir(parents=True, exist_ok=True)
     logger.info(f"Created an output folder if not exist at {output_dir_path}")
 
@@ -421,17 +424,17 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
 
     # write txt files
     subject_consent.to_csv(
-        os.path.join(output_dir_path, "SC_DS_" + phs_id + "_dbGaP_submission.txt"),
+        os.path.join(output_dir_path, "SC_DS_" + study_id + "_dbGaP_submission.txt"),
         sep="\t",
         index=False,
     )
     subject_sample.to_csv(
-        os.path.join(output_dir_path, "SSM_DS_" + phs_id + "_dbGaP_submission.txt"),
+        os.path.join(output_dir_path, "SSM_DS_" + study_id + "_dbGaP_submission.txt"),
         sep="\t",
         index=False,
     )
     sample_tumor.to_csv(
-        os.path.join(output_dir_path, "SA_DS_" + phs_id + "_dbGaP_submission.txt"),
+        os.path.join(output_dir_path, "SA_DS_" + study_id + "_dbGaP_submission.txt"),
         sep="\t",
         index=False,
     )

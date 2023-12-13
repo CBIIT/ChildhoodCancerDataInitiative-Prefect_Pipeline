@@ -14,6 +14,7 @@ from src.s3_catcherry import CatchERRy
 from src.s3_validationry import ValidationRy
 from src.utils import (
     get_time,
+    get_manifest_phs,
     outputs_ul,
     file_dl,
     view_all_s3_objects,
@@ -35,9 +36,8 @@ def runner(
     bucket: str,
     file_path: str,
     runner: str,
-    template_path: str = "path_to/ccdi_template/in/ccdi-curation/bucket",
-    sra_template_path: str = "path_to/sra_template/in/ccdi-curation/bucket",
-    output_folder: str = "outputs",
+    template_path: str = "path_to/ccdi_template/in/s3/bucket",
+    sra_template_path: str = "path_to/sra_template/in/s3/bucket",
 ):
     # create a logging object
     runner_logger = get_run_logger()
@@ -52,8 +52,12 @@ def runner(
     manifest_version = check_ccdi_version(os.path.basename(file_path))
     runner_logger.info(f"The version of provided CCDI manifest is v{manifest_version}")
 
+    # get study phs and create output_folder name
+    phs_accession = get_manifest_phs(os.path.basename(file_path))
+    output_folder = runner + "/" + phs_accession + "_outputs_" + get_time()
+
     # download CCDI template if not provided
-    if template_path != "path_to/ccdi_template/in/ccdi-curation/bucket":
+    if template_path != "path_to/ccdi_template/in/s3/bucket":
         file_dl(bucket, template_path)
         input_template = os.path.basename(template_path)
         runner_logger.info("A CCDI template was provided")
@@ -95,7 +99,7 @@ def runner(
             )
 
     # download SRA template if not provided
-    if sra_template_path != "path_to/sra_template/in/ccdi-curation/bucket":
+    if sra_template_path != "path_to/sra_template/in/s3/bucket":
         file_dl(bucket, sra_template_path)
         input_sra_template = os.path.basename(sra_template_path)
         runner_logger.info("An SRA template was provided")
@@ -161,18 +165,16 @@ def runner(
 
 if __name__ == "__main__":
     bucket = "my-source-bucket"
-    output_folder = "test_out"
 
     # test new version manifest and latest version template
     file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
-    template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
-    sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
+    #template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+    #sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
 
     runner(
         bucket=bucket,
         file_path=file_path,
-        template_path=template_path,
-        sra_template_path=sra_template_path,
+        #template_path=template_path,
+        #sra_template_path=sra_template_path,
         runner="QL",
-        output_folder=output_folder,
     )
