@@ -168,13 +168,13 @@ if __name__ == "__main__":
 
     # test new version manifest and latest version template
     file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
-    #template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
-    #sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
+    # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+    # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
 
     runner(
         bucket=bucket,
         file_path=file_path,
-        #template_path=template_path,
-        #sra_template_path=sra_template_path,
+        # template_path=template_path,
+        # sra_template_path=sra_template_path,
         runner="QL",
     )
