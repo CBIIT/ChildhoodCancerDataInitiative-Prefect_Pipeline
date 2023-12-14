@@ -30,17 +30,19 @@ The current workflow contains 4 subflow/steps during execution. All these steps 
 
 ### Execute a workflow
 
-- Find the deployment 
-A [**Deployment**](https://docs.prefect.io/latest/concepts/deployments/) is a server-side representation of a workflow. The deployment decides **when, where, and how** a workflow should run.
+- Find the deployment
+
+    A [**Deployment**](https://docs.prefect.io/latest/concepts/deployments/) is a server-side representation of a workflow. The deployment decides **when, where, and how** a workflow should run.
 ![ccdi-data-curation-deployment](./docs/deployment-ccdi-data-curation.png)
 
 - Click `Custom Run`
 ![click-custom-run](./docs/workflow-custom-run.png)
 
 - Provide inputs for the deployment.
-The only required two fields for deployment are `file_path` and `runner`. 
+
+    The only required two fields for deployment are `file_path` and `runner`. 
     - The `file_path` is the path of the CCDI manifest in the s3 `ccdi-validation` bucket. 
-    - The `runner` is a uniq id of your choice. Please avoid space in your runner name. All the workflow outputs will be stored in the s3 bucket under the folder in the name of `runner`.
+    - The `runner` is a uniq id of your choice. Please avoid space in your runner name. All the workflow outputs will be stored in the s3 bucket under the folder `runner`.
     ![deployment_inputs](./docs/deployment_inputs.png)
 - Check flow run 
 ![flow_run](./docs/flow_run.png)
