@@ -1,6 +1,6 @@
 # ChildhoodCancerDataInitiative-Prefect_Pipeline
 
-This repo contains the source code for a Prefect workflow that is deployed in `ccdi-workspace` of Prefect Cloud. The workflow performs data curation and validation based on a **Childhood Cancer Data Initiative** (CCDI) manifest, and outputs submission files for different platforms. This workflow is custom made for CCDI study ingestion in an effort to simplify and expedite the data ingestion process in a standard manner. Please login to the Prefect Cloud to execute the workflow.
+This repo contains the source code for a Prefect workflow that is deployed in the `ccdi-workspace` of Prefect Cloud. The workflow performs data curation and validation based on a **Childhood Cancer Data Initiative** (CCDI) manifest, and outputs submission files for different platforms. This workflow is custom-made for CCDI study ingestion in an effort to simplify and expedite the data ingestion process in a standard manner. Please login to the Prefect Cloud to execute the workflow.
 
 ## Contents
 
