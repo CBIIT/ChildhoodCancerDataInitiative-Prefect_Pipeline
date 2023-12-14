@@ -38,7 +38,7 @@ The current workflow contains 4 subflow/steps during execution. All these steps 
 - Click `Custom Run`
 ![click-custom-run](./docs/workflow-custom-run.png)
 
-- Provide inputs for the deployment.
+- Submit a workflow
 
     The only required two fields for deployment are `file_path` and `runner`. 
     - The `file_path` is the path of the CCDI manifest in the s3 `ccdi-validation` bucket. 
