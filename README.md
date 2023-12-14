@@ -11,9 +11,9 @@ This repo contains the source code for a Prefect workflow that is deployed in th
 
 ---
 ### Workflow overlook
-> 📌 This workflow expects the `latest` version of CCDI manifest as input. The current workflow was tested using CCDI model v1.7.1
+> 📌 This workflow expects a CCDI manifest in the `latest` version as input. The current workflow was tested using CCDI data model v1.7.1
 
-The current workflow contains 4 subflow/steps during execution. All these steps were modified based on previously developed scripts.  
+The current workflow contains 4 subflow/steps during execution. All these steps were modified based on previously developed Python scripts.  
 - [CatchERRy](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CatchERRy)
 - [ValidatoRy](https://github.com/CBIIT/ChildhoodCancerDataInitiative-Submission_ValidatoRy)
 - [CCDI_to_SRAy](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CCDI_to_SRAy)
@@ -48,5 +48,5 @@ The only required two fields for deployment are `file_path` and `runner`.
 ![subflow_run](./docs/subflow_run.png)
 
 ### Workflow outputs
-If finished successfully, the outputs of workflow will be uploaded to s3 bucket (ccdi-validation) under the folder `<runner>/<phs_accession>_outputs_<date>_T<time>`. The outputs of all workflows from the same runner can be found under `/<runner>` folder.
+If finished successfully, the outputs of your workflow will be uploaded to s3 bucket (ccdi-validation) under the folder `<runner>/<phs_accession>_outputs_<date>_T<time>`. The outputs of all workflows from the same runner can be found under `/<runner>` folder.
 ![workflow_outputs](./docs/workflow_outputs.png)
