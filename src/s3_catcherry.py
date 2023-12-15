@@ -13,8 +13,12 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 import uuid
 
 
-@flow(name="CCDI_CatchERRy", log_prints=True, flow_run_name="CCDI_CatchERRy_" + f"{get_time()}" )
-def CatchERRy(file_path:str, template_path:str):  # removed profile
+@flow(
+    name="CCDI_CatchERRy",
+    log_prints=True,
+    flow_run_name="CCDI_CatchERRy_" + f"{get_time()}",
+)
+def CatchERRy(file_path: str, template_path: str):  # removed profile
     ##############
     #
     # File name rework
@@ -48,7 +52,7 @@ def CatchERRy(file_path:str, template_path:str):  # removed profile
     def read_xlsx(file_path: str, sheet: str):
         # Read in excel file
         warnings.simplefilter(action="ignore", category=UserWarning)
-        return pd.read_excel(file_path, sheet, dtype=str)
+        return pd.read_excel(file_path, sheet, dtype="string")
 
     # create workbook
     xlsx_model = pd.ExcelFile(template_path)
@@ -322,14 +326,15 @@ def CatchERRy(file_path:str, template_path:str):  # removed profile
                             f"\tWARNING: The property, {col}, contained a non-UTF-8 character on row: {rows[i]+1}\n",
                             file=outf,
                         )
-                    df = df.applymap(
-                        lambda x: x.replace("®", "(R)")
-                        .replace("™", "(TM)")
-                        .replace("©", "(C)")
-                        if isinstance(x, str)
-                        else x
+            df = df.applymap(
+                    lambda x: x.replace("®", "(R)")
+                    .replace("™", "(TM)")
+                    .replace("©", "(C)")
+                    if isinstance(x, str)
+                    else x
                     )
-                    meta_dfs[node] = df
+            df = df.fillna("")
+            meta_dfs[node] = df
 
         ##############
         #
@@ -588,5 +593,5 @@ def CatchERRy(file_path:str, template_path:str):  # removed profile
     print(
         f"\n\nProcess Complete.\n\nThe output file can be found here: {file_dir_path}/{catcherr_out_file}\n\n"
     )
-    
+
     return (catcherr_out_file, catcherr_out_log)
