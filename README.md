@@ -50,5 +50,5 @@ The current workflow contains 4 subflow/steps during execution. All these steps 
 ![subflow_run](./docs/subflow_run.png)
 
 ### Workflow outputs
-If finished successfully, the outputs of your workflow will be uploaded to s3 bucket (ccdi-validation) under the folder `<runner>/<phs_accession>_outputs_<date>_T<time>`. The outputs of all workflows from the same runner can be found under `/<runner>` folder.
+If finished successfully, the outputs of your workflow will be uploaded to s3 bucket (ccdi-validation) under the folder `<your_runner_id>/<phs_accession>_outputs_<date>_T<time>`. The outputs of all workflows from the same runner can be found under `/<your_runner_id>` folder.
 ![workflow_outputs](./docs/workflow_outputs.png)
