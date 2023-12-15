@@ -42,7 +42,7 @@ The current workflow contains 4 subflow/steps during execution. All these steps 
 
     The only required two fields for deployment are `file_path` and `runner`. 
     - The `file_path` is the path of the CCDI manifest in the s3 `ccdi-validation` bucket. 
-    - The `runner` is a uniq id of your choice. Please avoid space in your runner name. All the workflow outputs will be stored in the s3 bucket under the folder `runner`.
+    - The `runner` is a uniq id of your choice. Please avoid space in your runner name. All the workflow outputs will be stored in the s3 bucket under the folder `/<your_runner_id>`.
     ![deployment_inputs](./docs/deployment_inputs.png)
 - Check flow run 
 ![flow_run](./docs/flow_run.png)
