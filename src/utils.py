@@ -319,7 +319,7 @@ def markdown_input_task(
 {sra_template}
 """
     create_markdown_artifact(
-        key=f"{runner.lower().replace('_','-').replace(' ','-')}-workflow-input-{source_bucket}",
+        key=f"{runner.lower().replace('_','-').replace(' ','-')}-workflow-input-report",
         markdown=markdown_report,
         description=f"{runner} workflow input report",
     )
@@ -444,7 +444,7 @@ def markdown_output_task(
 {os.path.basename(dbgap_log[0])}
 """
     create_markdown_artifact(
-        key=f"{runner.lower().replace('_','-').replace(' ','-')}-workflow-output-{source_bucket}",
+        key=f"{runner.lower().replace('_','-').replace(' ','-')}-workflow-output-report",
         markdown=markdown_report,
         description=f"{runner} workflow output report",
     )
