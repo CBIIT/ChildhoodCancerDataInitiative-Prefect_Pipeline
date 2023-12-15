@@ -290,50 +290,38 @@ def view_all_s3_objects(source_bucket):
 
 
 @task
-def markdown_task(source_bucket, source_file_list):
-    """Creates markdown bucket artifacts using Prefect
-    create_markdown_artifact()
-    """
-    markdown_report = f"""
-    # S3 Viewer Run
-
-    ## Source Bucket: {source_bucket}
-
-    ### List of files ({len(source_file_list)}):
-
-    {source_file_list}
-    """
-    create_markdown_artifact(
-        key=f"bucket-check-before-workflow-{source_bucket}",
-        markdown=markdown_report,
-        description=f"Bucket_check_before_workflow_{source_bucket}",
-    )
-
-
-@task
 def markdown_input_task(
     source_bucket: str, runner: str, manifest: str, template: str, sra_template: str
 ):
     """Creates markdown artifacts of workflow inputs using Prefect
     create_markdown_artifact()
     """
-    markdown_report = f"""
-    # CCDI Data Curation Flow Run
+    markdown_report = f"""# CCDI Data Curation Workflow Input Report
 
-    ### Source Bucket: {source_bucket}
+### Source Bucket
 
-    ### Runner: {runner}
+{source_bucket}
 
-    ### CCDI Manifest: {manifest}
+### Runner
+
+{runner}
+
+### CCDI Manifest
+
+{manifest}
     
-    ### CCDI template: {template}
+### CCDI template
 
-    ### SRA template: {sra_template}
-    """
+{template}
+
+### SRA template
+
+{sra_template}
+"""
     create_markdown_artifact(
-        key=f"{runner.lower().replace('_','-')}-workflow-input-{source_bucket}",
+        key=f"{runner.lower().replace('_','-').replace(' ','-')}-workflow-input-{source_bucket}",
         markdown=markdown_report,
-        description=f"{runner}_workflow_input_{source_bucket}",
+        description=f"{runner} workflow input report",
     )
 
 
@@ -383,33 +371,82 @@ def markdown_output_task(
         if re.search("dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}\/", p)
         and output_folder in p
     ]
+    dbgap_folder_str = "\n\n".join([os.path.basename(i) for i in dbgap_folder])
 
-    markdown_report = f"""
-    # S3 Viewer Run
+    markdown_report = f"""# CCDI Data Curation Workflow Report
+    
+## Source Bucket
 
-    ## Source Bucket: {source_bucket}
+{source_bucket}
 
-    ### List of outputs
+## Workflow output folder
 
-    - CatchERRy output: {catcherr_output}
+{output_folder}
 
-    - CatchERRy log: {catcherr_log}
+---
 
-    - ValidationRy report: {validationry_output}
+### CatchERRy 
 
-    - SRA submission file: {sra_submission}
+* Output folder
 
-    - SRA file log: {sra_log}
+{os.path.dirname(catcherr_output[0])}
 
-    - dbGaP submission file list in folder ({len(dbgap_folder)}):
-    {dbgap_folder}
+* Excel output
 
-    - dbGaP file log: {dbgap_log}
-    """
+{os.path.basename(catcherr_output[0])}
+
+* CatchERRy log
+
+{os.path.basename(catcherr_log[0])}
+
+---
+
+### ValidationRy
+
+* Output folder
+
+{os.path.dirname(validationry_output[0])}
+
+* Report
+
+{os.path.basename(validationry_output[0])}
+
+---
+
+### CCDI to SRA submission
+
+* Output folder
+
+{os.path.dirname(sra_submission[0])}
+
+* SRA submssion file
+
+{os.path.basename(sra_submission[0])}
+
+* SRA file log
+
+{os.path.basename(sra_log[0])}
+
+---
+
+### CCDI to dbGaP submission
+
+* Output folder
+
+{os.path.dirname(dbgap_folder[0])}
+
+* Output files ({len(dbgap_folder)})
+
+{dbgap_folder_str}
+
+* dbGaP file log
+
+{os.path.basename(dbgap_log[0])}
+"""
     create_markdown_artifact(
-        key=f"{runner.lower().replace('_','-')}-workflow-output-{source_bucket}",
+        key=f"{runner.lower().replace('_','-').replace(' ','-')}-workflow-output-{source_bucket}",
         markdown=markdown_report,
-        description=f"{runner}_workflow_output_{source_bucket}",
+        description=f"{runner} workflow output report",
     )
 
 
