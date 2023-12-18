@@ -207,6 +207,10 @@ def outputs_ul(
     sra_log: str,
     dbgap_folder: str,
     dbgap_log: str,
+    cds_file: str,
+    cds_log: str,
+    index_file: str,
+    index_log: str,
 ) -> None:
     # upload input files
     file_ul(
@@ -272,6 +276,26 @@ def outputs_ul(
         bucket=bucket,
         destination=output_folder,
         sub_folder="4_dbGaP_submisison_output",
+    )
+    # upload cds output
+    file_ul(
+        bucket, output_folder=output_folder, sub_folder="5_CDS_output", newfile=cds_file
+    )
+    file_ul(
+        bucket, output_folder=output_folder, sub_folder="5_CDS_output", newfile=cds_log
+    )
+    # upload index output
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="6_Index_output",
+        newfile=index_file,
+    )
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="6_Index_output",
+        newfile=index_log,
     )
 
 
@@ -372,6 +396,28 @@ def markdown_output_task(
         and output_folder in p
     ]
     dbgap_folder_str = "\n\n".join([os.path.basename(i) for i in dbgap_folder])
+    cds_output = [
+        q
+        for q in list_wo_inputs
+        if re.search("CDS[0-9]{8}\.xlsx$", q) and output_folder in q
+    ]
+    cds_log = [
+        r
+        for r in list_wo_inputs
+        if re.search("CCDI_to_CDS_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", r)
+        and output_folder in r
+    ]
+    index_output = [
+        s
+        for s in list_wo_inputs
+        if re.search("Index[0-9]{8}\.tsv$", s) and output_folder in s
+    ]
+    index_log = [
+        t
+        for t in list_wo_inputs
+        if re.search("CCDI_to_Index_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", t)
+        and output_folder in t
+    ]
 
     markdown_report = f"""# CCDI Data Curation Workflow Report
     
@@ -442,6 +488,39 @@ def markdown_output_task(
 * dbGaP file log
 
 {os.path.basename(dbgap_log[0])}
+
+---
+
+### CCDI to CDS submission
+
+* Output folder
+
+{os.path.dirname(cds_output[0])}
+
+* CDS submission file
+
+{os.path.basename(cds_output[0])}
+
+* CDS file log
+
+{os.path.basename(cds_log[0])}
+
+---
+
+### CCDI to Index file
+
+* Output folder
+
+{os.path.dirname(index_output[0])}
+
+* Index file
+
+{os.path.basename(index_output[0])}
+
+* Index file log
+
+{os.path.basename(index_log[0])}
+
 """
     create_markdown_artifact(
         key=f"{runner.lower().replace('_','-').replace(' ','-')}-workflow-output-report",

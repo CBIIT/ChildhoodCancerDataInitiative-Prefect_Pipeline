@@ -12,6 +12,8 @@ from src.s3_ccdi_to_sra import CCDI_to_SRA
 from src.s3_ccdi_to_dbgap import CCDI_to_dbGaP
 from src.s3_catcherry import CatchERRy
 from src.s3_validationry import ValidationRy
+from src.s3_ccdi_to_cds import CCDI_to_CDS
+from src.s3_ccdi_to_index import CCDI_to_IndexeRy
 from src.utils import (
     get_time,
     get_manifest_phs,
@@ -134,6 +136,13 @@ def runner(
     # run CCDI to dbGaP
     runner_logger.info("Running CCDI to dbGaP submission file flow")
     (dbgap_output_folder, dbgap_out_log) = CCDI_to_dbGaP(manifest=catcherr_out_file)
+    # run CCDI to CDS
+    runner_logger.info("Runnning CCDI to CDS conversion flow")
+    (cds_output_file, cds_output_log) = CCDI_to_CDS(manifest_path=catcherr_out_file)
+    # run CCDI to index
+    runner_logger.info("Running CCDO to Index files flow")
+    (index_out_file, index_out_log) = CCDI_to_IndexeRy(manifest_path=catcherr_out_file)
+
 
     # upload all outputs to the source bucket
     runner_logger.info(
@@ -152,6 +161,10 @@ def runner(
         sra_log=sra_out_log,
         dbgap_folder=dbgap_output_folder,
         dbgap_log=dbgap_out_log,
+        cds_file=cds_output_file,
+        cds_log=cds_output_log,
+        index_file=index_out_file,
+        index_log=index_out_log
     )
 
     source_file_list = view_all_s3_objects(bucket)
