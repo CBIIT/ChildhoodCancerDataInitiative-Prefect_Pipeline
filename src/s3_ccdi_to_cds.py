@@ -1051,7 +1051,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     template_workbook.close()
 
     # output file path
-    output_file_path = os.path.join(file_dir_path, output_file + ".xlsx")
+    output_file_path = output_file + ".xlsx"
 
     logger.info(
         f"Process Complete. The output file can be found here: {file_dir_path}/{output_file}"

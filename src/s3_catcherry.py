@@ -326,7 +326,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             f"\tWARNING: The property, {col}, contained a non-UTF-8 character on row: {rows[i]+1}\n",
                             file=outf,
                         )
-            df = df.applymap(
+            df = df.map(
                     lambda x: x.replace("®", "(R)")
                     .replace("™", "(TM)")
                     .replace("©", "(C)")

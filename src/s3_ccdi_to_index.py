@@ -10,7 +10,7 @@ from prefect import flow
     name="CCDI_to_Index",
     flow_run_name="CCDI_to_Index_" + f"{get_time()}",
 )
-def CCDI_to_IndexeRy(manifest_path: str) ->  tuple:
+def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     # pull in args as variables
     file_path = manifest_path
 
@@ -852,7 +852,7 @@ def CCDI_to_IndexeRy(manifest_path: str) ->  tuple:
         f"Process Complete. The output file can be found here: {file_dir_path}/{output_file}"
     )
 
-    output_file_path = os.path.join(file_dir_path, output_file + ".tsv")
+    output_file_path = output_file + ".tsv"
     logger_file_name = "CCDI_to_Index_" + get_date() + ".log"
 
     return (output_file_path, logger_file_name)
