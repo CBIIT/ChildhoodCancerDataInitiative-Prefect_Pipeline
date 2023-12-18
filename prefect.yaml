@@ -18,7 +18,7 @@ pull:
   - prefect.projects.steps.git_clone_project:
       id: clone-step
       repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-      branch: remove_runner_parameters
+      branch: add_cds_index
   - prefect.projects.steps.pip_install_requirements:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
@@ -28,6 +28,29 @@ pull:
 deployments:
   # base metadata
   - name: ccdi-data-curation
+    version: null
+    tags: []
+    description: null
+    entrypoint: s3-Prefect-Pipeline.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
+      runner: "your_uniq_id"
+      #optional parmaeters below, uncomment if needed
+      #output_folder: "output_folder_name"
+      #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+      #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation
+      work_queue_name: null
+      job_variables: {}
+  
+  - name: ccdi-workflow-6steps
     version: null
     tags: []
     description: null
