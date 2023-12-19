@@ -802,13 +802,12 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     # Not a perfect match, some logic required depending on version of CCDI
     # Also need to deconstruct the setup from `code : term` ----> `term`
     if "diagnosis_icd_o" in df_join_all.columns:
-        index_df["primary_diagnosis"] = (
-            df_join_all["diagnosis_icd_o"].str.split(":").str[1].str.strip()
-        )
+        cds_df["primary_diagnosis"] = df_join_all["diagnosis_icd_o"]
     elif "diagnosis_classification" in df_join_all.columns:
-        index_df["primary_diagnosis"] = (
-            df_join_all["diagnosis_classification"].str.split(":").str[1].str.strip()
-        )
+        cds_df['primary_diagnosis']=df_join_all['diagnosis_classification']
+        #further diagnosis handling for "see diagnosis_comment" copying
+        comment_true = cds_df['primary_diagnosis'] == "see diagnosis_comment"
+        cds_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
     else:
         logger.error("No 'primary_diagnosis' was transfered")
 
