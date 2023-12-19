@@ -133,7 +133,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         else:
             nodes_removed.append(node)
 
-    validation_logger.info(f"{nodes_removed} tabs are empty")
+    logger.info(f"{nodes_removed} tabs are empty")
     ccdi_dfs = {key: ccdi_dfs[key] for key in ccdi_dfs if key not in nodes_removed}    
 
     if "cell_line" not in nodes_removed or "pdx" not in nodes_removed:
