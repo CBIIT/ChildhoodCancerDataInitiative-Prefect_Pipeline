@@ -127,10 +127,14 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             test_df = test_df.dropna(how="all").dropna(how="all", axis=1)
             # if there is no data, drop the node/tab
             if test_df.empty:
-                del ccdi_dfs[node]
                 nodes_removed.append(node)
+            else:
+                pass
         else:
             nodes_removed.append(node)
+
+    validation_logger.info(f"{nodes_removed} tabs are empty")
+    ccdi_dfs = {key: ccdi_dfs[key] for key in ccdi_dfs if key not in nodes_removed}    
 
     if "cell_line" not in nodes_removed or "pdx" not in nodes_removed:
         logger.warning(
@@ -704,33 +708,34 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     df_join_all = df_join_all.reset_index(drop=True)
 
     # To try and preserve synonym links this section will join the synonyms if the data exists.
-    synonym_df = ccdi_dfs["synonym"]
-    synonym_df.rename(columns=col_remap, inplace=True)
-
-    if "participant_id" in synonym_df.columns:
-        df_join_all = join_node(df_join_all, synonym_df, "participant_id")
-        df_join_all = join_file_node_cleaner(df_join_all)
-        # now we need to move participant_ids that are related to dbGaP over to the property `dbGaP_subject_id`
-        # if statment because we are not asssured that links are correctly made
+    if 'synonym' in ccdi_to_cds_nodes:
+        synonym_df = ccdi_dfs["synonym"]
+        synonym_df.rename(columns=col_remap, inplace=True)
+    
+        if "participant_id" in synonym_df.columns:
+            df_join_all = join_node(df_join_all, synonym_df, "participant_id")
+            df_join_all = join_file_node_cleaner(df_join_all)
+            # now we need to move participant_ids that are related to dbGaP over to the property `dbGaP_subject_id`
+            # if statment because we are not asssured that links are correctly made
+            if "repository_of_synonym_id" in df_join_all.columns:
+                df_join_all["dbGaP_subject_id"] = df_join_all.loc[
+                    df_join_all["repository_of_synonym_id"] == "dbGaP", "synonym_id"
+                ]
+    
+        if "synonym_id" in df_join_all.columns:
+            df_join_all = df_join_all.drop("synonym_id", axis=1)
         if "repository_of_synonym_id" in df_join_all.columns:
-            df_join_all["dbGaP_subject_id"] = df_join_all.loc[
-                df_join_all["repository_of_synonym_id"] == "dbGaP", "synonym_id"
-            ]
-
-    if "synonym_id" in df_join_all.columns:
-        df_join_all = df_join_all.drop("synonym_id", axis=1)
-    if "repository_of_synonym_id" in df_join_all.columns:
-        df_join_all = df_join_all.drop("repository_of_synonym_id", axis=1)
-
-    if "sample_id" in synonym_df.columns:
-        df_join_all = join_node(df_join_all, synonym_df, "sample_id")
-        df_join_all = join_file_node_cleaner(df_join_all)
-        # now we need to move sample_ids that are related to BioSample over to the property `dbGaP_subject_id`
-        # if statment because we are not asssured that links are correctly made
-        if "repository_of_synonym_id" in df_join_all.columns:
-            df_join_all["biosample_accession"] = df_join_all.loc[
-                df_join_all["repository_of_synonym_id"] == "BioSample", "synonym_id"
-            ]
+            df_join_all = df_join_all.drop("repository_of_synonym_id", axis=1)
+    
+        if "sample_id" in synonym_df.columns:
+            df_join_all = join_node(df_join_all, synonym_df, "sample_id")
+            df_join_all = join_file_node_cleaner(df_join_all)
+            # now we need to move sample_ids that are related to BioSample over to the property `dbGaP_subject_id`
+            # if statment because we are not asssured that links are correctly made
+            if "repository_of_synonym_id" in df_join_all.columns:
+                df_join_all["biosample_accession"] = df_join_all.loc[
+                    df_join_all["repository_of_synonym_id"] == "BioSample", "synonym_id"
+                ]
 
     # Drop the current index as it is causing issues
     df_join_all = df_join_all.reset_index(drop=True)
