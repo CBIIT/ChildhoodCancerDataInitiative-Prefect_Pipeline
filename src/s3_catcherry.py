@@ -1,4 +1,4 @@
-from prefect import flow
+from prefect import flow, get_run_logger
 import os
 import warnings
 import pandas as pd
@@ -19,6 +19,8 @@ import uuid
     flow_run_name="CCDI_CatchERRy_" + f"{get_time()}",
 )
 def CatchERRy(file_path: str, template_path: str):  # removed profile
+
+    catcherr_logger = get_run_logger()
     ##############
     #
     # File name rework
@@ -48,6 +50,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # Pull Dictionary Page to create node pulls
     #
     ##############
+
+    catcherr_logger.info("Reading CCDI template file")
 
     def read_xlsx(file_path: str, sheet: str):
         # Read in excel file
@@ -87,6 +91,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # Read in data
     #
     ##############
+
+    catcherr_logger.info("Reading CCDI manifest file")
 
     # create workbook
     xlsx_data = pd.ExcelFile(file_path)
@@ -529,10 +535,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # Assign guids to files
         #
         ##############
-
-        print(
-            "The file based nodes will now have a guid assigned to each unique file.\n"
-        )
+                    
+        catcherr_logger.info("The file based nodes will now have a guid assigned to each unique file")
 
         # check each node
         for node in dict_nodes:
@@ -569,7 +573,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     #
     ##############
 
-    print("\nWriting out the CatchERR file.\n")
+    catcherr_logger.info("Writing out the CatchERR")
 
     template_workbook = openpyxl.load_workbook(template_path)
 
@@ -590,8 +594,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # close template_workbook object
     template_workbook.close()
 
-    print(
-        f"\n\nProcess Complete.\n\nThe output file can be found here: {file_dir_path}/{catcherr_out_file}\n\n"
-    )
+    catcherr_logger.info(f"Process Complete. The output file can be found here: {file_dir_path}/{catcherr_out_file}")
 
     return (catcherr_out_file, catcherr_out_log)

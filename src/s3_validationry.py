@@ -1,4 +1,4 @@
-from prefect import flow
+from prefect import flow, get_run_logger
 import os
 import pandas as pd
 from datetime import date
@@ -11,9 +11,14 @@ import boto3
 from botocore.exceptions import ClientError
 
 
-@flow(name="CCDI_ValidationRy", log_prints=True, flow_run_name="CCDI_ValidationRy_" + f"{get_time()}")
-def ValidationRy(file_path:str, template_path:str):  # removed profile
-    print("\nThe CCDI submission template is being checked for errors.\n\n")
+@flow(
+    name="CCDI_ValidationRy",
+    log_prints=True,
+    flow_run_name="CCDI_ValidationRy_" + f"{get_time()}",
+)
+def ValidationRy(file_path: str, template_path: str):  # removed profile
+    validation_logger = get_run_logger()
+    validation_logger.info("The CCDI submission template is being checked for errors")
 
     ##############
     #
@@ -78,15 +83,15 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
         not "Dictionary" in xlsx_model.sheet_names
         or not "Terms and Value Sets" in xlsx_model.sheet_names
     ):
-        print(
-            "ERROR: The template file needs to contain both a 'Dictionary' and 'Terms and Value Sets' tab."
+        validation_logger.error(
+            "The template file needs to contain both a 'Dictionary' and 'Terms and Value Sets' tab"
         )
         sys.exit(1)
 
     # read in dfs and apply to dictionary
     for sheet_name in xlsx_model.sheet_names:
         model_dfs[sheet_name] = read_xlsx(xlsx_model, sheet_name)
-    
+
     # close xlsx_model
     xlsx_model.close()
 
@@ -123,7 +128,7 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     # read in dfs and apply to dictionary
     for sheet_name in xlsx_data.sheet_names:
         meta_dfs[sheet_name] = read_xlsx(xlsx_data, sheet_name)
-    
+
     # close xlsx_data
     xlsx_data.close()
 
@@ -147,11 +152,10 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     dict_nodes = list(set(dict_nodes) & set(dictionary_node_check))
 
     if len(removed_nodes) > 0:
-        print(
-            "WARNING: The following nodes are not recognized in the 'Dictionary' tab, and were removed from the validation checks:"
+        validation_logger.warning(
+            f"The following nodes are not recognized in the 'Dictionary' tab, and were removed from the validation checks: {*removed_nodes,}"
         )
         for removed_node in removed_nodes:
-            print(f"\t{removed_node}")
             del meta_dfs[removed_node]
 
     ##############
@@ -159,7 +163,7 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
     # Go through each tab and remove completely empty tabs
     #
     ##############
-    node_to_remove =[]
+    node_to_remove = []
     for node in dict_nodes:
         # see if the tab contain any data
         test_df = meta_dfs[node]
@@ -170,7 +174,7 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
             node_to_remove.append(node)
         else:
             pass
-    print(f"{node_to_remove} tabs are empty")
+    validation_logger.info(f"{node_to_remove} tabs are empty")
     dict_nodes = [i for i in dict_nodes if i not in node_to_remove]
     meta_dfs = {key: meta_dfs[key] for key in meta_dfs if key not in node_to_remove}
 
@@ -952,7 +956,7 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
         df_file = pd.DataFrame(columns=file_node_props)
         df_file = df_file.sort_values("node").reset_index(drop=True)
 
-        #print(dict_nodes)
+        # print(dict_nodes)
         for node in dict_nodes:
             if node in file_nodes:
                 df = meta_dfs[node]
@@ -1069,11 +1073,11 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
 
         # create bucket column from file data frame
         df_file["bucket"] = df_file["file_url_in_cds"].str.split("/").str[2]
-        #print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
+        # print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
 
         # return the unique list of buckets
         buckets = list(set(df_file["bucket"].values.tolist()))
-        print(f"List of buckets: {buckets}")
+        validation_logger.info(f"List of buckets: {*buckets,}")
 
         # if there are more than one bucket, warning
         if len(buckets) > 1:
@@ -1327,8 +1331,6 @@ def ValidationRy(file_path:str, template_path:str):  # removed profile
 
                             print(f"\t\t{id_value}", file=outf)
 
-    print(
-        f"\nProcess Complete.\n\nThe output file can be found here: {file_dir_path}\n\n"
-    )
+    validation_logger.info(f"Process Complete. The output file can be found here: {file_dir_path}")
 
     return validation_out_file
