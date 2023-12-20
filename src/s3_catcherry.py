@@ -19,7 +19,6 @@ import uuid
     flow_run_name="CCDI_CatchERRy_" + f"{get_time()}",
 )
 def CatchERRy(file_path: str, template_path: str):  # removed profile
-
     catcherr_logger = get_run_logger()
     ##############
     #
@@ -333,13 +332,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             file=outf,
                         )
             df = df.map(
-                    lambda x: x.replace("®", "(R)")
-                    .replace("™", "(TM)")
-                    .replace("©", "(C)")
-                    if isinstance(x, str)
-                    else x
-                    )
-            df = df.fillna("")
+                lambda x: x.replace("®", "(R)").replace("™", "(TM)").replace("©", "(C)")
+                if isinstance(x, str)
+                else x
+            )
             meta_dfs[node] = df
 
         ##############
@@ -535,8 +531,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # Assign guids to files
         #
         ##############
-                    
-        catcherr_logger.info("The file based nodes will now have a guid assigned to each unique file")
+
+        catcherr_logger.info(
+            "The file based nodes will now have a guid assigned to each unique file"
+        )
 
         # check each node
         for node in dict_nodes:
@@ -569,6 +567,17 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
     ##############
     #
+    # Replace any NaN with "" before writing output
+    #
+    ############## 
+                    
+    for node in dict_nodes:
+        df = meta_dfs[node]
+        df = df.fillna("")
+        meta_dfs[node] = df
+
+    ##############
+    #
     # Write out
     #
     ##############
@@ -594,6 +603,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # close template_workbook object
     template_workbook.close()
 
-    catcherr_logger.info(f"Process Complete. The output file can be found here: {file_dir_path}/{catcherr_out_file}")
+    catcherr_logger.info(
+        f"Process Complete. The output file can be found here: {file_dir_path}/{catcherr_out_file}"
+    )
 
     return (catcherr_out_file, catcherr_out_log)
