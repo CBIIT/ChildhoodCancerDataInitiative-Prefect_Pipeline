@@ -200,6 +200,29 @@ def check_mapping(
         pass
 
 
+def check_synonym(synonym_df: DataFrame) -> tuple:
+    subject_synonym = False
+    sample_synonym = False
+    if synonym_df.empty:
+        pass
+    else:
+        subject_synonym_df = synonym_df[
+            synonym_df["repository_of_synonym_id"] == "dbGaP"
+        ]
+        if subject_synonym_df.empty:
+            pass
+        else:
+            subject_synonym = True
+        sample_synonym_df = synonym_df[
+            synonym_df["repository_of_synonym_id"] == "BioSample"
+        ]
+        if sample_synonym_df.empty:
+            pass
+        else:
+            sample_synonym = True
+    return (subject_synonym, sample_synonym)
+
+
 class DD_dataframe(Task):
     def __init__(self) -> None:
         self.subject_consent_dd = {
@@ -218,6 +241,24 @@ class DD_dataframe(Task):
                 "UNK=Unknown",
             ],
         }
+        self.subject_consent_dd_synonym = {
+            "VARNAME": ["VARDESC", "TYPE", "VALUES"],
+            "SUBJECT_ID": ["Subject ID", "string"],
+            "CONSENT": [
+                "Consent group as determined by DAC",
+                "encoded value",
+                "1=General Research Use (GRU)",
+            ],
+            "SEX": [
+                "Biological sex",
+                "encoded value",
+                "1=Male",
+                "2=Female",
+                "UNK=Unknown",
+            ],
+            "SUBJECT_SOURCE": ["Source repository where subjects originate", "string"],
+            "SOURCE_SUBJECT_ID": ["Subjet ID used in the Source Repository", "string"],
+        }
         self.subject_sample_dd = {
             "VARNAME": ["VARDESC", "TYPE", "VALUES"],
             "SUBJECT_ID": ["Subject ID", "string"],
@@ -228,6 +269,13 @@ class DD_dataframe(Task):
             "SAMPLE_ID": ["Sample ID", "string"],
             "SAMPLE_TUMOR_STATUS": ["Sample Tumor Status", "Status"],
         }
+        self.sample_tumor_dd_synonym = {
+            "VARNAME": ["VARDESC", "TYPE", "VALUES"],
+            "SAMPLE_ID": ["Sample ID", "string"],
+            "SAMPLE_TUMOR_STATUS": ["Sample Tumor Status", "Status"],
+            "SAMPLE_SOURCE": ["Source Repository where samples originate", "string"],
+            "SOURCE_SAMPLE_ID": ["Sample ID used in the Source Repository", "string"],
+        }
 
     @classmethod
     def create_dd_df(self, dd_dict: Dict) -> DataFrame:
@@ -237,10 +285,21 @@ class DD_dataframe(Task):
         df = df.reset_index()
         return df
 
-    def create_dd_all(self) -> Tuple:
-        subject_consent_dd_output = self.create_dd_df(self.subject_consent_dd)
+    def create_dd_all(self, subject_synonym: bool, sample_synonym: bool) -> Tuple:
+        if subject_synonym:
+            subject_consent_dd_output = self.create_dd_df(
+                self.subject_consent_dd_synonym
+            )
+        else:
+            subject_consent_dd_output = self.create_dd_df(self.subject_consent_dd)
+
         subject_sample_dd_output = self.create_dd_df(self.subject_sample_dd)
-        sample_tumor_dd_output = self.create_dd_df(self.sample_tumor_dd)
+
+        if sample_synonym:
+            sample_tumor_dd_output = self.create_dd_df(self.sample_tumor_dd_synonym)
+        else:
+            sample_tumor_dd_output = self.create_dd_df(self.sample_tumor_dd)
+
         return (
             subject_consent_dd_output,
             subject_sample_dd_output,
@@ -295,6 +354,61 @@ class Pre_dbGaP_combine(Task):
         return combined_subject_consent, combined_subject_sample, combined_sample_tumor
 
 
+class AddSynonym:
+    def __init__(self, synonym_df: DataFrame) -> None:
+        self.synonym_df = synonym_df
+
+    def slice_subject_synonym(self):
+        subject_synonym_df = self.synonym_df[
+            self.synonym_df["repository_of_synonym_id"] == "dbGaP"
+        ][
+            ["participant.participant_id", "synonym_id", "repository_of_synonym_id"]
+        ].dropna(
+            subset=["participant.participant_id"], how="all"
+        )
+        # print(subject_synonym_df.to_markdown())
+        return subject_synonym_df
+
+    def slice_sample_synonym(self):
+        sample_synonym_df = self.synonym_df[
+            self.synonym_df["repository_of_synonym_id"] == "BioSample"
+        ][["sample.sample_id", "synonym_id", "repository_of_synonym_id"]].dropna(
+            subset=["sample.sample_id"], how="all"
+        )
+        # print(sample_synonym_df.to_markdown())
+        return sample_synonym_df
+
+    def merge_subject_synonym(self, subject_consent_df: DataFrame) -> DataFrame:
+        subject_synonym_df = self.slice_subject_synonym()
+        subject_synonym_df = subject_synonym_df.rename(
+            columns={
+                "participant.participant_id": "SUBJECT_ID",
+                "repository_of_synonym_id": "SUBJECT_SOURCE",
+                "synonym_id": "SOURCE_SUBJECT_ID",
+            }
+        )
+        # left merged with subject_consent_df
+        merged_subject_df = subject_consent_df.merge(
+            subject_synonym_df, how="left", on="SUBJECT_ID"
+        )
+        return merged_subject_df
+
+    def merge_sample_synonym(self, sample_attribute_df: DataFrame) -> DataFrame:
+        sample_synonym_df = self.slice_sample_synonym()
+        sample_synonym_df = sample_synonym_df.rename(
+            columns={
+                "sample.sample_id": "SAMPLE_ID",
+                "repository_of_synonym_id": "SAMPLE_SOURCE",
+                "synonym_id": "SOURCE_SAMPLE_ID",
+            }
+        )
+        # left merged with sample_attribute_df
+        merged_sample_df = sample_attribute_df.merge(
+            sample_synonym_df, how="left", on="SAMPLE_ID"
+        )
+        return merged_sample_df
+
+
 @flow(
     name="CCDI_to_dbGaP_submission",
     flow_run_name="CCDI_to_dbGAP_submission_" + f"{get_time()}",
@@ -321,6 +435,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     study_df = workbook_dict["study"]
     participant_df = workbook_dict["participant"]
     sample_df = workbook_dict["sample"]
+    synonym_df = workbook_dict["synonym"]
 
     # extract consent value
     study_consent = study_df["consent"][0]
@@ -336,6 +451,14 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
             f"Consent {study_consent} was found in CCDI study manifest. Please fix the encoded value for CONSENT in SC_DD.xlsx before submission."
         )
 
+    # check synonym of subject and sample in synonym tab
+    (subject_synonym, sample_synonym) = check_synonym(synonym_df=synonym_df)
+    if any([subject_synonym, sample_synonym]):
+        logger.info(f"Synonym check for subject: {subject_synonym}")
+        logger.info(f"Synonym check for sample: {sample_synonym}")
+    else:
+        logger.info("No synonym was found for subject or sample")
+
     # dbgap submission is sample centered. Extract SSM information for first
     # subject_sample SSM df
     subject_sample = extract_ssm(
@@ -349,6 +472,12 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         participant_samples=subject_sample,
         logger=logger,
     )
+    if subject_synonym:
+        subject_consent = AddSynonym(synonym_df=synonym_df).merge_subject_synonym(
+            subject_consent_df=subject_consent
+        )
+    else:
+        pass
     # check if each participant only appears in one row
     check_participant_unique(sub_df=subject_consent, logger=logger)
 
@@ -356,13 +485,21 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     sample_tumor = extract_sa(
         sample_sheet=sample_df, participant_sample=subject_sample, logger=logger
     )
+    if sample_synonym:
+        sample_tumor = AddSynonym(synonym_df=synonym_df).merge_sample_synonym(
+            sample_attribute_df=sample_tumor
+        )
+    else:
+        pass
 
     # Create DD dataframes
     (
         subject_consent_dd_df,
         subject_sample_dd_df,
         sample_tumor_dd_df,
-    ) = DD_dataframe().create_dd_all()
+    ) = DD_dataframe().create_dd_all(
+        subject_synonym=subject_synonym, sample_synonym=sample_synonym
+    )
 
     if pre_submission is not None:
         try:
