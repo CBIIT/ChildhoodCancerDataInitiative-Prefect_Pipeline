@@ -143,7 +143,6 @@ def runner(
     runner_logger.info("Running CCDO to Index files flow")
     (index_out_file, index_out_log) = CCDI_to_IndexeRy(manifest_path=catcherr_out_file)
 
-
     # upload all outputs to the source bucket
     runner_logger.info(
         f"Uploading workflow inputs and outputs to bucket {bucket} under folder {output_folder}"
@@ -164,7 +163,7 @@ def runner(
         cds_file=cds_output_file,
         cds_log=cds_output_log,
         index_file=index_out_file,
-        index_log=index_out_log
+        index_log=index_out_log,
     )
 
     source_file_list = view_all_s3_objects(bucket)
@@ -180,7 +179,7 @@ if __name__ == "__main__":
     bucket = "my-source-bucket"
 
     # test new version manifest and latest version template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
+    file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207_noguid.xlsx"
     # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
 
