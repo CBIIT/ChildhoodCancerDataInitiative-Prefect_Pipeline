@@ -177,14 +177,14 @@ def runner(
     runner_logger.info("Start running gaptool validation")
     
     wkdir_content = subprocess.run("ls", shell=True, capture_output=True)
-    print(wkdir_content.stdout)
-    print(wkdir_content.stderr)
+    print(wkdir_content.stdout.decode())
+    print(wkdir_content.stderr.decode())
     gaptools_run = subprocess.run(gaptools_up, shell=True, capture_output=True)
-    print(gaptools_run.stdout)
-    print(gaptools_run.stderr)
+    print(gaptools_run.stdout.decode())
+    print(gaptools_run.stderr.decode())
     gaptools_stop = subprocess.run(gaptools_down, shell=True, capture_output=True)
-    print(gaptools_stop.stdout)
-    print(gaptools_stop.stderr)
+    print(gaptools_stop.stdout.decode())
+    print(gaptools_stop.stderr.decode())
     folder_ul(
         local_folder="gaptools_out",
         bucket=bucket,
