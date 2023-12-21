@@ -169,15 +169,22 @@ def runner(
     )
 
     # run gaptools validaiton of dbgap submission
-    create_gaptools_out = f"mkdir gaptools_out/"
+    os.mkdir("./gaptools_out/")
     gaptools_up = f"bash ./dbgap-docker.bash up -i {dbgap_output_folder} -o gaptools_out/ -m {dbgap_output_folder}/metadata.json"
+    print(gaptools_up)     
     gaptools_down = "bash ./dbgap-docker.bash down"
+    print(gaptools_down)
     runner_logger.info("Start running gaptool validation")
-    subprocess.run(create_gaptools_out, shell=True, capture_output=True)
-    subprocess.run("ls -ll", shell=True, capture_output=True)
-    subprocess.run("exit 1", shell=True, check=True)
-    subprocess.run(gaptools_up, shell=True, capture_output=True)
-    subprocess.run(gaptools_down, shell=True, capture_output=True)
+    
+    wkdir_content = subprocess.run("ls", shell=True, capture_output=True)
+    print(wkdir_content.stdout)
+    print(wkdir_content.stderr)
+    gaptools_run = subprocess.run(gaptools_up, shell=True, capture_output=True)
+    print(gaptools_run.stdout)
+    print(gaptools_run.stderr)
+    gaptools_stop = subprocess.run(gaptools_down, shell=True, capture_output=True)
+    print(gaptools_stop.stdout)
+    print(gaptools_stop.stderr)
     folder_ul(
         local_folder="gaptools_out",
         bucket=bucket,
