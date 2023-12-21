@@ -168,18 +168,22 @@ def runner(
         index_log=index_out_log,
     )
 
-    
-
     # run gaptools validaiton of dbgap submission
     create_gaptools_out = f"mkdir gaptools_out/"
     gaptools_up = f"bash ./dbgap-docker.bash up -i {dbgap_output_folder} -o gaptools_out/ -m {dbgap_output_folder}/metadata.json"
     gaptools_down = "bash ./dbgap-docker.bash down"
     runner_logger.info("Start running gaptool validation")
-    subprocess.run(create_gaptools_out, shell=True)
-    subprocess.run("ls -ll", shell=True)
-    subprocess.run(gaptools_up, shell=True)
-    subprocess.run(gaptools_down, shell=True)
-    folder_ul(local_folder="gaptools_out", bucket=bucket,destination=output_folder, sub_folder="7_dbGaP_validation_report")
+    subprocess.run(create_gaptools_out, shell=True, capture_output=True)
+    subprocess.run("ls -ll", shell=True, capture_output=True)
+    subprocess.run("exit 1", shell=True, check=True)
+    subprocess.run(gaptools_up, shell=True, capture_output=True)
+    subprocess.run(gaptools_down, shell=True, capture_output=True)
+    folder_ul(
+        local_folder="gaptools_out",
+        bucket=bucket,
+        destination=output_folder,
+        sub_folder="7_dbGaP_validation_report",
+    )
 
     source_file_list = view_all_s3_objects(bucket)
     markdown_output_task(
