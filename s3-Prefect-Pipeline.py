@@ -176,6 +176,7 @@ def runner(
     gaptools_down = "bash ./dbgap-docker.bash down"
     runner_logger.info("Start running gaptool validation")
     subprocess.run(create_gaptools_out, shell=True)
+    subprocess.run("ls -ll", shell=True)
     subprocess.run(gaptools_up, shell=True)
     subprocess.run(gaptools_down, shell=True)
     folder_ul(local_folder="gaptools_out", bucket=bucket,destination=output_folder, sub_folder="7_dbGaP_validation_report")
