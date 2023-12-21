@@ -8,6 +8,7 @@ Authors: Sean Burke <sean.burke2@nih.gov>
 """
 from prefect import flow, get_run_logger
 import os
+import subprocess
 from src.s3_ccdi_to_sra import CCDI_to_SRA
 from src.s3_ccdi_to_dbgap import CCDI_to_dbGaP
 from src.s3_catcherry import CatchERRy
@@ -26,6 +27,7 @@ from src.utils import (
     dl_ccdi_template,
     dl_sra_template,
     get_ccdi_latest_release,
+    folder_ul,
 )
 
 
@@ -173,6 +175,16 @@ def runner(
         output_folder=output_folder,
         runner=runner,
     )
+
+    # run gaptools validaiton of dbgap submission
+    create_gaptools_out = f"mkdir gaptools_out/"
+    gaptools_up = f"bash ./dbgap-docker.bash up -i {dbgap_output_folder} -o gaptools_out/ -m {dbgap_output_folder}/metadata.json"
+    gaptools_down = "bash ./dbgap-docker.bash down"
+    runner_logger.info("Start running gaptool validation")
+    subprocess.run(create_gaptools_out, shell=True)
+    subprocess.run(gaptools_up, shell=True)
+    subprocess.run(gaptools_down, shell=True)
+    folder_ul(local_folder="gaptools_out", bucket=bucket,destination=output_folder, sub_folder="7_dbGaP_validation_report")
 
 
 if __name__ == "__main__":
