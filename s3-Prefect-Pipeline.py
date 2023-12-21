@@ -32,7 +32,7 @@ from src.utils import (
 
 
 @flow(
-    name="S3 Prefect Pipeline",
+    name="S3 Prefect Pipeline add gaptool",
     log_prints=True,
     flow_run_name="{runner}_" + f"{get_time()}",
 )
@@ -168,13 +168,7 @@ def runner(
         index_log=index_out_log,
     )
 
-    source_file_list = view_all_s3_objects(bucket)
-    markdown_output_task(
-        source_bucket=bucket,
-        source_file_list=source_file_list,
-        output_folder=output_folder,
-        runner=runner,
-    )
+    
 
     # run gaptools validaiton of dbgap submission
     create_gaptools_out = f"mkdir gaptools_out/"
@@ -185,6 +179,14 @@ def runner(
     subprocess.run(gaptools_up, shell=True)
     subprocess.run(gaptools_down, shell=True)
     folder_ul(local_folder="gaptools_out", bucket=bucket,destination=output_folder, sub_folder="7_dbGaP_validation_report")
+
+    source_file_list = view_all_s3_objects(bucket)
+    markdown_output_task(
+        source_bucket=bucket,
+        source_file_list=source_file_list,
+        output_folder=output_folder,
+        runner=runner,
+    )
 
 
 if __name__ == "__main__":
