@@ -8,6 +8,7 @@ This repo contains the source code for a Prefect workflow that is deployed in th
 - [Prefect login instruction](#prefect-login-instruction)
 - [Exucute a workflow](#execute-a-workflow)
 - [Workflow outputs](#workflow-outputs)
+- [Download workflow outputs](#download-workflow-outputs)
 
 ---
 ### Workflow overlook
@@ -54,3 +55,12 @@ The current workflow contains 6 subflow/steps during execution. All these steps 
 ### Workflow outputs
 If finished successfully, the outputs of your workflow will be uploaded to s3 bucket (ccdi-validation) under the folder `<your_runner_id>/<phs_accession>_outputs_<date>_T<time>`. The outputs of all workflows from the same runner can be found under `/<your_runner_id>` folder.
 ![workflow_outputs](./docs/workflow_outputs.png)
+
+### Download workflow outputs
+Use AWS CLI to download the entire workflow output folder to your local computer. Make sure you have your aws credential that was set up properly. You can check your credentials in `credentials` file under `~/.aws` folder. 
+
+Run the command line below in your terminal to download the workflow outputs.
+
+```bash
+aws s3 cp s3://ccdi-validation/<your_runner_id>/ ./<your-runner-id>/ --recursive
+```
