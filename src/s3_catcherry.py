@@ -242,11 +242,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                                     == unique_value.lower()
                                                 )
                                             ]["Term"].values[0]
-
                                             df[property] = df[property].apply(
                                                 lambda x: re.sub(
                                                     rf"\b{unique_value}\b", new_value, x
-                                                )
+                                                ) if (np.all(pd.notnull(df[property]))) else x
                                             )
 
                                             print(
