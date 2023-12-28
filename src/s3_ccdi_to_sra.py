@@ -825,7 +825,16 @@ def spread_sra_df(sra_df: DataFrame, logger) -> DataFrame:
                 i_df_firstrow[j_md5] = i_df.at[i_df.index[j], "MD5_checksum"]
             return_df = pd.concat([return_df, i_df_firstrow], axis=0, ignore_index=True)
     # check if missing values of the certain columns ["active_location_URL","Bases","Reads","coverage","AvgReadLength"]
-    check_empty_df = return_df[["library_ID","active_location_URL","Bases","Reads","coverage","AvgReadLength"]]
+    check_empty_df = return_df[
+        [
+            "library_ID",
+            "active_location_URL",
+            "Bases",
+            "Reads",
+            "coverage",
+            "AvgReadLength",
+        ]
+    ]
     report_missing_library_id = check_empty_df[check_empty_df.isna().any(axis=1)][
         "library_ID"
     ].tolist()
@@ -897,10 +906,18 @@ def validate_sample_library(sra_df: DataFrame, logger) -> List:
     return index_rows_to_remove
 
 
-@flow(name="CCDI_to_SRA_submission", flow_run_name="CCDI_to_SRA_submission_"+f"{get_time()}")
-def CCDI_to_SRA(manifest: str, template: str, pre_submission=None,) -> tuple:
+@flow(
+    name="CCDI_to_SRA_submission",
+    flow_run_name="CCDI_to_SRA_submission_" + f"{get_time()}",
+)
+def CCDI_to_SRA(
+    manifest: str,
+    template: str,
+    pre_submission=None,
+) -> tuple:
     manifest_base = os.path.splitext(os.path.basename(manifest))[0]
     logger = get_logger(loggername="CCDI_to_SRA_submission", log_level="info")
+    logger_filename = "CCDI_to_SRA_submission_" + get_date() + ".log"
 
     # Check if manifest and template file can be found
     try:
@@ -959,7 +976,9 @@ def CCDI_to_SRA(manifest: str, template: str, pre_submission=None,) -> tuple:
         logger.info(
             "No seuqneincg file or single cell sequencing file found in CCDI submission file, and no SRA submission file will be generated"
         )
-        sys.exit()
+        sra_output_path = "(EMPTY)_SRA_submission.xlsx"
+        copy(src=template, dst=sra_output_path)
+        return (sra_output_path, logger_filename)
     else:
         pass
 
@@ -1020,7 +1039,9 @@ def CCDI_to_SRA(manifest: str, template: str, pre_submission=None,) -> tuple:
         logger.error(
             "No row passed verification step. Please fix the values mentioned above in the manifest and rerun the script"
         )
-        sys.exit()
+        sra_output_path = "(EMPTY)_SRA_submission.xlsx"
+        copy(src=template, dst=sra_output_path)
+        return (sra_output_path, logger_filename)
     else:
         pass
 
@@ -1074,7 +1095,5 @@ def CCDI_to_SRA(manifest: str, template: str, pre_submission=None,) -> tuple:
     ) as writer:
         sra_df.to_excel(writer, sheet_name="Sequence_Data", index=False, header=True)
     logger.info(f"Script finished!")
-
-    logger_filename = "CCDI_to_SRA_submission_" + get_date() + ".log"
 
     return (sra_output_path, logger_filename)
