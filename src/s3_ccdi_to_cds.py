@@ -702,9 +702,9 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             df_join_all = pd.concat([df_join_all, node_path], axis=0)
 
     #To reduce complexity in the conversion, only lines where the personnel type is PI will be used in the CDS template end file. Otherwise use Co-PI or just pass if nothing else or too complex.
-    if 'PI' in df_join_all['personnel_type']:
+    if 'PI' in df_join_all['personnel_type'].unique().tolist():
         df_join_all=df_join_all[df_join_all['personnel_type']=='PI']
-    elif 'Co-PI' in df_join_all['personnel_type']:
+    elif 'Co-PI' in df_join_all['personnel_type'].unique().tolist():
         df_join_all=df_join_all[df_join_all['personnel_type']=='Co-PI']
     else:
         pass
