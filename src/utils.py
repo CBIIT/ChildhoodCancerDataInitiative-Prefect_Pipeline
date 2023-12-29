@@ -15,6 +15,7 @@ import requests
 
 
 ExcelFile = TypeVar("ExcelFile")
+DataFrame = TypeVar("DataFrame")
 
 
 @dataclass
@@ -211,6 +212,8 @@ def outputs_ul(
     cds_log: str,
     index_file: str,
     index_log: str,
+    tabbreaker_folder: str,
+    tabbreaker_log: str,
 ) -> None:
     # upload input files
     file_ul(
@@ -296,6 +299,19 @@ def outputs_ul(
         output_folder=output_folder,
         sub_folder="6_Index_output",
         newfile=index_log,
+    )
+    # upload tabbreaker output
+    folder_ul(
+        local_folder=tabbreaker_folder,
+        bucket=bucket,
+        destination=output_folder,
+        sub_folder="7_TabBreaker_output",
+    )
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="7_TabBreaker_output",
+        newfile=tabbreaker_log,
     )
 
 
@@ -418,6 +434,23 @@ def markdown_output_task(
         if re.search("CCDI_to_Index_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", t)
         and output_folder in t
     ]
+    tabbreaker_folder = [
+        u
+        for u in list_wo_inputs
+        if re.search("_[0-9]{8}_T[0-9]{6}.tsv$", u) and output_folder in u
+    ]
+    tabbreaker_log = [
+        v
+        for v in list_wo_inputs
+        if re.search("CCDI_to_TabBreakeRy_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", v)
+        and output_folder in v
+    ]
+    tabbreaker_json = [
+        w
+        for w in list_wo_inputs
+        if re.search("_TabBreakeRLog_[0-9]{8}_T[0-9]{6}.json$", w)
+        and output_folder in w
+    ]
 
     markdown_report = f"""# CCDI Data Curation Workflow Report
     
@@ -521,6 +554,22 @@ def markdown_output_task(
 
 {os.path.basename(index_log[0])}
 
+---
+
+### CCDI to TabBreaker file
+
+* Output TSV folder
+
+{os.path.dirname(tabbreaker_folder[0])}
+
+* TabBreaker log
+
+{os.path.basename(tabbreaker_log[0])}
+
+* TabBreaker metadata json
+
+{os.path.basename(tabbreaker_json[0])}
+
 """
     create_markdown_artifact(
         key=f"{runner.lower().replace('_','-').replace(' ','-')}-workflow-output-report",
@@ -605,3 +654,54 @@ def ccdi_manifest_to_dict(excel_file: ExcelFile) -> Dict:
             pass
     del ccdi_dict_raw
     return ccdi_dict
+
+
+class CheckCCDI:
+    """
+    A Class that takes ccdi manifest path
+    and read sheet into df or extract specific
+    study related information
+    """
+
+    def __init__(self, ccdi_manifest: str) -> None:
+        self.ccdi_manifest = ccdi_manifest
+        self.na_bank = ["NA", "na", "N/A", "n/a"]
+
+    def read_sheet(self, sheetname: str) -> DataFrame:
+        warnings.simplefilter(action="ignore", category=UserWarning)
+        ccdi_excel = pd.ExcelFile(self.ccdi_manifest)
+        sheetname_df = pd.read_excel(ccdi_excel, sheet_name=sheetname, header=0)
+        ccdi_excel.close()
+        return sheetname_df
+
+    def read_sheet_na(self, sheetname: str) -> DataFrame:
+        warnings.simplefilter(action="ignore", category=UserWarning)
+        ccdi_excel = pd.ExcelFile(self.ccdi_manifest)
+        sheetname_df = pd.read_excel(
+            ccdi_excel, sheet_name=sheetname, na_values=self.na_bank, dtype="string"
+        )
+        ccdi_excel.close()
+        return sheetname_df
+
+    def get_version(self):
+        readme_df = self.read_sheet(sheetname="README and INSTRUCTIONS")
+        manifest_version = readme_df.columns[2][1:]
+        return manifest_version
+
+    def get_study_id(self):
+        study_df = self.read_sheet(sheetname="study")
+        study_id = study_df["study_id"][0]
+        return study_id
+
+    def get_dict_df(self):
+        dict_df = self.read_sheet(sheetname="Dictionary")
+        # remove empty row
+        dict_df.dropna(axis=0, how="all", inplace=True)
+        # remove empty column
+        dict_df.dropna(axis=1, how="all", inplace=True)
+        return dict_df
+
+    def get_dict_node(self):
+        dict_df = self.get_dict_df()
+        dict_nodes = dict_df["Node"].unique()
+        return dict_nodes

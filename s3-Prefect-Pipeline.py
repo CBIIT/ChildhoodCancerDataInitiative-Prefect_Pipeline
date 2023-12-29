@@ -14,6 +14,7 @@ from src.s3_catcherry import CatchERRy
 from src.s3_validationry import ValidationRy
 from src.s3_ccdi_to_cds import CCDI_to_CDS
 from src.s3_ccdi_to_index import CCDI_to_IndexeRy
+from src.s3_ccdi_to_tabbreakery import tabBreakeRy
 from src.utils import (
     get_time,
     get_manifest_phs,
@@ -140,8 +141,12 @@ def runner(
     runner_logger.info("Runnning CCDI to CDS conversion flow")
     (cds_output_file, cds_output_log) = CCDI_to_CDS(manifest_path=catcherr_out_file)
     # run CCDI to index
-    runner_logger.info("Running CCDO to Index files flow")
+    runner_logger.info("Running CCDI to Index files flow")
     (index_out_file, index_out_log) = CCDI_to_IndexeRy(manifest_path=catcherr_out_file)
+    # run the CCDI to tabbreaker
+    runner_logger.info("Running CCDI to TabBreaker flow")
+    (tabbreaker_output_folder, tabbreaker_out_log) = tabBreakeRy(manifest=catcherr_out_file)
+
 
     # upload all outputs to the source bucket
     runner_logger.info(
@@ -164,6 +169,8 @@ def runner(
         cds_log=cds_output_log,
         index_file=index_out_file,
         index_log=index_out_log,
+        tabbreaker_folder=tabbreaker_output_folder,
+        tabbreaker_log=tabbreaker_out_log,
     )
 
     source_file_list = view_all_s3_objects(bucket)
@@ -179,7 +186,7 @@ if __name__ == "__main__":
     bucket = "my-source-bucket"
 
     # test new version manifest and latest version template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207_noguid.xlsx"
+    file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
     # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
 
