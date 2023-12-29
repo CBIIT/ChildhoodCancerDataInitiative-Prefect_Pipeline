@@ -12,16 +12,16 @@ This repo contains the source code for a Prefect workflow that is deployed in th
 
 ---
 ### Workflow overlook
-> 📌 This workflow expects a CCDI manifest in the `latest` version as input. The current workflow was tested using CCDI data model v1.7.1
+> 📌 This workflow expects a CCDI manifest in the `latest` version as input. The current workflow has been tested with CCDI data model v1.7.2
 
-The current workflow contains 6 subflow/steps during execution. All these steps were modified based on previously developed Python scripts.  
+The current workflow contains 6 subflow/steps during execution. All these steps were modified based on previously developed Python/R scripts.  
 - [CatchERRy](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CatchERRy)
 - [ValidatoRy](https://github.com/CBIIT/ChildhoodCancerDataInitiative-Submission_ValidatoRy)
 - [CCDI_to_SRAy](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CCDI_to_SRAy)
 - [CCDI_to_dbGaPy](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CCDI_to_dbGaPy)
 - [CCDI_to_CDS](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CCDI_to_CDS_ConverteRy)
 - [CCDI_to_Index](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CCDI_IndexeRy)
-
+- [CCDI_to_TabBreakeR](https://github.com/CBIIT/ChildhoodCancerDataInitiative-TabBreakeR)
 
 ### Prefect login instruction
 
