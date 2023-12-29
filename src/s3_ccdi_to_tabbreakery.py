@@ -76,8 +76,10 @@ def tabBreakeRy(manifest: str) -> tuple:
 
         # if the df is not empty and not all columns in the df contains "."
         # add the df to the workbook list
-        if not df.loc[:, df.columns != "type"].empty:
-            columns_wo_type = [k for k in df.columns.tolist() if k != "type"]
+        df_content = df.drop(columns=["type"])
+        if not df_content.dropna(how="all").empty:
+            # columns_wo_type = [k for k in df.columns.tolist() if k != "type"]
+            columns_wo_type =  df_content.columns
             if len([h for h in columns_wo_type if "." in h]) < len(columns_wo_type):
                 workbook_dict[node] = df
             else:
