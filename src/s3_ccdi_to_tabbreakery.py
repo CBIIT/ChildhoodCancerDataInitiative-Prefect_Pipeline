@@ -71,8 +71,17 @@ def tabBreakeRy(manifest: str) -> tuple:
 
         # Remove the old linking properties [node].[node]_id,
         # as that will cause issues in the data loader
-        columns_to_keep = [i for i in df.columns.tolist() if "_id" not in i]
-        df = df[columns_to_keep]
+        columns_to_drop=[]
+        for i in df.columns:
+            if "." in i:
+                i_list = i.split(".")
+                if i_list[0] + "_id" == i_list[1]:
+                    columns_to_drop.append(i)
+                else:
+                    pass
+            else:
+                pass
+        df = df.drop(columns=columns_to_drop)
 
         # if the df is not empty and not all columns in the df contains "."
         # add the df to the workbook list
