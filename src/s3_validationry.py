@@ -1196,83 +1196,91 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                             file=outf,
                         )
 
+        #just to make sure we don't have too much sitting in memory.
+        del df_bucket
+
         ###############
         #
         # Cross node validation (do linking values have corresponding values)
         #
         ###############
 
-        # print(
-        #     "\n\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------",
-        #     file=outf,
-        # )
+        print(
+            "\n\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------",
+            file=outf,
+        )
 
-        # # for each node
-        # for node in dict_nodes:
-        #     print(f"\n\t{node}:\n\t----------", file=outf)
-        #     df = meta_dfs[node]
-        #     # pull out all the linking properties
-        #     link_props = df.filter(like=".", axis=1).columns.tolist()
+        # for each node
+        for node in dict_nodes:
+            print(f"\n\t{node}:\n\t----------", file=outf)
+            df = meta_dfs[node]
+            # pull out all the linking properties
+            link_props = df.filter(like="_id",axis=1)
+            link_props = link_props.filter(like=".", axis=1).columns.tolist()
 
-        #     # if there are more than one linking property
-        #     if len(link_props) > 1:
-        #         for index, row in df.iterrows():
-        #             row_values = row[link_props].dropna().tolist()
-        #             # if there are entries that have more than one linking property value
-        #             if len(set(row_values)) > 1:
-        #                 print(
-        #                     f"\tWARNING: The entry on row {index+1} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n",
-        #                     file=outf,
-        #                 )
+            # if there are more than one linking property
+            if len(link_props) > 1:
+                for index, row in df.iterrows():
+                    row_values = row[link_props].dropna().tolist()
+                    # if there are entries that have more than one linking property value
+                    if len(set(row_values)) > 1:
+                        print(
+                            f"\tWARNING: The entry on row {index+1} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n",
+                            file=outf,
+                        )
 
-        #     # for the linking property
-        #     for link_prop in link_props:
-        #         # find the unique values of that linking property
-        #         link_values = df[link_prop].dropna().unique().tolist()
+            # for the linking property
+            for link_prop in link_props:
+                # find the unique values of that linking property
+                link_values = df[link_prop].dropna().unique().tolist()
 
-        #         # if there are values
-        #         if len(link_values) > 0:
-        #             # determine the linking node and property.
-        #             linking_node = str.split(link_prop, ".")[0]
-        #             linking_prop = str.split(link_prop, ".")[1]
-        #             df_link = meta_dfs[linking_node]
-        #             linking_values = df_link[linking_prop].dropna().unique().tolist()
+                # if there are values
+                if len(link_values) > 0:
+                    # determine the linking node and property.
+                    linking_node = str.split(link_prop, ".")[0]
+                    linking_prop = str.split(link_prop, ".")[1]
+                    df_link = meta_dfs[linking_node]
+                    linking_values = df_link[linking_prop].dropna().unique().tolist()
 
-        #             # if there is an array of link values, pull the array apart and delete the old value.
-        #             for link_value in link_values:
-        #                 if ";" in link_value:
-        #                     value_splits = str.split(link_value, ";")
-        #                     for value_split_value in value_splits:
-        #                         link_values.append(value_split_value)
-        #                     link_values.remove(link_value)
+                    # if there is an array of link values, pull the array apart and delete the old value.
+                    # this should not happen as we are not accepting submissions where there are arrays in the <node>.<node>_id column
+                    # if there are multiple connections to different parent entities, they should be in multiple rows.
+                    # remove_link_values=[]
+                    # for link_value in link_values:
+                    #     if ";" in link_value:
+                    #         value_splits = str.split(link_value, ";")
+                    #         for value_split_value in value_splits:
+                    #             link_values.append(value_split_value)
+                    #         remove_link_values.append(link_value)
+                    #     link_values.remove(remove_link_values)
 
-        #             # test to see if all the values are found
-        #             matching_links = [
-        #                 [id in linking_values for id in link_values]
-        #                 for _ in range(len(linking_values))
-        #             ]
-        #             matching_links = matching_links[0]
+                    # test to see if all the values are found
+                    matching_links = [
+                        [id in linking_values for id in link_values]
+                        for _ in range(len(linking_values))
+                    ]
+                    matching_links = matching_links[0]
 
-        #             # if not all values match, determined the mismatched values
-        #             if not all(matching_links):
-        #                 mis_match_values = [
-        #                     value
-        #                     for value, flag in zip(link_values, matching_links)
-        #                     if not flag
-        #                 ]
+                    # if not all values match, determined the mismatched values
+                    if not all(matching_links):
+                        mis_match_values = [
+                            value
+                            for value, flag in zip(link_values, matching_links)
+                            if not flag
+                        ]
 
-        #                 # for each mismatched value, throw an error.
-        #                 for mis_match_value in mis_match_values:
-        #                     print(
-        #                         f"\tERROR: For the node, {node}, the following linking property, {link_prop}, has a value that is not found in the parent node: {mis_match_value}",
-        #                         file=outf,
-        #                     )
+                        # for each mismatched value, throw an error.
+                        for mis_match_value in mis_match_values:
+                            print(
+                                f"\tERROR: For the node, {node}, the following linking property, {link_prop}, has a value that is not found in the parent node: {mis_match_value}",
+                                file=outf,
+                            )
 
-        #             else:
-        #                 print(
-        #                     f"\tPASS: The links for the node, {node}, have corresponding values in the parent node, {linking_node}.",
-        #                     file=outf,
-        #                 )
+                    else:
+                        print(
+                            f"\tPASS: The links for the node, {node}, have corresponding values in the parent node, {linking_node}.",
+                            file=outf,
+                        )
 
         ###############
         #

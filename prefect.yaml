@@ -27,7 +27,7 @@ pull:
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
   # base metadata
-  - name: ccdi-data-curation
+  - name: ccdi-data-curation-validationRy-test
     version: null
     tags: []
     description: null
