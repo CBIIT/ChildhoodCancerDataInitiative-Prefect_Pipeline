@@ -573,6 +573,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     for node in dict_nodes:
         df = meta_dfs[node]
         df = df.fillna("")
+        df = df.drop_duplicates()
         meta_dfs[node] = df
 
     ##############
