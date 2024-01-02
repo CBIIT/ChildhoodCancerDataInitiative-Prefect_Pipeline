@@ -1255,21 +1255,17 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                     #     link_values.remove(remove_link_values)
 
                     # test to see if all the values are found
-                    matching_links=[id for id in link_values if id in linking_values]
+                    matching_links=[True if id in linking_values else False for id in link_values] 
                     
-                    #matching_links = [
-                    #    [id in linking_values for id in link_values]
-                    #    for _ in range(len(linking_values))
-                    #]
-                    #matching_links = matching_links[0]
+                    # matching_links = [
+                    #     [id in linking_values for id in link_values]
+                    #     for _ in range(len(linking_values))
+                    # ]
+                    # matching_links = matching_links[0]
 
                     # if not all values match, determined the mismatched values
                     if not all(matching_links):
-                        mis_match_values = [
-                            value
-                            for value, flag in zip(link_values, matching_links)
-                            if not flag
-                        ]
+                        mis_match_values = np.array(link_values)[~np.array(matching_links)].tolist()
 
                         # for each mismatched value, throw an error.
                         for mis_match_value in mis_match_values:
