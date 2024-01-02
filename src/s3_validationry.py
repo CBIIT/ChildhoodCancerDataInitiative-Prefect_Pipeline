@@ -1196,6 +1196,9 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                             file=outf,
                         )
 
+        #just to make sure we don't have too much sitting in memory.
+        del df_bucket
+
         ###############
         #
         # Cross node validation (do linking values have corresponding values)
@@ -1212,7 +1215,8 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
             print(f"\n\t{node}:\n\t----------", file=outf)
             df = meta_dfs[node]
             # pull out all the linking properties
-            link_props = df.filter(like=".", axis=1).columns.tolist()
+            link_props = df.filter(like="_id",axis=1)
+            link_props = link_props.filter(like=".", axis=1).columns.tolist()
 
             # if there are more than one linking property
             if len(link_props) > 1:
@@ -1239,27 +1243,29 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                     linking_values = df_link[linking_prop].dropna().unique().tolist()
 
                     # if there is an array of link values, pull the array apart and delete the old value.
-                    for link_value in link_values:
-                        if ";" in link_value:
-                            value_splits = str.split(link_value, ";")
-                            for value_split_value in value_splits:
-                                link_values.append(value_split_value)
-                            link_values.remove(link_value)
+                    # this should not happen as we are not accepting submissions where there are arrays in the <node>.<node>_id column
+                    # if there are multiple connections to different parent entities, they should be in multiple rows.
+                    # remove_link_values=[]
+                    # for link_value in link_values:
+                    #     if ";" in link_value:
+                    #         value_splits = str.split(link_value, ";")
+                    #         for value_split_value in value_splits:
+                    #             link_values.append(value_split_value)
+                    #         remove_link_values.append(link_value)
+                    #     link_values.remove(remove_link_values)
 
                     # test to see if all the values are found
-                    matching_links = [
-                        [id in linking_values for id in link_values]
-                        for _ in range(len(linking_values))
-                    ]
-                    matching_links = matching_links[0]
+                    matching_links=[True if id in linking_values else False for id in link_values] 
+                    
+                    # matching_links = [
+                    #     [id in linking_values for id in link_values]
+                    #     for _ in range(len(linking_values))
+                    # ]
+                    # matching_links = matching_links[0]
 
                     # if not all values match, determined the mismatched values
                     if not all(matching_links):
-                        mis_match_values = [
-                            value
-                            for value, flag in zip(link_values, matching_links)
-                            if not flag
-                        ]
+                        mis_match_values = np.array(link_values)[~np.array(matching_links)].tolist()
 
                         # for each mismatched value, throw an error.
                         for mis_match_value in mis_match_values:
