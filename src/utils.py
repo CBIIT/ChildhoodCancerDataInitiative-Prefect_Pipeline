@@ -665,7 +665,7 @@ class CheckCCDI:
 
     def __init__(self, ccdi_manifest: str) -> None:
         self.ccdi_manifest = ccdi_manifest
-        self.na_bank = ["NA", "na", "N/A", "n/a"]
+        self.na_bank = ["NA", "na", "N/A", "n/a", ""]
 
     def read_sheet(self, sheetname: str) -> DataFrame:
         warnings.simplefilter(action="ignore", category=UserWarning)
