@@ -1,13 +1,16 @@
 """
-This prefect pipeline works flow combines four tools
+This prefect pipeline works flow combines 7 tools
 that catches error and validate the CCDI manifest before it
-generates files for dbGaP and SRA submission.
+generates files for data ingestion and submission.
 
 Authors: Sean Burke <sean.burke2@nih.gov>
          Qiong Liu <qiong.liu@nih.gov>
 """
 from prefect import flow, get_run_logger
 import os
+import sys
+parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(parent_dir)
 from src.s3_ccdi_to_sra import CCDI_to_SRA
 from src.s3_ccdi_to_dbgap import CCDI_to_dbGaP
 from src.s3_catcherry import CatchERRy
@@ -145,8 +148,9 @@ def runner(
     (index_out_file, index_out_log) = CCDI_to_IndexeRy(manifest_path=catcherr_out_file)
     # run the CCDI to tabbreaker
     runner_logger.info("Running CCDI to TabBreaker flow")
-    (tabbreaker_output_folder, tabbreaker_out_log) = tabBreakeRy(manifest=catcherr_out_file)
-
+    (tabbreaker_output_folder, tabbreaker_out_log) = tabBreakeRy(
+        manifest=catcherr_out_file
+    )
 
     # upload all outputs to the source bucket
     runner_logger.info(
@@ -186,7 +190,7 @@ if __name__ == "__main__":
     bucket = "my-source-bucket"
 
     # test new version manifest and latest version template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
+    file_path = "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
     # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
 

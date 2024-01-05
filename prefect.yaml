@@ -31,13 +31,13 @@ deployments:
     version: null
     tags: []
     description: null
-    entrypoint: s3-Prefect-Pipeline.py:runner
+    entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
 
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
-      file_path: "inputs/CCDI_Submission_Template_v1.7.1_40ExampleR20231207.xlsx"
+      file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
       runner: "your_uniq_id"
       #optional parmaeters below, uncomment if needed
       #output_folder: "output_folder_name"
@@ -49,4 +49,28 @@ deployments:
       name: ccdi-curation
       work_queue_name: null
       job_variables: {}
+  
+  - name: ccdi-template-updater
+    version: null
+    tags: []
+    description: null
+    entrypoint: workflows/Template_Updater.py:updater
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "inputs/CCDI_Submission_Template_v1.5.0_10ExampleR20240102.xlsx"
+      runner: "your_uniq_id"
+      #optional parmaeters below, uncomment if needed
+      #output_folder: "output_folder_name"
+      #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+      #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation
+      work_queue_name: null
+      job_variables: {}
+  
   
