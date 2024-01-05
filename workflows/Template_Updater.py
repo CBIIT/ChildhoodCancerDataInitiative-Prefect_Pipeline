@@ -19,6 +19,7 @@ from src.utils import (
     get_ccdi_latest_release,
     get_date,
     file_ul,
+    markdown_template_updater,
 )
 from src.update_ccdi_template import updateManifest
 
@@ -79,6 +80,7 @@ def updater(
         updated_manifest = None
         updated_log = "Update_CCDI_manifest_" + get_date() + ".log"
 
+    # Upload updated manifest if it's not None
     if updated_manifest is not None:
         file_ul(
             bucket=bucket,
@@ -88,7 +90,7 @@ def updater(
         )
     else:
         pass
-
+    # Upload workflow log
     file_ul(
         bucket=bucket,
         output_folder=output_folder,
@@ -96,9 +98,20 @@ def updater(
         newfile=updated_log,
     )
 
+    # Generate markdown summary of this workflow
+    markdown_template_updater(
+        source_bucket=bucket,
+        runner=runner,
+        output_folder=output_folder,
+        manifest=os.path.basename(file_path),
+        manifest_version=manifest_version,
+        template=input_template,
+        template_version=template_version
+    )
+
 
 if __name__ == "__main__":
     bucket = "my-source-bucket"
     file_path = "inputs/CCDI_Submission_Template_v1.5.0_10ExampleR20240102.xlsx"
-    
+
     updater(bucket=bucket, file_path=file_path, runner="QL")

@@ -315,7 +315,6 @@ def outputs_ul(
     )
 
 
-@task
 def view_all_s3_objects(source_bucket):
     """List files from source bucket"""
     # Set the s3 resource object for local or remote execution
@@ -327,6 +326,76 @@ def view_all_s3_objects(source_bucket):
         source_file_list.append(obj.key)
 
     return source_file_list
+
+
+@task
+def markdown_template_updater(
+    source_bucket: str,
+    runner: str,
+    output_folder: str,
+    manifest: str,
+    manifest_version: str,
+    template: str,
+    template_version: str,
+):
+    """
+    Creates markdown file summary of tempalte updater flow run
+    """
+    source_file_list = view_all_s3_objects(source_bucket=source_bucket)
+    updated_manifest = [
+        i
+        for i in source_file_list
+        if re.search(
+            "_Updater_v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)_[0-9]{4}-[0-9]{2}-[0-9]{2}\.xlsx$",
+            i,
+        )
+        and output_folder in i
+    ]
+    update_log = [
+        j
+        for j in source_file_list
+        if re.search(
+            "Update_CCDI_manifest_[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$",
+            j,
+        )
+        and output_folder in j
+    ]
+    markdown_report = f"""# CCDI Template Updater Workflow Summary
+
+### Source Bucket
+
+{source_bucket}
+
+### Runner
+
+{runner}
+
+### CCDI Manifest
+
+- File: {os.path.basename(manifest)}
+
+- Version: {manifest_version}
+
+### CCDI Template
+
+- File: {os.path.basename(template)}
+
+- Version: {template_version}
+
+### Outputs
+
+- Output folder: {output_folder}
+
+- Updated manifest: {os.path.basename(updated_manifest[0])}
+
+- Log: {os.path.basename(update_log[0])}
+
+"""
+    create_markdown_artifact(
+        key=f"{runner.lower().replace('_','-').replace(' ','-')}-template-updater-summary",
+        markdown=markdown_report,
+        description=f"{runner} template updater worklfow summary",
+    )
 
 
 @task
