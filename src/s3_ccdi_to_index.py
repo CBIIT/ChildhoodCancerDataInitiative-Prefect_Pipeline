@@ -743,12 +743,13 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     # study information
     simple_add("phs_accession", "phs_accession")
 
-    if len(df_join_all["study_name"].dropna().unique().tolist()) == 1:
-        index_df["study_name"] = df_join_all["study_name"]
+    if (
+        'study_name' in df_join_all.columns
+    ):
+        cds_df["study_name"] = df_join_all["study_name"]
         # if there isn't a study_name
-    if len(df_join_all["study_name"].dropna().unique().tolist()) != 1:
-        index_df["study_name"] = df_join_all["study_short_title"]
-
+    else:
+        cds_df["study_name"] = df_join_all["study_short_title"]
     simple_add("study_acronym", "study_acronym")
     simple_add(
         "experimental_strategy_and_data_subtype",
@@ -811,8 +812,9 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     elif "diagnosis_classification" in df_join_all.columns:
         index_df['primary_diagnosis']=df_join_all['diagnosis_classification']
         #further diagnosis handling for "see diagnosis_comment" copying
-        comment_true = index_df['primary_diagnosis'] == "see diagnosis_comment"
-        index_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
+        if 'diagnosis_comment' in df_join_all:
+            comment_true = index_df['primary_diagnosis'] == "see diagnosis_comment"
+            index_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
     else:
         logger.error("No 'primary_diagnosis' was transfered")
 
