@@ -929,8 +929,9 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     elif "diagnosis_classification" in df_join_all.columns:
         cds_df['primary_diagnosis']=df_join_all['diagnosis_classification']
         #further diagnosis handling for "see diagnosis_comment" copying
-        comment_true = cds_df['primary_diagnosis'] == "see diagnosis_comment"
-        cds_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
+        if 'diagnosis_comment' in df_join_all.columns:
+            comment_true = cds_df['primary_diagnosis'] == "see diagnosis_comment"
+            cds_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
     else:
         logger.error("No 'primary_diagnosis' was transfered")
 
