@@ -810,15 +810,18 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     else :
         cds_df["experimental_strategy_and_data_subtype"] = "Sequencing"
 
-        # if there is one study data type value
-    if len(df_join_all["study_data_types"].dropna().unique().tolist()) == 1:
-        cds_df["study_data_types"] = df_join_all["study_data_types"]
-        # if there are multiple study data type values
-    elif len(df_join_all["study_data_types"].dropna().unique().tolist()) > 1:
-        es_and_ds = ";".join(df_join_all["study_data_types"].unique().tolist())
-        cds_df["study_data_types"] = es_and_ds
-        # if there are no study data type values
-    elif len(df_join_all["study_data_types"].dropna().unique().tolist()) < 1:
+    # if there is one study data type value
+    if (
+        'experimental_strategy_and_data_subtype' in df_join_all.columns
+    ):
+        if len(df_join_all["study_data_types"].dropna().unique().tolist()) == 1:
+            cds_df["study_data_types"] = df_join_all["study_data_types"]
+            # if there are multiple study data type values
+        elif len(df_join_all["study_data_types"].dropna().unique().tolist()) > 1:
+            es_and_ds = ";".join(df_join_all["study_data_types"].unique().tolist())
+            cds_df["study_data_types"] = es_and_ds
+            # if there are no study data type values
+    else:
         cds_df["study_data_types"] = "Genomics"
 
         # if there is a study_name
