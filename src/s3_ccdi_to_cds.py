@@ -768,7 +768,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     simple_add("email", "email_address")
     simple_add("role_or_affiliation", "personnel_type")
 
-    # NOT REQUIRED in CCDI, but can be derived via logic
+    # NOT REQUIRED in CCDI, but REQUIRED IN CDS and can be derived via logic
     if "authz" in df_join_all.columns:
         cds_df["authz"] = df_join_all["authz"]
     else:
@@ -776,43 +776,38 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         authz = "['/programs/" + authz[2:]
         cds_df["authz"] = authz
 
-        # if there is one experimental value
+    # if there is one experimental value
     if (
-        len(
-            df_join_all["experimental_strategy_and_data_subtype"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
-        == 1
+        'experimental_strategy_and_data_subtype' in df_join_all.columns
     ):
-        cds_df["experimental_strategy_and_data_subtype"] = df_join_all[
-            "experimental_strategy_and_data_subtype"
-        ]
-        # if there are multiple experimental values
-    elif (
-        len(
-            df_join_all["experimental_strategy_and_data_subtype"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
-        > 1
-    ):
-        es_and_ds = ";".join(
-            df_join_all["experimental_strategy_and_data_subtype"].unique().tolist()
-        )
-        cds_df["experimental_strategy_and_data_subtype"] = es_and_ds
-        # if there are no experimental values
-    elif (
-        len(
-            df_join_all["experimental_strategy_and_data_subtype"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
-        < 1
-    ):
+        if (
+            len(
+                df_join_all["experimental_strategy_and_data_subtype"]
+                .dropna()
+                .unique()
+                .tolist()
+            )
+            == 1
+        ):
+            cds_df["experimental_strategy_and_data_subtype"] = df_join_all[
+                "experimental_strategy_and_data_subtype"
+            ]
+            # if there are multiple experimental values
+        elif (
+            len(
+                df_join_all["experimental_strategy_and_data_subtype"]
+                .dropna()
+                .unique()
+                .tolist()
+            )
+            > 1
+        ):
+            es_and_ds = ";".join(
+                df_join_all["experimental_strategy_and_data_subtype"].unique().tolist()
+            )
+            cds_df["experimental_strategy_and_data_subtype"] = es_and_ds
+            # if there are no experimental values
+    else :
         cds_df["experimental_strategy_and_data_subtype"] = "Sequencing"
 
         # if there is one study data type value
