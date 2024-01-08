@@ -812,7 +812,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # if there is one study data type value
     if (
-        'experimental_strategy_and_data_subtype' in df_join_all.columns
+        'study_data_types' in df_join_all.columns
     ):
         if len(df_join_all["study_data_types"].dropna().unique().tolist()) == 1:
             cds_df["study_data_types"] = df_join_all["study_data_types"]
@@ -824,14 +824,16 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     else:
         cds_df["study_data_types"] = "Genomics"
 
-        # if there is a study_name
-    if len(df_join_all["study_name"].dropna().unique().tolist()) == 1:
+    # if there is a study_name
+    if (
+        'study_name' in df_join_all.columns
+    ):
         cds_df["study_name"] = df_join_all["study_name"]
-
         # if there isn't a study_name
-    if len(df_join_all["study_name"].dropna().unique().tolist()) != 1:
+    else:
         cds_df["study_name"] = df_join_all["study_short_title"]
 
+    
     # if there is a number_of_participants value
     if "number_of_participants" in df_join_all.columns:
         # if there is a number_of_participants
