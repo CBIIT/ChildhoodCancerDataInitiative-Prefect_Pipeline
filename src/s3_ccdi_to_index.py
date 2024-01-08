@@ -746,10 +746,10 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     if (
         'study_name' in df_join_all.columns
     ):
-        cds_df["study_name"] = df_join_all["study_name"]
+        index_df["study_name"] = df_join_all["study_name"]
         # if there isn't a study_name
     else:
-        cds_df["study_name"] = df_join_all["study_short_title"]
+        index_df["study_name"] = df_join_all["study_short_title"]
     simple_add("study_acronym", "study_acronym")
     simple_add(
         "experimental_strategy_and_data_subtype",
