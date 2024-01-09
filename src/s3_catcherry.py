@@ -11,6 +11,7 @@ from botocore.exceptions import ClientError
 import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
 import uuid
+from shutil import copy
 
 
 @flow(
@@ -584,18 +585,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
     catcherr_logger.info("Writing out the CatchERR")
 
-    template_workbook = openpyxl.load_workbook(template_path)
+#    template_workbook = openpyxl.load_workbook(template_path)
 
-    writer=pd.ExcelWriter(
-        template_path, mode="a", engine="openpyxl", if_sheet_exists="overlay"
-    )
-    # for each sheet df
-    for sheet_name in meta_dfs.keys():
-        sheet_df = meta_dfs[sheet_name]
-        sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=True)
-    writer.close()
-
-    
 #    for sheet_name, df in meta_dfs.items():
 #        # select workbook tab
 #        ws = template_workbook[sheet_name]
@@ -609,9 +600,19 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
     # save out template
     catcherr_out_file = f"{output_file}.xlsx"
-    template_workbook.save(f"{file_dir_path}/{catcherr_out_file}")
+    copy(src=template_path, dst=catcherr_out_file)
+    writer=pd.ExcelWriter(
+        catcherr_out_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+    )
+    # for each sheet df
+    for sheet_name in meta_dfs.keys():
+        sheet_df = meta_dfs[sheet_name]
+        sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=True)
+    writer.close()
+    
+    # template_workbook.save(f"{file_dir_path}/{catcherr_out_file}")
     # close template_workbook object
-    template_workbook.close()
+    #template_workbook.close()
 
     catcherr_logger.info(
         f"Process Complete. The output file can be found here: {file_dir_path}/{catcherr_out_file}"
