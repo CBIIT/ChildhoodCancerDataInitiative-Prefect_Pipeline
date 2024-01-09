@@ -768,7 +768,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     simple_add("email", "email_address")
     simple_add("role_or_affiliation", "personnel_type")
 
-    # NOT REQUIRED in CCDI, but can be derived via logic
+    # NOT REQUIRED in CCDI, but REQUIRED IN CDS and can be derived via logic
     if "authz" in df_join_all.columns:
         cds_df["authz"] = df_join_all["authz"]
     else:
@@ -776,64 +776,64 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         authz = "['/programs/" + authz[2:]
         cds_df["authz"] = authz
 
-        # if there is one experimental value
+    # if there is one experimental value
     if (
-        len(
-            df_join_all["experimental_strategy_and_data_subtype"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
-        == 1
+        'experimental_strategy_and_data_subtype' in df_join_all.columns
     ):
-        cds_df["experimental_strategy_and_data_subtype"] = df_join_all[
-            "experimental_strategy_and_data_subtype"
-        ]
-        # if there are multiple experimental values
-    elif (
-        len(
-            df_join_all["experimental_strategy_and_data_subtype"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
-        > 1
-    ):
-        es_and_ds = ";".join(
-            df_join_all["experimental_strategy_and_data_subtype"].unique().tolist()
-        )
-        cds_df["experimental_strategy_and_data_subtype"] = es_and_ds
-        # if there are no experimental values
-    elif (
-        len(
-            df_join_all["experimental_strategy_and_data_subtype"]
-            .dropna()
-            .unique()
-            .tolist()
-        )
-        < 1
-    ):
+        if (
+            len(
+                df_join_all["experimental_strategy_and_data_subtype"]
+                .dropna()
+                .unique()
+                .tolist()
+            )
+            == 1
+        ):
+            cds_df["experimental_strategy_and_data_subtype"] = df_join_all[
+                "experimental_strategy_and_data_subtype"
+            ]
+            # if there are multiple experimental values
+        elif (
+            len(
+                df_join_all["experimental_strategy_and_data_subtype"]
+                .dropna()
+                .unique()
+                .tolist()
+            )
+            > 1
+        ):
+            es_and_ds = ";".join(
+                df_join_all["experimental_strategy_and_data_subtype"].unique().tolist()
+            )
+            cds_df["experimental_strategy_and_data_subtype"] = es_and_ds
+            # if there are no experimental values
+    else :
         cds_df["experimental_strategy_and_data_subtype"] = "Sequencing"
 
-        # if there is one study data type value
-    if len(df_join_all["study_data_types"].dropna().unique().tolist()) == 1:
-        cds_df["study_data_types"] = df_join_all["study_data_types"]
-        # if there are multiple study data type values
-    elif len(df_join_all["study_data_types"].dropna().unique().tolist()) > 1:
-        es_and_ds = ";".join(df_join_all["study_data_types"].unique().tolist())
-        cds_df["study_data_types"] = es_and_ds
-        # if there are no study data type values
-    elif len(df_join_all["study_data_types"].dropna().unique().tolist()) < 1:
+    # if there is one study data type value
+    if (
+        'study_data_types' in df_join_all.columns
+    ):
+        if len(df_join_all["study_data_types"].dropna().unique().tolist()) == 1:
+            cds_df["study_data_types"] = df_join_all["study_data_types"]
+            # if there are multiple study data type values
+        elif len(df_join_all["study_data_types"].dropna().unique().tolist()) > 1:
+            es_and_ds = ";".join(df_join_all["study_data_types"].unique().tolist())
+            cds_df["study_data_types"] = es_and_ds
+            # if there are no study data type values
+    else:
         cds_df["study_data_types"] = "Genomics"
 
-        # if there is a study_name
-    if len(df_join_all["study_name"].dropna().unique().tolist()) == 1:
+    # if there is a study_name
+    if (
+        'study_name' in df_join_all.columns
+    ):
         cds_df["study_name"] = df_join_all["study_name"]
-
         # if there isn't a study_name
-    if len(df_join_all["study_name"].dropna().unique().tolist()) != 1:
+    else:
         cds_df["study_name"] = df_join_all["study_short_title"]
 
+    
     # if there is a number_of_participants value
     if "number_of_participants" in df_join_all.columns:
         # if there is a number_of_participants
@@ -929,8 +929,9 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     elif "diagnosis_classification" in df_join_all.columns:
         cds_df['primary_diagnosis']=df_join_all['diagnosis_classification']
         #further diagnosis handling for "see diagnosis_comment" copying
-        comment_true = cds_df['primary_diagnosis'] == "see diagnosis_comment"
-        cds_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
+        if 'diagnosis_comment' in df_join_all.columns:
+            comment_true = cds_df['primary_diagnosis'] == "see diagnosis_comment"
+            cds_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
     else:
         logger.error("No 'primary_diagnosis' was transfered")
 
