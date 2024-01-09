@@ -610,10 +610,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         sheet_df = meta_dfs[sheet_name]
         sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=True)
     writer.close()
-    
-    # template_workbook.save(f"{file_dir_path}/{catcherr_out_file}")
-    # close template_workbook object
-    #template_workbook.close()
 
     catcherr_logger.info(
         f"Process Complete. The output file can be found here: {file_dir_path}/{catcherr_out_file}"
