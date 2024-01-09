@@ -73,7 +73,7 @@ def dl_ccdi_template() -> None:
         i
         for i in manifest_names
         if latest_release in i
-        and re.search("v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\.xlsx$", i)
+        and re.search(r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\.xlsx$", i)
     ]
     manifest_response = [j for j in manifest_dict_list if j["name"] == manifest[0]]
     manifest_dl_url = requests.get(manifest_response[0]["url"]).json()["download_url"]
@@ -346,7 +346,7 @@ def markdown_template_updater(
         i
         for i in source_file_list
         if re.search(
-            "_Updater_v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)_[0-9]{4}-[0-9]{2}-[0-9]{2}\.xlsx$",
+            r"_Updater_v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)_[0-9]{4}-[0-9]{2}-[0-9]{2}\.xlsx$",
             i,
         )
         and output_folder in i
@@ -355,7 +355,7 @@ def markdown_template_updater(
         j
         for j in source_file_list
         if re.search(
-            "Update_CCDI_manifest_[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$",
+            r"Update_CCDI_manifest_[0-9]{4}-[0-9]{2}-[0-9]{2}\.log$",
             j,
         )
         and output_folder in j
@@ -445,79 +445,79 @@ def markdown_output_task(
     catcherr_log = [
         k
         for k in list_wo_inputs
-        if re.search("CatchERR[0-9]{8}\.txt$", k) and output_folder in k
+        if re.search(r"CatchERR[0-9]{8}\.txt$", k) and output_folder in k
     ]
     catcherr_output = [
         j
         for j in list_wo_inputs
-        if re.search("CatchERR[0-9]{8}\.xlsx$", j) and output_folder in j
+        if re.search(r"CatchERR[0-9]{8}\.xlsx$", j) and output_folder in j
     ]
     validationry_output = [
         l
         for l in list_wo_inputs
-        if re.search("Validate[0-9]{8}\.txt$", l) and output_folder in l
+        if re.search(r"Validate[0-9]{8}\.txt$", l) and output_folder in l
     ]
     sra_log = [
         m
         for m in list_wo_inputs
-        if re.search("CCDI_to_SRA_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", m)
+        if re.search(r"CCDI_to_SRA_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", m)
         and output_folder in m
     ]
     sra_submission = [
         o
         for o in list_wo_inputs
-        if re.search("SRA_submission.xlsx$", o) and output_folder in o
+        if re.search(r"SRA_submission.xlsx$", o) and output_folder in o
     ]
     dbgap_log = [
         n
         for n in list_wo_inputs
-        if re.search("CCDI_to_dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", n)
+        if re.search(r"CCDI_to_dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", n)
         and output_folder in n
     ]
     dbgap_folder = [
         p
         for p in list_wo_inputs
-        if re.search("dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}\/", p)
+        if re.search(r"dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}\/", p)
         and output_folder in p
     ]
     dbgap_folder_str = "\n\n".join([os.path.basename(i) for i in dbgap_folder])
     cds_output = [
         q
         for q in list_wo_inputs
-        if re.search("CDS[0-9]{8}\.xlsx$", q) and output_folder in q
+        if re.search(r"CDS[0-9]{8}\.xlsx$", q) and output_folder in q
     ]
     cds_log = [
         r
         for r in list_wo_inputs
-        if re.search("CCDI_to_CDS_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", r)
+        if re.search(r"CCDI_to_CDS_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", r)
         and output_folder in r
     ]
     index_output = [
         s
         for s in list_wo_inputs
-        if re.search("Index[0-9]{8}\.tsv$", s) and output_folder in s
+        if re.search(r"Index[0-9]{8}\.tsv$", s) and output_folder in s
     ]
     index_log = [
         t
         for t in list_wo_inputs
-        if re.search("CCDI_to_Index_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", t)
+        if re.search(r"CCDI_to_Index_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", t)
         and output_folder in t
     ]
     tabbreaker_folder = [
         u
         for u in list_wo_inputs
-        if re.search("_[0-9]{8}_T[0-9]{6}.tsv$", u) and output_folder in u
+        if re.search(r"_[0-9]{8}_T[0-9]{6}.tsv$", u) and output_folder in u
     ]
     tabbreaker_log = [
         v
         for v in list_wo_inputs
-        if re.search("CCDI_to_TabBreakeRy_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", v)
+        if re.search(r"CCDI_to_TabBreakeRy_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", v)
         and output_folder in v
     ]
     tabbreaker_json = [
         w
         for w in list_wo_inputs
-        if re.search("_TabBreakeRLog_[0-9]{8}_T[0-9]{6}.json$", w)
+        if re.search(r"_TabBreakeRLog_[0-9]{8}_T[0-9]{6}.json$", w)
         and output_folder in w
     ]
 
