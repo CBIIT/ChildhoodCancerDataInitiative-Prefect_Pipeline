@@ -589,11 +589,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     writer=pd.ExcelWriter(
         template_path, mode="a", engine="openpyxl", if_sheet_exists="overlay"
     )
-    
-
-    writer=pd.ExcelWriter(
-        template_path, mode="a", engine="openpyxl", if_sheet_exists="overlay"
-    )
     # for each sheet df
     for sheet_name in meta_dfs.keys():
         sheet_df = meta_dfs[sheet_name]
