@@ -590,8 +590,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     for sheet_name, df in meta_dfs.items():
         # select workbook tab
         ws = template_workbook[sheet_name]
+        # V Not needed as the template is set or atleast more consistently clean.
         # remove any data that might be in the template
-        ws.delete_rows(2, ws.max_row)
+        #ws.delete_rows(2, ws.max_row)
 
         # write the data
         for row in dataframe_to_rows(df, index=False, header=False):
