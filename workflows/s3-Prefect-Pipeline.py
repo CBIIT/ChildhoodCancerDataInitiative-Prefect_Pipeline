@@ -9,6 +9,8 @@ Authors: Sean Burke <sean.burke2@nih.gov>
 from prefect import flow, get_run_logger
 import os
 import sys
+from datetime import date
+
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.s3_ccdi_to_sra import CCDI_to_SRA
@@ -20,8 +22,8 @@ from src.s3_ccdi_to_index import CCDI_to_IndexeRy
 from src.s3_ccdi_to_tabbreakery import tabBreakeRy
 from src.utils import (
     get_time,
+    get_date,
     get_manifest_phs,
-    outputs_ul,
     file_dl,
     view_all_s3_objects,
     markdown_input_task,
@@ -30,6 +32,8 @@ from src.utils import (
     dl_ccdi_template,
     dl_sra_template,
     get_ccdi_latest_release,
+    ccdi_wf_inputs_ul,
+    ccdi_wf_outputs_ul,
 )
 
 
@@ -126,56 +130,147 @@ def runner(
         runner=runner,
     )
 
-    # run CatchERR
-    runner_logger.info("Running CatchERRy flow")
-    (catcherr_out_file, catcherr_out_log) = CatchERRy(input_file, input_template)
-    # run ValidationRy
-    runner_logger.info("Running ValidationRy flow")
-    validation_out_file = ValidationRy(catcherr_out_file, input_template)
-    # run CCDI to SRA
-    runner_logger.info("Running CCDI to SRA submission file flow")
-    (sra_out_file, sra_out_log) = CCDI_to_SRA(
-        manifest=catcherr_out_file, template=input_sra_template
-    )
-    # run CCDI to dbGaP
-    runner_logger.info("Running CCDI to dbGaP submission file flow")
-    (dbgap_output_folder, dbgap_out_log) = CCDI_to_dbGaP(manifest=catcherr_out_file)
-    # run CCDI to CDS
-    runner_logger.info("Runnning CCDI to CDS conversion flow")
-    (cds_output_file, cds_output_log) = CCDI_to_CDS(manifest_path=catcherr_out_file)
-    # run CCDI to index
-    runner_logger.info("Running CCDI to Index files flow")
-    (index_out_file, index_out_log) = CCDI_to_IndexeRy(manifest_path=catcherr_out_file)
-    # run the CCDI to tabbreaker
-    runner_logger.info("Running CCDI to TabBreaker flow")
-    (tabbreaker_output_folder, tabbreaker_out_log) = tabBreakeRy(
-        manifest=catcherr_out_file
-    )
-
-    # upload all outputs to the source bucket
-    runner_logger.info(
-        f"Uploading workflow inputs and outputs to bucket {bucket} under folder {output_folder}"
-    )
-    outputs_ul(
+    # upload wf inputs into designated bucket
+    ccdi_wf_inputs_ul(
         bucket=bucket,
         output_folder=output_folder,
         ccdi_manifest=input_file,
         ccdi_template=input_template,
         sra_template=input_sra_template,
-        catcherr_file=catcherr_out_file,
-        catcherr_log=catcherr_out_log,
-        validation_log=validation_out_file,
-        sra_file=sra_out_file,
-        sra_log=sra_out_log,
-        dbgap_folder=dbgap_output_folder,
-        dbgap_log=dbgap_out_log,
-        cds_file=cds_output_file,
-        cds_log=cds_output_log,
-        index_file=index_out_file,
-        index_log=index_out_log,
-        tabbreaker_folder=tabbreaker_output_folder,
-        tabbreaker_log=tabbreaker_out_log,
     )
+
+    # run CatchERR
+    runner_logger.info("Running CatchERRy flow")
+    try:
+        (catcherr_out_file, catcherr_out_log) = CatchERRy(input_file, input_template)
+    except:
+        catcherr_out_file = None
+        catcherr_out_log = input_file[0:-5] + "_CatchERR" + date.today().strftime("%Y%m%d") + ".txt"
+    # upload CatchERR output and log
+    runner_logger.info(f"Uploading outputs of CatchERR to bucket {bucket}")
+    ccdi_wf_outputs_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        output_path=catcherr_out_file,
+        output_log=catcherr_out_log,
+        wf_step="CatchERR",
+        sub_folder="1_CatchERR_output",
+    )
+
+    if catcherr_out_file is not None:
+        # run ValidationRy
+        runner_logger.info("Running ValidationRy flow")
+        try:
+            validation_out_file = ValidationRy(catcherr_out_file, input_template)
+        except:
+            validation_out_file = None
+        # upload ValidationRy output
+        runner_logger.info(f"Uploading outputs of ValidationRy to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=validation_out_file,
+            output_log=None,
+            wf_step="ValidationRy",
+            sub_folder="2_ValidationRy_output",
+        )
+
+        # run CCDI to SRA
+        runner_logger.info("Running CCDI to SRA submission file flow")
+        try:
+            (sra_out_file, sra_out_log) = CCDI_to_SRA(
+                manifest=catcherr_out_file, template=input_sra_template
+            )
+        except:
+            sra_out_file = None
+            sra_out_log = "CCDI_to_SRA_submission_" + get_date() + ".log"
+        runner_logger.info(f"Uploading outputs of SRA to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=sra_out_file,
+            output_log=sra_out_log,
+            wf_step="CCDI-to-SRA",
+            sub_folder="3_SRA_submisison_output",
+        )
+
+        # run CCDI to dbGaP
+        runner_logger.info("Running CCDI to dbGaP submission file flow")
+        try:
+            (dbgap_output_folder, dbgap_out_log) = CCDI_to_dbGaP(
+                manifest=catcherr_out_file
+            )
+        except:
+            dbgap_output_folder = None
+            dbgap_out_log = "CCDI_to_dbGaP_submission_" + get_date() + ".log"
+        runner_logger.info(f"Uploading outputs of dbGaP to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=dbgap_output_folder,
+            output_log=dbgap_out_log,
+            wf_step="CCDI-to-dbGaP",
+            sub_folder="4_dbGaP_submisison_output",
+        )
+
+        # run CCDI to CDS
+        runner_logger.info("Runnning CCDI to CDS conversion flow")
+        try:
+            (cds_output_file, cds_output_log) = CCDI_to_CDS(
+                manifest_path=catcherr_out_file
+            )
+        except:
+            cds_output_file = None
+            cds_output_log = "CCDI_to_CDS_submission_" + get_date() + ".log"
+        runner_logger.info(f"Uploading outputs of CDS to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=cds_output_file,
+            output_log=cds_output_log,
+            wf_step="CCDI-to-CDS",
+            sub_folder="5_CDS_output",
+        )
+
+        # run CCDI to index
+        runner_logger.info("Running CCDI to Index files flow")
+        try:
+            (index_out_file, index_out_log) = CCDI_to_IndexeRy(
+                manifest_path=catcherr_out_file
+            )
+        except:
+            index_out_file = None
+            index_out_log = "CCDI_to_Index_" + get_date() + ".log"
+        runner_logger.info(f"Uploading outputs of Index to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=index_out_file,
+            output_log=index_out_log,
+            wf_step="CCDI-to-index",
+            sub_folder="6_Index_output",
+        )
+
+        # run CCDI to tabbreaker
+        runner_logger.info("Running CCDI to TabBreaker flow")
+        try:
+            (tabbreaker_output_folder, tabbreaker_out_log) = tabBreakeRy(
+                manifest=catcherr_out_file
+            )
+        except:
+            tabbreaker_output_folder = None
+            tabbreaker_out_log = "CCDI_to_TabBreakeRy_" + get_date() + ".log"
+        runner_logger.info(f"Uploading outputs of TabBreaker to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=tabbreaker_output_folder,
+            output_log=tabbreaker_out_log,
+            wf_step="CCDI-to-TabBreaker",
+            sub_folder="7_TabBreaker_output",
+        )
+    else:
+        pass
 
     source_file_list = view_all_s3_objects(bucket)
     markdown_output_task(

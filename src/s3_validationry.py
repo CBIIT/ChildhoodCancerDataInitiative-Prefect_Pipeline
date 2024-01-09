@@ -1196,7 +1196,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                             file=outf,
                         )
 
-        #just to make sure we don't have too much sitting in memory.
+        # just to make sure we don't have too much sitting in memory.
         del df_bucket
 
         ###############
@@ -1215,7 +1215,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
             print(f"\n\t{node}:\n\t----------", file=outf)
             df = meta_dfs[node]
             # pull out all the linking properties
-            link_props = df.filter(like="_id",axis=1)
+            link_props = df.filter(like="_id", axis=1)
             link_props = link_props.filter(like=".", axis=1).columns.tolist()
 
             # if there are more than one linking property
@@ -1255,8 +1255,10 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                     #     link_values.remove(remove_link_values)
 
                     # test to see if all the values are found
-                    matching_links=[True if id in linking_values else False for id in link_values] 
-                    
+                    matching_links = [
+                        True if id in linking_values else False for id in link_values
+                    ]
+
                     # matching_links = [
                     #     [id in linking_values for id in link_values]
                     #     for _ in range(len(linking_values))
@@ -1265,7 +1267,9 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
                     # if not all values match, determined the mismatched values
                     if not all(matching_links):
-                        mis_match_values = np.array(link_values)[~np.array(matching_links)].tolist()
+                        mis_match_values = np.array(link_values)[
+                            ~np.array(matching_links)
+                        ].tolist()
 
                         # for each mismatched value, throw an error.
                         for mis_match_value in mis_match_values:
@@ -1337,6 +1341,8 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
                             print(f"\t\t{id_value}", file=outf)
 
-    validation_logger.info(f"Process Complete. The output file can be found here: {file_dir_path}")
+    validation_logger.info(
+        f"Process Complete. The output file can be found here: {file_dir_path}"
+    )
 
     return validation_out_file

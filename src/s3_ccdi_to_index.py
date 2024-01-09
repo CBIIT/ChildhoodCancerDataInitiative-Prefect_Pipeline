@@ -97,7 +97,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
             nodes_removed.append(node)
 
     logger.info(f"{nodes_removed} tabs are empty")
-    ccdi_dfs = {key: ccdi_dfs[key] for key in ccdi_dfs if key not in nodes_removed}    
+    ccdi_dfs = {key: ccdi_dfs[key] for key in ccdi_dfs if key not in nodes_removed}
 
     if "cell_line" not in nodes_removed or "pdx" not in nodes_removed:
         logger.warning(
@@ -664,11 +664,11 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
         if not node_path.empty:
             df_join_all = pd.concat([df_join_all, node_path], axis=0)
 
-    #To reduce complexity in the conversion, only lines where the personnel type is PI will be used in the CDS template end file. Otherwise use Co-PI or just pass if nothing else or too complex.
-    if 'PI' in df_join_all['personnel_type'].unique().tolist():
-        df_join_all=df_join_all[df_join_all['personnel_type']=='PI']
-    elif 'Co-PI' in df_join_all['personnel_type'].unique().tolist():
-        df_join_all=df_join_all[df_join_all['personnel_type']=='Co-PI']
+    # To reduce complexity in the conversion, only lines where the personnel type is PI will be used in the CDS template end file. Otherwise use Co-PI or just pass if nothing else or too complex.
+    if "PI" in df_join_all["personnel_type"].unique().tolist():
+        df_join_all = df_join_all[df_join_all["personnel_type"] == "PI"]
+    elif "Co-PI" in df_join_all["personnel_type"].unique().tolist():
+        df_join_all = df_join_all[df_join_all["personnel_type"] == "Co-PI"]
     else:
         pass
 
@@ -676,10 +676,10 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     df_join_all = df_join_all.reset_index(drop=True)
 
     # To try and preserve synonym links this section will join the synonyms if the data exists.
-    if 'synonym' in ccdi_to_cds_nodes:
+    if "synonym" in ccdi_to_cds_nodes:
         synonym_df = ccdi_dfs["synonym"]
         synonym_df.rename(columns=col_remap, inplace=True)
-    
+
         if "participant_id" in synonym_df.columns:
             df_join_all = join_node(df_join_all, synonym_df, "participant_id")
             df_join_all = join_file_node_cleaner(df_join_all)
@@ -689,12 +689,12 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
                 df_join_all["dbGaP_subject_id"] = df_join_all.loc[
                     df_join_all["repository_of_synonym_id"] == "dbGaP", "synonym_id"
                 ]
-    
+
         if "synonym_id" in df_join_all.columns:
             df_join_all = df_join_all.drop("synonym_id", axis=1)
         if "repository_of_synonym_id" in df_join_all.columns:
             df_join_all = df_join_all.drop("repository_of_synonym_id", axis=1)
-    
+
         if "sample_id" in synonym_df.columns:
             df_join_all = join_node(df_join_all, synonym_df, "sample_id")
             df_join_all = join_file_node_cleaner(df_join_all)
@@ -743,9 +743,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     # study information
     simple_add("phs_accession", "phs_accession")
 
-    if (
-        'study_name' in df_join_all.columns
-    ):
+    if "study_name" in df_join_all.columns:
         index_df["study_name"] = df_join_all["study_name"]
         # if there isn't a study_name
     else:
@@ -810,11 +808,13 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     if "diagnosis_icd_o" in df_join_all.columns:
         index_df["primary_diagnosis"] = df_join_all["diagnosis_icd_o"]
     elif "diagnosis_classification" in df_join_all.columns:
-        index_df['primary_diagnosis']=df_join_all['diagnosis_classification']
-        #further diagnosis handling for "see diagnosis_comment" copying
-        if 'diagnosis_comment' in df_join_all:
-            comment_true = index_df['primary_diagnosis'] == "see diagnosis_comment"
-            index_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
+        index_df["primary_diagnosis"] = df_join_all["diagnosis_classification"]
+        # further diagnosis handling for "see diagnosis_comment" copying
+        if "diagnosis_comment" in df_join_all:
+            comment_true = index_df["primary_diagnosis"] == "see diagnosis_comment"
+            index_df.loc[comment_true, "primary_diagnosis"] = df_join_all.loc[
+                comment_true, "diagnosis_comment"
+            ]
     else:
         logger.error("No 'primary_diagnosis' was transfered")
 
