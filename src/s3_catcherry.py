@@ -603,14 +603,13 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # save out template
     catcherr_out_file = f"{output_file}.xlsx"
     copy(src=template_path, dst=catcherr_out_file)
-    writer=pd.ExcelWriter(
+    with pd.ExcelWriter(
         catcherr_out_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
-    )
-    # for each sheet df
-    for sheet_name in meta_dfs.keys():
-        sheet_df = meta_dfs[sheet_name]
-        sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=True)
-    writer.close()
+    ) as writer:
+        # for each sheet df
+        for sheet_name in meta_dfs.keys():
+            sheet_df = meta_dfs[sheet_name]
+            sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=True)
 
     catcherr_logger.info(
         f"Process Complete. The output file can be found here: {file_dir_path}/{catcherr_out_file}"
