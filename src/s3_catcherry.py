@@ -599,6 +599,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 #        for row in dataframe_to_rows(df, index=False, header=False):
 #            ws.append(row)
 
+    catcherr_logger.info("Writing out the CatchERR using pd.ExcelWriter")
     # save out template
     catcherr_out_file = f"{output_file}.xlsx"
     copy(src=template_path, dst=catcherr_out_file)
