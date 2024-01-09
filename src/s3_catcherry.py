@@ -590,20 +590,16 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         template_path, mode="a", engine="openpyxl", if_sheet_exists="overlay"
     )
     # for each sheet df
-    for sheet_name in meta_dfs.keys():
-        sheet_df = meta_dfs[sheet_name]
-        sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=True)
-    writer.close()
-#    for sheet_name, df in meta_dfs.items():
-#        # select workbook tab
-#        ws = template_workbook[sheet_name]
-#        # V Not needed as the template is set or atleast more consistently clean.
-#        # remove any data that might be in the template
-#        #ws.delete_rows(2, ws.max_row)
-#
-#        # write the data
-#        for row in dataframe_to_rows(df, index=False, header=False):
-#            ws.append(row)
+    for sheet_name, df in meta_dfs.items():
+        # select workbook tab
+        ws = template_workbook[sheet_name]
+        # V Not needed as the template is set or atleast more consistently clean.
+        # remove any data that might be in the template
+        ws.delete_rows(2, ws.max_row)
+
+        # write the data
+        for row in dataframe_to_rows(df, index=False, header=False):
+            ws.append(row)
 
     # save out template
     catcherr_out_file = f"{output_file}.xlsx"
