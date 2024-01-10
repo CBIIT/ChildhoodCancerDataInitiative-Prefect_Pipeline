@@ -82,6 +82,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
+      buckets: ["s3://bucket-1", "s3://bucket-2",]
 
     # infra-specific fields
     work_pool:

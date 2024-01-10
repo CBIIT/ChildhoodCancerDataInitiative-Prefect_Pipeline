@@ -5,8 +5,8 @@ from prefect import flow, task
     name="variable inputs test",
     log_prints=True,
 )
-def pass_variable_args(*args):
-    for i in args:
+def pass_variable_args(*buckets):
+    for i in buckets:
         print(i)
     print("Hello World")
 
