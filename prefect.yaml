@@ -18,7 +18,7 @@ pull:
   - prefect.projects.steps.git_clone_project:
       id: clone-step
       repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-      branch: main
+      branch: CCDIDC-749_bucket_reader
   - prefect.projects.steps.pip_install_requirements:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
@@ -72,5 +72,19 @@ deployments:
       name: ccdi-curation
       work_queue_name: null
       job_variables: {}
-  
-  
+
+  - name: bucket-reader
+    version: null
+    tags: []
+    description: null
+    entrypoint: workflows/bucket_reader.py:pass_variable_args
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+
+    # infra-specific fields
+    work_pool:
+      name: fnl-worker
+      work_queue_name: null
+      job_variables: {}
