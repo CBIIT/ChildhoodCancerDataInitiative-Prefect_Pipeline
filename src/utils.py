@@ -12,6 +12,7 @@ import pandas as pd
 import boto3
 import re
 import requests
+import typing
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -194,27 +195,17 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@flow(name="Upload outputs", flow_run_name="upload_workflow_outputs_" + f"{get_time()}")
-def outputs_ul(
+@flow(
+    name="Upload ccdi workflow inputs", flow_run_name="upload_input_" + f"{get_time()}"
+)
+def ccdi_wf_inputs_ul(
     bucket: str,
     output_folder: str,
     ccdi_manifest: str,
     ccdi_template: str,
     sra_template: str,
-    catcherr_file: str,
-    catcherr_log: str,
-    validation_log: str,
-    sra_file: str,
-    sra_log: str,
-    dbgap_folder: str,
-    dbgap_log: str,
-    cds_file: str,
-    cds_log: str,
-    index_file: str,
-    index_log: str,
-    tabbreaker_folder: str,
-    tabbreaker_log: str,
-) -> None:
+):
+    """Upload inputs of CCDI data curation workflow into designated bucket"""
     # upload input files
     file_ul(
         bucket,
@@ -234,85 +225,51 @@ def outputs_ul(
         sub_folder="workflow_inputs",
         newfile=sra_template,
     )
-    # upload CatchERR outputs
-    file_ul(
-        bucket,
-        output_folder=output_folder,
-        sub_folder="1_CatchERR_output",
-        newfile=catcherr_file,
-    )
-    file_ul(
-        bucket,
-        output_folder=output_folder,
-        sub_folder="1_CatchERR_output",
-        newfile=catcherr_log,
-    )
-    # upload ValidationRy output
-    file_ul(
-        bucket,
-        output_folder=output_folder,
-        sub_folder="2_ValidationRy_output",
-        newfile=validation_log,
-    )
-    # upload SRA submission output
-    file_ul(
-        bucket,
-        output_folder=output_folder,
-        sub_folder="3_SRA_submisison_output",
-        newfile=sra_file,
-    )
-    file_ul(
-        bucket,
-        output_folder=output_folder,
-        sub_folder="3_SRA_submisison_output",
-        newfile=sra_log,
-    )
-    # upload dbgap submission output
-    file_ul(
-        bucket,
-        output_folder=output_folder,
-        sub_folder="4_dbGaP_submisison_output",
-        newfile=dbgap_log,
-    )
-    folder_ul(
-        local_folder=dbgap_folder,
-        bucket=bucket,
-        destination=output_folder,
-        sub_folder="4_dbGaP_submisison_output",
-    )
-    # upload cds output
-    file_ul(
-        bucket, output_folder=output_folder, sub_folder="5_CDS_output", newfile=cds_file
-    )
-    file_ul(
-        bucket, output_folder=output_folder, sub_folder="5_CDS_output", newfile=cds_log
-    )
-    # upload index output
-    file_ul(
-        bucket=bucket,
-        output_folder=output_folder,
-        sub_folder="6_Index_output",
-        newfile=index_file,
-    )
-    file_ul(
-        bucket=bucket,
-        output_folder=output_folder,
-        sub_folder="6_Index_output",
-        newfile=index_log,
-    )
-    # upload tabbreaker output
-    folder_ul(
-        local_folder=tabbreaker_folder,
-        bucket=bucket,
-        destination=output_folder,
-        sub_folder="7_TabBreaker_output",
-    )
-    file_ul(
-        bucket=bucket,
-        output_folder=output_folder,
-        sub_folder="7_TabBreaker_output",
-        newfile=tabbreaker_log,
-    )
+
+
+@flow(
+    name="Upload ccdi workflow outputs",
+    flow_run_name="upload_workflow_outputs_{wf_step}",
+)
+def ccdi_wf_outputs_ul(
+    bucket: str,
+    output_folder: str,
+    wf_step: str,
+    sub_folder: str,
+    output_path: typing.Optional[str] = None,
+    output_log: typing.Optional[str] = None,
+):
+    if output_path is not None:
+        if os.path.isdir(output_path):
+            folder_ul(
+                local_folder=output_path,
+                bucket=bucket,
+                destination=output_folder,
+                sub_folder=sub_folder,
+            )
+        elif os.path.isfile(output_path):
+            file_ul(
+                bucket=bucket,
+                output_folder=output_folder,
+                sub_folder=sub_folder,
+                newfile=output_path,
+            )
+        else:
+            pass
+    else:
+        pass
+
+    if output_log is not None:
+        file_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            sub_folder=sub_folder,
+            newfile=output_log,
+        )
+    else:
+        pass
+
+    return None
 
 
 def view_all_s3_objects(source_bucket):
@@ -447,79 +404,97 @@ def markdown_output_task(
         for k in list_wo_inputs
         if re.search(r"CatchERR[0-9]{8}\.txt$", k) and output_folder in k
     ]
+    catcherr_log.append("")
     catcherr_output = [
         j
         for j in list_wo_inputs
         if re.search(r"CatchERR[0-9]{8}\.xlsx$", j) and output_folder in j
     ]
+    catcherr_output.append("")
     validationry_output = [
         l
         for l in list_wo_inputs
         if re.search(r"Validate[0-9]{8}\.txt$", l) and output_folder in l
     ]
+    validationry_output.append("")
     sra_log = [
         m
         for m in list_wo_inputs
         if re.search(r"CCDI_to_SRA_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", m)
         and output_folder in m
     ]
+    sra_log.append("")
     sra_submission = [
         o
         for o in list_wo_inputs
         if re.search(r"SRA_submission.xlsx$", o) and output_folder in o
     ]
+    sra_submission.append("")
     dbgap_log = [
         n
         for n in list_wo_inputs
         if re.search(r"CCDI_to_dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", n)
         and output_folder in n
     ]
+    dbgap_log.append("")
     dbgap_folder = [
         p
         for p in list_wo_inputs
         if re.search(r"dbGaP_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}\/", p)
         and output_folder in p
     ]
+    dbgap_folder.append("")
+    if len(dbgap_folder) == 1:
+        dbgap_folder_len = 0
+    else:
+        dbgap_folder_len = len(dbgap_folder) - 1
     dbgap_folder_str = "\n\n".join([os.path.basename(i) for i in dbgap_folder])
     cds_output = [
         q
         for q in list_wo_inputs
         if re.search(r"CDS[0-9]{8}\.xlsx$", q) and output_folder in q
     ]
+    cds_output.append("")
     cds_log = [
         r
         for r in list_wo_inputs
         if re.search(r"CCDI_to_CDS_submission_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", r)
         and output_folder in r
     ]
+    cds_log.append("")
     index_output = [
         s
         for s in list_wo_inputs
         if re.search(r"Index[0-9]{8}\.tsv$", s) and output_folder in s
     ]
+    index_output.append("")
     index_log = [
         t
         for t in list_wo_inputs
         if re.search(r"CCDI_to_Index_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", t)
         and output_folder in t
     ]
+    index_log.append("")
     tabbreaker_folder = [
         u
         for u in list_wo_inputs
         if re.search(r"_[0-9]{8}_T[0-9]{6}.tsv$", u) and output_folder in u
     ]
+    tabbreaker_folder.append("")
     tabbreaker_log = [
         v
         for v in list_wo_inputs
         if re.search(r"CCDI_to_TabBreakeRy_[0-9]{4}-[0-9]{2}-[0-9]{2}.log$", v)
         and output_folder in v
     ]
+    tabbreaker_log.append("")
     tabbreaker_json = [
         w
         for w in list_wo_inputs
         if re.search(r"_TabBreakeRLog_[0-9]{8}_T[0-9]{6}.json$", w)
         and output_folder in w
     ]
+    tabbreaker_json.append("")
 
     markdown_report = f"""# CCDI Data Curation Workflow Report
     
@@ -537,7 +512,7 @@ def markdown_output_task(
 
 * Output folder
 
-{os.path.dirname(catcherr_output[0])}
+{os.path.dirname(catcherr_log[0])}
 
 * Excel output
 
@@ -565,7 +540,7 @@ def markdown_output_task(
 
 * Output folder
 
-{os.path.dirname(sra_submission[0])}
+{os.path.dirname(sra_log[0])}
 
 * SRA submssion file
 
@@ -581,9 +556,9 @@ def markdown_output_task(
 
 * Output folder
 
-{os.path.dirname(dbgap_folder[0])}
+{os.path.dirname(dbgap_log[0])}
 
-* Output files ({len(dbgap_folder)})
+* Output files ({dbgap_folder_len})
 
 {dbgap_folder_str}
 
@@ -597,7 +572,7 @@ def markdown_output_task(
 
 * Output folder
 
-{os.path.dirname(cds_output[0])}
+{os.path.dirname(cds_log[0])}
 
 * CDS submission file
 
@@ -613,7 +588,7 @@ def markdown_output_task(
 
 * Output folder
 
-{os.path.dirname(index_output[0])}
+{os.path.dirname(index_log[0])}
 
 * Index file
 
