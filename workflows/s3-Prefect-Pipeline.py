@@ -145,7 +145,9 @@ def runner(
         (catcherr_out_file, catcherr_out_log) = CatchERRy(input_file, input_template)
     except:
         catcherr_out_file = None
-        catcherr_out_log = input_file[0:-5] + "_CatchERR" + date.today().strftime("%Y%m%d") + ".txt"
+        catcherr_out_log = (
+            input_file[0:-5] + "_CatchERR" + date.today().strftime("%Y%m%d") + ".txt"
+        )
     # upload CatchERR output and log
     runner_logger.info(f"Uploading outputs of CatchERR to bucket {bucket}")
     ccdi_wf_outputs_ul(
