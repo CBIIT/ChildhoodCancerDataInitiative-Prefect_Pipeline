@@ -38,6 +38,7 @@ h2==4.1.0
 hpack==4.0.0
 httpcore==1.0.2
 httpx==0.25.2
+humanize==4.9.0
 hyperframe==6.0.1
 idna==3.6
 importlib-metadata==6.8.0
