@@ -32,6 +32,28 @@ def extract_obj_info(bucket_object: Dict) -> Dict:
 )
 def read_bucket_content(bucket):
     s3 = set_s3_session_client()
+    s3_paginator = s3.get_paginator("list_objects_v2")
+
+    bucket_df = pd.DataFrame(
+        {"filename": [], "size": [], "file_ext": [], "last_modified_date": []}
+    )
+    pages = s3_paginator.paginate(Bucket=bucket)
+    for page in pages:
+        for obj in page["Contents"]:
+            obj_dict = extract_obj_info(obj)
+            bucket_df = pd.concat([bucket_df, obj_dict], ignore_index=True) 
+    
+    return bucket_df
+
+
+"""
+@flow(
+    name="Read Bucket Content",
+    log_prints=True,
+    flow_run_name="read-bucket-content-" + f"{get_time()}",
+)
+def read_bucket_content(bucket):
+    s3 = set_s3_session_client()
     bucket_df = pd.DataFrame(
         {"filename": [], "size": [], "file_ext": [], "last_modified_date": []}
     )
@@ -40,6 +62,7 @@ def read_bucket_content(bucket):
         obj_dict = extract_obj_info(obj)
         bucket_df = pd.concat([bucket_df, obj_dict], ignore_index=True)
     return bucket_df
+"""
 
 
 def single_bucket_content_str(bucket_df: DataFrame, bucket_name: str) -> str:
