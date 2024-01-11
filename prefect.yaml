@@ -77,12 +77,12 @@ deployments:
     version: null
     tags: []
     description: null
-    entrypoint: workflows/bucket_reader.py:pass_variable_args
+    entrypoint: workflows/bucket_reader.py:reader
     schedule: null
 
     # flow-specific parameters
     parameters:
-      buckets: ["s3://bucket-1", "s3://bucket-2",]
+      buckets: ["my-first-bucket", "my-second-bucket",]
 
     # infra-specific fields
     work_pool:
