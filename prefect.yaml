@@ -75,7 +75,7 @@ deployments:
 
   - name: bucket-reader
     version: null
-    tags: []
+    tags: ["Development"]
     description: null
     entrypoint: workflows/bucket_reader.py:reader
     schedule: null
@@ -83,6 +83,17 @@ deployments:
     # flow-specific parameters
     parameters:
       buckets: ["my-first-bucket", "my-second-bucket",]
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-749_bucket_reader
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
 
     # infra-specific fields
     work_pool:
