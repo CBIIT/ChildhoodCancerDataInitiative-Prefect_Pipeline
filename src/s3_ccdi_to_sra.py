@@ -391,9 +391,7 @@ def reformat_sra_values(sra_df: DataFrame) -> DataFrame:
         )
     ] = "OTHER"
     sra_df["library_strategy (click for details)"][
-        sra_df["library_strategy (click for details)"].str.contains(
-            "Other", na=False
-        )
+        sra_df["library_strategy (click for details)"].str.contains("Other", na=False)
     ] = "OTHER"
     # fix platform value
     sra_df["platform (click for details)"][
@@ -537,6 +535,7 @@ def sra_value_verification(
         "MD5_checksum",
     ]
     required_df = sra_df[required_fields]
+
     cols_missing_info = required_df.columns[required_df.isna().any()].tolist()
     missing_info_index = []
     if len(cols_missing_info) > 0:
@@ -685,7 +684,10 @@ def sra_value_verification(
         i_platform_model_dict = {"platform": i_platform, "model": i_model}
         if i_platform in sra_terms_dict["platform"]["platforms"].to_list():
             if i_model not in sra_terms_dict["model"][i_platform].dropna().to_list():
-                unknown_model.append(i_platform_model_dict)
+                if i_platform_model_dict not in unknown_model:
+                    unknown_model.append(i_platform_model_dict)
+                else:
+                    pass
             else:
                 pass
         else:
@@ -712,6 +714,7 @@ def sra_value_verification(
         )
     else:
         logger.info("Platform verification PASSED")
+
     if len(unknown_model) > 0:
         logger.error(
             f"The following model values are not accepted given the platform value: {*list(set([str(k)for k in unknown_model])),}"
