@@ -390,6 +390,11 @@ def reformat_sra_values(sra_df: DataFrame) -> DataFrame:
             "Archer_Fusion", na=False
         )
     ] = "OTHER"
+    sra_df["library_strategy (click for details)"][
+        sra_df["library_strategy (click for details)"].str.contains(
+            "Other", na=False
+        )
+    ] = "OTHER"
     # fix platform value
     sra_df["platform (click for details)"][
         sra_df["platform (click for details)"].str.contains("Illumina", na=False)
