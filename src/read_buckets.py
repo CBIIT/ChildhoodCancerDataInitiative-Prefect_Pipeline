@@ -107,7 +107,7 @@ def bucket_reader_md(tablestr: str, runner: str) -> None:
 
 """
     create_markdown_artifact(
-        key=f"bucket-reader-report-{runner}",
+        key=f"bucket-reader-report-{runner.lower().replace('_','-').replace(' ','-').replace('.','-')}",
         markdown=markdown_report,
         description=f"Bucker Reader Report for {runner}",
     )
