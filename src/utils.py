@@ -1,4 +1,4 @@
-from prefect import flow, task
+from prefect import flow, task, Task
 from prefect.artifacts import create_markdown_artifact
 from dataclasses import dataclass, field
 from typing import List, TypeVar, Dict, Tuple
@@ -40,7 +40,7 @@ class GithubAPTendpoint:
     ccdi_tags: str = field(default="https://api.github.com/repos/CBIIT/ccdi-model/tags")
 
 
-class CCDI_Tags:
+class CCDI_Tags(Task):
     """Class that fetches available releases, checks if a release exists,
     and download ccdi manifest of a certain release
     """
@@ -88,33 +88,42 @@ class CCDI_Tags:
             manifests_folder_path = os.path.join(
                 tempdirobj.name, os.listdir(tempdirobj.name)[0], "metadata-manifest"
             )
-            manifest_file_list = os.listdir(manifests_folder_path)
-            manifest_tag_match = [
-                i for i in manifest_file_list if i.endswith(tag + ".xlsx")
-            ]
-            if len(manifest_tag_match) == 0:
-                logger.error(
-                    f"No CCDI manifest file ends with v{tag}.xlsx under matadata-manifest folder"
-                )
-                return False
-            elif len(manifest_tag_match) >= 1:
-                if len(manifest_tag_match) > 1:
-                    logger.warning(
-                        f"More than one manifest file ends with v{tag}.xlsx.\n{*manifest_tag_match,}\nThe workflow defaults to first item {manifest_tag_match[0]}"
+            try:
+                manifest_file_list = os.listdir(manifests_folder_path)
+                manifest_tag_match = [
+                    i for i in manifest_file_list if i.endswith(tag + ".xlsx")
+                ]
+                if len(manifest_tag_match) == 0:
+                    logger.error(
+                        f"No CCDI manifest file ends with v{tag}.xlsx under matadata-manifest folder"
                     )
-                else:
-                    pass
-                copy(
-                    os.path.join(manifests_folder_path, manifest_tag_match[0]),
-                    manifest_tag_match[0],
+                    return None
+                elif len(manifest_tag_match) >= 1:
+                    if len(manifest_tag_match) > 1:
+                        logger.warning(
+                            f"More than one manifest file ends with v{tag}.xlsx.\n{*manifest_tag_match,}\nThe workflow defaults to first item {manifest_tag_match[0]}"
+                        )
+                    else:
+                        pass
+                    copy(
+                        os.path.join(manifests_folder_path, manifest_tag_match[0]),
+                        manifest_tag_match[0],
+                    )
+                    return manifest_tag_match[0]
+            except FileNotFoundError as e:
+                logger.error(e)
+                return None
+            except:
+                logger.error(
+                    f"Error in finding manifest .xlsx file, please download the zipfile and investigate. {tag_zipurl}"
                 )
-                return manifest_tag_match[0]
+                return None
         else:
             available_tags = self.get_tags_only()
             logger.error(
                 f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
             )
-            return False
+            return None
 
 
 def get_ccdi_latest_release() -> str:
@@ -148,6 +157,7 @@ def check_ccdi_version(ccdi_manifest: str) -> str:
 
 @task
 def dl_ccdi_template() -> None:
+    """Downloads the latest version of CCDI manifest"""
     manifest_page_response = requests.get(GithubAPTendpoint.ccdi_model_manifest)
     manifest_dict_list = manifest_page_response.json()
     manifest_names = [i["name"] for i in manifest_dict_list]
@@ -379,7 +389,7 @@ def markdown_template_updater(
     template_version: str,
 ):
     """
-    Creates markdown file summary of tempalte updater flow run
+    Creates markdown file summary of template updater flow run
     """
     source_file_list = view_all_s3_objects(source_bucket=source_bucket)
     updated_manifest = [
@@ -815,6 +825,13 @@ class CheckCCDI:
         manifest_version = readme_df.columns[2][1:]
         return manifest_version
 
+    def get_sheetnames(self):
+        warnings.simplefilter(action="ignore", category=UserWarning)
+        ccdi_excel = pd.ExcelFile(self.ccdi_manifest)
+        sheet_names = ccdi_excel.sheet_names
+        ccdi_excel.close()
+        return sheet_names
+
     def get_study_id(self):
         study_df = self.read_sheet(sheetname="study")
         study_id = study_df["study_id"][0]
@@ -840,4 +857,13 @@ class CheckCCDI:
         terms_df.dropna(axis=0, how="all", inplace=True)
         # value to terms dict
         term_dict = terms_df.groupby("Value Set Name")["Term"].apply(list).to_dict()
+        if "diagnosis_classification" in term_dict.keys():
+            diagnosis_terms = term_dict["diagnosis_classification"]
+            diagnosis_terms_clean = [i for i in diagnosis_terms if "[-" not in i]
+            term_dict["diagnosis_classification"] = diagnosis_terms_clean
+            del diagnosis_terms
+            del diagnosis_terms_clean
+        else:
+            pass
+        
         return term_dict
