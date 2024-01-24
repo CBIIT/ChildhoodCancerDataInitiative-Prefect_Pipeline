@@ -865,5 +865,4 @@ class CheckCCDI:
             del diagnosis_terms_clean
         else:
             pass
-        
         return term_dict
