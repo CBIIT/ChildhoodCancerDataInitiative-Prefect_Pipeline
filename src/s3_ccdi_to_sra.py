@@ -786,7 +786,7 @@ def check_value_constancy(library_id: str, unit_df: DataFrame, logger) -> None:
             pass
     if len(cols_to_report) > 0:
         logger.warning(
-            f"Files from library {library_id} have different values for {*cols_to_report,}"
+            f"Files from library {library_id} have different values for {*cols_to_report,}. Because SRA submission requires files from the same libary id to be submitted in a single line, the output uses the first row of the table shown below."
         )
         logger.warning(
             f"Additional info:\n"
