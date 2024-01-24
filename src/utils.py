@@ -349,7 +349,7 @@ def markdown_template_updater(
 
 """
     create_markdown_artifact(
-        key=f"{runner.lower().replace('_','-').replace(' ','-').replace('.','-')}-template-updater-summary",
+        key=f"{runner.lower().replace('_','-').replace(' ','-').replace('.','-').replace('/','-')}-template-updater-summary",
         markdown=markdown_report,
         description=f"{runner} template updater worklfow summary",
     )
@@ -385,7 +385,7 @@ def markdown_input_task(
 {sra_template}
 """
     create_markdown_artifact(
-        key=f"{runner.lower().replace('_','-').replace(' ','-').replace('.','-')}-workflow-input-report",
+        key=f"{runner.lower().replace('_','-').replace(' ','-').replace('.','-').replace('/','-')}-workflow-input-report",
         markdown=markdown_report,
         description=f"{runner} workflow input report",
     )
@@ -616,7 +616,7 @@ def markdown_output_task(
 
 """
     create_markdown_artifact(
-        key=f"{runner.lower().replace('_','-').replace(' ','-').replace('.','-')}-workflow-output-report",
+        key=f"{runner.lower().replace('_','-').replace(' ','-').replace('.','-').replace('/','-')}-workflow-output-report",
         markdown=markdown_report,
         description=f"{runner} workflow output report",
     )
