@@ -46,7 +46,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation
+      name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
   
@@ -69,7 +69,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation
+      name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
 
@@ -97,6 +97,36 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation
+      name: ccdi-curation-ecs
+      work_queue_name: null
+      job_variables: {}
+
+  - name: template-exampler
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/Template_Exampler.py:run_template_exampler
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "your_uniq_id"
+      number_of_entries: 20
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
