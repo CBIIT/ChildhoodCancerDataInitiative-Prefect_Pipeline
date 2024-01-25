@@ -2,7 +2,6 @@ import os
 import sys
 from prefect import flow, task
 from prefect.artifacts import create_markdown_artifact
-from urllib.request import urlopen
 from typing import List, Dict, TypeVar
 import random
 import string
@@ -10,6 +9,7 @@ import uuid
 import pandas as pd
 from shutil import copy
 import re
+from wonderwords import RandomWord
 from src.utils import CheckCCDI, get_time, get_logger, get_date, view_all_s3_objects
 
 
@@ -27,8 +27,9 @@ def columns_to_populate(full_col_list: List) -> List:
 
 
 def get_property_type(dict_df: DataFrame, property_name: str, sheet_name: str) -> str:
-    # filter dict_df based on property name and sheet/node name
-    # there should be only one match
+    """filter dict_df based on property name and sheet/node name
+    there should be only one match
+    """
     property_type = dict_df.loc[
         (dict_df["Node"] == sheet_name) & (dict_df["Property"] == property_name)
     ]["Type"].values[0]
@@ -56,12 +57,15 @@ def populate_exampler(
     entry_count: int,
     logger,
 ) -> None:
+    """
+    Returns a dict that has keys of sheet names and df of populated fake values
+    """
     excelfile = CheckCCDI(ccdi_manifest=file_path)
     sheetnames = excelfile.get_sheetnames()
 
     sheetnames_short = [i for i in sheetnames if i not in skip_sheets]
 
-    # generate a word pool
+    # generate a word generater
     filter_words = fake_data_generater.get_word_lib()
 
     populated_dfs = {}
@@ -80,7 +84,7 @@ def populate_exampler(
             elif m == "file_url_in_cds":
                 j_populated_df[m] = [
                     fake_data_generater.get_fake_file_url_in_cds(
-                        filter_words=filter_words
+                        random_words=filter_words
                     )
                     for k in range(entry_count)
                 ]
@@ -94,7 +98,7 @@ def populate_exampler(
                 )
                 if m_type == "string":
                     j_populated_df[m] = [
-                        fake_data_generater.get_fake_str(filter_words=filter_words)
+                        fake_data_generater.get_fake_str(random_words=filter_words)
                         for k in range(entry_count)
                     ]
                 elif m_type == "integer":
@@ -109,7 +113,7 @@ def populate_exampler(
                 elif m_type == "array[string]":
                     j_populated_df[m] = [
                         fake_data_generater.get_random_string_list(
-                            filter_words=filter_words
+                            random_words=filter_words
                         )
                         for k in range(entry_count)
                     ]
@@ -131,7 +135,7 @@ def populate_exampler(
                     m_enum_list = term_dict[m]
                     j_populated_df[m] = [
                         fake_data_generater.get_random_str_or_enum(
-                            enum_list=m_enum_list, filter_words=filter_words
+                            enum_list=m_enum_list, random_words=filter_words
                         )
                         for k in range(entry_count)
                     ]
@@ -139,7 +143,7 @@ def populate_exampler(
                     m_enum_list = term_dict[m]
                     j_populated_df[m] = [
                         fake_data_generater.get_random_enum_string_list(
-                            enum_list=m_enum_list, filter_words=filter_words
+                            enum_list=m_enum_list, random_words=filter_words
                         )
                         for k in range(entry_count)
                     ]
@@ -207,21 +211,14 @@ def create_linkage(populated_dfs: Dict) -> Dict:
 
 
 class GetFakeValue:
-    word_site = "https://www.mit.edu/~ecprice/wordlist.10000"
-
     def __init__(self) -> None:
         return None
 
     @classmethod
     def get_word_lib(self):
-        """Creates a word library with word length between 6 and 10"""
-        response = urlopen(self.word_site)
-        text = response.read()
-        words = text.splitlines()
-        filter_words = [
-            str(i, encoding="utf-8") for i in words if len(i) > 5 and len(i) < 11
-        ]
-        return filter_words
+        """Creates a word generator with adjective words of length longer than 7"""
+        rand_words = RandomWord()
+        return rand_words
 
     @classmethod
     def get_fake_md5sum(self):
@@ -236,17 +233,18 @@ class GetFakeValue:
         fake_uuid = uuid.uuid4()
         return "dg.4DFC/" + str(fake_uuid)
 
-    def get_fake_str(self, filter_words: List) -> str:
+    def get_fake_str(self, random_words) -> str:
         """Generates a fake string with two words and a number"""
-        word_pool = filter_words
-        two_random_words = random.sample(word_pool, 2)
+        two_random_words = random_words.random_words(
+            amount=2, include_categories=["adjectives"], word_min_length=8
+        )
         one_random_int = random.randrange(0, 100)
         two_random_words.append(str(one_random_int))
         return "_".join(two_random_words)
 
-    def get_fake_file_url_in_cds(self, filter_words: List):
+    def get_fake_file_url_in_cds(self, random_words):
         """Generate fake s3 file url"""
-        fake_str = self.get_fake_str(filter_words=filter_words)
+        fake_str = self.get_fake_str(random_words=random_words)
         fake_url = "s3://" + fake_str
         return fake_url
 
@@ -270,11 +268,11 @@ class GetFakeValue:
             rand_enum = random.choice(enum_list)
             return rand_enum
 
-    def get_random_string_list(self, filter_words: List) -> str:
+    def get_random_string_list(self, random_words) -> str:
         """Generates fake value of array[string] type property"""
         rand_enum_len = random.randint(2, 3)
         string_list = [
-            self.get_fake_str(filter_words=filter_words) for _ in range(rand_enum_len)
+            self.get_fake_str(random_words=random_words) for _ in range(rand_enum_len)
         ]
         return ";".join(string_list)
 
@@ -287,7 +285,7 @@ class GetFakeValue:
             rand_enum_list = random.sample(enum_list, rand_enum_len)
         return ";".join(rand_enum_list)
 
-    def get_random_enum_string_list(self, enum_list: List, filter_words: List) -> str:
+    def get_random_enum_string_list(self, enum_list: List, random_words) -> str:
         """Generates fake value of array[string;enum] type property"""
         if len(enum_list) <= 1:
             rand_enum_list = enum_list
@@ -297,13 +295,13 @@ class GetFakeValue:
 
         add_str = random.randint(0, 1)
         if add_str == 1:
-            rand_str = self.get_fake_str(filter_words=filter_words)
+            rand_str = self.get_fake_str(random_words=random_words)
             rand_enum_list.append(rand_str)
         else:
             pass
         return ";".join(rand_enum_list)
 
-    def get_random_str_or_enum(self, enum_list: List, filter_words: List) -> str:
+    def get_random_str_or_enum(self, enum_list: List, random_words) -> str:
         """Generates fake value of string;enum type of property"""
         str_or_enum = random.randint(0, 1)
         if str_or_enum == 0:
@@ -312,7 +310,7 @@ class GetFakeValue:
             else:
                 return_value = ""
         else:
-            return_value = self.get_fake_str(filter_words=filter_words)
+            return_value = self.get_fake_str(random_words)
         return return_value
 
 

@@ -25,6 +25,8 @@ def run_template_exampler(
 
     output_folder = os.path.join(runner, "template_exampler_outputs_" + get_time())
 
+    # Check if manifest version is provided,
+    # download the specified version if yes, and download the latest version if no
     ccdi_tag = CCDI_Tags()
     if ccdi_manifest_version != "default_to_latest":
         check_tag = ccdi_tag.if_tag_exists(
@@ -111,7 +113,7 @@ if __name__ == "__main__":
     bucket = "my-source-bucket"
     runner = "QL"
     number_of_entries = 20
-    ccdi_manifest_version="1.6.1"
+    ccdi_manifest_version="1.7.2"
     run_template_exampler(
         bucket=bucket, runner=runner, number_of_entries=number_of_entries, ccdi_manifest_version=ccdi_manifest_version
     )

@@ -46,7 +46,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation
+      name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
   
@@ -69,7 +69,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation
+      name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
 
@@ -97,7 +97,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation
+      name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
 
@@ -105,7 +105,7 @@ deployments:
     version: null
     tags: ["Development"]
     description: null
-    entrypoint: workflows/Template_Exampler:run_template_exampler
+    entrypoint: workflows/Template_Exampler.py:run_template_exampler
     schedule: null
 
     # flow-specific parameters
@@ -127,6 +127,6 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation
+      name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
