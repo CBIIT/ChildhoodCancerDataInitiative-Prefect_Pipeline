@@ -103,7 +103,7 @@ deployments:
 
   - name: template-exampler
     version: null
-    tags: ["Development"]
+    tags: ["Production"]
     description: null
     entrypoint: workflows/Template_Exampler.py:run_template_exampler
     schedule: null
@@ -119,7 +119,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-770_template_exampler
+          branch: main
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
