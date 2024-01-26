@@ -13,6 +13,7 @@ from src.read_buckets import (
     count_df,
     single_bucket_content_str,
     read_bucket_content,
+    paginate_parameter,
 )
 
 
@@ -34,6 +35,17 @@ def single_object_noext_return():
         "LastModified": datetime.date(2024, 3, 4),
     }
     return object_dict
+
+
+@pytest.fixture
+def single_object_secext_return():
+    object_dict = {
+        "Key": "my/mock/dir/file_compressed.fastq.gz",
+        "Size": 67340,
+        "LastModified": datetime.date(2024, 2, 3),
+    }
+    return object_dict
+
 
 @pytest.fixture
 def paginate_return_iter():
@@ -90,6 +102,15 @@ def test_extract_obj_info_wo_extension(single_object_noext_return):
     assert modified_date == "2024-03-04"
 
 
+def test_extract_obj_info_w_secondext(single_object_secext_return):
+    object_ext, object_size, modified_date = extract_obj_info(
+        single_object_secext_return
+    )
+    assert object_ext == ".fastq.gz"
+    assert object_size == 67340
+    assert modified_date == "2024-02-03"
+
+
 def test_count_df_add_value():
     mydict = {"mykey": [1]}
     newdict = count_df(mydict=mydict, newitem="mykey")
@@ -125,7 +146,7 @@ def test_read_bucket_content(mock_s3_client, paginate_return_iter):
         # run the flow on a mocked s3 client return
         s3_client = mock_s3_client.return_value
         mock_paginator = s3_client.get_paginator.return_value
-        mock_paginator.paginate.return_value =  paginate_return_iter
+        mock_paginator.paginate.return_value = paginate_return_iter
 
         bucket_size, file_count, file_ext_df, modified_date_df = read_bucket_content(
             bucket="mock_bucket"
@@ -134,3 +155,14 @@ def test_read_bucket_content(mock_s3_client, paginate_return_iter):
         assert file_count == 4
         assert file_ext_df.shape[0] == 3
         assert modified_date_df.shape[0] == 3
+
+@pytest.mark.parametrize(
+        "bucket_path,expected",
+        [("my-bucket",{"Bucket":"my-bucket", "Prefix":""}),
+         ("my-bucket/test_subdir/",{"Bucket":"my-bucket","Prefix":"test_subdir"}),
+         ("my-bucket/subdir/more_subdir/",{"Bucket":"my-bucket", "Prefix":"subdir/more_subdir"})
+        ]
+)
+def test_paginate_parameter(bucket_path, expected):
+    assert paginate_parameter(bucket_path=bucket_path) == expected
+    
