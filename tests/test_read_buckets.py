@@ -13,6 +13,7 @@ from src.read_buckets import (
     count_df,
     single_bucket_content_str,
     read_bucket_content,
+    paginate_parameter,
 )
 
 
@@ -154,3 +155,14 @@ def test_read_bucket_content(mock_s3_client, paginate_return_iter):
         assert file_count == 4
         assert file_ext_df.shape[0] == 3
         assert modified_date_df.shape[0] == 3
+
+@pytest.mark.parametrize(
+        "bucket_path,expected",
+        [("my-bucket",{"Bucket":"my-bucket", "Prefix":""}),
+         ("my-bucket/test_subdir/",{"Bucket":"my-bucket","Prefix":"test_subdir"}),
+         ("my-bucket/subdir/more_subdir/",{"Bucket":"my-bucket", "Prefix":"subdir/more_subdir"})
+        ]
+)
+def test_paginate_parameter(bucket_path, expected):
+    assert paginate_parameter(bucket_path=bucket_path) == expected
+    
