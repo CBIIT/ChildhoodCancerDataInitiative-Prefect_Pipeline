@@ -14,7 +14,11 @@ DataFrame = TypeVar("DataFrame")
 def extract_obj_info(bucket_object: Dict) -> Dict:
     object_name = bucket_object["Key"]
     object_filename = os.path.basename(object_name)
-    object_ext = os.path.splitext(object_filename)[-1]
+    object_basename, object_ext = os.path.splitext(object_filename)
+    if "." in object_basename and object_ext in [".gz", ".zip"]:
+        object_ext = os.path.splitext(object_basename)[-1] + object_ext
+    else:
+        pass
     if (object_ext is None) or (object_ext == ""):
         object_ext = "missing ext"
     object_size = bucket_object["Size"]
@@ -31,6 +35,18 @@ def count_df(mydict: Dict, newitem: str) -> Dict:
     return mydict
 
 
+def paginate_parameter(bucket_path: str) -> tuple:
+    bucket_path = bucket_path.strip("/")
+    if "/" not in bucket_path:
+        bucket_name = bucket_path
+        prefix = ""
+    else:
+        bucket_path_splitted = bucket_path.split("/", 1)
+        bucket_name = bucket_path_splitted[0]
+        prefix = bucket_path_splitted[1]
+    return {"Bucket": bucket_name, "Prefix": prefix}
+
+
 @flow(
     name="Read Bucket Content",
     log_prints=True,
@@ -44,7 +60,8 @@ def read_bucket_content(bucket):
     file_count = 0
     file_ext = {}
     modified_date = {}
-    pages = s3_paginator.paginate(Bucket=bucket)
+    operation_parameters = paginate_parameter(bucket)
+    pages = s3_paginator.paginate(**operation_parameters)
     for page in pages:
         file_count += len(page["Contents"])
         for obj in page["Contents"]:
