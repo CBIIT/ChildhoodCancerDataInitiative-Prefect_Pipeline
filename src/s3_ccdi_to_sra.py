@@ -373,7 +373,9 @@ def sra_template_to_dict(excel_file: ExcelFile) -> Dict:
 
 
 @task
-def reformat_sra_values(sra_df: DataFrame) -> DataFrame:
+def reformat_sra_values(
+    sra_df: DataFrame, sra_term_dict: DataFrame, logger
+) -> DataFrame:
     """Reformat values of SRA dataframe
 
     The value modification based on CCDI model v1.7.0
@@ -383,16 +385,35 @@ def reformat_sra_values(sra_df: DataFrame) -> DataFrame:
     library source, library selection, filetype,
     design_description
     ]
+    Values of library_strategy, library source, and library
+    selection that does not find a match in sra_term_dict
+    will be replaced with OTHER or other value.
     """
     # fix library strategy value
-    sra_df["library_strategy (click for details)"][
-        sra_df["library_strategy (click for details)"].str.contains(
-            "Archer_Fusion", na=False
-        )
-    ] = "OTHER"
+    sra_strategy_acceptables = sra_term_dict["strategy"]["Strategy"].tolist()
     sra_df["library_strategy (click for details)"][
         sra_df["library_strategy (click for details)"].str.contains("Other", na=False)
     ] = "OTHER"
+    # after hardcoding strategy values, check for unacceptable values
+    unknown_library_strategy_index = find_new_value_in_col(
+        sra_df["library_strategy (click for details)"],
+        sra_term_dict["strategy"]["Strategy"],
+    )
+    unknown_library_strategy = sra_df["library_strategy (click for details)"][
+        unknown_library_strategy_index
+    ].tolist()
+    if len(unknown_library_strategy) > 0:
+        logger.error(
+            f"The following library strategy values are not accepted: {*list(set(unknown_library_strategy)),}.\nThe acceptable values for strategy are {*sra_strategy_acceptables,}"
+        )
+        sra_df.iloc[
+            unknown_library_strategy_index,
+            sra_df.columns.get_loc("library_strategy (click for details)"),
+        ] = "OTHER"
+        logger.warning("Any unacceptable library strategy has been converted to OTHER")
+    else:
+        pass
+
     # fix platform value
     sra_df["platform (click for details)"][
         sra_df["platform (click for details)"].str.contains("Illumina", na=False)
@@ -436,6 +457,7 @@ def reformat_sra_values(sra_df: DataFrame) -> DataFrame:
     ] = "paired"
 
     # fix library source value
+    sra_source_acceptables = sra_term_dict["source"]["Source"].tolist()
     sra_df["library_source (click for details)"] = sra_df[
         "library_source (click for details)"
     ].str.upper()
@@ -453,8 +475,28 @@ def reformat_sra_values(sra_df: DataFrame) -> DataFrame:
             "TRANSCRIPTOMIC", na=False
         )
     ] = "TRANSCRIPTOMIC"
+    # after hardcoding source, check for unacceptable values
+    unknown_library_source_index = find_new_value_in_col(
+        sra_df["library_source (click for details)"],
+        sra_term_dict["source"]["Source"],
+    )
+    unknown_library_source = sra_df["library_source (click for details)"][
+        unknown_library_source_index
+    ].tolist()
+    if len(unknown_library_source) > 0:
+        logger.error(
+            f"The following library source values are not accepted: {*list(set(unknown_library_source)),}.\nThe acceptable values for library source are {*sra_source_acceptables,}"
+        )
+        sra_df.iloc[
+            unknown_library_source_index,
+            sra_df.columns.get_loc("library_source (click for details)"),
+        ] = "OTHER"
+        logger.warning("Any unacceptable library source has been converted to OTHER")
+    else:
+        pass
 
     # fix library selection value
+    sra_selection_acceptables = sra_term_dict["selection"]["Selection"].tolist()
     sra_df["library_selection (click for details)"][
         sra_df["library_selection (click for details)"] == "Random"
     ] = "RANDOM"
@@ -486,6 +528,35 @@ def reformat_sra_values(sra_df: DataFrame) -> DataFrame:
     sra_df["library_selection (click for details)"][
         sra_df["library_selection (click for details)"] == "rRNA Depletion"
     ] = "Inverse rRNA"
+    # after harcoding selection, check for unacceptable values
+    unknown_library_selection_index = find_new_value_in_col(
+        sra_df["library_selection (click for details)"],
+        sra_term_dict["selection"]["Selection"],
+    )
+    unknown_library_selection = sra_df["library_selection (click for details)"][
+        unknown_library_selection_index
+    ].tolist()
+    if len(unknown_library_selection) > 0:
+        logger.error(
+            f"The following library selection values are not accepted: {*list(set(unknown_library_selection)),}.\nThe acceptable values for libary selection are {*sra_selection_acceptables,}"
+        )
+        sra_df.iloc[
+            unknown_library_selection_index,
+            sra_df.columns.get_loc("library_selection (click for details)"),
+        ] = "other"
+        logger.warning(
+            "Any unacceptable library selection have been converted to other"
+        )
+    else:
+        pass
+
+    # fix instrument_model
+    # currenlty only converts Unknown to unspecified for ION TORRENT paltform
+    sra_df.loc[
+        (sra_df["platform (click for details)"] == "ION_TORRENT")
+        & (sra_df["instrument_model"] == "Unknown"),
+        "instrument_model",
+    ] = "unspecified"
 
     # fix filetype value and convert all values to lower case
     sra_df["filetype"][sra_df["filetype"].str.contains("tbi", na=False)] = "vcf_index"
@@ -1014,7 +1085,8 @@ def CCDI_to_SRA(
     sra_df = sra_match_manifest_seq(sra_seq_df=sra_df, manifest_seq_df=sequencing_df)
 
     # special fixes (before verifiation)
-    sra_df = reformat_sra_values(sra_df)
+    logger.info("Start reformatting values in the Sequence Data Dataframe")
+    sra_df = reformat_sra_values(sra_df, sra_term_dict=sra_terms_dict, logger=logger)
     logger.info("Reformatting the value in the Seuquence Data Dataframe Done.")
 
     # check sample_ID and library_ID is one to many relationship
