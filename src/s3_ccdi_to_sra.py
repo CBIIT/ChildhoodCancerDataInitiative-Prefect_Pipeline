@@ -386,7 +386,7 @@ def reformat_sra_values(
     design_description
     ]
     Values of library_strategy, library source, and library
-    selection that doesn not find match in sra_term_dict
+    selection that does not find a match in sra_term_dict
     will be replaced with OTHER or other value.
     """
     # fix library strategy value
