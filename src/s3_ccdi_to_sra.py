@@ -848,7 +848,9 @@ def check_value_constancy(library_id: str, unit_df: DataFrame, logger) -> None:
     ]
     cols_to_report = []
     for i in check_fields:
-        i_uniq_list = unit_df[i].dropna().unique().tolist()
+        # i_uniq_list = unit_df[i].dropna().unique().tolist()
+        # include NA in the tested df
+        i_uniq_list = unit_df[i].unique().tolist()
         if len(i_uniq_list) == 0:
             pass
         elif len(i_uniq_list) > 1:
@@ -870,6 +872,36 @@ def check_value_constancy(library_id: str, unit_df: DataFrame, logger) -> None:
         pass
 
 
+def sort_subset_sra_df(subset_df: DataFrame) -> DataFrame:
+    """Sort the subset of the dataframe based on how
+    many information for fields of sequencing metadata
+
+    Fields being checkd:
+    ["active_location_URL", "Bases", "Reads", "coverage", "AvgReadLength"]
+    """
+    fields_check = [
+        "active_location_URL",
+        "Bases",
+        "Reads",
+        "coverage",
+        "AvgReadLength",
+    ]
+    subset_df = subset_df.reset_index(drop=True)
+    subset_meta=[]
+    for i in range(subset_df.shape[0]):
+        i_meta_count = 0
+        for h in fields_check:
+            if pd.isna(subset_df.loc[i,h]) or subset_df.loc[i,h] == "":
+                pass
+            else:
+                i_meta_count += 1
+        subset_meta.append(i_meta_count)
+    subset_df["meta_count"] =  subset_meta
+    subset_df = subset_df.sort_values(by=["meta_count","filetype"], ascending=False).reset_index(drop=True)
+    subset_df = subset_df.drop(["meta_count"], axis=1)
+    return subset_df
+
+
 @task
 def spread_sra_df(sra_df: DataFrame, logger) -> DataFrame:
     """Returns a spreaded dataframe if multiple files
@@ -886,7 +918,7 @@ def spread_sra_df(sra_df: DataFrame, logger) -> DataFrame:
         # subset a df for that library_ID and reset index starting from 0
         i_df = sra_df[sra_df["library_ID"] == i]
         # reoder i_df based on filetype, prioritize bam and cram files
-        i_df = i_df.sort_values(by=["filetype"], ascending=False).reset_index(drop=True)
+        i_df = sort_subset_sra_df(i_df)
         # get the line of i_df
         i_df_row = i_df.shape[0]
         if i_df_row == 1:
