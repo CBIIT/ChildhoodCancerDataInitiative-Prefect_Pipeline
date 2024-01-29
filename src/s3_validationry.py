@@ -28,7 +28,6 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
     # Determine file ext and abs path
     file_name = os.path.splitext(os.path.split(os.path.relpath(file_path))[1])[0]
-    file_ext = os.path.splitext(file_path)[1]
     file_dir_path = os.path.split(os.path.abspath(file_path))[0]
 
     if file_dir_path == "":
@@ -705,240 +704,6 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
-        # Library to sample check
-        #
-        ##############
-
-        print(
-            "\n\nThis submission and subsequent submission files derived from this template assume that a library_id is associated to only one sample_id.\nIf there are any unexpected values, they will be reported below:\n----------",
-            file=outf,
-        )
-
-        # for each node
-        for node in dict_nodes:
-            df = meta_dfs[node]
-            WARN_FLAG = True
-            # if it has a 'library_id' column (at this time, only sequencing_file, but could be more in the future)
-            if "library_id" in df.columns.tolist():
-                print(f"\n\t{node}:\n\t----------", file=outf)
-                # pull out the unique list of library_ids
-                library_ids = df["library_id"].unique().tolist()
-
-                # for each library_id
-                for library_id in library_ids:
-                    # pull all unique sample_id values that are associated with the library_id
-                    sample_ids = (
-                        df[df["library_id"] == library_id]["sample.sample_id"]
-                        .unique()
-                        .tolist()
-                    )
-
-                    # if there are more than one sample_id associated with the library_id, flag it
-                    if len(sample_ids) > 1:
-                        if WARN_FLAG:
-                            WARN_FLAG = False
-                            print(
-                                f"\tERROR: A library_id in the {node} node, has multiple samples associated with it.\n\tThis setup will cause issues when submitting to SRA.:",
-                                file=outf,
-                            )
-
-                        print(
-                            f"\t\tlibrary_id: {library_id} -----> sample.sample_id: {sample_ids}",
-                            file=outf,
-                        )
-
-        ##############
-        #
-        # Require certain properties based on the file type.
-        #
-        ##############
-        print(
-            "\nThis submission and subsequent submission files derived from the sequencing file template assume that FASTQ, BAM and CRAM files are single sample files, and contain all associated metadata for submission.\nIf there are any unexpected values, they will be reported below for their respective file type:\n----------",
-            file=outf,
-        )
-
-        file_types = ["fasta", "fastq", "bam", "cram"]
-
-        # for each node
-        for node in dict_nodes:
-            df = meta_dfs[node]
-
-            # if it has a 'library_id' and 'library_selection' column (at this time, only sequencing_file, but could be more in the future)
-            if ("library_id" in df.columns.tolist()) & (
-                "library_selection" in df.columns.tolist()
-            ):
-                print(f"\n\t{node}:\n\t----------", file=outf)
-                # for each file type
-                for file_type in file_types:
-                    # create a data frame filtered for that type
-                    file_type_df = df[df["file_type"].str.lower() == file_type]
-                    # if this creates an actual data frame
-                    if len(file_type_df) > 0:
-                        print(f"\t{file_type}", file=outf)
-
-                        # check if a single sample file has multiple samples associated with it
-                        WARN_FLAG = True
-                        unique_files = file_type_df["file_url_in_cds"].unique().tolist()
-                        file_names = file_type_df["file_name"].unique().tolist()
-
-                        ##########################################
-                        # for each unique file, based on the file_url, check samples
-                        ##########################################
-                        for unique_file in unique_files:
-                            # Define a regular expression pattern to match column names for [node].[node]_id columns
-                            pattern = r".*\..*_id$"
-                            # Use the filter method to select columns matching the pattern
-                            selected_columns = df.filter(regex=pattern).columns.tolist()
-                            # find the samples associated with the file
-                            file_samples = (
-                                file_type_df[
-                                    file_type_df["file_url_in_cds"] == unique_file
-                                ][selected_columns]
-                                .stack()
-                                .unique()
-                                .tolist()
-                            )
-
-                            # if these files are attached to samples
-                            if len(file_samples) > 0:
-                                # if there are arrays of linking samples, break them appart
-                                for file_sample in file_samples:
-                                    if ";" in file_sample:
-                                        split_samples = file_sample.split(";")
-                                        file_samples.remove(file_sample)
-                                        for split_sample in split_samples:
-                                            file_samples.append(split_sample)
-
-                                # if there are more than one sample associated with the file
-                                if len(file_samples) > 1:
-                                    if WARN_FLAG:
-                                        WARN_FLAG = False
-                                        print(
-                                            f"\t\tWARNING: A single sample file has multiple samples associated with it. These could cause errors in SRA submissions if this is unexpected:",
-                                            file=outf,
-                                        )
-
-                                    print(
-                                        f"\t\t\tunique file url: {unique_file} \n\t\t\t\tsample_id: {file_samples}",
-                                        file=outf,
-                                    )
-
-                        ##########################################
-                        # file_type specific checks
-                        ##########################################
-
-                        # sequence file check
-                        if file_type == "fastq" or file_type == "fasta":
-                            WARN_FLAG = True
-
-                            # expected values
-                            for file_name in file_names:
-                                # check the expected metrics
-                                bases_check = file_type_df[
-                                    file_type_df["file_name"] == file_name
-                                ]["number_of_bp"].values[0]
-                                avg_length_check = file_type_df[
-                                    file_type_df["file_name"] == file_name
-                                ]["avg_read_length"].values[0]
-                                reads_check = file_type_df[
-                                    file_type_df["file_name"] == file_name
-                                ]["number_of_reads"].values[0]
-
-                                SRA_checks = [
-                                    bases_check,
-                                    avg_length_check,
-                                    reads_check,
-                                ]
-
-                                # see if any are NA for each file
-                                na_check = any(
-                                    x is None or (isinstance(x, float) and np.isnan(x))
-                                    for x in SRA_checks
-                                )
-
-                                # if they are, throw warning
-                                if na_check:
-                                    if WARN_FLAG:
-                                        WARN_FLAG = False
-                                        print(
-                                            f"\t\tWARNING: A single sample file is missing at least one expected value (bases, avg_read_length, number_of_reads) that is associated with an SRA submission:",
-                                            file=outf,
-                                        )
-
-                                    print(f"\t\t\t{file_name}", file=outf)
-
-                            WARN_FLAG = True
-                            # unexpected values
-                            for file_name in file_names:
-                                # check the unexpected metrics
-                                coverage_check = file_type_df[
-                                    file_type_df["file_name"] == file_name
-                                ]["coverage"].values[0]
-
-                                SRA_checks = [coverage_check]
-
-                                # see if any are NA for each file
-                                na_check = any(
-                                    x is None or (isinstance(x, float) and np.isnan(x))
-                                    for x in SRA_checks
-                                )
-
-                                # if they are, throw warning
-                                if not na_check:
-                                    if WARN_FLAG:
-                                        WARN_FLAG = False
-                                        print(
-                                            f"\t\tWARNING: A single sample file is not expected to have a coverage value:",
-                                            file=outf,
-                                        )
-
-                                    print(f"\t\t\t{file_name}", file=outf)
-
-                        # alignment file check
-                        if file_type == "cram" or file_type == "bam":
-                            WARN_FLAG = True
-
-                            for file_name in file_names:
-                                # check the expected metrics
-                                bases_check = file_type_df[
-                                    file_type_df["file_name"] == file_name
-                                ]["number_of_bp"].values[0]
-                                avg_length_check = file_type_df[
-                                    file_type_df["file_name"] == file_name
-                                ]["avg_read_length"].values[0]
-                                coverage_check = file_type_df[
-                                    file_type_df["file_name"] == file_name
-                                ]["coverage"].values[0]
-                                reads_check = file_type_df[
-                                    file_type_df["file_name"] == file_name
-                                ]["number_of_reads"].values[0]
-
-                                SRA_checks = [
-                                    bases_check,
-                                    avg_length_check,
-                                    coverage_check,
-                                    reads_check,
-                                ]
-
-                                # see if any are NA for each file
-                                na_check = any(
-                                    x is None or (isinstance(x, float) and np.isnan(x))
-                                    for x in SRA_checks
-                                )
-
-                                # if they are, throw warning
-                                if na_check:
-                                    if WARN_FLAG:
-                                        WARN_FLAG = False
-                                        print(
-                                            f"\t\tWARNING: A single sample file is missing at least one expected value (bases, avg_read_length, coverage, number_of_reads) that is associated with an SRA submission:",
-                                            file=outf,
-                                        )
-
-                                    print(f"\t\t\t{file_name}", file=outf)
-
-        ##############
-        #
         # File checks, both metdata and buckets.
         #
         ##############
@@ -947,6 +712,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
             "Node"
         ].values.tolist()
         file_node_props = [
+            "file_id",
             "file_name",
             "file_size",
             "md5sum",
@@ -961,8 +727,10 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
             if node in file_nodes:
                 df = meta_dfs[node]
                 df["node"] = node
+                df["file_id"] = df[f"{node}_id"]
                 df_file = pd.concat([df_file, df[file_node_props]], ignore_index=True)
 
+        file_ids = df_file["file_id"].dropna().unique().tolist()
         file_names = df_file["file_name"].dropna().unique().tolist()
         file_urls = df_file["file_url_in_cds"].dropna().unique().tolist()
 
@@ -1052,7 +820,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                 if WARN_FLAG:
                     WARN_FLAG = False
                     print(
-                        f"\t\tWARNING: There are files that are associated with more than one url:",
+                        f"\t\tWARNING: There are files that are associated with more than one url.\n\t\tWARNING: If they only have one associated file_id, then they are acceptable.",
                         file=outf,
                     )
 
@@ -1060,6 +828,17 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                     "node"
                 ].values[0]
                 print(f"\t\t\t{current_node} : {file_name} --> {file_url}", file=outf)
+
+                # check to see if file_id is unique even if file name isn't
+                multi_urls = []
+                for per_file_url in file_url:
+                    multi_urls = df_file[df_file["file_url_in_cds"] == per_file_url][
+                        "file_name"
+                    ].tolist()
+                    print(
+                        f"\t\t\t\t{per_file_url}\n\t\t\t\t\tfile_ids:\n\t\t\t\t\t\t{multi_urls}",
+                        file=outf,
+                    )
 
         ##########################################
         # AWS bucket file checks
