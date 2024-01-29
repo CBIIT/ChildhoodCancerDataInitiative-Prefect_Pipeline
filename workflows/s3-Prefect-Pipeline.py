@@ -25,6 +25,7 @@ from src.utils import (
     get_date,
     get_manifest_phs,
     file_dl,
+    folder_dl,
     view_all_s3_objects,
     markdown_input_task,
     markdown_output_task,
@@ -48,6 +49,8 @@ def runner(
     runner: str,
     template_path: str = "path_to/ccdi_template/in/s3/bucket",
     sra_template_path: str = "path_to/sra_template/in/s3/bucket",
+    sra_previous_file_path: str = "path_to/sra_previous_file/in/s3/bucket",
+    dbgap_previous_dir_path: str = "path_to/dbgap_previous_dir/in/s3/bucket",
 ):
     # create a logging object
     runner_logger = get_run_logger()
@@ -121,12 +124,45 @@ def runner(
 
     input_file = os.path.basename(file_path)
 
+    # download sra previous submission or dbgap previous submission if provided
+    if sra_previous_file_path != "path_to/sra_previous_file/in/s3/bucket":
+        try:
+            file_dl(bucket=bucket, filename=sra_previous_file_path)
+            sra_previous_submission = os.path.basename(sra_previous_file_path)
+            runner_logger.info(
+                f"Downloaded SRA previous submission from s3 bucket: {sra_previous_file_path}"
+            )
+        except:
+            runner_logger.info(
+                "Problem occurred downloading SRA previous submission from s3 bucket. The workflow will continue without SRA previous submission input"
+            )
+            sra_previous_submission = None
+    else:
+        sra_previous_submission = None
+
+    if dbgap_previous_dir_path != "path_to/dbgap_previous_dir/in/s3/bucket":
+        try:
+            folder_dl(bucket=bucket, remote_folder=dbgap_previous_dir_path)
+            dbgap_pre_sub_dir = dbgap_previous_dir_path
+            runner_logger.info(
+                f"Downloaded dbGaP previous submission folder from s3 bucket: {dbgap_pre_sub_dir}"
+            )
+        except:
+            runner_logger.info(
+                "Problem occurred downloading dbGaP previous submission folder from s3 bucket. The workflow will continue without dbGaP previous submission input"
+            )
+            dbgap_pre_sub_dir = None
+    else:
+        dbgap_pre_sub_dir = None
+
     # create an artifact markdown of workflow inputs
     markdown_input_task(
         source_bucket=bucket,
         manifest=input_file,
         template=input_template,
         sra_template=input_sra_template,
+        sra_pre_sub=sra_previous_submission,
+        dbgap_pre_sub=dbgap_pre_sub_dir,
         runner=runner,
     )
 
@@ -181,7 +217,9 @@ def runner(
         runner_logger.info("Running CCDI to SRA submission file flow")
         try:
             (sra_out_file, sra_out_log) = CCDI_to_SRA(
-                manifest=catcherr_out_file, template=input_sra_template
+                manifest=catcherr_out_file,
+                template=input_sra_template,
+                pre_submission=sra_previous_submission,
             )
         except:
             sra_out_file = None
@@ -200,7 +238,7 @@ def runner(
         runner_logger.info("Running CCDI to dbGaP submission file flow")
         try:
             (dbgap_output_folder, dbgap_out_log) = CCDI_to_dbGaP(
-                manifest=catcherr_out_file
+                manifest=catcherr_out_file, pre_submission=dbgap_pre_sub_dir
             )
         except:
             dbgap_output_folder = None
@@ -287,9 +325,11 @@ if __name__ == "__main__":
     bucket = "my-source-bucket"
 
     # test new version manifest and latest version template
-    file_path = "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
+    file_path = "inputs/test_problem_file.xlsx"
     # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
+    # sra_previous_file_path = "QL/phs002790_outputs_20240129_T113511/3_SRA_submisison_output/phs002790_SRA_submission.xlsx"
+    # dbgap_previous_path = "QL/phs002790_outputs_20240129_T113511/4_dbGaP_submisison_output/phs002790_dbGaP_submission_2024-01-29"
 
     runner(
         bucket=bucket,
@@ -297,4 +337,6 @@ if __name__ == "__main__":
         # template_path=template_path,
         # sra_template_path=sra_template_path,
         runner="QL",
+        # sra_previous_file_path=sra_previous_file_path,
+        # dbgap_previous_dir_path=dbgap_previous_path,
     )

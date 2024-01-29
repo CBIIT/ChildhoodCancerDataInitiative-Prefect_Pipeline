@@ -288,6 +288,24 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
+@task
+def folder_dl(bucket: str, remote_folder: str) -> None:
+    """Downloads a remote direcotry folder from s3
+    bucket to local. it generates a folder that follows the
+    structure in s3 bucket
+
+    for instance, if the remote_folder is "uniq_id/test_folder",
+    the local directory will create path of "uniq_id/test_folder"
+    """
+    s3_resouce = set_s3_resource()
+    bucket_obj = s3_resouce.Bucket(bucket)
+    for obj in bucket_obj.objects.filter(Prefix=remote_folder):
+        if not os.path.exists(os.path.dirname(obj.key)):
+            os.makedirs(os.path.dirname(obj.key))
+        bucket_obj.download_file(obj.key, obj.key)
+    return None
+
+
 @flow(
     name="Upload ccdi workflow inputs", flow_run_name="upload_input_" + f"{get_time()}"
 )
@@ -450,11 +468,20 @@ def markdown_template_updater(
 
 @task
 def markdown_input_task(
-    source_bucket: str, runner: str, manifest: str, template: str, sra_template: str
+    source_bucket: str, runner: str, manifest: str, template: str, sra_template: str, sra_pre_sub: str, dbgap_pre_sub: str
 ):
     """Creates markdown artifacts of workflow inputs using Prefect
     create_markdown_artifact()
     """
+    if sra_pre_sub is None:
+        sra_pre_file = ""
+    else:
+        sra_pre_file = sra_pre_sub
+
+    if dbgap_pre_sub is None:
+        dbgap_pre_folder = ""
+    else:
+        dbgap_pre_folder = dbgap_pre_sub
     markdown_report = f"""# CCDI Data Curation Workflow Input Report
 
 ### Source Bucket
@@ -476,6 +503,15 @@ def markdown_input_task(
 ### SRA template
 
 {sra_template}
+
+### SRA previous submission if applicable
+
+{sra_pre_file}
+
+### dbGaP previous submission if applicable
+
+{dbgap_pre_folder}
+
 """
     create_markdown_artifact(
         key=f"{runner.lower().replace('_','-').replace(' ','-').replace('.','-').replace('/','-')}-workflow-input-report",
