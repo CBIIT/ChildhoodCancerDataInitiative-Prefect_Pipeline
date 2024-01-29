@@ -28,7 +28,6 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
     # Determine file ext and abs path
     file_name = os.path.splitext(os.path.split(os.path.relpath(file_path))[1])[0]
-    #file_ext = os.path.splitext(file_path)[1]
     file_dir_path = os.path.split(os.path.abspath(file_path))[0]
 
     if file_dir_path == "":
@@ -703,7 +702,6 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
                             print("\n", file=outf)
 
-
         ##############
         #
         # File checks, both metdata and buckets.
@@ -729,7 +727,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
             if node in file_nodes:
                 df = meta_dfs[node]
                 df["node"] = node
-                df["file_id"]=df[f'{node}_id']
+                df["file_id"] = df[f"{node}_id"]
                 df_file = pd.concat([df_file, df[file_node_props]], ignore_index=True)
 
         file_ids = df_file["file_id"].dropna().unique().tolist()
@@ -822,19 +820,25 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                 if WARN_FLAG:
                     WARN_FLAG = False
                     print(
-                        f"\t\tWARNING: There are files that are associated with more than one url.\n\t\tWARNING: If they only have one associated file_id, then they are acceptable.",file=outf,)
+                        f"\t\tWARNING: There are files that are associated with more than one url.\n\t\tWARNING: If they only have one associated file_id, then they are acceptable.",
+                        file=outf,
+                    )
 
                 current_node = df_file[df_file["file_name"] == file_name][
                     "node"
                 ].values[0]
                 print(f"\t\t\t{current_node} : {file_name} --> {file_url}", file=outf)
 
-                #check to see if file_id is unique even if file name isn't
-                multi_urls=[]
+                # check to see if file_id is unique even if file name isn't
+                multi_urls = []
                 for per_file_url in file_url:
-                    multi_urls = df_file[df_file["file_url_in_cds"] == per_file_url]["file_name"].tolist()
-                    print(f"\t\t\t\t{per_file_url}\n\t\t\t\t\tfile_ids:\n\t\t\t\t\t\t{multi_urls}", file=outf)
-
+                    multi_urls = df_file[df_file["file_url_in_cds"] == per_file_url][
+                        "file_name"
+                    ].tolist()
+                    print(
+                        f"\t\t\t\t{per_file_url}\n\t\t\t\t\tfile_ids:\n\t\t\t\t\t\t{multi_urls}",
+                        file=outf,
+                    )
 
         ##########################################
         # AWS bucket file checks
