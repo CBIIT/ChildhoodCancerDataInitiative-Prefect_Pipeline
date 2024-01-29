@@ -1071,7 +1071,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                 multi_urls=[]
                 for per_file_url in file_url:
                     multi_urls = df_file[df_file["file_url_in_cds"] == per_file_url]["file_name"].tolist()
-                    print(f"\t\t\t\t{per_file_url} file_ids:\n\t\t\t\t\t {multi_urls}", file=outf)
+                    print(f"\t\t\t\t{per_file_url}\n\t\t\t\t\tfile_ids:\n\t\t\t\t\t\t{multi_urls}", file=outf)
 
 
         ##########################################
