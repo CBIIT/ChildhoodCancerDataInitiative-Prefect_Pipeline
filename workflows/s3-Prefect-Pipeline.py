@@ -126,6 +126,9 @@ def runner(
 
     # download sra previous submission or dbgap previous submission if provided
     if sra_previous_file_path != "path_to/sra_previous_file/in/s3/bucket":
+        runner_logger.info(
+            f"User provided SRA previous submission file at s3 bucket {sra_previous_file_path}"
+        )
         try:
             file_dl(bucket=bucket, filename=sra_previous_file_path)
             sra_previous_submission = os.path.basename(sra_previous_file_path)
@@ -138,9 +141,13 @@ def runner(
             )
             sra_previous_submission = None
     else:
+        runner_logger.info("No SRA previous submission file provided")
         sra_previous_submission = None
 
     if dbgap_previous_dir_path != "path_to/dbgap_previous_dir/in/s3/bucket":
+        runner_logger.info(
+            f"User provided dbGaP previous submission folder at s3 bucket {dbgap_previous_dir_path}"
+        )
         try:
             folder_dl(bucket=bucket, remote_folder=dbgap_previous_dir_path)
             dbgap_pre_sub_dir = dbgap_previous_dir_path
@@ -153,6 +160,7 @@ def runner(
             )
             dbgap_pre_sub_dir = None
     else:
+        runner_logger.info("No dbGaP previous submission folder provided")
         dbgap_pre_sub_dir = None
 
     # create an artifact markdown of workflow inputs
