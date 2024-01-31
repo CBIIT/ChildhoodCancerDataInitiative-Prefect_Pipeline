@@ -255,7 +255,6 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         )
         output_file_path = "(EMPTY)_"+ output_file + ".xlsx"
         logger_file_name = "CCDI_to_CDS_submission_" + get_date() + ".log"
-        #copy(src=template, dst=sra_output_path)
         return (output_file_path, logger_file_name)
     else:
         pass
