@@ -8,7 +8,6 @@ from src.utils import get_logger, get_date, get_time
 from prefect import flow
 import requests
 import re
-#from shutil import copy
 
 
 @flow(
