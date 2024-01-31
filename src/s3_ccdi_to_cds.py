@@ -250,7 +250,6 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # Check df_file to see if there are any rows
     # abort the script if no rows are left.
-    
     if df_file.shape[0] == 0:
         logger.error(
             "No files were found in the submission template. Please add files or ignore the output from this step."
@@ -261,7 +260,6 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         return (output_file_path, logger_file_name)
     else:
         pass
-
 
 
     # START WITH FILES INSTEAD AND WALK EACH LINE BACK?
