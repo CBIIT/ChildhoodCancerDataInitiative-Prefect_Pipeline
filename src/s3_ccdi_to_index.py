@@ -210,6 +210,19 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     # drop off all the extra properties that are not required for transformation into a flattened data frame
     df_file = drop_type_id_others(df_file)
 
+    # Check df_file to see if there are any rows
+    # abort the script if no rows are left.
+    if df_file.shape[0] == 0:
+        logger.error(
+            "No files were found in the submission template. Please add files or ignore the output from this step."
+        )
+        output_file_path = "(EMPTY)_"+ output_file + ".xlsx"
+        logger_file_name = "CCDI_to_Index_" + get_date() + ".log"
+        return (output_file_path, logger_file_name)
+    else:
+        pass
+
+
     # START WITH FILES INSTEAD AND WALK EACH LINE BACK?
     # Based on each connection possible for the files walk it back manually by starting with the most likely connections
 
