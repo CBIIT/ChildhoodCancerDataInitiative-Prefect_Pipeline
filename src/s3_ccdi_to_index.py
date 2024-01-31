@@ -217,7 +217,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
             "No files were found in the submission template. Please add files or ignore the output from this step."
         )
         output_file_path = "(EMPTY)_"+ output_file + ".xlsx"
-        logger_file_name = "CCDI_to_Index_submission_" + get_date() + ".log"
+        logger_file_name = "CCDI_to_Index_" + get_date() + ".log"
         #copy(src=template, dst=sra_output_path)
         return (output_file_path, logger_file_name)
     else:
