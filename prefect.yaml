@@ -18,7 +18,7 @@ pull:
   - prefect.projects.steps.git_clone_project:
       id: clone-step
       repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-      branch: CCDIDC-747
+      branch: main
   - prefect.projects.steps.pip_install_requirements:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
@@ -27,9 +27,9 @@ pull:
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
   # base metadata
-  - name: ccdi-data-curation-empty-file
+  - name: ccdi-data-curation
     version: null
-    tags: [TESTING]
+    tags: []
     description: null
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
