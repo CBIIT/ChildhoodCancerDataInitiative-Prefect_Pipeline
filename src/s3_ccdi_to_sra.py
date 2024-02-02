@@ -372,6 +372,22 @@ def sra_template_to_dict(excel_file: ExcelFile) -> Dict:
     return sra_dict
 
 
+def replace_invalid_character_sra(mystr: str) -> str:
+    invalid_char_replace = {
+        "<": "[less_than]",
+        ">": "[greater_than]",
+        ":": "[colon]",
+        "/": "[foward_slash]",
+        "\\": "[backslash]",
+        "|": "[pipe]",
+        "?": "[question_mark]",
+        "*": "[asterisk]",
+    }
+    for char, newchar in invalid_char_replace.items():
+        mystr = mystr.replace(char, newchar)
+    return mystr
+
+
 @task
 def reformat_sra_values(
     sra_df: DataFrame, sra_term_dict: DataFrame, logger
@@ -389,6 +405,7 @@ def reformat_sra_values(
     selection that does not find a match in sra_term_dict
     will be replaced with OTHER or other value.
     """
+
     # fix library strategy value
     sra_strategy_acceptables = sra_term_dict["strategy"]["Strategy"].tolist()
     sra_df["library_strategy (click for details)"][
@@ -567,6 +584,29 @@ def reformat_sra_values(
     sra_df["design_description"] = fix_design_description(
         sra_df["design_description"].tolist()
     )
+
+    # fix reference_genome_assembly and alignment_software which are required for alignment filetypes
+    # cram or bam
+    # change missing value into "Not Reported"
+    sra_df.loc[
+        sra_df["filetype"].isin(["cram", "bam", "crai", "bai"])
+        & pd.isna(sra_df["reference_genome_assembly (or accession)"]),
+        "reference_genome_assembly (or accession)",
+    ] = "Not Reported"
+    sra_df.loc[
+        sra_df["filetype"].isin(["cram", "bam", "crai", "bai"])
+        & pd.isna(sra_df["alignment_software"]),
+        "alignment_software",
+    ] = "Not Reported"
+
+    # fix invalid character in alignment_software column.
+    # in case the column contains invalid characters, such as url
+    alignment_software_list = sra_df["alignment_software"].tolist()
+    alignment_software_clean = [
+        replace_invalid_character_sra(i) for i in alignment_software_list
+    ]
+    sra_df["alignment_software"] = alignment_software_clean
+
     return sra_df
 
 
@@ -887,17 +927,19 @@ def sort_subset_sra_df(subset_df: DataFrame) -> DataFrame:
         "AvgReadLength",
     ]
     subset_df = subset_df.reset_index(drop=True)
-    subset_meta=[]
+    subset_meta = []
     for i in range(subset_df.shape[0]):
         i_meta_count = 0
         for h in fields_check:
-            if pd.isna(subset_df.loc[i,h]) or subset_df.loc[i,h] == "":
+            if pd.isna(subset_df.loc[i, h]) or subset_df.loc[i, h] == "":
                 pass
             else:
                 i_meta_count += 1
         subset_meta.append(i_meta_count)
-    subset_df["meta_count"] =  subset_meta
-    subset_df = subset_df.sort_values(by=["meta_count","filetype"], ascending=False).reset_index(drop=True)
+    subset_df["meta_count"] = subset_meta
+    subset_df = subset_df.sort_values(
+        by=["meta_count", "filetype"], ascending=False
+    ).reset_index(drop=True)
     subset_df = subset_df.drop(["meta_count"], axis=1)
     return subset_df
 
@@ -1015,6 +1057,83 @@ def validate_sample_library(sra_df: DataFrame, logger) -> List:
     else:
         logger.info("sample_ID and library_ID checking PASSED ")
     return index_rows_to_remove
+
+
+def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
+    """This function alters df only if multiple library IDs
+    associated with same sample ID that sharing the same library
+    strategy, source, and selection. For instance
+
+    sample_ID library_ID library_strategy library_source library_selection
+    sample_1  library_a       WXS            GENOMIC          PolyA
+    sample_1  library_b       WXS            GENOMIC          PolyA
+
+    We will convert it into
+    sample_ID library_ID           library_strategy library_source library_selection
+    sample_1  library_a;library_b       WXS            GENOMIC          PolyA
+    sample_1  library_a;library_b       WXS            GENOMIC          PolyA
+
+    So in the spread_sra_df step, files from the library_a;library_b will be
+    transformed into a single line
+    """
+    sra_df["check_sample_id"] = (
+        sra_df["sample_ID"]
+        + sra_df["library_strategy (click for details)"]
+        + sra_df["library_source (click for details)"]
+        + sra_df["library_selection (click for details)"]
+    )
+    unique_concate = sra_df["check_sample_id"].unique().tolist()
+    for i in unique_concate:
+        i_df = sra_df[sra_df["check_sample_id"] == i]
+        # concatenate library_ID if more than one unqiue library_ID are found
+        if len(i_df["library_ID"].unique().tolist()) > 1:
+            i_library_id = ";".join(i_df["library_ID"].unique().tolist())
+            sra_df.loc[sra_df["check_sample_id"] == i, "library_ID"] = i_library_id
+        else:
+            pass
+        # concatenate design description if more than one unqiue description are found
+        if len(i_df["design_description"].unique().tolist()) > 1:
+            i_design_description = ";".join(
+                i_df["design_description"].unique().tolist()
+            )
+            sra_df.loc[
+                sra_df["check_sample_id"] == i, "design_description"
+            ] = i_design_description
+        else:
+            pass
+        # concatenate reference genome assembly if more than one unique value were found
+        if len(i_df["reference_genome_assembly (or accession)"].unique().tolist()) > 1:
+            i_reference_genome = ";".join(
+                i_df["reference_genome_assembly (or accession)"].unique().tolist()
+            )
+            sra_df.loc[
+                sra_df["check_sample_id"] == i,
+                "reference_genome_assembly (or accession)",
+            ] = i_reference_genome
+        else:
+            pass
+        # concatenate alignment_software if more than one unique value were found
+        if len(i_df["alignment_software"].unique().tolist()) > 1:
+            i_alignment_software = ";".join(
+                i_df["alignment_software"].unique().tolist()
+            )
+            sra_df.loc[
+                sra_df["check_sample_id"] == i,
+                "alignment_software",
+            ] = i_alignment_software
+        else:
+            pass
+        # concatenate active location url if more than one unique value were found
+        if len(i_df["active_location_URL"].unique().tolist()) > 1:
+            i_active_url = ";".join(i_df["active_location_URL"].unique().tolist())
+            sra_df.loc[
+                sra_df["check_sample_id"] == i,
+                "active_location_URL",
+            ] = i_active_url
+        else:
+            pass
+    sra_df = sra_df.drop(columns=["check_sample_id"])
+    return sra_df
 
 
 @flow(
@@ -1181,6 +1300,10 @@ def CCDI_to_SRA(
             pass
     else:
         pass
+
+    # concatenate library_IDs if multiple librarys that are associated with the
+    # the same sample_ID and sharing SAME library source, selection, and strategy
+    sra_df = concatenate_library_id(sra_df=sra_df)
 
     # data frame manipulation, spread sra_df if multiple sequencing files are
     # sharing same library_ID. This function won't result multiple row sharing
