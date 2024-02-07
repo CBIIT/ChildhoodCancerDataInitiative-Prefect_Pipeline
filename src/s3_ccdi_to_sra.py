@@ -1089,15 +1089,15 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
     for i in unique_concate:
         i_df = sra_df[sra_df["check_sample_id"] == i]
         # concatenate library_ID if more than one unqiue library_ID are found
-        if len(i_df["library_ID"].unique().tolist()) > 1:
-            i_library_id = ";".join(i_df["library_ID"].unique().tolist())
+        if len(i_df["library_ID"].dropna().unique().tolist()) > 1:
+            i_library_id = ";".join(i_df["library_ID"].dropna().unique().tolist())
             sra_df.loc[sra_df["check_sample_id"] == i, "library_ID"] = i_library_id
         else:
             pass
         # concatenate design description if more than one unqiue description are found
-        if len(i_df["design_description"].unique().tolist()) > 1:
+        if len(i_df["design_description"].dropna().unique().tolist()) > 1:
             i_design_description = ";".join(
-                i_df["design_description"].unique().tolist()
+                i_df["design_description"].dropna().unique().tolist()
             )
             sra_df.loc[
                 sra_df["check_sample_id"] == i, "design_description"
@@ -1105,9 +1105,9 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
         else:
             pass
         # concatenate reference genome assembly if more than one unique value were found
-        if len(i_df["reference_genome_assembly (or accession)"].unique().tolist()) > 1:
+        if len(i_df["reference_genome_assembly (or accession)"].dropna().unique().tolist()) > 1:
             i_reference_genome = ";".join(
-                i_df["reference_genome_assembly (or accession)"].unique().tolist()
+                i_df["reference_genome_assembly (or accession)"].dropna().unique().tolist()
             )
             sra_df.loc[
                 sra_df["check_sample_id"] == i,
@@ -1116,9 +1116,9 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
         else:
             pass
         # concatenate alignment_software if more than one unique value were found
-        if len(i_df["alignment_software"].unique().tolist()) > 1:
+        if len(i_df["alignment_software"].dropna().unique().tolist()) > 1:
             i_alignment_software = ";".join(
-                i_df["alignment_software"].unique().tolist()
+                i_df["alignment_software"].dropna().unique().tolist()
             )
             sra_df.loc[
                 sra_df["check_sample_id"] == i,
@@ -1127,8 +1127,8 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
         else:
             pass
         # concatenate active location url if more than one unique value were found
-        if len(i_df["active_location_URL"].unique().tolist()) > 1:
-            i_active_url = ";".join(i_df["active_location_URL"].unique().tolist())
+        if len(i_df["active_location_URL"].dropna().unique().tolist()) > 1:
+            i_active_url = ";".join(i_df["active_location_URL"].dropna().unique().tolist())
             sra_df.loc[
                 sra_df["check_sample_id"] == i,
                 "active_location_URL",
