@@ -383,8 +383,11 @@ def replace_invalid_character_sra(mystr: str) -> str:
         "?": "[question_mark]",
         "*": "[asterisk]",
     }
-    for char, newchar in invalid_char_replace.items():
-        mystr = mystr.replace(char, newchar)
+    if pd.isna(mystr):
+        pass
+    else:
+        for char, newchar in invalid_char_replace.items():
+            mystr = mystr.replace(char, newchar)
     return mystr
 
 
