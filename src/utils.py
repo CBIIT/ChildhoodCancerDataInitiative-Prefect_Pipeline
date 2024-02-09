@@ -141,6 +141,13 @@ def dl_sra_template() -> None:
     f.write(r.content)
     return sra_filename
 
+@task
+def dl_file_from_url(file_endpoint: str) -> str:
+    filename = os.path.basename(file_endpoint)
+    r = requests.get(file_endpoint)
+    f = open(filename, "wb")
+    f.write(r.content)
+    return filename
 
 @task
 def check_ccdi_version(ccdi_manifest: str) -> str:
