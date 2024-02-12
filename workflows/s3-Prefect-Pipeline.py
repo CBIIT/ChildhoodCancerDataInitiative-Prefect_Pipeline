@@ -35,6 +35,7 @@ from src.utils import (
     get_ccdi_latest_release,
     ccdi_wf_inputs_ul,
     ccdi_wf_outputs_ul,
+    identify_data_curation_log_file
 )
 
 
@@ -231,7 +232,10 @@ def runner(
             )
         except:
             sra_out_file = None
-            sra_out_log = "CCDI_to_SRA_submission_" + get_date() + ".log"
+            sra_out_log = identify_data_curation_log_file(
+                start_str="CCDI_to_SRA_submission_"
+            )
+            # sra_out_log = "CCDI_to_SRA_submission_" + get_date() + ".log"
         runner_logger.info(f"Uploading outputs of SRA to bucket {bucket}")
         ccdi_wf_outputs_ul(
             bucket=bucket,
@@ -250,7 +254,10 @@ def runner(
             )
         except:
             dbgap_output_folder = None
-            dbgap_out_log = "CCDI_to_dbGaP_submission_" + get_date() + ".log"
+            dbgap_out_log = identify_data_curation_log_file(
+                start_str="CCDI_to_dbGaP_submission_"
+            )
+            # dbgap_out_log = "CCDI_to_dbGaP_submission_" + get_date() + ".log"
         runner_logger.info(f"Uploading outputs of dbGaP to bucket {bucket}")
         ccdi_wf_outputs_ul(
             bucket=bucket,
@@ -269,7 +276,10 @@ def runner(
             )
         except:
             cds_output_file = None
-            cds_output_log = "CCDI_to_CDS_submission_" + get_date() + ".log"
+            cds_output_log = identify_data_curation_log_file(
+                start_str="CCDI_to_CDS_submission_"
+            )
+            # cds_output_log = "CCDI_to_CDS_submission_" + get_date() + ".log"
         runner_logger.info(f"Uploading outputs of CDS to bucket {bucket}")
         ccdi_wf_outputs_ul(
             bucket=bucket,
@@ -288,7 +298,8 @@ def runner(
             )
         except:
             index_out_file = None
-            index_out_log = "CCDI_to_Index_" + get_date() + ".log"
+            index_out_log = identify_data_curation_log_file(start_str="CCDI_to_Index_")
+            # index_out_log = "CCDI_to_Index_" + get_date() + ".log"
         runner_logger.info(f"Uploading outputs of Index to bucket {bucket}")
         ccdi_wf_outputs_ul(
             bucket=bucket,
@@ -307,7 +318,10 @@ def runner(
             )
         except:
             tabbreaker_output_folder = None
-            tabbreaker_out_log = "CCDI_to_TabBreakeRy_" + get_date() + ".log"
+            tabbreaker_out_log = identify_data_curation_log_file(
+                start_str="CCDI_to_TabBreakeRy_"
+            )
+            # tabbreaker_out_log = "CCDI_to_TabBreakeRy_" + get_date() + ".log"
         runner_logger.info(f"Uploading outputs of TabBreaker to bucket {bucket}")
         ccdi_wf_outputs_ul(
             bucket=bucket,
@@ -333,7 +347,9 @@ if __name__ == "__main__":
     bucket = "my-source-bucket"
 
     # test new version manifest and latest version template
-    file_path = "inputs/test_problem_file.xlsx"
+    file_path = (
+        "inputs/Qiong_test_Feb09_CCDI_Submission_Template_v1.7.2_20Exampler.xlsx"
+    )
     # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
     # sra_previous_file_path = "QL/phs002790_outputs_20240129_T113511/3_SRA_submisison_output/phs002790_SRA_submission.xlsx"

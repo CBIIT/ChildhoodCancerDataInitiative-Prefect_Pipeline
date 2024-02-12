@@ -396,6 +396,16 @@ def view_all_s3_objects(source_bucket):
     return source_file_list
 
 
+def identify_data_curation_log_file(start_str: str):
+    file_list =  os.listdir("./")
+    log_file_regx = start_str + r"[0-9]{4}-[0-9]{2}-[0-9]{2}"
+    log_file_found = [i for i in file_list if re.search(log_file_regx, i) and ".log" in i]
+    if len(log_file_found) == 0:
+        return None
+    else:
+        return log_file_found[0]
+
+
 @task
 def markdown_template_updater(
     source_bucket: str,
