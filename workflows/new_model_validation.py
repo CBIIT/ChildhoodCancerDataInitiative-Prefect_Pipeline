@@ -16,7 +16,7 @@ from requests.exceptions import ConnectionError
     log_prints=True,
     flow_run_name="new-model-validation-{runner}-" + f"{get_time()}",
 )
-def new_model_validation(
+def validate_new_model(
     bucket: str,
     runner: str,
     release_title: str
@@ -110,4 +110,4 @@ if __name__=="__main__":
     runner="QL"
     release_title="my new model release"
 
-    new_model_validation(bucket=bucket, runner=runner, release_title=release_title)
+    validate_new_model(bucket=bucket, runner=runner, release_title=release_title)
