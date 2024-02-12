@@ -14,7 +14,7 @@ from requests.exceptions import ConnectionError
     log_prints=True,
     flow_run_name="model-to-submission-{runner}-" + f"{get_time()}",
 )
-def create_submission_manifest(bucket: str, runner: str, release_title: str) -> None:
+def create_submission_manifest(bucket: str, runner: str, release_title: str) -> str:
     # create a logging object
     runner_logger = get_run_logger()
 
@@ -128,6 +128,7 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     runner_logger.info(
         f"Uploaded submiassion manifest file {output_wb_name} to the bucket {bucket} at {output_folder}"
     )
+    return output_folder
 
 
 if __name__ == "__main__":
