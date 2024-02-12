@@ -1,12 +1,11 @@
 import os
 import sys
 
-
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.create_submission import ModelEndpoint, GetCCDIModel, ManifestSheet
 from src.utils import file_ul, get_time, dl_file_from_url
-from prefect import flow, task, get_run_logger
+from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
 
 
@@ -68,7 +67,14 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
         return None
 
     # get dictionary dataframe which can be used for Dictionary sheet
-    dict_df = getmodel.get_prop_dict_df()
+    try:
+        dict_df = getmodel.get_prop_dict_df()
+    except KeyError as e:
+        runner_logger.error(e)
+        return None
+    except:
+        runner_logger.error("Failed to generate the dataframe for Dictionay sheet")
+        return None
 
     # get terms dataframe which can be used for terms and values set sheet
     terms_df = getmodel.get_terms_df()
@@ -117,13 +123,18 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
-        newfile=output_wb_name
+        newfile=output_wb_name,
     )
-    runner_logger.info(f"Uploaded submiassion manifest file {output_wb_name} to the bucket {bucket} at {output_folder}")
+    runner_logger.info(
+        f"Uploaded submiassion manifest file {output_wb_name} to the bucket {bucket} at {output_folder}"
+    )
 
-if __name__=="__main__":
-    bucket="my-source-bucket"
-    runner="QL"
+
+if __name__ == "__main__":
+    bucket = "my-source-bucket"
+    runner = "QL"
     release_title = "test release title"
 
-    create_submission_manifest(bucket=bucket, runner=runner,release_title=release_title)
+    create_submission_manifest(
+        bucket=bucket, runner=runner, release_title=release_title
+    )

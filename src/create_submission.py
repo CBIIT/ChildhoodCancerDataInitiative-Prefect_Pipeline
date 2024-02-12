@@ -1,8 +1,6 @@
 import yaml
-import os
 from dataclasses import dataclass
 from pathlib import Path
-import openpyxl
 import numpy as np
 import requests
 import json
@@ -13,8 +11,7 @@ from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl import Workbook
 from typing import Any, TypeVar, Dict, List
-from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
-from prefect import Task, task
+from openpyxl.styles import PatternFill, Font
 
 
 DataFrame = TypeVar("DataFrame")
@@ -391,11 +388,6 @@ class GetCCDIModel():
                     ],
                     ignore_index=True,
                 )
-                """
-                terms_value_df = pd.concat(
-                    [terms_value_df, prop_term_df], ignore_index=True
-                )
-                """
                 term_value_dict[prop] = prop_term_df
             else:
                 pass
