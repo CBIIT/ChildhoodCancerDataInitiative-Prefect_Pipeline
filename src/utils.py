@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from typing import List, TypeVar, Dict, Tuple
 import warnings
 import os
+import sys
 from datetime import date
 from datetime import datetime
 from pytz import timezone
@@ -778,16 +779,16 @@ def get_logger(loggername: str, log_level: str):
     logger = logging.getLogger(loggername)
     logger.setLevel(log_levels[log_level])
 
-    # set the stream handler
-    # stream_handler = logging.StreamHandler(sys.stdout)
-    # stream_handler.setFormatter(ColorLogFormatter())
-    # stream_handler.setLevel(log_levels["info"])
-
     # set the file handler
     file_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
     file_handler = logging.FileHandler(logger_filename, mode="w")
     file_handler.setFormatter(logging.Formatter(file_FORMAT, "%H:%M:%S"))
     file_handler.setLevel(log_levels["info"])
+
+    # set the stream handler
+    # stream_handler = logging.StreamHandler(sys.stdout)
+    # stream_handler.setFormatter(logging.Formatter(file_FORMAT, "%H:%M:%S"))
+    # stream_handler.setLevel(log_levels["info"])
 
     # logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
@@ -912,3 +913,10 @@ class CheckCCDI:
         else:
             pass
         return term_dict
+
+    def find_file_nodes(self):
+        dict_df =  self.get_dict_df()
+        file_node_list = dict_df[dict_df["Property"] == "file_url_in_cds"]["Node"].tolist()
+        # remove any duplcates
+        file_node_list_uniq = list(set(file_node_list))
+        return file_node_list_uniq
