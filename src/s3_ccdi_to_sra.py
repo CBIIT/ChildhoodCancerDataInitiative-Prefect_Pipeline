@@ -6,6 +6,8 @@ import sys
 import os
 from shutil import copy
 from src.utils import get_date, get_time, get_logger, ccdi_manifest_to_dict
+import openpyxl
+from openpyxl.styles import Font
 
 
 ExcelReader = TypeVar("ExcelReader")
@@ -35,6 +37,40 @@ def get_study_name(workbook_dict: Dict) -> str:
     """
     df_study_name = workbook_dict["study"]["study_name"].tolist()[0]
     return df_study_name
+
+
+def get_study_contact(workbook_dict: Dict, logger) -> tuple:
+    """Returns contact information for SRA front page
+    """
+    study_phs = get_acl(workbook_dict)
+    df_study_personnel = workbook_dict["study_personnel"]
+    df_study_personnel.drop(columns=["type"], axis=1, inplace=True)
+    df_study_personnel.dropna(axis=0, how="all", inplace=True)
+    if df_study_personnel.shape[0] == 0:
+        logger.error("The sheet of study_personnel is EMPTY. Please find the study contact source elsewhere")
+        return study_phs, "", ""
+    else:
+        if "PI" in df_study_personnel["personnel_type"].unique():
+            # use first entry of PI
+            pi_df = df_study_personnel[df_study_personnel["personnel_type"]=="PI"].reset_index(drop=True)
+            contact_name = pi_df.loc[0, "personnel_name"]
+            contact_email = pi_df.loc[0, "email_address"]
+        elif "Co-PI" in df_study_personnel["personnel_type"].unique():
+            # use fist entry of Co-PI
+            copi_df = df_study_personnel[
+                df_study_personnel["personnel_type"] == "Co-PI"
+            ].reset_index(drop=True)
+            contact_name = copi_df.loc[0, "personnel_name"]
+            contact_email = copi_df.loc[0, "email_address"]      
+        else:
+            # If no PI or Co-PI found, use the first entry
+            contact_name = df_study_personnel.loc[0, "personnel_name"]
+            contact_email = df_study_personnel.loc[0, "email_address"]
+        if pd.isna(contact_email) or contact_email == "":
+            logger.error(f"email_address of contact {contact_name} is MISSING")
+        else:
+            pass
+        return study_phs, contact_name, contact_email
 
 
 def concat_seq_single_seq(seq_df: DataFrame, single_df: DataFrame) -> DataFrame:
@@ -1332,6 +1368,21 @@ def CCDI_to_SRA(
         sra_output_path, mode="a", engine="openpyxl", if_sheet_exists="overlay"
     ) as writer:
         sra_df.to_excel(writer, sheet_name="Sequence_Data", index=False, header=True)
+
+    # fill the contact info in "Instructions and Contact Info" sheet
+
     logger.info(f"Script finished!")
+    sra_wb = openpyxl.load_workbook(sra_output_path)
+    sra_contact_ws =  sra_wb['Instructions and Contact Info']
+    phs_accession, contact_name, contact_email =  get_study_contact(workbook_dict=workbook_dict, logger=logger)
+    sra_contact_ws['B1'] = phs_accession
+    sra_contact_ws["B2"] = contact_name
+    sra_contact_ws["B3"] = contact_email
+    # style the cell format
+    style_font = Font(name="Calibri", size=11, bold=False)
+    sra_contact_ws["B1"].font = style_font
+    sra_contact_ws["B2"].font = style_font
+    sra_contact_ws["B3"].font = style_font
+    sra_wb.save(sra_output_path)
 
     return (sra_output_path, logger_filename)
