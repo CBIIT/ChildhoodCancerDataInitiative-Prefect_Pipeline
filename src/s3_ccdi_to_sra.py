@@ -44,8 +44,6 @@ def get_study_contact(workbook_dict: Dict, logger) -> tuple:
     """
     study_phs = get_acl(workbook_dict)
     df_study_personnel = workbook_dict["study_personnel"]
-    df_study_personnel.drop(columns=["type"], axis=1, inplace=True)
-    df_study_personnel.dropna(axis=0, how="all", inplace=True)
     if df_study_personnel.shape[0] == 0:
         logger.error("The sheet of study_personnel is EMPTY. Please find the study contact source elsewhere")
         return study_phs, "", ""

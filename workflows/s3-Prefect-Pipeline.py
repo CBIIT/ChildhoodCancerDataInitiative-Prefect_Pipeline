@@ -205,6 +205,7 @@ def runner(
     )
 
     if catcherr_out_file is not None:
+        """
         # run ValidationRy
         runner_logger.info("Running ValidationRy flow")
         try:
@@ -221,7 +222,8 @@ def runner(
             wf_step="ValidationRy",
             sub_folder="2_ValidationRy_output",
         )
-
+        """
+        
         # run CCDI to SRA
         runner_logger.info("Running CCDI to SRA submission file flow")
         try:
@@ -246,6 +248,9 @@ def runner(
             sub_folder="3_SRA_submisison_output",
         )
 
+        
+
+        """
         # run CCDI to dbGaP
         runner_logger.info("Running CCDI to dbGaP submission file flow")
         try:
@@ -331,6 +336,8 @@ def runner(
             wf_step="CCDI-to-TabBreaker",
             sub_folder="7_TabBreaker_output",
         )
+        """
+
     else:
         pass
 
@@ -347,9 +354,7 @@ if __name__ == "__main__":
     bucket = "my-source-bucket"
 
     # test new version manifest and latest version template
-    file_path = (
-        "inputs/Qiong_test_Feb09_CCDI_Submission_Template_v1.7.2_20Exampler.xlsx"
-    )
+    file_path = "s3://my-source-bucket/inputs/CCDI_MetaMerge20240129_CatchERR20240129_CatchERR20240129.xlsx"
     # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
     # sra_previous_file_path = "QL/phs002790_outputs_20240129_T113511/3_SRA_submisison_output/phs002790_SRA_submission.xlsx"
