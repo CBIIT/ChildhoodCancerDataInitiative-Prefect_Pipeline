@@ -24,6 +24,7 @@ def parse_file_url_in_cds(url: str) -> tuple:
 
 def calculate_object_md5sum(s3_client, url) -> str:
     """Calculate md5sum of an object using url
+    This function was modified based on https://github.com/jmwarfe/s3-md5sum/blob/main/s3-md5sum.py
 
     Example of url:
     s3://example-bucket/folder1/folder2/test_file.fastq.gz
@@ -251,4 +252,3 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     logger.info(f"File mover summary table was created {mover_summary_table}")
     del transfer_df
     return output_name, logger_filename, mover_summary_table
-
