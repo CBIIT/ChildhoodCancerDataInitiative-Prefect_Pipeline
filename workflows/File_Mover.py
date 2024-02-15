@@ -53,6 +53,7 @@ def file_mover(bucket: str, file_path: str, runner: str, dest_bucket_path: str) 
     runner_logger.info(
         f"Uploaded {summary_table} to bucket {bucket} folder {output_folder}"
     )
+    runner_logger.info(f"File mover workflow has FINISHED! Modified CCDI manifest, summary table tsv, and workflow log can be found at {output_folder}")
 
 
 if __name__=="__main__":
