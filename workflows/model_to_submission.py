@@ -63,6 +63,7 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     # get model version
     try:
         model_version = getmodel.get_version()
+        runner_logger.info(f"Model version captured in ccdi-model.yml is {model_version}")
     except KeyError as e:
         runner_logger.error("Can't find Version information in ccdi-model.yml")
         return None
