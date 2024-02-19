@@ -37,7 +37,7 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
         runner_logger.error(e)
         return None
     except Exception as er:
-        runner_logger.error("Downloading ccdi-model-props.yml failed unexpectedly")
+        runner_logger.error(f"Downloading ccdi-model-props.yml failed unexpectedly {er}")
         traceback.print_exc()
         return None
 

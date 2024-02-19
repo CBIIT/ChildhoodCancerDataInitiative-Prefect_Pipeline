@@ -41,10 +41,11 @@ def validate_new_model(
         return None
 
     # Get the filename of template file
-    if new_model_folder is not None:
+    if isinstance(new_model_folder, str):
         filelist = os.listdir("./")
         manifest_file = [i for i in filelist if "CCDI_Submission_Template" in i][0]
     else:
+        runner_logger.error("Failed to create a submission template using model files")
         return None
 
     
