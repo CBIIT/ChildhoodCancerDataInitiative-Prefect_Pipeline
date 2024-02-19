@@ -296,7 +296,7 @@ def updateManifest(manifest: str, template: str, template_version: str) -> Tuple
         for key in populated_template_dict.keys():
             logger.info(f"Writing sheet {key} to output")
             key_df = populated_template_dict[key]
-            key_df.to_excel(writer, sheet_name=key, index=False, header=True)
+            key_df.to_excel(writer, sheet_name=key, index=False, header=False, startrow=1)
     logger.info(f"Updated manifest can be found at: {output_name}")
 
     return output_name, output_logger
