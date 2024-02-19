@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -40,9 +41,13 @@ def validate_new_model(
         return None
 
     # Get the filename of template file
-    filelist = os.listdir("./")
-    manifest_file = [i for i in filelist if "CCDI_Submission_Template" in i][0]
+    if new_model_folder is not None:
+        filelist = os.listdir("./")
+        manifest_file = [i for i in filelist if "CCDI_Submission_Template" in i][0]
+    else:
+        return None
 
+    
     # generate template exampler file with 30 entries
     template_exampler_output_folder = os.path.join(
         new_model_validation_out, "template_exampler_outputs_" + currenttime

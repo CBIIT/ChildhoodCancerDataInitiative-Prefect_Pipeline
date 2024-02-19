@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -24,8 +25,9 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     except ConnectionError as e:
         runner_logger.error(e)
         return None
-    except:
-        runner_logger.error("Downloading ccdi-model.yml failed unexpectedly")
+    except Exception as er:
+        runner_logger.error(f"Downloading ccdi-model.yml failed unexpectedly. {er}")
+        traceback.print_exc()
         return None
 
     # download ccdi-model-props.yml
@@ -34,8 +36,9 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     except ConnectionError as e:
         runner_logger.error(e)
         return None
-    except:
+    except Exception as er:
         runner_logger.error("Downloading ccdi-model-props.yml failed unexpectedly")
+        traceback.print_exc()
         return None
 
     # download terms.yaml
@@ -44,8 +47,9 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     except ConnectionError as e:
         runner_logger.error(e)
         return None
-    except:
-        runner_logger.error("downloading terms.yaml failed unexpectedly")
+    except Exception as er:
+        runner_logger.error(f"downloading terms.yaml failed unexpectedly. {er}")
+        traceback.print_exc()
         return None
 
     runner_logger.info(
@@ -62,8 +66,9 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     except KeyError as e:
         runner_logger.error("Can't find Version information in ccdi-model.yml")
         return None
-    except:
-        runner_logger.error("Failed to collect Version from ccdi-model.yml")
+    except Exception as er:
+        runner_logger.error(f"Failed to collect Version from ccdi-model.yml. {er}")
+        traceback.print_exc()
         return None
 
     # get dictionary dataframe which can be used for Dictionary sheet
@@ -72,8 +77,9 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     except KeyError as e:
         runner_logger.error(e)
         return None
-    except:
-        runner_logger.error("Failed to generate the dataframe for Dictionay sheet")
+    except Exception as er:
+        runner_logger.error(f"Failed to generate the dataframe for Dictionay sheet. {er}")
+        traceback.print_exc()
         return None
 
     # get terms dataframe which can be used for terms and values set sheet
