@@ -38,7 +38,6 @@ def validate_new_model(
         runner_logger.info(f"New model submission file has been uploaded to {new_model_folder}")
     except:
         runner_logger.error("Creating submission manifest file using new model FAILED")
-        return None
 
     # Get the filename of template file
     if isinstance(new_model_folder, str):
