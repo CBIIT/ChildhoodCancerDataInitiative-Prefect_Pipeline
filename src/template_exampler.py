@@ -442,6 +442,6 @@ def make_template_example(manifest_path: str, entry_num: int) -> tuple:
         # for each sheet df
         for sheet_name in populated_dfs.keys():
             sheet_df = populated_dfs[sheet_name]
-            sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=True)
+            sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=1)
 
     return output_path, logger_filename
