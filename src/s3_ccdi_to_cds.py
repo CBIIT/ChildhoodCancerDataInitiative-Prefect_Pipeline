@@ -290,6 +290,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         print(node_df)
         # clean up the data frame, drop empty columns, rows that don't have files, reset index and remove duplicates.
         if "file_url_in_cds" in node_df.columns:
+            print(node_df["file_url_in_cds"])
             node_df = node_df.dropna(subset=["file_url_in_cds"])
         print("dropna of empty file_url_in_cds")
         print(node_df)
