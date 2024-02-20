@@ -143,6 +143,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # This was removed as the nodes required for CDS destroys paths that need to be walked to obtain the full data.
     ccdi_to_cds_nodes = [node for node in ccdi_nodes if node not in nodes_removed]
+    print(f"{*ccdi_to_cds_nodes,}")
 
     ### MERGING OF ALL DATA
     # The variable names will be the initials of the node as they are added
@@ -305,7 +306,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         if "sample_id" in df_file.columns:
             sample_file = join_node(ccdi_dfs["sample"], df_file, "sample_id")
             sample_file = join_file_node_cleaner(sample_file)
-
+    print("printing sample_file df")
+    print(sample_file)
     # file --> pdx
     pdx_file = pd.DataFrame()
     if "pdx" in ccdi_to_cds_nodes:
