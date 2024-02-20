@@ -287,13 +287,19 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 col_y = col_base + "_y"
                 node_df[col_base] = node_df[col_x].combine_first(node_df[col_y])
                 node_df.drop(columns=[col_x, col_y], inplace=True)
-
+        print(node_df)
         # clean up the data frame, drop empty columns, rows that don't have files, reset index and remove duplicates.
         if "file_url_in_cds" in node_df.columns:
             node_df = node_df.dropna(subset=["file_url_in_cds"])
-        node_df = node_df.dropna(axis=1, how="all")
-        node_df = node_df.reset_index(drop=True)
+        print("dropna of empty file_url_in_cds")
+        print(node_df)
+        node_df = node_df.dropna(axis=1, how="all").reset_index(drop=True)
+        print("dropna of all empty columns")
+        print(node_df)
+        #node_df = node_df.reset_index(drop=True)
         node_df = node_df.drop_duplicates()
+        print("drop duplicates")
+        print(node_df)
         return node_df
 
     # Do an empty check on the parent nodes before trying to join them
@@ -312,6 +318,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             print(sample_file)
             sample_file = join_file_node_cleaner(sample_file)
             print("printing sample_file afer join_file_node_cleaner")
+            print(sample_file)
     print("printing final sample_file df")
     print(sample_file)
     # file --> pdx
