@@ -711,7 +711,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     for node_path in all_paths:
         if not node_path.empty:
-            df_join_all = pd.concat([df_join_all, node_path], axis=0).reset_index(drop=True)
+            df_join_all = pd.concat([df_join_all, node_path], axis=0, ignore_index=True)
+            print(node_path)
         else:
             print(node_path)
             print("is empty")
