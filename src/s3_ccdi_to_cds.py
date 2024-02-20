@@ -711,7 +711,10 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     for node_path in all_paths:
         if not node_path.empty:
-            df_join_all = pd.concat([df_join_all, node_path], axis=0)
+            df_join_all = pd.concat([df_join_all, node_path], axis=0).reset_index(drop=True)
+        else:
+            print(node_path)
+            print("is empty")
 
     # To reduce complexity in the conversion, only lines where the personnel type is PI will be used in the CDS template end file. Otherwise use Co-PI or just pass if nothing else or too complex.
     if 'PI' in df_join_all['personnel_type'].unique().tolist():
