@@ -569,8 +569,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     #
     # Replace any NaN with "" before writing output
     #
-    ############## 
-                    
+    ##############
+
     for node in dict_nodes:
         df = meta_dfs[node]
         df = df.fillna("")
@@ -593,7 +593,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # for each sheet df
         for sheet_name in meta_dfs.keys():
             sheet_df = meta_dfs[sheet_name]
-            sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=1)
+            # sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=False, startrow=1)
+            sheet_df.to_excel(
+                writer, sheet_name=sheet_name, index=False, header=True
+            )
 
     catcherr_logger.info(
         f"Process Complete. The output file can be found here: {file_dir_path}/{catcherr_out_file}"
