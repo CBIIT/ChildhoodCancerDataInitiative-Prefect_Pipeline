@@ -143,7 +143,6 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # This was removed as the nodes required for CDS destroys paths that need to be walked to obtain the full data.
     ccdi_to_cds_nodes = [node for node in ccdi_nodes if node not in nodes_removed]
-    print(f"{*ccdi_to_cds_nodes,}")
 
     ### MERGING OF ALL DATA
     # The variable names will be the initials of the node as they are added
@@ -194,8 +193,6 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # pull out df for study
     df_study_level = df_all
-    print("below is the df_all")
-    print(df_all)
 
     # add participant
     if "participant" in ccdi_to_cds_nodes:
@@ -287,20 +284,12 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 col_y = col_base + "_y"
                 node_df[col_base] = node_df[col_x].combine_first(node_df[col_y])
                 node_df.drop(columns=[col_x, col_y], inplace=True)
-        print(node_df)
         # clean up the data frame, drop empty columns, rows that don't have files, reset index and remove duplicates.
         if "file_url_in_cds" in node_df.columns:
-            print(node_df["file_url_in_cds"])
             node_df = node_df.dropna(subset=["file_url_in_cds"])
-        print("dropna of empty file_url_in_cds")
-        print(node_df)
         node_df = node_df.dropna(axis=1, how="all").reset_index(drop=True)
-        print("dropna of all empty columns")
-        print(node_df)
         #node_df = node_df.reset_index(drop=True)
         node_df = node_df.drop_duplicates()
-        print("drop duplicates")
-        print(node_df)
         return node_df
 
     # Do an empty check on the parent nodes before trying to join them
@@ -309,19 +298,10 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # file --> sample
     sample_file = pd.DataFrame()
-    print(f"df_file columns: \n {*df_file.columns.tolist(),}")
-    print(f"ccdi_dfs[sample]")
-    print(ccdi_dfs["sample"])
     if "sample" in ccdi_to_cds_nodes:
         if "sample_id" in df_file.columns:
             sample_file = join_node(ccdi_dfs["sample"], df_file, "sample_id")
-            print("printing sample_file after join_node")
-            print(sample_file)
             sample_file = join_file_node_cleaner(sample_file)
-            print("printing sample_file afer join_file_node_cleaner")
-            print(sample_file)
-    print("printing final sample_file df")
-    print(sample_file)
     # file --> pdx
     pdx_file = pd.DataFrame()
     if "pdx" in ccdi_to_cds_nodes:
@@ -730,10 +710,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     for node_path in all_paths:
         if not node_path.empty:
             df_join_all = pd.concat([df_join_all, node_path], axis=0, ignore_index=True)
-            print(node_path)
         else:
-            print(node_path)
-            print("is empty")
+            pass
 
     # To reduce complexity in the conversion, only lines where the personnel type is PI will be used in the CDS template end file. Otherwise use Co-PI or just pass if nothing else or too complex.
     if 'PI' in df_join_all['personnel_type'].unique().tolist():
@@ -767,8 +745,6 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             df_join_all = df_join_all.drop("repository_of_synonym_id", axis=1)
 
         if "sample_id" in synonym_df.columns:
-            print(f"synonym_df columns: {*synonym_df.columns.tolist(),}" )
-            print(f"df_join_all columns: {*df_join_all.columns.tolist(),}")
             df_join_all = join_node(df_join_all, synonym_df, "sample_id")
             df_join_all = join_file_node_cleaner(df_join_all)
             # now we need to move sample_ids that are related to BioSample over to the property `dbGaP_subject_id`
