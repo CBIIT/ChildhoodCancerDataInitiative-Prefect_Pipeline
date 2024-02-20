@@ -745,8 +745,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             df_join_all = df_join_all.drop("repository_of_synonym_id", axis=1)
 
         if "sample_id" in synonym_df.columns:
-            print("synonym_df columns:" + synonym_df.columns.tolist())
-            print("df_join_all columns:" + df_join_all.columns.tolist())
+            print(f"synonym_df columns: {*synonym_df.columns.tolist(),}" )
+            print(f"df_join_all columns: {*df_join_all.columns.tolist(),}")
             df_join_all = join_node(df_join_all, synonym_df, "sample_id")
             df_join_all = join_file_node_cleaner(df_join_all)
             # now we need to move sample_ids that are related to BioSample over to the property `dbGaP_subject_id`
