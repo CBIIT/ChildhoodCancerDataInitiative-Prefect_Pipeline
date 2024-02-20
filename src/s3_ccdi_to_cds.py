@@ -193,6 +193,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # pull out df for study
     df_study_level = df_all
+    print("below is the df_all")
+    print(df_all)
 
     # add participant
     if "participant" in ccdi_to_cds_nodes:
