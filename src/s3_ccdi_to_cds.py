@@ -303,6 +303,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     # file --> sample
     sample_file = pd.DataFrame()
     print(f"df_file columns: \n {*df_file.columns.tolist(),}")
+    print(f"ccdi_dfs[sample]")
+    print(ccdi_dfs["sample"])
     if "sample" in ccdi_to_cds_nodes:
         if "sample_id" in df_file.columns:
             sample_file = join_node(ccdi_dfs["sample"], df_file, "sample_id")
