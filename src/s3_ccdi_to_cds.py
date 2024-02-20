@@ -308,8 +308,11 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     if "sample" in ccdi_to_cds_nodes:
         if "sample_id" in df_file.columns:
             sample_file = join_node(ccdi_dfs["sample"], df_file, "sample_id")
+            print("printing sample_file after join_node")
+            print(sample_file)
             sample_file = join_file_node_cleaner(sample_file)
-    print("printing sample_file df")
+            print("printing sample_file afer join_file_node_cleaner")
+    print("printing final sample_file df")
     print(sample_file)
     # file --> pdx
     pdx_file = pd.DataFrame()
