@@ -259,7 +259,6 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     else:
         pass
 
-
     # START WITH FILES INSTEAD AND WALK EACH LINE BACK?
     # Based on each connection possible for the files walk it back manually by starting with the most likely connections
 
@@ -714,7 +713,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         if not node_path.empty:
             df_join_all = pd.concat([df_join_all, node_path], axis=0)
 
-    #To reduce complexity in the conversion, only lines where the personnel type is PI will be used in the CDS template end file. Otherwise use Co-PI or just pass if nothing else or too complex.
+    # To reduce complexity in the conversion, only lines where the personnel type is PI will be used in the CDS template end file. Otherwise use Co-PI or just pass if nothing else or too complex.
     if 'PI' in df_join_all['personnel_type'].unique().tolist():
         df_join_all=df_join_all[df_join_all['personnel_type']=='PI']
     elif 'Co-PI' in df_join_all['personnel_type'].unique().tolist():
@@ -729,7 +728,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     if 'synonym' in ccdi_to_cds_nodes:
         synonym_df = ccdi_dfs["synonym"]
         synonym_df.rename(columns=col_remap, inplace=True)
-    
+
         if "participant_id" in synonym_df.columns:
             df_join_all = join_node(df_join_all, synonym_df, "participant_id")
             df_join_all = join_file_node_cleaner(df_join_all)
@@ -739,13 +738,15 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 df_join_all["dbGaP_subject_id"] = df_join_all.loc[
                     df_join_all["repository_of_synonym_id"] == "dbGaP", "synonym_id"
                 ]
-    
+
         if "synonym_id" in df_join_all.columns:
             df_join_all = df_join_all.drop("synonym_id", axis=1)
         if "repository_of_synonym_id" in df_join_all.columns:
             df_join_all = df_join_all.drop("repository_of_synonym_id", axis=1)
-    
+
         if "sample_id" in synonym_df.columns:
+            print("synonym_df columns:" + synonym_df.columns.tolist())
+            print("df_join_all columns:" + df_join_all.columns.tolist())
             df_join_all = join_node(df_join_all, synonym_df, "sample_id")
             df_join_all = join_file_node_cleaner(df_join_all)
             # now we need to move sample_ids that are related to BioSample over to the property `dbGaP_subject_id`
@@ -846,7 +847,6 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     else:
         cds_df["study_name"] = df_join_all["study_short_title"]
 
-    
     # if there is a number_of_participants value
     if "number_of_participants" in df_join_all.columns:
         # if there is a number_of_participants
@@ -941,7 +941,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         cds_df["primary_diagnosis"] = df_join_all["diagnosis_icd_o"]
     elif "diagnosis_classification" in df_join_all.columns:
         cds_df['primary_diagnosis']=df_join_all['diagnosis_classification']
-        #further diagnosis handling for "see diagnosis_comment" copying
+        # further diagnosis handling for "see diagnosis_comment" copying
         if 'diagnosis_comment' in df_join_all.columns:
             comment_true = cds_df['primary_diagnosis'] == "see diagnosis_comment"
             cds_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
