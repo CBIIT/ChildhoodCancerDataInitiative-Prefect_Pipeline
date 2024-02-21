@@ -590,7 +590,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 reordered_df[i] = dataframe[i].tolist()
             else:
                 logger.warning(f"Column {i} in sheet {sheet_name} was left empty")
-        return reorder_dataframe
+        return reordered_df
 
     catcherr_logger.info("Writing out the CatchERR using pd.ExcelWriter")
     # save out template
