@@ -569,8 +569,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     #
     # Replace any NaN with "" before writing output
     #
-    ############## 
-                    
+    ##############
+
     for node in dict_nodes:
         df = meta_dfs[node]
         df = df.fillna("")
@@ -583,6 +583,15 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     #
     ##############
 
+    def reorder_dataframe(dataframe, column_list: list, sheet_name: str, logger):
+        reordered_df = pd.DataFrame(columns=column_list)
+        for i in column_list:
+            if i in dataframe.columns:
+                reordered_df[i] = dataframe[i].tolist()
+            else:
+                logger.warning(f"Column {i} in sheet {sheet_name} was left empty")
+        return reordered_df
+
     catcherr_logger.info("Writing out the CatchERR using pd.ExcelWriter")
     # save out template
     catcherr_out_file = f"{output_file}.xlsx"
@@ -593,7 +602,18 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # for each sheet df
         for sheet_name in meta_dfs.keys():
             sheet_df = meta_dfs[sheet_name]
-            sheet_df.to_excel(writer, sheet_name=sheet_name, index=False, header=True)
+            sheet_df_col = sheet_df.columns.tolist()
+            template_sheet_df = pd.read_excel(template_path, sheet_name=sheet_name)
+            template_sheet_col = template_sheet_df.columns.tolist()
+            if sheet_df_col != template_sheet_col:
+                sheet_df = reorder_dataframe(
+                    dataframe=sheet_df, column_list=template_sheet_col, sheet_name=sheet_name, logger=catcherr_logger
+                )
+            else:
+                pass
+            sheet_df.to_excel(
+                writer, sheet_name=sheet_name, index=False, header=False, startrow=1
+            )
 
     catcherr_logger.info(
         f"Process Complete. The output file can be found here: {file_dir_path}/{catcherr_out_file}"
