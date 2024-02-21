@@ -4,9 +4,9 @@ import sys
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.utils import set_s3_session_client
 from botocore.exceptions import ClientError
 import json
+import boto3
 
 @flow
 def get_s3_parameter(parameter_name: str):
@@ -14,10 +14,10 @@ def get_s3_parameter(parameter_name: str):
     logger = get_run_logger()
 
     # get s3_client object
-    s3_client = set_s3_session_client()
+    ssm_client = boto3.client("ssm")
 
     try:
-        parameter_response =  s3_client.get_parameter(Name=parameter_name)
+        parameter_response =  ssm_client.get_parameter(Name=parameter_name)
         logger.info(f"Parameter info:\n{json.dump(parameter_response, indent=4)}")
     except ClientError as err:
         ex_code = err.response["Error"]["Code"]
