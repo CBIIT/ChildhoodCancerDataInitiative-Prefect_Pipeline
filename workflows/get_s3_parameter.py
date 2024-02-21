@@ -18,7 +18,7 @@ def get_s3_parameter(parameter_name: str):
 
     try:
         parameter_response =  ssm_client.get_parameter(Name=parameter_name)
-        logger.info(f"Parameter info:\n{json.dump(parameter_response, indent=4)}")
+        logger.info(f"Parameter info:\n{json.dumps(parameter_response, indent=4)}")
     except ClientError as err:
         ex_code = err.response["Error"]["Code"]
         ex_message = err.response["Error"]["Message"]
