@@ -133,7 +133,7 @@ deployments:
 
   - name: file-mover
     version: null
-    tags: ["Test"]
+    tags: ["Production"]
     description: null
     entrypoint: workflows/File_Mover.py:file_mover
     schedule: null
