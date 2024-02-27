@@ -1,4 +1,4 @@
-from prefect import flow, get_run_logger
+from prefect import flow, task, get_run_logger
 import os
 import sys
 
@@ -8,12 +8,12 @@ from botocore.exceptions import ClientError
 import json
 import boto3
 
-@flow
-def get_s3_parameter(parameter_name: str):
-    # get logger
-    logger = get_run_logger()
+@task
+def get_aws_parameter(parameter_name: str) -> dict:
+    # get a logger
+    logger= get_run_logger()
 
-    # get s3_client object
+    # create simple system manaer (SSM) client
     ssm_client = boto3.client("ssm")
 
     try:
@@ -23,8 +23,10 @@ def get_s3_parameter(parameter_name: str):
         ex_code = err.response["Error"]["Code"]
         ex_message = err.response["Error"]["Message"]
         logger.error(ex_code + ":" + ex_message)
+        raise
     except Exception as error:
         logger.error(f"Get s3 parameter {parameter_name} FAILED")
         logger.error("General exception noted.", exc_info=True)
+        raise
 
-    return None
+    return parameter_response
