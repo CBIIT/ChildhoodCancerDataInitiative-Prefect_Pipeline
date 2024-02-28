@@ -1119,6 +1119,7 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
         + sra_df["library_source (click for details)"]
         + sra_df["library_selection (click for details)"]
     )
+    sra_df = sra_df.sort_values(by=["filetype"], ascending=False).reset_index(drop=True)
     unique_concate = sra_df["check_sample_id"].unique().tolist()
     for i in unique_concate:
         i_df = sra_df[sra_df["check_sample_id"] == i]
