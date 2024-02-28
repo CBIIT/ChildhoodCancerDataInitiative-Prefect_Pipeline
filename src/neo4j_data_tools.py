@@ -1,4 +1,4 @@
-from src.utils import cypher_query_parameters, get_date
+from src.utils import get_date
 from dataclasses import dataclass
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
