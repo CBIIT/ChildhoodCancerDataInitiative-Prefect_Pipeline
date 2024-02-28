@@ -16,9 +16,9 @@ from src.utils import get_time, folder_ul
 def pull_neo4j_data(
     bucket: str,
     runner: str,
-    uri_parameter: str = "uri_parameter",
-    username_parameter: str = "username_parameter",
-    password_parameter: str = "password_parameter",
+    uri_parameter: str = "uri",
+    username_parameter: str = "username",
+    password_parameter: str = "password",
 ):
     logger = get_run_logger()
 

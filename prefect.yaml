@@ -199,7 +199,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      parameter_name: "prefect-test"
+      bucket: "ccdi-validation"
 
     # pull action to overwrite from file pull action
     pull:
