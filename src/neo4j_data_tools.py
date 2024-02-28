@@ -510,7 +510,7 @@ def list_type_files(file_dir: str, file_type: str) -> list:
     """Returns a list of matched file paths under a folder path"""
     file_list = os.listdir(file_dir)
     matched_files = [
-        os.join.path(file_dir, file) for file in file_list if file.endswith(file_type)
+        os.path.join(file_dir, file) for file in file_list if file.endswith(file_type)
     ]
     if len(matched_files) == 0:
         raise ValueError(
