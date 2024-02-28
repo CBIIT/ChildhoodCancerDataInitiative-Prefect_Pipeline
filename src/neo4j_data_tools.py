@@ -637,14 +637,14 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
     logger.info(f"List of csv files under {db_pulled_outdir}: {*csv_list,}")
 
     # export folder for tsv files
-    logger.info("Creating the output for writing output tsv files ")
     export_folder = os.path.join(output_dir, "export_" + get_date())
     os.makedirs(export_folder, exist_ok=True)
+    logger.info(f"Creating the output for writing output tsv files: {export_folder} ")
 
     # writing tsv files
     for file_path in csv_list:
         wider_df = pivot_long_df_wide_clean(file_path=file_path)
         wider_df = wide_df_setup_link(df_wide=wider_df)
         logger.info(f"Writing tsv files for all studies from file: {file_path}")
-        write_wider_df_all(wider_df, output_dir=export_folder)
+        write_wider_df_all(wider_df, output_dir=export_folder, logger=logger)
     return export_folder
