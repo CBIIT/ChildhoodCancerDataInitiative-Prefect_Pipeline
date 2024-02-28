@@ -481,7 +481,7 @@ def query_db_to_csv(
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
     pull_nodes_loop(
-        node_list=unique_nodes, driver=driver, output_dir=output_dir, logger=logger
+        node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
     )
 
     # Obtain study node data
