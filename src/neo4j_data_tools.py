@@ -171,7 +171,7 @@ def pull_nodes_loop(node_list: list, driver, out_dir: str, logger) -> None:
     return None
 
 
-@task
+@flow
 def pull_study_node(driver, out_dir: str) -> None:
     """Pulls data for study node from a neo4j DB"""
     cypher_phrase = Neo4jCypherQuery.study_cypher_query
