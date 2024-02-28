@@ -305,6 +305,7 @@ def counts_DB_all_nodes_all_studies(
         uri_parameter=uri_parameter,
         username_parameter=username_parameter,
         password_parameter=password_parameter,
+        logger=logger
     )
 
     # driver instance
@@ -341,6 +342,7 @@ def validate_DB_with_input_tsvs(
         uri_parameter=uri_parameter,
         username_parameter=username_parameter,
         password_parameter=password_parameter,
+        logger=logger
     )
 
     # driver instance
@@ -464,6 +466,7 @@ def query_db_to_csv(
         uri_parameter=uri_parameter,
         username_parameter=username_parameter,
         password_parameter=password_parameter,
+        logger=logger
     )
 
     # driver instance
