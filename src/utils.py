@@ -930,36 +930,3 @@ class CheckCCDI:
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
 
-def get_aws_parameter(parameter_name: str, logger) -> Dict:
-    # create simple system manaer (SSM) client
-    ssm_client = boto3.client("ssm")
-
-    try:
-        parameter_response = ssm_client.get_parameter(Name=parameter_name)
-        logger.info(
-            f"Parameter info:\n{json.dumps(parameter_response, indent=4, default=str)}"
-        )
-    except ClientError as err:
-        ex_code = err.response["Error"]["Code"]
-        ex_message = err.response["Error"]["Message"]
-        logger.error(ex_code + ":" + ex_message)
-        raise
-    except Exception as error:
-        logger.error(f"Get s3 parameter {parameter_name} FAILED")
-        logger.error("General exception noted.", exc_info=True)
-        raise
-
-    return parameter_response
-
-@task
-def cypher_query_parameters(uri_parameter: str, username_parameter: str, password_parameter: str, logger) -> tuple:
-    uri_reponse =  get_aws_parameter(parameter_name=uri_parameter, logger=logger)
-    username_response = get_aws_parameter(parameter_name=username_parameter, logger=logger)
-    password_response = get_aws_parameter(
-        parameter_name=password_parameter, logger=logger
-    )
-    return (
-        uri_reponse["Parameter"]["Value"],
-        username_response["Parameter"]["Value"],
-        password_response["Parameter"]["Value"],
-    )

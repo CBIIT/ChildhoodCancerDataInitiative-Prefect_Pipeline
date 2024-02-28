@@ -633,7 +633,7 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
 
     logger.info(f"List of csv files under {db_pulled_outdir}: {*csv_list,}")
 
-    # export folder
+    # export folder for tsv files
     logger.info("Creating the output for writing output tsv files ")
     export_folder = os.path.join(output_dir, "export_" + get_date())
     os.makedirs(export_folder, exist_ok=True)

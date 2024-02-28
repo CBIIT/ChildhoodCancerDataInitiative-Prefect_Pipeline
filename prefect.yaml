@@ -189,3 +189,31 @@ deployments:
       name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
+
+  - name: pull-neo4j-data
+    version: null
+    tags: ["Test"]
+    description: null
+    entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      parameter_name: "prefect-test"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-861_get_parameter
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-ecs
+      work_queue_name: null
+      job_variables: {}
