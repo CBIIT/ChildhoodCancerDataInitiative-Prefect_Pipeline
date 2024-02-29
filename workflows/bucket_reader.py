@@ -20,7 +20,7 @@ from src.read_buckets import (
     log_prints=True,
     flow_run_name="bucket-reader-{runner}-" + f"{get_time()}",
 )
-def reader(*buckets, runner: str):
+def reader(buckets: list[str], runner: str):
     # create a logging object
     runner_logger = get_run_logger()
 
