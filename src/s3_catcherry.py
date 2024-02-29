@@ -477,7 +477,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 # revert HTML code changes that might exist so that it can be handled with correct AWS calls
                 # this is then reverted after this section, which allows for this check to be made multiple times against the same file.
 
-                df["file_path"] = df["file_path"].map(
+                df["file_url_in_cds"] = df["file_url_in_cds"].map(
                     lambda x: (
                         x.replace("%20", " ").replace("%2C", ",")
                         if isinstance(x, str)
