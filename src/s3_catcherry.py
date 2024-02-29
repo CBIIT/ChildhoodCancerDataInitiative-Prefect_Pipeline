@@ -388,7 +388,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     ]
                     for i in range(0, len(rows)):
                         print(
-                            f"\tWARNING: The url contained a non-HTML encoded character on row: {rows[i]+1}\n",
+                            f"\tWARNING: The url contained a non-HTML encoded character on row and was fixed: {rows[i]+1}\n",
                             file=outf,
                         )
                 df["file_url_in_cds"] = df["file_url_in_cds"].map(
