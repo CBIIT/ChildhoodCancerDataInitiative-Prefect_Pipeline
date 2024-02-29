@@ -473,6 +473,18 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             # for a column called file_url_in_cds
             if "file_url_in_cds" in meta_dfs[node].columns:
                 df = meta_dfs[node]
+
+                # revert HTML code changes that might exist so that it can be handled with correct AWS calls
+                # this is then reverted after this section, which allows for this check to be made multiple times against the same file.
+
+                df["file_path"] = df["file_path"].map(
+                    lambda x: (
+                        x.replace("%20", " ").replace("%2C", ",")
+                        if isinstance(x, str)
+                        else x
+                    )
+                )
+
                 print(f"{node}\n----------", file=outf)
 
                 # discover all possible base bucket urls in the file node
@@ -537,16 +549,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             "file_name": s3_file_name,
                             "file_size": s3_file_size,
                         }
-                    )
-
-                    # revert HTML code changes that might exist so that it can be handled with correct AWS calls
-
-                    df_bucket["file_path"] = df_bucket["file_path"].map(
-                        lambda x: (
-                            x.replace("%20", " ").replace("%2C", ",")
-                            if isinstance(x, str)
-                            else x
-                        )
                     )
 
                     # find bad url locs based on the full file path and whether it can be found in the url bucket manifest.
