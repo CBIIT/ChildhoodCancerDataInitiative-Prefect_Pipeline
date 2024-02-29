@@ -371,7 +371,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             file=outf,
         )
 
-        non_html_array = [" ", ","]
+        non_html_array = [" ", ",","#"]
 
         non_html_array = "|".join(non_html_array)
 
@@ -393,7 +393,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         )
                 df["file_url_in_cds"] = df["file_url_in_cds"].map(
                     lambda x: (
-                        x.replace(" ", "%20").replace(",", "%2C")
+                        x.replace(" ", "%20").replace(",", "%2C").replace("#", "%23")
                         if isinstance(x, str)
                         else x
                     )
@@ -479,7 +479,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
                 df["file_url_in_cds"] = df["file_url_in_cds"].map(
                     lambda x: (
-                        x.replace("%20", " ").replace("%2C", ",")
+                        x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
                         if isinstance(x, str)
                         else x
                     )
@@ -613,7 +613,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 # check for any of the values in the array and make changes.
                 df["file_url_in_cds"] = df["file_url_in_cds"].map(
                     lambda x: (
-                        x.replace(" ", "%20").replace(",", "%2C")
+                        x.replace(" ", "%20").replace(",", "%2C").replace("#", "%23")
                         if isinstance(x, str)
                         else x
                     )
