@@ -1,10 +1,10 @@
-from prefect import flow, task, get_run_logger
+from prefect import flow, get_run_logger
 import os
 import sys
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.utils import get_date, get_time, folder_dl
+from src.utils import get_time, folder_dl
 from src.neo4j_data_tools import (
     counts_DB_all_nodes_all_studies,
     validate_DB_with_input_tsvs,
@@ -17,13 +17,13 @@ from src.neo4j_data_tools import (
     log_prints=True,
     flow_run_name="pull-neo4j-{runner}-" + f"{get_time()}",
 )
-def pull_neo4j_data(
+def validate_neo4j_data(
     bucket: str,
     runner: str,
     tsv_folder: str,
-    uri_parameter: str = "uri_parameter",
-    username_parameter: str = "username_parameter",
-    password_parameter: str = "password_parameter",
+    uri_parameter: str = "uri",
+    username_parameter: str = "username",
+    password_parameter: str = "password",
 ):
     logger = get_run_logger()
 
