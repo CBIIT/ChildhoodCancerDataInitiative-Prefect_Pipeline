@@ -15,7 +15,7 @@ from src.neo4j_data_tools import (
 @flow(
     name="Validate Neo4j DB",
     log_prints=True,
-    flow_run_name="pull-neo4j-{runner}-" + f"{get_time()}",
+    flow_run_name="validate-neo4j-{runner}-" + f"{get_time()}",
 )
 def validate_neo4j_data(
     bucket: str,
