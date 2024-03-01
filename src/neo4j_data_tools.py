@@ -137,7 +137,7 @@ def export_to_csv(tx, node_label: str, cypher_query: str, output_directory: str)
             csv_writer.writerow(record.values())
 
 
-@task
+@task(name="Pull node data", task_run_name="pull_node_data_{node_label}")
 def pull_data_per_node(
     driver, data_to_csv, node_label: str, query_str: str, output_dir: str
 ) -> None:
