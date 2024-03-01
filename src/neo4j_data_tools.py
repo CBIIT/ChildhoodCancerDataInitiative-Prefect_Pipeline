@@ -293,15 +293,22 @@ def pull_ids_node_study(driver, export_ids_csv, study_id: str, node: str, output
 @flow(task_runner=ConcurrentTaskRunner())
 def pull_node_ids_all_studies_write(driver, studies_dataframe: DataFrame, logger) -> str:
     """Returns a temp folder that contains files of ids for each node each study"""
-    tempdirobj =  tempfile.TemporaryDirectory(suffix="_db_pull_ids")
-    tempdir = tempdirobj.name
+    # create a temp folder
+    temp_folder_name = "db_ids_all_node_all_studies"
+    os.mkdir(temp_folder_name)
 
     for index in range(studies_dataframe.shape[0]):
         study_id = studies_dataframe.loc[index, "study_id"]
         node = studies_dataframe.loc[index, "node"]
         logger.info(f"Pulling ids for node {node} study {study_id}")
-        pull_ids_node_study.submit(driver, export_ids_csv=export_node_ids_a_study, study_id=study_id, node=node)
-    return tempdir
+        pull_ids_node_study.submit(
+            driver,
+            export_ids_csv=export_node_ids_a_study,
+            study_id=study_id,
+            node=node,
+            output_dir=temp_folder_name,
+        )
+    return temp_folder_name
 
 @flow
 def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> Dict:
@@ -326,15 +333,15 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     """Returns temp folder which contains counts all nodes(except study node) 
     of all studies in a DB
     """
-    # create a temp dir obj
-    tempdirobj = tempfile.TemporaryDirectory(suffix="_db_pull")
-    tempdir = tempdirobj.name
+    # create a folder to keep all node entry counts per study
+    temp_folder_name = "db_node_entry_counts_all_studies"
+    os.mkdir(temp_folder_name)
     logger.info("Start pulling entry counts per node per study")
     for study in study_list:
         logger.info(f"Pulling entry counts per node for study {study}")
-        pull_all_nodes_a_study.submit(driver=driver, export_to_csv=export_node_counts_a_study, study_id=study, output_dir=tempdir)
+        pull_all_nodes_a_study.submit(driver=driver, export_to_csv=export_node_counts_a_study, study_id=study, output_dir=temp_folder_name)
 
-    return tempdir
+    return temp_folder_name
 
 
 @flow
