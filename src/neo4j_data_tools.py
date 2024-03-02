@@ -441,7 +441,7 @@ def validate_DB_with_input_tsvs(
                 (validate_df["study_id"] == tsv_study_id)
                 & (validate_df["node"] == tsv_node),
                 "DB_count",
-            ]
+            ].values[0]
             if node_db_count == tsv_count:
                 validate_df.loc[
                     (validate_df["study_id"] == tsv_study_id)
