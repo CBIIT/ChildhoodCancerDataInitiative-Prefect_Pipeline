@@ -349,7 +349,7 @@ def pull_studies_loop(driver, study_list: list, logger) -> DataFrame:
     """Return a dataframe contains entry counts per node of all studies in DB"""
     csv_folder =  pull_studies_loop_write(driver=driver, study_list=study_list, logger=logger)
     csv_filelist = os.listdir(csv_folder)
-    count_df = pd.DataFrame(columns=["stuy_id","node","DB_count"])
+    count_df = pd.DataFrame(columns=["study_id","node","DB_count"])
     for file in csv_filelist:
         file_path =  os.path.join(csv_folder, file)
         file_df = pd.read_csv(file_path, header=0)
