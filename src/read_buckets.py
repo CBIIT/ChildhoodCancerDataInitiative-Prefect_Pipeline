@@ -63,12 +63,15 @@ def read_bucket_content(bucket):
     operation_parameters = paginate_parameter(bucket)
     pages = s3_paginator.paginate(**operation_parameters)
     for page in pages:
-        file_count += len(page["Contents"])
-        for obj in page["Contents"]:
-            obj_ext, obj_size, obj_date = extract_obj_info(obj)
-            file_ext = count_df(mydict=file_ext, newitem=obj_ext)
-            modified_date = count_df(mydict=modified_date, newitem=obj_date)
-            bucket_size += obj_size
+        if "Contents" in page.keys():
+            file_count += len(page["Contents"])
+            for obj in page["Contents"]:
+                obj_ext, obj_size, obj_date = extract_obj_info(obj)
+                file_ext = count_df(mydict=file_ext, newitem=obj_ext)
+                modified_date = count_df(mydict=modified_date, newitem=obj_date)
+                bucket_size += obj_size
+        else:
+            pass
 
     file_ext_df = (
         pd.DataFrame(file_ext)
