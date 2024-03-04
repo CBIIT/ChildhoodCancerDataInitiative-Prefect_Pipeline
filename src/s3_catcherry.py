@@ -139,6 +139,18 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     ##############
     catcherr_out_log = f"{output_file}.txt"
     with open(f"{file_dir_path}/{catcherr_out_log}", "w") as outf:
+
+        ##############
+        #
+        # Pre-unique check on all nodes
+        #
+        ##############
+
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            df = df.drop_duplicates()
+            meta_dfs[node] = df
+
         ##############
         #
         # Terms and Value sets checks
@@ -244,9 +256,17 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                                 )
                                             ]["Term"].values[0]
                                             df[property] = df[property].apply(
-                                                lambda x: re.sub(
-                                                    rf"\b{unique_value}\b", new_value, x
-                                                ) if (np.all(pd.notnull(df[property]))) else x
+                                                lambda x: (
+                                                    re.sub(
+                                                        rf"\b{unique_value}\b",
+                                                        new_value,
+                                                        x,
+                                                    )
+                                                    if (
+                                                        np.all(pd.notnull(df[property]))
+                                                    )
+                                                    else x
+                                                )
                                             )
 
                                             print(
@@ -332,11 +352,53 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             file=outf,
                         )
             df = df.map(
-                lambda x: x.replace("®", "(R)").replace("™", "(TM)").replace("©", "(C)")
-                if isinstance(x, str)
-                else x
+                lambda x: (
+                    x.replace("®", "(R)").replace("™", "(TM)").replace("©", "(C)")
+                    if isinstance(x, str)
+                    else x
+                )
             )
             meta_dfs[node] = df
+
+        ##############
+        #
+        # Check and replace non-html encoded characters in URLs
+        #
+        ##############
+
+        print(
+            "\nCertain characters (comma, space) do not handle being used in HTML, due to this, the following characters were changed.\n----------",
+            file=outf,
+        )
+
+        non_html_array = [" ", ",", "#"]
+
+        non_html_array = "|".join(non_html_array)
+
+        for node in dict_nodes:
+            # for a column called file_url_in_cds
+            if "file_url_in_cds" in meta_dfs[node].columns:
+                df = meta_dfs[node]
+                # check for any of the values in the array
+                if df["file_url_in_cds"].str.contains(non_html_array).any():
+                    # only if they have an issue, then print out the node.
+                    print(f"\n{node}\n----------", file=outf)
+                    rows = np.where(df["file_url_in_cds"].str.contains(non_html_array))[
+                        0
+                    ]
+                    for i in range(0, len(rows)):
+                        print(
+                            f"\tWARNING: The url contained a non-HTML encoded character on row and was fixed: {rows[i]+1}\n",
+                            file=outf,
+                        )
+                df["file_url_in_cds"] = df["file_url_in_cds"].map(
+                    lambda x: (
+                        x.replace(" ", "%20").replace(",", "%2C").replace("#", "%23")
+                        if isinstance(x, str)
+                        else x
+                    )
+                )
+                meta_dfs[node] = df
 
         ##############
         #
@@ -411,6 +473,18 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             # for a column called file_url_in_cds
             if "file_url_in_cds" in meta_dfs[node].columns:
                 df = meta_dfs[node]
+
+                # revert HTML code changes that might exist so that it can be handled with correct AWS calls
+                # this is then reverted after this section, which allows for this check to be made multiple times against the same file.
+
+                df["file_url_in_cds"] = df["file_url_in_cds"].map(
+                    lambda x: (
+                        x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
+                        if isinstance(x, str)
+                        else x
+                    )
+                )
+
                 print(f"{node}\n----------", file=outf)
 
                 # discover all possible base bucket urls in the file node
@@ -528,6 +602,26 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
+        # Reapply HTML encoding changes without throwing errors after AWS check.
+        #
+        ##############
+
+        for node in dict_nodes:
+            # for a column called file_url_in_cds
+            if "file_url_in_cds" in meta_dfs[node].columns:
+                df = meta_dfs[node]
+                # check for any of the values in the array and make changes.
+                df["file_url_in_cds"] = df["file_url_in_cds"].map(
+                    lambda x: (
+                        x.replace(" ", "%20").replace(",", "%2C").replace("#", "%23")
+                        if isinstance(x, str)
+                        else x
+                    )
+                )
+                meta_dfs[node] = df
+
+        ##############
+        #
         # Assign guids to files
         #
         ##############
@@ -607,7 +701,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             template_sheet_col = template_sheet_df.columns.tolist()
             if sheet_df_col != template_sheet_col:
                 sheet_df = reorder_dataframe(
-                    dataframe=sheet_df, column_list=template_sheet_col, sheet_name=sheet_name, logger=catcherr_logger
+                    dataframe=sheet_df,
+                    column_list=template_sheet_col,
+                    sheet_name=sheet_name,
+                    logger=catcherr_logger,
                 )
             else:
                 pass
