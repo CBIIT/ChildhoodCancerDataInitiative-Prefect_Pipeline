@@ -180,9 +180,11 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
     # Final reordering of present nodes to show up in tab order in the output.
     dict_nodes = sorted(
         dict_nodes,
-        key=lambda x: dictionary_node_check.index(x)
-        if x in dictionary_node_check
-        else float("inf"),
+        key=lambda x: (
+            dictionary_node_check.index(x)
+            if x in dictionary_node_check
+            else float("inf")
+        ),
     )
 
     ##############
@@ -721,7 +723,6 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
         ]
         df_file = pd.DataFrame(columns=file_node_props)
         df_file = df_file.sort_values("node").reset_index(drop=True)
-
 
         # print(dict_nodes)
         for node in dict_nodes:

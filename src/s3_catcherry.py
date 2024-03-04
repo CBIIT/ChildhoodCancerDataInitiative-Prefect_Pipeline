@@ -371,7 +371,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             file=outf,
         )
 
-        non_html_array = [" ", ",","#"]
+        non_html_array = [" ", ",", "#"]
 
         non_html_array = "|".join(non_html_array)
 
