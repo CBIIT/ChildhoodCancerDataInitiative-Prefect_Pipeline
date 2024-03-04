@@ -4,11 +4,13 @@ import sys
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.utils import get_time, folder_dl
+from src.utils import get_time, folder_dl, get_date, file_ul
 from src.neo4j_data_tools import (
     counts_DB_all_nodes_all_studies,
     validate_DB_with_input_tsvs,
     neo4j_validation_md,
+    validate_df_to_count_summary,
+    validate_df_to_id_summary
 )
 
 
@@ -50,6 +52,20 @@ def validate_neo4j_data(
         studies_dataframe=db_node_count_all_studies,
     )
 
+    # folder name in the bucket for file ul
+    summary_file_name =  f"neo4j_validation_summary_{get_date()}.csv"
+    validate_df.to_csv(summary_file_name, index=False)
+    bucket_folder = os.path.join(runner, "neo4j_validation_" + get_time())
+    file_ul(
+        bucket=bucket,
+        output_folder=bucket_folder,
+        sub_folder="",
+        newfile=summary_file_name,
+    )
+    logger.info(f"Neo4j validation summary file {summary_file_name} has been uploaded to bucket {bucket} at folder {bucket_folder}")
+
     # crete markdown report for this workflow
     logger.info("Creating markdown report for Neo4j validation")
-    neo4j_validation_md(validate_df=validate_df, runner=runner)
+    count_summary_df = validate_df_to_count_summary(validate_df=validate_df)
+    id_summary_df = validate_df_to_id_summary(validate_df=validate_df)
+    neo4j_validation_md(count_summary_df=count_summary_df, id_summary_df=id_summary_df, runner=runner)

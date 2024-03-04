@@ -490,12 +490,51 @@ def validate_DB_with_input_tsvs(
     return validate_df
 
 
-@task
-def neo4j_validation_md(validate_df: DataFrame, runner=str) -> None:
-    validate_df_str = validate_df.to_markdown(tablefmt="pipe", index=False)
-    markdown_report = f"""# CCDI Neo4j DB Validation Summary Table
+def validate_df_to_count_summary(validate_df: DataFrame) -> DataFrame:
+    count_summary_df = (
+        validate_df.groupby(["study_id", "count_compare"])["node"]
+        .agg("count")
+        .reset_index()
+        .rename(
+            columns={
+                "study_id": "Study ID",
+                "count_compare": "Entries Count Check",
+                "node": "Node Count",
+            }
+        )
+    )
+    return count_summary_df
 
-{validate_df_str}
+
+def validate_df_to_id_summary(validate_df: DataFrame) -> DataFrame:
+    id_summary_df = (
+        validate_df.groupby(["study_id", "id_check"])["node"]
+        .agg("count")
+        .reset_index()
+        .rename(
+            columns={
+                "study_id": "Study ID",
+                "id_check": "Entries ID Check",
+                "node": "Node Count",
+            }
+        )
+    )
+    return id_summary_df
+
+
+@task
+def neo4j_validation_md(count_summary_df: DataFrame, id_summary_df: DataFrame, runner=str) -> None:
+    count_df_str = count_summary_df.to_markdown(tablefmt="pipe", index=False)
+    id_df_str = id_summary_df.to_markdown(tablefmt="pipe", index=False)
+    markdown_report = f"""# CCDI Neo4j DB Validation Summary
+
+## Entry Count Validation Summary
+
+{count_df_str}
+
+## Entry ID Validation Summary
+
+{id_df_str}
 
 """
     create_markdown_artifact(
