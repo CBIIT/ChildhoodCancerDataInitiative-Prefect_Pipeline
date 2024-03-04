@@ -73,18 +73,26 @@ def read_bucket_content(bucket):
         else:
             pass
 
-    file_ext_df = (
-        pd.DataFrame(file_ext)
-        .transpose()
-        .reset_index()
-        .rename(columns={"index": "Extension", 0: "Count"})
-    ).sort_values(by=["Count"], ascending=False)
-    modified_date_df = (
-        pd.DataFrame(modified_date)
-        .transpose()
-        .reset_index()
-        .rename(columns={"index": "Date", 0: "Count"})
-    ).sort_values(by=["Count"], ascending=False)
+    # returns empty df of file_ext_df and modified_date_df if bucket is empty
+    if file_ext != {}:
+        file_ext_df = (
+            pd.DataFrame(file_ext)
+            .transpose()
+            .reset_index()
+            .rename(columns={"index": "Extension", 0: "Count"})
+        ).sort_values(by=["Count"], ascending=False)
+    else:
+        file_ext_df = pd.DataFrame({})
+    
+    if modified_date != {}:
+        modified_date_df = (
+            pd.DataFrame(modified_date)
+            .transpose()
+            .reset_index()
+            .rename(columns={"index": "Date", 0: "Count"})
+        ).sort_values(by=["Count"], ascending=False)
+    else:
+        modified_date_df = pd.DataFrame({})
 
     return bucket_size, file_count, file_ext_df, modified_date_df
 
