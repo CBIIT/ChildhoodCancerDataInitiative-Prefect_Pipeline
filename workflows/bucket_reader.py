@@ -15,6 +15,7 @@ from src.read_buckets import (
 )
 from botocore.exceptions import ClientError
 import json
+import traceback
 
 
 @flow(
@@ -34,6 +35,11 @@ def reader(buckets: list[str], runner: str):
             bucket_size, file_count, file_ext_df, modified_date_df = read_bucket_content(
                 bucket
             )
+            # logger warning if bucket is empty without objects
+            if bucket_size == 0:
+                runner_logger.warning(f"Bucket {bucket} is EMPTY")
+            else:
+                pass
             single_bucket_summary = single_bucket_content_str(bucket_name=bucket, bucket_size=bucket_size, file_count=file_count, ext_dict=file_ext_df, date_dict=modified_date_df)
             md_str = md_str + single_bucket_summary
         except ClientError as ex:
@@ -46,7 +52,9 @@ def reader(buckets: list[str], runner: str):
                 "Additional info:\n" + json.dumps(ex.response["Error"], indent=4)
             )
         except Exception as error:
-            runner_logger.error(f"Fetching contents in bucket {bucket} Failed: {error}")
+            runner_logger.error(f"Fetching contents in bucket {bucket} Failed: {type(error).__name__}, {error}")
+            traceback.print_exc()
+
 
     runner_logger.info("Generating markdown output")
     if md_str != "":
