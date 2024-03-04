@@ -39,7 +39,7 @@ def reader(buckets: list[str], runner: str):
             ex_code = ex.response["Error"]["Code"]
             ex_message = ex.response["Error"]["Message"]
             runner_logger.error("Error info:\n" + json.dumps(ex.response["Error"], indent=4))
-        except Exception as error
+        except Exception as error:
             runner_logger.error("Fetching bucket contents in bucket {bucket} Failed: {error}")
         
 
