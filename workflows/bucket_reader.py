@@ -13,6 +13,7 @@ from src.read_buckets import (
     bucket_reader_md,
     single_bucket_content_str,
 )
+from botocore.exceptions import ClientError
 
 
 @flow(
@@ -28,17 +29,29 @@ def reader(buckets: list[str], runner: str):
 
     for bucket in buckets:
         runner_logger.info(f"Start reading bucket {bucket}")
-        bucket_size, file_count, file_ext_df, modified_date_df = read_bucket_content(
-            bucket
-        )
-        single_bucket_summary = single_bucket_content_str(bucket_name=bucket, bucket_size=bucket_size, file_count=file_count, ext_dict=file_ext_df, date_dict=modified_date_df)
-        md_str = md_str + single_bucket_summary
+        try:
+            bucket_size, file_count, file_ext_df, modified_date_df = read_bucket_content(
+                bucket
+            )
+            single_bucket_summary = single_bucket_content_str(bucket_name=bucket, bucket_size=bucket_size, file_count=file_count, ext_dict=file_ext_df, date_dict=modified_date_df)
+            md_str = md_str + single_bucket_summary
+        except ClientError as ex:
+            ex_code = ex.response["Error"]["Code"]
+            ex_message = ex.response["Error"]["Message"]
+            runner_logger.error("Error info:\n" + json.dumps(ex.response["Error"], indent=4))
+        except Exception as error
+            runner_logger.error("Fetching bucket contents in bucket {bucket} Failed: {error}")
+        
 
     runner_logger.info("Generating markdown output")
-    bucket_reader_md(
-        tablestr=md_str,
-        runner=runner.lower().replace("_", "-").replace(" ", "-").replace(".", "-"),
-    )
+    if md_str != "":
+        bucket_reader_md(
+            tablestr=md_str,
+            runner=runner.lower().replace("_", "-").replace(" ", "-").replace(".", "-"),
+        )
+    else:
+        runner_logger.warning("No bucket contents summary was generated")
+    
 
     runner_logger.info("Workflow finished!")
 
