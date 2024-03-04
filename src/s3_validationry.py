@@ -722,14 +722,6 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
         df_file = pd.DataFrame(columns=file_node_props)
         df_file = df_file.sort_values("node").reset_index(drop=True)
 
-        # revert HTML code changes that might exist so that it can be handled with correct AWS calls
-        df_file["file_url_in_cds"] = df_file["file_url_in_cds"].map(
-            lambda x: (
-                x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
-                if isinstance(x, str)
-                else x
-            )
-        )
 
         # print(dict_nodes)
         for node in dict_nodes:
@@ -738,6 +730,15 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                 df["node"] = node
                 df["file_id"] = df[f"{node}_id"]
                 df_file = pd.concat([df_file, df[file_node_props]], ignore_index=True)
+
+        # revert HTML code changes that might exist so that it can be handled with correct AWS calls
+        df_file["file_url_in_cds"] = df_file["file_url_in_cds"].map(
+            lambda x: (
+                x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
+                if isinstance(x, str)
+                else x
+            )
+        )
 
         file_ids = df_file["file_id"].dropna().unique().tolist()
         file_names = df_file["file_name"].dropna().unique().tolist()
