@@ -39,10 +39,14 @@ def reader(buckets: list[str], runner: str):
         except ClientError as ex:
             ex_code = ex.response["Error"]["Code"]
             ex_message = ex.response["Error"]["Message"]
-            runner_logger.error("Error info while reading bucket {bucket}:\n" + json.dumps(ex.response["Error"], indent=4))
+            runner_logger.error(
+                ex_code + ":" + ex_message + " Bucket name: " + bucket
+            )
+            runner_logger.error(
+                "Additional info:\n" + json.dumps(ex.response["Error"], indent=4)
+            )
         except Exception as error:
-            runner_logger.error("Fetching bucket contents in bucket {bucket} Failed: {error}")
-        
+            runner_logger.error(f"Fetching contents in bucket {bucket} Failed: {error}")
 
     runner_logger.info("Generating markdown output")
     if md_str != "":
@@ -52,7 +56,6 @@ def reader(buckets: list[str], runner: str):
         )
     else:
         runner_logger.warning("No bucket contents summary was generated")
-    
 
     runner_logger.info("Workflow finished!")
 
