@@ -846,15 +846,25 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     #
     ##############
 
-    # Define a custom function to aggregate columns
-    def join_lists(lst):
-        return ';'.join(map(str, lst))
-
     # Group by "guid" and aggregate other columns
-    index_df = index_df.groupby('guid').agg({col: join_lists for col in index_df.columns if col != 'guid'})
+    index_df = index_df.groupby('guid').agg(lambda x: list(x))
 
     # Reset index to make 'guid' a column again
     index_df = index_df.reset_index()
+
+    # Define a custom function to process lists in cells
+    def process_list(lst):
+        unique_values = set(lst)
+        if len(unique_values) == 1:
+            # Return the single value
+            return next(iter(unique_values))  
+        else:
+            # Return the list as a string separated by semicolon
+            return ';'.join(map(str, lst))  
+
+    # Apply the custom function to each cell in the DataFrame
+    index_df = index_df.applymap(process_list)
+
 
     # Double check for duplicates again.
     index_df = index_df.drop_duplicates()
@@ -866,6 +876,8 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     ##############
 
     # Quick stats to check the conversion, make sure things are working as we think they should be.
+    file_total = len(df_file.loc[:, ["md5sum", "file_name", "file_url_in_cds"]])
+
     file_expected = len(
         df_file.loc[:, ["md5sum", "file_name", "file_url_in_cds"]].drop_duplicates()
     )
@@ -883,6 +895,10 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     elif file_expected != file_returned:
         logger.warning(
             "The conversion was likely NOT successful, as it did not return the same number of unique files"
+        )
+    if file_expected != file_total:
+        logger.info(
+            "This conversion contains roll-ups."
         )
 
     ##############
