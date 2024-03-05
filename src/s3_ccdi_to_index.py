@@ -846,8 +846,12 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     #
     ##############
 
+    # Define a custom function to aggregate columns
+    def join_lists(lst):
+        return ';'.join(map(str, lst))
+
     # Group by "guid" and aggregate other columns
-    index_df = index_df.groupby("guid").agg(lambda x: ';'.join(map(str,x)))
+    index_df = index_df.groupby('guid').agg({col: join_lists for col in index_df.columns if col != 'guid'})
 
     # Reset index to make 'guid' a column again
     index_df = index_df.reset_index()
