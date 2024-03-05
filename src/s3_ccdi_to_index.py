@@ -216,12 +216,11 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
         logger.error(
             "No files were found in the submission template. Please add files or ignore the output from this step."
         )
-        output_file_path = "(EMPTY)_"+ output_file + ".xlsx"
+        output_file_path = "(EMPTY)_" + output_file + ".xlsx"
         logger_file_name = "CCDI_to_Index_" + get_date() + ".log"
         return (output_file_path, logger_file_name)
     else:
         pass
-
 
     # START WITH FILES INSTEAD AND WALK EACH LINE BACK?
     # Based on each connection possible for the files walk it back manually by starting with the most likely connections
@@ -577,10 +576,10 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
                 col_x = "anatomic_site_x"
                 col_base = col_x[:-2]
                 col_y = col_base + "_y"
-                participant_sample_cell_line_file[
-                    col_base
-                ] = participant_sample_cell_line_file[col_y].combine_first(
-                    participant_sample_cell_line_file[col_x]
+                participant_sample_cell_line_file[col_base] = (
+                    participant_sample_cell_line_file[col_y].combine_first(
+                        participant_sample_cell_line_file[col_x]
+                    )
                 )
                 participant_sample_cell_line_file.drop(
                     columns=[col_x, col_y], inplace=True
@@ -603,10 +602,10 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
                 col_x = "anatomic_site_x"
                 col_base = col_x[:-2]
                 col_y = col_base + "_y"
-                participant_sample_pdx_sample_file[
-                    col_base
-                ] = participant_sample_pdx_sample_file[col_y].combine_first(
-                    participant_sample_pdx_sample_file[col_x]
+                participant_sample_pdx_sample_file[col_base] = (
+                    participant_sample_pdx_sample_file[col_y].combine_first(
+                        participant_sample_pdx_sample_file[col_x]
+                    )
                 )
                 participant_sample_pdx_sample_file.drop(
                     columns=[col_x, col_y], inplace=True
@@ -629,10 +628,10 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
                 col_x = "anatomic_site_x"
                 col_base = col_x[:-2]
                 col_y = col_base + "_y"
-                participant_sample_cell_line_sample_file[
-                    col_base
-                ] = participant_sample_cell_line_sample_file[col_y].combine_first(
-                    participant_sample_cell_line_sample_file[col_x]
+                participant_sample_cell_line_sample_file[col_base] = (
+                    participant_sample_cell_line_sample_file[col_y].combine_first(
+                        participant_sample_cell_line_sample_file[col_x]
+                    )
                 )
                 participant_sample_cell_line_sample_file.drop(
                     columns=[col_x, col_y], inplace=True
@@ -840,6 +839,27 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     index_df = index_df.dropna(subset=["file_url_in_cds"])
 
     index_df = index_df.drop_duplicates()
+
+    ##############
+    #
+    # Roll-up
+    #
+    ##############
+
+    # Group by "GUID" and aggregate other columns
+    index_df = index_df.groupby("GUID").agg(lambda x: list(x))
+
+    # Reset index to make 'GUID' a column again
+    index_df = index_df.reset_index()
+
+    # Double check for duplicates again.
+    index_df = index_df.drop_duplicates()
+
+    ##############
+    #
+    # Stat check
+    #
+    ##############
 
     # Quick stats to check the conversion, make sure things are working as we think they should be.
     file_expected = len(
