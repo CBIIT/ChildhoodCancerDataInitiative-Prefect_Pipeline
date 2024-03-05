@@ -22,16 +22,12 @@ from src.neo4j_data_tools import (
 def validate_neo4j_data(
     bucket: str,
     runner: str,
-    tsv_folder: str,
+    tsv_folder: str = "path/to/ingestion_folder/in/s3/bucket",
     uri_parameter: str = "uri",
     username_parameter: str = "username",
     password_parameter: str = "password",
 ):
     logger = get_run_logger()
-
-    # download folder from bucket
-    logger.info(f"Downloading folder {tsv_folder}")
-    folder_dl(bucket=bucket, remote_folder=tsv_folder)
 
     # query counts per node per study
     # it returns a pandas dataframe
@@ -42,19 +38,37 @@ def validate_neo4j_data(
         password_parameter=password_parameter,
     )
 
-    # validate db info with files in tsv folder
-    logger.info("Reading tsv files and validating records between tsv files and DB")
-    validate_df = validate_DB_with_input_tsvs(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-        tsv_folder=tsv_folder,
-        studies_dataframe=db_node_count_all_studies,
-    )
+    # download folder from bucket
+    if tsv_folder != "path/to/ingestion_folder/in/s3/bucket":
+        logger.info(f"Downloading folder {tsv_folder}")
+        folder_dl(bucket=bucket, remote_folder=tsv_folder)
+    else:
+        logger.info("No ingestion files folder path provided")
+
+    if tsv_folder != "path/to/ingestion_folder/in/s3/bucket":
+        # validate db info with files in tsv folder
+        logger.info("Reading tsv files and validating records between tsv files and DB")
+        validate_df = validate_DB_with_input_tsvs(
+            uri_parameter=uri_parameter,
+            username_parameter=username_parameter,
+            password_parameter=password_parameter,
+            tsv_folder=tsv_folder,
+            studies_dataframe=db_node_count_all_studies,
+        )
+
+        # create markdown report for validation purpose
+        logger.info("Creating markdown report for Neo4j validation")
+        count_summary_df = validate_df_to_count_summary(validate_df=validate_df)
+        id_summary_df = validate_df_to_id_summary(validate_df=validate_df)
+        neo4j_validation_md(count_summary_df=count_summary_df, id_summary_df=id_summary_df, runner=runner)
+
+        df_for_bucket_upload = validate_df
+    else:
+        df_for_bucket_upload = db_node_count_all_studies
 
     # folder name in the bucket for file ul
-    summary_file_name =  f"neo4j_validation_summary_{get_date()}.csv"
-    validate_df.to_csv(summary_file_name, index=False)
+    summary_file_name =  f"neo4j_validation_summary_{get_date()}.tsv"
+    df_for_bucket_upload.to_csv(summary_file_name, sep='\t', index=False)
     bucket_folder = os.path.join(runner, "neo4j_validation_" + get_time())
     file_ul(
         bucket=bucket,
@@ -63,9 +77,3 @@ def validate_neo4j_data(
         newfile=summary_file_name,
     )
     logger.info(f"Neo4j validation summary file {summary_file_name} has been uploaded to bucket {bucket} at folder {bucket_folder}")
-
-    # crete markdown report for this workflow
-    logger.info("Creating markdown report for Neo4j validation")
-    count_summary_df = validate_df_to_count_summary(validate_df=validate_df)
-    id_summary_df = validate_df_to_id_summary(validate_df=validate_df)
-    neo4j_validation_md(count_summary_df=count_summary_df, id_summary_df=id_summary_df, runner=runner)

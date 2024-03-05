@@ -218,19 +218,21 @@ def pull_uniq_studies(driver) -> List:
 
 def export_node_counts_a_study(tx, study_id: str, output_dir: str) -> None:
     """Returns a csv which countains count of entries of each noe of a study
-    
+
     Example content of csv file:
     study_id, node, DB_count
     phs000123, study_admin, 1
     ...
     """
-    cypher_query=Neo4jCypherQuery.all_nodes_entries_study_cypher_query.format(study_id=study_id)
+    cypher_query = Neo4jCypherQuery.all_nodes_entries_study_cypher_query.format(
+        study_id=study_id
+    )
     # run the cypher query with specified study_id
     result = tx.run(cypher_query)
     output_filename = os.path.join(output_dir, f"{study_id}_nodes_entry_counts.csv")
     with open(output_filename, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
-        csv_writer.writerow(["study_id","node","DB_count"])
+        csv_writer.writerow(["study_id", "node", "DB_count"])
         for record in result:
             node_label = record["NodeLabel"][0]
             node_count = record["NodeCount"]
@@ -238,14 +240,17 @@ def export_node_counts_a_study(tx, study_id: str, output_dir: str) -> None:
     return None
 
 
-@task(name="Pull counts per node a study", task_run_name="pull_counts_per_node_study_{study_id}")
-def pull_all_nodes_a_study(driver, export_to_csv, study_id: str, output_dir: str) -> None:
+@task(
+    name="Pull counts per node a study",
+    task_run_name="pull_counts_per_node_study_{study_id}",
+)
+def pull_all_nodes_a_study(
+    driver, export_to_csv, study_id: str, output_dir: str
+) -> None:
     """Executes export_node_count_a_study"""
     session = driver.session()
     try:
-        session.execute_read(
-            export_to_csv, study_id, output_dir
-        )
+        session.execute_read(export_to_csv, study_id, output_dir)
     except:
         traceback.print_exc()
         raise
@@ -256,12 +261,14 @@ def pull_all_nodes_a_study(driver, export_to_csv, study_id: str, output_dir: str
 
 def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> None:
     """Writes a csv which contains ids of all entries of a node of a study
-    
+
     Example content of csv file:
     study_id, node, id
     phs000123, publication, phs000123::random_id
     """
-    cypher_query = Neo4jCypherQuery.node_id_cypher_query_query.format(study_id=study_id, node=node)
+    cypher_query = Neo4jCypherQuery.node_id_cypher_query_query.format(
+        study_id=study_id, node=node
+    )
     # run the cypher query with specified study and node
     result = tx.run(cypher_query)
     db_id_list = [record["id"] for record in result]
@@ -273,15 +280,15 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     study_node_id_df.to_csv(output_filepath, index=False)
     return None
 
+
 @task(name="Pull ids a node a study", task_run_name="pull_ids_{node}_{study_id}")
-def pull_ids_node_study(driver, export_ids_csv, study_id: str, node: str, output_dir: str) -> None:
-    """Executes export_node_ids_a_study
-    """
+def pull_ids_node_study(
+    driver, export_ids_csv, study_id: str, node: str, output_dir: str
+) -> None:
+    """Executes export_node_ids_a_study"""
     session = driver.session()
     try:
-        session.execute_read(
-            export_ids_csv, study_id, node, output_dir
-        )
+        session.execute_read(export_ids_csv, study_id, node, output_dir)
     except:
         traceback.print_exc()
         raise
@@ -290,8 +297,67 @@ def pull_ids_node_study(driver, export_ids_csv, study_id: str, node: str, output
     return None
 
 
+@task
+def parse_tsv_files(filelist: list) -> DataFrame:
+    """Loops through all ingested tsv files downloaded from bucket
+    and returns dataframe with columns of ["study_id","node","tsv_count","tsv_id"]
+    """
+    return_df = pd.DataFrame(columns=["study_id", "node", "tsv_count", "tsv_id"])
+    for file in filelist:
+        tsv_df = pd.read_csv(file, sep="\t", low_memory=False)
+        tsv_study_id = (
+            tsv_df["id"].str.split(pat="::", n=1, expand=True)[0].unique().tolist()[0]
+        )
+        tsv_node = tsv_df["type"].unique().tolist()[0]
+        tsv_id_list = tsv_df["id"].tolist()
+        tsv_id_count = tsv_df.shape[0]
+        tsv_df_info = pd.DataFrame(
+            {
+                "study_id": [tsv_study_id],
+                "node": [tsv_node],
+                "tsv_count": [tsv_id_count],
+                "tsv_id": [tsv_id_list],
+            }
+        )
+        return_df = pd.concat([return_df, tsv_df_info], ignore_index=True)
+    # filter out any node ==  "study"
+    return_df = return_df[return_df["node"] != "study"].reset_index(drop=True)
+    return return_df
+
+
+@task
+def compare_id_input_db(db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, logger) -> DataFrame:
+    comparison_df = parsed_tsv_file_df
+    comparison_df["count_check"] = np.nan
+    comparison_df["id_check"] = np.nan
+    comparison_df["db_missing_id"] = np.nan
+    for i in range(comparison_df.shape[0]):
+        i_study_id = comparison_df.loc[i, "study_id"]
+        i_node = comparison_df.loc[i, "node"]
+        i_node_id = comparison_df.loc[i, "tsv_id"]
+        i_node_id_count = comparison_df.loc[i, "tsv_count"]
+        db_node_id_count =  len(db_id_pulled_dict[i_study_id][i_node])
+        db_node_id = db_id_pulled_dict[i_study_id][i_node]
+        if i_node_id_count == db_node_id_count:
+            comparison_df.loc[i, "count_check"] = "Equal"
+        else:
+            comparison_df.loc[i, "count_check"] = "Unequal"
+            logger.warning(f"Study {i_study_id} node {i_node} ingestion file contains different number of entries compared to neo4j DB")
+        db_missing_ids = [i for i in i_node_id if i not in db_node_id]
+        if len(db_missing_ids) > 0:
+            comparison_df.loc[i, "db_missing_id"] = ";".join(db_missing_ids)
+            comparison_df.loc[i, "id_check"] = "Fail"
+            logger.error(f"Study {i_study_id} node {i_node} ingestion has ids not found in neo4j DB: {*db_missing_ids,}")
+        else:
+            comparison_df.loc[i, "id_check"] = "Pass"
+            logger.info(f"Study {i_study_id} node {i_node} ingestion has all ids found in neo4j DB")
+    return comparison_df
+
+
 @flow(task_runner=ConcurrentTaskRunner())
-def pull_node_ids_all_studies_write(driver, studies_dataframe: DataFrame, logger) -> str:
+def pull_node_ids_all_studies_write(
+    driver, studies_dataframe: DataFrame, logger
+) -> str:
     """Returns a temp folder that contains files of ids for each node each study"""
     # create a temp folder
     temp_folder_name = "db_ids_all_node_all_studies"
@@ -310,17 +376,25 @@ def pull_node_ids_all_studies_write(driver, studies_dataframe: DataFrame, logger
         )
     return temp_folder_name
 
+
 @flow
 def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> Dict:
-    csv_folder = pull_node_ids_all_studies_write(driver=driver, studies_dataframe=studies_dataframe, logger=logger)
+    """Returns a dictionary of db id list using study id and node name
+    
+    The function takes dataframe which contains columns of study_id and node as input.
+    It loops each row, and pulls id list of a node in one study.
+    """
+    csv_folder = pull_node_ids_all_studies_write(
+        driver=driver, studies_dataframe=studies_dataframe, logger=logger
+    )
     ids_dict = {}
-    csv_list =  os.listdir(csv_folder)
+    csv_list = os.listdir(csv_folder)
     for file in csv_list:
         file_path = os.path.join(csv_folder, file)
-        file_df =  pd.read_csv(file_path, header=0)
-        file_study =  file_df["study_id"].unique().tolist()[0]
+        file_df = pd.read_csv(file_path, header=0)
+        file_study = file_df["study_id"].unique().tolist()[0]
         if file_study not in ids_dict.keys():
-            ids_dict[file_study]={}
+            ids_dict[file_study] = {}
         else:
             pass
         file_node = file_df["node"].unique().tolist()[0]
@@ -330,7 +404,7 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
 
 @flow(task_runner=ConcurrentTaskRunner())
 def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
-    """Returns temp folder which contains counts all nodes(except study node) 
+    """Returns temp folder which contains counts all nodes(except study node)
     of all studies in a DB
     """
     # create a folder to keep all node entry counts per study
@@ -339,7 +413,12 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     logger.info("Start pulling entry counts per node per study")
     for study in study_list:
         logger.info(f"Pulling entry counts per node for study {study}")
-        pull_all_nodes_a_study.submit(driver=driver, export_to_csv=export_node_counts_a_study, study_id=study, output_dir=temp_folder_name)
+        pull_all_nodes_a_study.submit(
+            driver=driver,
+            export_to_csv=export_node_counts_a_study,
+            study_id=study,
+            output_dir=temp_folder_name,
+        )
 
     return temp_folder_name
 
@@ -347,11 +426,13 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
 @flow
 def pull_studies_loop(driver, study_list: list, logger) -> DataFrame:
     """Return a dataframe contains entry counts per node of all studies in DB"""
-    csv_folder =  pull_studies_loop_write(driver=driver, study_list=study_list, logger=logger)
+    csv_folder = pull_studies_loop_write(
+        driver=driver, study_list=study_list, logger=logger
+    )
     csv_filelist = os.listdir(csv_folder)
-    count_df = pd.DataFrame(columns=["study_id","node","DB_count"])
+    count_df = pd.DataFrame(columns=["study_id", "node", "DB_count"])
     for file in csv_filelist:
-        file_path =  os.path.join(csv_folder, file)
+        file_path = os.path.join(csv_folder, file)
         file_df = pd.read_csv(file_path, header=0)
         count_df = pd.concat([count_df, file_df], ignore_index=True)
     return count_df
@@ -413,81 +494,30 @@ def validate_DB_with_input_tsvs(
     logger.info("Creating GraphDatabase driver using uri, username, and password")
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
-    db_id_list_all_studies = pull_node_ids_all_studies(
-        driver=driver, studies_dataframe=studies_dataframe, logger=logger
-    )
+    # read trhough tsv folder and extrac study_id, node, id_count,
+    # and id list from each file
     tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
-    validate_df = studies_dataframe
-    validate_df["tsv_count"] = np.nan
-    validate_df["count_compare"] = np.nan
-    validate_df["id_check"] = np.nan
-    for tsv in tsv_files:
-        tsv_df = pd.read_csv(tsv, sep="\t", low_memory=False)
-        tsv_study_id = (
-            tsv_df["id"].str.split(pat="::", n=1, expand=True)[0].unique().tolist()[0]
-        )
-        tsv_node = tsv_df["type"].unique().tolist()[0]
-        # skip tsv file for study node tsv
-        if tsv_node != "study":
-            tsv_count = tsv_df.shape[0]
-            tsv_id_list = tsv_df["id"].tolist()
-            db_id_list = db_id_list_all_studies[tsv_study_id][tsv_node]
-            validate_df.loc[
-                (validate_df["study_id"] == tsv_study_id)
-                & (validate_df["node"] == tsv_node),
-                "tsv_count",
-            ] = tsv_count
-            node_db_count = validate_df.loc[
-                (validate_df["study_id"] == tsv_study_id)
-                & (validate_df["node"] == tsv_node),
-                "DB_count",
-            ].values[0]
-            if node_db_count == tsv_count:
-                validate_df.loc[
-                    (validate_df["study_id"] == tsv_study_id)
-                    & (validate_df["node"] == tsv_node),
-                    "count_compare",
-                ] = "Pass"
-                logger.info(
-                    f"Count check Passed for node {tsv_node} in study {tsv_study_id}"
-                )
-            else:
-                validate_df.loc[
-                    (validate_df["study_id"] == tsv_study_id)
-                    & (validate_df["node"] == tsv_node),
-                    "count_compare",
-                ] = "Fail"
-                logger.error(
-                    f"Count discrepancy of node {tsv_node} in study {tsv_study_id}"
-                )
+    ingested_studies_dataframe = parse_tsv_files(tsv_files)
 
-            # check if tsv_id_list can be found in DB
-            id_notfound = [id for id in tsv_id_list if id not in db_id_list]
-            if len(id_notfound) >= 1:
-                logger.error(
-                    f"Ids in tsv of node {tsv_node} in study {tsv_study_id} not found in db: {*id_notfound,}"
-                )
-                validate_df.loc[
-                    (validate_df["study_id"] == tsv_study_id)
-                    & (validate_df["node"] == tsv_node),
-                    "id_check",
-                ] = "Fail"
-            else:
-                validate_df.loc[
-                    (validate_df["study_id"] == tsv_study_id)
-                    & (validate_df["node"] == tsv_node),
-                    "id_check",
-                ] = "Pass"
-                logger.info(
-                    f"All ids of node {tsv_node} in study {tsv_study_id} found in DB"
-                )
-        else:
-            pass
+    db_id_list_all_studies = pull_node_ids_all_studies(
+        driver=driver, studies_dataframe=ingested_studies_dataframe, logger=logger
+    )
+
+    comparison_df = compare_id_input_db(
+        db_id_pulled_dict=db_id_list_all_studies,
+        parsed_tsv_file_df=ingested_studies_dataframe,
+        logger=logger)
+
+    merged_summary_table =  pd.merge(studies_dataframe, comparison_df, on=["study_id","node"], how="left")
+    merged_summary_table.drop(columns=["tsv_id"], inplace=True)
+
     # sort the df order based on study id and node
-    validate_df = validate_df.sort_values(by=["study_id", "node"], ascending=True)
+    merged_summary_table = merged_summary_table.sort_values(
+        by=["study_id", "node"], ascending=True
+    )
     # close driver
     driver.close()
-    return validate_df
+    return merged_summary_table
 
 
 def validate_df_to_count_summary(validate_df: DataFrame) -> DataFrame:
@@ -523,7 +553,9 @@ def validate_df_to_id_summary(validate_df: DataFrame) -> DataFrame:
 
 
 @task
-def neo4j_validation_md(count_summary_df: DataFrame, id_summary_df: DataFrame, runner=str) -> None:
+def neo4j_validation_md(
+    count_summary_df: DataFrame, id_summary_df: DataFrame, runner=str
+) -> None:
     count_df_str = count_summary_df.to_markdown(tablefmt="pipe", index=False)
     id_df_str = id_summary_df.to_markdown(tablefmt="pipe", index=False)
     markdown_report = f"""# CCDI Neo4j DB Validation Summary
