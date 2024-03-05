@@ -846,10 +846,10 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     #
     ##############
 
-    # Group by "GUID" and aggregate other columns
-    index_df = index_df.groupby("GUID").agg(lambda x: list(x))
+    # Group by "guid" and aggregate other columns
+    index_df = index_df.groupby("guid").agg(lambda x: list(x))
 
-    # Reset index to make 'GUID' a column again
+    # Reset index to make 'guid' a column again
     index_df = index_df.reset_index()
 
     # Double check for duplicates again.
