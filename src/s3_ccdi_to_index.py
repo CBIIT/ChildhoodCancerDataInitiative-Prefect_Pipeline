@@ -847,7 +847,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     ##############
 
     # Group by "guid" and aggregate other columns
-    index_df = index_df.groupby('guid').agg(lambda x: list(x))
+    index_df = index_df.groupby("guid").agg(lambda x: list(x))
 
     # Reset index to make 'guid' a column again
     index_df = index_df.reset_index()
@@ -857,14 +857,15 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
         unique_values = set(lst)
         if len(unique_values) == 1:
             # Return the single value
-            return next(iter(unique_values))  
+            return next(iter(unique_values))
         else:
             # Return the list as a string separated by semicolon
-            return ';'.join(map(str, lst))  
+            return ";".join(map(str, lst))
 
     # Apply the custom function to each cell in the DataFrame
-    index_df = index_df.applymap(process_list)
-
+    for col in index_df.columns:
+        if col != "guid":
+            index_df[col] = index_df[col].apply(process_list)
 
     # Double check for duplicates again.
     index_df = index_df.drop_duplicates()
@@ -897,9 +898,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
             "The conversion was likely NOT successful, as it did not return the same number of unique files"
         )
     if file_expected != file_total:
-        logger.info(
-            "This conversion contains roll-ups."
-        )
+        logger.info("This conversion contains roll-ups.")
 
     ##############
     #
