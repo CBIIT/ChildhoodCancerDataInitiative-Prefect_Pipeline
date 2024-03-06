@@ -19,6 +19,8 @@ from urllib.request import urlopen
 from io import BytesIO
 from zipfile import ZipFile
 from shutil import copy
+import json
+from botocore.exceptions import ClientError
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -927,3 +929,4 @@ class CheckCCDI:
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
+
