@@ -631,17 +631,6 @@ def query_db_to_csv(
     return output_dir
 
 
-def read_node_tsv(filepath: str) -> tuple:
-    node_df = pd.read_csv(filepath, sep="\t", low_memory=False)
-    study_id = (
-        node_df["id"].str.split(pat="::", n=1, expand=True)[0].unique().tolist()[0]
-    )
-    node_name = node_df["type"].unique().tolist()[0]
-    node_count = node_df.shape[0]
-    id_list = node_df["id"].tolist()
-    return study_id, node_name, node_count, id_list
-
-
 def list_type_files(file_dir: str, file_type: str) -> list:
     """Returns a list of matched file paths under a folder path"""
     file_list = os.listdir(file_dir)
