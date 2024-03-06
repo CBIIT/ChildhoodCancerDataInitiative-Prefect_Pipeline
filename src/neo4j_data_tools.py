@@ -84,16 +84,17 @@ def get_aws_parameter(parameter_name: str, logger) -> Dict:
 
     try:
         parameter_response = ssm_client.get_parameter(Name=parameter_name)
-        logger.info(
-            f"Parameter info:\n{json.dumps(parameter_response, indent=4, default=str)}"
-        )
+        logger.info(f"Fetching aws parameter {parameter_name} Done")
+        #logger.info(
+        #    f"Parameter info:\n{json.dumps(parameter_response, indent=4, default=str)}"
+        #)
     except ClientError as err:
         ex_code = err.response["Error"]["Code"]
         ex_message = err.response["Error"]["Message"]
         logger.error(ex_code + ":" + ex_message)
         raise
     except Exception as error:
-        logger.error(f"Get s3 parameter {parameter_name} FAILED")
+        logger.error(f"Fetching aws parameter {parameter_name} FAILED")
         logger.error("General exception noted.", exc_info=True)
         raise
 
