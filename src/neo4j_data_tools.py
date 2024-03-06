@@ -217,7 +217,7 @@ def pull_uniq_studies(driver) -> List:
 
 
 def export_node_counts_a_study(tx, study_id: str, output_dir: str) -> None:
-    """Returns a csv which countains count of entries of each noe of a study
+    """Returns a csv which contains counts of entries of every node of a study
 
     Example content of csv file:
     study_id, node, DB_count
@@ -522,13 +522,13 @@ def validate_DB_with_input_tsvs(
 
 def validate_df_to_count_summary(validate_df: DataFrame) -> DataFrame:
     count_summary_df = (
-        validate_df.groupby(["study_id", "count_compare"])["node"]
+        validate_df.groupby(["study_id", "count_check"])["node"]
         .agg("count")
         .reset_index()
         .rename(
             columns={
                 "study_id": "Study ID",
-                "count_compare": "Entries Count Check",
+                "count_check": "Entries Count Check",
                 "node": "Node Count",
             }
         )
