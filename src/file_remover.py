@@ -4,41 +4,49 @@ from botocore.errorfactory import ClientError
 import os
 import hashlib
 
+
 def if_object_exists(bucket: str, key_path: str, logger) -> None:
     """Retrives the metadata of an object without returning the
     object itself
 
     To use HEAD, you must have the s3:GetObject permission
     """
-    s3_client= set_s3_session_client()
+    s3_client = set_s3_session_client()
     try:
-        object_meta = s3_client.head_object(Bucket=bucket,Key=key_path)
+        object_meta = s3_client.head_object(Bucket=bucket, Key=key_path)
         if_exist = True
     except ClientError as err:
         err_code = err.response["Error"]["Code"]
         err_message = err.response["Error"]["Message"]
-        logger.error(f"Error occurred while fetching metadata of {key_path} from bucjet {bucket}: {err_code} {err_message}")
+        logger.error(
+            f"Error occurred while fetching metadata of {key_path} from bucjet {bucket}: {err_code} {err_message}"
+        )
         if_exist = False
     finally:
         s3_client.close()
     return if_exist
 
-def parse_bucket_folder_path(bucket_folder_path:str) -> tuple:
+
+def parse_bucket_folder_path(bucket_folder_path: str) -> tuple:
     """Extract bucket name and folder path from a bucket path str
-    
+
     Example: "ccdi-staging/sub_folder1/sub_folder2"
     Return values: ccdi-staging, "subfolder1/sub_folder2"
     """
-    bucket_folder_path =  bucket_folder_path.strip("/")
+    bucket_folder_path = bucket_folder_path.strip("/")
     if "/" in bucket_folder_path:
-        path_list =  bucket_folder_path.split("/", 1)
-        bucket, folder_path =  path_list
+        path_list = bucket_folder_path.split("/", 1)
+        bucket, folder_path = path_list
     else:
         bucket = bucket_folder_path
         folder_path = ""
     return bucket, folder_path
 
-def construct_staging_bucket_key(object_prod_bucket_key: str, prod_bucket_path: str, staging_bucket_path: str) -> str:
+
+@task
+def construct_staging_bucket_key(
+    object_prod_bucket_key: str, prod_bucket_path: str, staging_bucket_path: str
+) -> str:
     """Reconstruct the object key in staging bucket
 
     Example:
@@ -51,7 +59,7 @@ def construct_staging_bucket_key(object_prod_bucket_key: str, prod_bucket_path: 
     _, prod_prefix = parse_bucket_folder_path(bucket_folder_path=prod_bucket_path)
     object_prod_bucket_key = object_prod_bucket_key.strip("/")
     # remove the prefix part in prod bucket
-    object_without_prod_prefix = object_prod_bucket_key[len(prod_prefix):].strip("/")
+    object_without_prod_prefix = object_prod_bucket_key[len(prod_prefix) :].strip("/")
     # parse staging bucket path to staging bucket name, staging prefix
     staging_bucket, staging_prefix = parse_bucket_folder_path(
         bucket_folder_path=staging_bucket_path
@@ -59,6 +67,7 @@ def construct_staging_bucket_key(object_prod_bucket_key: str, prod_bucket_path: 
     # concatenate with staging bucket path
     object_staging_bucket_key = os.path.join(staging_prefix, object_without_prod_prefix)
     return staging_bucket, object_staging_bucket_key
+
 
 @task
 def get_md5sum(object_key: str, bucket: str) -> str:
@@ -82,24 +91,30 @@ def get_md5sum(object_key: str, bucket: str) -> str:
     s3_client.close()
     return md5_hash.hexdigest()
 
+
 @flow
 def objects_md5sum(list_keys: list[str], bucket_name: str) -> list[str]:
     """Get a list of md5sum using a list of keys and static bucket name
 
-    Example: 
+    Example:
         list_keys = ["folder1/folder2/file1.txt","folder1/folder2/file2.txt","folder1/folder2/file3.txt"]
         bucket_name = "ccdi-staging"
     """
-    #logger = get_run_logger()
+    # logger = get_run_logger()
     md5sum_futures = get_md5sum.map(list_keys, bucket_name)
     md5sum_list = [i.result() for i in md5sum_futures]
-    #logger.info(f"md5sum list return is: {*md5sum_list,}")
+    # logger.info(f"md5sum list return is: {*md5sum_list,}")
     return md5sum_list
 
+
 @flow
-def objects_staging_key(object_prod_key_list: list[str], prod_bucket_path: str, staging_bucket_path: str) -> list[str]:
+def objects_staging_key(
+    object_prod_key_list: list[str], prod_bucket_path: str, staging_bucket_path: str
+) -> list[str]:
     logger = get_run_logger()
-    staging_keys_future =  construct_staging_bucket_key.map(object_prod_key_list, prod_bucket_path, staging_bucket_path)
+    staging_keys_future = construct_staging_bucket_key.map(
+        object_prod_key_list, prod_bucket_path, staging_bucket_path
+    )
     staging_keys_list = [i.result() for i in staging_keys_future]
     for h in staging_keys_list:
         logger.info(f"staging bucket: {h[0]}\nobject key: {h[1]}")
