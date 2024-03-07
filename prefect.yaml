@@ -192,3 +192,36 @@ deployments:
       name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-construct-staging-keys
+    version: null
+    tags: ["Test"]
+    description: null
+    entrypoint: src/file_remover.py:objects_staging_key
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      object_prod_key_list:
+        - "release_folder/sub_dir1/sub_dir2/object_file.txt"
+        - "release_folder/sub_dir3/object_file.tsv"
+        - "release_folder/sub_dir4/sub_dir5/sub_dir6/object_file.fastq"
+      prod_bucket_path: "prod_bucket/release_folder"
+      staging_bucket_path: "staging_bucket/staging_subfolder"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-886_file_remover
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-ecs
+      work_queue_name: null
+      job_variables: {}

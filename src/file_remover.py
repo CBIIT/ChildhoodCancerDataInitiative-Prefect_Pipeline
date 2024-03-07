@@ -38,7 +38,7 @@ def parse_bucket_folder_path(bucket_folder_path:str) -> tuple:
         folder_path = ""
     return bucket, folder_path
 
-def construct_staging_key(object_prod_bucket_key: str, prod_bucket_path: str, staging_bucket_path: str) -> str:
+def construct_staging_bucket_key(object_prod_bucket_key: str, prod_bucket_path: str, staging_bucket_path: str) -> str:
     """Reconstruct the object key in staging bucket
 
     Example:
@@ -83,15 +83,24 @@ def get_md5sum(object_key: str, bucket: str) -> str:
     return md5_hash.hexdigest()
 
 @flow
-def objects_md5sum(list_keys: list[str], bucket_name: str):
+def objects_md5sum(list_keys: list[str], bucket_name: str) -> list[str]:
     """Get a list of md5sum using a list of keys and static bucket name
 
     Example: 
         list_keys = ["folder1/folder2/file1.txt","folder1/folder2/file2.txt","folder1/folder2/file3.txt"]
         bucket_name = "ccdi-staging"
     """
-    logger = get_run_logger()
+    #logger = get_run_logger()
     md5sum_futures = get_md5sum.map(list_keys, bucket_name)
     md5sum_list = [i.result() for i in md5sum_futures]
-    logger.info(f"md5sum list return is: {*md5sum_list,}")
+    #logger.info(f"md5sum list return is: {*md5sum_list,}")
     return md5sum_list
+
+@flow
+def objects_staging_key(object_prod_key_list: list[str], prod_bucket_path: str, staging_bucket_path: str) -> list[str]:
+    logger = get_run_logger()
+    staging_keys_future =  construct_staging_bucket_key.map(object_prod_key_list, prod_bucket_path, staging_bucket_path)
+    staging_keys_list = [i.result() for i in staging_keys_future]
+    for h in staging_keys_list:
+        logger.info(f"staging bucket: {h[0]}\nobject key: {h[1]}")
+    return staging_keys_list
