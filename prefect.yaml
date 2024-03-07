@@ -171,7 +171,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket_name: "ccdi-validation"
       list_keys:
         - "sub_dir1/subdir2/object_file.txt"
         - "sub_dir3/object_file.tsv"

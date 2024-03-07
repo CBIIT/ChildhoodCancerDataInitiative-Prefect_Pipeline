@@ -1,4 +1,4 @@
-from prefect import flow, task
+from prefect import flow, task, get_run_logger
 from src.utils import set_s3_session_client
 from botocore.errorfactory import ClientError
 import os
@@ -90,7 +90,8 @@ def objects_md5sum(list_keys: list[str], bucket_name: str):
         list_keys = ["folder1/folder2/file1.txt","folder1/folder2/file2.txt","folder1/folder2/file3.txt"]
         bucket_name = "ccdi-staging"
     """
+    logger = get_run_logger()
     md5sum_futures = get_md5sum.map(list_keys, bucket_name)
     md5sum_list = [i.result() for i in md5sum_futures]
-    print(md5sum_list)
+    logger.info(f"md5sum list return is: {*md5sum_list,}")
     return md5sum_list
