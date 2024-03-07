@@ -161,3 +161,34 @@ deployments:
       name: ccdi-curation-ecs
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-md5sum-function
+    version: null
+    tags: ["Test"]
+    description: null
+    entrypoint: src/file_remover.py:objects_md5sum
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      list_keys:
+        - "sub_dir1/subdir2/object_file.txt"
+        - "sub_dir3/object_file.tsv"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-886_file_remover
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-ecs
+      work_queue_name: null
+      job_variables: {}

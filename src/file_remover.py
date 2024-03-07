@@ -83,7 +83,7 @@ def get_md5sum(object_key: str, bucket: str) -> str:
     return md5_hash.hexdigest()
 
 @flow
-def objects_md5sum(list_keys: list, bucket_name: str):
+def objects_md5sum(list_keys: list[str], bucket_name: str):
     """Get a list of md5sum using a list of keys and static bucket name
 
     Example: 
