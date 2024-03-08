@@ -523,9 +523,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             paginator = s3_client.get_paginator("list_objects_v2")
                             response_iterator = paginator.paginate(Bucket=node_url)
 
-                            #REMOVE LATER
-                            print('Found bucket')
-
                             # pull out each response and obtain file name and size
                             for response in response_iterator:
                                 if "Contents" in response:
@@ -554,10 +551,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         }
                     )
 
-                    #REMOVE LATER
-                    print ("THE CREATED DATA FRAME")
-                    print (df_bucket)
-
                     # find bad url locs based on the full file path and whether it can be found in the url bucket manifest.
                     bad_url_locs = df["file_url_in_cds"].isin(df_bucket["file_path"])
 
@@ -581,11 +574,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
                                 print(
                                     f"\tWARNING: The file location for the file, {file_name_find}, has been changed:",
-                                    file=outf
+                                    file=outf,
                                 )
                                 print(
                                     f"\t\t{df['file_url_in_cds'][loc]} ---> {filtered_df['file_path'].values[0]}",
-                                    file=outf
+                                    file=outf,
                                 )
 
                                 df["file_url_in_cds"][loc] = filtered_df[
@@ -595,7 +588,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             else:
                                 print(
                                     f"\tERROR: There is an unresolvable issue with the file url for file: {file_name_find}",
-                                    file=outf
+                                    file=outf,
                                 )
 
                     # write back to the meta_dfs list
