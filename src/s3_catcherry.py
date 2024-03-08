@@ -588,7 +588,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     file=outf
                                 )
 
-                                df.iloc["file_url_in_cds"][loc] = filtered_df[
+                                df["file_url_in_cds"][loc] = filtered_df[
                                     "file_path"
                                 ].values[0]
 
