@@ -8,7 +8,7 @@ from botocore.exceptions import ClientError
 import json
 import boto3
 
-@task
+@flow
 def get_aws_parameter(parameter_name: str) -> dict:
     # get a logger
     logger= get_run_logger()
@@ -25,8 +25,9 @@ def get_aws_parameter(parameter_name: str) -> dict:
         logger.error(ex_code + ":" + ex_message)
         raise
     except Exception as error:
-        logger.error(f"Get s3 parameter {parameter_name} FAILED")
+        logger.error(f"Get aws parameter {parameter_name} FAILED")
         logger.error("General exception noted.", exc_info=True)
         raise
 
     return parameter_response
+
