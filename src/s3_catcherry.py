@@ -557,7 +557,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     # Go through each bad location and determine if the correct url location can be determined on file_name and file_size.
                     for loc in range(len(bad_url_locs)):
                         # if the value is bad then fix
-                        if not bad_url_locs[loc]:
+                        if not bad_url_locs.iloc[loc]:
                             file_name_find = df["file_name"][loc]
                             file_size_find = df["file_size"][loc]
 
