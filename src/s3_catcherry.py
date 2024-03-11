@@ -194,7 +194,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         if property in enum_arrays:
                             # reorder the array to be in alphabetical order
                             for value_pos in range(0, len(df[property])):
-                                value = df[property][value_pos]
+                                value = df[property].iloc[value_pos]
                                 if pd.notna(value):
                                     if ";" in value:
                                         value = ";".join(
@@ -557,7 +557,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     # Go through each bad location and determine if the correct url location can be determined on file_name and file_size.
                     for loc in range(len(bad_url_locs)):
                         # if the value is bad then fix
-                        if not bad_url_locs[loc]:
+                        if not bad_url_locs.iloc[loc]:
                             file_name_find = df["file_name"][loc]
                             file_size_find = df["file_size"][loc]
 
