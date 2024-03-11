@@ -80,7 +80,7 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     return dest_url
 
 
-@task(name="Copy an object file", task_run_name="copy_object_{Key}".format(**copy_parameter))
+@task(name="Copy an object file")
 def copy_file_task(copy_parameter: dict, logger) -> str:
     s3_client = set_s3_session_client()
     try:
