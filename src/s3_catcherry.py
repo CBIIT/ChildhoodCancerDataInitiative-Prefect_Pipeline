@@ -194,7 +194,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         if property in enum_arrays:
                             # reorder the array to be in alphabetical order
                             for value_pos in range(0, len(df[property])):
-                                value = df[property][value_pos]
+                                value = df[property].iloc[value_pos]
                                 if pd.notna(value):
                                     if ";" in value:
                                         value = ";".join(
