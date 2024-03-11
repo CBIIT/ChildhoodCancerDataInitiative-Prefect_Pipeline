@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import json
 import hashlib
-from prefect import flow, task
+from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
 from typing import TypeVar
 
@@ -81,7 +81,7 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
 
 
 @task(name="Copy an object file")
-def copy_file_task(copy_parameter: dict, logger) -> str:
+def copy_file_task(copy_parameter: dict, logger, runner_logger) -> str:
     s3_client = set_s3_session_client()
     try:
         s3_client.copy_object(**copy_parameter)
@@ -93,24 +93,27 @@ def copy_file_task(copy_parameter: dict, logger) -> str:
         if ex_code == "NoSuchKey":
             object_name = ex.response["Error"]["Key"]
             logger.error(ex_code + ":" + ex_message + " " + object_name)
+            runner_logger.error(ex_code + ":" + ex_message + " " + object_name)
         elif ex_code == "NoSuchBucket":
             bucket_name = ex.response["Error"]["Code"]["BucketName"]
             logger.error(
                 ex_code + ":" + ex_message + " Bucket name: " + bucket_name
             )
+            runner_logger.error(ex_code + ":" + ex_message + " Bucket name: " + bucket_name)
         else:
             logger.error(
                 "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
             )
+            runner_logger.error("Error info:\n" + json.dumps(ex.response["Error"], indent=4))
     finally:
         s3_client.close()
     return transfer_status    
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
-def copy_file_flow(copy_parameter_list: list[dict], logger) -> list:
+def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> list:
     """Copy of list of file concurrently"""
-    transfer_status_list =  copy_file_task.map(copy_parameter_list, logger)
+    transfer_status_list =  copy_file_task.map(copy_parameter_list, logger, runner_logger)
     return [i.result() for i in transfer_status_list]
 
 @task(name="Compare md5sum values")
@@ -158,6 +161,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     with a new url in prod bucket
     Returns a new manifest with new
     """
+    # create a runner logger
+    runner_logger = get_run_logger()
+
     # create logger
     logger = get_logger(loggername="file_mover_workflow", log_level="info")
     logger_filename = "file_mover_workflow_" + get_date() + ".log"
@@ -196,6 +202,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             logger.info(
                 f"Number of file objects in node {node}: {node_df_rmna.shape[0]}"
             )
+            runner_logger.info(
+                f"Number of file objects in node {node}: {node_df_rmna.shape[0]}"
+            )
             node_file_urls = node_df["file_url_in_cds"].tolist()
             new_node_file_urls = [
                 dest_object_url(url_in_cds=i, dest_bucket_path=dest_bucket_path)
@@ -226,27 +235,35 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
                 )
         else:
             logger.info(f"Number of file objects in node {node}: 0")
+            runner_logger.info(f"Number of file objects in node {node}: 0")
     logger.info(
+        f"A CCDI Excel manifest with new object urls was generated {output_name}"
+    )
+    runner_logger.info(
         f"A CCDI Excel manifest with new object urls was generated {output_name}"
     )
 
     # File transfer starts
     logger.info(f"Start transfering files to destination bucket {dest_bucket_path}")
     transfer_parameter_list = transfer_df["cp_object_parameter"].tolist()
-    transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
+    transfer_status_list = copy_file_flow(transfer_parameter_list, logger,runner_logger)
     transfer_df["transfer_status"] = transfer_status_list
     # if there is failed transfer
     if "Fail" in transfer_df["transfer_status"].value_counts().keys():
         failed_transfer_counts = transfer_df["transfer_status"].value_counts()["Fail"]
         success_transfer_counts = transfer_df.shape[0] - failed_transfer_counts
         logger.warning(f"Failed to transfer {failed_transfer_counts} files")
+        runner_logger.warning(f"Failed to transfer {failed_transfer_counts} files")
         logger.info(f"Successfully transferred {success_transfer_counts} files")
+        runner_logger.info(f"Successfully transferred {success_transfer_counts} files")
     else:
         logger.info(f"Successfully transferred {transfer_df.shape[0]} files")
+        runner_logger.info(f"Successfully transferred {transfer_df.shape[0]} files")
 
     # Check md5sum of file before transfer and after transfer
     # md5sum check only checks files which have been successfully copied between buckets
     logger.info("Start checking md5sum before and after transfer")
+    runner_logger.info("Start checking md5sum before and after transfer")
     # only checking md5sum for all success transfers. Tasks will be running concurrently
     urls_before_transfer = transfer_df.loc[
         transfer_df["transfer_status"] == "Success", "url_before_cp"
@@ -263,8 +280,10 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     passed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Pass")
     failed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Fail")
     logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
+    runner_logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
     if failed_md5sum_check_ct >= 1:
         logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
+        runner_logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
     else:
         pass
 
@@ -285,5 +304,6 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
         ]
     ].to_csv(mover_summary_table, sep="\t", index=False)
     logger.info(f"File mover summary table was created {mover_summary_table}")
+    runner_logger.info(f"File mover summary table was created {mover_summary_table}")
     del transfer_df
     return output_name, logger_filename, mover_summary_table
