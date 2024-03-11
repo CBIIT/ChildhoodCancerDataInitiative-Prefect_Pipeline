@@ -8,8 +8,11 @@ import numpy as np
 import pandas as pd
 import json
 import hashlib
-from prefect import flow
+from prefect import flow, task
+from prefect.task_runners import ConcurrentTaskRunner
+from typing import TypeVar
 
+DataFrame = TypeVar("DataFrame")
 
 def parse_file_url_in_cds(url: str) -> tuple:
     parsed_url = urlparse(url)
@@ -40,16 +43,6 @@ def calculate_object_md5sum(s3_client, url) -> str:
     for chunk in iter(lambda: obj_body.read(1024 * 1024), b""):
         md5_hash.update(chunk)
     return md5_hash.hexdigest()
-
-
-def compare_md5sum(first_url: str, second_url: str, s3_client) -> bool:
-    """Compares the md5sum of two objects"""
-    first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
-    second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
-    if first_md5sum == second_md5sum:
-        return first_md5sum, second_md5sum, True
-    else:
-        return (first_md5sum, second_md5sum, False)
 
 
 def copy_object_parameter(url_in_cds: str, dest_bucket_path: str) -> dict:
@@ -85,6 +78,74 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     orgin_bucket, object_key = parse_file_url_in_cds(url=url_in_cds)
     dest_url = os.path.join("s3://", dest_bucket_path, object_key)
     return dest_url
+
+
+@task(name="Copy an object file", task_run_name="copy_object_{Key}".format(**copy_parameter))
+def copy_file_task(copy_parameter: dict, logger) -> str:
+    s3_client = set_s3_session_client()
+    try:
+        s3_client.copy_object(**copy_parameter)
+        transfer_status = "Success"
+    except ClientError as ex:
+        transfer_status = "Fail"
+        ex_code = ex.response["Error"]["Code"]
+        ex_message = ex.response["Error"]["Message"]
+        if ex_code == "NoSuchKey":
+            object_name = ex.response["Error"]["Key"]
+            logger.error(ex_code + ":" + ex_message + " " + object_name)
+        elif ex_code == "NoSuchBucket":
+            bucket_name = ex.response["Error"]["Code"]["BucketName"]
+            logger.error(
+                ex_code + ":" + ex_message + " Bucket name: " + bucket_name
+            )
+        else:
+            logger.error(
+                "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
+            )
+    finally:
+        s3_client.close()
+    return transfer_status    
+
+
+@flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
+def copy_file_flow(copy_parameter_list: list[dict], logger) -> list:
+    """Copy of list of file concurrently"""
+    transfer_status_list =  copy_file_task.map(copy_parameter_list, logger)
+    return [i.result() for i in transfer_status_list]
+
+@task(name="Compare md5sum values")
+def compare_md5sum_task(first_url: str, second_url:str) -> tuple:
+    """Compares the md5sum of two objects"""
+    s3_client = set_s3_session_client()
+    first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
+    second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
+    s3_client.close()
+    if first_md5sum == second_md5sum:
+        return (first_md5sum, second_md5sum, "Pass")
+    else:
+        return (first_md5sum, second_md5sum, "Fail")
+
+@flow(task_runner=ConcurrentTaskRunner(), name="Compare md5sum Concurrently")
+def compare_md5sum_flow(first_url_list: list[str], second_url_list: list[str]) -> list:
+    """Compare md5sum of two list of urls concurrently"""
+    compare_list = compare_md5sum_task.map(first_url_list, second_url_list)
+    return [i.result() for i in compare_list]
+
+
+def add_md5sum_results(transfer_df: DataFrame, md5sum_results: list[tuple]) -> DataFrame:
+    """Adds md5sum comparison results to df"""
+    transfer_df["md5sum_check"] = [""] * transfer_df.shape[0]
+    transfer_df["md5sum_before_cp"] = [""] * transfer_df.shape[0]
+    transfer_df["md5sum_after_cp"] = [""] * transfer_df.shape[0]
+    md5sum_df = pd.DataFrame(md5sum_results, columns=["first_md5sum","second_md5sum","md5sum_check"])
+    transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_before_cp"] = md5sum_df["first_md5sum"].tolist()
+    transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_after_cp"] = (
+        md5sum_df["second_md5sum"].tolist()
+    )
+    transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_check"] = (
+        md5sum_df["md5sum_check"].tolist()
+    )
+    return transfer_df
 
 
 @flow(
@@ -171,65 +232,39 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
 
     # File transfer starts
     logger.info(f"Start transfering files to destination bucket {dest_bucket_path}")
-    s3_client = set_s3_session_client()
-    success_transfer_ct = 0
-    fail_transfer_ct = 0
-    for index, row in transfer_df.iterrows():
-        row_cp_parameter = row["cp_object_parameter"]
-        try:
-            response = s3_client.copy_object(**row_cp_parameter)
-            transfer_df.loc[index, "transfer_status"] = "Success"
-            success_transfer_ct += 1
-        except ClientError as ex:
-            ex_code = ex.response["Error"]["Code"]
-            ex_message = ex.response["Error"]["Message"]
-            failed_file = row["url_before_cp"]
-            if ex_code == "NoSuchKey":
-                object_name = ex.response["Error"]["Key"]
-                logger.error(ex_code + ":" + ex_message + " " + object_name)
-            elif ex_code == "NoSuchBucket":
-                bucket_name = ex.response["Error"]["Code"]["BucketName"]
-                logger.error(
-                    ex_code + ":" + ex_message + " Bucket name: " + bucket_name
-                )
-            else:
-                logger.error(
-                    "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
-                )
-            transfer_df.loc[index, "transfer_status"] = "Fail"
-            fail_transfer_ct += 1
-    logger.info(f"Successfully transferred {success_transfer_ct} files")
-    if fail_transfer_ct >= 1:
-        logger.warning(f"Failed to transfer {fail_transfer_ct} files")
+    transfer_parameter_list = transfer_df["cp_object_parameter"].tolist()
+    transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
+    transfer_df["transfer_status"] = transfer_status_list
+    # if there is failed transfer
+    if "Fail" in transfer_df["transfer_status"].value_counts().keys():
+        failed_transfer_counts = transfer_df["transfer_status"].value_counts()["Fail"]
+        success_transfer_counts = transfer_df.shape[0] - failed_transfer_counts
+        logger.warning(f"Failed to transfer {failed_transfer_counts} files")
+        logger.info(f"Successfully transferred {success_transfer_counts} files")
     else:
-        pass
+        logger.info(f"Successfully transferred {transfer_df.shape[0]} files")
 
     # Check md5sum of file before transfer and after transfer
     # md5sum check only checks files which have been successfully copied between buckets
     logger.info("Start checking md5sum before and after transfer")
-    transfer_df["md5sum_check"] = [""] * transfer_df.shape[0]
-    transfer_df["md5sum_before_cp"] = [""] * transfer_df.shape[0]
-    transfer_df["md5sum_after_cp"] = [""] * transfer_df.shape[0]
-    for index, row in transfer_df.iterrows():
-        if row["transfer_status"] == "Fail":
-            pass
-        else:
-            url_before = row["url_before_cp"]
-            url_after = row["url_after_cp"]
-            before_md5sum, after_md5sum, compare_result = compare_md5sum(
-                first_url=url_before, second_url=url_after, s3_client=s3_client
-            )
-            if compare_result:
-                transfer_df.loc[index, "md5sum_check"] = "Pass"
-            else:
-                transfer_df.loc[index, "md5sum_check"] = "Fail"
-            transfer_df.loc[index, "md5sum_before_cp"] = before_md5sum
-            transfer_df.loc[index, "md5sum_after_cp"] = after_md5sum
+    # only checking md5sum for all success transfers. Tasks will be running concurrently
+    urls_before_transfer = transfer_df.loc[
+        transfer_df["transfer_status"] == "Success", "url_before_cp"
+    ].tolist()
+    urls_after_transfer = transfer_df.loc[
+        transfer_df["transfer_status"] == "Success", "url_after_cp"
+    ].tolist()
+    md5sum_compare_result = compare_md5sum_flow(first_url_list=urls_before_transfer, second_url_list=urls_after_transfer)
+    # add md5sum comparison result to transfer_df
+    transfer_df = add_md5sum_results(
+        transfer_df=transfer_df, md5sum_results=md5sum_compare_result
+    )
+    # log md5sum comparison check
     passed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Pass")
     failed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Fail")
     logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
     if failed_md5sum_check_ct >= 1:
-        logger.warning(f"md5sum check failed files: {failed_md5sum_check_ct}")
+        logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
     else:
         pass
 
