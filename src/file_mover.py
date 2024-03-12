@@ -246,6 +246,10 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
         f"A CCDI Excel manifest with new object urls was generated {output_name}"
     )
 
+    runner_logger.info(f"transfer_df counts: {transfer_df.shape[0]}")
+    for index, row in transfer_df.iterrows():
+        runner_logger.info(json.dumps(row["cp_object_parameter"], indent=4))
+
     # File transfer starts
     logger.info(f"Start transfering files to destination bucket {dest_bucket_path}")
     transfer_parameter_list = transfer_df["cp_object_parameter"].tolist()
