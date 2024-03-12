@@ -153,6 +153,11 @@ def add_md5sum_results(transfer_df: DataFrame, md5sum_results: list[tuple]) -> D
     )
     return transfer_df
 
+def list_to_chunks(mylist: list, chunk_len: int) -> list:
+    """Break a list into a list of chunks"""
+    chunks = [mylist[i * chunk_len : (i + 1) * chunk_len] for i in range((len(mylist) + chunk_len - 1) // chunk_len)]
+    return chunks
+
 
 @flow(
     name="Move Manifest Files",
@@ -252,18 +257,19 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
 
     # File transfer starts
     logger.info(f"Start transfering files to destination bucket {dest_bucket_path}")
+    runner_logger.info(
+        f"Start transfering files to destination bucket {dest_bucket_path}"
+    )
     transfer_parameter_list = transfer_df["cp_object_parameter"].tolist()
     # break transfer_parameter_list into chunks with 50
-    transfer_chuncks = [
-        transfer_parameter_list[i * 50 : (i + 1) * 50]
-        for i in range((len(transfer_parameter_list) + 50 - 1) // 50)
-    ]
+    transfer_chuncks = list_to_chunks(mylist=transfer_parameter_list, chunk_len=100)
+    runner_logger.info(f"Copying file will be processed into {len(transfer_chuncks)} chunks")
     transfer_status_list = []
     for h in transfer_chuncks:
         h_transfer_status_list = copy_file_flow(h, logger)
         transfer_status_list.extend(h_transfer_status_list)
 
-    #transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
+    # transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
     transfer_df["transfer_status"] = transfer_status_list
     # if there is failed transfer
     if "Fail" in transfer_df["transfer_status"].value_counts().keys():
@@ -288,7 +294,14 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     urls_after_transfer = transfer_df.loc[
         transfer_df["transfer_status"] == "Success", "url_after_cp"
     ].tolist()
-    md5sum_compare_result = compare_md5sum_flow(first_url_list=urls_before_transfer, second_url_list=urls_after_transfer)
+    # url list needs to be break into chunks
+    urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=100)
+    urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=100)
+    md5sum_compare_result = []
+    for j in range(len(urls_before_chunks)):
+        j_md5sum_compare_result = compare_md5sum_flow(first_url_list=urls_before_chunks[j], second_url_list=urls_after_chunks[j])
+        md5sum_compare_result.extend(j_md5sum_compare_result)
+
     # add md5sum comparison result to transfer_df
     transfer_df = add_md5sum_results(
         transfer_df=transfer_df, md5sum_results=md5sum_compare_result
