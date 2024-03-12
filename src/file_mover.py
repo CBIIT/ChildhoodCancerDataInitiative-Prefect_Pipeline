@@ -81,8 +81,7 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
 
 
 @task(name="Copy an object file", tags=["concurrency-test"])
-def copy_file_task(copy_parameter: dict, logger, runner_logger) -> str:
-    s3_client = set_s3_session_client()
+def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> str:
     try:
         s3_client.copy_object(**copy_parameter)
         transfer_status = "Success"
@@ -105,25 +104,26 @@ def copy_file_task(copy_parameter: dict, logger, runner_logger) -> str:
                 "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
             )
             runner_logger.error("Error info:\n" + json.dumps(ex.response["Error"], indent=4))
-    finally:
-        s3_client.close()
+    #finally:
+    #    s3_client.close()
     return transfer_status    
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
 def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> list:
     """Copy of list of file concurrently"""
-    transfer_status_list =  copy_file_task.map(copy_parameter_list, logger, runner_logger)
+    s3_client = set_s3_session_client()
+    transfer_status_list =  copy_file_task.map(copy_parameter_list, s3_client, logger, runner_logger)
+    s3_client.close()
     return [i.result() for i in transfer_status_list]
 
 
 @task(name="Compare md5sum values", tags=["concurrency-test"])
-def compare_md5sum_task(first_url: str, second_url:str) -> tuple:
+def compare_md5sum_task(first_url: str, second_url:str, s3_client) -> tuple:
     """Compares the md5sum of two objects"""
-    s3_client = set_s3_session_client()
     first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
     second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
-    s3_client.close()
+    #s3_client.close()
     if first_md5sum == second_md5sum:
         return (first_md5sum, second_md5sum, "Pass")
     else:
@@ -132,7 +132,9 @@ def compare_md5sum_task(first_url: str, second_url:str) -> tuple:
 @flow(task_runner=ConcurrentTaskRunner(), name="Compare md5sum Concurrently")
 def compare_md5sum_flow(first_url_list: list[str], second_url_list: list[str]) -> list:
     """Compare md5sum of two list of urls concurrently"""
-    compare_list = compare_md5sum_task.map(first_url_list, second_url_list)
+    s3_client = set_s3_session_client
+    compare_list = compare_md5sum_task.map(first_url_list, second_url_list, s3_client=s3_client)
+    s3_client.close()
     return [i.result() for i in compare_list]
 
 
