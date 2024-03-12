@@ -261,7 +261,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     transfer_status_list = []
     for h in transfer_chuncks:
         h_transfer_status_list = copy_file_flow(h, logger)
-        transfer_status_list.append(h_transfer_status_list)
+        transfer_status_list.extend(h_transfer_status_list)
 
     #transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
     transfer_df["transfer_status"] = transfer_status_list
