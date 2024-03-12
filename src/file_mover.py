@@ -247,13 +247,23 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     )
 
     runner_logger.info(f"transfer_df counts: {transfer_df.shape[0]}")
-    #for index, row in transfer_df.iterrows():
+    # for index, row in transfer_df.iterrows():
     #    runner_logger.info(json.dumps(row["cp_object_parameter"], indent=4))
 
     # File transfer starts
     logger.info(f"Start transfering files to destination bucket {dest_bucket_path}")
     transfer_parameter_list = transfer_df["cp_object_parameter"].tolist()
-    transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
+    # break transfer_parameter_list into chunks with 50
+    transfer_chuncks = [
+        transfer_parameter_list[i * 50 : (i + 1) * 50]
+        for i in range((len(transfer_parameter_list) + 50 - 1) // 50)
+    ]
+    transfer_status_list = []
+    for h in transfer_chuncks:
+        h_transfer_status_list = copy_file_flow(h, logger)
+        transfer_status_list.append(h_transfer_status_list)
+
+    #transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
     transfer_df["transfer_status"] = transfer_status_list
     # if there is failed transfer
     if "Fail" in transfer_df["transfer_status"].value_counts().keys():
