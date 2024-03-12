@@ -80,7 +80,7 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     return dest_url
 
 
-@task(name="Copy an object file")
+@task(name="Copy an object file", tags=["concurrency-test"])
 def copy_file_task(copy_parameter: dict, logger, runner_logger) -> str:
     s3_client = set_s3_session_client()
     try:
@@ -116,7 +116,8 @@ def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> li
     transfer_status_list =  copy_file_task.map(copy_parameter_list, logger, runner_logger)
     return [i.result() for i in transfer_status_list]
 
-@task(name="Compare md5sum values")
+
+@task(name="Compare md5sum values", tags=["concurrency-test"])
 def compare_md5sum_task(first_url: str, second_url:str) -> tuple:
     """Compares the md5sum of two objects"""
     s3_client = set_s3_session_client()
