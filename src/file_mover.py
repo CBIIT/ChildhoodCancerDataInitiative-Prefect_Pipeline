@@ -132,7 +132,7 @@ def compare_md5sum_task(first_url: str, second_url:str, s3_client) -> tuple:
 @flow(task_runner=ConcurrentTaskRunner(), name="Compare md5sum Concurrently")
 def compare_md5sum_flow(first_url_list: list[str], second_url_list: list[str]) -> list:
     """Compare md5sum of two list of urls concurrently"""
-    s3_client = set_s3_session_client
+    s3_client = set_s3_session_client()
     compare_list = compare_md5sum_task.map(first_url_list, second_url_list, s3_client=s3_client)
     s3_client.close()
     return [i.result() for i in compare_list]
