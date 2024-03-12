@@ -298,6 +298,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=100)
     urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=100)
     md5sum_compare_result = []
+    runner_logger.info(
+        f"Md5sum check will be processed into {len(urls_before_chunks)} chunks"
+    )
     for j in range(len(urls_before_chunks)):
         j_md5sum_compare_result = compare_md5sum_flow(first_url_list=urls_before_chunks[j], second_url_list=urls_after_chunks[j])
         md5sum_compare_result.extend(j_md5sum_compare_result)
