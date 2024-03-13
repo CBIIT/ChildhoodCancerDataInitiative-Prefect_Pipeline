@@ -118,7 +118,12 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     return dest_url
 
 
-@task(name="Copy an object file", tags=["concurrency-test"])
+@task(
+    name="Copy an object file",
+    tags=["concurrency-test"],
+    retries=3,
+    retry_delay_seconds=0.5,
+)
 def copy_file_task(copy_parameter: dict, s3_client, logger) -> str:
     try:
         s3_client.copy_object(**copy_parameter)
