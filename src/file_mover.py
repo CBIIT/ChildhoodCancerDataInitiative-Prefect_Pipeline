@@ -58,7 +58,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
     # get object size
     bucket_name, object_key = parse_file_url_in_cds(url)
     object_size = s3_client.get_object_attributes(
-        Bucket=bucket_name, Key=object, ObjectAttributes=["ObjectSize"]
+        Bucket=bucket_name, Key=object_key, ObjectAttributes=["ObjectSize"]
     ).get("ObjectSize")
 
     chunk_start = 0
