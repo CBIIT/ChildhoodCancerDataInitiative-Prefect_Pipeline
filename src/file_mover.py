@@ -44,6 +44,40 @@ def calculate_object_md5sum(s3_client, url) -> str:
         md5_hash.update(chunk)
     return md5_hash.hexdigest()
 
+def calculate_object_md5sum_new(s3_client, url) -> str:
+    """Calculate md5sum of an object using url
+    This function was modified based on https://github.com/jmwarfe/s3-md5sum/blob/main/s3-md5sum.py
+    The new one reads specific byte range frm file as a chunk to avoid empty chunk
+    aws server getting time out
+
+    Example of url:
+    s3://example-bucket/folder1/folder2/test_file.fastq.gz
+    """
+    # specify a chunk size to get object
+    chunk_size = 1073741824
+    # get object size
+    bucket_name, object_key = parse_file_url_in_cds(url)
+    object_size = s3_client.get_object_attributes(
+        Bucket=bucket_name, Key=object, ObjectAttributes=["ObjectSize"]
+    ).get("ObjectSize")
+
+    chunk_start = 0
+    chunk_end = chunk_start + chunk_size -1
+
+    # Initialize MD5 hash object
+    md5_hash = hashlib.md5()
+    while chunk_start <= object_size:
+        # Read specific byte range from file as a chunk. We do this because AWS server times out and sends
+        # empty chunks when streaming the entire file.
+        if body := s3_client.get_object(
+            Bucket=bucket_name, Key=object_key, Range=f"bytes={chunk_start}-{chunk_end}"
+            ).get("Body"):
+            for small_chunk in iter(lambda: body.read(1024 * 1024), b""):
+                md5_hash.update(small_chunk)
+            chunk_start += chunk_size
+            chunk_end += chunk_size
+    return md5_hash.hexdigest()
+
 
 def copy_object_parameter(url_in_cds: str, dest_bucket_path: str) -> dict:
     """Returns a dict that can be used as parameter for copy object using s3 client
@@ -121,9 +155,11 @@ def copy_file_flow(copy_parameter_list: list[dict], logger) -> list:
 @task(name="Compare md5sum values", tags=["concurrency-test"])
 def compare_md5sum_task(first_url: str, second_url:str, s3_client) -> tuple:
     """Compares the md5sum of two objects"""
-    first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
-    second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
-    #s3_client.close()
+    #first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
+    #second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
+    first_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=first_url)
+    second_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=second_url)
+    # s3_client.close()
     if first_md5sum == second_md5sum:
         return (first_md5sum, second_md5sum, "Pass")
     else:
