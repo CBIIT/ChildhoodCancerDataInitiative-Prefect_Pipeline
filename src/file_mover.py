@@ -118,45 +118,133 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     return dest_url
 
 
+def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> None:
+    # collect source bucket, source key, destination bucket, and destination key
+    source_bucket, source_key = copy_parameter["CopySource"].split("/", 1)
+    destination_bucket = copy_parameter["Bucket"]
+    destination_key = copy_parameter["Key"]
+
+    # Define the size of each part (100MB)
+    part_size = 100 * 1024 * 1024
+
+    # Calculate the number of parts required
+    num_parts = int(file_size / part_size) + 1
+
+    # Initialize the multipart upload and get upload_id
+    upload_id = s3_client.create_multipart_upload(
+        Bucket=destination_bucket, Key=destination_key
+    )["UploadId"]
+
+    # Initialize parts list
+    parts = []
+
+    try:
+        # Upload parts
+        for part_number in range(1, num_parts + 1):
+            # Calculate the byte range for this part
+            start_byte = (part_number - 1) * part_size
+            end_byte = min(part_number * part_size - 1, file_size - 1)
+            byte_range = f"bytes={start_byte}-{end_byte}"
+
+            # Upload a part
+            response = s3_client.upload_part_copy(
+                Bucket=destination_bucket,
+                Key=destination_key,
+                CopySource={"Bucket": source_bucket, "Key": source_key},
+                PartNumber=part_number,
+                UploadId=upload_id,
+                CopySourceRange=byte_range,
+            )
+
+            # Append the response to the parts list
+            parts.append(
+                {"PartNumber": part_number, "ETag": response["CopyPartResult"]["ETag"]}
+            )
+
+        # Complete the multipart upload
+        s3_client.complete_multipart_upload(
+            Bucket=destination_bucket,
+            Key=destination_key,
+            UploadId=upload_id,
+            MultipartUpload={"Parts": parts},
+        )
+
+        logger.info(
+            f"Multipart transferred successfully from {source_bucket}/{source_key} to {destination_bucket}/{destination_key}"
+        )
+        print(f"Multipart transferred successfully from {source_bucket}/{source_key} to {destination_bucket}/{destination_key}")
+        transfer_status = "Success"
+    except Exception as e:
+        # Abort the multipart upload if an error occurs
+        s3_client.abort_multipart_upload(
+            Bucket=destination_bucket, Key=destination_key, UploadId=upload_id
+        )
+        logger.info(f"Multipart copy Failed to copy file {copy_parameter["CopySource"]}: {e}")
+        print(f"Multipart copy Failed to copy file {copy_parameter["CopySource"]}: {e}")
+        transfer_status = "Fail"
+    return transfer_status
+
+
 @task(
     name="Copy an object file",
     tags=["concurrency-test"],
     retries=3,
     retry_delay_seconds=0.5,
+    log_prints=True
 )
-def copy_file_task(copy_parameter: dict, s3_client, logger) -> str:
-    try:
-        s3_client.copy_object(**copy_parameter)
-        transfer_status = "Success"
-    except ClientError as ex:
-        transfer_status = "Fail"
-        ex_code = ex.response["Error"]["Code"]
-        ex_message = ex.response["Error"]["Message"]
-        if ex_code == "NoSuchKey":
-            object_name = ex.response["Error"]["Key"]
-            logger.error(ex_code + ":" + ex_message + " " + object_name)
-            #runner_logger.error(ex_code + ":" + ex_message + " " + object_name)
-        elif ex_code == "NoSuchBucket":
-            bucket_name = ex.response["Error"]["Code"]["BucketName"]
-            logger.error(
-                ex_code + ":" + ex_message + " Bucket name: " + bucket_name
-            )
-            #runner_logger.error(ex_code + ":" + ex_message + " Bucket name: " + bucket_name)
-        else:
-            logger.error(
-                "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
-            )
-            #runner_logger.error("Error info:\n" + json.dumps(ex.response["Error"], indent=4))
-    #finally:
-    #    s3_client.close()
+def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> str:
+    copy_source = copy_parameter['CopySource']
+    source_bucket, source_key = copy_source.split("/", 1)
+    object_response = s3_client.head_object(Bucket=source_bucket, Key=source_key)
+    file_size = object_response["ContentLength"]
+
+    # test if file_size larger than 5GB, 5*1024*1024*1024
+    if file_size > 5368709120:
+        runner_logger.info(
+            f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
+        )
+        logger.info(
+            f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
+        )
+        transfer_status = copy_large_file(copy_parameter=copy_parameter, file_size=file_size, s3_client=s3_client, logger=logger)
+    else:
+        runner_logger.info(
+            f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
+        )
+        logger.info(
+            f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
+        )
+        try:
+            s3_client.copy_object(**copy_parameter)
+            transfer_status = "Success"
+        except ClientError as ex:
+            transfer_status = "Fail"
+            ex_code = ex.response["Error"]["Code"]
+            ex_message = ex.response["Error"]["Message"]
+            if ex_code == "NoSuchKey":
+                object_name = ex.response["Error"]["Key"]
+                logger.error(ex_code + ":" + ex_message + " " + object_name)
+                # runner_logger.error(ex_code + ":" + ex_message + " " + object_name)
+            elif ex_code == "NoSuchBucket":
+                bucket_name = ex.response["Error"]["Code"]["BucketName"]
+                logger.error(
+                    ex_code + ":" + ex_message + " Bucket name: " + bucket_name
+                )
+                runner_logger.error(ex_code + ":" + ex_message + " Bucket name: " + bucket_name)
+            else:
+                logger.error(
+                    "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
+                )
+                runner_logger.error("Error info:\n" + json.dumps(ex.response["Error"], indent=4))
+
     return transfer_status    
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
-def copy_file_flow(copy_parameter_list: list[dict], logger) -> list:
+def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> list:
     """Copy of list of file concurrently"""
     s3_client = set_s3_session_client()
-    transfer_status_list =  copy_file_task.map(copy_parameter_list, s3_client, logger)
+    transfer_status_list =  copy_file_task.map(copy_parameter_list, s3_client, logger, runner_logger)
     s3_client.close()
     return [i.result() for i in transfer_status_list]
 
@@ -311,7 +399,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     runner_logger.info(f"Copying file will be processed into {len(transfer_chuncks)} chunks")
     transfer_status_list = []
     for h in transfer_chuncks:
-        h_transfer_status_list = copy_file_flow(h, logger)
+        h_transfer_status_list = copy_file_flow(h, logger, runner_logger)
         transfer_status_list.extend(h_transfer_status_list)
 
     # transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
