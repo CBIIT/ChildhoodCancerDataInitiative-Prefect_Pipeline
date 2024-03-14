@@ -121,6 +121,7 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
 def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> None:
     # collect source bucket, source key, destination bucket, and destination key
     source_bucket, source_key = copy_parameter["CopySource"].split("/", 1)
+    copy_source = copy_parameter["CopySource"]
     destination_bucket = copy_parameter["Bucket"]
     destination_key = copy_parameter["Key"]
 
@@ -170,17 +171,17 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
         )
 
         logger.info(
-            f"Multipart transferred successfully from {source_bucket}/{source_key} to {destination_bucket}/{destination_key}"
+            f"Multipart transferred successfully from {copy_source} to {destination_bucket}/{destination_key}"
         )
-        print(f"Multipart transferred successfully from {source_bucket}/{source_key} to {destination_bucket}/{destination_key}")
+        print(f"Multipart transferred successfully from {copy_source} to {destination_bucket}/{destination_key}")
         transfer_status = "Success"
     except Exception as e:
         # Abort the multipart upload if an error occurs
         s3_client.abort_multipart_upload(
             Bucket=destination_bucket, Key=destination_key, UploadId=upload_id
         )
-        logger.info(f"Multipart copy Failed to copy file {copy_parameter["CopySource"]}: {e}")
-        print(f"Multipart copy Failed to copy file {copy_parameter["CopySource"]}: {e}")
+        logger.info(f"Multipart copy Failed to copy file {copy_source}: {e}")
+        print(f"Multipart copy Failed to copy file {copy_source}: {e}")
         transfer_status = "Fail"
     return transfer_status
 
