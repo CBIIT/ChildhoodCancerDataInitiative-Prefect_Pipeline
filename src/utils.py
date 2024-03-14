@@ -11,6 +11,7 @@ from pytz import timezone
 import logging
 import pandas as pd
 import boto3
+from botocore.config import Config
 import re
 import requests
 import typing
@@ -244,7 +245,14 @@ def set_s3_session_client():
             "s3", region_name=AWS_REGION, endpoint_url=ENDPOINT_URL
         )
     else:
-        s3_client = boto3.client("s3")
+        # Create a custom retry configuration
+        custom_retry_config = Config(
+        retries = {
+            'max_attempts': 5,  # Maximum number of retry attempts
+            'mode': 'standard'  # Retry on HTTP status codes considered retryable
+        }
+)
+        s3_client = boto3.client("s3", config=custom_retry_config)
     return s3_client
 
 
@@ -929,4 +937,3 @@ class CheckCCDI:
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
-
