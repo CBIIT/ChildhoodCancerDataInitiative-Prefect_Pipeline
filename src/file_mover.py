@@ -14,6 +14,7 @@ from typing import TypeVar
 
 DataFrame = TypeVar("DataFrame")
 
+
 def parse_file_url_in_cds(url: str) -> tuple:
     parsed_url = urlparse(url)
     bucket_name = parsed_url.netloc
@@ -44,6 +45,7 @@ def calculate_object_md5sum(s3_client, url) -> str:
         md5_hash.update(chunk)
     return md5_hash.hexdigest()
 
+
 def calculate_object_md5sum_new(s3_client, url) -> str:
     """Calculate md5sum of an object using url
     This function was modified based on https://github.com/jmwarfe/s3-md5sum/blob/main/s3-md5sum.py
@@ -66,7 +68,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
     # ).get("ObjectSize")
 
     chunk_start = 0
-    chunk_end = chunk_start + chunk_size -1
+    chunk_end = chunk_start + chunk_size - 1
 
     # Initialize MD5 hash object
     md5_hash = hashlib.md5()
@@ -75,7 +77,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
         # empty chunks when streaming the entire file.
         if body := s3_client.get_object(
             Bucket=bucket_name, Key=object_key, Range=f"bytes={chunk_start}-{chunk_end}"
-            ).get("Body"):
+        ).get("Body"):
             for small_chunk in iter(lambda: body.read(1024 * 1024), b""):
                 md5_hash.update(small_chunk)
             chunk_start += chunk_size
@@ -173,7 +175,9 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
         logger.info(
             f"Multipart transferred successfully from {copy_source} to {destination_bucket}/{destination_key}"
         )
-        print(f"Multipart transferred successfully from {copy_source} to {destination_bucket}/{destination_key}")
+        print(
+            f"Multipart transferred successfully from {copy_source} to {destination_bucket}/{destination_key}"
+        )
         transfer_status = "Success"
     except Exception as e:
         # Abort the multipart upload if an error occurs
@@ -186,19 +190,10 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
     return transfer_status
 
 
-@task(
-    name="Copy an object file",
-    tags=["concurrency-test"],
-    retries=3,
-    retry_delay_seconds=0.5,
-    log_prints=True
-)
-def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> str:
-    copy_source = copy_parameter['CopySource']
-    source_bucket, source_key = copy_source.split("/", 1)
-    object_response = s3_client.head_object(Bucket=source_bucket, Key=source_key)
-    file_size = object_response["ContentLength"]
-
+def copy_file_by_size(
+    copy_parameter: dict, file_size: int, s3_client, logger, runner_logger
+):
+    copy_source = copy_parameter["CopySource"]
     # test if file_size larger than 5GB, 5*1024*1024*1024
     if file_size > 5368709120:
         runner_logger.info(
@@ -207,7 +202,12 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> st
         logger.info(
             f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
         )
-        transfer_status = copy_large_file(copy_parameter=copy_parameter, file_size=file_size, s3_client=s3_client, logger=logger)
+        transfer_status = copy_large_file(
+            copy_parameter=copy_parameter,
+            file_size=file_size,
+            s3_client=s3_client,
+            logger=logger,
+        )
     else:
         runner_logger.info(
             f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
@@ -231,30 +231,83 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> st
                 logger.error(
                     ex_code + ":" + ex_message + " Bucket name: " + bucket_name
                 )
-                runner_logger.error(ex_code + ":" + ex_message + " Bucket name: " + bucket_name)
+                runner_logger.error(
+                    ex_code + ":" + ex_message + " Bucket name: " + bucket_name
+                )
             else:
                 logger.error(
                     "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
                 )
-                runner_logger.error("Error info:\n" + json.dumps(ex.response["Error"], indent=4))
+                runner_logger.error(
+                    "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
+                )
+    return transfer_status
 
-    return transfer_status    
+
+@task(
+    name="Copy an object file",
+    tags=["concurrency-test"],
+    retries=3,
+    retry_delay_seconds=0.5,
+    log_prints=True,
+)
+def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> str:
+    copy_source = copy_parameter["CopySource"]
+    source_bucket, source_key = copy_source.split("/", 1)
+    object_response = s3_client.head_object(Bucket=source_bucket, Key=source_key)
+    file_size = object_response["ContentLength"]
+
+    # check if the destination object has been copied or no
+    try:
+        dest_object = s3_client.head_object(
+            Bucket=copy_parameter["Bucket"], Key=copy_parameter["Key"]
+        )
+        if dest_object["ContentLength"] == file_size:
+            logger.info(
+                f"File {copy_source} had already been copied to destination bucket path. Skip"
+            )
+            runner_logger.info(
+                f"File {copy_source} had already been copied to destination bucket path. Skip"
+            )
+            transfer_status = "Success"
+        else:
+            # if the destin object size is different from source, copy the object
+            transfer_status = copy_file_by_size(
+                copy_parameter=copy_parameter,
+                file_size=file_size,
+                s3_client=s3_client,
+                logger=logger,
+                runner_logger=runner_logger,
+            )
+
+    except Exception as ex:
+        # if the destin object does not exist, copy oject
+        transfer_status = copy_file_by_size(
+            copy_parameter=copy_parameter,
+            file_size=file_size,
+            s3_client=s3_client,
+            logger=logger,
+            runner_logger=runner_logger,
+        )
+    return transfer_status
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
 def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> list:
     """Copy of list of file concurrently"""
     s3_client = set_s3_session_client()
-    transfer_status_list =  copy_file_task.map(copy_parameter_list, s3_client, logger, runner_logger)
+    transfer_status_list = copy_file_task.map(
+        copy_parameter_list, s3_client, logger, runner_logger
+    )
     s3_client.close()
     return [i.result() for i in transfer_status_list]
 
 
 @task(name="Compare md5sum values", tags=["concurrency-test"])
-def compare_md5sum_task(first_url: str, second_url:str, s3_client) -> tuple:
+def compare_md5sum_task(first_url: str, second_url: str, s3_client) -> tuple:
     """Compares the md5sum of two objects"""
-    #first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
-    #second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
+    # first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
+    # second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
     first_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=first_url)
     second_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=second_url)
     # s3_client.close()
@@ -263,22 +316,31 @@ def compare_md5sum_task(first_url: str, second_url:str, s3_client) -> tuple:
     else:
         return (first_md5sum, second_md5sum, "Fail")
 
+
 @flow(task_runner=ConcurrentTaskRunner(), name="Compare md5sum Concurrently")
 def compare_md5sum_flow(first_url_list: list[str], second_url_list: list[str]) -> list:
     """Compare md5sum of two list of urls concurrently"""
     s3_client = set_s3_session_client()
-    compare_list = compare_md5sum_task.map(first_url_list, second_url_list, s3_client=s3_client)
+    compare_list = compare_md5sum_task.map(
+        first_url_list, second_url_list, s3_client=s3_client
+    )
     s3_client.close()
     return [i.result() for i in compare_list]
 
 
-def add_md5sum_results(transfer_df: DataFrame, md5sum_results: list[tuple]) -> DataFrame:
+def add_md5sum_results(
+    transfer_df: DataFrame, md5sum_results: list[tuple]
+) -> DataFrame:
     """Adds md5sum comparison results to df"""
     transfer_df["md5sum_check"] = [""] * transfer_df.shape[0]
     transfer_df["md5sum_before_cp"] = [""] * transfer_df.shape[0]
     transfer_df["md5sum_after_cp"] = [""] * transfer_df.shape[0]
-    md5sum_df = pd.DataFrame(md5sum_results, columns=["first_md5sum","second_md5sum","md5sum_check"])
-    transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_before_cp"] = md5sum_df["first_md5sum"].tolist()
+    md5sum_df = pd.DataFrame(
+        md5sum_results, columns=["first_md5sum", "second_md5sum", "md5sum_check"]
+    )
+    transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_before_cp"] = (
+        md5sum_df["first_md5sum"].tolist()
+    )
     transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_after_cp"] = (
         md5sum_df["second_md5sum"].tolist()
     )
@@ -287,9 +349,13 @@ def add_md5sum_results(transfer_df: DataFrame, md5sum_results: list[tuple]) -> D
     )
     return transfer_df
 
+
 def list_to_chunks(mylist: list, chunk_len: int) -> list:
     """Break a list into a list of chunks"""
-    chunks = [mylist[i * chunk_len : (i + 1) * chunk_len] for i in range((len(mylist) + chunk_len - 1) // chunk_len)]
+    chunks = [
+        mylist[i * chunk_len : (i + 1) * chunk_len]
+        for i in range((len(mylist) + chunk_len - 1) // chunk_len)
+    ]
     return chunks
 
 
@@ -324,6 +390,15 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
         + os.path.basename(manifest_path).rsplit(".", 1)[1]
     )
     copy(src=manifest_path, dst=output_name)
+
+    # create filename for summary table
+    # write transfer summary table
+    mover_summary_table = (
+        os.path.basename(manifest_path).rsplit(".", 1)[0]
+        + "_FileMover_Summary_"
+        + get_date()
+        + ".tsv"
+    )
 
     # create an empty df
     transfer_df = pd.DataFrame(
@@ -397,7 +472,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     transfer_parameter_list = transfer_df["cp_object_parameter"].tolist()
     # break transfer_parameter_list into chunks with 50
     transfer_chuncks = list_to_chunks(mylist=transfer_parameter_list, chunk_len=100)
-    runner_logger.info(f"Copying file will be processed into {len(transfer_chuncks)} chunks")
+    runner_logger.info(
+        f"Copying file will be processed into {len(transfer_chuncks)} chunks"
+    )
     transfer_status_list = []
     for h in transfer_chuncks:
         h_transfer_status_list = copy_file_flow(h, logger, runner_logger)
@@ -417,60 +494,81 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
         logger.info(f"Successfully transferred {transfer_df.shape[0]} files")
         runner_logger.info(f"Successfully transferred {transfer_df.shape[0]} files")
 
-    # Check md5sum of file before transfer and after transfer
-    # md5sum check only checks files which have been successfully copied between buckets
-    logger.info("Start checking md5sum before and after transfer")
-    runner_logger.info("Start checking md5sum before and after transfer")
-    # only checking md5sum for all success transfers. Tasks will be running concurrently
-    urls_before_transfer = transfer_df.loc[
-        transfer_df["transfer_status"] == "Success", "url_before_cp"
-    ].tolist()
-    urls_after_transfer = transfer_df.loc[
-        transfer_df["transfer_status"] == "Success", "url_after_cp"
-    ].tolist()
-    # url list needs to be break into chunks
-    urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=100)
-    urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=100)
-    md5sum_compare_result = []
-    runner_logger.info(
-        f"Md5sum check will be processed into {len(urls_before_chunks)} chunks"
-    )
-    for j in range(len(urls_before_chunks)):
-        j_md5sum_compare_result = compare_md5sum_flow(first_url_list=urls_before_chunks[j], second_url_list=urls_after_chunks[j])
-        md5sum_compare_result.extend(j_md5sum_compare_result)
+    try:
+        # Check md5sum of file before transfer and after transfer
+        # md5sum check only checks files which have been successfully copied between buckets
+        logger.info("Start checking md5sum before and after transfer")
+        runner_logger.info("Start checking md5sum before and after transfer")
+        # only checking md5sum for all success transfers. Tasks will be running concurrently
+        urls_before_transfer = transfer_df.loc[
+            transfer_df["transfer_status"] == "Success", "url_before_cp"
+        ].tolist()
+        urls_after_transfer = transfer_df.loc[
+            transfer_df["transfer_status"] == "Success", "url_after_cp"
+        ].tolist()
+        # url list needs to be break into chunks
+        urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=100)
+        urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=100)
+        md5sum_compare_result = []
+        runner_logger.info(
+            f"Md5sum check will be processed into {len(urls_before_chunks)} chunks"
+        )
+        for j in range(len(urls_before_chunks)):
+            j_md5sum_compare_result = compare_md5sum_flow(
+                first_url_list=urls_before_chunks[j],
+                second_url_list=urls_after_chunks[j],
+            )
+            md5sum_compare_result.extend(j_md5sum_compare_result)
 
-    # add md5sum comparison result to transfer_df
-    transfer_df = add_md5sum_results(
-        transfer_df=transfer_df, md5sum_results=md5sum_compare_result
-    )
-    # log md5sum comparison check
-    passed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Pass")
-    failed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Fail")
-    logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
-    runner_logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
-    if failed_md5sum_check_ct >= 1:
-        logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
-        runner_logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
-    else:
-        pass
+        # add md5sum comparison result to transfer_df
+        transfer_df = add_md5sum_results(
+            transfer_df=transfer_df, md5sum_results=md5sum_compare_result
+        )
+        # log md5sum comparison check
+        passed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Pass")
+        failed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Fail")
+        logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
+        runner_logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
+        if failed_md5sum_check_ct >= 1:
+            logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
+            runner_logger.warning(
+                f"md5sum check failed files count: {failed_md5sum_check_ct}"
+            )
+        else:
+            pass
 
-    # write transfer summary table
-    mover_summary_table = (
-        os.path.basename(manifest_path).rsplit(".", 1)[0]
-        + "_FileMover_Summary_" + get_date() + ".tsv"
-    )
-    transfer_df[
-        [
-            "node",
-            "url_before_cp",
-            "url_after_cp",
-            "transfer_status",
-            "md5sum_check",
-            "md5sum_before_cp",
-            "md5sum_after_cp",
-        ]
-    ].to_csv(mover_summary_table, sep="\t", index=False)
-    logger.info(f"File mover summary table was created {mover_summary_table}")
-    runner_logger.info(f"File mover summary table was created {mover_summary_table}")
-    del transfer_df
+        # write transfer summary table
+        transfer_df[
+            [
+                "node",
+                "url_before_cp",
+                "url_after_cp",
+                "transfer_status",
+                "md5sum_check",
+                "md5sum_before_cp",
+                "md5sum_after_cp",
+            ]
+        ].to_csv(mover_summary_table, sep="\t", index=False)
+        logger.info(f"File mover summary table was created {mover_summary_table}")
+        runner_logger.info(
+            f"File mover summary table was created {mover_summary_table}"
+        )
+        del transfer_df
+    except Exception as ex:
+        logger.error(f"Fail to finish md5sum check for all files. {ex}")
+        runner_logger.error(f"Fail to finish md5sum check for all files. {ex}")
+        transfer_df[
+            [
+                "node",
+                "url_before_cp",
+                "url_after_cp",
+                "transfer_status",
+            ]
+        ].to_csv(mover_summary_table, sep="\t", index=False)
+        logger.info(f"File mover summary table was created {mover_summary_table}")
+        runner_logger.info(
+            f"File mover summary table was created {mover_summary_table}"
+        )
+        del transfer_df
+
     return output_name, logger_filename, mover_summary_table
