@@ -285,7 +285,7 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
 @task(
     name="Pull ids a node a study",
     task_run_name="pull_ids_{node}_{study_id}",
-    tags=["concurrency-test"],
+    tags=["concurrency-small"],
 )
 def pull_ids_node_study(
     driver, export_ids_csv, study_id: str, node: str, output_dir: str
