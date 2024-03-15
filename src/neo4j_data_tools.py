@@ -85,9 +85,9 @@ def get_aws_parameter(parameter_name: str, logger) -> Dict:
     try:
         parameter_response = ssm_client.get_parameter(Name=parameter_name)
         logger.info(f"Fetching aws parameter {parameter_name} Done")
-        #logger.info(
+        # logger.info(
         #    f"Parameter info:\n{json.dumps(parameter_response, indent=4, default=str)}"
-        #)
+        # )
     except ClientError as err:
         ex_code = err.response["Error"]["Code"]
         ex_message = err.response["Error"]["Message"]
@@ -282,7 +282,11 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     return None
 
 
-@task(name="Pull ids a node a study", task_run_name="pull_ids_{node}_{study_id}")
+@task(
+    name="Pull ids a node a study",
+    task_run_name="pull_ids_{node}_{study_id}",
+    tags=["concurrency-test"],
+)
 def pull_ids_node_study(
     driver, export_ids_csv, study_id: str, node: str, output_dir: str
 ) -> None:
@@ -327,7 +331,9 @@ def parse_tsv_files(filelist: list) -> DataFrame:
 
 
 @task
-def compare_id_input_db(db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, logger) -> DataFrame:
+def compare_id_input_db(
+    db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, logger
+) -> DataFrame:
     comparison_df = parsed_tsv_file_df
     comparison_df["count_check"] = np.nan
     comparison_df["id_check"] = np.nan
@@ -337,21 +343,27 @@ def compare_id_input_db(db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, 
         i_node = comparison_df.loc[i, "node"]
         i_node_id = comparison_df.loc[i, "tsv_id"]
         i_node_id_count = comparison_df.loc[i, "tsv_count"]
-        db_node_id_count =  len(db_id_pulled_dict[i_study_id][i_node])
+        db_node_id_count = len(db_id_pulled_dict[i_study_id][i_node])
         db_node_id = db_id_pulled_dict[i_study_id][i_node]
         if i_node_id_count == db_node_id_count:
             comparison_df.loc[i, "count_check"] = "Equal"
         else:
             comparison_df.loc[i, "count_check"] = "Unequal"
-            logger.warning(f"Study {i_study_id} node {i_node} ingestion file contains different number of entries compared to neo4j DB")
+            logger.warning(
+                f"Study {i_study_id} node {i_node} ingestion file contains different number of entries compared to neo4j DB"
+            )
         db_missing_ids = [i for i in i_node_id if i not in db_node_id]
         if len(db_missing_ids) > 0:
             comparison_df.loc[i, "db_missing_id"] = ";".join(db_missing_ids)
             comparison_df.loc[i, "id_check"] = "Fail"
-            logger.error(f"Study {i_study_id} node {i_node} ingestion has ids not found in neo4j DB: {*db_missing_ids,}")
+            logger.error(
+                f"Study {i_study_id} node {i_node} ingestion has ids not found in neo4j DB: {*db_missing_ids,}"
+            )
         else:
             comparison_df.loc[i, "id_check"] = "Pass"
-            logger.info(f"Study {i_study_id} node {i_node} ingestion has all ids found in neo4j DB")
+            logger.info(
+                f"Study {i_study_id} node {i_node} ingestion has all ids found in neo4j DB"
+            )
     return comparison_df
 
 
@@ -364,24 +376,47 @@ def pull_node_ids_all_studies_write(
     temp_folder_name = "db_ids_all_node_all_studies"
     os.mkdir(temp_folder_name)
 
-    for index in range(studies_dataframe.shape[0]):
-        study_id = studies_dataframe.loc[index, "study_id"]
-        node = studies_dataframe.loc[index, "node"]
-        logger.info(f"Pulling ids for node {node} study {study_id}")
-        pull_ids_node_study.submit(
-            driver,
-            export_ids_csv=export_node_ids_a_study,
-            study_id=study_id,
-            node=node,
-            output_dir=temp_folder_name,
-        )
+    if studies_dataframe.shape[0] > 100:
+        uniq_nodes =  studies_dataframe['node'].unique().tolist()
+        df_list = []
+        # break studies_dataframe based on uniq value of nodes
+        for i in uniq_nodes:
+            i_df =  studies_dataframe[studies_dataframe["node"]==i].reset_index(drop=True)
+            df_list.append(i_df)
+
+        # loop through each df in df_list
+        # we limit the task concurrency by the number of studies
+        for df in df_list:
+            for index in range(df.shape[0]):
+                study_id = studies_dataframe.loc[index, "study_id"]
+                node = studies_dataframe.loc[index, "node"]
+                logger.info(f"Pulling ids for node {node} study {study_id}")
+                pull_ids_node_study.submit(
+                    driver,
+                    export_ids_csv=export_node_ids_a_study,
+                    study_id=study_id,
+                    node=node,
+                    output_dir=temp_folder_name,
+                )
+    else:
+        for index in range(studies_dataframe.shape[0]):
+            study_id = studies_dataframe.loc[index, "study_id"]
+            node = studies_dataframe.loc[index, "node"]
+            logger.info(f"Pulling ids for node {node} study {study_id}")
+            pull_ids_node_study.submit(
+                driver,
+                export_ids_csv=export_node_ids_a_study,
+                study_id=study_id,
+                node=node,
+                output_dir=temp_folder_name,
+            )
     return temp_folder_name
 
 
 @flow
 def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> Dict:
     """Returns a dictionary of db id list using study id and node name
-    
+
     The function takes dataframe which contains columns of study_id and node as input.
     It loops each row, and pulls id list of a node in one study.
     """
@@ -507,9 +542,12 @@ def validate_DB_with_input_tsvs(
     comparison_df = compare_id_input_db(
         db_id_pulled_dict=db_id_list_all_studies,
         parsed_tsv_file_df=ingested_studies_dataframe,
-        logger=logger)
+        logger=logger,
+    )
 
-    merged_summary_table =  pd.merge(studies_dataframe, comparison_df, on=["study_id","node"], how="left")
+    merged_summary_table = pd.merge(
+        studies_dataframe, comparison_df, on=["study_id", "node"], how="left"
+    )
     merged_summary_table.drop(columns=["tsv_id"], inplace=True)
 
     # sort the df order based on study id and node
