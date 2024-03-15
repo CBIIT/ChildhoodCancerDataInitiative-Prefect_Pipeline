@@ -376,7 +376,7 @@ def pull_node_ids_all_studies_write(
     temp_folder_name = "db_ids_all_node_all_studies"
     os.mkdir(temp_folder_name)
 
-    if studies_dataframe.shape[0] > 100:
+    if studies_dataframe.shape[0] > 50:
         uniq_nodes =  studies_dataframe['node'].unique().tolist()
         df_list = []
         # break studies_dataframe based on uniq value of nodes
