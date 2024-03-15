@@ -427,7 +427,7 @@ def pull_node_ids_all_studies_write(
     study_id_chunks = list_to_chunks(study_id_list, 10)
     node_list = studies_dataframe['node'].tolist()
     node_chunks = list_to_chunks(node_list, 10)
-    for i in range(len(node_list)):
+    for i in range(len(node_chunks)):
         print(f"study_id_list: {*study_id_chunks[i],}")
         print(f"node_list: {*node_chunks[i],}")
         pull_ids_node_study.map(
