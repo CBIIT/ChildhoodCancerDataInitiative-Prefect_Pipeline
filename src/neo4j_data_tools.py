@@ -377,7 +377,8 @@ def pull_node_ids_all_studies_write(
     os.mkdir(temp_folder_name)
 
     print(f"studies dataframe has rows: {studies_dataframe.shape[0]}")
-    if studies_dataframe.shape[0] > 50:
+    """
+        if studies_dataframe.shape[0] > 50:
         uniq_nodes =  studies_dataframe['node'].unique().tolist()
         df_list = []
         # break studies_dataframe based on uniq value of nodes
@@ -412,6 +413,13 @@ def pull_node_ids_all_studies_write(
                 node=node,
                 output_dir=temp_folder_name,
             )
+    """
+    study_id_list = studies_dataframe['study_id'].tolist()
+    node_list = studies_dataframe['node'].tolist()
+    print(f"study_id_list: {*study_id_list,}")
+    print(f"node_list: {*node_list,}")
+    pull_ids_node_study.map(driver, export_node_ids_a_study, study_id_list, node_list, temp_folder_name)
+
     return temp_folder_name
 
 
