@@ -367,7 +367,7 @@ def compare_id_input_db(
     return comparison_df
 
 
-@flow(task_runner=ConcurrentTaskRunner())
+@flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
 def pull_node_ids_all_studies_write(
     driver, studies_dataframe: DataFrame, logger
 ) -> str:
@@ -376,6 +376,7 @@ def pull_node_ids_all_studies_write(
     temp_folder_name = "db_ids_all_node_all_studies"
     os.mkdir(temp_folder_name)
 
+    print(f"studies dataframe has rows: {studies_dataframe.shape[0]}")
     if studies_dataframe.shape[0] > 50:
         uniq_nodes =  studies_dataframe['node'].unique().tolist()
         df_list = []
@@ -387,6 +388,7 @@ def pull_node_ids_all_studies_write(
         # loop through each df in df_list
         # we limit the task concurrency by the number of studies
         for df in df_list:
+            print(df)
             for index in range(df.shape[0]):
                 study_id = studies_dataframe.loc[index, "study_id"]
                 node = studies_dataframe.loc[index, "node"]
@@ -507,7 +509,7 @@ def counts_DB_all_nodes_all_studies(
     return studies_dataframe
 
 
-@flow
+@flow(log_prints=True)
 def validate_DB_with_input_tsvs(
     uri_parameter: str,
     username_parameter: str,
@@ -534,6 +536,7 @@ def validate_DB_with_input_tsvs(
     # and id list from each file
     tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
     ingested_studies_dataframe = parse_tsv_files(tsv_files)
+    print(ingested_studies_dataframe)
 
     db_id_list_all_studies = pull_node_ids_all_studies(
         driver=driver, studies_dataframe=ingested_studies_dataframe, logger=logger
