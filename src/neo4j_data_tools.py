@@ -101,6 +101,15 @@ def get_aws_parameter(parameter_name: str, logger) -> Dict:
     return parameter_response
 
 
+def list_to_chunks(mylist: list, chunk_len: int) -> list:
+    """Break a list into a list of chunks"""
+    chunks = [
+        mylist[i * chunk_len : (i + 1) * chunk_len]
+        for i in range((len(mylist) + chunk_len - 1) // chunk_len)
+    ]
+    return chunks
+
+
 @task
 def cypher_query_parameters(
     uri_parameter: str, username_parameter: str, password_parameter: str, logger
@@ -285,7 +294,7 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
 @task(
     name="Pull ids a node a study",
     task_run_name="pull_ids_{node}_{study_id}",
-    tags=["concurrency-small"],
+    tags=["concurrency-test"],
 )
 def pull_ids_node_study(
     driver, export_ids_csv, study_id: str, node: str, output_dir: str
@@ -376,7 +385,7 @@ def pull_node_ids_all_studies_write(
     temp_folder_name = "db_ids_all_node_all_studies"
     os.mkdir(temp_folder_name)
 
-    print(f"studies dataframe has rows: {studies_dataframe.shape[0]}")
+    print(f"ingested studies dataframe has rows: {studies_dataframe.shape[0]}")
     """
         if studies_dataframe.shape[0] > 50:
         uniq_nodes =  studies_dataframe['node'].unique().tolist()
@@ -415,10 +424,19 @@ def pull_node_ids_all_studies_write(
             )
     """
     study_id_list = studies_dataframe['study_id'].tolist()
+    study_id_chunks = list_to_chunks(study_id_list, 10)
     node_list = studies_dataframe['node'].tolist()
-    print(f"study_id_list: {*study_id_list,}")
-    print(f"node_list: {*node_list,}")
-    pull_ids_node_study.map(driver, export_node_ids_a_study, study_id_list, node_list, temp_folder_name)
+    node_chunks = list_to_chunks(node_list, 10)
+    for i in range(len(node_list)):
+        print(f"study_id_list: {*study_id_chunks[i],}")
+        print(f"node_list: {*node_chunks[i],}")
+        pull_ids_node_study.map(
+            driver,
+            export_node_ids_a_study,
+            study_id_chunks[i],
+            node_chunks[i],
+            temp_folder_name,
+        )
 
     return temp_folder_name
 
