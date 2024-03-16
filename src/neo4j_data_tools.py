@@ -568,7 +568,7 @@ def validate_DB_with_input_tsvs(
     
 
     db_id_list_all_studies = pull_node_ids_all_studies(
-        driver=driver, studies_dataframe=ingested_studies_dataframe, logger=logger
+        driver=driver, studies_dataframe=ingested_studies_dataframe[["study_id","node"]], logger=logger
     )
 
     comparison_df = compare_id_input_db(
