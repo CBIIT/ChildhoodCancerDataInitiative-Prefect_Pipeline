@@ -145,6 +145,7 @@ def dl_sra_template() -> None:
     f.write(r.content)
     return sra_filename
 
+
 @task
 def dl_file_from_url(file_endpoint: str) -> str:
     filename = os.path.basename(file_endpoint)
@@ -152,6 +153,7 @@ def dl_file_from_url(file_endpoint: str) -> str:
     f = open(filename, "wb")
     f.write(r.content)
     return filename
+
 
 @task
 def check_ccdi_version(ccdi_manifest: str) -> str:
@@ -247,11 +249,13 @@ def set_s3_session_client():
     else:
         # Create a custom retry configuration
         custom_retry_config = Config(
-        retries = {
-            'max_attempts': 5,  # Maximum number of retry attempts
-            'mode': 'standard'  # Retry on HTTP status codes considered retryable
-        }
-)
+            connect_timeout = 300,
+            read_timeout = 300,
+            retries={
+                "max_attempts": 5,  # Maximum number of retry attempts
+                "mode": "standard",  # Retry on HTTP status codes considered retryable
+            }
+        )
         s3_client = boto3.client("s3", config=custom_retry_config)
     return s3_client
 
@@ -415,9 +419,11 @@ def view_all_s3_objects(source_bucket):
 
 
 def identify_data_curation_log_file(start_str: str):
-    file_list =  os.listdir("./")
+    file_list = os.listdir("./")
     log_file_regx = start_str + r"[0-9]{4}-[0-9]{2}-[0-9]{2}"
-    log_file_found = [i for i in file_list if re.search(log_file_regx, i) and ".log" in i]
+    log_file_found = [
+        i for i in file_list if re.search(log_file_regx, i) and ".log" in i
+    ]
     if len(log_file_found) == 0:
         return None
     else:
@@ -496,7 +502,13 @@ def markdown_template_updater(
 
 @task
 def markdown_input_task(
-    source_bucket: str, runner: str, manifest: str, template: str, sra_template: str, sra_pre_sub: str, dbgap_pre_sub: str
+    source_bucket: str,
+    runner: str,
+    manifest: str,
+    template: str,
+    sra_template: str,
+    sra_pre_sub: str,
+    dbgap_pre_sub: str,
 ):
     """Creates markdown artifacts of workflow inputs using Prefect
     create_markdown_artifact()
@@ -932,8 +944,10 @@ class CheckCCDI:
         return term_dict
 
     def find_file_nodes(self):
-        dict_df =  self.get_dict_df()
-        file_node_list = dict_df[dict_df["Property"] == "file_url_in_cds"]["Node"].tolist()
+        dict_df = self.get_dict_df()
+        file_node_list = dict_df[dict_df["Property"] == "file_url_in_cds"][
+            "Node"
+        ].tolist()
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq

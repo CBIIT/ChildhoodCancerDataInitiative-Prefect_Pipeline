@@ -1,7 +1,7 @@
 import os
 import sys
 from src.utils import CheckCCDI, set_s3_session_client, get_logger, get_date, get_time
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError, ReadTimeoutError, ConnectTimeoutError
 from urllib.parse import urlparse
 from shutil import copy
 import numpy as np
@@ -266,9 +266,9 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> st
             logger.info(
                 f"File {copy_source} had already been copied to destination bucket path. Skip"
             )
-            runner_logger.info(
-                f"File {copy_source} had already been copied to destination bucket path. Skip"
-            )
+            #runner_logger.info(
+            #    f"File {copy_source} had already been copied to destination bucket path. Skip"
+            #)
             transfer_status = "Success"
         else:
             # if the destin object size is different from source, copy the object
@@ -304,25 +304,44 @@ def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> li
 
 
 @task(name="Compare md5sum values", tags=["concurrency-test"])
-def compare_md5sum_task(first_url: str, second_url: str, s3_client) -> tuple:
+def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> tuple:
     """Compares the md5sum of two objects"""
     # first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
     # second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
-    first_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=first_url)
-    second_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=second_url)
-    # s3_client.close()
-    if first_md5sum == second_md5sum:
-        return (first_md5sum, second_md5sum, "Pass")
-    else:
-        return (first_md5sum, second_md5sum, "Fail")
+    try:
+        first_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=first_url)
+        second_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=second_url)
+        if first_md5sum == second_md5sum:
+            return (first_md5sum, second_md5sum, "Pass")
+        else:
+            return (first_md5sum, second_md5sum, "Fail")
+    except ClientError as ec:
+        logger.error(f"ClientError occurred while calculating md5sum of {first_url} and {second_url}: {ec}")
+        return ("", "", "Error")
+    except ReadTimeoutError as er:
+        logger.error(
+            f"ReadTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {er}"
+        )
+        return ("", "", "Error")
+    except ConnectTimeoutError as econ:
+        logger.error(
+            f"ConnectTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {econ}"
+        )
+        return ("", "", "Error")
+    except Exception as ex:
+        logger.error(
+            f"Error occurred while calculating  md5sum of {first_url} and {second_url}: {ex}"
+        )
+        return ("", "", "Error")
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Compare md5sum Concurrently")
 def compare_md5sum_flow(first_url_list: list[str], second_url_list: list[str]) -> list:
     """Compare md5sum of two list of urls concurrently"""
     s3_client = set_s3_session_client()
+    runner_logger = get_run_logger()
     compare_list = compare_md5sum_task.map(
-        first_url_list, second_url_list, s3_client=s3_client
+        first_url_list, second_url_list, s3_client=s3_client, logger=runner_logger
     )
     s3_client.close()
     return [i.result() for i in compare_list]
@@ -555,20 +574,61 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
         )
         del transfer_df
     except Exception as ex:
+        # in case there is an exception didn't get captured
         logger.error(f"Fail to finish md5sum check for all files. {ex}")
         runner_logger.error(f"Fail to finish md5sum check for all files. {ex}")
-        transfer_df[
-            [
-                "node",
-                "url_before_cp",
-                "url_after_cp",
-                "transfer_status",
-            ]
-        ].to_csv(mover_summary_table, sep="\t", index=False)
-        logger.info(f"File mover summary table was created {mover_summary_table}")
-        runner_logger.info(
-            f"File mover summary table was created {mover_summary_table}"
-        )
-        del transfer_df
+        try:
+            len_md5sum_compare_result = len(md5sum_compare_result)
+            missing_len = len(urls_before_transfer) - len_md5sum_compare_result
+            md5sum_compare_result.extend([("", "", "")] * missing_len)
+            # add md5sum comparison result to transfer_df
+            transfer_df = add_md5sum_results(
+                transfer_df=transfer_df, md5sum_results=md5sum_compare_result
+            )
+            # log md5sum comparison check
+            passed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Pass")
+            failed_md5sum_check_ct = sum(transfer_df["md5sum_check"] == "Fail")
+            logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
+            runner_logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
+            if failed_md5sum_check_ct >= 1:
+                logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
+                runner_logger.warning(
+                    f"md5sum check failed files count: {failed_md5sum_check_ct}"
+                )
+            else:
+                pass
+            
+            # write transfer summary table
+            transfer_df[
+                [
+                    "node",
+                    "url_before_cp",
+                    "url_after_cp",
+                    "transfer_status",
+                    "md5sum_check",
+                    "md5sum_before_cp",
+                    "md5sum_after_cp",
+                ]
+            ].to_csv(mover_summary_table, sep="\t", index=False)
+            logger.info(f"File mover summary table was created {mover_summary_table}")
+            runner_logger.info(
+                f"File mover summary table was created {mover_summary_table}"
+            )
+            del transfer_df
+
+        except NameError:
+            transfer_df[
+                [
+                    "node",
+                    "url_before_cp",
+                    "url_after_cp",
+                    "transfer_status",
+                ]
+            ].to_csv(mover_summary_table, sep="\t", index=False)
+            logger.info(f"File mover summary table was created {mover_summary_table}")
+            runner_logger.info(
+                f"File mover summary table was created {mover_summary_table}"
+            )
+            del transfer_df
 
     return output_name, logger_filename, mover_summary_table
