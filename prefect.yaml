@@ -290,9 +290,10 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
+
   - name: validate-neo4j-data-32gb
     version: null
-    tags: ["Test"]
+    tags: ["Production"]
     description: null
     entrypoint: workflows/validate_neo4j_data.py:validate_neo4j_data
     schedule: null
@@ -306,7 +307,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-861_get_parameter
+          branch: main
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
