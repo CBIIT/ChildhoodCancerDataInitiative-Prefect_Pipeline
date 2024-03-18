@@ -529,10 +529,6 @@ def validate_DB_with_input_tsvs(
     # and id list from each file
     tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
     ingested_studies_dataframe = parse_tsv_files(tsv_files)
-    print(f"ingested studies dataframe has {ingested_studies_dataframe.shape[0]} rows")
-    for index, row in ingested_studies_dataframe.iterrows():
-        print(row)
-    
 
     db_id_list_all_studies = pull_node_ids_all_studies(
         driver=driver, studies_dataframe=ingested_studies_dataframe[["study_id","node"]], logger=logger
