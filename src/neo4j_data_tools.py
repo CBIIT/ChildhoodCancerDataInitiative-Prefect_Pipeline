@@ -386,50 +386,17 @@ def pull_node_ids_all_studies_write(
     os.mkdir(temp_folder_name)
 
     print(f"ingested studies dataframe has rows: {studies_dataframe.shape[0]}")
-    """
-        if studies_dataframe.shape[0] > 50:
-        uniq_nodes =  studies_dataframe['node'].unique().tolist()
-        df_list = []
-        # break studies_dataframe based on uniq value of nodes
-        for i in uniq_nodes:
-            i_df =  studies_dataframe[studies_dataframe["node"]==i].reset_index(drop=True)
-            df_list.append(i_df)
-
-        # loop through each df in df_list
-        # we limit the task concurrency by the number of studies
-        for df in df_list:
-            print(df)
-            for index in range(df.shape[0]):
-                study_id = studies_dataframe.loc[index, "study_id"]
-                node = studies_dataframe.loc[index, "node"]
-                logger.info(f"Pulling ids for node {node} study {study_id}")
-                pull_ids_node_study.submit(
-                    driver,
-                    export_ids_csv=export_node_ids_a_study,
-                    study_id=study_id,
-                    node=node,
-                    output_dir=temp_folder_name,
-                )
-    else:
-        for index in range(studies_dataframe.shape[0]):
-            study_id = studies_dataframe.loc[index, "study_id"]
-            node = studies_dataframe.loc[index, "node"]
-            logger.info(f"Pulling ids for node {node} study {study_id}")
-            pull_ids_node_study.submit(
-                driver,
-                export_ids_csv=export_node_ids_a_study,
-                study_id=study_id,
-                node=node,
-                output_dir=temp_folder_name,
-            )
-    """
+    print(f"ingested studies dataframe size: {studies_dataframe.size}")
+    logger.info(
+        f"ingested studies dataframe has rows of {studies_dataframe.shape[0]} and size of {studies_dataframe.size}"
+    )
     study_id_list = studies_dataframe['study_id'].tolist()
     study_id_chunks = list_to_chunks(study_id_list, 50)
     node_list = studies_dataframe['node'].tolist()
     node_chunks = list_to_chunks(node_list, 50)
     for i in range(len(node_chunks)):
-        print(f"study_id_list: {*study_id_chunks[i],}")
-        print(f"node_list: {*node_chunks[i],}")
+        # print(f"study_id_list: {*study_id_chunks[i],}")
+        # print(f"node_list: {*node_chunks[i],}")
         pull_ids_node_study.map(
             driver,
             export_node_ids_a_study,
