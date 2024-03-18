@@ -119,7 +119,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
   
-  - name: ccdi-template-updater
+  - name: ccdi-template-updater-2gb
     version: null
     tags: []
     description: null
@@ -142,7 +142,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: bucket-reader
+  - name: bucket-reader-2gb
     version: null
     tags: ["Production"]
     description: null
@@ -173,7 +173,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: template-exampler
+  - name: template-exampler-2gb
     version: null
     tags: ["Production"]
     description: null
@@ -203,7 +203,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: file-mover
+  - name: file-mover-16gb
     version: null
     tags: ["Production"]
     description: null
@@ -234,7 +234,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: get-parameter
+  - name: get-parameter-2gb
     version: null
     tags: ["Test"]
     description: null
@@ -262,7 +262,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: pull-neo4j-data
+  - name: pull-neo4j-data-16gb
     version: null
     tags: ["Test"]
     description: null
@@ -290,7 +290,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: validate-neo4j-data
+  - name: validate-neo4j-data-32gb
     version: null
     tags: ["Test"]
     description: null
