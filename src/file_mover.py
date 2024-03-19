@@ -1,7 +1,12 @@
 import os
 import sys
 from src.utils import CheckCCDI, set_s3_session_client, get_logger, get_date, get_time
-from botocore.exceptions import ClientError, ReadTimeoutError, ConnectTimeoutError
+from botocore.exceptions import (
+    ClientError,
+    ReadTimeoutError,
+    ConnectTimeoutError,
+    ResponseStreamingError,
+)
 from urllib.parse import urlparse
 from shutil import copy
 import numpy as np
@@ -326,6 +331,11 @@ def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> t
     except ConnectTimeoutError as econ:
         logger.error(
             f"ConnectTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {econ}"
+        )
+        return ("", "", "Error")
+    except ResponseStreamingError as erres:
+        logger.error(
+            f"ConnectTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {erres}"
         )
         return ("", "", "Error")
     except Exception as ex:
