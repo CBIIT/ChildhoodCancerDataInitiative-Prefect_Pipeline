@@ -198,12 +198,20 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
 def copy_file_by_size(
     copy_parameter: dict, file_size: int, s3_client, logger, runner_logger
 ):
+    """Copy objects between two locations defined by copy_parameter
+
+    Uses regular s3_client.copy_object for files less then 5GB, and
+    Multipart upload for files larger than 5GB
+
+    runner_logger is only used for error messages. logger is used for both regular
+    info and error/warning messages
+    """
     copy_source = copy_parameter["CopySource"]
     # test if file_size larger than 5GB, 5*1024*1024*1024
     if file_size > 5368709120:
-        runner_logger.info(
-            f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
-        )
+        #runner_logger.info(
+        #    f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
+        #)
         logger.info(
             f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
         )
@@ -214,9 +222,9 @@ def copy_file_by_size(
             logger=logger,
         )
     else:
-        runner_logger.info(
-            f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
-        )
+        #runner_logger.info(
+        #    f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
+        #)
         logger.info(
             f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
         )
@@ -230,7 +238,7 @@ def copy_file_by_size(
             if ex_code == "NoSuchKey":
                 object_name = ex.response["Error"]["Key"]
                 logger.error(ex_code + ":" + ex_message + " " + object_name)
-                # runner_logger.error(ex_code + ":" + ex_message + " " + object_name)
+                runner_logger.error(ex_code + ":" + ex_message + " " + object_name)
             elif ex_code == "NoSuchBucket":
                 bucket_name = ex.response["Error"]["Code"]["BucketName"]
                 logger.error(
@@ -257,6 +265,13 @@ def copy_file_by_size(
     log_prints=True,
 )
 def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> str:
+    """Copy objects between two locations defined by copy_parameter
+
+    It checks if the file has been transferred (Key and object Content length/size) before trasnfer process
+    Function copy_file_by_size is executed only if
+        - The file hasn't been transferred
+        - the destination object size doesn't match to the source size
+    """
     copy_source = copy_parameter["CopySource"]
     source_bucket, source_key = copy_source.split("/", 1)
     object_response = s3_client.head_object(Bucket=source_bucket, Key=source_key)
@@ -271,9 +286,9 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> st
             logger.info(
                 f"File {copy_source} had already been copied to destination bucket path. Skip"
             )
-            #runner_logger.info(
+            # runner_logger.info(
             #    f"File {copy_source} had already been copied to destination bucket path. Skip"
-            #)
+            # )
             transfer_status = "Success"
         else:
             # if the destin object size is different from source, copy the object
@@ -308,11 +323,19 @@ def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> li
     return [i.result() for i in transfer_status_list]
 
 
-@task(name="Compare md5sum values", tags=["concurrency-test"])
+@task(
+    name="Compare md5sum values",
+    tags=["concurrency-test"],
+    retries=3,
+    retry_delay_seconds=0.5,
+    log_prints=True,
+)
 def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> tuple:
-    """Compares the md5sum of two objects"""
-    # first_md5sum = calculate_object_md5sum(s3_client=s3_client, url=first_url)
-    # second_md5sum = calculate_object_md5sum(s3_client=s3_client, url=second_url)
+    """Compares the md5sum of two objects
+
+    compare_md5sum_task can return three status for comparison
+    "Pass", "Fail", and "Error"
+    """
     try:
         first_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=first_url)
         second_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=second_url)
@@ -539,6 +562,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
         urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=100)
         urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=100)
         md5sum_compare_result = []
+        logger.info(
+            f"Md5sum check will be processed into {len(urls_before_chunks)} chunks"
+        )
         runner_logger.info(
             f"Md5sum check will be processed into {len(urls_before_chunks)} chunks"
         )
@@ -547,6 +573,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
                 first_url_list=urls_before_chunks[j],
                 second_url_list=urls_after_chunks[j],
             )
+            # add logging info on the md5sum check progress
+            logger.info(f"md5sum check completed: {j+1}/{len(urls_before_chunks)}")
+            runner_logger.info(f"md5sum check completed: {j+1}/{len(urls_before_chunks)}")
             md5sum_compare_result.extend(j_md5sum_compare_result)
 
         # add md5sum comparison result to transfer_df
@@ -559,8 +588,8 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
         logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
         runner_logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
         if failed_md5sum_check_ct >= 1:
-            logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
-            runner_logger.warning(
+            logger.error(f"md5sum check failed files count: {failed_md5sum_check_ct}")
+            runner_logger.error(
                 f"md5sum check failed files count: {failed_md5sum_check_ct}"
             )
         else:
@@ -584,6 +613,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
         )
         del transfer_df
     except Exception as ex:
+        # for interrupted md5sum comparison, we fill the unchecked comparison with
+        # status of "". Therefore the comparison results can have 4 kinds outcomes
+        # "Pass", "Fail", "Error", and ""
         # in case there is an exception didn't get captured
         logger.error(f"Fail to finish md5sum check for all files. {ex}")
         runner_logger.error(f"Fail to finish md5sum check for all files. {ex}")
@@ -601,13 +633,13 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
             runner_logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
             if failed_md5sum_check_ct >= 1:
-                logger.warning(f"md5sum check failed files count: {failed_md5sum_check_ct}")
-                runner_logger.warning(
+                logger.error(f"md5sum check failed files count: {failed_md5sum_check_ct}")
+                runner_logger.error(
                     f"md5sum check failed files count: {failed_md5sum_check_ct}"
                 )
             else:
                 pass
-            
+
             # write transfer summary table
             transfer_df[
                 [
