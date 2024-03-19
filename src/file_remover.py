@@ -7,19 +7,28 @@ import hashlib
 import pandas as pd
 import numpy as np
 from typing import TypeVar
+from src.utils import get_time
 
 
 DataFrame = TypeVar("DataFrame")
 
 
+def list_to_chunks(mylist: list, chunk_len: int) -> list:
+    """Break a list into a list of chunks"""
+    chunks = [
+        mylist[i * chunk_len : (i + 1) * chunk_len]
+        for i in range((len(mylist) + chunk_len - 1) // chunk_len)
+    ]
+    return chunks
+
+
 @task
-def if_object_exists(key_path: str, bucket: str, logger) -> None:
+def if_object_exists(key_path: str, bucket: str, s3_client, logger) -> None:
     """Retrives the metadata of an object without returning the
     object itself
 
     To use HEAD, you must have the s3:GetObject permission
     """
-    s3_client = set_s3_session_client()
     try:
         object_meta = s3_client.head_object(Bucket=bucket, Key=key_path)
         if_exist = True
@@ -30,8 +39,6 @@ def if_object_exists(key_path: str, bucket: str, logger) -> None:
             f"Error occurred while fetching metadata of {key_path} from bucjet {bucket}: {err_code} {err_message}"
         )
         if_exist = False
-    finally:
-        s3_client.close()
     return if_exist
 
 
@@ -74,7 +81,7 @@ def construct_staging_bucket_key(
     )
     # concatenate with staging bucket path
     object_staging_bucket_key = os.path.join(staging_prefix, object_without_prod_prefix)
-    return staging_bucket, object_staging_bucket_key
+    return object_staging_bucket_key
 
 
 @task
@@ -115,7 +122,7 @@ def get_md5sum(object_key: str, bucket_name: str, s3_client) -> str:
     return md5_hash.hexdigest()
 
 
-@flow
+@flow(name="Calculate objects md5sum ")
 def objects_md5sum(list_keys: list[str], bucket_name: str) -> list[str]:
     """Get a list of md5sum using a list of keys and static bucket name
 
@@ -139,32 +146,34 @@ def objects_staging_key(
     """Returns a list of proposed keys of objects in staging bucket, given object paths in prod bucket,
     prod bucket name and staging bucket path
     """
-    #logger = get_run_logger()
+    # logger = get_run_logger()
     staging_keys_future = construct_staging_bucket_key.map(
         object_prod_key_list, prod_bucket_path, staging_bucket_path
     )
     staging_keys_list = [i.result() for i in staging_keys_future]
-    #for h in staging_keys_list:
+    # for h in staging_keys_list:
     #    logger.info(f"staging bucket: {h[0]}\nobject key: {h[1]}")
     return staging_keys_list
 
 
 @flow
-def objects_if_exist(key_path_list: list[str], bucket:str, logger) -> list:
+def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     """Returns a list of boolean indicating if the object exists
-    
+
     This flow takes logger input so the parent flow can log objects
     aren't existed
     """
-    if_exist_future = if_object_exists.map(key_path_list, bucket, logger)
+    s3_client = set_s3_session_client()
+    if_exist_future = if_object_exists.map(key_path_list, bucket, s3_client, logger)
     if_exist_list = [i.result() for i in if_exist_future]
+    s3_client.close()
     return if_exist_list
 
 
 @flow
 def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     """Returns a list of dict for object files located under bucket_folder_path
-    
+
     List item example:
         {
             "Bucket": "prod_ccdi",
@@ -173,7 +182,9 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
         }
     """
     logger = get_run_logger()
-    bucket, folder_prefix =  parse_bucket_folder_path(bucket_folder_path=bucket_folder_path)
+    bucket, folder_prefix = parse_bucket_folder_path(
+        bucket_folder_path=bucket_folder_path
+    )
     lookup_parameters = paginate_parameter(bucket_path=bucket_folder_path)
     s3 = set_s3_session_client()
     s3_paginator = s3.get_paginator("list_objects_v2")
@@ -182,89 +193,248 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     bucket_object_dict_list = []
     for page in pages:
         if "Contents" in page.keys():
-            for obj in page['Contents']:
+            for obj in page["Contents"]:
                 obj_dict = {
                     "Bucket": bucket,
-                    "Key": obj['Key'],
-                    "Size": obj['Size'],
+                    "Key": obj["Key"],
+                    "Size": obj["Size"],
                 }
                 bucket_object_dict_list.append(obj_dict)
 
         else:
             logger.info(f"No object file found under {bucket_folder_path}")
             break
+    s3.close()
     return bucket_object_dict_list
 
 
 @flow
-def find_missing_objects(manifest_df: DataFrame, file_object_list: list[dict]) -> DataFrame:
-    manifest_df["Missing_Object_Candidate_Keys"] = np.nan
-    for index, row in manifest_df.iterrows():
-        if row["Staging_If_Exist"] == False:
-            row_filename = os.path.basename(row['Key'])
-            row_md5sum = row['md5sum']
+def find_missing_objects(
+    manifest_df: DataFrame, file_object_list: list[dict]
+) -> DataFrame:
+    """ Adds a column of object keys in staging bucket if the object
+    in prod bucket can't be found under staging bucket path.
+    """
+    # find nonexist files
+    not_found_df = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, ["Key", "Size", "md5sum"]]
+    not_found_df["Missing_Object_Candidate_Keys"] =""
 
-    return None
+    # add file basename to file_object_list
+    file_object_list_new = []
+    for i in range(len(file_object_list)):
+        i_dict = file_object_list[i]
+        i_dict["Filename"] = os.path.basename(i_dict['Key'])
+        file_object_list_new.append(i_dict)
+
+    for index, row in not_found_df.iterrows():
+        row_basename = os.path.basename(row['Key'])
+        row_missing_candidates = []
+        for k in file_object_list_new:
+            if k['Filename'] == row_basename and k['Size'] == row['Size']:
+                s3_client = set_s3_session_client()
+                k_md5sum = get_md5sum(object_key=k['Key'], bucket_name=k['Bucket'], s3_client=s3_client)
+                s3_client.close()
+                if k_md5sum == row['md5sum']:
+                    row_missing_candidates.append(k['Key'])
+                else:
+                    pass
+            else:
+                pass
+        not_found_df.loc[index, "Missing_Object_Candidate_Keys"] = row_missing_candidates
+
+    manifest_df["Missing_Object_Candidate_Keys"] = ""
+    manifest_df.loc[
+        manifest_df["Staging_If_Exist"] == False, "Missing_Object_Candidate_Keys"
+    ] = not_found_df["Missing_Object_Candidate_Keys"].tolist()
+
+    return manifest_df
 
 
 @flow
-def create_object_manifest(prod_bucket_path: str, staging_bucket_path: str) -> None:
+def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: str, runner: str) -> None:
+    # get output name
+    output_manifest_name = runner + "_matching_objects_manifest_" + get_time + ".tsv"
+
     # create logger
     logger = get_run_logger()
 
     # get prod bucket and prod prefix
-    prod_bucket, prod_prefix = parse_bucket_folder_path(bucket_folder_path=prod_bucket_path)
-    staging_bucket, staging_prefix = parse_bucket_folder_path(bucket_folder_path=staging_bucket_path)
-
-    # create a list of dicts for objects in under prod_bucket_path
-    objects_prod_list = retrieve_objects_from_bucket_path(bucket_folder_path=prod_bucket_path)
-    objects_prod_key_list =  [i['Key'] for i in objects_prod_list]
-    objects_prod_md5sum = objects_md5sum(list_keys=objects_prod_key_list, bucket_name=prod_bucket)
-    # reconstruct the key in staging bucket
-    # This is before validating whether the key in staging bucket exists or not
-
-    objects_staging_key_list = objects_staging_key(
-        object_prod_key_list=objects_prod_key_list,
-        prod_bucket_path=prod_bucket_path,
-        staging_bucket_path=staging_bucket_path
+    prod_bucket, prod_prefix = parse_bucket_folder_path(
+        bucket_folder_path=prod_bucket_path
+    )
+    staging_bucket, staging_prefix = parse_bucket_folder_path(
+        bucket_folder_path=staging_bucket_path
     )
 
-    # add prod_md5sum value and proposed staging key to each object dict
-    # each object dict should have keys: Bucket, Key, Size, Staging_Bucket, Staging_Key,
+    # create a list of dicts for objects in under prod_bucket_path
+    logger.info(f"Reading object files under prod bucket path: {prod_bucket_path}")
+    objects_prod_list = retrieve_objects_from_bucket_path(
+        bucket_folder_path=prod_bucket_path
+    )
+    logger.info(f"Files found under prod bucket path: {len(objects_prod_list)}")
+    objects_prod_key_list = [i["Key"] for i in objects_prod_list]
+    # calculate md5sum of pbjects in prod bucket. If more than 100 objects, split them into chunks
+    logger.info("Start calculating md5sum of objects under prod bucket path")
+    if len(objects_prod_key_list) > 100:
+        objects_prod_key_chunks = list_to_chunks(
+            mylist=objects_prod_key_list, chunk_len=100
+        )
+        logger.info(
+            f"md5sum calculation will be processed in {len(objects_prod_key_chunks)} chunks"
+        )
+        objects_prod_md5sum = []
+        for i in range(len(objects_prod_key_chunks)):
+            i_md5sum_list = objects_md5sum(
+                list_keys=objects_prod_key_chunks[i], bucket_name=prod_bucket
+            )
+            logger.info(
+                f"md5sum calculation progress: {i+1}/{len(objects_prod_key_chunks)}"
+            )
+            objects_prod_md5sum.extend(i_md5sum_list)
+        logger.info("md5sum calculation of prod keys finished")
+    else:
+        objects_prod_md5sum = objects_md5sum(
+            list_keys=objects_prod_key_list, bucket_name=prod_bucket
+        )
+        logger.info("md5sum calculation of prod keys finished")
+
+    # reconstruct the key in staging bucket
+    # This is before validating whether the key in staging bucket exists or not
+    # objects_staging_key_list example ["sub_dir/subdir2/file.txt", "dir1/dir2/file.fastq", ...]
+    logger.info(f"Start reconstructing staging object keys given the info of staging bucket path: {staging_bucket_path}")
+    if len(objects_prod_key_list) > 100:
+        objects_prod_key_chunks = list_to_chunks(
+            mylist=objects_prod_key_list, chunk_len=100
+        )
+        logger.info(
+            f"Object staging keys reconstruction will be processed in {len(objects_prod_key_chunks)} chunks"
+        )
+        objects_staging_key_list = []
+        for j in range(len(objects_prod_key_chunks)):
+            j_staging_key_list = objects_staging_key(
+                object_prod_key_list=objects_prod_key_chunks[j],
+                prod_bucket_path=prod_bucket_path,
+                staging_bucket_path=staging_bucket_path,
+            )
+            logger.info(
+                f"Object staging keys reconstruction progress: {j+1}/{len(objects_prod_key_chunks)}"
+            )
+            objects_staging_key_list.extend(j_staging_key_list)
+        logger.info("Object staging keys reconstruction finished")
+    else:
+        objects_staging_key_list = objects_staging_key(
+            object_prod_key_list=objects_prod_key_list,
+            prod_bucket_path=prod_bucket_path,
+            staging_bucket_path=staging_bucket_path,
+        )
+        logger.info("Object staging keys reconstruction finished")
+
+    # check if staging key exists
+    logger.info(f"Start checking if objects exist under staging bucket path: {staging_bucket_path}")
+    if len(objects_staging_key_list) > 100:
+        objects_staging_key_chunks = list_to_chunks(mylist=objects_staging_key_list, chunk_len=100)
+        logger.info(
+            f"Checking if object staging keys exist will be processed in {len(objects_staging_key_chunks)} chunks"
+        )
+        if_staging_objects_exist = []
+        for h in range(len(objects_staging_key_chunks)):
+            h_staging_if_exist = objects_if_exist(
+                key_path_list=objects_staging_key_chunks[h], bucket=staging_bucket, logger=logger
+            )
+            logger.info(
+                f"Checking if object staging keys exist progress: {h+1}/{len(objects_staging_key_chunks)}"
+            )
+            if_staging_objects_exist.extend(h_staging_if_exist)
+        logger.info("Checking if object staging keys exist finished")
+    else:
+        if_staging_objects_exist = objects_if_exist(
+            key_path_list=objects_staging_key_list,
+            bucket=staging_bucket,
+            logger=logger
+        )
+        logger.info("Checking if object staging keys exist finished")
+
+    logger.info(
+        f"files exist under staging bucket path: {sum(if_staging_objects_exist)} / {len(if_staging_objects_exist)}"
+    )
+
+    # add prod_md5sum value and proposed staging key, and if the staging key is valid
+    # each object dict should have keys: Bucket, Key, Size, Staging_Bucket, Staging_Key, Staging_If_Exist
+    manifest_list = []
     for i in range(len(objects_prod_list)):
         i_dict = objects_prod_list[i]
         i_dict["md5sum"] = objects_prod_md5sum[i]
         i_dict["Staging_Bucket"] = staging_bucket
         i_dict["Staging_Key"] = objects_staging_key_list[i]
-    # turn object_prod_list into a pd dataframe
-    manifest_df = pd.DataFrame(objects_prod_list)
+        i_dict["Staging_If_Exist"] = if_staging_objects_exist[i]
+        manifest_list.append(i_dict)
+    del objects_prod_list
 
-    # check if staging keys exist in staging bucket
-    if_staging_objects_exist = objects_if_exist(
-        key_path_list=manifest_df["Staging_Key"], bucket=staging_bucket, logger=logger
-    )
-    manifest_df["Staging_If_Exist"] = if_staging_objects_exist
+    # turn manifest_list into a pd dataframe
+    manifest_df = pd.DataFrame(manifest_list)
     if sum(manifest_df["Staging_If_Exist"]) < manifest_df.shape[0]:
-        missing_staging_keys = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, "Staging_Key"].tolist()
+        missing_staging_keys = manifest_df.loc[
+            manifest_df["Staging_If_Exist"] == False, "Staging_Key"
+        ].tolist()
         missing_count = manifest_df.shape[0] - sum(manifest_df["Staging_If_Exist"])
-        logger.error(f"{missing_count} objects not found in staging bucket {staging_bucket_path}:\n{*missing_staging_keys,}")
+        logger.error(
+            f"{missing_count} objects not found in staging bucket {staging_bucket_path}:\n{*missing_staging_keys,}"
+        )
     else:
-        logger.info(f"All objects were found under staging bucket path: {staging_bucket_path}")
+        logger.info(
+            f"All objects were found under staging bucket path: {staging_bucket_path}"
+        )
 
     # check the md5sum of staging key if the object exists
+    logger.info("Start calculating md5sum of objects in staging bucket path if they exist")
     staging_exist_key = manifest_df.loc[
         manifest_df["Staging_If_Exist"] == True, "Staging_Key"
     ].tolist()
-    objects_staging_md5sum = objects_md5sum(list_keys=staging_exist_key, bucket_name=staging_bucket)
-    manifest_df["Staging_md5sum"]=""
+    if len(staging_exist_key)>100:
+        staging_exist_key_chunks = list_to_chunks(mylist=staging_exist_key, chunk_len=100)
+        logger.info(
+            f"md5sum calculation will be processed in {len(staging_exist_key_chunks)} chunks"
+        )
+        objects_staging_md5sum = []
+        for k in range(len(staging_exist_key_chunks)):
+            logger.info(
+                f"md5sum calculation progress: {k+1}/{len(staging_exist_key_chunks)}"
+            )
+            k_staging_md5sum = objects_md5sum(list_keys=staging_exist_key_chunks[k], bucket_name=staging_bucket)
+            objects_staging_md5sum.extend(k_staging_md5sum)
+        logger.info("md5sum calculation of staging keys finished")
+    else:
+        objects_staging_md5sum = objects_md5sum(list_keys=staging_exist_key, bucket_name=staging_bucket)
+        logger.info("md5sum calculation of staging keys finished")
+    # add staging md5sum values to df
+    manifest_df["Staging_md5sum"] = ""
     manifest_df.loc[manifest_df["Staging_If_Exist"] == True, "Staging_md5sum"] = (
         objects_staging_md5sum
     )
+
+    # check if staging md5sum value == prod md5sum
     manifest_df["md5sum_check"] = ""
     # compare md5sum vlaues between prod key and staging key
-    manifest_df.loc[manifest_df["md5sum"]==manifest_df["Staging_md5sum"], "md5sum_check"] = "Pass"
-    
+    manifest_df.loc[
+        manifest_df["md5sum"] == manifest_df["Staging_md5sum"], "md5sum_check"
+    ] = "Pass"
+    passed_md5sum_counts = manifest_df[manifest_df["md5sum_check"]=="Pass"].shape[0]
+    logger.info(f"Files passed md5sum checks: {passed_md5sum_counts}")
+
     # look for missing objects if there are missing ones
     if sum(manifest_df["Staging_If_Exist"]) < manifest_df.shape[0]:
         # if there is object missing, search for entire bucket
-        staging_objects_list = retrieve_objects_from_bucket_path(bucket_folder_path=staging_bucket)
+        logger.info(f"Not all files can be found under staging bucket path {staging_bucket_path}. Start looking for missing objects in staging bucket {staging_bucket}")
+        staging_objects_list = retrieve_objects_from_bucket_path(
+            bucket_folder_path=staging_bucket
+        )
+        manifest_df = find_missing_objects(
+            manifest_df=manifest_df, file_object_list=staging_objects_list
+        )
+        logger.info("Searching for missing objects finished")
+    else:
+        pass
+
+    # write manifest into file
+    logger.info(f"Writing output manifest {output_manifest_name}")
+    manifest_df.to_csv(output_manifest_name, sep="\t", index=False)
