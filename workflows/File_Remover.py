@@ -28,6 +28,10 @@ def run_file_remover():
     logger = get_run_logger()
     current_time = get_time()
 
+    user = pause_flow_run(wait_for_input=str)
+
+    logger.info(f"Hello, {user}!")
+
     description_md = f"""
 **Welcome to the File Remover Flow!**
 Today's Date: {current_time}
@@ -43,11 +47,11 @@ Please enter your preferred path below:
 - **bucket**: bucket name of where manifest lives
 - **manifest_tsv_path**: path of manifest(tsv) in the bucket
 - **delete_column_name**: column name of s3 uri to be deleted
-- **runner**": your runner id
+- **runner**: your runner id
 
 """
 
-
+"""
     user_input = pause_flow_run(
         wait_for_input=FlowPath.with_initial_data(
             description=description_md, have_manifest="y"
@@ -69,7 +73,9 @@ Please enter your preferred path below:
 
     else:
         logger.info(f"You don't have a manifest for File Remover!")
+"""
 
+    
 
 if __name__=="__main__":
     run_file_remover()
