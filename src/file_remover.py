@@ -1,7 +1,8 @@
 from prefect import flow, task, get_run_logger
 from src.utils import set_s3_session_client
 from src.read_buckets import paginate_parameter
-from botocore.errorfactory import ClientError
+from src.file_mover import parse_file_url_in_cds
+from botocore.exceptions import ClientError
 import os
 import hashlib
 import pandas as pd
@@ -22,7 +23,7 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
     return chunks
 
 
-@task
+@task(retries=3, retry_delay_seconds=0.5)
 def if_object_exists(key_path: str, bucket: str, s3_client, logger) -> None:
     """Retrives the metadata of an object without returning the
     object itself
@@ -69,7 +70,7 @@ def construct_staging_bucket_key(
         prod_bucket_path: prod_bucket/release_2
         staging_bucket_path: staging_bucket/staging_folder
     Returns:
-        staging_bucket, staging_folder/sub_dir1/sub_dir2/example.cram
+        staging_folder/sub_dir1/sub_dir2/example.cram
     """
     _, prod_prefix = parse_bucket_folder_path(bucket_folder_path=prod_bucket_path)
     object_prod_bucket_key = object_prod_bucket_key.strip("/")
@@ -84,7 +85,7 @@ def construct_staging_bucket_key(
     return object_staging_bucket_key
 
 
-@task
+@task(retries=3, retry_delay_seconds=0.5)
 def get_md5sum(object_key: str, bucket_name: str, s3_client) -> str:
     """
     Calculate md5sum of an object using url
@@ -100,7 +101,7 @@ def get_md5sum(object_key: str, bucket_name: str, s3_client) -> str:
         "ContentLength"
     ]
 
-    # specify a chunk size to get object, for intance 1GB
+    # specify a chunk size to get object, for intance 1Gb
     chunk_size = 1073741824
 
     chunk_start = 0
@@ -146,13 +147,10 @@ def objects_staging_key(
     """Returns a list of proposed keys of objects in staging bucket, given object paths in prod bucket,
     prod bucket name and staging bucket path
     """
-    # logger = get_run_logger()
     staging_keys_future = construct_staging_bucket_key.map(
         object_prod_key_list, prod_bucket_path, staging_bucket_path
     )
     staging_keys_list = [i.result() for i in staging_keys_future]
-    # for h in staging_keys_list:
-    #    logger.info(f"staging bucket: {h[0]}\nobject key: {h[1]}")
     return staging_keys_list
 
 
@@ -168,6 +166,26 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     if_exist_list = [i.result() for i in if_exist_future]
     s3_client.close()
     return if_exist_list
+
+@task(name="Delete Single S3 Object", retries=3, retry_delay_seconds=0.5)
+def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
+    bucket_name, object_key = parse_file_url_in_cds(url=object_uri)
+    try:
+        s3_client.delete_object(Bucket=bucket_name, Key=object_key)
+        delete_status = "Success"
+    except ClientError as err:
+        logger.info(f"Fail to delete object {object_uri}: {err}")
+        delete_status = "Fail"
+    return delete_status
+
+
+@flow(name="Delete S3 Objects")
+def delete_objects_by_uri(uri_list, logger) -> None:
+    s3_client = set_s3_session_client()
+    delete_responses =  delete_single_object_by_uri.map(uri_list, s3_client, logger)
+    delete_status_list =  [i.result() for i in delete_responses]
+    s3_client.close()
+    return delete_status_list
 
 
 @flow
@@ -435,6 +453,58 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
     else:
         pass
 
+    # construct full path of staging object
+    manifest_df["Staging_S3_URI"] = (
+        "s3://" + manifest_df["Staging_Bucket"] + "/" + manifest_df["Staging_Key"]
+    )
+
     # write manifest into file
     logger.info(f"Writing output manifest {output_manifest_name}")
     manifest_df.to_csv(output_manifest_name, sep="\t", index=False)
+
+
+@flow
+def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: str):
+    logger = get_run_logger()
+
+    # read manifest file
+    logger.info(f"Reading manifest file {manifest_file_path}")
+    manifest_df =  pd.read_csv(manifest_file_path, sep='\t', header=0)
+
+    # check if the delete_column_name can be found in the manifest tsv
+    manifest_columns = manifest_df.columns.tolist()
+    if delete_column_name not in manifest_columns:
+        raise KeyError(f"Column name {delete_column_name} not found in manifest file {manifest_file_path}")
+    else:
+        pass
+
+    # filter delete_column_name if check_md5sum column is present
+    if "md5sum_check" in manifest_columns:
+        delete_uri_list = manifest_df.loc[manifest_df["md5sum_check"]=="Pass", delete_column_name].tolist()
+    else:
+        delete_uri_list = manifest_df[delete_column_name]
+    logger.info(f"Number of objects to be deleted: {len(delete_uri_list)}")
+
+    if len(delete_uri_list) > 100:
+        delete_chunks =  list_to_chunks(delete_uri_list, 100)
+        logger.info(f"Objects deletion will be performed in {len(delete_chunks)} chunks")
+        delete_status = []
+        for i in range(len(delete_chunks)):
+            i_delete_list = delete_chunks[i]
+            i_delete_status = delete_objects_by_uri(uri_list=i_delete_list, logger=logger)
+            logger.info(f"Objects deletion progress: {i+1}/{len(delete_chunks)}")
+            delete_status.extend(i_delete_status)
+    else:
+        delete_status = delete_objects_by_uri(uri_list=delete_uri_list, logger=logger)
+        logger.info("Objects deletion finished")
+
+    # prepare for file deletion output
+    
+    delete_output = runner + "_deleting_object_summary_" + get_time() + ".tsv"
+    logger.info(f"Writing objects deletion summary table to: {delete_output}")
+    delete_dict = {"s3_uri": delete_uri_list, "delete_status" : delete_status}
+    delete_df = pd.DataFrame(delete_dict)
+    delete_df.to_csv(delete_output, sep='\t', index=False)
+    logger.info("Deleting objects finished!")
+    return delete_df
+         
