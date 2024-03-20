@@ -24,7 +24,7 @@ class UserInput(RunInput):
 
 
 @flow
-async def run_file_remover():
+def run_file_remover():
     logger = get_run_logger()
     current_time = get_time()
 
@@ -47,8 +47,8 @@ Please enter your preferred path below:
 
 """
 
-    """
-    user_input = await pause_flow_run(
+
+    user_input = pause_flow_run(
         wait_for_input=FlowPath.with_initial_data(
             description=description_md, have_manifest="y"
         )
@@ -56,7 +56,7 @@ Please enter your preferred path below:
 
     if user_input.have_manifest == "y":
         logger.info("You have a manifest for File Remover")
-        manifest_path_inputs = await pause_flow_run(
+        manifest_path_inputs = pause_flow_run(
             wait_for_input=ManifestPath.with_initial_data(
                 description=description_manifest_md, bucket="ccdi-validation"
             )
@@ -69,12 +69,7 @@ Please enter your preferred path below:
 
     else:
         logger.info(f"You don't have a manifest for File Remover!")
-    """
-    user_input = await pause_flow_run(
-        wait_for_input=UserInput.with_initial_data(name="anonymous")
-    )
 
-    if user_input.name == "anonymous":
-        logger.info("Hello, stranger!")
-    else:
-        logger.info(f"Hello, {user_input.name}!")
+
+if __name__=="__main__":
+    run_file_remover()
