@@ -18,6 +18,11 @@ class ManifestPath(RunInput):
     runner: str
 
 
+class UserInput(RunInput):
+    name: str
+    age: int
+
+
 @flow
 async def run_file_remover():
     logger = get_run_logger()
@@ -42,6 +47,7 @@ Please enter your preferred path below:
 
 """
 
+    """
     user_input = await pause_flow_run(
         wait_for_input=FlowPath.with_initial_data(
             description=description_md, have_manifest="y"
@@ -63,3 +69,12 @@ Please enter your preferred path below:
 
     else:
         logger.info(f"You don't have a manifest for File Remover!")
+    """
+    user_input = await pause_flow_run(
+        wait_for_input=UserInput.with_initial_data(name="anonymous")
+    )
+
+    if user_input.name == "anonymous":
+        logger.info("Hello, stranger!")
+    else:
+        logger.info(f"Hello, {user_input.name}!")
