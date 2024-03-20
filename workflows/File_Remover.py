@@ -2,6 +2,7 @@ import sys
 import os
 from prefect import flow, pause_flow_run, get_run_logger
 from prefect.input import RunInput
+import prefect
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
@@ -23,10 +24,12 @@ class UserInput(RunInput):
     age: int
 
 
-@flow
+@flow(log_prints=True)
 def run_file_remover():
     logger = get_run_logger()
     current_time = get_time()
+    print(f"current time is {current_time}")
+    print(prefect.__version__)
 
     user = pause_flow_run(wait_for_input=str)
 
