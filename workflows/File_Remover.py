@@ -18,7 +18,10 @@ def run_file_remover():
 
     user_input = pause_flow_run(
         wait_for_input=FlowPathInput.with_initial_data(
-            description=InputDescriptionMD.manifest_inputs_md.format(current_time=current_time), have_manifest="y"
+            description=InputDescriptionMD.have_manifest_md.format(
+                current_time=current_time
+            ),
+            have_manifest="y",
         )
     )
 
