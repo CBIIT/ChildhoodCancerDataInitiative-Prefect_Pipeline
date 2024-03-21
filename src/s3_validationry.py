@@ -819,38 +819,37 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
         WARN_FLAG = True
 
-        # check for file uniqueness for name and url
-        for file_name in file_names:
-            # determine file url
-            file_url = (
-                df_file[df_file["file_name"] == file_name]["file_url_in_cds"]
-                .unique()
-                .tolist()
-            )
-            if len(file_url) > 1:
-                if WARN_FLAG:
-                    WARN_FLAG = False
-                    print(
-                        f"\t\tWARNING: There are files that are associated with more than one url.\n\t\tWARNING: If they only have one associated file_id, then they are acceptable.",
-                        file=outf,
-                    )
+        # # check for file uniqueness for name and url
+        # for file_name in file_names:
+        #     # determine file url
+        #     file_url = (
+        #         df_file[df_file["file_name"] == file_name]["file_url_in_cds"]
+        #         .unique()
+        #         .tolist()
+        #     )
+        #     if len(file_url) > 1:
+        #         if WARN_FLAG:
+        #             WARN_FLAG = False
+        #             print(
+        #                 f"\t\tWARNING: There are files that are associated with more than one url.\n\t\tWARNING: If they only have one associated file_id, then they are acceptable.",
+        #                 file=outf,
+        #             )
 
-                current_node = df_file[df_file["file_name"] == file_name][
-                    "node"
-                ].values[0]
-                print(f"\t\t\t{current_node} : {file_name} --> {file_url}", file=outf)
+        #         current_node = df_file[df_file["file_name"] == file_name][
+        #             "node"
+        #         ].values[0]
+        #         print(f"\t\t\t{current_node} : {file_name} --> {file_url}", file=outf)
 
-                # check to see if file_id is unique even if file name isn't
-                multi_urls = []
-                file_id=current_node+"_id"
-                for per_file_url in file_url:
-                    multi_urls = df_file[df_file["file_url_in_cds"] == per_file_url][
-                        f"{file_id}"
-                    ].unique().tolist()
-                    print(
-                        f"\t\t\t\t{per_file_url}\n\t\t\t\t\tfile_ids:\n\t\t\t\t\t\t{multi_urls}",
-                        file=outf,
-                    )
+        #         # check to see if file_id is unique even if file name isn't
+        #         multi_urls = []
+        #         for per_file_url in file_url:
+        #             multi_urls = df_file[df_file["file_url_in_cds"] == per_file_url][
+        #                 "file_name"
+        #             ].unique().tolist()
+        #             print(
+        #                 f"\t\t\t\t{per_file_url}\n\t\t\t\t\tfile_ids:\n\t\t\t\t\t\t{multi_urls}",
+        #                 file=outf,
+        #             )
 
         ##########################################
         # AWS bucket file checks
