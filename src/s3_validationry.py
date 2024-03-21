@@ -819,7 +819,10 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
         WARN_FLAG = True
 
-        # # check for file uniqueness for name and url
+        # This check is likely unneeded for CCDI validation, as it was a hack for CDS downstream validation.
+        # It will remain commented out for a while and if someone comes across this section and finds that no one
+        # has complained since it was commented out on March 21, 2024, then it can be deleted.
+        # check for file uniqueness for name and url
         # for file_name in file_names:
         #     # determine file url
         #     file_url = (
