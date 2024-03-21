@@ -3,7 +3,7 @@ import os
 from prefect import flow, pause_flow_run, get_run_logger
 from prefect.input import RunInput
 import prefect
-import pip
+import boto3
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
@@ -31,11 +31,13 @@ def run_file_remover():
     current_time = get_time()
     print(f"current time is {current_time}")
     print(prefect.__version__)
+    
+    f=open("requirements.txt")
+    file_content = f.read()
+    print(file_content)
+    f.close()
 
-    installed_packages = sorted(
-        ["%s==%s" % (i.key, i.version) for i in pip.get_installed_distributions()]
-    )
-    print(installed_packages)
+    print(boto3.__version__)
 
     user = pause_flow_run(wait_for_input=str)
 
