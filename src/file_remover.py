@@ -3,6 +3,8 @@ from src.utils import set_s3_session_client
 from src.read_buckets import paginate_parameter
 from src.file_mover import parse_file_url_in_cds
 from botocore.exceptions import ClientError
+from dataclasses import dataclass
+from prefect.input import RunInput
 import os
 import hashlib
 import pandas as pd
@@ -12,6 +14,59 @@ from src.utils import get_time
 
 
 DataFrame = TypeVar("DataFrame")
+
+
+class FlowPathInput(RunInput):
+    have_manifest: str
+
+
+class ManifestPathInput(RunInput):
+    bucket: str
+    manifest_tsv_path: str
+    delete_column_name: str
+    runner: str
+
+
+class NoManifestPathInput(RunInput):
+    prod_bucket_path: str
+    staging_bucket_path: str
+    runner: str
+
+
+@dataclass
+class InputDescriptionMD:
+    """dataclass for wait for input description MD"""
+    have_manifest_md: str = (
+        """
+**Welcome to the File Remover Flow!**
+Today's Date: {current_time}
+
+Do you have a manifest of s3 URI endpoints to be deleted :
+- **have_manifest**: y/n
+
+"""
+    )
+    manifest_inputs_md: str = (
+        """
+**Please provide inputs as shown below**
+
+- **bucket**: bucket name of where manifest lives
+- **manifest_tsv_path**: path of manifest(tsv) in the bucket
+- **delete_column_name**: column name of s3 uri to be deleted
+- **runner**: your runner id
+
+"""
+    )
+    no_manifest_inputs_md: str = (
+        """
+**Please provide inputs as shown below**
+
+- **prod_bucket_path**: bucket path containig files you would like to keep
+- **staging_bucket_path**: bucket path contaings duplciated object under prod bucket path that you would like to delete
+- **runner**: your runner id
+
+"""
+    )
 
 
 def list_to_chunks(mylist: list, chunk_len: int) -> list:
@@ -507,4 +562,3 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: s
     delete_df.to_csv(delete_output, sep='\t', index=False)
     logger.info("Deleting objects finished!")
     return delete_df
-         
