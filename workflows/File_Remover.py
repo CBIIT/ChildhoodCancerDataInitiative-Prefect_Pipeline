@@ -3,6 +3,7 @@ import os
 from prefect import flow, pause_flow_run, get_run_logger
 from prefect.input import RunInput
 import prefect
+import pip
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
@@ -30,6 +31,11 @@ def run_file_remover():
     current_time = get_time()
     print(f"current time is {current_time}")
     print(prefect.__version__)
+
+    installed_packages = sorted(
+        ["%s==%s" % (i.key, i.version) for i in pip.get_installed_distributions()]
+    )
+    print(installed_packages)
 
     user = pause_flow_run(wait_for_input=str)
 
@@ -78,7 +84,6 @@ Please enter your preferred path below:
         logger.info(f"You don't have a manifest for File Remover!")
 """
 
-    
 
 if __name__=="__main__":
     run_file_remover()
