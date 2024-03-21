@@ -29,19 +29,6 @@ class UserInput(RunInput):
 def run_file_remover():
     logger = get_run_logger()
     current_time = get_time()
-    print(f"current time is {current_time}")
-    print(prefect.__version__)
-    
-    f=open("requirements.txt")
-    file_content = f.read()
-    print(file_content)
-    f.close()
-
-    print(boto3.__version__)
-
-    user = pause_flow_run(wait_for_input=str)
-
-    logger.info(f"Hello, {user}!")
 
     description_md = f"""
 **Welcome to the File Remover Flow!**
@@ -62,7 +49,6 @@ Please enter your preferred path below:
 
 """
 
-"""
     user_input = pause_flow_run(
         wait_for_input=FlowPath.with_initial_data(
             description=description_md, have_manifest="y"
@@ -84,7 +70,7 @@ Please enter your preferred path below:
 
     else:
         logger.info(f"You don't have a manifest for File Remover!")
-"""
+
 
 
 if __name__=="__main__":
