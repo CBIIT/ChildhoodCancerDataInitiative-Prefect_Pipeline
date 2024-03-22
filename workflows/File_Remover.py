@@ -137,7 +137,12 @@ def run_file_remover():
         )
         deletion_input = pause_flow_run(
             wait_for_input=ObjectDeletionInput.with_initial_data(
-                description=InputDescriptionMD.object_deletion_md, proceed_to_delete="n"
+                description=InputDescriptionMD.object_deletion_md.format(
+                    manifest_file=manifest_file,
+                    bucket=no_manifest_path_inputs.workflow_output_bucket,
+                    folder=output_folder,
+                ),
+                proceed_to_delete="n",
             )
         )
         if deletion_input.proceed_to_delete == "y":

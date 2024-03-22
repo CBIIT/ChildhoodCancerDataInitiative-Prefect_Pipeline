@@ -324,7 +324,7 @@ def find_missing_objects(
 
     # find nonexist files, df has four columns "Key","Size", "md5sum","Filename", "Missing_Object_Candidate_Keys"
     not_found_df = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, ["Key", "Size", "md5sum"]]
-    not_found_df = not_found_df.assign(Filename = lambda x: (os.path.basename(x["Key"].values[0])))
+    not_found_df["Filename"] = [os.path.basename(i) for i in not_found_df["Key"].tolist()]
     print(not_found_df)
 
     # add file basename to file_object_list
@@ -557,6 +557,7 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
     manifest_df["Staging_S3_URI"] = (
         "s3://" + manifest_df["Staging_Bucket"] + "/" + manifest_df["Staging_Key"]
     )
+    manifest_df.loc[manifest_df["Staging_If_Exist"] == False, "Staging_S3_URI"] = ""
 
     # write manifest into file
     logger.info(f"Writing output manifest {output_manifest_name}")
