@@ -589,7 +589,7 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: s
     logger.info(f"Deleted files: {success_count}/{len(delete_status)}")
 
     # prepare for file deletion output
-    delete_output = runner + "_deleting_object_summary_" + get_time() + ".tsv"
+    delete_output = "objects_deletion_summary_" + get_time() + ".tsv"
     logger.info(f"Writing objects deletion summary table to: {delete_output}")
     delete_dict = {"s3_uri": delete_uri_list, "delete_status" : delete_status}
     delete_df = pd.DataFrame(delete_dict)
