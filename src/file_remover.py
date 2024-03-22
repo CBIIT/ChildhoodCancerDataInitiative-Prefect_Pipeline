@@ -65,7 +65,7 @@ Do you have a manifest of s3 URI endpoints to be deleted :
 **Please provide inputs as shown below**
 
 - **prod_bucket_path**: bucket path containing files you would like to keep
-- **staging_bucket_path**: bucket path containing duplciated objects under prod bucket path that you would like to delete
+- **staging_bucket_path**: bucket path containing duplicated objects under prod bucket path that you would like to delete
 - **workflow_output_bucket**: the bucket where the workflow output will be uploaded to
 - **runner**: your runner id
 
@@ -321,37 +321,50 @@ def find_missing_objects(
     """ Adds a column of object keys in staging bucket if the object
     in prod bucket can't be found under staging bucket path.
     """
-    # find nonexist files
+    manifest_df["Missing_Object_Candidate_Keys"] = ""
+
+    # find nonexist files, df has four columns "Key","Size", "md5sum","Filename", "Missing_Object_Candidate_Keys"
     not_found_df = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, ["Key", "Size", "md5sum"]]
     not_found_df["Missing_Object_Candidate_Keys"] =""
+    not_found_df = not_found_df.assign(Filename = lambda x: (os.path.basename(x["Key"])))
 
     # add file basename to file_object_list
+    # "Bucket", "Key", "Size", "Filename"
     file_object_list_new = []
     for i in range(len(file_object_list)):
         i_dict = file_object_list[i]
         i_dict["Filename"] = os.path.basename(i_dict['Key'])
         file_object_list_new.append(i_dict)
 
-    for index, row in not_found_df.iterrows():
-        row_basename = os.path.basename(row['Key'])
-        row_missing_candidates = []
-        for k in file_object_list_new:
-            if k['Filename'] == row_basename and k['Size'] == row['Size']:
-                s3_client = set_s3_session_client()
-                k_md5sum = get_md5sum(object_key=k['Key'], bucket_name=k['Bucket'], s3_client=s3_client)
-                s3_client.close()
-                if k_md5sum == row['md5sum']:
-                    row_missing_candidates.append(k['Key'])
-                else:
-                    pass
+    for h in file_object_list_new:
+        h_filename = h["Filename"]
+        h_size = h["Size"]
+        # search for match in not_found_df
+        h_match_df = not_found_df.loc[
+            (not_found_df["Filename"] == h_filename) & (not_found_df["Size"]==h_size),
+        ]
+        if h_match_df.shape[0] == 0:
+            pass
+        else:
+            s3_client = set_s3_session_client()
+            h_md5sum = get_md5sum(
+                object_key=h['Key'], bucket_name=h['Bucket'], s3_client=s3_client
+            )
+            s3_client.close()
+            h_match_md5sum_df = h_match_df.loc[h_match_df["md5sum"] == h_md5sum,]
+            if h_match_md5sum_df.shape[0] >= 1:
+                h_match_keys = h_match_md5sum_df["Key"].tolist()
+                for j in h_match_keys:
+                    manifest_df.loc[
+                        manifest_df["Key"] == j, "Missing_Object_Candidate_Keys"
+                    ] = (
+                        manifest_df.loc[
+                            manifest_df["Key"] == j, "Missing_Object_Candidate_Keys"
+                        ]
+                        + h["Key"] + ","
+                    )
             else:
                 pass
-        not_found_df.loc[index, "Missing_Object_Candidate_Keys"] = row_missing_candidates
-
-    manifest_df["Missing_Object_Candidate_Keys"] = ""
-    manifest_df.loc[
-        manifest_df["Staging_If_Exist"] == False, "Missing_Object_Candidate_Keys"
-    ] = not_found_df["Missing_Object_Candidate_Keys"].tolist()
 
     return manifest_df
 
@@ -372,7 +385,7 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
         bucket_folder_path=staging_bucket_path
     )
 
-    # create a list of dicts for objects in under prod_bucket_path
+    # create a list of dicts for objects under prod_bucket_path
     logger.info(f"Reading object files under prod bucket path: {prod_bucket_path}")
     objects_prod_list = retrieve_objects_from_bucket_path(
         bucket_folder_path=prod_bucket_path
