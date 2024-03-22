@@ -71,7 +71,7 @@ def run_file_remover():
             delete_column_name=manifest_path_inputs.delete_column_name,
             runner=manifest_path_inputs.runner,
         )
-        logger.info(deletion_counts_df.to_markdown(index=False, tablefmt="simple_grid"))
+        logger.info(deletion_counts_df.to_markdown(index=False, tablefmt="rst"))
         logger.info(
             f"Objects deletion finished and a summary table has been generated {deletion_summary}"
         )
@@ -148,7 +148,7 @@ def run_file_remover():
                 runner=no_manifest_path_inputs.runner,
             )
             logger.info(
-                deletion_counts_df.to_markdown(index=False, tablefmt="simple_grid")
+                deletion_counts_df.to_markdown(index=False, tablefmt="rst")
             )
             logger.info(f"Objects deletion finished and a summary table has been generated {deletion_summary}")
 
