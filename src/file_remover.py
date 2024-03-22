@@ -112,8 +112,8 @@ def if_object_exists(key_path: str, bucket: str, s3_client, logger) -> None:
     except ClientError as err:
         err_code = err.response["Error"]["Code"]
         err_message = err.response["Error"]["Message"]
-        logger.error(
-            f"Error occurred while fetching metadata of {key_path} from bucjet {bucket}: {err_code} {err_message}"
+        logger.warning(
+            f"Error occurred while fetching metadata of {key_path} from bucket {bucket}: {err_code} {err_message}"
         )
         if_exist = False
     return if_exist
@@ -314,7 +314,7 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     return bucket_object_dict_list
 
 
-@flow
+@flow(log_prints=True)
 def find_missing_objects(
     manifest_df: DataFrame, file_object_list: list[dict]
 ) -> DataFrame:
@@ -327,16 +327,14 @@ def find_missing_objects(
     not_found_df = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, ["Key", "Size", "md5sum"]]
     not_found_df["Missing_Object_Candidate_Keys"] =""
     not_found_df = not_found_df.assign(Filename = lambda x: (os.path.basename(x["Key"])))
+    print(not_found_df)
 
     # add file basename to file_object_list
     # "Bucket", "Key", "Size", "Filename"
-    file_object_list_new = []
-    for i in range(len(file_object_list)):
-        i_dict = file_object_list[i]
-        i_dict["Filename"] = os.path.basename(i_dict['Key'])
-        file_object_list_new.append(i_dict)
+    for i in file_object_list:
+        i["Filename"] = os.path.basename(i["Key"])
 
-    for h in file_object_list_new:
+    for h in file_object_list:
         h_filename = h["Filename"]
         h_size = h["Size"]
         # search for match in not_found_df
@@ -496,7 +494,7 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
             manifest_df["Staging_If_Exist"] == False, "Staging_Key"
         ].tolist()
         missing_count = manifest_df.shape[0] - sum(manifest_df["Staging_If_Exist"])
-        logger.error(
+        logger.warning(
             f"{missing_count} objects not found in staging bucket {staging_bucket_path}:\n{*missing_staging_keys,}"
         )
     else:
@@ -546,6 +544,9 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
         logger.info(f"Not all files can be found under staging bucket path {staging_bucket_path}. Start looking for missing objects in staging bucket {staging_bucket}")
         staging_objects_list = retrieve_objects_from_bucket_path(
             bucket_folder_path=staging_bucket
+        )
+        logger.info(
+            f"Files in staging bucket {staging_bucket}: {len(staging_objects_list)}"
         )
         manifest_df = find_missing_objects(
             manifest_df=manifest_df, file_object_list=staging_objects_list
