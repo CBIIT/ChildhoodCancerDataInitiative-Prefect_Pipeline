@@ -93,6 +93,11 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
     return chunks
 
 
+def count_success_fail(deletion_status: list) -> tuple:
+    count_success = deletion_status.count("Success")
+    count_fail = deletion_status.count("Fail")
+    return count_success, count_fail
+
 @task(retries=3, retry_delay_seconds=0.5)
 def if_object_exists(key_path: str, bucket: str, s3_client, logger) -> None:
     """Retrives the metadata of an object without returning the
@@ -575,12 +580,19 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: s
         delete_status = delete_objects_by_uri(uri_list=delete_uri_list, logger=logger)
         logger.info("Objects deletion finished")
 
-    # prepare for file deletion output
+    success_count, fail_count = count_success_fail(deletion_status=delete_status)
+    deletion_counts_df = pd.DataFrame({"Success":[success_count], "Fail":[fail_count]})
+    if fail_count >= 1:
+        logger.warning(f"Fail to delete files: {fail_count}/{len(delete_status)}")
+    else:
+        pass
+    logger.info(f"Deleted files: {success_count}/{len(delete_status)}")
 
+    # prepare for file deletion output
     delete_output = runner + "_deleting_object_summary_" + get_time() + ".tsv"
     logger.info(f"Writing objects deletion summary table to: {delete_output}")
     delete_dict = {"s3_uri": delete_uri_list, "delete_status" : delete_status}
     delete_df = pd.DataFrame(delete_dict)
     delete_df.to_csv(delete_output, sep='\t', index=False)
     logger.info("Deleting objects finished!")
-    return delete_output
+    return delete_output, deletion_counts_df

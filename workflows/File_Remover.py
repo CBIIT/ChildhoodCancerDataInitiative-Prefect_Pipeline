@@ -20,7 +20,7 @@ from src.file_remover import (
 )
 
 
-@flow(log_prints=True)
+@flow(name="File Remover Pipeline", log_prints=True)
 def run_file_remover():
     logger = get_run_logger()
     current_time = get_time()
@@ -66,18 +66,19 @@ def run_file_remover():
 
         # start deleting objects in manifest
         logger.info("Start objects deletion process")
-        deletion_summary = objects_deletion(
+        deletion_summary, deletion_counts_df = objects_deletion(
             manifest_file_path=manifest_file,
             delete_column_name=manifest_path_inputs.delete_column_name,
             runner=manifest_path_inputs.runner,
         )
+        logger.info(deletion_counts_df.to_markdown(index=False, tablefmt="simple_grid"))
         logger.info(
             f"Objects deletion finished and a summary table has been generated {deletion_summary}"
         )
 
         # upload the deletion summary to bucket
         output_folder = (
-            manifest_path_inputs.runner + "/" + "_file_remover_summary_" + get_time()
+            manifest_path_inputs.runner + "/" + "file_remover_summary_" + get_time()
         )
         file_ul(
             bucket=manifest_path_inputs.bucket,
@@ -123,7 +124,7 @@ def run_file_remover():
         # upload the manifest to bucket
         # upload the deletion summary to bucket
         output_folder = (
-            no_manifest_path_inputs.runner + "/" + "_file_remover_summary_" + get_time()
+            no_manifest_path_inputs.runner + "/" + "file_remover_summary_" + get_time()
         )
         file_ul(
             bucket=no_manifest_path_inputs.workflow_output_bucket,
@@ -141,10 +142,13 @@ def run_file_remover():
         )
         if deletion_input.proceed_to_delete == "y":
             logger.info("Start objects deletion process")
-            deletion_summary = objects_deletion(
+            deletion_summary, deletion_counts_df = objects_deletion(
                 manifest_file_path=manifest_file,
                 delete_column_name="Staging_S3_URI",
                 runner=no_manifest_path_inputs.runner,
+            )
+            logger.info(
+                deletion_counts_df.to_markdown(index=False, tablefmt="simple_grid")
             )
             logger.info(f"Objects deletion finished and a summary table has been generated {deletion_summary}")
 
