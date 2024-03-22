@@ -314,7 +314,6 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     return bucket_object_dict_list
 
 
-@flow(log_prints=True)
 def find_missing_objects(
     manifest_df: DataFrame, file_object_list: list[dict]
 ) -> DataFrame:
@@ -325,7 +324,7 @@ def find_missing_objects(
 
     # find nonexist files, df has four columns "Key","Size", "md5sum","Filename", "Missing_Object_Candidate_Keys"
     not_found_df = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, ["Key", "Size", "md5sum"]]
-    not_found_df["Missing_Object_Candidate_Keys"] =""
+    print(not_found_df)
     not_found_df = not_found_df.assign(Filename = lambda x: (os.path.basename(x["Key"])))
     print(not_found_df)
 
@@ -345,7 +344,7 @@ def find_missing_objects(
             pass
         else:
             s3_client = set_s3_session_client()
-            h_md5sum = get_md5sum(
+            h_md5sum = get_md5sum.fn(
                 object_key=h['Key'], bucket_name=h['Bucket'], s3_client=s3_client
             )
             s3_client.close()
