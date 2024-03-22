@@ -64,8 +64,9 @@ Do you have a manifest of s3 URI endpoints to be deleted :
         """
 **Please provide inputs as shown below**
 
-- **prod_bucket_path**: bucket path containig files you would like to keep
-- **staging_bucket_path**: bucket path contaings duplciated object under prod bucket path that you would like to delete
+- **prod_bucket_path**: bucket path containing files you would like to keep
+- **staging_bucket_path**: bucket path containing duplciated objects under prod bucket path that you would like to delete
+- **workflow_output_bucket**: the bucket where the workflow output will be uploaded to
 - **runner**: your runner id
 
 """
