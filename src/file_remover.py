@@ -124,6 +124,12 @@ def parse_bucket_folder_path(bucket_folder_path: str) -> tuple:
     Example: "ccdi-staging/sub_folder1/sub_folder2"
     Return values: ccdi-staging, "subfolder1/sub_folder2"
     """
+    # remove s3:// if observed
+    if bucket_folder_path.startswith("s3://"):
+        bucket_folder_path = bucket_folder_path[5:]
+    else:
+        pass
+
     bucket_folder_path = bucket_folder_path.strip("/")
     if "/" in bucket_folder_path:
         path_list = bucket_folder_path.split("/", 1)
@@ -352,7 +358,7 @@ def find_missing_objects(
 @flow
 def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: str, runner: str) -> None:
     # get output name
-    output_manifest_name = runner + "_matching_objects_manifest_" + get_time + ".tsv"
+    output_manifest_name = runner + "_matching_objects_manifest_" + get_time() + ".tsv"
 
     # create logger
     logger = get_run_logger()
