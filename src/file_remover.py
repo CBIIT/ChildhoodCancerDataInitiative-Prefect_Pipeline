@@ -30,8 +30,11 @@ class ManifestPathInput(RunInput):
 class NoManifestPathInput(RunInput):
     prod_bucket_path: str
     staging_bucket_path: str
+    workflow_output_bucket: str
     runner: str
 
+class ObjectDeletionInput(RunInput):
+    proceed_to_delete: str
 
 @dataclass
 class InputDescriptionMD:
@@ -50,8 +53,8 @@ Do you have a manifest of s3 URI endpoints to be deleted :
         """
 **Please provide inputs as shown below**
 
-- **bucket**: bucket name of where manifest lives
-- **manifest_tsv_path**: path of manifest(tsv) in the bucket
+- **bucket**: bucket name of where the manifest lives
+- **manifest_tsv_path**: path of the manifest(tsv) in the bucket
 - **delete_column_name**: column name of s3 uri to be deleted
 - **runner**: your runner id
 
@@ -64,6 +67,18 @@ Do you have a manifest of s3 URI endpoints to be deleted :
 - **prod_bucket_path**: bucket path containig files you would like to keep
 - **staging_bucket_path**: bucket path contaings duplciated object under prod bucket path that you would like to delete
 - **runner**: your runner id
+
+"""
+    )
+    object_deletion_md: str = (
+        """
+**Please provide inputs as shown below**
+
+!!CAUTION!!
+
+Make sure you have reviewed the manifest {manifest_file} under bucker {bucket} folder {folder}
+
+- **proceed_to_delete**: y/n
 
 """
     )
@@ -222,7 +237,13 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     s3_client.close()
     return if_exist_list
 
-@task(name="Delete Single S3 Object", retries=3, retry_delay_seconds=0.5)
+
+@task(
+    name="Delete Single S3 Object",
+    retries=3,
+    retry_delay_seconds=0.5,
+    tags=["concurrency-test"],
+)
 def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
     bucket_name, object_key = parse_file_url_in_cds(url=object_uri)
     try:
@@ -516,6 +537,7 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
     # write manifest into file
     logger.info(f"Writing output manifest {output_manifest_name}")
     manifest_df.to_csv(output_manifest_name, sep="\t", index=False)
+    return output_manifest_name
 
 
 @flow
@@ -554,11 +576,11 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: s
         logger.info("Objects deletion finished")
 
     # prepare for file deletion output
-    
+
     delete_output = runner + "_deleting_object_summary_" + get_time() + ".tsv"
     logger.info(f"Writing objects deletion summary table to: {delete_output}")
     delete_dict = {"s3_uri": delete_uri_list, "delete_status" : delete_status}
     delete_df = pd.DataFrame(delete_dict)
     delete_df.to_csv(delete_output, sep='\t', index=False)
     logger.info("Deleting objects finished!")
-    return delete_df
+    return delete_output
