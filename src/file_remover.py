@@ -313,7 +313,7 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     s3.close()
     return bucket_object_dict_list
 
-@flow
+
 def find_missing_objects(
     manifest_df: DataFrame, file_object_list: list[dict]
 ) -> DataFrame:
