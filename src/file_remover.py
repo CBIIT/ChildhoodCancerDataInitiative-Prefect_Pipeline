@@ -324,8 +324,7 @@ def find_missing_objects(
 
     # find nonexist files, df has four columns "Key","Size", "md5sum","Filename", "Missing_Object_Candidate_Keys"
     not_found_df = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, ["Key", "Size", "md5sum"]]
-    print(not_found_df)
-    not_found_df = not_found_df.assign(Filename = lambda x: (os.path.basename(x["Key"])))
+    not_found_df = not_found_df.assign(Filename = lambda x: (os.path.basename(x["Key"].values[0])))
     print(not_found_df)
 
     # add file basename to file_object_list
