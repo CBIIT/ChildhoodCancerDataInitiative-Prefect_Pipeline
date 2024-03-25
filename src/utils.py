@@ -165,11 +165,16 @@ def check_ccdi_version(ccdi_manifest: str) -> str:
     return manifest_version
 
 
-@task
+@task(log_prints=True)
 def dl_ccdi_template() -> None:
     """Downloads the latest version of CCDI manifest"""
     manifest_page_response = requests.get(GithubAPTendpoint.ccdi_model_manifest)
     manifest_dict_list = manifest_page_response.json()
+    if not isinstance(manifest_dict_list, list):
+        print("Github API return was not a list: " + str(manifest_dict_list))
+        raise
+    else:
+        pass
     manifest_names = [i["name"] for i in manifest_dict_list]
     latest_release = get_ccdi_latest_release()
     # There should be only one match in the list comprehension below
@@ -929,4 +934,3 @@ class CheckCCDI:
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
-
