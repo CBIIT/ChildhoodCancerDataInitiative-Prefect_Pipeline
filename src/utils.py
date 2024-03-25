@@ -171,7 +171,7 @@ def dl_ccdi_template() -> None:
     manifest_page_response = requests.get(GithubAPTendpoint.ccdi_model_manifest)
     manifest_dict_list = manifest_page_response.json()
     if not isinstance(manifest_dict_list, list):
-        print("Github API return was not a list: " + manifest_dict_list)
+        print("Github API return was not a list: " + str(manifest_dict_list))
         raise
     else:
         pass
