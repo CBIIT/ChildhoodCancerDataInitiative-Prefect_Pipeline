@@ -53,9 +53,9 @@ Do you have a manifest of s3 URI endpoints to be deleted :
         """
 **Please provide inputs as shown below**
 
-- **bucket**: bucket name of where the manifest lives
-- **manifest_tsv_path**: path of the manifest(tsv) in the bucket
-- **delete_column_name**: column name of s3 uri to be deleted
+- **bucket**: bucket name of where the manifest lives (e.g., ccdi-validation)
+- **manifest_tsv_path**: path of the manifest(tsv) in the bucket (e.g., folder/manifest.tsv)
+- **delete_column_name**: column name of s3 uri to be deleted (e.g., Staging_S3_URI)
 - **runner**: your runner id
 
 """
@@ -64,9 +64,9 @@ Do you have a manifest of s3 URI endpoints to be deleted :
         """
 **Please provide inputs as shown below**
 
-- **prod_bucket_path**: bucket path containing files you would like to keep
-- **staging_bucket_path**: bucket path containing duplicated objects under prod bucket path that you would like to delete
-- **workflow_output_bucket**: the bucket where the workflow output will be uploaded to
+- **prod_bucket_path**: bucket path containing files you would like to keep (e.g., prod-bucket/example_subfolder)
+- **staging_bucket_path**: bucket path containing duplicated objects under prod bucket path that you would like to delete (e.g., staging-bucket/example_subfolder)
+- **workflow_output_bucket**: the bucket where the workflow output will be uploaded to (e.g., ccdi-validation)
 - **runner**: your runner id
 
 """
@@ -77,7 +77,7 @@ Do you have a manifest of s3 URI endpoints to be deleted :
 
 !!CAUTION!!
 
-Make sure you have reviewed the manifest {manifest_file} under bucker {bucket} folder {folder}
+Make sure you have reviewed the manifest {manifest_file} under bucket {bucket} folder {folder}
 
 - **proceed_to_delete**: y/n
 
@@ -325,7 +325,7 @@ def find_missing_objects(
     # find nonexist files, df has four columns "Key","Size", "md5sum","Filename", "Missing_Object_Candidate_Keys"
     not_found_df = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, ["Key", "Size", "md5sum"]]
     not_found_df["Filename"] = [os.path.basename(i) for i in not_found_df["Key"].tolist()]
-    print(not_found_df)
+    #print(not_found_df)
 
     # add file basename to file_object_list
     # "Bucket", "Key", "Size", "Filename"
