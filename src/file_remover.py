@@ -42,9 +42,9 @@ class InputDescriptionMD:
     have_manifest_md: str = (
         """
 **Welcome to the File Remover Flow!**
-Today's Date: {current_time}
+Today's Date: *{current_time}*
 
-Do you have a manifest of s3 URI endpoints to be deleted :
+Do you have a manifest containing **s3 URI endpoints** to be deleted :
 - **have_manifest**: y/n
 
 """
@@ -77,7 +77,7 @@ Do you have a manifest of s3 URI endpoints to be deleted :
 
 !!CAUTION!!
 
-Make sure you have reviewed the manifest {manifest_file} under bucket {bucket} folder {folder}
+Make sure you have reviewed the manifest *{manifest_file}* under bucket *{bucket}* folder *{folder}*
 
 - **proceed_to_delete**: y/n
 
