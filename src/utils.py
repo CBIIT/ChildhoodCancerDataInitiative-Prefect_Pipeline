@@ -961,5 +961,5 @@ def get_github_credentials()-> None:
     headers = {"Authorization": "token " + token_value}
     # try to get api return
     response = requests.get(GithubAPTendpoint.ccdi_model_recent_release, headers=headers)
-    runner_logger.info(response.json())
+    runner_logger.info(json.dumps(response.json(), indent=4))
     return None
