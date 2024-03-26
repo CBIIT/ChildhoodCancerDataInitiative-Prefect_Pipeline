@@ -21,6 +21,7 @@ from zipfile import ZipFile
 from shutil import copy
 import json
 from botocore.exceptions import ClientError
+from prefect_github import GitHubCredentials
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -949,3 +950,10 @@ class CheckCCDI:
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
+
+
+@flow(log_prints=True)
+def get_github_credentials()-> None:
+    github_credentials_block = GitHubCredentials.load("fnlccdidatacuration")
+    print(github_credentials_block.token)
+    return None
