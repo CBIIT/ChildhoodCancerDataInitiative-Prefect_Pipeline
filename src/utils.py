@@ -1,4 +1,4 @@
-from prefect import flow, task, Task
+from prefect import flow, task, Task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from dataclasses import dataclass, field
 from typing import List, TypeVar, Dict, Tuple
@@ -954,6 +954,7 @@ class CheckCCDI:
 
 @flow(log_prints=True)
 def get_github_credentials()-> None:
+    runner_logger = get_run_logger()
     github_credentials_block = GitHubCredentials.load("fnlccdidatacuration")
-    print(github_credentials_block.token)
+    runner_logger.info("credential block: " + github_credentials_block.token)
     return None
