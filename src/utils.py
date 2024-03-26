@@ -956,5 +956,10 @@ class CheckCCDI:
 def get_github_credentials()-> None:
     runner_logger = get_run_logger()
     github_credentials_block = GitHubCredentials.load("fnlccdidatacuration")
-    runner_logger.info("credential block: " + github_credentials_block.token)
+    token_value = github_credentials_block.token.get_secret_value()
+    runner_logger.info("credential block: " + token_value)
+    headers = {"Authorization": "token " + token_value}
+    # try to get api return
+    response = requests.get(GithubAPTendpoint.ccdi_model_recent_release, headers=headers)
+    runner_logger.info(response.json())
     return None
