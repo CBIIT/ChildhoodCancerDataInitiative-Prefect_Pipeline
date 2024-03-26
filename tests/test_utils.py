@@ -6,7 +6,7 @@ from unittest.mock import MagicMock
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.utils import CCDI_Tags
+from src.utils import CCDI_Tags, get_ccdi_latest_release
 
 
 # test for CCDI_Tags class
@@ -93,3 +93,19 @@ def test_CCDI_Tags_get_tag_element(
     request_return.json.return_value = fake_tags_api_return
     tag_element = my_ccdi_tags.get_tag_element(tag="0.1.0")
     assert tag_element["zipball_url"] == "http://url/tags/0.1.0"
+
+
+@mock.patch("src.utils.requests", autospec=True)
+def test_get_ccdi_latest_release_valid(mock_requests):
+    request_return = mock_requests.get.return_value
+    request_return.json.return_value = {"tag_name": "1.8.2"}
+    latest_release = get_ccdi_latest_release()
+    assert latest_release == "1.8.2"
+
+
+@mock.patch("src.utils.requests", autospec=True)
+def test_get_ccdi_latest_release_invalid(mock_requests):
+    request_return = mock_requests.get.return_value
+    request_return.json.return_value = {"message": "failed api call"}
+    latest_release = get_ccdi_latest_release()
+    assert latest_release == "unknown"
