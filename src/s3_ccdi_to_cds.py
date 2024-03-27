@@ -4,7 +4,7 @@ import openpyxl
 from datetime import date
 import warnings
 from openpyxl.utils.dataframe import dataframe_to_rows
-from src.utils import get_logger, get_date, get_time
+from src.utils import get_logger, get_date, get_time, get_github_token
 from prefect import flow
 import requests
 import re
@@ -26,7 +26,9 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     cds_template_url = (
         "https://api.github.com/repos/CBIIT/cds-model/contents/metadata-manifest/"
     )
-    cds_template_content = requests.get(cds_template_url).json()
+    github_token = get_github_token()
+    headers = {"Authorization": "token " + github_token}
+    cds_template_content = requests.get(cds_template_url, headers=headers).json()
     if re.search(
         "v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\.xlsx$",
         cds_template_content[0]["name"],
@@ -288,7 +290,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         if "file_url_in_cds" in node_df.columns:
             node_df = node_df.dropna(subset=["file_url_in_cds"])
         node_df = node_df.dropna(axis=1, how="all").reset_index(drop=True)
-        #node_df = node_df.reset_index(drop=True)
+        # node_df = node_df.reset_index(drop=True)
         node_df = node_df.drop_duplicates()
         return node_df
 

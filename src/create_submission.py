@@ -12,6 +12,7 @@ from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl import Workbook
 from typing import Any, TypeVar, Dict, List
 from openpyxl.styles import PatternFill, Font
+from src.utils import get_github_token
 
 
 DataFrame = TypeVar("DataFrame")
@@ -459,7 +460,9 @@ class ManifestSheet():
 
     def release_api_return(self) -> List[Dict]:
         """Get a return from github repo ccdi-model release api"""
-        release_endpoint_response = requests.get(self.release_api)
+        github_token =  get_github_token()
+        headers = {"Authorization": "token " + github_token}
+        release_endpoint_response = requests.get(self.release_api, headers=headers)
         response_list = release_endpoint_response.json()
         version_list = []
         title_list = []
