@@ -2,9 +2,6 @@ import sys
 import os
 from prefect import flow, pause_flow_run, get_run_logger
 
-import prefect
-import boto3
-
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 

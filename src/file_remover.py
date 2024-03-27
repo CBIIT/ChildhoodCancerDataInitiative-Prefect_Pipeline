@@ -41,7 +41,7 @@ class InputDescriptionMD:
     """dataclass for wait for input description MD"""
     have_manifest_md: str = (
         """
-**Welcome to the File Remover Flow!**
+**Welcome to the File Remover Workflow!**
 Today's Date: *{current_time}*
 
 Do you have a manifest containing **s3 URI endpoints** to be deleted :
@@ -55,7 +55,7 @@ Do you have a manifest containing **s3 URI endpoints** to be deleted :
 
 - **bucket**: bucket name of where the manifest lives (e.g., ccdi-validation)
 - **manifest_tsv_path**: path of the manifest(tsv) in the bucket (e.g., folder/manifest.tsv)
-- **delete_column_name**: column name of s3 uri to be deleted (e.g., Staging_S3_URI)
+- **delete_column_name**: column name of s3 URI to be deleted. S3 URI starts with s3://
 - **runner**: your runner id
 
 """
@@ -64,8 +64,8 @@ Do you have a manifest containing **s3 URI endpoints** to be deleted :
         """
 **Please provide inputs as shown below**
 
-- **prod_bucket_path**: bucket path containing files you would like to keep (e.g., prod-bucket/example_subfolder)
-- **staging_bucket_path**: bucket path containing duplicated objects under prod bucket path that you would like to delete (e.g., staging-bucket/example_subfolder)
+- **prod_bucket_path**: a bucket path containing files you would like to keep (e.g., prod-bucket/example_subfolder)
+- **staging_bucket_path**: a bucket path containing duplicated objects that you would like to delete (e.g., staging-bucket/example_subfolder)
 - **workflow_output_bucket**: the bucket where the workflow output will be uploaded to (e.g., ccdi-validation)
 - **runner**: your runner id
 
