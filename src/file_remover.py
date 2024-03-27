@@ -33,12 +33,15 @@ class NoManifestPathInput(RunInput):
     workflow_output_bucket: str
     runner: str
 
+
 class ObjectDeletionInput(RunInput):
     proceed_to_delete: str
+
 
 @dataclass
 class InputDescriptionMD:
     """dataclass for wait for input description MD"""
+
     have_manifest_md: str = (
         """
 **Welcome to the File Remover Workflow!**
@@ -98,6 +101,7 @@ def count_success_fail(deletion_status: list) -> tuple:
     count_success = deletion_status.count("Success")
     count_fail = deletion_status.count("Fail")
     return count_success, count_fail
+
 
 @task(retries=3, retry_delay_seconds=0.5)
 def if_object_exists(key_path: str, bucket: str, s3_client, logger) -> None:
@@ -270,8 +274,8 @@ def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
 @flow(name="Delete S3 Objects")
 def delete_objects_by_uri(uri_list, logger) -> None:
     s3_client = set_s3_session_client()
-    delete_responses =  delete_single_object_by_uri.map(uri_list, s3_client, logger)
-    delete_status_list =  [i.result() for i in delete_responses]
+    delete_responses = delete_single_object_by_uri.map(uri_list, s3_client, logger)
+    delete_status_list = [i.result() for i in delete_responses]
     s3_client.close()
     return delete_status_list
 
@@ -317,15 +321,19 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
 def find_missing_objects(
     manifest_df: DataFrame, file_object_list: list[dict]
 ) -> DataFrame:
-    """ Adds a column of object keys in staging bucket if the object
+    """Adds a column of object keys in staging bucket if the object
     in prod bucket can't be found under staging bucket path.
     """
     manifest_df["Missing_Object_Candidate_Keys"] = ""
 
     # find nonexist files, df has four columns "Key","Size", "md5sum","Filename", "Missing_Object_Candidate_Keys"
-    not_found_df = manifest_df.loc[manifest_df["Staging_If_Exist"]==False, ["Key", "Size", "md5sum"]]
-    not_found_df["Filename"] = [os.path.basename(i) for i in not_found_df["Key"].tolist()]
-    #print(not_found_df)
+    not_found_df = manifest_df.loc[
+        manifest_df["Staging_If_Exist"] == False, ["Key", "Size", "md5sum"]
+    ]
+    not_found_df["Filename"] = [
+        os.path.basename(i) for i in not_found_df["Key"].tolist()
+    ]
+    # print(not_found_df)
 
     # add file basename to file_object_list
     # "Bucket", "Key", "Size", "Filename"
@@ -337,14 +345,14 @@ def find_missing_objects(
         h_size = h["Size"]
         # search for match in not_found_df
         h_match_df = not_found_df.loc[
-            (not_found_df["Filename"] == h_filename) & (not_found_df["Size"]==h_size),
+            (not_found_df["Filename"] == h_filename) & (not_found_df["Size"] == h_size),
         ]
         if h_match_df.shape[0] == 0:
             pass
         else:
             s3_client = set_s3_session_client()
             h_md5sum = get_md5sum.fn(
-                object_key=h['Key'], bucket_name=h['Bucket'], s3_client=s3_client
+                object_key=h["Key"], bucket_name=h["Bucket"], s3_client=s3_client
             )
             s3_client.close()
             h_match_md5sum_df = h_match_df.loc[h_match_df["md5sum"] == h_md5sum,]
@@ -357,7 +365,8 @@ def find_missing_objects(
                         manifest_df.loc[
                             manifest_df["Key"] == j, "Missing_Object_Candidate_Keys"
                         ]
-                        + h["Key"] + ","
+                        + h["Key"]
+                        + ","
                     )
             else:
                 pass
@@ -366,7 +375,9 @@ def find_missing_objects(
 
 
 @flow
-def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: str, runner: str) -> None:
+def create_matching_object_manifest(
+    prod_bucket_path: str, staging_bucket_path: str, runner: str
+) -> None:
     # get output name
     output_manifest_name = runner + "_matching_objects_manifest_" + get_time() + ".tsv"
 
@@ -416,7 +427,9 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
     # reconstruct the key in staging bucket
     # This is before validating whether the key in staging bucket exists or not
     # objects_staging_key_list example ["sub_dir/subdir2/file.txt", "dir1/dir2/file.fastq", ...]
-    logger.info(f"Start reconstructing staging object keys given the info of staging bucket path: {staging_bucket_path}")
+    logger.info(
+        f"Start reconstructing staging object keys given the info of staging bucket path: {staging_bucket_path}"
+    )
     if len(objects_prod_key_list) > 100:
         objects_prod_key_chunks = list_to_chunks(
             mylist=objects_prod_key_list, chunk_len=100
@@ -445,16 +458,22 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
         logger.info("Object staging keys reconstruction finished")
 
     # check if staging key exists
-    logger.info(f"Start checking if objects exist under staging bucket path: {staging_bucket_path}")
+    logger.info(
+        f"Start checking if objects exist under staging bucket path: {staging_bucket_path}"
+    )
     if len(objects_staging_key_list) > 100:
-        objects_staging_key_chunks = list_to_chunks(mylist=objects_staging_key_list, chunk_len=100)
+        objects_staging_key_chunks = list_to_chunks(
+            mylist=objects_staging_key_list, chunk_len=100
+        )
         logger.info(
             f"Checking if object staging keys exist will be processed in {len(objects_staging_key_chunks)} chunks"
         )
         if_staging_objects_exist = []
         for h in range(len(objects_staging_key_chunks)):
             h_staging_if_exist = objects_if_exist(
-                key_path_list=objects_staging_key_chunks[h], bucket=staging_bucket, logger=logger
+                key_path_list=objects_staging_key_chunks[h],
+                bucket=staging_bucket,
+                logger=logger,
             )
             logger.info(
                 f"Checking if object staging keys exist progress: {h+1}/{len(objects_staging_key_chunks)}"
@@ -463,9 +482,7 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
         logger.info("Checking if object staging keys exist finished")
     else:
         if_staging_objects_exist = objects_if_exist(
-            key_path_list=objects_staging_key_list,
-            bucket=staging_bucket,
-            logger=logger
+            key_path_list=objects_staging_key_list, bucket=staging_bucket, logger=logger
         )
         logger.info("Checking if object staging keys exist finished")
 
@@ -501,12 +518,16 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
         )
 
     # check the md5sum of staging key if the object exists
-    logger.info("Start calculating md5sum of objects in staging bucket path if they exist")
+    logger.info(
+        "Start calculating md5sum of objects in staging bucket path if they exist"
+    )
     staging_exist_key = manifest_df.loc[
         manifest_df["Staging_If_Exist"] == True, "Staging_Key"
     ].tolist()
-    if len(staging_exist_key)>100:
-        staging_exist_key_chunks = list_to_chunks(mylist=staging_exist_key, chunk_len=100)
+    if len(staging_exist_key) > 100:
+        staging_exist_key_chunks = list_to_chunks(
+            mylist=staging_exist_key, chunk_len=100
+        )
         logger.info(
             f"md5sum calculation will be processed in {len(staging_exist_key_chunks)} chunks"
         )
@@ -515,11 +536,15 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
             logger.info(
                 f"md5sum calculation progress: {k+1}/{len(staging_exist_key_chunks)}"
             )
-            k_staging_md5sum = objects_md5sum(list_keys=staging_exist_key_chunks[k], bucket_name=staging_bucket)
+            k_staging_md5sum = objects_md5sum(
+                list_keys=staging_exist_key_chunks[k], bucket_name=staging_bucket
+            )
             objects_staging_md5sum.extend(k_staging_md5sum)
         logger.info("md5sum calculation of staging keys finished")
     else:
-        objects_staging_md5sum = objects_md5sum(list_keys=staging_exist_key, bucket_name=staging_bucket)
+        objects_staging_md5sum = objects_md5sum(
+            list_keys=staging_exist_key, bucket_name=staging_bucket
+        )
         logger.info("md5sum calculation of staging keys finished")
     # add staging md5sum values to df
     manifest_df["Staging_md5sum"] = ""
@@ -533,13 +558,15 @@ def create_matching_object_manifest(prod_bucket_path: str, staging_bucket_path: 
     manifest_df.loc[
         manifest_df["md5sum"] == manifest_df["Staging_md5sum"], "md5sum_check"
     ] = "Pass"
-    passed_md5sum_counts = manifest_df[manifest_df["md5sum_check"]=="Pass"].shape[0]
+    passed_md5sum_counts = manifest_df[manifest_df["md5sum_check"] == "Pass"].shape[0]
     logger.info(f"Files passed md5sum checks: {passed_md5sum_counts}")
 
     # look for missing objects if there are missing ones
     if sum(manifest_df["Staging_If_Exist"]) < manifest_df.shape[0]:
         # if there is object missing, search for entire bucket
-        logger.info(f"Not all files can be found under staging bucket path {staging_bucket_path}. Start looking for missing objects in staging bucket {staging_bucket}")
+        logger.info(
+            f"Not all files can be found under staging bucket path {staging_bucket_path}. Start looking for missing objects in staging bucket {staging_bucket}"
+        )
         staging_objects_list = retrieve_objects_from_bucket_path(
             bucket_folder_path=staging_bucket
         )
@@ -571,29 +598,41 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: s
 
     # read manifest file
     logger.info(f"Reading manifest file {manifest_file_path}")
-    manifest_df =  pd.read_csv(manifest_file_path, sep='\t', header=0)
+    manifest_df = pd.read_csv(manifest_file_path, sep="\t", header=0)
 
     # check if the delete_column_name can be found in the manifest tsv
     manifest_columns = manifest_df.columns.tolist()
     if delete_column_name not in manifest_columns:
-        raise KeyError(f"Column name {delete_column_name} not found in manifest file {manifest_file_path}")
+        raise KeyError(
+            f"Column name {delete_column_name} not found in manifest file {manifest_file_path}"
+        )
     else:
         pass
 
     # filter delete_column_name if check_md5sum column is present
     if "md5sum_check" in manifest_columns:
-        delete_uri_list = manifest_df.loc[manifest_df["md5sum_check"]=="Pass", delete_column_name].tolist()
+        delete_uri_list = manifest_df.loc[
+            (manifest_df["md5sum_check"] == "Pass")
+            & (~manifest_df[delete_column_name].isna()),
+            delete_column_name,
+        ].tolist()
     else:
-        delete_uri_list = manifest_df[delete_column_name]
+        delete_uri_list = manifest_df.loc[
+            ~manifest_df[delete_column_name].isna(), delete_column_name
+        ].tolist()
     logger.info(f"Number of objects to be deleted: {len(delete_uri_list)}")
 
     if len(delete_uri_list) > 100:
-        delete_chunks =  list_to_chunks(delete_uri_list, 100)
-        logger.info(f"Objects deletion will be performed in {len(delete_chunks)} chunks")
+        delete_chunks = list_to_chunks(delete_uri_list, 100)
+        logger.info(
+            f"Objects deletion will be performed in {len(delete_chunks)} chunks"
+        )
         delete_status = []
         for i in range(len(delete_chunks)):
             i_delete_list = delete_chunks[i]
-            i_delete_status = delete_objects_by_uri(uri_list=i_delete_list, logger=logger)
+            i_delete_status = delete_objects_by_uri(
+                uri_list=i_delete_list, logger=logger
+            )
             logger.info(f"Objects deletion progress: {i+1}/{len(delete_chunks)}")
             delete_status.extend(i_delete_status)
     else:
@@ -601,7 +640,9 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: s
         logger.info("Objects deletion finished")
 
     success_count, fail_count = count_success_fail(deletion_status=delete_status)
-    deletion_counts_df = pd.DataFrame({"Success":[success_count], "Fail":[fail_count]})
+    deletion_counts_df = pd.DataFrame(
+        {"Success": [success_count], "Fail": [fail_count]}
+    )
     if fail_count >= 1:
         logger.warning(f"Fail to delete files: {fail_count}/{len(delete_status)}")
     else:
@@ -611,8 +652,8 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: s
     # prepare for file deletion output
     delete_output = "objects_deletion_summary_" + get_time() + ".tsv"
     logger.info(f"Writing objects deletion summary table to: {delete_output}")
-    delete_dict = {"s3_uri": delete_uri_list, "delete_status" : delete_status}
+    delete_dict = {"s3_uri": delete_uri_list, "delete_status": delete_status}
     delete_df = pd.DataFrame(delete_dict)
-    delete_df.to_csv(delete_output, sep='\t', index=False)
+    delete_df.to_csv(delete_output, sep="\t", index=False)
     logger.info("Deleting objects finished!")
     return delete_output, deletion_counts_df
