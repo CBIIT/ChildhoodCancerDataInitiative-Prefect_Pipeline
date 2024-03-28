@@ -258,7 +258,7 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     name="Delete Single S3 Object",
     retries=3,
     retry_delay_seconds=0.5,
-    tags=["concurrency-test"],
+    tags=["file-remover-tag"],
 )
 def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
     bucket_name, object_key = parse_file_url_in_cds(url=object_uri)
