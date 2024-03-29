@@ -96,7 +96,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
   
-  - name: ccdi-data-curation-32gb
+  - name: TEST-CCDIDC920-ccdi-data-curation-32gb
     version: null
     tags: []
     description: null
@@ -105,7 +105,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "TEST-CCDIDC920-ccdi-validation"
+      bucket: "ccdi-validation"
       file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
       runner: "your_uniq_id"
       #optional parmaeters below, uncomment if needed
