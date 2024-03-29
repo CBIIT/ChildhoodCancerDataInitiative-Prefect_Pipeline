@@ -136,7 +136,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             nodes_removed.append(node)
 
     logger.info(f"{nodes_removed} tabs are empty")
-    ccdi_dfs = {key: ccdi_dfs[key] for key in ccdi_dfs if key not in nodes_removed}    
+    ccdi_dfs = {key: ccdi_dfs[key] for key in ccdi_dfs if key not in nodes_removed}
 
     if "cell_line" not in nodes_removed or "pdx" not in nodes_removed:
         logger.warning(
@@ -255,7 +255,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         logger.error(
             "No files were found in the submission template. Please add files or ignore the output from this step."
         )
-        output_file_path = "(EMPTY)_"+ output_file + ".xlsx"
+        output_file_path = "(EMPTY)_" + output_file + ".xlsx"
         logger_file_name = "CCDI_to_CDS_submission_" + get_date() + ".log"
         return (output_file_path, logger_file_name)
     else:
@@ -294,6 +294,35 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         node_df = node_df.drop_duplicates()
         return node_df
 
+    # Specify the path for the data frame directory
+    df_dir = "./export_dfs"
+
+    # Check if the directory already exists
+    if not os.path.exists(df_dir):
+        # Create the directory
+        os.makedirs(df_dir)
+        print(f"Directory '{df_dir}' created successfully.")
+    else:
+        print(f"Directory '{df_dir}' already exists.")
+
+    # This write out is done to preserve as much memory as possible as some data sets are extremely large
+    def write_df_to_tsv(df):
+        # Check if DataFrame is empty
+        if df.empty:
+            print("DataFrame is empty. No file will be written.")
+            return
+
+        # Get the variable name of the DataFrame
+        df_name = [name for name, var in globals().items() if var is df][0]
+
+        # Define the output file path
+        output_file = f"{df_name}.tsv"
+
+        # Write DataFrame to TSV file
+        df.to_csv(f"./export_dfs/{output_file}", sep="\t", index=False)
+
+        print(f"DataFrame '{df_name}' has been written to '{output_file}'.")
+
     # Do an empty check on the parent nodes before trying to join them
     # Since the final concatenation needs to have an object, each data frame will be made before the check to ensure it exists,
     # it will be removed from the final addition if it is an empty data frame.
@@ -326,6 +355,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 df_participant_level, df_file, "participant_id"
             )
             participant_file = join_file_node_cleaner(participant_file)
+            write_df_to_tsv(participant_file)
+            del participant_file
 
     # file --> study
     study_file = pd.DataFrame()
@@ -333,6 +364,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         if "study_id" in df_file.columns:
             study_file = join_node(df_study_level, df_file, "study_id")
             study_file = join_file_node_cleaner(study_file)
+            write_df_to_tsv(study_file)
+            del study_file
 
     # Then for the nodes that don't end on either sample, participant or study, walk again and check.
     # This is likely to be deprecated later as having all files go to sample is the preferred method.
@@ -350,6 +383,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         if "study_id" in pdx_file.columns:
             study_pdx_file = join_node(df_study_level, pdx_file, "study_id")
             study_pdx_file = join_file_node_cleaner(study_pdx_file)
+            write_df_to_tsv(study_pdx_file)
+            del study_pdx_file
 
     # cell_line_file --> sample
     sample_cell_line_file = pd.DataFrame()
@@ -370,6 +405,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             participant_cell_line_file = join_file_node_cleaner(
                 participant_cell_line_file
             )
+            write_df_to_tsv(participant_cell_line_file)
+            del participant_cell_line_file
 
     # cell_line_file --> study
     study_cell_line_file = pd.DataFrame()
@@ -377,6 +414,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         if "study_id" in cell_line_file.columns:
             study_cell_line_file = join_node(df_study_level, cell_line_file, "study_id")
             study_cell_line_file = join_file_node_cleaner(study_cell_line_file)
+            write_df_to_tsv(study_cell_line_file)
+            del study_cell_line_file
 
     # If not all samples can link to a participant, then handle those exceptions
 
@@ -416,6 +455,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 df_study_level, pdx_sample_file, "study_id"
             )
             study_pdx_sample_file = join_file_node_cleaner(study_pdx_sample_file)
+            write_df_to_tsv(study_pdx_sample_file)
+            del study_pdx_sample_file
 
     # cell_line_sample_file --> sample
     sample_cell_line_sample_file = pd.DataFrame()
@@ -438,6 +479,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             participant_cell_line_sample_file = join_file_node_cleaner(
                 participant_cell_line_sample_file
             )
+            write_df_to_tsv(participant_cell_line_sample_file)
+            del participant_cell_line_sample_file
 
     # cell_line_sample_file --> study
     study_cell_line_sample_file = pd.DataFrame()
@@ -449,6 +492,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             study_cell_line_sample_file = join_file_node_cleaner(
                 study_cell_line_sample_file
             )
+            write_df_to_tsv(study_cell_line_sample_file)
+            del study_cell_line_sample_file
 
     # It is not likely to loop more than once as that would mean a pdx or cell_line was made from a sample of a pdx or cell_line.
 
@@ -577,6 +622,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 participant_sample_file.drop(columns=[col_x, col_y], inplace=True)
 
             participant_sample_file = join_file_node_cleaner(participant_sample_file)
+            write_df_to_tsv(participant_sample_file)
+            del participant_sample_file
 
     # sample_pdx_file --> participant
     participant_sample_pdx_file = pd.DataFrame()
@@ -599,6 +646,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             participant_sample_pdx_file = join_file_node_cleaner(
                 participant_sample_pdx_file
             )
+            write_df_to_tsv(participant_sample_pdx_file)
+            del participant_sample_pdx_file
 
     # sample_cell_line_file --> participant
     participant_sample_cell_line_file = pd.DataFrame()
@@ -613,10 +662,10 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 col_x = "anatomic_site_x"
                 col_base = col_x[:-2]
                 col_y = col_base + "_y"
-                participant_sample_cell_line_file[
-                    col_base
-                ] = participant_sample_cell_line_file[col_y].combine_first(
-                    participant_sample_cell_line_file[col_x]
+                participant_sample_cell_line_file[col_base] = (
+                    participant_sample_cell_line_file[col_y].combine_first(
+                        participant_sample_cell_line_file[col_x]
+                    )
                 )
                 participant_sample_cell_line_file.drop(
                     columns=[col_x, col_y], inplace=True
@@ -625,6 +674,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             participant_sample_cell_line_file = join_file_node_cleaner(
                 participant_sample_cell_line_file
             )
+            write_df_to_tsv(participant_sample_cell_line_file)
+            del participant_sample_cell_line_file
 
     # sample_pdx_sample_file --> participant
     participant_sample_pdx_sample_file = pd.DataFrame()
@@ -639,10 +690,10 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 col_x = "anatomic_site_x"
                 col_base = col_x[:-2]
                 col_y = col_base + "_y"
-                participant_sample_pdx_sample_file[
-                    col_base
-                ] = participant_sample_pdx_sample_file[col_y].combine_first(
-                    participant_sample_pdx_sample_file[col_x]
+                participant_sample_pdx_sample_file[col_base] = (
+                    participant_sample_pdx_sample_file[col_y].combine_first(
+                        participant_sample_pdx_sample_file[col_x]
+                    )
                 )
                 participant_sample_pdx_sample_file.drop(
                     columns=[col_x, col_y], inplace=True
@@ -651,6 +702,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             participant_sample_pdx_sample_file = join_file_node_cleaner(
                 participant_sample_pdx_sample_file
             )
+            write_df_to_tsv(participant_sample_pdx_sample_file)
+            del participant_sample_pdx_sample_file
 
     # sample_cell_line_sample_file --> participant
     participant_sample_cell_line_sample_file = pd.DataFrame()
@@ -665,10 +718,10 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 col_x = "anatomic_site_x"
                 col_base = col_x[:-2]
                 col_y = col_base + "_y"
-                participant_sample_cell_line_sample_file[
-                    col_base
-                ] = participant_sample_cell_line_sample_file[col_y].combine_first(
-                    participant_sample_cell_line_sample_file[col_x]
+                participant_sample_cell_line_sample_file[col_base] = (
+                    participant_sample_cell_line_sample_file[col_y].combine_first(
+                        participant_sample_cell_line_sample_file[col_x]
+                    )
                 )
                 participant_sample_cell_line_sample_file.drop(
                     columns=[col_x, col_y], inplace=True
@@ -677,6 +730,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             participant_sample_cell_line_sample_file = join_file_node_cleaner(
                 participant_sample_cell_line_sample_file
             )
+            write_df_to_tsv(participant_sample_cell_line_sample_file)
+            del participant_sample_cell_line_sample_file
 
     # sample_pdx_sample_file --> study
     study_sample_pdx_sample_file = pd.DataFrame()
@@ -688,38 +743,70 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             study_sample_pdx_sample_file = join_file_node_cleaner(
                 study_sample_pdx_sample_file
             )
+            write_df_to_tsv(study_sample_pdx_sample_file)
+            del study_sample_pdx_sample_file
+
+    # DELETE ALL OTHER INTERMEDIATE DATA FRAMES
+    def delete_dataframes_with_file_suffix():
+        # Iterate over the global namespace
+        for name, var in list(
+            globals().items()
+        ):  # Convert to list to avoid "dictionary changed size during iteration" error
+            # Check if the variable is a DataFrame and contains "_file" in its name
+            if isinstance(var, pd.DataFrame) and "_file" in name and name != "df_file":
+                print(f"Deleting DataFrame: {name}")
+                del globals()[name]  # Delete the variable from the global namespace
+
+    delete_dataframes_with_file_suffix()
 
     # List of all paths that can be derived from files that either end at study or participant (which has study information)
-    all_paths = [
-        participant_file,
-        participant_cell_line_file,
-        participant_cell_line_sample_file,
-        participant_sample_file,
-        participant_sample_pdx_file,
-        participant_sample_cell_line_file,
-        participant_sample_pdx_sample_file,
-        participant_sample_cell_line_sample_file,
-        study_file,
-        study_pdx_file,
-        study_cell_line_file,
-        study_pdx_sample_file,
-        study_cell_line_sample_file,
-        study_sample_pdx_sample_file,
-    ]
+    # all_paths = [
+    #     participant_file,
+    #     participant_cell_line_file,
+    #     participant_cell_line_sample_file,
+    #     participant_sample_file,
+    #     participant_sample_pdx_file,
+    #     participant_sample_cell_line_file,
+    #     participant_sample_pdx_sample_file,
+    #     participant_sample_cell_line_sample_file,
+    #     study_file,
+    #     study_pdx_file,
+    #     study_cell_line_file,
+    #     study_pdx_sample_file,
+    #     study_cell_line_sample_file,
+    #     study_sample_pdx_sample_file,
+    # ]
 
     df_join_all = pd.DataFrame()
 
-    for node_path in all_paths:
-        if not node_path.empty:
-            df_join_all = pd.concat([df_join_all, node_path], axis=0, ignore_index=True)
-        else:
-            pass
+    # Read in df files in ./export_dfs and concatenate them into one df
+
+    # List all files in the directory
+    df_files = os.listdir(df_dir)
+
+    # Iterate over each file
+    for file in df_files:
+        # Read the TSV file into a DataFrame
+        df = pd.read_csv(os.path.join(df_dir, file), sep="\t")
+        # Concatenate the DataFrame with the existing DataFrame
+        df_join_all = pd.concat([df_join_all, df], ignore_index=True)
+
+        # Delete the DataFrame to free memory
+        del df
+
+    # Old memory intensive method
+    # We now write out the files with write_df_to_tsv() and del the df for all file paths dfs
+    # for node_path in all_paths:
+    #     if not node_path.empty:
+    #         df_join_all = pd.concat([df_join_all, node_path], axis=0, ignore_index=True)
+    #     else:
+    #         pass
 
     # To reduce complexity in the conversion, only lines where the personnel type is PI will be used in the CDS template end file. Otherwise use Co-PI or just pass if nothing else or too complex.
-    if 'PI' in df_join_all['personnel_type'].unique().tolist():
-        df_join_all=df_join_all[df_join_all['personnel_type']=='PI']
-    elif 'Co-PI' in df_join_all['personnel_type'].unique().tolist():
-        df_join_all=df_join_all[df_join_all['personnel_type']=='Co-PI']
+    if "PI" in df_join_all["personnel_type"].unique().tolist():
+        df_join_all = df_join_all[df_join_all["personnel_type"] == "PI"]
+    elif "Co-PI" in df_join_all["personnel_type"].unique().tolist():
+        df_join_all = df_join_all[df_join_all["personnel_type"] == "Co-PI"]
     else:
         pass
 
@@ -727,7 +814,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     df_join_all = df_join_all.reset_index(drop=True)
 
     # To try and preserve synonym links this section will join the synonyms if the data exists.
-    if 'synonym' in ccdi_to_cds_nodes:
+    if "synonym" in ccdi_to_cds_nodes:
         synonym_df = ccdi_dfs["synonym"]
         synonym_df.rename(columns=col_remap, inplace=True)
 
@@ -791,9 +878,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         cds_df["authz"] = authz
 
     # if there is one experimental value
-    if (
-        'experimental_strategy_and_data_subtype' in df_join_all.columns
-    ):
+    if "experimental_strategy_and_data_subtype" in df_join_all.columns:
         if (
             len(
                 df_join_all["experimental_strategy_and_data_subtype"]
@@ -821,13 +906,11 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             )
             cds_df["experimental_strategy_and_data_subtype"] = es_and_ds
             # if there are no experimental values
-    else :
+    else:
         cds_df["experimental_strategy_and_data_subtype"] = "Sequencing"
 
     # if there is one study data type value
-    if (
-        'study_data_types' in df_join_all.columns
-    ):
+    if "study_data_types" in df_join_all.columns:
         if len(df_join_all["study_data_types"].dropna().unique().tolist()) == 1:
             cds_df["study_data_types"] = df_join_all["study_data_types"]
             # if there are multiple study data type values
@@ -839,9 +922,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         cds_df["study_data_types"] = "Genomics"
 
     # if there is a study_name
-    if (
-        'study_name' in df_join_all.columns
-    ):
+    if "study_name" in df_join_all.columns:
         cds_df["study_name"] = df_join_all["study_name"]
         # if there isn't a study_name
     else:
@@ -940,11 +1021,13 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     if "diagnosis_icd_o" in df_join_all.columns:
         cds_df["primary_diagnosis"] = df_join_all["diagnosis_icd_o"]
     elif "diagnosis_classification" in df_join_all.columns:
-        cds_df['primary_diagnosis']=df_join_all['diagnosis_classification']
+        cds_df["primary_diagnosis"] = df_join_all["diagnosis_classification"]
         # further diagnosis handling for "see diagnosis_comment" copying
-        if 'diagnosis_comment' in df_join_all.columns:
-            comment_true = cds_df['primary_diagnosis'] == "see diagnosis_comment"
-            cds_df.loc[comment_true, 'primary_diagnosis'] = df_join_all.loc[comment_true, 'diagnosis_comment']
+        if "diagnosis_comment" in df_join_all.columns:
+            comment_true = cds_df["primary_diagnosis"] == "see diagnosis_comment"
+            cds_df.loc[comment_true, "primary_diagnosis"] = df_join_all.loc[
+                comment_true, "diagnosis_comment"
+            ]
     else:
         logger.error("No 'primary_diagnosis' was transfered")
 
