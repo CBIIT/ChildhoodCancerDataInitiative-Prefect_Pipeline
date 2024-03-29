@@ -52,7 +52,7 @@ def concatenate_submissions(xlsx_list: list[str], template_file: str, logger) ->
         logger.info("Submission files version matches to template's")
 
     # create an output name
-    output_name = "CCDI_MetaMerge_v" + tempalte_version + "_" + get_date + ".xlsx"
+    output_name = "CCDI_MetaMerge_v" + tempalte_version + "_" + get_date() + ".xlsx"
     copy(template_file, output_name)
 
     # concatinate info of submission files
