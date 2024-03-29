@@ -1,7 +1,7 @@
 import pandas as pd
 import os
 import openpyxl
-from datetime import date
+from datetime import date, datetime
 import warnings
 from openpyxl.utils.dataframe import dataframe_to_rows
 from src.utils import get_logger, get_date, get_time, get_github_token
@@ -68,6 +68,11 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         return today
 
     todays_date = refresh_date()
+
+    def get_exact_seconds_timestamp():
+        now = datetime.now()
+        exact_seconds_timestamp = now.strftime("%Y%m%d_%H%M%S")
+        return exact_seconds_timestamp
 
     # Output file name based on input file name and date/time stamped.
     output_file = file_name + "_CDS" + todays_date
@@ -312,16 +317,13 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
             logger.info("DataFrame is empty. No file will be written.")
             return
 
-        # Get the variable name of the DataFrame
-        df_name = [name for name, var in globals().items() if var is df][0]
-
         # Define the output file path
-        output_file = f"{df_name}.tsv"
+        output_file = f"{get_exact_seconds_timestamp()}.tsv"
 
         # Write DataFrame to TSV file
         df.to_csv(f"./export_dfs/{output_file}", sep="\t", index=False)
 
-        logger.info(f"DataFrame '{df_name}' has been written to '{output_file}'.")
+        logger.info(f"DataFrame has been written to '{output_file}'.")
 
     # Do an empty check on the parent nodes before trying to join them
     # Since the final concatenation needs to have an object, each data frame will be made before the check to ensure it exists,
