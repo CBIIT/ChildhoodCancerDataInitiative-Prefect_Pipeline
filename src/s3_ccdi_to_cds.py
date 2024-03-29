@@ -71,7 +71,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     def get_exact_seconds_timestamp():
         now = datetime.now()
-        exact_seconds_timestamp = now.strftime("%Y%m%d_%H%M%S")
+        exact_seconds_timestamp = now.strftime("%Y%m%d_%H%M%S%f")
         return exact_seconds_timestamp
 
     # Output file name based on input file name and date/time stamped.
