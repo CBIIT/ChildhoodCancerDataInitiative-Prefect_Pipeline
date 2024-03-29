@@ -27,14 +27,17 @@ def submission_cruncher(bucket: str, submission_folder_path: str, template_path:
     # list all the files under submission_folder_path and filter list based on the file extension
     submission_files = os.listdir(submission_folder_path)
     submission_files = [os.path.join(submission_folder_path, i) for i in submission_files if i.endswith(".xlsx")]
-    runner_logger.info(f"{len(submission_files)} files were found in folder {submission_folder_path}")
+    
+    if len(submission_files) > 0:
+        runner_logger.info(f"{len(submission_files)} xlsx files were found in folder {submission_folder_path}")
 
-    # concatenate submission files
-    runner_logger.info("Start merging submission files")
-    output_file = concatenate_submissions(xlsx_list=submission_files, template_file=template, logger=runner_logger)
+        # concatenate submission files
+        runner_logger.info("Start merging submission files")
+        output_file = concatenate_submissions(xlsx_list=submission_files, template_file=template, logger=runner_logger)
 
-    # upload the output to the bucket
-    output_folder = os.path.join(runner, "Submission_Cruncher_output_" + get_time())
-    file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile = output_file)
-    runner_logger.info(f"Uploaded output {output_file} to bucket {bucket} folder {output_folder}")
-
+        # upload the output to the bucket
+        output_folder = os.path.join(runner, "Submission_Cruncher_output_" + get_time())
+        file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile = output_file)
+        runner_logger.info(f"Uploaded output {output_file} to bucket {bucket} folder {output_folder}")
+    else:
+        runner_logger.warning(f"No xlsx file found under folder {submission_folder_path}.")
