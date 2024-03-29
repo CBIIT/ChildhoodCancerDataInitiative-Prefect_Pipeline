@@ -309,7 +309,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     def write_df_to_tsv(df):
         # Check if DataFrame is empty
         if df.empty:
-            print("DataFrame is empty. No file will be written.")
+            logger.info("DataFrame is empty. No file will be written.")
             return
 
         # Get the variable name of the DataFrame
@@ -321,7 +321,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         # Write DataFrame to TSV file
         df.to_csv(f"./export_dfs/{output_file}", sep="\t", index=False)
 
-        print(f"DataFrame '{df_name}' has been written to '{output_file}'.")
+        logger.info(f"DataFrame '{df_name}' has been written to '{output_file}'.")
 
     # Do an empty check on the parent nodes before trying to join them
     # Since the final concatenation needs to have an object, each data frame will be made before the check to ensure it exists,
@@ -754,7 +754,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
         ):  # Convert to list to avoid "dictionary changed size during iteration" error
             # Check if the variable is a DataFrame and contains "_file" in its name
             if isinstance(var, pd.DataFrame) and "_file" in name and name != "df_file":
-                print(f"Deleting DataFrame: {name}")
+                logger.info(f"Deleting DataFrame: {name}")
                 del globals()[name]  # Delete the variable from the global namespace
 
     delete_dataframes_with_file_suffix()
