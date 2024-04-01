@@ -40,15 +40,13 @@ def append_one_submission(submission_file: str, append_to_file: str):
                 j_append_to_df.to_excel(writer, sheet_name=j, index=False, header=False, startrow=1)
     """
     warnings.simplefilter(action="ignore", category=UserWarning)
-    submission_obj = pd.ExcelFile(submission_file)
-    append_to_obj = pd.ExcelFile(append_to_file)
     skip_sheetnames = ["README and INSTRUCTIONS", "Dictionary", "Terms and Value Sets"]
     na_bank = ["NA", "na", "N/A", "n/a", ""]
-    sheetnames = submission_obj.sheet_names
+    sheetnames = pd.ExcelFile(submission_file).sheet_names
     sheetnames = [i for i in sheetnames if i not in skip_sheetnames]
     for j in sheetnames:
         j_df = pd.read_excel(
-            submission_obj, sheet_name=j, na_values=na_bank, dtype="string"
+            submission_file, sheet_name=j, na_values=na_bank, dtype="string"
         )
         # test if the df is empty
         j_df = j_df.drop(columns=["type"]).dropna(how="all")
@@ -56,7 +54,7 @@ def append_one_submission(submission_file: str, append_to_file: str):
             pass
         else:
             j_append_to_df = pd.read_excel(
-                append_to_obj,
+                append_to_file,
                 sheet_name=j,
                 na_values=na_bank,
                 dtype="string",
@@ -71,8 +69,6 @@ def append_one_submission(submission_file: str, append_to_file: str):
                 j_append_to_df.to_excel(
                     writer, sheet_name=j, index=False, header=False, startrow=1
                 )
-    submission_obj.close()
-    append_to_obj.close()
 
     return None
 
