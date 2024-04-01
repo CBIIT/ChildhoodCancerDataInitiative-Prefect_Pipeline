@@ -2,10 +2,10 @@ from prefect import flow, task
 from src.utils import CheckCCDI, get_date
 import pandas as pd
 from shutil import copy
-import warnings
 
 
 def if_version_match(xlsx_list: list[str], template_version: str) -> tuple[list]:
+    """Splits xlsx list into matched to template version and not matched to template version"""
     if_match = []
     if_not_match = []
     for i in xlsx_list:
@@ -19,7 +19,7 @@ def if_version_match(xlsx_list: list[str], template_version: str) -> tuple[list]
 
 @task(log_prints=True)
 def append_one_submission(submission_file: str, append_to_file: str):
-
+    """Append one submission file to the final submission template"""
     submission_obj = CheckCCDI(ccdi_manifest=submission_file)
     append_to_obj = CheckCCDI(ccdi_manifest=append_to_file)
     skip_sheetnames =  ["README and INSTRUCTIONS","Dictionary","Terms and Value Sets"]
@@ -42,38 +42,6 @@ def append_one_submission(submission_file: str, append_to_file: str):
                 append_to_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
             ) as writer:
                 j_append_to_df.to_excel(writer, sheet_name=j, index=False, header=False, startrow=1)
-    """
-    warnings.simplefilter(action="ignore", category=UserWarning)
-    skip_sheetnames = ["README and INSTRUCTIONS", "Dictionary", "Terms and Value Sets"]
-    na_bank = ["NA", "na", "N/A", "n/a", ""]
-    sheetnames = pd.ExcelFile(submission_file).sheet_names
-    sheetnames = [i for i in sheetnames if i not in skip_sheetnames]
-    for j in sheetnames:
-        j_df = pd.read_excel(
-            submission_file, sheet_name=j, na_values=na_bank, dtype="string"
-        )
-        # test if the df is empty
-        j_df = j_df.drop(columns=["type"]).dropna(how="all")
-        if j_df.empty:
-            pass
-        else:
-            j_append_to_df = pd.read_excel(
-                append_to_file,
-                sheet_name=j,
-                na_values=na_bank,
-                dtype="string",
-            )
-            j_append_to_df = j_append_to_df.drop(columns=["type"]).dropna(how="all")
-            j_append_to_df = pd.concat([j_append_to_df, j_df], ignore_index=True)
-            j_append_to_df.drop_duplicates(inplace=True, ignore_index=True)
-            j_append_to_df["type"] = j
-            with pd.ExcelWriter(
-                append_to_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
-            ) as writer:
-                j_append_to_df.to_excel(
-                    writer, sheet_name=j, index=False, header=False, startrow=1
-                )
-    """
 
     return None
 
