@@ -19,7 +19,7 @@ def if_version_match(xlsx_list: list[str], template_version: str) -> tuple[list]
 
 @task(log_prints=True)
 def append_one_submission(submission_file: str, append_to_file: str):
-    """
+
     submission_obj = CheckCCDI(ccdi_manifest=submission_file)
     append_to_obj = CheckCCDI(ccdi_manifest=append_to_file)
     skip_sheetnames =  ["README and INSTRUCTIONS","Dictionary","Terms and Value Sets"]
@@ -27,13 +27,17 @@ def append_one_submission(submission_file: str, append_to_file: str):
     sheetnames = [i for i in sheetnames if i not in skip_sheetnames]
     for j in sheetnames:
         j_df = submission_obj.read_sheet_na(sheetname=j)
+        j_df = j_df.drop(columns=["type"]).dropna(how="all")
         if j_df.empty:
             pass
         else:
             j_append_to_df =  append_to_obj.read_sheet_na(sheetname=j)
+            j_append_to_df = j_append_to_df.drop(columns=["type"]).dropna(how="all")
             j_append_to_df = pd.concat([j_append_to_df, j_df], ignore_index=True)
             # drop any duplicated lines
             j_append_to_df.drop_duplicates(inplace=True, ignore_index=True)
+            # add type column in the front
+            j_append_to_df.insert(0,"type",[j]*j_append_to_df.shape[0])
             with pd.ExcelWriter(
                 append_to_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
             ) as writer:
@@ -69,6 +73,7 @@ def append_one_submission(submission_file: str, append_to_file: str):
                 j_append_to_df.to_excel(
                     writer, sheet_name=j, index=False, header=False, startrow=1
                 )
+    """
 
     return None
 
