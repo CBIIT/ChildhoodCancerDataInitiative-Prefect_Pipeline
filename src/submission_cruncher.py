@@ -2,6 +2,7 @@ from prefect import flow, task
 from src.utils import CheckCCDI, get_date
 import pandas as pd
 from shutil import copy
+import warnings
 
 
 def if_version_match(xlsx_list: list[str], template_version: str) -> tuple[list]:
@@ -15,8 +16,9 @@ def if_version_match(xlsx_list: list[str], template_version: str) -> tuple[list]
             if_not_match.append((i, i_version))
     return if_match, if_not_match
 
-@task
+@task(log_prints=True)
 def append_one_submission(submission_file: str, append_to_file: str):
+    """
     submission_obj = CheckCCDI(ccdi_manifest=submission_file)
     append_to_obj = CheckCCDI(ccdi_manifest=append_to_file)
     skip_sheetnames =  ["README and INSTRUCTIONS","Dictionary","Terms and Value Sets"]
@@ -35,6 +37,43 @@ def append_one_submission(submission_file: str, append_to_file: str):
                 append_to_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
             ) as writer:
                 j_append_to_df.to_excel(writer, sheet_name=j, index=False, header=False, startrow=1)
+    """
+    warnings.simplefilter(action="ignore", category=UserWarning)
+    submission_obj = pd.ExcelFile(submission_file)
+    append_to_obj = pd.ExcelFile(append_to_file)
+    skip_sheetnames =  ["README and INSTRUCTIONS","Dictionary","Terms and Value Sets"]
+    na_bank = ["NA", "na", "N/A", "n/a", ""]
+    sheetnames = submission_obj.sheet_names
+    sheetnames = [i for i in sheetnames if i not in skip_sheetnames]
+    for j in sheetnames:
+        j_df = pd.read_excel(
+            submission_obj, sheet_name=j, na_values=na_bank, dtype="string"
+        )
+        # test if the df is empty
+        j_df.drop(columns=["type"], inplace=True).dropna(how="all", inplace=True)
+        if j_df.empty:
+            pass
+        else:
+            j_append_to_df = pd.read_excel(
+                append_to_obj,
+                sheet_name=j,
+                na_values=na_bank,
+                dtype="string",
+            )
+            j_append_to_df.drop(columns=["type"], inplace=True).dropna(
+                how="all", inplace=True
+            )
+            j_append_to_df = pd.concat([j_append_to_df, j_df], ignore_index=True)
+            j_append_to_df.drop_duplicates(inplace=True, ignore_index=True)
+            j_append_to_df["type"] = j
+            with pd.ExcelWriter(
+                append_to_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+            ) as writer:
+                j_append_to_df.to_excel(
+                    writer, sheet_name=j, index=False, header=False, startrow=1
+                )
+    submission_obj.close()
+    append_to_obj.close()
 
     return None
 
@@ -56,12 +95,10 @@ def concatenate_submissions(xlsx_list: list[str], template_file: str, logger) ->
     copy(template_file, output_name)
 
     # concatinate info of submission files
-    completed = 0
+    completed = 1
     for h in xlsx_list:
         logger.info(f"Appending info from file {h}")
         append_one_submission(submission_file=h, append_to_file=output_name)
         logger.info(f"Progress: {completed}/{len(xlsx_list)}")
         completed += 1
     return output_name
-
-
