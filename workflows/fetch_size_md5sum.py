@@ -38,8 +38,8 @@ def fetch_size_md5sum(bucket: str, runner: str, s3uri_list: list[str]) -> None:
         for i in chunk_list:
             i_size_list = calculate_list_size(s3uri_list=i)
             i_md5sum_list = calculate_list_md5sum(s3uri_list=i)
-            size_list.append(i_size_list)
-            md5sum_list.append(i_md5sum_list)
+            size_list.extend(i_size_list)
+            md5sum_list.extend(i_md5sum_list)
             logger.info(f"Progress: {process_bar}/{len(chunk_list)}")
             process_bar += 1
     # creates a pandas df and writes it into a tsv file
