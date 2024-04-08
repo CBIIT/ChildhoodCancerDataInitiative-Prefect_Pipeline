@@ -16,9 +16,9 @@ import pandas as pd
 
 
 @flow(
-    name="Calculate md5sum values",
+    name="Calculate md5sum and size values",
     log_prints=True,
-    flow_run_name="file-mover-{runner}-" + f"{get_time()}",
+    flow_run_name="{runner}-" + f"{get_time()}",
 )
 def fetch_size_md5sum(bucket: str, runner: str, s3uri_list: list[str]) -> None:
     logger = get_run_logger()
