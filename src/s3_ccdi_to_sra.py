@@ -495,6 +495,12 @@ def reformat_sra_values(
     sra_df["instrument_model"][
         sra_df["instrument_model"] == "Illumina NovaSeq"
     ] = "Illumina NovaSeq 6000"
+    sra_df["instrument_model"][
+        sra_df["instrument_model"] == "Illumina NextSeq 2000"
+    ] = "NextSeq 2000"
+    sra_df["instrument_model"][
+        sra_df["instrument_model"] == "Illumina NextSeq 1000"
+    ] = "NextSeq 1000"
 
     # fix library layout value
     sra_df["library_layout"][
