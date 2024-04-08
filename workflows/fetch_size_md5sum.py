@@ -1,4 +1,4 @@
-from prefect import flow, task, get_run_logger
+from prefect import flow, get_run_logger
 import os
 import sys
 
@@ -10,8 +10,8 @@ from src.utils import (
     calculate_list_md5sum,
     calculate_list_size,
     file_ul,
+    list_to_chunks
 )
-from src.file_mover import list_to_chunks
 import pandas as pd
 
 
