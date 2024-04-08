@@ -448,6 +448,9 @@ def reformat_sra_values(
     sra_df["library_strategy (click for details)"][
         sra_df["library_strategy (click for details)"].str.contains("Other", na=False)
     ] = "OTHER"
+    sra_df["library_strategy (click for details)"][
+        sra_df["library_strategy (click for details)"].str.contains("Archer_Fusion", na=False)
+    ] = "OTHER"
     # after hardcoding strategy values, check for unacceptable values
     unknown_library_strategy_index = find_new_value_in_col(
         sra_df["library_strategy (click for details)"],
