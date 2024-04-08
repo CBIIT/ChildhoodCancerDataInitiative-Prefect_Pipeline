@@ -1,5 +1,6 @@
 from prefect import flow, task, Task
 from prefect.artifacts import create_markdown_artifact
+from prefect.task_runners import ConcurrentTaskRunner
 from dataclasses import dataclass, field
 from typing import List, TypeVar, Dict, Tuple
 import warnings
@@ -22,6 +23,7 @@ from zipfile import ZipFile
 from shutil import copy
 import json
 from botocore.exceptions import ClientError
+from src.file_mover import calculate_object_md5sum_new, parse_file_url_in_cds
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -951,3 +953,54 @@ class CheckCCDI:
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
+
+
+@task(
+    tags=["md5sum-cal-tag"],
+    name="Calculate single md5sum",
+    retries=3,
+    retry_delay_seconds=0.5,
+    log_prints=True,
+)
+def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
+    try:
+        md5sum_value = calculate_object_md5sum_new(url=s3uri, s3_client=s3_client)
+        return md5sum_value
+    except Exception as err:
+        err_str= repr(err)
+        return err_str
+
+
+@task(
+    tags=["size-cal-tag"],
+    name="Calculate single md5sum",
+    retries=3,
+    retry_delay_seconds=0.5,
+    log_prints=True,
+)
+def calculate_single_size_task(s3uri: str, s3_client) -> str:
+    try:
+        bucket_name, object_key = parse_file_url_in_cds(s3uri)
+        object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
+            "ContentLength"
+        ]
+        return str(object_size)
+    except Exception as err:
+        err_str = repr(err)
+        return err_str
+
+
+@flow(task_runner=ConcurrentTaskRunner(), name="Calculate object md5sum Concurrently")
+def calculate_list_md5sum(s3uri_list: list[str]) -> list[str]:
+    s3_client = set_s3_session_client()
+    md5sum_value_list = calculate_single_md5sum_task.map(s3uri_list, s3_client)
+    s3_client.close()
+    return md5sum_value_list
+
+
+@flow(task_runner=ConcurrentTaskRunner(), name="Fetch object size Concurrently")
+def calculate_list_size(s3uri_list: list[str]) -> list[str]:
+    s3_client = set_s3_session_client()
+    size_value_list = calculate_single_size_task.map(s3uri_list, s3_client)
+    s3_client.close()
+    return size_value_list
