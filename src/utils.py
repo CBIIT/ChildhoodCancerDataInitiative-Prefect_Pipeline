@@ -1054,17 +1054,19 @@ def calculate_single_size_task(s3uri: str, s3_client) -> str:
         return err_str
 
 
-@flow(task_runner=ConcurrentTaskRunner(), name="Calculate objects md5sum Concurrently")
+@flow(task_runner=ConcurrentTaskRunner(), name="Calculate objects md5sum Concurrently", log_prints=True)
 def calculate_list_md5sum(s3uri_list: list[str]) -> list[str]:
     s3_client = set_s3_session_client()
     md5sum_value_list = calculate_single_md5sum_task.map(s3uri_list, s3_client)
     s3_client.close()
+    print(md5sum_value_list)
     return md5sum_value_list
 
 
-@flow(task_runner=ConcurrentTaskRunner(), name="Fetch objects size Concurrently")
+@flow(task_runner=ConcurrentTaskRunner(), name="Fetch objects size Concurrently", log_prints=True)
 def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     s3_client = set_s3_session_client()
     size_value_list = calculate_single_size_task.map(s3uri_list, s3_client)
     s3_client.close()
+    print(size_value_list)
     return size_value_list
