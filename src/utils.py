@@ -986,7 +986,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
     s3://example-bucket/folder1/folder2/test_file.fastq.gz
     """
     # specify a chunk size to get object
-    chunk_size = 1073741824
+    chunk_size = 536870912
     # get object size
     bucket_name, object_key = parse_file_url_in_cds(url)
     object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
