@@ -1046,7 +1046,6 @@ def calculate_single_size_task(s3uri: str, s3_client) -> str:
         object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
             "ContentLength"
         ]
-        print(object_size)
         return str(object_size)
     except Exception as err:
         print(f"Error reading size {s3uri}: {err}")
@@ -1059,8 +1058,7 @@ def calculate_list_md5sum(s3uri_list: list[str]) -> list[str]:
     s3_client = set_s3_session_client()
     md5sum_value_list = calculate_single_md5sum_task.map(s3uri_list, s3_client)
     s3_client.close()
-    print(md5sum_value_list)
-    return md5sum_value_list
+    return [i.result() for i in md5sum_value_list]
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Fetch objects size Concurrently", log_prints=True)
@@ -1068,5 +1066,4 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     s3_client = set_s3_session_client()
     size_value_list = calculate_single_size_task.map(s3uri_list, s3_client)
     s3_client.close()
-    print(size_value_list)
-    return size_value_list
+    return [i.result() for i in size_value_list]
