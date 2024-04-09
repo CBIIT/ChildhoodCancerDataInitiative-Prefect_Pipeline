@@ -1025,6 +1025,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
 def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
     try:
         md5sum_value = calculate_object_md5sum_new(url=s3uri, s3_client=s3_client)
+        print(md5sum_value)
         return md5sum_value
     except Exception as err:
         print(f"Error reading md5sum {s3uri}: {err}")
@@ -1045,6 +1046,7 @@ def calculate_single_size_task(s3uri: str, s3_client) -> str:
         object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
             "ContentLength"
         ]
+        print(object_size)
         return str(object_size)
     except Exception as err:
         print(f"Error reading size {s3uri}: {err}")
