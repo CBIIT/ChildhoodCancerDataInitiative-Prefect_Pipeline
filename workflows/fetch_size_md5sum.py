@@ -6,7 +6,6 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.utils import (
     get_time,
-    get_date,
     calculate_list_md5sum,
     calculate_list_size,
     file_ul,
@@ -22,7 +21,7 @@ import pandas as pd
 )
 def fetch_size_md5sum(bucket: str, runner: str, s3uri_list: list[str]) -> None:
     logger = get_run_logger()
-    today_date = get_date()
+    time_rightnow = get_time()
     logger.info(f"Number of objects: {len(s3uri_list)}")
     if len(s3uri_list) <= 100:
         size_list = calculate_list_size(s3uri_list=s3uri_list)
@@ -46,8 +45,8 @@ def fetch_size_md5sum(bucket: str, runner: str, s3uri_list: list[str]) -> None:
     return_df = pd.DataFrame(
         {"S3_URI": s3uri_list, "Size": size_list, "md5sum": md5sum_list}
     )
-    output_folder = os.path.join(runner, "fetch_size_md5sum_outputs_" + get_time())
-    output_filename = "fetch_size_md5sum_" + today_date + ".tsv"
+    output_folder = os.path.join(runner, "fetch_size_md5sum_outputs_" + time_rightnow)
+    output_filename = "fetch_size_md5sum_" + time_rightnow + ".tsv"
     return_df.to_csv(output_filename, sep="\t", index=False)
     logger.info(f"Created summary file: {output_filename}")
 
