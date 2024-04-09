@@ -52,6 +52,10 @@ def copy_object_parameter(url_in_cds: str, dest_bucket_path: str) -> dict:
      }
     """
     origin_bucket, object_key = parse_file_url_in_cds(url=url_in_cds)
+    if "/" not in dest_bucket_path:
+        dest_bucket_path = dest_bucket_path + "/"
+    else:
+        pass
     dest_bucket, dest_prefix = dest_bucket_path.split("/", 1)
     copysource = os.path.join(origin_bucket, object_key)
     dest_key = os.path.join(dest_prefix, object_key)
