@@ -23,6 +23,8 @@ from zipfile import ZipFile
 from shutil import copy
 import json
 from botocore.exceptions import ClientError
+import hashlib
+from urllib.parse import urlparse
 
 
 ExcelFile = TypeVar("ExcelFile")

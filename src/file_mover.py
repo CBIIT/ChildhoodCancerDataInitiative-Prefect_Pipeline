@@ -1,6 +1,13 @@
 import os
 import sys
-from src.utils import CheckCCDI, set_s3_session_client, get_logger, get_date, get_time, calculate_object_md5sum_new
+from src.utils import (
+    CheckCCDI,
+    set_s3_session_client,
+    get_logger,
+    get_date,
+    get_time,
+    calculate_object_md5sum_new,
+)
 from botocore.exceptions import (
     ClientError,
     ReadTimeoutError,
@@ -150,9 +157,9 @@ def copy_file_by_size(
     copy_source = copy_parameter["CopySource"]
     # test if file_size larger than 5GB, 5*1024*1024*1024
     if file_size > 5368709120:
-        #runner_logger.info(
+        # runner_logger.info(
         #    f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
-        #)
+        # )
         logger.info(
             f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
         )
@@ -163,9 +170,9 @@ def copy_file_by_size(
             logger=logger,
         )
     else:
-        #runner_logger.info(
+        # runner_logger.info(
         #    f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
-        #)
+        # )
         logger.info(
             f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
         )
@@ -285,7 +292,9 @@ def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> t
         else:
             return (first_md5sum, second_md5sum, "Fail")
     except ClientError as ec:
-        logger.error(f"ClientError occurred while calculating md5sum of {first_url} and {second_url}: {ec}")
+        logger.error(
+            f"ClientError occurred while calculating md5sum of {first_url} and {second_url}: {ec}"
+        )
         return ("", "", "Error")
     except ReadTimeoutError as er:
         logger.error(
@@ -516,7 +525,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             )
             # add logging info on the md5sum check progress
             logger.info(f"md5sum check completed: {j+1}/{len(urls_before_chunks)}")
-            runner_logger.info(f"md5sum check completed: {j+1}/{len(urls_before_chunks)}")
+            runner_logger.info(
+                f"md5sum check completed: {j+1}/{len(urls_before_chunks)}"
+            )
             md5sum_compare_result.extend(j_md5sum_compare_result)
 
         # add md5sum comparison result to transfer_df
@@ -574,7 +585,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
             runner_logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
             if failed_md5sum_check_ct >= 1:
-                logger.error(f"md5sum check failed files count: {failed_md5sum_check_ct}")
+                logger.error(
+                    f"md5sum check failed files count: {failed_md5sum_check_ct}"
+                )
                 runner_logger.error(
                     f"md5sum check failed files count: {failed_md5sum_check_ct}"
                 )
