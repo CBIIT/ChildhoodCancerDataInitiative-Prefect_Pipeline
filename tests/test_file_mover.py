@@ -86,6 +86,7 @@ def test_copy_object_parameter():
 
 
 def test_add_md5sum_results():
+    """test for add_md5sum_results"""
     transfer_df = pd.DataFrame(
         {
             "node": ["sequencing_file"] * 5,
