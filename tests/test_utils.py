@@ -6,7 +6,12 @@ from unittest.mock import MagicMock
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.utils import CCDI_Tags
+from src.utils import (
+    CCDI_Tags,
+    list_to_chunks,
+    get_ccdi_latest_release,
+    calculate_single_size_task,
+)
 
 
 # test for CCDI_Tags class
@@ -93,3 +98,35 @@ def test_CCDI_Tags_get_tag_element(
     request_return.json.return_value = fake_tags_api_return
     tag_element = my_ccdi_tags.get_tag_element(tag="0.1.0")
     assert tag_element["zipball_url"] == "http://url/tags/0.1.0"
+
+
+def test_list_to_chunks():
+    test_list = [1,2,3,4,5]
+    chunked_list =  list_to_chunks(mylist=test_list, chunk_len=2)
+    assert chunked_list[0] == [1,2]
+    assert chunked_list[2] == [5]
+
+
+@mock.patch("src.utils.requests", autospec=True)
+def test_get_ccdi_latest_release(mock_requests):
+    request_return = mock_requests.get.return_value
+    request_return.json.return_value = {
+        "tag_name": "9.9.9",
+        "name": "v9.9.9: This is a test",
+        "created_at": "2023-03-09T13:22:57Z",
+        "published_at": "2023-03-09T13:22:50Z",
+    }
+    latest_tag =  get_ccdi_latest_release()
+    assert latest_tag == "9.9.9"
+
+@mock.patch("src.utils.set_s3_session_client", autospec=True)
+def test_calculate_single_size_task(mock_client):
+    s3_client = mock_client.return_value
+    s3_client.get_object.return_value = {
+        "LastModified": "fake_datetime",
+        "ContentLength": 123,
+        "ContentType": "string",
+        "Metadata": {"string": "string"},
+    }
+    object_size = calculate_single_size_task.fn(s3uri="s3://test-bucket/test_folder/test_file.txt", s3_client=s3_client)
+    assert object_size == "123"

@@ -1,6 +1,13 @@
 import os
 import sys
-from src.utils import CheckCCDI, set_s3_session_client, get_logger, get_date, get_time
+from src.utils import (
+    CheckCCDI,
+    set_s3_session_client,
+    get_logger,
+    get_date,
+    get_time,
+    calculate_object_md5sum_new,
+)
 from botocore.exceptions import (
     ClientError,
     ReadTimeoutError,
@@ -31,71 +38,12 @@ def parse_file_url_in_cds(url: str) -> tuple:
     return bucket_name, object_key
 
 
-def calculate_object_md5sum(s3_client, url) -> str:
-    """Calculate md5sum of an object using url
-    This function was modified based on https://github.com/jmwarfe/s3-md5sum/blob/main/s3-md5sum.py
-
-    Example of url:
-    s3://example-bucket/folder1/folder2/test_file.fastq.gz
-    """
-    bucket_name, object_key = parse_file_url_in_cds(url)
-    # get obejct
-    obj = s3_client.get_object(Bucket=bucket_name, Key=object_key)
-    obj_body = obj["Body"]
-
-    # Initialize MD5 hash object
-    md5_hash = hashlib.md5()
-    # Read the object in chunks and update the MD5 hash
-    for chunk in iter(lambda: obj_body.read(1024 * 1024), b""):
-        md5_hash.update(chunk)
-    return md5_hash.hexdigest()
-
-
-def calculate_object_md5sum_new(s3_client, url) -> str:
-    """Calculate md5sum of an object using url
-    This function was modified based on https://github.com/jmwarfe/s3-md5sum/blob/main/s3-md5sum.py
-    The new one reads specific byte range frm file as a chunk to avoid empty chunk
-    aws server getting time out
-
-    Example of url:
-    s3://example-bucket/folder1/folder2/test_file.fastq.gz
-    """
-    # specify a chunk size to get object
-    chunk_size = 1073741824
-    # get object size
-    bucket_name, object_key = parse_file_url_in_cds(url)
-    object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
-        "ContentLength"
-    ]
-
-    # object_size = s3_client.get_object_attributes(
-    #    Bucket=bucket_name, Key=object_key, ObjectAttributes=["ObjectSize"]
-    # ).get("ObjectSize")
-
-    chunk_start = 0
-    chunk_end = chunk_start + chunk_size - 1
-
-    # Initialize MD5 hash object
-    md5_hash = hashlib.md5()
-    while chunk_start <= object_size:
-        # Read specific byte range from file as a chunk. We do this because AWS server times out and sends
-        # empty chunks when streaming the entire file.
-        if body := s3_client.get_object(
-            Bucket=bucket_name, Key=object_key, Range=f"bytes={chunk_start}-{chunk_end}"
-        ).get("Body"):
-            for small_chunk in iter(lambda: body.read(1024 * 1024), b""):
-                md5_hash.update(small_chunk)
-            chunk_start += chunk_size
-            chunk_end += chunk_size
-    return md5_hash.hexdigest()
-
-
 def copy_object_parameter(url_in_cds: str, dest_bucket_path: str) -> dict:
     """Returns a dict that can be used as parameter for copy object using s3 client
 
     Example
-    mydict=copy_object_parameter(origin_bucket=ccdi-validation, object_key="QL/file2.txt",
-                                 dest_bucket_path="my-source-bucket/new_release")
+    mydict=copy_object_parameter(url_in_cds="s3://ccdi-validation/QL/file2.txt",
+        dest_bucket_path="my-source-bucket/new_release")
     Expected Return
     {
         'Bucket': 'my-source-bucket',
@@ -120,7 +68,7 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     object_key is the path of object in original bucket(without bucket name)
 
     Example:
-    dest_url =  dest_object_url(object_key="QL/inputs/file1.txt", dest_bucket_path="new-bucket/release5")
+    dest_url =  dest_object_url(url_in_cds="s3://ccdi-validation/QL/inputs/file1.txt", dest_bucket_path="new-bucket/release5")
     Expected Return
     "s3://new-bucket/release5/QL/inputs/file1.txt"
     """
@@ -213,9 +161,9 @@ def copy_file_by_size(
     copy_source = copy_parameter["CopySource"]
     # test if file_size larger than 5GB, 5*1024*1024*1024
     if file_size > 5368709120:
-        #runner_logger.info(
+        # runner_logger.info(
         #    f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
-        #)
+        # )
         logger.info(
             f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
         )
@@ -226,9 +174,9 @@ def copy_file_by_size(
             logger=logger,
         )
     else:
-        #runner_logger.info(
+        # runner_logger.info(
         #    f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
-        #)
+        # )
         logger.info(
             f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
         )
@@ -348,7 +296,9 @@ def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> t
         else:
             return (first_md5sum, second_md5sum, "Fail")
     except ClientError as ec:
-        logger.error(f"ClientError occurred while calculating md5sum of {first_url} and {second_url}: {ec}")
+        logger.error(
+            f"ClientError occurred while calculating md5sum of {first_url} and {second_url}: {ec}"
+        )
         return ("", "", "Error")
     except ReadTimeoutError as er:
         logger.error(
@@ -579,7 +529,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             )
             # add logging info on the md5sum check progress
             logger.info(f"md5sum check completed: {j+1}/{len(urls_before_chunks)}")
-            runner_logger.info(f"md5sum check completed: {j+1}/{len(urls_before_chunks)}")
+            runner_logger.info(
+                f"md5sum check completed: {j+1}/{len(urls_before_chunks)}"
+            )
             md5sum_compare_result.extend(j_md5sum_compare_result)
 
         # add md5sum comparison result to transfer_df
@@ -637,7 +589,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
             runner_logger.info(f"md5sum check passed files: {passed_md5sum_check_ct}")
             if failed_md5sum_check_ct >= 1:
-                logger.error(f"md5sum check failed files count: {failed_md5sum_check_ct}")
+                logger.error(
+                    f"md5sum check failed files count: {failed_md5sum_check_ct}"
+                )
                 runner_logger.error(
                     f"md5sum check failed files count: {failed_md5sum_check_ct}"
                 )
