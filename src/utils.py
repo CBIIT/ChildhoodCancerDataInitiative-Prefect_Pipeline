@@ -1109,8 +1109,7 @@ def extract_dcf_index(CCDI_manifest: CheckCCDI, sheetname_list: list[str]) -> li
     """
     logger = get_run_logger()
     list_dicts_future_objs =  extract_dcf_index_single_sheet.map(sheetname_list, CCDI_manifest, logger)
-    list_dicts = [i.result() for i in list_dicts_future_objs]
-    return list_dicts
+    return [i.result() for i in list_dicts_future_objs]
 
 
 @task(
