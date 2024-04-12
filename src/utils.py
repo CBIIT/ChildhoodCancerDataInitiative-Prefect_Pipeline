@@ -1075,16 +1075,17 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     log_prints=True,
     tags=["size-cal-tag"],
 )
-def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI) -> dict:
+def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI, logger) -> dict:
     """Extracts columns for dcf indexing of a single sheet
 
     columns: ["file_size", "md5sum", "file_url_in_cds", "dcf_indexd_guid"]
     The task returns a dictionary of lists
     """
-    #logger.info(f"Reading sheet {sheetname}")
+    logger.info(f"Reading sheet {sheetname}")
     sheet_df = CCDI_manifest.read_sheet_na(sheetname=sheetname)
+    print(sheet_df)
     sheet_df.drop(columns=["type"], inplace=True).dropna(how="all", inplace=True)
-    #logger.info(f"Count of objects found in sheet {sheetname}: {sheet_df.shape[0]}")
+    logger.info(f"Count of objects found in sheet {sheetname}: {sheet_df.shape[0]}")
     return_dict = {"GUID":[], "md5":[],"urls":[], "size": []}
     if sheet_df.empty:
         return return_dict
@@ -1108,9 +1109,9 @@ def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI) -> 
 def extract_dcf_index(CCDI_manifest: CheckCCDI, sheetname_list: list[str]) -> list[dict]:
     """Extracts columns for dcf indexing of a given list sheetnames
     """
-    #logger = get_run_logger()
+    logger = get_run_logger()
     print(sheetname_list)
-    list_dicts_future_objs =  extract_dcf_index_single_sheet.map(sheetname_list, CCDI_manifest=CCDI_manifest)
+    list_dicts_future_objs =  extract_dcf_index_single_sheet.map(sheetname_list, CCDI_manifest=CCDI_manifest, logger=logger)
     return [i.result() for i in list_dicts_future_objs]
 
 
