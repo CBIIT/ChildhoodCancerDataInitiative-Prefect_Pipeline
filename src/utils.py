@@ -1083,7 +1083,8 @@ def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI, log
     logger.info(f"Reading sheet {sheetname}")
     sheet_df = CCDI_manifest.read_sheet_na(sheetname=sheetname)
     print(sheet_df)
-    sheet_df.drop(columns=["type"], inplace=True).dropna(how="all", inplace=True)
+    sheet_df.drop(columns=["type"], inplace=True)
+    sheet_df.dropna(how="all", inplace=True)
     logger.info(f"Count of objects found in sheet {sheetname}: {sheet_df.shape[0]}")
     return_dict = {"GUID":[], "md5":[],"urls":[], "size": []}
     if sheet_df.empty:
