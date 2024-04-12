@@ -1069,9 +1069,11 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     s3_client.close()
     return [i.result() for i in size_value_list]
 
+
 @task(
-        name="Extract one sheet dcf index info",
-        log_prints=True
+    name="Extract one sheet dcf index info",
+    log_prints=True,
+    tags=["size-cal-tag"],
 )
 def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI) -> dict:
     """Extracts columns for dcf indexing of a single sheet
