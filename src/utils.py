@@ -1082,7 +1082,6 @@ def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI, log
     """
     logger.info(f"Reading sheet {sheetname}")
     sheet_df = CCDI_manifest.read_sheet_na(sheetname=sheetname)
-    print(sheet_df)
     sheet_df.drop(columns=["type"], inplace=True)
     sheet_df.dropna(how="all", inplace=True)
     logger.info(f"Count of objects found in sheet {sheetname}: {sheet_df.shape[0]}")
@@ -1110,7 +1109,6 @@ def extract_dcf_index(CCDI_manifest: CheckCCDI, sheetname_list: list[str]) -> li
     """Extracts columns for dcf indexing of a given list sheetnames
     """
     logger = get_run_logger()
-    print(sheetname_list)
     list_dicts_future_objs =  extract_dcf_index_single_sheet.map(sheetname_list, CCDI_manifest=CCDI_manifest, logger=logger)
     return [i.result() for i in list_dicts_future_objs]
 

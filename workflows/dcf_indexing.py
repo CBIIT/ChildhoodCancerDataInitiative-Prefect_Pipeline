@@ -55,11 +55,13 @@ def dcf_index_manifest(
     # Convert combined_dict into a dataframe
     # add acl and authz
     combined_df = pd.DataFrame(combined_dict)
+    logger.info(f"Number of objects in total: {combined_df.shape[0]}")
+    combined_df.drop_duplicates(inplace=True, ignore_index=True)
+    logger.info(f"Number of objects in total after removing duplicates: {combined_df.shape[0]}")
     combined_df["acl"] = acl
     combined_df["authz"] = authz
     col_order = ["GUID", "md5", "size", "acl", "authz", "urls"]
     combined_df = combined_df[col_order]
-    logger.info(f"Number of objects in total: {combined_df.shape[0]}")
 
     # save df to tsv and upload to bucket
     output_filename = "dcf_index_" + study_accession + "_" + current_time + ".tsv"

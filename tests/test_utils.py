@@ -1,5 +1,7 @@
 import os
 import sys
+import pandas as pd
+import numpy as np
 import pytest
 import mock
 from unittest.mock import MagicMock
@@ -11,6 +13,8 @@ from src.utils import (
     list_to_chunks,
     get_ccdi_latest_release,
     calculate_single_size_task,
+    extract_dcf_index_single_sheet,
+    combine_dcf_dicts,
 )
 
 
@@ -43,6 +47,46 @@ def fake_tags_api_return():
 @pytest.fixture
 def my_ccdi_tags():
     return CCDI_Tags()
+
+
+@pytest.fixture
+def fake_sheet_df():
+    return_df = pd.DataFrame(
+        {
+            "type": ["sequencing_file", "sequencing_file", "sequencing_file"],
+            "file_size": ["123", "456", "789"],
+            "md5sum": [
+                "cdfe3bc245cfc8f2d8bc48a806acca83",
+                "930e205602c67442ebfdce3969967273",
+                "37a315b5210116fa8717f5461b9f1d9a",
+            ],
+            "dcf_indexd_guid": [
+                "dg.4DFC/guid1",
+                "dg.4DFC/guid2",
+                "dg.4DFC/guid3",
+            ],
+            "file_url_in_cds": [
+                "s3://some-bucket/testfolder/file1.tsv",
+                "s3://some-bucket/testfolder/file2.tsv",
+                "s3://some-bucket/testfolder/file3.tsv",
+            ],
+        }
+    )
+    return return_df
+
+
+@pytest.fixture
+def empty_sheet_df():
+    return_df = pd.DataFrame(
+        {
+            "type": ["sequencing_file"],
+            "file_size": [np.nan],
+            "md5sum": [np.nan],
+            "dcf_indexd_guid": [np.nan],
+            "file_url_in_cds": [np.nan],
+        }
+    )
+    return return_df
 
 
 def test_CCDI_Tags_init(my_ccdi_tags):
@@ -91,9 +135,7 @@ def test_CCDI_Tags_if_tag_exists_false(
 
 
 @mock.patch("src.utils.requests", autospec=True)
-def test_CCDI_Tags_get_tag_element(
-    mock_requests, my_ccdi_tags, fake_tags_api_return
-):
+def test_CCDI_Tags_get_tag_element(mock_requests, my_ccdi_tags, fake_tags_api_return):
     request_return = mock_requests.get.return_value
     request_return.json.return_value = fake_tags_api_return
     tag_element = my_ccdi_tags.get_tag_element(tag="0.1.0")
@@ -101,9 +143,9 @@ def test_CCDI_Tags_get_tag_element(
 
 
 def test_list_to_chunks():
-    test_list = [1,2,3,4,5]
-    chunked_list =  list_to_chunks(mylist=test_list, chunk_len=2)
-    assert chunked_list[0] == [1,2]
+    test_list = [1, 2, 3, 4, 5]
+    chunked_list = list_to_chunks(mylist=test_list, chunk_len=2)
+    assert chunked_list[0] == [1, 2]
     assert chunked_list[2] == [5]
 
 
@@ -116,8 +158,9 @@ def test_get_ccdi_latest_release(mock_requests):
         "created_at": "2023-03-09T13:22:57Z",
         "published_at": "2023-03-09T13:22:50Z",
     }
-    latest_tag =  get_ccdi_latest_release()
+    latest_tag = get_ccdi_latest_release()
     assert latest_tag == "9.9.9"
+
 
 @mock.patch("src.utils.set_s3_session_client", autospec=True)
 def test_calculate_single_size_task(mock_client):
@@ -128,5 +171,40 @@ def test_calculate_single_size_task(mock_client):
         "ContentType": "string",
         "Metadata": {"string": "string"},
     }
-    object_size = calculate_single_size_task.fn(s3uri="s3://test-bucket/test_folder/test_file.txt", s3_client=s3_client)
+    object_size = calculate_single_size_task.fn(
+        s3uri="s3://test-bucket/test_folder/test_file.txt", s3_client=s3_client
+    )
     assert object_size == "123"
+
+
+def test_extract_dcf_index_single_sheet(fake_sheet_df):
+    test_manifest = MagicMock()
+    test_logger = MagicMock()
+    test_manifest.read_sheet_na.return_value = fake_sheet_df
+    test_dict = extract_dcf_index_single_sheet.fn(
+        CCDI_manifest=test_manifest, sheetname="anysheet", logger=test_logger
+    )
+    assert test_dict["GUID"][1] == "dg.4DFC/guid2"
+    assert "size" in test_dict.keys()
+    assert test_dict["urls"][2] == "s3://some-bucket/testfolder/file3.tsv"
+
+
+def test_extract_dcf_index_single_sheet(empty_sheet_df):
+    test_manifest = MagicMock()
+    test_logger = MagicMock()
+    test_manifest.read_sheet_na.return_value = empty_sheet_df
+    test_dict = extract_dcf_index_single_sheet.fn(
+        CCDI_manifest=test_manifest, sheetname="anysheet", logger=test_logger
+    )
+    assert len(test_dict["GUID"]) == 0
+    assert "size" in test_dict.keys()
+    assert test_dict["size"] == []
+
+
+def test_combine_dcf_dicts():
+    dict1 = {"GUID": [1,2], "md5": [3,4], "urls": [5,6], "size": [7,8]}
+    dict2 = {"GUID": [10], "md5": [11], "urls": [12], "size": [13]}
+    combined_df = combine_dcf_dicts.fn([dict1, dict2])
+    assert combined_df["GUID"] == [1,2,10]
+    assert len(combined_df["urls"]) == 3
+    assert len(combined_df.keys()) == 4 
