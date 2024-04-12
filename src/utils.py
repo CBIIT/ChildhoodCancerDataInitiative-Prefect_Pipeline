@@ -1107,6 +1107,7 @@ def extract_dcf_index(CCDI_manifest: CheckCCDI, sheetname_list: list[str]) -> li
     """Extracts columns for dcf indexing of a given list sheetnames
     """
     #logger = get_run_logger()
+    print(sheetname_list)
     list_dicts_future_objs =  extract_dcf_index_single_sheet.map(sheetname_list, CCDI_manifest=CCDI_manifest)
     return [i.result() for i in list_dicts_future_objs]
 
