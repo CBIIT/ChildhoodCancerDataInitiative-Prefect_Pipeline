@@ -30,6 +30,7 @@ from urllib.parse import urlparse
 
 ExcelFile = TypeVar("ExcelFile")
 DataFrame = TypeVar("DataFrame")
+CheckCCDI = TypeVar("CheckCCDI")
 
 
 @dataclass
@@ -1103,4 +1104,57 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     size_value_list = calculate_single_size_task.map(s3uri_list, s3_client)
     s3_client.close()
     return [i.result() for i in size_value_list]
+
+  
+@task(
+    name="Extract one sheet dcf index info",
+    log_prints=True,
+)
+def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI, logger) -> dict:
+    """Extracts columns for dcf indexing of a single sheet
+
+    columns: ["file_size", "md5sum", "file_url_in_cds", "dcf_indexd_guid"]
+    The task returns a dictionary of lists
+    """
+    logger.info(f"Reading sheet {sheetname}")
+    sheet_df = CCDI_manifest.read_sheet_na(sheetname=sheetname)
+    sheet_df.drop(columns=["type"], inplace=True)
+    sheet_df.dropna(how="all", inplace=True)
+    logger.info(f"Count of objects found in sheet {sheetname}: {sheet_df.shape[0]}")
+    return_dict = {"GUID":[], "md5":[],"urls":[], "size": []}
+    if sheet_df.empty:
+        return return_dict
+    else:
+        md5sum_list =  sheet_df["md5sum"].tolist()
+        return_dict["md5"] = md5sum_list
+        file_url_list = sheet_df["file_url_in_cds"].tolist()
+        return_dict["urls"] = file_url_list
+        size_list = sheet_df["file_size"].tolist()
+        return_dict["size"] =  size_list
+        guid_list = sheet_df["dcf_indexd_guid"].tolist()
+        return_dict["GUID"] = guid_list
+        return return_dict
+
+
+@flow(
+    task_runner=ConcurrentTaskRunner(),
+    name="Extract all sheets dcf index info",
+    log_prints=True,
+)
+def extract_dcf_index(CCDI_manifest: CheckCCDI, sheetname_list: list[str]) -> list[dict]:
+    """Extracts columns for dcf indexing of a given list sheetnames
+    """
+    logger = get_run_logger()
+    list_dicts_future_objs =  extract_dcf_index_single_sheet.map(sheetname_list, CCDI_manifest=CCDI_manifest, logger=logger)
+    return [i.result() for i in list_dicts_future_objs]
+
+
+@task(
+    name =  "Combine dcf index dicts"
+)
+def combine_dcf_dicts(list_dicts:list[dict]) -> dict:
+    combined_dict = {"GUID": [], "md5": [], "urls": [], "size": []}
+    for i_dict in list_dicts:
+        combined_dict =  {key: value + i_dict[key] for key, value in combined_dict.items()}
+    return combined_dict
 
