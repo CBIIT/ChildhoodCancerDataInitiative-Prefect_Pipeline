@@ -23,6 +23,7 @@ from zipfile import ZipFile
 from shutil import copy
 import json
 from botocore.exceptions import ClientError
+from prefect_github import GitHubCredentials
 import hashlib
 from urllib.parse import urlparse
 
@@ -57,7 +58,9 @@ class CCDI_Tags(Task):
         self.tags_api = "https://api.github.com/repos/CBIIT/ccdi-model/tags"
 
     def get_tags(self) -> List[Dict]:
-        api_re = requests.get(self.tags_api)
+        github_token =  get_github_token()
+        headers = {"Authorization": "token " + github_token}
+        api_re = requests.get(self.tags_api, headers=headers)
         tags_list = api_re.json()
         return tags_list
 
@@ -136,15 +139,22 @@ class CCDI_Tags(Task):
 
 def get_ccdi_latest_release() -> str:
     latest_url = GithubAPTendpoint.ccdi_model_recent_release
-    response = requests.get(latest_url)
-    tag_name = response.json()["tag_name"]
+    github_token =  get_github_token()
+    headers = {"Authorization": "token " + github_token}
+    response = requests.get(latest_url, headers=headers)
+    if "tag_name" in response.json().keys():
+        tag_name = response.json()["tag_name"]
+    else:
+        tag_name = "unknown"
     return tag_name
 
 
 @task
 def dl_sra_template() -> None:
     sra_filename = "phsXXXXXX.xlsx"
-    r = requests.get(GithubAPTendpoint.sra_template)
+    github_token = get_github_token()
+    headers = {"Authorization": "token " + github_token}
+    r = requests.get(GithubAPTendpoint.sra_template, headers=headers)
     f = open(sra_filename, "wb")
     f.write(r.content)
     return sra_filename
@@ -172,11 +182,18 @@ def check_ccdi_version(ccdi_manifest: str) -> str:
     return manifest_version
 
 
-@task
+@task(log_prints=True)
 def dl_ccdi_template() -> None:
     """Downloads the latest version of CCDI manifest"""
-    manifest_page_response = requests.get(GithubAPTendpoint.ccdi_model_manifest)
+    github_token = get_github_token()
+    headers = {"Authorization": "token " + github_token}
+    manifest_page_response = requests.get(GithubAPTendpoint.ccdi_model_manifest, headers=headers)
     manifest_dict_list = manifest_page_response.json()
+    if not isinstance(manifest_dict_list, list):
+        print("Github API return was not a list: " + str(manifest_dict_list))
+        raise
+    else:
+        pass
     manifest_names = [i["name"] for i in manifest_dict_list]
     latest_release = get_ccdi_latest_release()
     # There should be only one match in the list comprehension below
@@ -187,8 +204,8 @@ def dl_ccdi_template() -> None:
         and re.search(r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\.xlsx$", i)
     ]
     manifest_response = [j for j in manifest_dict_list if j["name"] == manifest[0]]
-    manifest_dl_url = requests.get(manifest_response[0]["url"]).json()["download_url"]
-    manifest_dl_res = requests.get(manifest_dl_url)
+    manifest_dl_url = requests.get(manifest_response[0]["url"], headers=headers).json()["download_url"]
+    manifest_dl_res = requests.get(manifest_dl_url, headers=headers)
     manifest_file = open(manifest[0], "wb")
     manifest_file.write(manifest_dl_res.content)
     return manifest[0]
@@ -957,6 +974,25 @@ class CheckCCDI:
         return file_node_list_uniq
 
 
+
+@flow(log_prints=True)
+def get_github_credentials()-> None:
+    runner_logger = get_run_logger()
+    github_credentials_block = GitHubCredentials.load("fnlccdidatacuration")
+    token_value = github_credentials_block.token.get_secret_value()
+    headers = {"Authorization": "token " + token_value}
+    # try to get api return
+    response = requests.get(GithubAPTendpoint.ccdi_model_recent_release, headers=headers)
+    runner_logger.info(json.dumps(response.json(), indent=4))
+    return None
+
+
+def get_github_token() -> str:
+    github_credentials_block = GitHubCredentials.load("fnlccdidatacuration")
+    token_value = github_credentials_block.token.get_secret_value()
+    return token_value
+
+  
 def list_to_chunks(mylist: list, chunk_len: int) -> list:
     """Break a list into a list of chunks"""
     chunks = [
@@ -1069,7 +1105,7 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     s3_client.close()
     return [i.result() for i in size_value_list]
 
-
+  
 @task(
     name="Extract one sheet dcf index info",
     log_prints=True,
@@ -1121,3 +1157,4 @@ def combine_dcf_dicts(list_dicts:list[dict]) -> dict:
     for i_dict in list_dicts:
         combined_dict =  {key: value + i_dict[key] for key, value in combined_dict.items()}
     return combined_dict
+

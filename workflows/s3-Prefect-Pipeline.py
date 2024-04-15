@@ -99,18 +99,23 @@ def runner(
         else:
             pass
     else:
-        if manifest_version == template_version:
-            output_folder = output_folder + "(OLD_VERSION_v" + manifest_version + ")"
-            runner_logger.error(
-                f"An old version(v{manifest_version}) of CCDI manifest and CCDI template were provided. New version of CCDI template v{latest_manifest_version} is available"
-            )
+        if latest_manifest_version == "unknown":
+            # This might happen when the github API limit being reached and we failed to get latest manifest version
+            # the get_ccdi_latest_release() will return "unknown"
+            runner_logger.error("Fail to retrieve latest manifest version through GitHub API likely due to API rate limit being reached. The workflow will continue without this information")
         else:
-            runner_logger.error(
-                f"An old version of CCDI manifest was provided(v{manifest_version}). And no matching CCDI template was provided. Please provide a matching CCDI template in the same version of the manifest or update the CCDI manifest to the latest version v{latest_manifest_version}"
-            )
-            raise ValueError(
-                "CCDI manifest version is older version and doesn't match to the version of provided CCDI template"
-            )
+            if manifest_version == template_version:
+                output_folder = output_folder + "(OLD_VERSION_v" + manifest_version + ")"
+                runner_logger.error(
+                    f"An old version(v{manifest_version}) of CCDI manifest and CCDI template were provided. New version of CCDI template v{latest_manifest_version} is available"
+                )
+            else:
+                runner_logger.error(
+                    f"An old version of CCDI manifest was provided(v{manifest_version}). And no matching CCDI template was provided. Please provide a matching CCDI template in the same version of the manifest or update the CCDI manifest to the latest version v{latest_manifest_version}"
+                )
+                raise ValueError(
+                    "CCDI manifest version is older version and doesn't match to the version of provided CCDI template"
+                )
 
     # download SRA template if not provided
     if sra_template_path != "path_to/sra_template/in/s3/bucket":
@@ -221,7 +226,7 @@ def runner(
             wf_step="ValidationRy",
             sub_folder="2_ValidationRy_output",
         )
-        
+
         # run CCDI to SRA
         runner_logger.info("Running CCDI to SRA submission file flow")
         try:
@@ -245,7 +250,6 @@ def runner(
             wf_step="CCDI-to-SRA",
             sub_folder="3_SRA_submisison_output",
         )
-
 
         # run CCDI to dbGaP
         runner_logger.info("Running CCDI to dbGaP submission file flow")
