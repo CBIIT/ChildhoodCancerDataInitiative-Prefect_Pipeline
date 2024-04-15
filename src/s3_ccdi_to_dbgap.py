@@ -332,13 +332,13 @@ class Pre_dbGaP_combine(Task):
         )
 
         pre_subject_consent_df = pd.read_csv(
-            os.path.join(self.pre_sub_dir, pre_subject_consent), sep="\t", header=0
+            os.path.join(self.pre_sub_dir, pre_subject_consent), sep="\t", header=0, dtype=str
         )
         pre_subject_sample_df = pd.read_csv(
-            os.path.join(self.pre_sub_dir, pre_subject_sample), sep="\t", header=0
+            os.path.join(self.pre_sub_dir, pre_subject_sample), sep="\t", header=0, dtype=str
         )
         pre_sample_tumor_df = pd.read_csv(
-            os.path.join(self.pre_sub_dir, pre_sample_tumor), sep="\t", header=0
+            os.path.join(self.pre_sub_dir, pre_sample_tumor), sep="\t", header=0, dtype=str
         )
 
         combined_subject_consent = pd.concat(

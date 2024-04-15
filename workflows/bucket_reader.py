@@ -27,6 +27,9 @@ def reader(buckets: list[str], runner: str):
     # create a logging object
     runner_logger = get_run_logger()
 
+    # remove default items from buckets list
+    buckets =  [i for i in buckets if i not in ["my-first-bucket", "my-second-bucket/subdir"]]
+    
     md_str = ""
 
     for bucket in buckets:
