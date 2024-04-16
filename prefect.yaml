@@ -346,7 +346,7 @@ deployments:
     version: null
     tags: ["TEST"]
     description: null
-    entrypoint: workflows/guid_checker.py:runner
+    entrypoint: workflows/guid_checker.py:guid_checker_runner
     schedule: null
 
     # flow-specific parameters

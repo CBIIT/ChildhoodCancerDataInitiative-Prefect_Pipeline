@@ -215,7 +215,7 @@ def guid_checker(file_path: str):  # removed profile
 
 
 @flow(
-    name="runner",
+    name="guid_checker_runner",
     log_prints=True,
     flow_run_name="{runner}_" + f"{get_time()}",
 )
