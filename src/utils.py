@@ -317,7 +317,7 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@task
+@task(log_prints=True)
 def folder_dl(bucket: str, remote_folder: str) -> None:
     """Downloads a remote direcotry folder from s3
     bucket to local. it generates a folder that follows the
@@ -331,7 +331,11 @@ def folder_dl(bucket: str, remote_folder: str) -> None:
     for obj in bucket_obj.objects.filter(Prefix=remote_folder):
         if not os.path.exists(os.path.dirname(obj.key)):
             os.makedirs(os.path.dirname(obj.key))
-        bucket_obj.download_file(obj.key, obj.key)
+        try:
+            bucket_obj.download_file(obj.key, obj.key)
+        except NotADirectoryError as err:
+            err_str = repr(err)
+            print(f"Error downloading folder {remote_folder} from bucket {bucket}: {err_str}")
     return None
 
 
