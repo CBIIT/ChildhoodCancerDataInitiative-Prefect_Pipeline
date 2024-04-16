@@ -219,7 +219,7 @@ def guid_checker(file_path: str):  # removed profile
     log_prints=True,
     flow_run_name="{runner}_" + f"{get_time()}",
 )
-def runner(
+def guid_checker_runner(
     bucket: str,
     file_path: str,
     runner: str,
