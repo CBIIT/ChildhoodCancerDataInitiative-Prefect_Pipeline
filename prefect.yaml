@@ -341,3 +341,22 @@ deployments:
       name: ccdi-curation-32gb
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST_ccdi-guid-checker
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/guid_checker.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
+      runner: "your_uniq_id"
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-2gb
+      work_queue_name: null
+      job_variables: {}
