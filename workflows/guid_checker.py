@@ -3,22 +3,12 @@ from prefect import flow, get_run_logger
 import os
 import time
 import pandas as pd
-import numpy as np
-import re
 import warnings
 from datetime import date
-from src.utils import set_s3_session_client, get_time
-from botocore.exceptions import ClientError
-import openpyxl
 from openpyxl.utils.dataframe import dataframe_to_rows
-import uuid
 from shutil import copy
+from src.utils import get_time, file_dl, file_ul
 
-
-md5sum = '2b2cc12bb6a0a1176738fbb63329496e'
-size=102458
-
-file_path="SMALL_TEST_phs002517_CHOP_CCDI_Submission_v1.7.2_X01_20240315_v2_CatchERR20240330.xlsx"
 
 @flow(
     name="make_requests",
@@ -37,6 +27,7 @@ def make_request(url):
         print(f"Error: {e}. Retrying...")
         return None
 
+
 @flow(
     name="pull_guids",
     log_prints=True,
@@ -47,8 +38,8 @@ def pull_guids(df):
     # Iterate over the entries dataframe
     for index, row in df.iterrows():
         # Extract hash and size from the dataframe
-        hash_value = row['md5sum']
-        size = row['file_size']
+        hash_value = row["md5sum"]
+        size = row["file_size"]
 
         # Send API request with query parameters
         # Define the API endpoint URL
@@ -63,13 +54,13 @@ def pull_guids(df):
             data = response.json()
             # Extract the relevant information from the response and append to results
 
-            if len(data['records']) > 1:
-                if data['records'][0]['acl'] != None:
-                    if len(data['records'])>1:
-                        for pos in range(len(data['records'])):
-                            if data['records'][pos]['file_name'] == None:
-                                guid= data['records'][pos]['did']
-                                df.at[index,'dcf_indexd_guid']=guid
+            if len(data["records"]) > 1:
+                if data["records"][0]["acl"] != None:
+                    if len(data["records"]) > 1:
+                        for pos in range(len(data["records"])):
+                            if data["records"][pos]["file_name"] == None:
+                                guid = data["records"][pos]["did"]
+                                df.at[index, "dcf_indexd_guid"] = guid
                             else:
                                 pass
                     else:
@@ -77,18 +68,19 @@ def pull_guids(df):
                 else:
                     pass
             else:
-                    pass
+                pass
         else:
-            print(f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'")
+            print(
+                f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'"
+            )
 
     return df
 
 
-
 @flow(
-    name="CCDI_GUIDchecker",
+    name="guid_checker",
     log_prints=True,
-    flow_run_name="CCDI_GUIDchecker_" + f"{get_time()}",
+    flow_run_name="guid_checker_" + f"{get_time()}",
 )
 def guid_checker(file_path: str):  # removed profile
     guidcheck_logger = get_run_logger()
@@ -127,8 +119,6 @@ def guid_checker(file_path: str):  # removed profile
         # Read in excel file
         warnings.simplefilter(action="ignore", category=UserWarning)
         return pd.read_excel(file_path, sheet, dtype="string")
-
-
 
     ##############
     #
@@ -176,12 +166,11 @@ def guid_checker(file_path: str):  # removed profile
     # determine nodes again
     dict_nodes = set(list(meta_dfs.keys()))
 
-    meta_dfs['sequencing_file']['dcf_indexd_guid']
+    meta_dfs["sequencing_file"]["dcf_indexd_guid"]
 
     for node in dict_nodes:
         if "file_url_in_cds" in meta_dfs[node].columns:
-            meta_dfs[node]=pull_guids(meta_dfs[node])
-
+            meta_dfs[node] = pull_guids(meta_dfs[node])
 
     def reorder_dataframe(dataframe, column_list: list, sheet_name: str, logger):
         reordered_df = pd.DataFrame(columns=column_list)
@@ -221,3 +210,40 @@ def guid_checker(file_path: str):  # removed profile
     guidcheck_logger.info(
         f"Process Complete. The output file can be found here: {file_dir_path}/{checker_out_file}"
     )
+
+    return checker_out_file
+
+
+@flow(
+    name="runner",
+    log_prints=True,
+    flow_run_name="{runner}_" + f"{get_time()}",
+)
+def runner(
+    bucket: str,
+    file_path: str,
+    runner: str,
+):
+
+    # generate output folder name
+    output_folder = runner + "/guid_checker_outputs_" + get_time()
+
+    # download the manifest
+    file_dl(bucket, file_path)
+
+    checker_out_file = guid_checker(file_path)
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=checker_out_file,
+    )
+
+
+if __name__ == "__main__":
+    bucket = "my-source-bucket"
+    # test new version manifest and latest version template
+    file_path = "inputs/test_file.xlsx"
+
+    runner(bucket=bucket, file_path=file_path, runner="svb")
