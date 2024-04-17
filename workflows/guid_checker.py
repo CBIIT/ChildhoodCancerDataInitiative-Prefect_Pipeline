@@ -231,6 +231,8 @@ def guid_checker_runner(
     # download the manifest
     file_dl(bucket, file_path)
 
+    file_path=os.path.basename(file_path)
+
     checker_out_file = guid_checker(file_path)
 
     file_ul(
@@ -246,4 +248,4 @@ if __name__ == "__main__":
     # test new version manifest and latest version template
     file_path = "inputs/test_file.xlsx"
 
-    runner(bucket=bucket, file_path=file_path, runner="svb")
+    guid_checker_runner(bucket=bucket, file_path=file_path, runner="svb")
