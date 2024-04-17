@@ -113,8 +113,6 @@ def guid_checker(file_path: str):  # removed profile
     #
     ##############
 
-    guidcheck_logger.info("Reading CCDI template file")
-
     def read_xlsx(file_path: str, sheet: str):
         # Read in excel file
         warnings.simplefilter(action="ignore", category=UserWarning)
@@ -154,6 +152,8 @@ def guid_checker(file_path: str):  # removed profile
     #
     ##############
 
+    guidcheck_logger.info("Removing empty CCDI Manifest file tabs")
+
     for node in dict_nodes:
         # see if the tab contain any data
         test_df = meta_dfs[node]
@@ -166,7 +166,7 @@ def guid_checker(file_path: str):  # removed profile
     # determine nodes again
     dict_nodes = set(list(meta_dfs.keys()))
 
-    meta_dfs["sequencing_file"]["dcf_indexd_guid"]
+    guidcheck_logger.info("Calling Indexd API")
 
     for node in dict_nodes:
         if "file_url_in_cds" in meta_dfs[node].columns:
