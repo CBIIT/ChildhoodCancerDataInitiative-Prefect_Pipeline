@@ -40,6 +40,7 @@ def pull_guids(row):
     # Extract hash and size from the dataframe
     hash_value = row["md5sum"]
     size = row["file_size"]
+    guid = row['dcf_indexd_guid']
 
     guidcheck_logger.info(f"Making API call for {hash_value} of size: {size}.")
 
