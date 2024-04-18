@@ -1,5 +1,5 @@
 import requests
-from prefect import flow, get_run_logger
+from prefect import flow, task, get_run_logger
 import os
 import time
 import pandas as pd
@@ -10,10 +10,10 @@ from shutil import copy
 from src.utils import get_time, file_dl, file_ul
 
 
-@flow(
+@task(
     name="make_requests",
     log_prints=True,
-    flow_run_name="make_requests_" + f"{get_time()}",
+    task_run_name="make_requests_" + f"{get_time()}",
 )
 def make_request(url):
     try:
