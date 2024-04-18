@@ -49,7 +49,7 @@ def pull_guids(row):
     api_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{hash_value}&size={size}"
     response = make_request(api_url)
 
-    time.sleep(1)
+    time.sleep(1.5)
 
     # Check if the request was successful
     if response.status_code == 200:
