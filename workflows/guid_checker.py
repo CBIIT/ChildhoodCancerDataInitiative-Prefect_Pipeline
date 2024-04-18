@@ -34,12 +34,14 @@ def make_request(url):
     flow_run_name="pull_guids_" + f"{get_time()}",
 )
 def pull_guids(df):
-
+    guidcheck_logger = get_run_logger()
     # Iterate over the entries dataframe
     for index, row in df.iterrows():
         # Extract hash and size from the dataframe
         hash_value = row["md5sum"]
         size = row["file_size"]
+
+        guidcheck_logger.info(f"Making API call #{index}, for {hash_value} of size {size}.")
 
         # Send API request with query parameters
         # Define the API endpoint URL
