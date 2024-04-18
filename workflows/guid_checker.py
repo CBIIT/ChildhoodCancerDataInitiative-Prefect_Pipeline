@@ -33,50 +33,49 @@ def make_request(url):
     log_prints=True,
     flow_run_name="pull_guids_" + f"{get_time()}",
 )
-def pull_guids(df):
+def pull_guids(row):
     guidcheck_logger = get_run_logger()
     # Iterate over the entries dataframe
-    for index, row in df.iterrows():
-        # Extract hash and size from the dataframe
-        hash_value = row["md5sum"]
-        size = row["file_size"]
+    
+    # Extract hash and size from the dataframe
+    hash_value = row["md5sum"]
+    size = row["file_size"]
 
-        guidcheck_logger.info(f"Making API call #{index}, for {hash_value} of size {size}.")
+    guidcheck_logger.info(f"Making API call for {hash_value} of size: {size}.")
 
-        # Send API request with query parameters
-        # Define the API endpoint URL
-        api_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{hash_value}&size={size}"
-        response = make_request(api_url)
+    # Send API request with query parameters
+    # Define the API endpoint URL
+    api_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{hash_value}&size={size}"
+    response = make_request(api_url)
 
-        time.sleep(2)
+    time.sleep(1)
 
-        # Check if the request was successful
-        if response.status_code == 200:
-            # Parse the JSON response
-            data = response.json()
-            # Extract the relevant information from the response and append to results
+    # Check if the request was successful
+    if response.status_code == 200:
+        # Parse the JSON response
+        data = response.json()
+        # Extract the relevant information from the response and append to results
 
-            if len(data["records"]) > 1:
-                if data["records"][0]["acl"] != None:
-                    if len(data["records"]) > 1:
-                        for pos in range(len(data["records"])):
-                            if data["records"][pos]["file_name"] == None:
-                                guid = data["records"][pos]["did"]
-                                df.at[index, "dcf_indexd_guid"] = guid
-                            else:
-                                pass
-                    else:
-                        pass
+        if len(data["records"]) > 1:
+            if data["records"][0]["acl"] != None:
+                if len(data["records"]) > 1:
+                    for pos in range(len(data["records"])):
+                        if data["records"][pos]["file_name"] == None:
+                            guid = data["records"][pos]["did"]
+                        else:
+                            pass
                 else:
                     pass
             else:
                 pass
         else:
-            print(
-                f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'"
-            )
+            pass
+    else:
+        print(
+            f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'"
+        )
 
-    return df
+    return guid
 
 
 @flow(
@@ -172,7 +171,9 @@ def guid_checker(file_path: str):  # removed profile
 
     for node in dict_nodes:
         if "file_url_in_cds" in meta_dfs[node].columns:
-            meta_dfs[node] = pull_guids(meta_dfs[node])
+            df = meta_dfs[node]
+            df['dcf_indexd_guid'] = df.apply(pull_guids, axis=1)
+            meta_dfs[node]=df
 
     def reorder_dataframe(dataframe, column_list: list, sheet_name: str, logger):
         reordered_df = pd.DataFrame(columns=column_list)
