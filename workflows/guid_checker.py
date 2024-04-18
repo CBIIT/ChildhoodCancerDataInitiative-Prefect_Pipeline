@@ -52,7 +52,7 @@ def pull_guids(row):
     time.sleep(1.5)
 
     # Check if the request was successful
-    if response.status_code == 200:
+    if response is not None or response.status_code == 200:
         # Parse the JSON response
         data = response.json()
         # Extract the relevant information from the response and append to results
