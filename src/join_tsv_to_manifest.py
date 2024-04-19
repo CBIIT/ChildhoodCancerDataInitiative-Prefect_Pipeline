@@ -140,7 +140,7 @@ def join_tsv_to_manifest_single_study(
         for i in range(len(id_cols)):
             i_col = id_cols[i]
             parent_i_col = parent_id_cols[i]
-            tsv_df[parent_i_col] = tsv_df[i_col]
+            tsv_df[parent_i_col] = [i.split("::")[1] for i in tsv_df[i_col].tolist()]
             tsv_df[i_col] = ""
         # remove the content of col "id"
         tsv_df["id"] = ""
