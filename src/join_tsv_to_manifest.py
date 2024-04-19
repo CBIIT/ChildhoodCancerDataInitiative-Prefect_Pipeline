@@ -101,7 +101,7 @@ def join_tsv_to_manifest_single_study(
     )
     copy(manifest_path, output_file_name)
 
-    output_file = pd.ExcelFile(output_file_name)
+    #output_file = pd.ExcelFile(output_file_name)
 
     for tsv_file in file_list:
         logger.info(f"working on tsv file: {tsv_file}")
@@ -115,7 +115,7 @@ def join_tsv_to_manifest_single_study(
         logger.info(f"tsv file node type: {node_type}")
         # read the node sheet in ccdi manifest
         manifest_df = pd.read_excel(
-            output_file,
+            output_file_name,
             sheet_name=node_type,
             na_values=["NA", "na", "N/A", "n/a", ""],
             dtype="string",
