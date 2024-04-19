@@ -153,7 +153,6 @@ def join_tsv_to_manifest_single_study(
         ) as writer:
             tsv_df.to_excel(writer, sheet_name= node_type, index=False, header=False, startrow=1)
 
-    output_file.close()
     return output_file_name
 
 
