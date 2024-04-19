@@ -101,7 +101,7 @@ def join_tsv_to_manifest_single_study(
     )
     copy(manifest_path, output_file_name)
 
-    #output_file = pd.ExcelFile(output_file_name)
+    # output_file = pd.ExcelFile(output_file_name)
 
     for tsv_file in file_list:
         logger.info(f"working on tsv file: {tsv_file}")
@@ -140,7 +140,10 @@ def join_tsv_to_manifest_single_study(
         for i in range(len(id_cols)):
             i_col = id_cols[i]
             parent_i_col = parent_id_cols[i]
-            tsv_df[parent_i_col] = [i.split("::")[1] for i in tsv_df[i_col].tolist()]
+            tsv_df[parent_i_col] = [
+                i.split("::")[1] if isinstance(i, str) and "::" in i else i
+                for i in tsv_df[i_col].tolist()
+            ]
             tsv_df[i_col] = ""
         # remove the content of col "id"
         tsv_df["id"] = ""
@@ -165,4 +168,3 @@ def multi_studies_tsv_join(folder_path_list:list, manifest_path: str) -> list[st
     logger.info("Start creating manifest files concurrently")
     manifest_outputs = join_tsv_to_manifest_single_study.map(unpacked_folder_list, manifest_path)
     return [i.result() for i in manifest_outputs]
-
