@@ -105,8 +105,7 @@ def join_tsv_to_manifest_single_study(
 
     for tsv_file in file_list:
         logger.info(f"working on tsv file: {tsv_file}")
-        tsv_df = pd.read_csv(tsv_file, sep="\t", header=True)
-        # if "study" in tsv columns, drop the column
+        tsv_df = pd.read_csv(tsv_file, sep="\t")
         if "study" in tsv_df.columns:
             tsv_df.drop(columns=["study"], inplace=True)
         else:
