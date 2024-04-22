@@ -246,7 +246,7 @@ def guid_checker_runner(
 
     file_path = os.path.basename(file_path)
 
-    checker_out_file, file_logger_filename = guid_checker(file_path)
+    checker_out_file = guid_checker(file_path)
 
     file_ul(
         bucket=bucket,
