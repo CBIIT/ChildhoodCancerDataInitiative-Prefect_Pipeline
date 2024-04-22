@@ -141,8 +141,8 @@ def join_tsv_to_manifest_single_study(
             i_col = id_cols[i]
             parent_i_col = parent_id_cols[i]
             tsv_df[parent_i_col] = [
-                i.split("::")[1] if isinstance(i, str) and "::" in i else i
-                for i in tsv_df[i_col].tolist()
+                j.split("::")[1] if isinstance(j, str) and "::" in j else j
+                for j in tsv_df[i_col].tolist()
             ]
             tsv_df[i_col] = ""
         # remove the content of col "id"
