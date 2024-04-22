@@ -66,7 +66,6 @@ def run_file_remover():
         deletion_summary, deletion_counts_df = objects_deletion(
             manifest_file_path=manifest_file,
             delete_column_name=manifest_path_inputs.delete_column_name,
-            runner=manifest_path_inputs.runner,
         )
         logger.info(deletion_counts_df.to_markdown(index=False, tablefmt="rst"))
         logger.info(
@@ -114,7 +113,6 @@ def run_file_remover():
         manifest_file = create_matching_object_manifest(
             prod_bucket_path=no_manifest_path_inputs.prod_bucket_path,
             staging_bucket_path=no_manifest_path_inputs.staging_bucket_path,
-            runner=no_manifest_path_inputs.runner,
         )
         logger.info("Generated a manifest for objects deletion")
 
@@ -147,12 +145,11 @@ def run_file_remover():
             deletion_summary, deletion_counts_df = objects_deletion(
                 manifest_file_path=manifest_file,
                 delete_column_name="Staging_S3_URI",
-                runner=no_manifest_path_inputs.runner,
             )
+            logger.info(deletion_counts_df.to_markdown(index=False, tablefmt="rst"))
             logger.info(
-                deletion_counts_df.to_markdown(index=False, tablefmt="rst")
+                f"Objects deletion finished and a summary table has been generated {deletion_summary}"
             )
-            logger.info(f"Objects deletion finished and a summary table has been generated {deletion_summary}")
 
             # upload deletion_summary to bucket
             file_ul(
@@ -161,13 +158,16 @@ def run_file_remover():
                 sub_folder="",
                 newfile=deletion_summary,
             )
-            logger.info(f"Uploaded deletion summaru table {deletion_summary} to bucket {no_manifest_path_inputs.workflow_output_bucket} under folder {output_folder}")
+            logger.info(
+                f"Uploaded deletion summaru table {deletion_summary} to bucket {no_manifest_path_inputs.workflow_output_bucket} under folder {output_folder}"
+            )
             logger.info("File Remover workflow finished!")
         else:
             logger.info(
                 f"You chose not to proceed with deletion this time.\nYou can restart the flow whenever you're ready.\nManifest location: {no_manifest_path_inputs.workflow_output_bucket}/{output_folder}/{manifest_file}"
             )
             logger.info("File Remover workflow finished!")
+
 
 if __name__ == "__main__":
     run_file_remover()
