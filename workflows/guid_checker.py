@@ -54,7 +54,7 @@ def pull_guids(row):
 
     # Check if the request was successful
     if response is not None and response.status_code == 200:
-        with open(f"API_indexd_calls_{get_time()}.log", 'a') as logfile:
+        with open("API_indexd_calls.log", 'a') as logfile:
             logfile.write(
             f"Response {response.status_code} for {hash_value} of size: {size}."
         )
@@ -77,7 +77,7 @@ def pull_guids(row):
         else:
             pass
     else:
-        with open(f"API_indexd_calls_{get_time()}.log", 'a') as logfile:
+        with open("API_indexd_calls.log", 'a') as logfile:
             logfile.write(f"ERROR: no response for {hash_value} of size: {size}.")
         guidcheck_logger(
             f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'"
@@ -252,14 +252,14 @@ def guid_checker_runner(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
-        newfile=checker_out_file,
+        newfile=checker_out_file
     )
 
     file_ul(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
-        newfile=f"API_indexd_calls_{get_time()}.log",
+        newfile="API_indexd_calls.log"
     )
 
 
