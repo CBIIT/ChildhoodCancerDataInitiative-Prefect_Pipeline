@@ -35,9 +35,6 @@ def make_request(url):
 )
 def pull_guids(row):
     guidcheck_logger = get_run_logger()
-    file_logger = get_logger(loggername="Indexd_API_calls", log_level="info")
-    file_logger_filename = "Indexd_API_calls" + get_date() + ".log"
-    # Iterate over the entries dataframe
 
     # Extract hash and size from the dataframe
     hash_value = row["md5sum"]
@@ -57,7 +54,8 @@ def pull_guids(row):
 
     # Check if the request was successful
     if response is not None and response.status_code == 200:
-        file_logger.info(
+        with open(f"API_indexd_calls_{get_time()}.log", 'a') as logfile:
+            logfile.write(
             f"Response {response.status_code} for {hash_value} of size: {size}."
         )
         # Parse the JSON response
@@ -79,12 +77,15 @@ def pull_guids(row):
         else:
             pass
     else:
-        file_logger.info(f"ERROR: no response for {hash_value} of size: {size}.")
+        with open(f"API_indexd_calls_{get_time()}.log", 'a') as logfile:
+            logfile.write(f"ERROR: no response for {hash_value} of size: {size}.")
         guidcheck_logger(
             f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'"
         )
 
-    return guid, file_logger_filename
+    
+
+    return guid
 
 
 @flow(
@@ -223,7 +224,7 @@ def guid_checker(file_path: str):  # removed profile
         f"Process Complete. The output file can be found here: {file_dir_path}/{checker_out_file}"
     )
 
-    return checker_out_file
+    return checker_out_file, 
 
 
 @flow(
@@ -258,7 +259,7 @@ def guid_checker_runner(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
-        newfile=file_logger_filename,
+        newfile=f"API_indexd_calls_{get_time()}.log",
     )
 
 
