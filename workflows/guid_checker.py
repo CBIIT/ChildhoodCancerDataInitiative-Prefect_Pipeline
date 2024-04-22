@@ -35,7 +35,7 @@ def make_request(url):
 )
 def pull_guids(row):
     guidcheck_logger = get_run_logger()
-    file_logger = get_logger(loggername="Indexd_API_calls", log_levels="info")
+    file_logger = get_logger(loggername="Indexd_API_calls", log_level="info")
     file_logger_filename = "Indexd_API_calls" + get_date() + ".log"
     # Iterate over the entries dataframe
 
