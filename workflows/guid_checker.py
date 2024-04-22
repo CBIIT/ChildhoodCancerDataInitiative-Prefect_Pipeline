@@ -224,7 +224,7 @@ def guid_checker(file_path: str):  # removed profile
         f"Process Complete. The output file can be found here: {file_dir_path}/{checker_out_file}"
     )
 
-    return checker_out_file, 
+    return checker_out_file
 
 
 @flow(
