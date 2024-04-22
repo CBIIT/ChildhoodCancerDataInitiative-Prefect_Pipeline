@@ -376,10 +376,10 @@ def find_missing_objects(
 
 @flow
 def create_matching_object_manifest(
-    prod_bucket_path: str, staging_bucket_path: str, runner: str
+    prod_bucket_path: str, staging_bucket_path: str
 ) -> None:
     # get output name
-    output_manifest_name = runner + "_matching_objects_manifest_" + get_time() + ".tsv"
+    output_manifest_name = "matching_objects_manifest_" + get_time() + ".tsv"
 
     # create logger
     logger = get_run_logger()
@@ -593,7 +593,7 @@ def create_matching_object_manifest(
 
 
 @flow
-def objects_deletion(manifest_file_path: str, delete_column_name: str, runner: str):
+def objects_deletion(manifest_file_path: str, delete_column_name: str):
     logger = get_run_logger()
 
     # read manifest file
