@@ -275,9 +275,8 @@ def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
 def delete_objects_by_uri(uri_list, logger) -> None:
     s3_client = set_s3_session_client()
     delete_responses = delete_single_object_by_uri.map(uri_list, s3_client, logger)
-    delete_status_list = [i.result() for i in delete_responses]
     s3_client.close()
-    return delete_status_list
+    return [i.result() for i in delete_responses]
 
 
 @flow
