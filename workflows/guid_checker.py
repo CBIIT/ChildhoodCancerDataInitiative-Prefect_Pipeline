@@ -7,7 +7,7 @@ import warnings
 from datetime import date
 from openpyxl.utils.dataframe import dataframe_to_rows
 from shutil import copy
-from src.utils import get_time, file_dl, file_ul, get_logger, get_date
+from src.utils import get_time, file_dl, file_ul
 
 
 @task(
@@ -54,10 +54,10 @@ def pull_guids(row):
 
     # Check if the request was successful
     if response is not None and response.status_code == 200:
-        with open("API_indexd_calls.log", 'a') as logfile:
+        with open("API_indexd_calls.log", "a") as logfile:
             logfile.write(
-            f"Response {response.status_code} for {hash_value} of size: {size}."
-        )
+                f"Response {response.status_code} for {hash_value} of size: {size}.\n"
+            )
         # Parse the JSON response
         data = response.json()
         # Extract the relevant information from the response and append to results
@@ -77,13 +77,11 @@ def pull_guids(row):
         else:
             pass
     else:
-        with open("API_indexd_calls.log", 'a') as logfile:
-            logfile.write(f"ERROR: no response for {hash_value} of size: {size}.")
+        with open("API_indexd_calls.log", "a") as logfile:
+            logfile.write(f"ERROR: no response for {hash_value} of size: {size}.\n")
         guidcheck_logger(
             f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'"
         )
-
-    
 
     return guid
 
@@ -252,14 +250,14 @@ def guid_checker_runner(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
-        newfile=checker_out_file
+        newfile=checker_out_file,
     )
 
     file_ul(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
-        newfile="API_indexd_calls.log"
+        newfile="API_indexd_calls.log",
     )
 
 
