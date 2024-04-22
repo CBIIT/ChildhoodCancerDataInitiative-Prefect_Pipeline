@@ -7,7 +7,7 @@ import warnings
 from datetime import date
 from openpyxl.utils.dataframe import dataframe_to_rows
 from shutil import copy
-from src.utils import get_time, file_dl, file_ul
+from src.utils import get_time, file_dl, file_ul, get_logger, get_date
 
 
 @task(
@@ -35,24 +35,31 @@ def make_request(url):
 )
 def pull_guids(row):
     guidcheck_logger = get_run_logger()
+    file_logger = get_logger(loggername="Indexd_API_calls", log_levels="info")
+    file_logger_filename = "Indexd_API_calls" + get_date() + ".log"
     # Iterate over the entries dataframe
-    
+
     # Extract hash and size from the dataframe
     hash_value = row["md5sum"]
     size = row["file_size"]
-    guid = row['dcf_indexd_guid']
+    guid = row["dcf_indexd_guid"]
 
     guidcheck_logger.info(f"Making API call for {hash_value} of size: {size}.")
 
     # Send API request with query parameters
     # Define the API endpoint URL
-    api_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{hash_value}&size={size}"
+    api_url = (
+        f"https://nci-crdc.datacommons.io/index/index?hash=md5:{hash_value}&size={size}"
+    )
     response = make_request(api_url)
 
     time.sleep(1.5)
 
     # Check if the request was successful
-    if response is not None or response.status_code == 200:
+    if response is not None and response.status_code == 200:
+        file_logger.info(
+            f"Response {response.status_code} for {hash_value} of size: {size}."
+        )
         # Parse the JSON response
         data = response.json()
         # Extract the relevant information from the response and append to results
@@ -72,11 +79,12 @@ def pull_guids(row):
         else:
             pass
     else:
-        print(
+        file_logger.info(f"ERROR: no response for {hash_value} of size: {size}.")
+        guidcheck_logger(
             f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'"
         )
 
-    return guid
+    return guid, file_logger_filename
 
 
 @flow(
@@ -173,8 +181,8 @@ def guid_checker(file_path: str):  # removed profile
     for node in dict_nodes:
         if "file_url_in_cds" in meta_dfs[node].columns:
             df = meta_dfs[node]
-            df['dcf_indexd_guid'] = df.apply(pull_guids, axis=1)
-            meta_dfs[node]=df
+            df["dcf_indexd_guid"] = df.apply(pull_guids, axis=1)
+            meta_dfs[node] = df
 
     def reorder_dataframe(dataframe, column_list: list, sheet_name: str, logger):
         reordered_df = pd.DataFrame(columns=column_list)
@@ -235,15 +243,22 @@ def guid_checker_runner(
     # download the manifest
     file_dl(bucket, file_path)
 
-    file_path=os.path.basename(file_path)
+    file_path = os.path.basename(file_path)
 
-    checker_out_file = guid_checker(file_path)
+    checker_out_file, file_logger_filename = guid_checker(file_path)
 
     file_ul(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
         newfile=checker_out_file,
+    )
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=file_logger_filename,
     )
 
 
