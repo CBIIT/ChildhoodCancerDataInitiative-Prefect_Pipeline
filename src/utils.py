@@ -1,5 +1,6 @@
-from prefect import flow, task, Task
+from prefect import flow, task, Task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
+from prefect.task_runners import ConcurrentTaskRunner
 from dataclasses import dataclass, field
 from typing import List, TypeVar, Dict, Tuple
 from botocore.exceptions import ClientError
@@ -12,6 +13,7 @@ from pytz import timezone
 import logging
 import pandas as pd
 import boto3
+from botocore.config import Config
 import re
 import requests
 import typing
@@ -20,10 +22,16 @@ from urllib.request import urlopen
 from io import BytesIO
 from zipfile import ZipFile
 from shutil import copy
+import json
+from botocore.exceptions import ClientError
+from prefect_github import GitHubCredentials
+import hashlib
+from urllib.parse import urlparse
 
 
 ExcelFile = TypeVar("ExcelFile")
 DataFrame = TypeVar("DataFrame")
+CheckCCDI = TypeVar("CheckCCDI")
 
 
 @dataclass
@@ -51,7 +59,9 @@ class CCDI_Tags(Task):
         self.tags_api = "https://api.github.com/repos/CBIIT/ccdi-model/tags"
 
     def get_tags(self) -> List[Dict]:
-        api_re = requests.get(self.tags_api)
+        github_token =  get_github_token()
+        headers = {"Authorization": "token " + github_token}
+        api_re = requests.get(self.tags_api, headers=headers)
         tags_list = api_re.json()
         return tags_list
 
@@ -130,18 +140,26 @@ class CCDI_Tags(Task):
 
 def get_ccdi_latest_release() -> str:
     latest_url = GithubAPTendpoint.ccdi_model_recent_release
-    response = requests.get(latest_url)
-    tag_name = response.json()["tag_name"]
+    github_token =  get_github_token()
+    headers = {"Authorization": "token " + github_token}
+    response = requests.get(latest_url, headers=headers)
+    if "tag_name" in response.json().keys():
+        tag_name = response.json()["tag_name"]
+    else:
+        tag_name = "unknown"
     return tag_name
 
 
 @task
 def dl_sra_template() -> None:
     sra_filename = "phsXXXXXX.xlsx"
-    r = requests.get(GithubAPTendpoint.sra_template)
+    github_token = get_github_token()
+    headers = {"Authorization": "token " + github_token}
+    r = requests.get(GithubAPTendpoint.sra_template, headers=headers)
     f = open(sra_filename, "wb")
     f.write(r.content)
     return sra_filename
+
 
 @task
 def dl_file_from_url(file_endpoint: str) -> str:
@@ -150,6 +168,7 @@ def dl_file_from_url(file_endpoint: str) -> str:
     f = open(filename, "wb")
     f.write(r.content)
     return filename
+
 
 @task
 def check_ccdi_version(ccdi_manifest: str) -> str:
@@ -164,11 +183,18 @@ def check_ccdi_version(ccdi_manifest: str) -> str:
     return manifest_version
 
 
-@task
+@task(log_prints=True)
 def dl_ccdi_template() -> None:
     """Downloads the latest version of CCDI manifest"""
-    manifest_page_response = requests.get(GithubAPTendpoint.ccdi_model_manifest)
+    github_token = get_github_token()
+    headers = {"Authorization": "token " + github_token}
+    manifest_page_response = requests.get(GithubAPTendpoint.ccdi_model_manifest, headers=headers)
     manifest_dict_list = manifest_page_response.json()
+    if not isinstance(manifest_dict_list, list):
+        print("Github API return was not a list: " + str(manifest_dict_list))
+        raise
+    else:
+        pass
     manifest_names = [i["name"] for i in manifest_dict_list]
     latest_release = get_ccdi_latest_release()
     # There should be only one match in the list comprehension below
@@ -179,8 +205,8 @@ def dl_ccdi_template() -> None:
         and re.search(r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\.xlsx$", i)
     ]
     manifest_response = [j for j in manifest_dict_list if j["name"] == manifest[0]]
-    manifest_dl_url = requests.get(manifest_response[0]["url"]).json()["download_url"]
-    manifest_dl_res = requests.get(manifest_dl_url)
+    manifest_dl_url = requests.get(manifest_response[0]["url"], headers=headers).json()["download_url"]
+    manifest_dl_res = requests.get(manifest_dl_url, headers=headers)
     manifest_file = open(manifest[0], "wb")
     manifest_file.write(manifest_dl_res.content)
     return manifest[0]
@@ -243,7 +269,16 @@ def set_s3_session_client():
             "s3", region_name=AWS_REGION, endpoint_url=ENDPOINT_URL
         )
     else:
-        s3_client = boto3.client("s3")
+        # Create a custom retry configuration
+        custom_retry_config = Config(
+            connect_timeout = 300,
+            read_timeout = 300,
+            retries={
+                "max_attempts": 5,  # Maximum number of retry attempts
+                "mode": "standard",  # Retry on HTTP status codes considered retryable
+            }
+        )
+        s3_client = boto3.client("s3", config=custom_retry_config)
     return s3_client
 
 
@@ -306,7 +341,7 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@task
+@task(log_prints=True)
 def folder_dl(bucket: str, remote_folder: str) -> None:
     """Downloads a remote direcotry folder from s3
     bucket to local. it generates a folder that follows the
@@ -320,7 +355,11 @@ def folder_dl(bucket: str, remote_folder: str) -> None:
     for obj in bucket_obj.objects.filter(Prefix=remote_folder):
         if not os.path.exists(os.path.dirname(obj.key)):
             os.makedirs(os.path.dirname(obj.key))
-        bucket_obj.download_file(obj.key, obj.key)
+        try:
+            bucket_obj.download_file(obj.key, obj.key)
+        except NotADirectoryError as err:
+            err_str = repr(err)
+            print(f"Error downloading folder {remote_folder} from bucket {bucket}: {err_str}")
     return None
 
 
@@ -415,9 +454,11 @@ def view_all_s3_objects(source_bucket):
 
 
 def identify_data_curation_log_file(start_str: str):
-    file_list =  os.listdir("./")
+    file_list = os.listdir("./")
     log_file_regx = start_str + r"[0-9]{4}-[0-9]{2}-[0-9]{2}"
-    log_file_found = [i for i in file_list if re.search(log_file_regx, i) and ".log" in i]
+    log_file_found = [
+        i for i in file_list if re.search(log_file_regx, i) and ".log" in i
+    ]
     if len(log_file_found) == 0:
         return None
     else:
@@ -496,7 +537,13 @@ def markdown_template_updater(
 
 @task
 def markdown_input_task(
-    source_bucket: str, runner: str, manifest: str, template: str, sra_template: str, sra_pre_sub: str, dbgap_pre_sub: str
+    source_bucket: str,
+    runner: str,
+    manifest: str,
+    template: str,
+    sra_template: str,
+    sra_pre_sub: str,
+    dbgap_pre_sub: str,
 ):
     """Creates markdown artifacts of workflow inputs using Prefect
     create_markdown_artifact()
@@ -932,8 +979,196 @@ class CheckCCDI:
         return term_dict
 
     def find_file_nodes(self):
-        dict_df =  self.get_dict_df()
-        file_node_list = dict_df[dict_df["Property"] == "file_url_in_cds"]["Node"].tolist()
+        dict_df = self.get_dict_df()
+        file_node_list = dict_df[dict_df["Property"] == "file_url_in_cds"][
+            "Node"
+        ].tolist()
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
+
+
+
+@flow(log_prints=True)
+def get_github_credentials()-> None:
+    runner_logger = get_run_logger()
+    github_credentials_block = GitHubCredentials.load("fnlccdidatacuration")
+    token_value = github_credentials_block.token.get_secret_value()
+    headers = {"Authorization": "token " + token_value}
+    # try to get api return
+    response = requests.get(GithubAPTendpoint.ccdi_model_recent_release, headers=headers)
+    runner_logger.info(json.dumps(response.json(), indent=4))
+    return None
+
+
+def get_github_token() -> str:
+    github_credentials_block = GitHubCredentials.load("fnlccdidatacuration")
+    token_value = github_credentials_block.token.get_secret_value()
+    return token_value
+
+  
+def list_to_chunks(mylist: list, chunk_len: int) -> list:
+    """Break a list into a list of chunks"""
+    chunks = [
+        mylist[i * chunk_len : (i + 1) * chunk_len]
+        for i in range((len(mylist) + chunk_len - 1) // chunk_len)
+    ]
+    return chunks
+
+
+def parse_file_url_in_cds(url: str) -> tuple:
+    parsed_url = urlparse(url)
+    bucket_name = parsed_url.netloc
+    object_key = parsed_url.path
+    if object_key[0] == "/":
+        object_key = object_key[1:]
+    else:
+        pass
+    return bucket_name, object_key
+
+
+def calculate_object_md5sum_new(s3_client, url) -> str:
+    """Calculate md5sum of an object using url
+    This function was modified based on https://github.com/jmwarfe/s3-md5sum/blob/main/s3-md5sum.py
+    The new one reads specific byte range frm file as a chunk to avoid empty chunk
+    aws server getting time out
+
+    Example of url:
+    s3://example-bucket/folder1/folder2/test_file.fastq.gz
+    """
+    # specify a chunk size to get object
+    chunk_size = 536870912
+    # get object size
+    bucket_name, object_key = parse_file_url_in_cds(url)
+    object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
+        "ContentLength"
+    ]
+
+    # object_size = s3_client.get_object_attributes(
+    #    Bucket=bucket_name, Key=object_key, ObjectAttributes=["ObjectSize"]
+    # ).get("ObjectSize")
+
+    chunk_start = 0
+    chunk_end = chunk_start + chunk_size - 1
+
+    # Initialize MD5 hash object
+    md5_hash = hashlib.md5()
+    while chunk_start <= object_size:
+        # Read specific byte range from file as a chunk. We do this because AWS server times out and sends
+        # empty chunks when streaming the entire file.
+        if body := s3_client.get_object(
+            Bucket=bucket_name, Key=object_key, Range=f"bytes={chunk_start}-{chunk_end}"
+        ).get("Body"):
+            for small_chunk in iter(lambda: body.read(1024 * 1024), b""):
+                md5_hash.update(small_chunk)
+            chunk_start += chunk_size
+            chunk_end += chunk_size
+    return md5_hash.hexdigest()
+
+
+@task(
+    tags=["md5sum-cal-tag"],
+    name="Calculate one object md5sum",
+    retries=3,
+    retry_delay_seconds=0.5,
+    log_prints=True,
+)
+def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
+    try:
+        md5sum_value = calculate_object_md5sum_new(url=s3uri, s3_client=s3_client)
+        print(md5sum_value)
+        return md5sum_value
+    except Exception as err:
+        print(f"Error reading md5sum {s3uri}: {err}")
+        err_str= repr(err)
+        return err_str
+
+
+@task(
+    tags=["size-cal-tag"],
+    name="Calculate one object size",
+    retries=3,
+    retry_delay_seconds=0.5,
+    log_prints=True,
+)
+def calculate_single_size_task(s3uri: str, s3_client) -> str:
+    try:
+        bucket_name, object_key = parse_file_url_in_cds(s3uri)
+        object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
+            "ContentLength"
+        ]
+        return str(object_size)
+    except Exception as err:
+        print(f"Error reading size {s3uri}: {err}")
+        err_str = repr(err)
+        return err_str
+
+
+@flow(task_runner=ConcurrentTaskRunner(), name="Calculate objects md5sum Concurrently", log_prints=True)
+def calculate_list_md5sum(s3uri_list: list[str]) -> list[str]:
+    s3_client = set_s3_session_client()
+    md5sum_value_list = calculate_single_md5sum_task.map(s3uri_list, s3_client)
+    s3_client.close()
+    return [i.result() for i in md5sum_value_list]
+
+
+@flow(task_runner=ConcurrentTaskRunner(), name="Fetch objects size Concurrently", log_prints=True)
+def calculate_list_size(s3uri_list: list[str]) -> list[str]:
+    s3_client = set_s3_session_client()
+    size_value_list = calculate_single_size_task.map(s3uri_list, s3_client)
+    s3_client.close()
+    return [i.result() for i in size_value_list]
+
+  
+@task(
+    name="Extract one sheet dcf index info",
+    log_prints=True,
+)
+def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI, logger) -> dict:
+    """Extracts columns for dcf indexing of a single sheet
+
+    columns: ["file_size", "md5sum", "file_url_in_cds", "dcf_indexd_guid"]
+    The task returns a dictionary of lists
+    """
+    logger.info(f"Reading sheet {sheetname}")
+    sheet_df = CCDI_manifest.read_sheet_na(sheetname=sheetname)
+    sheet_df.drop(columns=["type"], inplace=True)
+    sheet_df.dropna(how="all", inplace=True)
+    logger.info(f"Count of objects found in sheet {sheetname}: {sheet_df.shape[0]}")
+    return_dict = {"GUID":[], "md5":[],"urls":[], "size": []}
+    if sheet_df.empty:
+        return return_dict
+    else:
+        md5sum_list =  sheet_df["md5sum"].tolist()
+        return_dict["md5"] = md5sum_list
+        file_url_list = sheet_df["file_url_in_cds"].tolist()
+        return_dict["urls"] = file_url_list
+        size_list = sheet_df["file_size"].tolist()
+        return_dict["size"] =  size_list
+        guid_list = sheet_df["dcf_indexd_guid"].tolist()
+        return_dict["GUID"] = guid_list
+        return return_dict
+
+
+@flow(
+    task_runner=ConcurrentTaskRunner(),
+    name="Extract all sheets dcf index info",
+    log_prints=True,
+)
+def extract_dcf_index(CCDI_manifest: CheckCCDI, sheetname_list: list[str]) -> list[dict]:
+    """Extracts columns for dcf indexing of a given list sheetnames
+    """
+    logger = get_run_logger()
+    list_dicts_future_objs =  extract_dcf_index_single_sheet.map(sheetname_list, CCDI_manifest=CCDI_manifest, logger=logger)
+    return [i.result() for i in list_dicts_future_objs]
+
+
+@task(
+    name =  "Combine dcf index dicts"
+)
+def combine_dcf_dicts(list_dicts:list[dict]) -> dict:
+    combined_dict = {"GUID": [], "md5": [], "urls": [], "size": []}
+    for i_dict in list_dicts:
+        combined_dict =  {key: value + i_dict[key] for key, value in combined_dict.items()}
+    return combined_dict
+

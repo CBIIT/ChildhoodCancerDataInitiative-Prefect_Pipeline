@@ -27,9 +27,9 @@ pull:
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
   # base metadata
-  - name: ccdi-data-curation
+  - name: ccdi-data-curation-2gb
     version: null
-    tags: []
+    tags: ["Production"]
     description: null
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
@@ -46,11 +46,103 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-ecs
+      name: ccdi-curation-2gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: ccdi-data-curation-8gb
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/s3-Prefect-Pipeline.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
+      runner: "your_uniq_id"
+      #optional parmaeters below, uncomment if needed
+      #output_folder: "output_folder_name"
+      #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+      #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
       work_queue_name: null
       job_variables: {}
   
-  - name: ccdi-template-updater
+  - name: ccdi-data-curation-16gb
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/s3-Prefect-Pipeline.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
+      runner: "your_uniq_id"
+      #optional parmaeters below, uncomment if needed
+      #output_folder: "output_folder_name"
+      #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+      #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-16gb
+      work_queue_name: null
+      job_variables: {}
+  
+  - name: ccdi-data-curation-32gb
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/s3-Prefect-Pipeline.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
+      runner: "your_uniq_id"
+      #optional parmaeters below, uncomment if needed
+      #output_folder: "output_folder_name"
+      #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+      #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-32gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: ccdi-data-curation-60gb
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/s3-Prefect-Pipeline.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
+      runner: "your_uniq_id"
+      #optional parmaeters below, uncomment if needed
+      #output_folder: "output_folder_name"
+      #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+      #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-60gb
+      work_queue_name: null
+      job_variables: {}  
+  
+  - name: ccdi-template-updater-2gb
     version: null
     tags: []
     description: null
@@ -69,11 +161,11 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-ecs
+      name: ccdi-curation-2gb
       work_queue_name: null
       job_variables: {}
 
-  - name: bucket-reader
+  - name: bucket-reader-2gb
     version: null
     tags: ["Production"]
     description: null
@@ -82,7 +174,10 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      buckets: ["my-first-bucket", "my-second-bucket",]
+      buckets: 
+        - "my-first-bucket"
+        - "my-second-bucket/subdir"
+      runner: "your_uniq_id"
 
     # pull action to overwrite from file pull action
     pull:
@@ -97,11 +192,11 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-ecs
+      name: ccdi-curation-2gb
       work_queue_name: null
       job_variables: {}
 
-  - name: template-exampler
+  - name: template-exampler-2gb
     version: null
     tags: ["Production"]
     description: null
@@ -127,11 +222,11 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-ecs
+      name: ccdi-curation-2gb
       work_queue_name: null
       job_variables: {}
 
-  - name: file-mover
+  - name: file-mover-16gb
     version: null
     tags: ["Production"]
     description: null
@@ -158,7 +253,92 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-ecs
+      name: ccdi-curation-16gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: get-parameter-2gb
+    version: null
+    tags: ["Test"]
+    description: null
+    entrypoint: workflows/get_aws_parameter.py:get_aws_parameter
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      parameter_name: "prefect-test"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-2gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: pull-neo4j-data-16gb
+    version: null
+    tags: ["Test"]
+    description: null
+    entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-861_get_parameter
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-16gb
+      work_queue_name: null
+      job_variables: {}
+
+
+  - name: validate-neo4j-data-32gb
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/validate_neo4j_data.py:validate_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-32gb
       work_queue_name: null
       job_variables: {}
 
