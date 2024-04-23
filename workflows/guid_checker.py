@@ -179,7 +179,7 @@ def guid_checker(file_path: str):  # removed profile
 
             total_rows = len(df)
 
-            for index, row in df.interrows():
+            for index, row in df.iterrows():
                 df.at[index, "dcf_indexd_guid"]=pull_guids(row)
 
                 guidcheck_logger.info(f"{index} / {total_rows}")
