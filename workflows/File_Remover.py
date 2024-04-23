@@ -18,7 +18,7 @@ from src.file_remover import (
 
 
 @flow(name="File Remover Pipeline", log_prints=True)
-def run_file_remover(do_you_have_tsv_manifest:str ="y/n"):
+def run_file_remover(do_you_have_tsv_manifest:str):
     logger = get_run_logger()
     #current_time = get_time()
 
@@ -173,7 +173,7 @@ def run_file_remover(do_you_have_tsv_manifest:str ="y/n"):
             )
             logger.info("File Remover workflow finished!")
     else:
-        raise ValueError("You provided invalid answer. Please use y or n")
+        raise ValueError(f"You provided invalid answer {do_you_have_tsv_manifest}. Please use y or n")
 
 if __name__ == "__main__":
     run_file_remover()
