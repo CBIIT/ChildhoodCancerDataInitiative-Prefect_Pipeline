@@ -3,6 +3,7 @@ from prefect.artifacts import create_markdown_artifact
 from prefect.task_runners import ConcurrentTaskRunner
 from dataclasses import dataclass, field
 from typing import List, TypeVar, Dict, Tuple
+from botocore.exceptions import ClientError
 import warnings
 import os
 import sys
@@ -281,15 +282,24 @@ def set_s3_session_client():
     return s3_client
 
 
-@task(name="Download file", task_run_name="download_file_{filename}")
+@task(name="Download file", task_run_name="download_file_{filename}", log_prints=True)
 def file_dl(bucket, filename):
-    """File download using bucket name and filename"""
+    """File download using bucket name and filename
+    filename is the key path in bucket
+    file is the basename
+    """
     # Set the s3 resource object for local or remote execution
     s3 = set_s3_resource()
     source = s3.Bucket(bucket)
     file_key = filename
     file = os.path.basename(filename)
-    source.download_file(file_key, file)
+    try:
+        source.download_file(file_key, file)
+    except ClientError as ex:
+        ex_code = ex.response["Error"]["Code"]
+        ex_message = ex.response["Error"]["Message"]
+        print(f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}")
+        raise
 
 
 @task(name="Upload file", task_run_name="upload_file_{newfile}")
