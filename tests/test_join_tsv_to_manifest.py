@@ -4,7 +4,6 @@ import mock
 import pandas as pd
 import pytest
 from unittest.mock import MagicMock
-import pyfakefs
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
