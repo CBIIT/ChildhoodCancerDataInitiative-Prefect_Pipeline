@@ -22,12 +22,6 @@ def make_request(url):
         print(f"Error: {e}. Retrying...")
         return None
 
-
-@flow(
-    name="pull_guids",
-    log_prints=True,
-    flow_run_name="pull_guids_" + f"{get_time()}",
-)
 def pull_guids(row):
     guidcheck_logger = get_run_logger()
 
@@ -182,7 +176,7 @@ def guid_checker(file_path: str):  # removed profile
             for index, row in df.iterrows():
                 df.at[index, "dcf_indexd_guid"]=pull_guids(row)
 
-                guidcheck_logger.info(f"{index} / {total_rows}")
+                guidcheck_logger.info(f"{index}+1 / {total_rows}")
 
             #df["dcf_indexd_guid"] = df.apply(pull_guids, axis=1)
             meta_dfs[node] = df
