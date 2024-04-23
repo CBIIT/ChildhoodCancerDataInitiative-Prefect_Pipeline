@@ -116,4 +116,7 @@ def test_delete_single_object_by_uri_fail():
         s3_client=s3_client,
         logger=logger,
     )
-    assert delete_status == "Fail"
+    assert (
+        delete_status
+        == "ClientError('An error occurred (TestErrorCode) when calling the InvalidKey operation: This is a custom message')"
+    )

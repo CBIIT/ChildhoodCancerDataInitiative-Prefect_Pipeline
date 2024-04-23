@@ -98,6 +98,9 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
 
 
 def count_success_fail(deletion_status: list) -> tuple:
+    """Returns counts of successful deletion and counts of 
+    unsuccessful deletion
+    """
     count_success = deletion_status.count("Success")
     # count_fail = deletion_status.count("Fail")
     count_fail = len(deletion_status) - count_success
@@ -265,6 +268,8 @@ def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
     """Delete a single s3 uri"""
     bucket_name, object_key = parse_file_url_in_cds(url=object_uri)
     try:
+        # check if the object exist before deletion.
+        # if not found, return status "not found"
         s3_client.head_object(Bucket=bucket_name, Key=object_key)
         try:
             s3_client.delete_object(Bucket=bucket_name, Key=object_key)
