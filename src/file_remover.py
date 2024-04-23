@@ -47,7 +47,7 @@ class InputDescriptionMD:
 **Welcome to the File Remover Workflow!**
 Today's Date: *{current_time}*
 
-Do you have a manifest containing **s3 URI endpoints** to be deleted :
+Do you have a **TSV** manifest containing a column of **s3 URI endpoints** to be deleted :
 - **have_manifest**: y/n
 
 """
@@ -99,7 +99,8 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
 
 def count_success_fail(deletion_status: list) -> tuple:
     count_success = deletion_status.count("Success")
-    count_fail = deletion_status.count("Fail")
+    # count_fail = deletion_status.count("Fail")
+    count_fail = len(deletion_status) - count_success
     return count_success, count_fail
 
 
@@ -261,23 +262,26 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     tags=["file-remover-tag"],
 )
 def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
+    """Delete a single s3 uri"""
     bucket_name, object_key = parse_file_url_in_cds(url=object_uri)
     try:
         s3_client.delete_object(Bucket=bucket_name, Key=object_key)
         delete_status = "Success"
     except ClientError as err:
         logger.info(f"Fail to delete object {object_uri}: {err}")
-        delete_status = "Fail"
+        # delete_status = "Fail"
+        delete_status = repr(err)
     return delete_status
 
 
 @flow(name="Delete S3 Objects")
 def delete_objects_by_uri(uri_list, logger) -> None:
+    """Delete a list of s3 uri"""
     s3_client = set_s3_session_client()
     delete_responses = delete_single_object_by_uri.map(uri_list, s3_client, logger)
-    delete_status_list = [i.result() for i in delete_responses]
+    # delete_status_list = [i.result() for i in delete_responses]
     s3_client.close()
-    return delete_status_list
+    return [i.result() for i in delete_responses]
 
 
 @flow

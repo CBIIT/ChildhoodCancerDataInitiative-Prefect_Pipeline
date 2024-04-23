@@ -18,10 +18,11 @@ from src.file_remover import (
 
 
 @flow(name="File Remover Pipeline", log_prints=True)
-def run_file_remover():
+def run_file_remover(do_you_have_tsv_manifest:str ="y/n"):
     logger = get_run_logger()
-    current_time = get_time()
+    #current_time = get_time()
 
+    """
     user_input = pause_flow_run(
         wait_for_input=FlowPathInput.with_initial_data(
             description=InputDescriptionMD.have_manifest_md.format(
@@ -30,8 +31,11 @@ def run_file_remover():
             have_manifest="y",
         )
     )
+    """
+    
 
-    if user_input.have_manifest == "y":
+    #if user_input.have_manifest == "y":
+    if do_you_have_tsv_manifest == "y":
         logger.info("You have a manifest for File Remover")
         manifest_path_inputs = pause_flow_run(
             wait_for_input=ManifestPathInput.with_initial_data(
@@ -87,7 +91,8 @@ def run_file_remover():
         )
         logger.info("File Remover workflow finished!")
 
-    else:
+    #else:
+    elif do_you_have_tsv_manifest == "n":
         logger.info(
             "You don't have a manifest. To proceed, please provide a prod bucket path and a staging bucket path"
         )
@@ -167,7 +172,8 @@ def run_file_remover():
                 f"You chose not to proceed with deletion this time.\nYou can restart the flow whenever you're ready.\nManifest location: {no_manifest_path_inputs.workflow_output_bucket}/{output_folder}/{manifest_file}"
             )
             logger.info("File Remover workflow finished!")
-
+    else:
+        raise ValueError("You provided invalid answer. Please use y or n")
 
 if __name__ == "__main__":
     run_file_remover()
