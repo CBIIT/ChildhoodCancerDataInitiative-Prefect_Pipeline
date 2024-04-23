@@ -10,11 +10,6 @@ from shutil import copy
 from src.utils import get_time, file_dl, file_ul
 
 
-@task(
-    name="make_requests",
-    log_prints=True,
-    task_run_name="make_requests_" + f"{get_time()}",
-)
 def make_request(url):
     try:
         response = requests.get(url)
@@ -179,8 +174,17 @@ def guid_checker(file_path: str):  # removed profile
 
     for node in dict_nodes:
         if "file_url_in_cds" in meta_dfs[node].columns:
+            guidcheck_logger.info(f"Checking {node}.")
             df = meta_dfs[node]
-            df["dcf_indexd_guid"] = df.apply(pull_guids, axis=1)
+
+            total_rows = len(df)
+
+            for index, row in df.interrows():
+                df.at[index, "dcf_indexd_guid"]=pull_guids(row)
+
+                guidcheck_logger.info(f"{index} / {total_rows}")
+
+            #df["dcf_indexd_guid"] = df.apply(pull_guids, axis=1)
             meta_dfs[node] = df
 
     def reorder_dataframe(dataframe, column_list: list, sheet_name: str, logger):
