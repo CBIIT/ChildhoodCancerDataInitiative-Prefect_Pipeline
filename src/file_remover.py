@@ -265,12 +265,16 @@ def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
     """Delete a single s3 uri"""
     bucket_name, object_key = parse_file_url_in_cds(url=object_uri)
     try:
-        s3_client.delete_object(Bucket=bucket_name, Key=object_key)
-        delete_status = "Success"
+        s3_client.head_object(Bucket=bucket_name, Key=object_key)
+        try:
+            s3_client.delete_object(Bucket=bucket_name, Key=object_key)
+            delete_status = "Success"
+        except ClientError as err:
+            logger.info(f"Fail to delete object {object_uri}: {err}")
+            delete_status = repr(err)
     except ClientError as err:
-        logger.info(f"Fail to delete object {object_uri}: {err}")
-        # delete_status = "Fail"
-        delete_status = repr(err)
+        logger.info(f"Object {object_uri} does not exist")
+        delete_status = "Not Found"
     return delete_status
 
 
