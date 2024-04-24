@@ -30,7 +30,7 @@ def pull_guids(row):
     size = row["file_size"]
     guid = row["dcf_indexd_guid"]
 
-    guidcheck_logger.info(f"Making API call for {hash_value} of size: {size}.")
+    #guidcheck_logger.info(f"Making API call for {hash_value} of size: {size}.")
 
     # Send API request with query parameters
     # Define the API endpoint URL
@@ -176,7 +176,7 @@ def guid_checker(file_path: str):  # removed profile
             for index, row in df.iterrows():
                 df.at[index, "dcf_indexd_guid"]=pull_guids(row)
 
-                guidcheck_logger.info(f"{index} / {total_rows}")
+                #guidcheck_logger.info(f"{index} / {total_rows}")
 
             #df["dcf_indexd_guid"] = df.apply(pull_guids, axis=1)
             meta_dfs[node] = df
