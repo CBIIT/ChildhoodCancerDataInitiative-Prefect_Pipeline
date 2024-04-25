@@ -68,8 +68,8 @@ def pull_guids(row):
     else:
         with open("API_indexd_calls.log", "a") as logfile:
             logfile.write(f"ERROR: no response for {hash_value} of size: {size}.\n")
-        guidcheck_logger(
-            f"Error: Failed to fetch data for hash='{hash_value}' and size='{size}'"
+        guidcheck_logger.error(
+            f"Failed to fetch data for hash='{hash_value}' and size='{size}'"
         )
 
     return guid
