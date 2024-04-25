@@ -988,7 +988,6 @@ class CheckCCDI:
         return file_node_list_uniq
 
 
-
 @flow(log_prints=True)
 def get_github_credentials()-> None:
     runner_logger = get_run_logger()
@@ -1119,7 +1118,7 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     s3_client.close()
     return [i.result() for i in size_value_list]
 
-  
+
 @task(
     name="Extract one sheet dcf index info",
     log_prints=True,
