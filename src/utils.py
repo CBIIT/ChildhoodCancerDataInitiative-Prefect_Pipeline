@@ -986,6 +986,13 @@ class CheckCCDI:
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
+    
+    def get_all_sheet_dfs(self):
+        meta_dfs = {}
+        sheet_names =  self.get_sheetnames()
+        for sheet_name in sheet_names:
+            meta_dfs[sheet_name] = self.read_sheet_na(sheetname=sheet_name)
+        return meta_dfs
 
 
 
