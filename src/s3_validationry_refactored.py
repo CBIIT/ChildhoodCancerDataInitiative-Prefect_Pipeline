@@ -111,7 +111,7 @@ def cleanup_manifest_nodes(
     log_prints=True,
 )
 def validate_required_properties(
-    node_list: list[str], file_path: str, required_properties: set, output_file: str
+    node_list, file_path, required_properties, output_file
 ) -> None:
     section_title = """\n\nThis section is for required properties for all nodes that contain data.\nFor information
     on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, 
@@ -133,7 +133,7 @@ def validate_required_properties(
 
 @task(name="Validate required properties of a single sheet", log_prints=True)
 def validate_required_properties_one_sheet(
-    node_name: str, checkccdi_object, required_properties: set
+    node_name, checkccdi_object, required_properties
 ) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
@@ -225,7 +225,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     validate_required_properties(
         nodes_to_validate,
         file_path,
-        [list(required_properties)],
+        unmapped(list(required_properties)),
         output_file,
     )
     return output_file
