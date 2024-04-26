@@ -1,5 +1,5 @@
 import requests
-from prefect import flow, task, get_run_logger
+from prefect import flow, get_run_logger
 import os
 import time
 import pandas as pd
