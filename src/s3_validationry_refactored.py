@@ -111,7 +111,7 @@ def cleanup_manifest_nodes(
     log_prints=True,
 )
 def validate_required_properties(
-    file_path: str, node_list: list[str], required_properties: set, output_file: str
+    node_list: list[str], file_path: str, required_properties: set, output_file: str
 ) -> None:
     section_title = """\n\nThis section is for required properties for all nodes that contain data.\nFor information
     on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, 
@@ -223,9 +223,9 @@ def ValidationRy_new(file_path: str, template_path: str):
     # starts validation of unempty node sheets
     validation_logger.info("Checking if required properties were filled")
     validate_required_properties(
-        file_path=file_path,
-        node_list=nodes_to_validate,
-        required_properties=unmapped(required_properties),
-        output_file=output_file,
+        nodes_to_validate,
+        file_path,
+        unmapped(required_properties),
+        output_file,
     )
     return output_file
