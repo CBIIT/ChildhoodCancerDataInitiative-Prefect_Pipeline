@@ -119,7 +119,7 @@ def validate_required_properties(
     """
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_required_prop_str_future = validate_required_properties_one_sheet.map(
-        node_list, file_object, required_properties=required_properties
+        node_list, file_object, required_properties
     )
     validate_required_prop_str = "".join(
         [i.result() for i in validate_required_prop_str_future]
@@ -225,7 +225,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     validate_required_properties(
         nodes_to_validate,
         file_path,
-        unmapped(required_properties),
+        unmapped(list(required_properties)),
         output_file,
     )
     return output_file
