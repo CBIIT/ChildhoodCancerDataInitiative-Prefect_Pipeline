@@ -1,4 +1,4 @@
-from prefect import flow, task, get_run_logger
+from prefect import flow, task, get_run_logger, unmapped
 import os
 import pandas as pd
 from datetime import date
@@ -225,7 +225,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     validate_required_properties(
         file_path=file_path,
         node_list=nodes_to_validate,
-        required_properties=required_properties,
+        required_properties=unmapped(required_properties),
         output_file=output_file,
     )
     return output_file
