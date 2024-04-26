@@ -415,6 +415,7 @@ class AddSynonym:
 )
 def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger = get_logger(loggername="CCDI_to_dbGaP_submission", log_level="info")
+    logger_filename = "CCDI_to_dbGaP_submission_" + get_date() + ".log"
 
     try:
         manifest_f = pd.ExcelFile(manifest)
@@ -583,7 +584,5 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger.info("Writing metadata.json")
 
     logger.info("Script finished!")
-
-    logger_filename = "CCDI_to_dbGaP_submission_" + get_date() + ".log"
 
     return (output_folder_name, logger_filename)
