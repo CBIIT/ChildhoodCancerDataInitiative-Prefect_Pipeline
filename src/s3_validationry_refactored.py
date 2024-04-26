@@ -225,7 +225,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     validate_required_properties(
         nodes_to_validate,
         file_path,
-        unmapped(list(required_properties)),
+        [list(required_properties)],
         output_file,
     )
     return output_file
