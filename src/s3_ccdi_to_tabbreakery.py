@@ -12,6 +12,7 @@ from src.utils import get_logger, get_time, get_date, CheckCCDI
 )
 def tabBreakeRy(manifest: str) -> tuple:
     logger = get_logger(loggername="CCDI_to_TabBreakeRy", log_level="info")
+    output_log = "CCDI_to_TabBreakeRy_" + get_date() + ".log"
 
     try:
         manifest_f = pd.ExcelFile(manifest)
@@ -116,7 +117,5 @@ def tabBreakeRy(manifest: str) -> tuple:
     )
     with open(json_file_path, "w") as fp:
         json.dump(json_dict, fp)
-
-    output_log = "CCDI_to_TabBreakeRy_" + get_date() + ".log"
 
     return output_folder, output_log
