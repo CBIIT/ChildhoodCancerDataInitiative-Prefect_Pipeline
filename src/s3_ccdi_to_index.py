@@ -16,6 +16,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
 
     # get logger
     logger = get_logger(loggername="CCDI_to_Index", log_level="info")
+    logger_file_name = "CCDI_to_Index_" + get_date() + ".log"
     logger.info("The CCDI to Index conversion has begun")
 
     ##############
@@ -916,6 +917,5 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     )
 
     output_file_path = output_file + ".tsv"
-    logger_file_name = "CCDI_to_Index_" + get_date() + ".log"
 
     return (output_file_path, logger_file_name)
