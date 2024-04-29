@@ -111,24 +111,29 @@ def cleanup_manifest_nodes(
     log_prints=True,
 )
 def validate_required_properties(
-    node_list, file_path, required_properties, output_file
-) -> None:
+    node_list, file_object, required_properties
+) -> list:
+    validate_required_prop_str_future = validate_required_properties_one_sheet.map(
+        node_list, file_object, required_properties
+    ) 
+    return [i.result() for i in validate_required_prop_str_future]
+
+
+@flow
+def validate_required_properties_wrapper(file_path: str, node_list:list, required_properties: list, output_file: str):
     section_title = """\n\nThis section is for required properties for all nodes that contain data.\nFor information
     on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, 
     it is expected that all required information has a value:\n----------\n
     """
     file_object = CheckCCDI(ccdi_manifest=file_path)
-    validate_required_prop_str_future = validate_required_properties_one_sheet.map(
-        node_list, file_object, required_properties
-    )
-    validate_required_prop_str = "".join(
-        [i.result() for i in validate_required_prop_str_future]
-    )
-    return_str = section_title + validate_required_prop_str
+    validate_str_list = validate_required_properties(node_list, file_object,unmapped(required_properties))
+    validate_str = "".join(validate_str_list)
+    return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
     print(return_str)
     return None
+
 
 
 @task(name="Validate required properties of a single sheet", log_prints=True)
@@ -222,10 +227,10 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # starts validation of unempty node sheets
     validation_logger.info("Checking if required properties were filled")
-    validate_required_properties(
-        nodes_to_validate,
+    validate_required_properties_wrapper(
         file_path,
-        unmapped(list(required_properties)),
+        nodes_to_validate,
+        list(required_properties),
         output_file,
     )
     return output_file
