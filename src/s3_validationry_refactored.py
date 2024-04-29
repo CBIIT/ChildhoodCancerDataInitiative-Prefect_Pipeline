@@ -104,6 +104,7 @@ def cleanup_manifest_nodes(
     )
     return sheetnames_ordered
 
+"""
 
 @flow(
     task_runner=ConcurrentTaskRunner(),
@@ -118,6 +119,8 @@ def validate_required_properties(
     ) 
     return [i.result() for i in validate_required_prop_str_future]
 
+"""
+
 
 @flow
 def validate_required_properties_wrapper(file_path: str, node_list:list, required_properties: list, output_file: str):
@@ -126,8 +129,13 @@ def validate_required_properties_wrapper(file_path: str, node_list:list, require
     it is expected that all required information has a value:\n----------\n
     """
     file_object = CheckCCDI(ccdi_manifest=file_path)
-    validate_str_list = validate_required_properties(node_list, file_object, required_properties)
-    validate_str = "".join(validate_str_list)
+    # validate_str_list = validate_required_properties(node_list, file_object, required_properties)
+    validate_str_future = validate_required_properties_one_sheet.map(
+        node_list, file_object, unmapped(required_properties)
+    )
+
+    # validate_str = "".join(validate_str_list)
+    validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
@@ -141,7 +149,7 @@ def validate_required_properties_one_sheet(
 ) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
-    line_length = 25
+    line_length = 5
     print_str = ""
     print_str = print_str + f"\n\t{node_name}\n\t----------\n"
     for property in properties:
@@ -155,16 +163,14 @@ def validate_required_properties_one_sheet(
                     WARN_FLAG = False
                     print_str = (
                         print_str
-                        + f"""
-                    \tERROR: The values for the node, {node_name}, in the the required property, 
-                    {property}, are missing:\n
-                    """
+                        + f"\tERROR: The values for the node, {node_name}, in the the required property, {property}, are missing:\n"
                     )
                 # print out the row number contains missing value
                 pos_print = ""
                 for i, pos in enumerate(bad_positions):
                     if i % line_length == 0:
-                        print_str = print_str + "\n\t\t\n"
+                        pos_print = pos_print + "\n\t"
+                        # print_str = print_str + "\n\t\t\n"
                     else:
                         pass
                     pos_print = pos_print + str(pos) + ","
@@ -191,7 +197,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     todays_date = get_date()
 
     # Output file name based on input file name and date/time stamped.
-    file_basename = os.path.basename(file_path).split(".")[0]
+    file_basename = os.path.basename(file_path).rsplit(".", 1)[0]
     output_file = file_basename + "_Validate" + todays_date + ".txt"
 
     # check if template file is valid, "Dictionary" and "Terms and Value Sets"
