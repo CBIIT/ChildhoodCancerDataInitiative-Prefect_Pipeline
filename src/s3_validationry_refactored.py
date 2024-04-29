@@ -171,7 +171,7 @@ def validate_required_properties(file_path: str, node_list:list, required_proper
 
 
 @task(name="Validate whitespace of a single sheet", log_prints=True)
-def validate_whitespace_one_sheet(node_name, checkccdi_object) -> str:
+def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     line_length = 25
@@ -221,7 +221,7 @@ def validate_whitespace_one_sheet(node_name, checkccdi_object) -> str:
     name="Validate whitespace issue",
     log_prints=True,
 )
-def validate_whitespace(node_list: str, file_path: str, output_file: str) -> None:
+def validate_whitespace(node_list: list[str], file_path: str, output_file: str) -> None:
     section_title = """\n\nThis section checks for white space issues in all properties.\n----------\n
     """
     file_object = CheckCCDI(ccdi_manifest=file_path)
