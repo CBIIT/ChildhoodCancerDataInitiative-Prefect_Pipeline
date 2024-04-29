@@ -114,7 +114,7 @@ def validate_required_properties(
     node_list, file_object, required_properties
 ) -> list:
     validate_required_prop_str_future = validate_required_properties_one_sheet.map(
-        node_list, file_object, required_properties
+        node_list, file_object, unmapped(required_properties)
     ) 
     return [i.result() for i in validate_required_prop_str_future]
 
@@ -126,7 +126,7 @@ def validate_required_properties_wrapper(file_path: str, node_list:list, require
     it is expected that all required information has a value:\n----------\n
     """
     file_object = CheckCCDI(ccdi_manifest=file_path)
-    validate_str_list = validate_required_properties(node_list, file_object,unmapped(required_properties))
+    validate_str_list = validate_required_properties(node_list, file_object, required_properties)
     validate_str = "".join(validate_str_list)
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
