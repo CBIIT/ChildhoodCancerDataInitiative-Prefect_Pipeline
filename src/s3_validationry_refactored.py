@@ -135,7 +135,6 @@ def validate_required_properties_wrapper(file_path: str, node_list:list, require
     return None
 
 
-
 @task(name="Validate required properties of a single sheet", log_prints=True)
 def validate_required_properties_one_sheet(
     node_name, checkccdi_object, required_properties
@@ -146,6 +145,7 @@ def validate_required_properties_one_sheet(
     print_str = ""
     print_str = print_str + f"\n\t{node_name}\n\t----------\n"
     for property in properties:
+        WARN_FLAG = True
         if property in required_properties:
             if node_df[property].isna().any():
                 bad_positions = np.where(node_df[property].isna())[0] + 2
