@@ -104,44 +104,6 @@ def cleanup_manifest_nodes(
     )
     return sheetnames_ordered
 
-"""
-
-@flow(
-    task_runner=ConcurrentTaskRunner(),
-    name="Validate required properties",
-    log_prints=True,
-)
-def validate_required_properties(
-    node_list, file_object, required_properties
-) -> list:
-    validate_required_prop_str_future = validate_required_properties_one_sheet.map(
-        node_list, file_object, unmapped(required_properties)
-    ) 
-    return [i.result() for i in validate_required_prop_str_future]
-
-"""
-
-
-@flow
-def validate_required_properties_wrapper(file_path: str, node_list:list, required_properties: list, output_file: str):
-    section_title = """\n\nThis section is for required properties for all nodes that contain data.\nFor information
-    on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, 
-    it is expected that all required information has a value:\n----------\n
-    """
-    file_object = CheckCCDI(ccdi_manifest=file_path)
-    # validate_str_list = validate_required_properties(node_list, file_object, required_properties)
-    validate_str_future = validate_required_properties_one_sheet.map(
-        node_list, file_object, unmapped(required_properties)
-    )
-
-    # validate_str = "".join(validate_str_list)
-    validate_str = "".join([i.result() for i in validate_str_future])
-    return_str = section_title + validate_str
-    with open(output_file, "a+") as outf:
-        outf.write(return_str)
-    print(return_str)
-    return None
-
 
 @task(name="Validate required properties of a single sheet", log_prints=True)
 def validate_required_properties_one_sheet(
@@ -149,7 +111,7 @@ def validate_required_properties_one_sheet(
 ) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
-    line_length = 5
+    line_length = 25
     print_str = ""
     print_str = print_str + f"\n\t{node_name}\n\t----------\n"
     for property in properties:
@@ -184,6 +146,92 @@ def validate_required_properties_one_sheet(
             pass
     print(print_str)
     return print_str
+
+
+@flow(
+    task_runner=ConcurrentTaskRunner(),
+    name="Validate required properties",
+    log_prints=True,
+)
+def validate_required_properties(file_path: str, node_list:list, required_properties: list, output_file: str):
+    section_title = """\n\nThis section is for required properties for all nodes that contain data.\nFor information
+    on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, 
+    it is expected that all required information has a value:\n----------\n
+    """
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    validate_str_future = validate_required_properties_one_sheet.map(
+        node_list, file_object, unmapped(required_properties)
+    )
+    validate_str = "".join([i.result() for i in validate_str_future])
+    return_str = section_title + validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    print(return_str)
+    return None
+
+
+@task(name="Validate whitespace of a single sheet", log_prints=True)
+def validate_whitespace_one_sheet(node_name, checkccdi_object) -> str:
+    node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
+    properties = node_df.columns
+    line_length = 25
+    print_str = ""
+    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+    for property in properties:
+        WARN_FLAG = True
+        # if the property is not completely empty:
+        if not node_df[property].isna().all():
+            # if there are some values that do not match when positions are stripped of white space
+            if (
+                node_df[property].fillna("") != node_df[property].str.strip().fillna("")
+            ).any():
+                bad_positions = (
+                    np.where(
+                        node_df[property].fillna("") != node_df[property].str.strip().fillna("")
+                    )[0]
+                    + 2
+                )
+                # Flag to turn on explanation of error/warning
+                if WARN_FLAG:
+                    WARN_FLAG = False
+                    print_str = (
+                        print_str
+                        + f"\tERROR: The values for the node, {node_name}, in the property, {property}, have white space issues:\n"
+                    )
+
+                # itterate over that list and print out the values
+                pos_print = ""
+                for i, pos in enumerate(bad_positions):
+                    if i % line_length == 0:
+                        pos_print = pos_print + "\n\t"
+                    else:
+                        pass
+                    pos_print = pos_print + str(pos) + ","
+                print_str = print_str + pos_print + "\n"
+            else:
+                pass
+        else:
+            pass
+    print(print_str)
+    return print_str
+
+
+@flow(
+    task_runner=ConcurrentTaskRunner(),
+    name="Validate whitespace issue",
+    log_prints=True,
+)
+def validate_whitespace(node_list: str, file_path: str, output_file: str) -> None:
+    section_title = """\n\nThis section checks for white space issues in all properties.\n----------\n
+    """
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    validate_str_future = validate_whitespace_one_sheet.map(node_list, file_object)
+    validate_str = "".join([i.result() for i in validate_str_future])
+    return_str = section_title + validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    print(return_str)
+    return None
 
 
 @flow(
@@ -233,10 +281,12 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # starts validation of unempty node sheets
     validation_logger.info("Checking if required properties were filled")
-    validate_required_properties_wrapper(
+    validate_required_properties(
         file_path,
         nodes_to_validate,
         list(required_properties),
         output_file,
     )
+
+    validate_whitespace(nodes_to_validate, file_path, output_file)
     return output_file
