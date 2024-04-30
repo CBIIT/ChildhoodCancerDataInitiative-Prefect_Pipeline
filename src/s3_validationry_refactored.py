@@ -241,15 +241,34 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
 def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
-    tavs_df: DataFrame,
-    dict_df: DataFrame,
-    enum_arrays: list,
+    template_object,
 ):
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     line_length = 5
     print_str = ""
     print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+
+    # create tavs_df and dict_df
+    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    tavs_df = template_object.read_sheet_na(sheetname="Terms and Value Sets")
+    tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
+
+    # create an enum property list
+    # For newer versions of the submission template, obtain the arrays from the Dictionary tab
+    if any(dict_df["Type"].str.contains("array")):
+        enum_arrays = dict_df[dict_df["Type"].str.contains("array")][
+            "Property"
+        ].tolist()
+    else:
+        enum_arrays = [
+            "therapeutic_agents",
+            "treatment_type",
+            "study_data_types",
+            "morphology",
+            "primary_site",
+            "race",
+        ]
 
     for property in properties:
         WARN_FLAG = True
@@ -390,32 +409,20 @@ def validate_terms_value_sets_one_sheet(
 @flow(name="Validate terms and value sets", log_prints=True)
 def validate_terms_value_sets(
     file_path: str,
+    template_path: str,
     node_list: list[str],
-    dict_df: DataFrame,
-    tavs_df: DataFrame,
+    #dict_df: DataFrame,
+    #tavs_df: DataFrame,
     output_file: str,
 ) -> None:
     section_title = """he following columns have controlled vocabulary on the 'Terms and Value Sets' 
     page of the template file. If the values present do not match, they will noted and in some cases 
     the values will be replaced:\n----------\n
     """
-    # For newer versions of the submission template, obtain the arrays from the Dictionary tab
-    if any(dict_df["Type"].str.contains("array")):
-        enum_arrays = dict_df[dict_df["Type"].str.contains("array")][
-            "Property"
-        ].tolist()
-    else:
-        enum_arrays = [
-            "therapeutic_agents",
-            "treatment_type",
-            "study_data_types",
-            "morphology",
-            "primary_site",
-            "race",
-        ]
+    template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
-        node_list, file_object, tavs_df, dict_df, unmapped(enum_arrays)
+        node_list, file_object, template_object
     )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
