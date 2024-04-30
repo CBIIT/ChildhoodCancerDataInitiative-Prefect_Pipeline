@@ -491,7 +491,7 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # validate terms and value sets
     validate_terms_value_sets(
-        file_path, nodes_to_validate, dict_df, tavs_df, output_file
+        file_path, template_path, nodes_to_validate, output_file
     )
 
     return output_file
