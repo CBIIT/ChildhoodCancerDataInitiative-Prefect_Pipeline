@@ -153,7 +153,9 @@ def validate_required_properties_one_sheet(
     name="Validate required properties",
     log_prints=True,
 )
-def validate_required_properties(file_path: str, node_list:list, required_properties: list, output_file: str):
+def validate_required_properties(
+    file_path: str, node_list: list, required_properties: list, output_file: str
+):
     section_title = """\n\nThis section is for required properties for all nodes that contain data.\nFor information
     on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, 
     it is expected that all required information has a value:\n----------\n
@@ -187,7 +189,8 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
             ).any():
                 bad_positions = (
                     np.where(
-                        node_df[property].fillna("") != node_df[property].str.strip().fillna("")
+                        node_df[property].fillna("")
+                        != node_df[property].str.strip().fillna("")
                     )[0]
                     + 2
                 )
@@ -226,6 +229,194 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
     """
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_whitespace_one_sheet.map(node_list, file_object)
+    validate_str = "".join([i.result() for i in validate_str_future])
+    return_str = section_title + validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    print(return_str)
+    return None
+
+
+@task(name="Validate terms and value sets of one sheet", log_prints=True)
+def validate_terms_value_sets_one_sheet(
+    node_name: str,
+    checkccdi_object,
+    tavs_df: DataFrame,
+    dict_df: DataFrame,
+    enum_arrays: list,
+):
+    node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
+    properties = node_df.columns
+    line_length = 5
+    print_str = ""
+    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+
+    for property in properties:
+        WARN_FLAG = True
+        tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
+        # if the property is in the TaVs data frame
+        if len(tavs_df_prop) > 0:
+            # if the property is not completely empty:
+            if not node_df[property].isna().all():
+                # if the property is an enum
+                if property in enum_arrays:
+                    # obtain a list of value strings
+                    unique_values = node_df[property].dropna().unique()
+                    # pull out a complete list of all values in sub-arrays
+                    for unique_value in unique_values:
+                        # if there is a semi-colon
+                        if ";" in unique_value:
+                            # make sure the semi-colon is not part of a pre-existing term. (This will help with most use cases, but there could be arrays that also have enums with semi-colons and that will just have to be handled manually.)
+                            if (
+                                unique_value
+                                not in tavs_df_prop["Term"].unique().tolist()
+                            ):
+                                # find the position
+                                unique_value_pos = np.where(
+                                    unique_values == unique_value
+                                )[0][0]
+                                # delete entry
+                                unique_values = np.delete(
+                                    unique_values, unique_value_pos
+                                )
+                                # rework the entry and apply back to list
+                                unique_value = list(set(unique_value.split(";")))
+                                for value in unique_value:
+                                    unique_values = np.append(unique_values, value)
+                    # make sure list is unique
+                    unique_values = list(set(unique_values))
+
+                    if set(unique_values).issubset(set(tavs_df_prop["Term"])):
+                        # if yes, then
+                        print_str = (
+                            print_str
+                            + f"\tPASS: {property}, property contains all valid values.\n"
+                        )
+                    else:
+                        # if no, then
+                        # for each unique value
+                        bad_enum_list = []
+
+                        # Flag to turn on explanation of error/warning
+                        if WARN_FLAG:
+                            WARN_FLAG = False
+                            # test to see if string;enum
+                            enum_strings = dict_df[
+                                dict_df["Type"].str.contains("string")
+                                & dict_df["Type"].str.contains("enum")
+                            ]["Property"].tolist()
+                            # if the enum is an string;enum
+                            if property in enum_strings:
+                                print_str = (
+                                    print_str
+                                    + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n",
+                                )
+                            else:
+                                print_str = (
+                                    print_str
+                                    + f"\tERROR: {property} property contains a value that is not recognized:\n",
+                                )
+                        else:
+                            pass
+
+                        # for each value that is not found, add to a list
+                        for unique_value in unique_values:
+                            if unique_value not in tavs_df_prop["Term"].values:
+                                bad_enum_list.append(unique_value)
+
+                        # itterate over that list and print out the values
+                        enum_print = ""
+                        for i, enum in enumerate(bad_enum_list):
+                            if i % line_length == 0:
+                                enum_print = enum_print + "\n\t"
+                            else:
+                                pass
+                            enum_print = enum_print + str(enum) + ","
+                        print_str = print_str + enum_print + "\n"
+                # if the property is not an enum
+                else:
+                    unique_values = node_df[property].dropna().unique()
+                    # as long as there are unique values
+                    if len(unique_values) > 0:
+                        # are all the values found in the TaVs terms
+                        if set(unique_values).issubset(set(tavs_df_prop["Term"])):
+                            # if yes, then
+                            print_str = (
+                                print_str
+                                + f"\tPASS: {property}, property contains all valid values.\n",
+                            )
+                        else:
+                            # if no, then
+                            bad_enum_list = []
+
+                            # Flag to turn on explanation of error/warning
+                            if WARN_FLAG:
+                                WARN_FLAG = False
+                                # test to see if string;enum
+                                enum_strings = dict_df[
+                                    dict_df["Type"].str.contains("string")
+                                    & dict_df["Type"].str.contains("enum")
+                                ]["Property"].tolist()
+                                # if the enum is an string;enum
+                                if property in enum_strings:
+                                    print_str = (
+                                        print_str
+                                        + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n",
+                                    )
+
+                                else:
+                                    print_str = (
+                                        print_str
+                                        + f"\tERROR: {property} property contains a value that is not recognized:\n"
+                                    )
+
+                            # for each unique value, check it against the TaVs data frame
+                            for unique_value in unique_values:
+                                if unique_value not in tavs_df_prop["Term"].values:
+                                    bad_enum_list.append(unique_value)
+
+                            enum_print = ""
+                            for i, enum in enumerate(bad_enum_list):
+                                if i % line_length == 0:
+                                    enum_print = enum_print + "\n\t"
+                                else:
+                                    pass
+                                enum_print = enum_print + str(enum) + ","
+                            print_str = print_str + enum_print + "\n"
+    print(print_str)
+    return print_str
+
+
+@flow(name="Validate terms and value sets", log_prints=True)
+def validate_terms_value_sets(
+    file_path: str,
+    node_list: list[str],
+    dict_df: DataFrame,
+    tavs_df: DataFrame,
+    output_file: str,
+) -> None:
+    section_title = """he following columns have controlled vocabulary on the 'Terms and Value Sets' 
+    page of the template file. If the values present do not match, they will noted and in some cases 
+    the values will be replaced:\n----------\n
+    """
+    # For newer versions of the submission template, obtain the arrays from the Dictionary tab
+    if any(dict_df["Type"].str.contains("array")):
+        enum_arrays = dict_df[dict_df["Type"].str.contains("array")][
+            "Property"
+        ].tolist()
+    else:
+        enum_arrays = [
+            "therapeutic_agents",
+            "treatment_type",
+            "study_data_types",
+            "morphology",
+            "primary_site",
+            "race",
+        ]
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    validate_str_future = validate_terms_value_sets_one_sheet.map(
+        node_list, file_object, tavs_df, dict_df, unmapped(enum_arrays)
+    )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
@@ -288,5 +479,12 @@ def ValidationRy_new(file_path: str, template_path: str):
         output_file,
     )
 
+    # validate whitespace in proprety values
     validate_whitespace(nodes_to_validate, file_path, output_file)
+
+    # validate terms and value sets
+    validate_terms_value_sets(
+        file_path, nodes_to_validate, dict_df, tavs_df, output_file
+    )
+
     return output_file
