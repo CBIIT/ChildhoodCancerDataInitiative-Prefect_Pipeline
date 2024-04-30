@@ -131,12 +131,12 @@ def validate_required_properties_one_sheet(
                 pos_print = ""
                 for i, pos in enumerate(bad_positions):
                     if i % line_length == 0:
-                        pos_print = pos_print + "\n\t"
+                        pos_print = pos_print + "\n\t\t"
                         # print_str = print_str + "\n\t\t\n"
                     else:
                         pass
                     pos_print = pos_print + str(pos) + ","
-                print_str = print_str + pos_print + "\n"
+                print_str = print_str + pos_print + "\n\n"
             else:
                 print_str = (
                     print_str
@@ -206,11 +206,11 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
                 pos_print = ""
                 for i, pos in enumerate(bad_positions):
                     if i % line_length == 0:
-                        pos_print = pos_print + "\n\t"
+                        pos_print = pos_print + "\n\t\t"
                     else:
                         pass
                     pos_print = pos_print + str(pos) + ","
-                print_str = print_str + pos_print + "\n"
+                print_str = print_str + pos_print + "\n\n"
             else:
                 pass
         else:
@@ -347,11 +347,11 @@ def validate_terms_value_sets_one_sheet(
                         enum_print = ""
                         for i, enum in enumerate(bad_enum_list):
                             if i % line_length == 0:
-                                enum_print = enum_print + "\n\t"
+                                enum_print = enum_print + "\n\t\t"
                             else:
                                 pass
                             enum_print = enum_print + str(enum) + ","
-                        print_str = print_str + enum_print + "\n"
+                        print_str = print_str + enum_print + "\n\n"
                 # if the property is not an enum
                 else:
                     unique_values = node_df[property].dropna().unique()
@@ -397,11 +397,11 @@ def validate_terms_value_sets_one_sheet(
                             enum_print = ""
                             for i, enum in enumerate(bad_enum_list):
                                 if i % line_length == 0:
-                                    enum_print = enum_print + "\n\t"
+                                    enum_print = enum_print + "\n\t\t"
                                 else:
                                     pass
                                 enum_print = enum_print + str(enum) + ","
-                            print_str = print_str + enum_print + "\n"
+                            print_str = print_str + enum_print + "\n\n"
     print(print_str)
     return print_str
 
@@ -415,7 +415,7 @@ def validate_terms_value_sets(
     #tavs_df: DataFrame,
     output_file: str,
 ) -> None:
-    section_title = """he following columns have controlled vocabulary on the 'Terms and Value Sets' 
+    section_title = """\n\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' 
     page of the template file. If the values present do not match, they will noted and in some cases 
     the values will be replaced:\n----------\n
     """
