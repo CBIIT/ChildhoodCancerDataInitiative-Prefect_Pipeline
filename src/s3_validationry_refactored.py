@@ -541,6 +541,8 @@ def validate_integer_numeric_checks_one_sheet(node_name: str, file_object, templ
                 print_str = print_str + enum_print + "\n\n"
             else:
                 pass
+        else:
+            pass
     print(print_str)
     return print_str
 
@@ -630,7 +632,7 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # validate integer and numeric vlaues
     validate_integer_numeric_checks(file_path, template_path, nodes_to_validate, output_file)
-    
+
 
 
     return output_file
