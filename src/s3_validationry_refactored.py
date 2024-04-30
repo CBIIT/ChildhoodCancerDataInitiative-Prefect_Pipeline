@@ -156,9 +156,9 @@ def validate_required_properties_one_sheet(
 def validate_required_properties(
     file_path: str, node_list: list, required_properties: list, output_file: str
 ):
-    section_title = """\n\nThis section is for required properties for all nodes that contain data.\nFor information
-    on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, 
-    it is expected that all required information has a value:\n----------\n
+    section_title = """\n\nThis section is for required properties for all nodes that contain data.
+    For information on required properties per node, please see the 'Dictionary' page of the template file.
+    For each entry, it is expected that all required information has a value:\n----------\n
     """
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_required_properties_one_sheet.map(
@@ -406,7 +406,11 @@ def validate_terms_value_sets_one_sheet(
     return print_str
 
 
-@flow(name="Validate terms and value sets", log_prints=True)
+@flow(
+    name="Validate terms and value sets",
+    log_prints=True,
+    task_runner=ConcurrentTaskRunner(),
+)
 def validate_terms_value_sets(
     file_path: str,
     template_path: str,
@@ -416,12 +420,142 @@ def validate_terms_value_sets(
     output_file: str,
 ) -> None:
     section_title = """\n\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' 
-    page of the template file. If the values present do not match, they will noted and in some cases 
-    the values will be replaced:\n----------\n
+page of the template file. If the values present do not match, they will noted and in some cases 
+the values will be replaced:\n----------\n
     """
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
+        node_list, file_object, template_object
+    )
+    validate_str = "".join([i.result() for i in validate_str_future])
+    return_str = section_title + validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    print(return_str)
+    return None
+
+
+@task(
+        name="Validate integer and numeric value of one sheet",
+        log_prints=True
+)
+def validate_integer_numeric_checks_one_sheet(node_name: str, file_object, template_object):
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+    properties = node_df.columns
+    line_length = 25
+    print_str = ""
+    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+
+    # read dict_df, create int_props, and num_props
+    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    int_props = dict_df[dict_df["Type"] == "integer"]["Property"].unique().tolist()
+    num_props = dict_df[dict_df["Type"] == "number"]["Property"].unique().tolist()
+
+    for property in properties:
+        WARN_FLAG = False
+        # NUMBER PROPS CHECK
+        # if that property is a number property
+        if property in num_props:
+            if len(node_df[property].dropna().tolist()) > 0:
+                error_rows = []
+                # go throw each row
+                for row in list(range(len(node_df))):
+                    # obtain the value
+                    value = node_df[property][row]
+                    # if it is not NA
+                    if pd.notna(value):
+                        # test whether it is a float
+                        if not if_string_float(value):
+                            # if not, add to list, row number offset by 2
+                            error_rows.append(row + 2)
+                            WARN_FLAG = True
+                        else:
+                            pass
+                    else:
+                        pass
+            else:
+                pass
+
+            # if the warning flag was tripped
+            if WARN_FLAG:
+                WARN_FLAG = False
+                print_str = (
+                    print_str
+                    + f"\tERROR: {property} property contains a value that is not a number:\n"
+                )
+                # itterate over that list and print out the values
+                enum_print = ""
+                for i, row in enumerate(error_rows):
+                    if i % line_length == 0:
+                        enum_print = enum_print + "\n\t\t"
+                    else:
+                        pass
+                    enum_print = enum_print + str(row) + ","
+                print_str = print_str + enum_print + "\n\n"
+            else:
+                pass
+        # property not an num_props
+        else:
+            pass
+
+        # INTEGER props check
+        # if that property is a integer property
+        if property in int_props:
+            # if there are atleast one value
+            if len(node_df[property].dropna().tolist()) > 0:
+                error_rows = []
+                # go through each row
+                for row in list(range(len(node_df))):
+                    # obtain the value
+                    value = node_df[property][row]
+                    # if it is not NA
+                    if pd.notna(value):
+                        # test whether it is a int
+                        if not if_string_int(value):
+                            # if not, add to list, row number offset by 2
+                            error_rows.append(row + 2)
+                            WARN_FLAG = True
+                        else:
+                            pass
+                    else:
+                        pass
+            else:
+                pass
+
+            # if the warning flag was tripped
+            if WARN_FLAG:
+                WARN_FLAG = False
+                print_str = (
+                    print_str
+                    + "\tERROR: {property} property contains a value that is not a number:\n"
+                )
+                # itterate over that list and print out the values
+                enum_print = ""
+                for i, row in enumerate(error_rows):
+                    if i % line_length == 0:
+                        enum_print = enum_print + "\n\t\t"
+                    else:
+                        pass
+                    enum_print = enum_print + str(row) + ","
+                print_str = print_str + enum_print + "\n\n"
+            else:
+                pass
+    print(print_str)
+    return print_str
+
+
+@flow(
+    name="Validate integer and numeric value",
+    log_prints=True,
+    task_runner=ConcurrentTaskRunner(),
+)
+def validate_integer_numeric_checks(file_path: str, template_path: str, node_list: list[str], output_file: str):
+    section_title="\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
+    template_object = CheckCCDI(ccdi_manifest=template_path)
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+
+    validate_str_future = validate_integer_numeric_checks_one_sheet.map(
         node_list, file_object, template_object
     )
     validate_str = "".join([i.result() for i in validate_str_future])
@@ -493,5 +627,10 @@ def ValidationRy_new(file_path: str, template_path: str):
     validate_terms_value_sets(
         file_path, template_path, nodes_to_validate, output_file
     )
+
+    # validate integer and numeric vlaues
+    validate_integer_numeric_checks(file_path, template_path, nodes_to_validate, output_file)
+    
+
 
     return output_file
