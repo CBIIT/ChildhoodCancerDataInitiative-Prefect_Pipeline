@@ -328,12 +328,12 @@ def validate_terms_value_sets_one_sheet(
                             if property in enum_strings:
                                 print_str = (
                                     print_str
-                                    + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n",
+                                    + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n"
                                 )
                             else:
                                 print_str = (
                                     print_str
-                                    + f"\tERROR: {property} property contains a value that is not recognized:\n",
+                                    + f"\tERROR: {property} property contains a value that is not recognized:\n"
                                 )
                         else:
                             pass
@@ -362,7 +362,7 @@ def validate_terms_value_sets_one_sheet(
                             # if yes, then
                             print_str = (
                                 print_str
-                                + f"\tPASS: {property}, property contains all valid values.\n",
+                                + f"\tPASS: {property}, property contains all valid values.\n"
                             )
                         else:
                             # if no, then
@@ -380,7 +380,7 @@ def validate_terms_value_sets_one_sheet(
                                 if property in enum_strings:
                                     print_str = (
                                         print_str
-                                        + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n",
+                                        + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n"
                                     )
 
                                 else:
