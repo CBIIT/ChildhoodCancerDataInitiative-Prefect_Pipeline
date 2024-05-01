@@ -157,8 +157,8 @@ def validate_required_properties(
     file_path: str, node_list: list, required_properties: list, output_file: str
 ):
     section_title = """\n\nThis section is for required properties for all nodes that contain data.
-    For information on required properties per node, please see the 'Dictionary' page of the template file.
-    For each entry, it is expected that all required information has a value:\n----------\n
+For information on required properties per node, please see the 'Dictionary' page of the template file.
+For each entry, it is expected that all required information has a value:\n----------\n
     """
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_required_properties_one_sheet.map(
@@ -415,8 +415,8 @@ def validate_terms_value_sets(
     file_path: str,
     template_path: str,
     node_list: list[str],
-    #dict_df: DataFrame,
-    #tavs_df: DataFrame,
+    # dict_df: DataFrame,
+    # tavs_df: DataFrame,
     output_file: str,
 ) -> None:
     section_title = """\n\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' 
@@ -436,11 +436,10 @@ the values will be replaced:\n----------\n
     return None
 
 
-@task(
-        name="Validate integer and numeric value of one sheet",
-        log_prints=True
-)
-def validate_integer_numeric_checks_one_sheet(node_name: str, file_object, template_object):
+@task(name="Validate integer and numeric value of one sheet", log_prints=True)
+def validate_integer_numeric_checks_one_sheet(
+    node_name: str, file_object, template_object
+):
     node_df = file_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     line_length = 25
@@ -552,8 +551,10 @@ def validate_integer_numeric_checks_one_sheet(node_name: str, file_object, templ
     log_prints=True,
     task_runner=ConcurrentTaskRunner(),
 )
-def validate_integer_numeric_checks(file_path: str, template_path: str, node_list: list[str], output_file: str):
-    section_title="\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
+def validate_integer_numeric_checks(
+    file_path: str, template_path: str, node_list: list[str], output_file: str
+):
+    section_title = "\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
 
@@ -562,6 +563,199 @@ def validate_integer_numeric_checks(file_path: str, template_path: str, node_lis
     )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    print(return_str)
+    return None
+
+
+@task(name="Validate regex of one sheet", log_prints=True)
+def validate_regex_one_sheet(
+    node_name: str, file_object, template_object, all_regex: list
+):
+    # read dict_df
+    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    # pull out a data frame that only applies to string values
+    string_df = dict_df[dict_df["Type"].str.lower().str.contains("string")]
+
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+    string_node = string_df[string_df["Node"].isin([node_name])]
+    string_props = string_node["Property"].values
+
+    # logic to remove both GUID and md5sum from the check, as these are random/semi-random strings that are created and would never have a date placed in them.
+    if "md5sum" in string_props:
+        string_props = string_props[string_props != "md5sum"]
+    else:
+        pass
+
+    if "dcf_indexd_guid" in string_props:
+        string_props = string_props[string_props != "dcf_indexd_guid"]
+    else:
+        pass
+
+    line_length = 5
+    print_str = ""
+    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+    for string_prop in string_props:
+        WARN_FLAG = True
+        # find all unique values
+        string_values = node_df[string_prop].dropna().unique()
+
+        bad_regex_strings = []
+        # each unique value
+        for string_value in string_values:
+            # if that value matches any of the regex
+            for regex in all_regex:
+                if re.match(regex, string_value):
+                    bad_regex_strings.append(string_value)
+                else:
+                    pass
+
+        if len(bad_regex_strings) > 0:
+            # Flag to turn on explanation of error/warning
+            if WARN_FLAG:
+                WARN_FLAG = False
+                print_str = (
+                    print_str
+                    + "\tERROR: For the {node} node, the {string_prop} property contains a value that matches a regular expression for dates/social security number/phone number/zip code:\n"
+                )
+            else:
+                pass
+            # itterate over that list and print out the values
+            enum_print = ""
+            for i, string_val in enumerate(bad_regex_strings):
+                if i % line_length == 0:
+                    enum_print = enum_print + "\n\t\t"
+                else:
+                    pass
+                enum_print = enum_print + str(string_val) + ","
+            print_str = print_str + enum_print + "\n\n"
+
+        else:
+            pass
+    print(print_str)
+    return print_str
+
+
+@flow(name="Validate regex", log_prints=True, task_runner=ConcurrentTaskRunner())
+def validate_regex(
+    node_list: list[str], file_path: str, template_path: str, output_file: str
+):
+    section_title = """\nThis section will display any values in properties that can accept strings, which are thought to contain PII/PHI based on regex suggestions from dbGaP:\n----------\n"""
+    # create file_object and template_object
+    template_object = CheckCCDI(ccdi_manifest=template_path)
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    date_regex = [
+        "(0?[1-9]|1[0-2])[-\\/.](0?[1-9]|[12][0-9]|3[01])[-\\/.](19[0-9]{2}|2[0-9]{3}|[0-9]{2})",
+        "(19[0-9]{2}|2[0-9]{3})[-\\/.](0?[1-9]|1[0-2])[-\\/.](0?[1-9]|[12][0-9]|3[01])",
+        "(0?[1-9]|[12][0-9]|3[01])[\\/](19[0-9]{2}|2[0-9]{3})",
+        "(0?[1-9]|[12][0-9])[\\/]([0-9]{2})",
+        "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[0-9]{2}",
+        "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])19[0-9]{2}",
+        "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])2[0-9]{3}",
+        "19[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])",
+        "2[0-9]{3}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])",
+    ]
+    # Problematic regex
+    # A month name or abbreviation and a 1, 2, or 4-digit number, in either order, separated by some non-letter, non-number characters or not separated, e.g., "JAN '93", "FEB64", "May 3rd" (but not "May be 14").
+    # ```'[a-zA-Z]{3}[\ ]?([0-9]|[0-9]{2}|[0-9]{4})[a-zA-Z]{0,2}'```
+    socsec_regex = ["[0-9]{3}[-][0-9]{2}[-][0-9]{4}"]
+    phone_regex = ["[(]?[0-9]{3}[-)\ ][0-9]{3}[-][0-9]{4}"]
+    zip_regex = ["(^[0-9]{5}$)|(^[0-9]{9}$)|(^[0-9]{5}-[0-9]{4}$)"]
+    all_regex = date_regex + socsec_regex + phone_regex + zip_regex
+
+    validate_str_future = validate_regex_one_sheet.map(
+        node_list, file_object, template_object, unmapped(all_regex)
+    )
+    validate_str = "".join([i.result() for i in validate_str_future])
+    return_str = section_title + validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    print(return_str)
+    return None
+
+
+@task(name="Validate unique key of one sheet", log_prints=True)
+def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+
+    # read dict_df
+    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    # pull out all key value properties
+    key_value_props = dict_df[(dict_df["Key"] == "True") & (dict_df["Node"] == node)][
+        "Property"
+    ].values
+
+    line_length = 5
+    print_str = ""
+    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+
+    for key_value_prop in key_value_props:
+        WARN_FLAG = True
+        # if a property is found in the data frame
+        if key_value_prop in node_df.columns.tolist():
+            # as long as there are some values in the key column
+            if node_df[key_value_prop].notna().any():
+                # if the length of the data frame is not the same length of the unique key property values, then we have some non-unique values
+                if len(node_df[key_value_prop].dropna()) != len(
+                    node_df[key_value_prop].dropna().unique()
+                ):
+                    if WARN_FLAG:
+                        WARN_FLAG = False
+                        print_str = (
+                            print_str
+                            + f"\tERROR: The {node_name} node, has multiple instances of the same key value, which should be unique, in the property, {key_value_prop}:\n"
+                        )
+                    else:
+                        pass
+                    # create a table of values and counts
+                    freq_key_values = node_df[key_value_prop].value_counts()
+                    # pull out a unique list of values that have more than one instance
+                    not_unique_key_values = (
+                        node_df[
+                            node_df[key_value_prop].isin(
+                                freq_key_values[freq_key_values > 1].index
+                            )
+                        ][key_value_prop]
+                        .unique()
+                        .tolist()
+                    )
+
+                    # itterate over that list and print out the values
+                    enum_print = ""
+                    for i, not_unique_key_value in enumerate(not_unique_key_values):
+                        if i % line_length == 0:
+                            enum_print = enum_print + "\n\t\t"
+                        else:
+                            pass
+                        enum_print = enum_print + str(not_unique_key_value) + ","
+                    print_str = print_str + enum_print + "\n\n"
+                else:
+                    pass
+
+            else:
+                pass
+        else:
+            pass
+    print(print_str)
+    return print_str
+
+
+@flow(name="Valiedate unique key", log_prints=True, task_runner=ConcurrentTaskRunner())
+def validate_unique_key(
+    node_list: list[str], file_path: str, template_path: str, output_file: str
+):
+    section_title = "\n\nThe following will check for multiples of key values, which are expected to be unique.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    # create file_object and template_object
+    template_object = CheckCCDI(ccdi_manifest=template_path)
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+
+    validate_str_future = validate_unique_key_one_sheet.map(
+        node_list, file_object, template_object
+    )
+    validate_str = "".join([i.result() for i in validate_str_future])
+    return_str = section_title + validate_str
+    # print the return_str to the output file
     with open(output_file, "a+") as outf:
         outf.write(return_str)
     print(return_str)
@@ -626,13 +820,11 @@ def ValidationRy_new(file_path: str, template_path: str):
     validate_whitespace(nodes_to_validate, file_path, output_file)
 
     # validate terms and value sets
-    validate_terms_value_sets(
-        file_path, template_path, nodes_to_validate, output_file
-    )
+    validate_terms_value_sets(file_path, template_path, nodes_to_validate, output_file)
 
     # validate integer and numeric vlaues
-    validate_integer_numeric_checks(file_path, template_path, nodes_to_validate, output_file)
-
-
+    validate_integer_numeric_checks(
+        file_path, template_path, nodes_to_validate, output_file
+    )
 
     return output_file
