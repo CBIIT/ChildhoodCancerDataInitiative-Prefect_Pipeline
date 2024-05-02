@@ -635,13 +635,12 @@ def reformat_sra_values(
     # cram or bam
     # change missing value into "Not Reported"
     sra_df.loc[
-        sra_df["filetype"].isin(["cram", "bam", "crai", "bai"])
-        & pd.isna(sra_df["reference_genome_assembly (or accession)"]),
+        pd.isna(sra_df["reference_genome_assembly (or accession)"]),
         "reference_genome_assembly (or accession)",
     ] = "Not Reported"
+
     sra_df.loc[
-        sra_df["filetype"].isin(["cram", "bam", "crai", "bai"])
-        & pd.isna(sra_df["alignment_software"]),
+        pd.isna(sra_df["alignment_software"]),
         "alignment_software",
     ] = "Not Reported"
 
