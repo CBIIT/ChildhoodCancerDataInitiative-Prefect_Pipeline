@@ -7,6 +7,8 @@ import numpy as np
 import warnings
 import re
 from src.utils import set_s3_session_client, get_time, get_date, CheckCCDI
+from src.file_mover import parse_file_url_in_cds
+from src.file_remover import list_to_chunks
 import boto3
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
@@ -682,7 +684,7 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
     # pull out all key value properties
-    key_value_props = dict_df[(dict_df["Key"] == "True") & (dict_df["Node"] == node)][
+    key_value_props = dict_df[(dict_df["Key"] == "True") & (dict_df["Node"] == node_name)][
         "Property"
     ].values
 
@@ -762,6 +764,378 @@ def validate_unique_key(
     return None
 
 
+def extract_object_file_meta(nodes_list: list[str], file_object):
+    file_node_props = [
+        "file_id",
+        "file_name",
+        "file_size",
+        "md5sum",
+        "file_url_in_cds",
+        "node",
+    ]
+    df_file = pd.DataFrame(columns=file_node_props)
+    for node in nodes_list:
+        node_df = file_object.read_sheet_na(sheetname=node)
+        node_df["node"] = node
+        node_df["file_id"] = node_df[f"{node}_id"]
+        df_file = pd.concat([df_file, node_df[file_node_props]], ignore_index=True)
+    df_file["file_url_in_cds"] = df_file["file_url_in_cds"].map(
+        lambda x: (
+            x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
+            if isinstance(x, str)
+            else x
+        )
+    )
+    return df_file
+
+
+def check_file_size_zero(file_df: DataFrame) -> str:
+    WARN_FLAG = True
+    size_zero_match = file_df[file_df["file_size"] == "0"]
+    print_str = ""
+    if size_zero_match.shape[0] > 0:
+        if WARN_FLAG:
+            WARN_FLAG = False
+            print_str = (
+                print_str
+                + "\t\tWARNING: There are files that have a size value of 0:\n"
+            )
+            print_str = (
+                print_str
+                + size_zero_match[["node", "file_name"]].to_markdown(
+                    tablefmt="pipe", index=False
+                )
+                + "\n"
+            )
+        else:
+            pass
+    else:
+        print_str = print_str + "\t\tINFO: No files were found with 0 file_size.\n"
+    return print_str
+
+
+def check_file_md5sum_regex(file_df: DataFrame) -> str:
+    WARN_FLAG = True
+    print_str = ""
+    file_md5sum_list = file_df["md5sum"].tolist()
+    if_md5sum_regex = [
+        True if re.match(pattern=r"^[a-f0-9]{32}$", string=i) else False
+        for i in file_md5sum_list
+    ]
+    if sum(if_md5sum_regex) < file_df.shape[0]:
+        if WARN_FLAG:
+            WARN_FLAG = False
+            print_str = (
+                print_str
+                + "\t\tWARNING: There are files that have a md5sum value that does not follow the md5sum regular expression:\n"
+            )
+            failed_df = file_df[np.logical_not(if_md5sum_regex)]
+            print_str = (
+                print_str
+                + failed_df[["node", "file_name"]].to_markdown(
+                    tablefmt="pipe", index=False
+                )
+                + "\n"
+            )
+        else:
+            pass
+    else:
+        print_str = (
+            print_str
+            + "\t\tINFO: all files were found with md5sum value that follows md5sum regular expression.\n"
+        )
+    return print_str
+
+
+def check_file_basename(file_df: DataFrame) -> str:
+    WARN_FLAG = True
+    print_str = ""
+    url_list = file_df["file_url_in_cds"].tolist()
+    file_df["url_basename"] = [os.path.split(os.path.relpath(i))[1] for i in url_list]
+    filename_not_match = file_df[
+        np.logical_not(file_df["file_name"] == file_df["url_basename"])
+    ]
+    if filename_not_match.shape[0] > 0:
+        if WARN_FLAG:
+            WARN_FLAG = False
+            print_str = (
+                print_str
+                + f"\t\tWARNING: There are files that have a file_name that does not match the file name in the url:\n"
+            )
+            print_str = (
+                print_str
+                + filename_not_match[["node", "file_name"]].to_markdown(
+                    tablefmt="pipe", index=False
+                )
+                + "\n"
+            )
+        else:
+            pass
+    else:
+        print_str = (
+            print_str
+            + "\t\tINFO: all file names were found in their file_url_in_cds.\n"
+        )
+    return print_str
+
+
+def count_buckets(df_file: DataFrame) -> list:
+    df_file["bucket"] = df_file["file_url_in_cds"].str.split("/").str[2]
+    bucket_list = list(set(df_file["bucket"].values.tolist()))
+    return bucket_list
+
+
+def check_buckets_access(bucket_list: list[str], output_file: str) -> list:
+    invalid_buckets = []
+    s3_client = set_s3_session_client()
+    for bucket in bucket_list:
+        try:
+            s3_client.head_bucket(Bucket=bucket)
+        except ClientError as err:
+            err_code = err.response["Error"]["Code"]
+            err_message = err.response["Error"]["Message"]
+            with open(output_file, "a+") as outf:
+                outf.write(f"\tFail to read bucket {bucket}: {err_code} {err_message}\n")
+            invalid_buckets.append(bucket)
+    s3_client.close()
+    return invalid_buckets
+
+
+@task(
+        name="if a single obj exists in bucket"
+)
+def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client, readable_bucket_list: list) -> bool:
+    """Checks if an obj exists in AWS by using a s3 uri
+    Returns True if exist, False if not exist, and None 
+    """
+    obj_bucket, obj_key = parse_file_url_in_cds(url=s3_uri)
+    if obj_bucket in readable_bucket_list:
+        try:
+            object_meta = s3_client.head_object(Bucket=obj_bucket, Key=obj_key)
+            if_exist = True
+        except ClientError as err:
+            if_exist = False
+    else:
+        if_exist = None
+
+    return if_exist
+
+
+@flow(task_runner=ConcurrentTaskRunner(), name="If objects exist in bucket")
+def validate_manifest_objs_in_bucket(s3_uri_list: list) -> list:
+    s3_client =  set_s3_session_client()
+    exist_list_future = validate_single_manifest_obj_in_bucket.map(s3_uri_list, s3_client)
+    s3_client.close()
+    return [i.result() for i in exist_list_future]
+
+
+@flow(name="if bucket objects exist in manifest")
+def validate_bucket_objs_in_manifest(file_object: str, file_node_list: list[str], readable_buckets: list[str]) -> list:
+    """Returns a list of object found in bucket, but not found in the manifest
+    """
+    df_file = extract_object_file_meta(
+        nodes_list=file_node_list, file_object=file_object
+    )
+    df_file_subset = df_file[["node", "file_url_in_cds", "file_size"]]
+    del df_file
+    s3_client = set_s3_session_client()
+    # create a paginator to itterate through each 1000 objs
+    paginator = s3_client.get_paginator("list_objects_v2")
+    bucket_obj_unfound = []
+    for bucket in readable_buckets:
+        response_iterator = paginator.paginate(Bucket=bucket)
+        # pull out each response and obtain file name and size
+        for response in response_iterator:
+            if "Contents" in response:
+                for obj in response["Contents"]:
+                    obj_uri = "s3://" + bucket + "/" + obj["Key"]
+                    if obj_uri not in df_file_subset["file_url_in_cds"].tolist():
+                        bucket_obj_unfound.append(obj_uri)
+                    else:
+                        pass
+            else:
+                pass
+    s3_client.close()
+    return bucket_obj_unfound
+
+
+@flow(name="Validate obj size in bucket if exsit")
+def validate_objs_size(file_object, file_node_list: list[str], if_exist_list: list)-> DataFrame:
+    """Validate if the manifest obj size matches to bucket obj size
+    Test only on obj that passed the exist test in bucket
+    """
+    df_file = extract_object_file_meta(
+        nodes_list=file_node_list, file_object=file_object
+    )
+    # turn if_exist_list to boolean only, because it might contain None when the bucket
+    # isn't accesible
+    if_exist_filter = [True if i else False for i in if_exist_list]
+    size_validation_df = df_file[if_exist_filter].reset_index(drop=True)
+    url_list = size_validation_df["file_url_in_cds"].tolist()
+
+    # create s3_client
+    s3_client = set_s3_session_client()
+    bucket_file_size = []
+    for i in url_list:
+        i_bucket, i_key = parse_file_url_in_cds(url=i)
+        i_response = s3_client.head_object(Bucket=i_bucket, Key = i_key)
+        i_size = i_response["ContentLength"]
+        bucket_file_size.append(i_size)
+    size_validation_df["bucket_file_size"] =  bucket_file_size
+    size_validation_df["size_compare"] = size_validation_df.apply(
+        lambda x: True if x["file_size"] == x["bucket_file_size"] else False, axis=1
+    )
+    size_compare_fail = size_validation_df[size_validation_df["size_compare"]==False]
+    size_compare_fail = size_compare_fail[
+        ["node", "file_url_in_cds", "file_size", "bucket_file_size"]
+    ]
+    s3_client.close()
+    return size_compare_fail
+
+
+@flow(name="Validate file metadata", log_prints=True)
+def validate_file_metadata(
+    node_list: list[str], file_path: str, template_path: str, output_file: str
+):
+    """Validate if manifest file objs have none zero file size, correct md5sum regex
+    and if file name matches to s3 uri
+    """
+    section_title = "\nThe following section will check the manifest for expected file metadata.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    return_str = "" + section_title
+    # create file_object and template_object
+    template_object = CheckCCDI(ccdi_manifest=template_path)
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+
+    # read dict_df
+    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    file_nodes = dict_df[dict_df["Property"] == "file_url_in_cds"][
+        "Node"
+    ].values.tolist()
+    file_nodes_to_check = [i for i in node_list if i in file_nodes]
+    df_file = extract_object_file_meta(
+        nodes_list=file_nodes_to_check, file_object=file_object
+    )
+
+    # check for file_size == 0
+    return_str = return_str + check_file_size_zero(file_df=df_file)
+
+    # check for md5sum regular expression
+    return_str = return_str + check_file_md5sum_regex(file_df=df_file)
+
+    # check for file basename in url
+    return_str = return_str + check_file_basename(file_df=df_file)
+
+    # print the return_str to output_file
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    print(return_str)
+    return None
+
+
+@flow(
+        name="Validate AWS bucket content", log_prints=True
+)
+def validate_bucket_content(node_list: list[str], file_path: str, template_path: str, output_file: str):
+    section_title = "\nThe following section will compare the manifest against the reported buckets and note if there are unexpected results where the file is represented equally in both sources.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    with open(output_file, "a+") as outf:
+        outf.write(section_title)
+    # create file_object and template_object
+    template_object = CheckCCDI(ccdi_manifest=template_path)
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+
+    # read dict_df
+    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    file_nodes = dict_df[dict_df["Property"] == "file_url_in_cds"][
+        "Node"
+    ].values.tolist()
+    file_nodes_to_check = [i for i in node_list if i in file_nodes]
+    if len(file_nodes_to_check) == 0:
+        with open(output_file, "a+") as outf:
+            outf.write("\tAll file nodes in this manifest were found empty. No further bucket content validation\n")
+        return None
+    else:
+        pass
+    df_file = extract_object_file_meta(
+        nodes_list=file_nodes_to_check, file_object=file_object
+    )
+    # report a list of buckets found within the manifest
+    bucket_list = count_buckets(df_file=df_file)
+    if len(bucket_list) >1:
+        with open(output_file, "a+") as outf:
+            outf.write(
+                f"\tThere are more than one aws bucket that is associated with this metadata file:\n\t\t{*bucket_list,}\n"
+            )
+    else:
+        with open(output_file, "a+") as outf:
+            outf.write(
+                f"\tOnly one aws bucket is associated with this metadata file:\n\t\t{*bucket_list,}\n"
+            )
+    invalid_buckets = check_buckets_access(bucket_list=bucket_list, output_file=output_file)
+    if len(invalid_buckets) > 0:
+        with open(output_file, "a+") as outf:
+            outf.write(
+                f"\tAWS bucket content validation won't perform validation for buckets: {*invalid_buckets,}\n"
+            )
+    else:
+        pass
+    readable_buckets =  [i for i in bucket_list if i not in invalid_buckets]
+    if len(readable_buckets) > 0:
+        # Check if manifest files can be found in buckets
+        uri_list = df_file["file_url_in_cds"].tolist()
+        obj_exist_list = []
+        if len(uri_list) > 100:
+            uri_list_chunk = list_to_chunks(mylist=uri_list, chunk_len=100)
+            for chunk in uri_list_chunk:
+                exist_list_chunk = validate_manifest_objs_in_bucket(s3_uri_list=chunk)
+                obj_exist_list.extend(exist_list_chunk)
+        else:
+            obj_exist_list = validate_manifest_objs_in_bucket(s3_uri_list=uri_list)
+        objs_not_exist = [True if i==False else False for i in obj_exist_list]
+        if sum(objs_not_exist) > 0:
+            not_exist_str = "\tWARNING: There are files that are not found in the bucket, but are in the manifest:\n"
+            not_exist_str = not_exist_str + df_file[objs_not_exist][["node","file_name"]].to_markdown(
+                    tablefmt="pipe", index=False
+                ) + "\n"
+            with open(output_file, "a+") as outf:
+                outf.write(not_exist_str)
+        else:
+            with open(output_file, "a+") as outf:
+                outf.write("\tFiles in the manifest located in accessible buckets were all found\n")
+
+        # Check if the size of the manifest files(passed exist test) match to the bucket object size
+        size_compare_fail_df = validate_objs_size(
+            file_object=file_object,
+            file_node_list=file_nodes_to_check,
+            if_exist_list=obj_exist_list,
+        )
+        if size_compare_fail_df.shape[0] > 0:
+            size_fail_str = "\tWARNING: There are files having different file size between manifest and bucket:\n"
+            size_fail_str = size_fail_str + size_compare_fail_df.to_markdown(
+                    tablefmt="pipe", index=False) + "\n"
+            with open(output_file, "a+") as outf:
+                outf.write(size_fail_str)
+        else:
+            with open(output_file, "a+") as outf:
+                outf.write("\tAll files in the manifest have the same file size in the accessible buckets")
+
+        # Check if the bucket content can be found in the manifest
+        bucket_objs_unfound = validate_bucket_objs_in_manifest(file_object=file_object, file_node_list=file_nodes_to_check, readable_buckets=readable_buckets)
+        if len(bucket_objs_unfound) > 0:
+            bucket_objs_unfound_str = "\tWARNING: There are files that are found in the bucket but not the manifest:\n\t\t"
+            bucket_objs_unfound_str = bucket_objs_unfound_str + "\n\t\t".join(
+                bucket_objs_unfound
+            ) + "\n"
+            with open(output_file, "a+") as outf:
+                outf.write(bucket_objs_unfound_str)
+        else:
+             with open(output_file, "a+") as outf:
+                outf.write("\tAll files in the accessible buckets can be found in the manifest\n")
+
+    else:
+        with open(output_file, "a+") as outf:
+            outf.write("\tWARNING: No accessible buckets for AWS bucket content validation\n")
+    return None
+
 @flow(
     name="CCDI_ValidationRy_refactor",
     log_prints=True,
@@ -826,5 +1200,18 @@ def ValidationRy_new(file_path: str, template_path: str):
     validate_integer_numeric_checks(
         file_path, template_path, nodes_to_validate, output_file
     )
+
+    # validate regex
+    validate_regex(nodes_to_validate, file_path, template_path, output_file)
+
+    # validate unique keys
+    validate_unique_key(nodes_to_validate, file_path, template_path, output_file)
+
+    # validate file metadata (size, md5sum regex, and file basename in url)
+    validate_file_metadata(node_list=nodes_to_validate, file_path=file_path, template_path=template_path, output_file=output_file)
+
+    # validate bucket content
+    validate_bucket_content(node_list=nodes_to_validate, file_path=file_path, template_path=template_path, output_file=output_file)
+    
 
     return output_file
