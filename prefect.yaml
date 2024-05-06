@@ -408,7 +408,7 @@ deployments:
 
   - name: ccdi-guid-checker_2gb
     version: null
-    tags: ["TEST"]
+    tags: ["Production"]
     description: null
     entrypoint: workflows/guid_checker.py:guid_checker_runner
     schedule: null
