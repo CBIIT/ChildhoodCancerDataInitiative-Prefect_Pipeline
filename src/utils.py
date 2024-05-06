@@ -3,6 +3,7 @@ from prefect.artifacts import create_markdown_artifact
 from prefect.task_runners import ConcurrentTaskRunner
 from dataclasses import dataclass, field
 from typing import List, TypeVar, Dict, Tuple
+from botocore.exceptions import ClientError
 import warnings
 import os
 import sys
@@ -281,15 +282,24 @@ def set_s3_session_client():
     return s3_client
 
 
-@task(name="Download file", task_run_name="download_file_{filename}")
+@task(name="Download file", task_run_name="download_file_{filename}", log_prints=True)
 def file_dl(bucket, filename):
-    """File download using bucket name and filename"""
+    """File download using bucket name and filename
+    filename is the key path in bucket
+    file is the basename
+    """
     # Set the s3 resource object for local or remote execution
     s3 = set_s3_resource()
     source = s3.Bucket(bucket)
     file_key = filename
     file = os.path.basename(filename)
-    source.download_file(file_key, file)
+    try:
+        source.download_file(file_key, file)
+    except ClientError as ex:
+        ex_code = ex.response["Error"]["Code"]
+        ex_message = ex.response["Error"]["Message"]
+        print(f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}")
+        raise
 
 
 @task(name="Upload file", task_run_name="upload_file_{newfile}")
@@ -331,7 +341,7 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@task
+@task(log_prints=True)
 def folder_dl(bucket: str, remote_folder: str) -> None:
     """Downloads a remote direcotry folder from s3
     bucket to local. it generates a folder that follows the
@@ -345,7 +355,11 @@ def folder_dl(bucket: str, remote_folder: str) -> None:
     for obj in bucket_obj.objects.filter(Prefix=remote_folder):
         if not os.path.exists(os.path.dirname(obj.key)):
             os.makedirs(os.path.dirname(obj.key))
-        bucket_obj.download_file(obj.key, obj.key)
+        try:
+            bucket_obj.download_file(obj.key, obj.key)
+        except NotADirectoryError as err:
+            err_str = repr(err)
+            print(f"Error downloading folder {remote_folder} from bucket {bucket}: {err_str}")
     return None
 
 
@@ -974,7 +988,6 @@ class CheckCCDI:
         return file_node_list_uniq
 
 
-
 @flow(log_prints=True)
 def get_github_credentials()-> None:
     runner_logger = get_run_logger()
@@ -1105,7 +1118,7 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     s3_client.close()
     return [i.result() for i in size_value_list]
 
-  
+
 @task(
     name="Extract one sheet dcf index info",
     log_prints=True,

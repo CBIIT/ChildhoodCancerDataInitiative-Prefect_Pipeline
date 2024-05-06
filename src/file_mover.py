@@ -28,6 +28,12 @@ DataFrame = TypeVar("DataFrame")
 
 
 def parse_file_url_in_cds(url: str) -> tuple:
+    """Parse an s3 uri into bucket name and key"""
+    # add s3:// if missing
+    if not url.startswith("s3://"):
+        url = "s3://" + url
+    else:
+        pass
     parsed_url = urlparse(url)
     bucket_name = parsed_url.netloc
     object_key = parsed_url.path
