@@ -815,10 +815,11 @@ def check_file_size_zero(file_df: DataFrame) -> str:
                 + "\t\tWARNING: There are files that have a size value of 0:\n"
             )
             print_str = (
-                print_str + "\t\t"
-                + size_zero_match[["node", "file_name"]].to_markdown(
-                    tablefmt="pipe", index=False
-                ).replace("\n","\n\t\t")
+                print_str
+                + "\n\t\t"
+                + size_zero_match[["node", "file_name"]]
+                .to_markdown(tablefmt="rounded_grid", index=False)
+                .replace("\n", "\n\t\t")
                 + "\n"
             )
         else:
@@ -846,9 +847,10 @@ def check_file_md5sum_regex(file_df: DataFrame) -> str:
             failed_df = file_df[np.logical_not(if_md5sum_regex)]
             print_str = (
                 print_str
-                + failed_df[["node", "file_name"]].to_markdown(
-                    tablefmt="pipe", index=False
-                )
+                + "\n\t\t"
+                + failed_df[["node", "file_name"]]
+                .to_markdown(tablefmt="rounded_grid", index=False)
+                .replace("\n", "\n\t\t")
                 + "\n"
             )
         else:
@@ -862,6 +864,7 @@ def check_file_md5sum_regex(file_df: DataFrame) -> str:
 
 
 def check_file_basename(file_df: DataFrame) -> str:
+    """Checks if the file_name value matches to the basename of file_url_in_cds"""
     WARN_FLAG = True
     print_str = ""
     url_list = file_df["file_url_in_cds"].tolist()
@@ -877,10 +880,11 @@ def check_file_basename(file_df: DataFrame) -> str:
                 + f"\t\tWARNING: There are files that have a file_name that does not match the file name in the url:\n"
             )
             print_str = (
-                print_str + "\t\t"
-                + filename_not_match[["node", "file_name"]].to_markdown(
-                    tablefmt="pipe", index=False
-                ).replace("\n","\n\t\t")
+                print_str
+                + "\n\t\t"
+                + filename_not_match[["node", "file_name"]]
+                .to_markdown(tablefmt="rounded_grid", index=False)
+                .replace("\n", "\n\t\t")
                 + "\n"
             )
         else:
@@ -1091,22 +1095,23 @@ def validate_bucket_content(
     if len(bucket_list) > 1:
         with open(output_file, "a+") as outf:
             outf.write(
-                f"\tThere are more than one aws bucket that is associated with this metadata file:\n\t\t{*bucket_list,}\n"
+                f"\tThere are more than one aws bucket that is associated with this metadata file:\n\t\t{*bucket_list,}\n\n"
             )
     else:
         with open(output_file, "a+") as outf:
             outf.write(
-                f"\tOnly one aws bucket is associated with this metadata file:\n\t\t{*bucket_list,}\n"
+                f"\tOnly one aws bucket is associated with this metadata file:\n\t\t{*bucket_list,}\n\n"
             )
     invalid_buckets = check_buckets_access(bucket_list=bucket_list)
     invalid_buckets_df = pd.DataFrame.from_dict(invalid_buckets)
     if len(invalid_buckets) > 0:
         with open(output_file, "a+") as outf:
             outf.write(
-                f"\tAWS bucket content validation won't perform validation for buckets:\n\t"
+                f"\tAWS bucket content validation won't perform validation for buckets:\n\n\t"
                 + invalid_buckets_df.to_markdown(
-                    tablefmt="pipe", index=False
-                ).replace("\n","\n\t") + "\n"
+                    tablefmt="rounded_grid", index=False
+                ).replace("\n", "\n\t")
+                + "\n\n"
             )
     else:
         pass
@@ -1131,10 +1136,11 @@ def validate_bucket_content(
         if sum(objs_not_exist) > 0:
             not_exist_str = "\tWARNING: There are files that are not found in the bucket, but are in the manifest:\n"
             not_exist_str = (
-                not_exist_str + "\t"
-                + df_file[objs_not_exist][["node", "file_name"]].to_markdown(
-                    tablefmt="pipe", index=False
-                ).replace("\n","\n\t")
+                not_exist_str
+                + "\t"
+                + df_file[objs_not_exist][["node", "file_name"]]
+                .to_markdown(tablefmt="rounded_grid", index=False)
+                .replace("\n", "\n\t")
                 + "\n"
             )
             with open(output_file, "a+") as outf:
@@ -1154,8 +1160,11 @@ def validate_bucket_content(
         if size_compare_fail_df.shape[0] > 0:
             size_fail_str = "\tWARNING: There are files having different file size between manifest and bucket:\n"
             size_fail_str = (
-                size_fail_str + "\t"
-                + size_compare_fail_df.to_markdown(tablefmt="pipe", index=False).replace("\n","\n\t")
+                size_fail_str
+                + "\n\t"
+                + size_compare_fail_df.to_markdown(
+                    tablefmt="rounded_grid", index=False
+                ).replace("\n", "\n\t")
                 + "\n"
             )
             with open(output_file, "a+") as outf:
@@ -1188,7 +1197,7 @@ def validate_bucket_content(
     else:
         with open(output_file, "a+") as outf:
             outf.write(
-                "\tWARNING: No accessible buckets for AWS bucket content validation\n"
+                "\n\tWARNING: No accessible buckets for AWS bucket content validation\n"
             )
     return None
 
