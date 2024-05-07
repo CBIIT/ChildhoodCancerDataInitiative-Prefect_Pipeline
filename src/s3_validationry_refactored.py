@@ -921,7 +921,7 @@ def check_buckets_access(bucket_list: list[str]) -> dict:
 
 @task(name="if a single obj exists in bucket")
 def validate_single_manifest_obj_in_bucket(
-    s3_uri: str, s3_client, readable_bucket_list: list
+    s3_uri: str, s3_client, readable_bucket_list: list[str]
 ) -> bool:
     """Checks if an obj exists in AWS by using a s3 uri
     Returns True if exist, False if not exist, and None
@@ -940,10 +940,13 @@ def validate_single_manifest_obj_in_bucket(
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="If objects exist in bucket")
-def validate_manifest_objs_in_bucket(s3_uri_list: list) -> list:
+def validate_manifest_objs_in_bucket(s3_uri_list: list, readable_bucket_list: list[str]) -> list:
+    """Checks if a list of uri exists in AWS by using a s3 uri
+    Returns a list of True if exist, False if not exist, and None
+    """
     s3_client = set_s3_session_client()
     exist_list_future = validate_single_manifest_obj_in_bucket.map(
-        s3_uri_list, s3_client
+        s3_uri_list, s3_client, unmapped(readable_bucket_list)
     )
     s3_client.close()
     return [i.result() for i in exist_list_future]
@@ -1108,6 +1111,7 @@ def validate_bucket_content(
     else:
         pass
     readable_buckets = [i for i in bucket_list if i not in invalid_buckets]
+    print(f"readable buckets are: {*readable_buckets,}")
     if len(readable_buckets) > 0:
         # Check if manifest files can be found in buckets
         uri_list = df_file["file_url_in_cds"].tolist()
@@ -1115,10 +1119,14 @@ def validate_bucket_content(
         if len(uri_list) > 100:
             uri_list_chunk = list_to_chunks(mylist=uri_list, chunk_len=100)
             for chunk in uri_list_chunk:
-                exist_list_chunk = validate_manifest_objs_in_bucket(s3_uri_list=chunk)
+                exist_list_chunk = validate_manifest_objs_in_bucket(
+                    s3_uri_list=chunk, readable_bucket_list=readable_buckets
+                )
                 obj_exist_list.extend(exist_list_chunk)
         else:
-            obj_exist_list = validate_manifest_objs_in_bucket(s3_uri_list=uri_list)
+            obj_exist_list = validate_manifest_objs_in_bucket(
+                s3_uri_list=uri_list, readable_bucket_list=readable_buckets
+            )
         objs_not_exist = [True if i == False else False for i in obj_exist_list]
         if sum(objs_not_exist) > 0:
             not_exist_str = "\tWARNING: There are files that are not found in the bucket, but are in the manifest:\n"
