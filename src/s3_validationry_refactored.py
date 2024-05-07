@@ -107,7 +107,11 @@ def cleanup_manifest_nodes(
     return sheetnames_ordered
 
 
-@task(name="Validate required properties of a single sheet", log_prints=True)
+@task(
+    name="Validate required properties of a single sheet",
+    log_prints=True,
+    task_run_name="Validate required properties of node {node_name}",
+)
 def validate_required_properties_one_sheet(
     node_name, checkccdi_object, required_properties
 ) -> str:
@@ -174,13 +178,12 @@ For each entry, it is expected that all required information has a value:\n-----
     return None
 
 
-@task(name="Validate whitespace of a single sheet", log_prints=True)
+@task(name="Validate whitespace of a single sheet", log_prints=True, task_run_name="Validate whitespace of node {node_name}")
 def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     line_length = 25
-    print_str = ""
-    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+    print_str = f"\n\t{node_name}\n\t----------\n"
     for property in properties:
         WARN_FLAG = True
         # if the property is not completely empty:
@@ -239,7 +242,11 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
     return None
 
 
-@task(name="Validate terms and value sets of one sheet", log_prints=True)
+@task(
+    name="Validate terms and value sets of one sheet",
+    log_prints=True,
+    task_run_name="Validate terms and value sets of node {node_name}",
+)
 def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
@@ -438,7 +445,11 @@ If the values present do not match, they will noted and in some cases the values
     return None
 
 
-@task(name="Validate integer and numeric value of one sheet", log_prints=True)
+@task(
+    name="Validate integer and numeric value of one sheet",
+    log_prints=True,
+    task_run_name="Validate integer and numeric value of node {node_name}",
+)
 def validate_integer_numeric_checks_one_sheet(
     node_name: str, file_object, template_object
 ):
@@ -571,7 +582,7 @@ def validate_integer_numeric_checks(
     return None
 
 
-@task(name="Validate regex of one sheet", log_prints=True)
+@task(name="Validate regex of one sheet", log_prints=True, task_run_name="Validate regex of node {node_name}")
 def validate_regex_one_sheet(
     node_name: str, file_object, template_object, all_regex: list
 ):
@@ -677,7 +688,11 @@ def validate_regex(
     return None
 
 
-@task(name="Validate unique key of one sheet", log_prints=True)
+@task(
+    name="Validate unique key of one sheet",
+    log_prints=True,
+    task_run_name="Validate unique key of node {node_name}",
+)
 def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
     node_df = file_object.read_sheet_na(sheetname=node_name)
 
@@ -1173,7 +1188,11 @@ def validate_bucket_content(
     return None
 
 
-@task(name="Validate cross links of one sheet", log_prints=True)
+@task(
+    name="Validate cross links of one sheet",
+    log_prints=True,
+    task_run_name="Validate cross links of node {node_name}",
+)
 def validate_cross_links_single_sheet(
     node_name: str, file_object
 ) -> str:
@@ -1257,7 +1276,11 @@ def validate_cross_links(file_path: str, output_file: str, node_list: list[str])
     return None
 
 
-@task(name="Validate Key ID of a single sheet", log_prints=True)
+@task(
+    name="Validate Key ID of a single sheet",
+    log_prints=True,
+    task_run_name="Validate Key ID of node {node_name}",
+)
 def validate_key_id_single_sheet(node_name: str, file_object, template_object) -> str:
     """Validate key id of a single sheet"""
     print_str = f"\n\t{node_name}:\n\t----------\n"
