@@ -37,8 +37,7 @@ def if_string_int(mystr: str) -> bool:
 def if_template_valid(template_path: str) -> None:
     template_file = pd.ExcelFile(template_path)
     template_sheets = template_file.sheet_names
-    print(template_sheets)
-    print(len(template_sheets))
+    # if template doesn't have 
     if not (
         ("Dictionary" in template_sheets)
         and ("Terms and Value Sets" in template_sheets)
@@ -1096,9 +1095,7 @@ def validate_bucket_content(
             outf.write(
                 f"\tOnly one aws bucket is associated with this metadata file:\n\t\t{*bucket_list,}\n"
             )
-    invalid_buckets = check_buckets_access(
-        bucket_list=bucket_list, output_file=output_file
-    )
+    invalid_buckets = check_buckets_access(bucket_list=bucket_list)
     invalid_buckets_df = pd.DataFrame.from_dict(invalid_buckets)
     if len(invalid_buckets) > 0:
         with open(output_file, "a+") as outf:
