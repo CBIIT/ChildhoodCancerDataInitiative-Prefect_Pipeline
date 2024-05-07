@@ -556,7 +556,7 @@ def validate_integer_numeric_checks_one_sheet(
 def validate_integer_numeric_checks(
     file_path: str, template_path: str, node_list: list[str], output_file: str
 ):
-    section_title = "\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
+    section_title = "\n\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
 
@@ -643,7 +643,7 @@ def validate_regex_one_sheet(
 def validate_regex(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
-    section_title = """\nThis section will display any values in properties that can accept strings, which are thought to contain PII/PHI based on regex suggestions from dbGaP:\n----------\n"""
+    section_title = """\n\nThis section will display any values in properties that can accept strings, which are thought to contain PII/PHI based on regex suggestions from dbGaP:\n----------\n"""
     # create file_object and template_object
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -801,10 +801,10 @@ def check_file_size_zero(file_df: DataFrame) -> str:
                 + "\t\tWARNING: There are files that have a size value of 0:\n"
             )
             print_str = (
-                print_str
+                print_str + "\t\t"
                 + size_zero_match[["node", "file_name"]].to_markdown(
                     tablefmt="pipe", index=False
-                )
+                ).replace("\n","\n\t\t")
                 + "\n"
             )
         else:
@@ -863,10 +863,10 @@ def check_file_basename(file_df: DataFrame) -> str:
                 + f"\t\tWARNING: There are files that have a file_name that does not match the file name in the url:\n"
             )
             print_str = (
-                print_str
+                print_str + "\t\t"
                 + filename_not_match[["node", "file_name"]].to_markdown(
                     tablefmt="pipe", index=False
-                )
+                ).replace("\n","\n\t\t")
                 + "\n"
             )
         else:
@@ -1007,7 +1007,7 @@ def validate_file_metadata(
     """Validate if manifest file objs have none zero file size, correct md5sum regex
     and if file name matches to s3 uri
     """
-    section_title = "\nThe following section will check the manifest for expected file metadata.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    section_title = "\n\nThe following section will check the manifest for expected file metadata.\nIf there are any unexpected values, they will be reported below:\n----------\n"
     return_str = "" + section_title
     # create file_object and template_object
     template_object = CheckCCDI(ccdi_manifest=template_path)
@@ -1043,7 +1043,7 @@ def validate_file_metadata(
 def validate_bucket_content(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
-    section_title = "\nThe following section will compare the manifest against the reported buckets and note if there are unexpected results where the file is represented equally in both sources.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    section_title = "\n\nThe following section will compare the manifest against the reported buckets and note if there are unexpected results where the file is represented equally in both sources.\nIf there are any unexpected values, they will be reported below:\n----------\n"
     with open(output_file, "a+") as outf:
         outf.write(section_title)
     # create file_object and template_object
@@ -1105,10 +1105,10 @@ def validate_bucket_content(
         if sum(objs_not_exist) > 0:
             not_exist_str = "\tWARNING: There are files that are not found in the bucket, but are in the manifest:\n"
             not_exist_str = (
-                not_exist_str
+                not_exist_str + "\t"
                 + df_file[objs_not_exist][["node", "file_name"]].to_markdown(
                     tablefmt="pipe", index=False
-                )
+                ).replace("\n","\n\t")
                 + "\n"
             )
             with open(output_file, "a+") as outf:
@@ -1128,8 +1128,8 @@ def validate_bucket_content(
         if size_compare_fail_df.shape[0] > 0:
             size_fail_str = "\tWARNING: There are files having different file size between manifest and bucket:\n"
             size_fail_str = (
-                size_fail_str
-                + size_compare_fail_df.to_markdown(tablefmt="pipe", index=False)
+                size_fail_str + "\t"
+                + size_compare_fail_df.to_markdown(tablefmt="pipe", index=False).replace("\n","\n\t")
                 + "\n"
             )
             with open(output_file, "a+") as outf:
@@ -1239,7 +1239,7 @@ def validate_cross_links_single_sheet(
 @flow(name="Validate cross links", log_prints=True)
 def validate_cross_links(file_path: str, output_file: str, node_list: list[str]) -> None:
     """Performs cross link validation between nodes of entire manifest file"""
-    section_title = "\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
+    section_title = "\n\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
 
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -1319,7 +1319,7 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
 @flow(name="Validate Key ID", log_prints=True)
 def validate_key_id(file_path: str, template_path: str, node_list: list[str], output_file) -> None:
     """Validate key id of entire manifest"""
-    section_title = "\nFor the '_id' key properties, only the following characters can be included: English letters, Arabic numerals, period (.), hyphen (-), underscore (_), at symbol (@), and the pound sign (#).\nFor values that do not match, they will be reported below:\n----------\n"
+    section_title = "\n\nFor the '_id' key properties, only the following characters can be included: English letters, Arabic numerals, period (.), hyphen (-), underscore (_), at symbol (@), and the pound sign (#).\nFor values that do not match, they will be reported below:\n----------\n"
 
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -1359,12 +1359,6 @@ def ValidationRy_new(file_path: str, template_path: str):
     # crete a list of all properties and a list of required properties
     # all_properties = set(dict_df["Property"]) # this variable not used in original script
     required_properties = set(dict_df[dict_df["Required"].notna()]["Property"])
-
-    # Try not to read every df into a single dict variable
-    # the size gets too big. Instead, filter nodes by removing instruction
-    # node and empty df nodes. and we can create task by taking, manifest path, node/sheet name,
-    # and template info as necessary, and we can run task concurrently to speed up
-    # the process
 
     # list of nodes based on template Dictionary sheet
     template_node_list = dict_df["Node"].unique().tolist()
