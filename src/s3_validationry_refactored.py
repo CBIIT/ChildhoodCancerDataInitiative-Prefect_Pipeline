@@ -539,7 +539,7 @@ def validate_integer_numeric_checks_one_sheet(
                 WARN_FLAG = False
                 print_str = (
                     print_str
-                    + "\tERROR: {property} property contains a value that is not a number:\n"
+                    + f"\tERROR: {property} property contains a value that is not an integer:\n"
                 )
                 # itterate over that list and print out the values
                 enum_print = ""
@@ -812,20 +812,20 @@ def check_file_size_zero(file_df: DataFrame) -> str:
             WARN_FLAG = False
             print_str = (
                 print_str
-                + "\t\tWARNING: There are files that have a size value of 0:\n"
+                + "\tWARNING: There are files that have a size value of 0:\n"
             )
             print_str = (
                 print_str
-                + "\n\t\t"
-                + size_zero_match[["node", "file_name"]]
+                + "\n\t"
+                + size_zero_match[["node", "file_name", "file_size"]]
                 .to_markdown(tablefmt="rounded_grid", index=False)
-                .replace("\n", "\n\t\t")
-                + "\n"
+                .replace("\n", "\n\t")
+                + "\n\n"
             )
         else:
             pass
     else:
-        print_str = print_str + "\t\tINFO: No files were found with 0 file_size.\n"
+        print_str = print_str + "\tINFO: No files were found with 0 file_size.\n"
     return print_str
 
 
@@ -842,23 +842,23 @@ def check_file_md5sum_regex(file_df: DataFrame) -> str:
             WARN_FLAG = False
             print_str = (
                 print_str
-                + "\t\tWARNING: There are files that have a md5sum value that does not follow the md5sum regular expression:\n"
+                + "\tWARNING: There are files that have a md5sum value that does not follow the md5sum regular expression:\n"
             )
             failed_df = file_df[np.logical_not(if_md5sum_regex)]
             print_str = (
                 print_str
-                + "\n\t\t"
-                + failed_df[["node", "file_name"]]
+                + "\n\t"
+                + failed_df[["node", "file_name", "md5sum"]]
                 .to_markdown(tablefmt="rounded_grid", index=False)
-                .replace("\n", "\n\t\t")
-                + "\n"
+                .replace("\n", "\n\t")
+                + "\n\n"
             )
         else:
             pass
     else:
         print_str = (
             print_str
-            + "\t\tINFO: all files were found with md5sum value that follows md5sum regular expression.\n"
+            + "\tINFO: all files were found with md5sum value that follows md5sum regular expression.\n"
         )
     return print_str
 
@@ -877,22 +877,22 @@ def check_file_basename(file_df: DataFrame) -> str:
             WARN_FLAG = False
             print_str = (
                 print_str
-                + f"\t\tWARNING: There are files that have a file_name that does not match the file name in the url:\n"
+                + f"\tWARNING: There are files that have a file_name that does not match the file name in the url:\n"
             )
             print_str = (
                 print_str
-                + "\n\t\t"
-                + filename_not_match[["node", "file_name"]]
+                + "\n\t"
+                + filename_not_match[["node", "file_name", "file_url_in_cds"]]
                 .to_markdown(tablefmt="rounded_grid", index=False)
-                .replace("\n", "\n\t\t")
-                + "\n"
+                .replace("\n", "\n\t")
+                + "\n\n"
             )
         else:
             pass
     else:
         print_str = (
             print_str
-            + "\t\tINFO: all file names were found in their file_url_in_cds.\n"
+            + "\tINFO: all file names were found in their file_url_in_cds.\n"
         )
     return print_str
 
@@ -1095,19 +1095,19 @@ def validate_bucket_content(
     if len(bucket_list) > 1:
         with open(output_file, "a+") as outf:
             outf.write(
-                f"\tThere are more than one aws bucket that is associated with this metadata file:\n\t\t{*bucket_list,}\n\n"
+                f"\tINFO: There are more than one aws bucket that is associated with this metadata file:\n\t{*bucket_list,}\n\n"
             )
     else:
         with open(output_file, "a+") as outf:
             outf.write(
-                f"\tOnly one aws bucket is associated with this metadata file:\n\t\t{*bucket_list,}\n\n"
+                f"\tINFO: Only one aws bucket is associated with this metadata file:\n\t\t{*bucket_list,}\n\n"
             )
     invalid_buckets = check_buckets_access(bucket_list=bucket_list)
     invalid_buckets_df = pd.DataFrame.from_dict(invalid_buckets)
     if len(invalid_buckets) > 0:
         with open(output_file, "a+") as outf:
             outf.write(
-                f"\tAWS bucket content validation won't perform validation for buckets:\n\n\t"
+                f"\tAWS bucket content validation won't perform validation for buckets:\n\t"
                 + invalid_buckets_df.to_markdown(
                     tablefmt="rounded_grid", index=False
                 ).replace("\n", "\n\t")
