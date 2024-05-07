@@ -1110,7 +1110,7 @@ def validate_bucket_content(
             )
     else:
         pass
-    readable_buckets = [i for i in bucket_list if i not in invalid_buckets]
+    readable_buckets = [i for i in bucket_list if i not in invalid_buckets["bucket"]]
     print(f"readable buckets are: {*readable_buckets,}")
     if len(readable_buckets) > 0:
         # Check if manifest files can be found in buckets
