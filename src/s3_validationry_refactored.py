@@ -248,8 +248,7 @@ def validate_terms_value_sets_one_sheet(
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     line_length = 5
-    print_str = ""
-    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+    print_str = f"\n\t{node_name}\n\t----------\n"
 
     # create tavs_df and dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
@@ -404,6 +403,8 @@ def validate_terms_value_sets_one_sheet(
                                     pass
                                 enum_print = enum_print + str(enum) + ","
                             print_str = print_str + enum_print + "\n\n"
+                    else:
+                        pass
     print(print_str)
     return print_str
 
@@ -421,9 +422,8 @@ def validate_terms_value_sets(
     # tavs_df: DataFrame,
     output_file: str,
 ) -> None:
-    section_title = """\n\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' 
-page of the template file. If the values present do not match, they will noted and in some cases 
-the values will be replaced:\n----------\n
+    section_title = """\n\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file. 
+If the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n
     """
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -684,9 +684,9 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
     # pull out all key value properties
-    key_value_props = dict_df[(dict_df["Key"] == "True") & (dict_df["Node"] == node_name)][
-        "Property"
-    ].values
+    key_value_props = dict_df[
+        (dict_df["Key"] == "True") & (dict_df["Node"] == node_name)
+    ]["Property"].values
 
     line_length = 5
     print_str = ""
@@ -895,18 +895,20 @@ def check_buckets_access(bucket_list: list[str], output_file: str) -> list:
             err_code = err.response["Error"]["Code"]
             err_message = err.response["Error"]["Message"]
             with open(output_file, "a+") as outf:
-                outf.write(f"\tFail to read bucket {bucket}: {err_code} {err_message}\n")
+                outf.write(
+                    f"\tFail to read bucket {bucket}: {err_code} {err_message}\n"
+                )
             invalid_buckets.append(bucket)
     s3_client.close()
     return invalid_buckets
 
 
-@task(
-        name="if a single obj exists in bucket"
-)
-def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client, readable_bucket_list: list) -> bool:
+@task(name="if a single obj exists in bucket")
+def validate_single_manifest_obj_in_bucket(
+    s3_uri: str, s3_client, readable_bucket_list: list
+) -> bool:
     """Checks if an obj exists in AWS by using a s3 uri
-    Returns True if exist, False if not exist, and None 
+    Returns True if exist, False if not exist, and None
     """
     obj_bucket, obj_key = parse_file_url_in_cds(url=s3_uri)
     if obj_bucket in readable_bucket_list:
@@ -923,16 +925,19 @@ def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client, readable_buck
 
 @flow(task_runner=ConcurrentTaskRunner(), name="If objects exist in bucket")
 def validate_manifest_objs_in_bucket(s3_uri_list: list) -> list:
-    s3_client =  set_s3_session_client()
-    exist_list_future = validate_single_manifest_obj_in_bucket.map(s3_uri_list, s3_client)
+    s3_client = set_s3_session_client()
+    exist_list_future = validate_single_manifest_obj_in_bucket.map(
+        s3_uri_list, s3_client
+    )
     s3_client.close()
     return [i.result() for i in exist_list_future]
 
 
 @flow(name="if bucket objects exist in manifest")
-def validate_bucket_objs_in_manifest(file_object: str, file_node_list: list[str], readable_buckets: list[str]) -> list:
-    """Returns a list of object found in bucket, but not found in the manifest
-    """
+def validate_bucket_objs_in_manifest(
+    file_object: str, file_node_list: list[str], readable_buckets: list[str]
+) -> list:
+    """Returns a list of object found in bucket, but not found in the manifest"""
     df_file = extract_object_file_meta(
         nodes_list=file_node_list, file_object=file_object
     )
@@ -960,7 +965,9 @@ def validate_bucket_objs_in_manifest(file_object: str, file_node_list: list[str]
 
 
 @flow(name="Validate obj size in bucket if exsit")
-def validate_objs_size(file_object, file_node_list: list[str], if_exist_list: list)-> DataFrame:
+def validate_objs_size(
+    file_object, file_node_list: list[str], if_exist_list: list
+) -> DataFrame:
     """Validate if the manifest obj size matches to bucket obj size
     Test only on obj that passed the exist test in bucket
     """
@@ -978,14 +985,14 @@ def validate_objs_size(file_object, file_node_list: list[str], if_exist_list: li
     bucket_file_size = []
     for i in url_list:
         i_bucket, i_key = parse_file_url_in_cds(url=i)
-        i_response = s3_client.head_object(Bucket=i_bucket, Key = i_key)
+        i_response = s3_client.head_object(Bucket=i_bucket, Key=i_key)
         i_size = i_response["ContentLength"]
         bucket_file_size.append(i_size)
-    size_validation_df["bucket_file_size"] =  bucket_file_size
+    size_validation_df["bucket_file_size"] = bucket_file_size
     size_validation_df["size_compare"] = size_validation_df.apply(
         lambda x: True if x["file_size"] == x["bucket_file_size"] else False, axis=1
     )
-    size_compare_fail = size_validation_df[size_validation_df["size_compare"]==False]
+    size_compare_fail = size_validation_df[size_validation_df["size_compare"] == False]
     size_compare_fail = size_compare_fail[
         ["node", "file_url_in_cds", "file_size", "bucket_file_size"]
     ]
@@ -1032,10 +1039,10 @@ def validate_file_metadata(
     return None
 
 
-@flow(
-        name="Validate AWS bucket content", log_prints=True
-)
-def validate_bucket_content(node_list: list[str], file_path: str, template_path: str, output_file: str):
+@flow(name="Validate AWS bucket content", log_prints=True)
+def validate_bucket_content(
+    node_list: list[str], file_path: str, template_path: str, output_file: str
+):
     section_title = "\nThe following section will compare the manifest against the reported buckets and note if there are unexpected results where the file is represented equally in both sources.\nIf there are any unexpected values, they will be reported below:\n----------\n"
     with open(output_file, "a+") as outf:
         outf.write(section_title)
@@ -1051,7 +1058,9 @@ def validate_bucket_content(node_list: list[str], file_path: str, template_path:
     file_nodes_to_check = [i for i in node_list if i in file_nodes]
     if len(file_nodes_to_check) == 0:
         with open(output_file, "a+") as outf:
-            outf.write("\tAll file nodes in this manifest were found empty. No further bucket content validation\n")
+            outf.write(
+                "\tAll file nodes in this manifest were found empty. No further bucket content validation\n"
+            )
         return None
     else:
         pass
@@ -1060,7 +1069,7 @@ def validate_bucket_content(node_list: list[str], file_path: str, template_path:
     )
     # report a list of buckets found within the manifest
     bucket_list = count_buckets(df_file=df_file)
-    if len(bucket_list) >1:
+    if len(bucket_list) > 1:
         with open(output_file, "a+") as outf:
             outf.write(
                 f"\tThere are more than one aws bucket that is associated with this metadata file:\n\t\t{*bucket_list,}\n"
@@ -1070,7 +1079,9 @@ def validate_bucket_content(node_list: list[str], file_path: str, template_path:
             outf.write(
                 f"\tOnly one aws bucket is associated with this metadata file:\n\t\t{*bucket_list,}\n"
             )
-    invalid_buckets = check_buckets_access(bucket_list=bucket_list, output_file=output_file)
+    invalid_buckets = check_buckets_access(
+        bucket_list=bucket_list, output_file=output_file
+    )
     if len(invalid_buckets) > 0:
         with open(output_file, "a+") as outf:
             outf.write(
@@ -1078,7 +1089,7 @@ def validate_bucket_content(node_list: list[str], file_path: str, template_path:
             )
     else:
         pass
-    readable_buckets =  [i for i in bucket_list if i not in invalid_buckets]
+    readable_buckets = [i for i in bucket_list if i not in invalid_buckets]
     if len(readable_buckets) > 0:
         # Check if manifest files can be found in buckets
         uri_list = df_file["file_url_in_cds"].tolist()
@@ -1090,17 +1101,23 @@ def validate_bucket_content(node_list: list[str], file_path: str, template_path:
                 obj_exist_list.extend(exist_list_chunk)
         else:
             obj_exist_list = validate_manifest_objs_in_bucket(s3_uri_list=uri_list)
-        objs_not_exist = [True if i==False else False for i in obj_exist_list]
+        objs_not_exist = [True if i == False else False for i in obj_exist_list]
         if sum(objs_not_exist) > 0:
             not_exist_str = "\tWARNING: There are files that are not found in the bucket, but are in the manifest:\n"
-            not_exist_str = not_exist_str + df_file[objs_not_exist][["node","file_name"]].to_markdown(
+            not_exist_str = (
+                not_exist_str
+                + df_file[objs_not_exist][["node", "file_name"]].to_markdown(
                     tablefmt="pipe", index=False
-                ) + "\n"
+                )
+                + "\n"
+            )
             with open(output_file, "a+") as outf:
                 outf.write(not_exist_str)
         else:
             with open(output_file, "a+") as outf:
-                outf.write("\tFiles in the manifest located in accessible buckets were all found\n")
+                outf.write(
+                    "\tFiles in the manifest located in accessible buckets were all found\n"
+                )
 
         # Check if the size of the manifest files(passed exist test) match to the bucket object size
         size_compare_fail_df = validate_objs_size(
@@ -1110,31 +1127,210 @@ def validate_bucket_content(node_list: list[str], file_path: str, template_path:
         )
         if size_compare_fail_df.shape[0] > 0:
             size_fail_str = "\tWARNING: There are files having different file size between manifest and bucket:\n"
-            size_fail_str = size_fail_str + size_compare_fail_df.to_markdown(
-                    tablefmt="pipe", index=False) + "\n"
+            size_fail_str = (
+                size_fail_str
+                + size_compare_fail_df.to_markdown(tablefmt="pipe", index=False)
+                + "\n"
+            )
             with open(output_file, "a+") as outf:
                 outf.write(size_fail_str)
         else:
             with open(output_file, "a+") as outf:
-                outf.write("\tAll files in the manifest have the same file size in the accessible buckets")
+                outf.write(
+                    "\tAll files in the manifest have the same file size in the accessible buckets"
+                )
 
         # Check if the bucket content can be found in the manifest
-        bucket_objs_unfound = validate_bucket_objs_in_manifest(file_object=file_object, file_node_list=file_nodes_to_check, readable_buckets=readable_buckets)
+        bucket_objs_unfound = validate_bucket_objs_in_manifest(
+            file_object=file_object,
+            file_node_list=file_nodes_to_check,
+            readable_buckets=readable_buckets,
+        )
         if len(bucket_objs_unfound) > 0:
             bucket_objs_unfound_str = "\tWARNING: There are files that are found in the bucket but not the manifest:\n\t\t"
-            bucket_objs_unfound_str = bucket_objs_unfound_str + "\n\t\t".join(
-                bucket_objs_unfound
-            ) + "\n"
+            bucket_objs_unfound_str = (
+                bucket_objs_unfound_str + "\n\t\t".join(bucket_objs_unfound) + "\n"
+            )
             with open(output_file, "a+") as outf:
                 outf.write(bucket_objs_unfound_str)
         else:
-             with open(output_file, "a+") as outf:
-                outf.write("\tAll files in the accessible buckets can be found in the manifest\n")
+            with open(output_file, "a+") as outf:
+                outf.write(
+                    "\tAll files in the accessible buckets can be found in the manifest\n"
+                )
 
     else:
         with open(output_file, "a+") as outf:
-            outf.write("\tWARNING: No accessible buckets for AWS bucket content validation\n")
+            outf.write(
+                "\tWARNING: No accessible buckets for AWS bucket content validation\n"
+            )
     return None
+
+
+@task(name="Validate cross links of one sheet", log_prints=True)
+def validate_cross_links_single_sheet(
+    node_name: str, file_object
+) -> str:
+    """Performs cross links validation between nodes of a single sheet"""
+    print_str = f"\n\t{node_name}:\n\t----------\n"
+
+    # get node df
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+    # pull out all the linking properties
+    link_props = node_df.filter(like="_id", axis=1)
+    link_props = link_props.filter(like=".", axis=1).columns.tolist()
+
+    # if there are more than one linking property
+    if len(link_props) > 1:
+        for _, row in node_df.iterrows():
+            row_values = row[link_props].dropna().tolist()
+            # if there are entries that have more than one linking property value
+            if len(set(row_values)) > 1:
+                print_str = (
+                    print_str
+                    + "\tWARNING: The entry on row {index+1} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n"
+                )
+            else:
+                pass
+    else:
+        # skip multiple linking property check if only one parent node found
+        pass
+
+    # for the linking property
+    for link_prop in link_props:
+        # find the unique values of that linking property
+        link_values = node_df[link_prop].dropna().unique().tolist()
+
+        # if there are values in parent link 
+        if len(link_values) > 0:
+            # determine the linking node and property.
+            linking_node = str.split(link_prop, ".")[0]
+            linking_prop = str.split(link_prop, ".")[1]
+            df_link = file_object.read_sheet_na(sheetname=linking_node)
+            linking_values = df_link[linking_prop].dropna().unique().tolist()
+
+            # test to see if all the values are found
+            # all True if all values in link_values can be found in linking values(parent node sheet id)
+            matching_links = [
+                True if id in linking_values else False for id in link_values
+            ]
+
+            # if not all values match, determined the mismatched values
+            if not all(matching_links):
+                mis_match_values = np.array(link_values)[~np.array(matching_links)].tolist()
+
+                # for each mismatched value, throw an error.
+                for mis_match_value in mis_match_values:
+                    print_str = (
+                        print_str
+                        + f"\tERROR: For the node, {node_name}, the following linking property, {link_prop}, has a value that is not found in the parent node: {mis_match_value}\n"
+                    )
+            else:
+                print_str = (
+                    print_str
+                    + f"\tPASS: The links for the node, {node_name}, have corresponding values in the parent node, {linking_node}.\n"
+                )
+        else:
+            pass
+    print(print_str)
+    return print_str
+
+
+@flow(name="Validate cross links", log_prints=True)
+def validate_cross_links(file_path: str, output_file: str, node_list: list[str]) -> None:
+    """Performs cross link validation between nodes of entire manifest file"""
+    section_title = "\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
+
+    # create file_object and template_object
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    cross_validate_future = validate_cross_links_single_sheet.map(node_list, file_object)
+    cross_validate_str = "".join([i.result() for i in cross_validate_future])
+    return_str = section_title + cross_validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
+
+@task(name="Validate Key ID of a single sheet", log_prints=True)
+def validate_key_id_single_sheet(node_name: str, file_object, template_object) -> str:
+    """Validate key id of a single sheet"""
+    print_str = f"\n\t{node_name}:\n\t----------\n"
+
+    # get node df
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    # pull out all the id properties in the node
+    id_props = node_df.filter(like="_id", axis=1).columns.tolist()
+    key_id_props = dict_df[dict_df["Key"] == "True"]["Property"].unique().tolist()
+    # pull out only the key ids that are present in the node
+    key_ids = list(set(id_props) & set(key_id_props))
+
+    for key_id in key_ids:
+        # find the unique values of that linking property
+        id_values = node_df[key_id].dropna().unique().tolist()
+
+        # if there are values with ";", unpack them
+        # for instance ["apple;orange", "milk;yogurt", "cabbage;carrot"] -> ['apple', 'orange', 'milk', 'yogurt', 'cabbage', 'carrot']
+        if len(id_values) > 0:
+            # if there is an array of link values, pull the array apart and delete the old value.
+            remove_id_value = []
+            append_id_value = []
+            for id_value in id_values:
+                if ";" in id_value:
+                    value_splits = str.split(id_value, ";")
+                    append_id_value.extend(value_splits)
+                    remove_id_value.append(id_value)
+                else:
+                    pass
+            id_values.extend(append_id_value)
+            new_id_values = [i for i in id_values if i not in remove_id_value]
+            id_values = new_id_values
+
+            WARN_FLAG = True
+            # for each id value
+            troubled_id_value = []
+            for id_value in id_values:
+                # if it does not match the following regex, throw an error.
+                if not re.match(
+                            pattern=r"^[a-zA-Z0-9_.@#;-]*$", string=id_value
+                        ):
+                    if WARN_FLAG:
+                        WARN_FLAG = False
+                        print_str = (
+                            print_str
+                            + f"\tERROR: The following IDs have an illegal character (acceptable: A-z,0-9,_,.,-,@,#) in the property:\n"
+                        )
+                    else:
+                        pass
+                    troubled_id_value.append(id_value)
+                else:
+                    pass
+
+            if len(troubled_id_value) > 0:
+                print_str = print_str + "\t\t" + ", ".join(troubled_id_value) + "\n"
+            else:
+                pass
+        else:
+            pass
+
+    return print_str
+
+
+@flow(name="Validate Key ID", log_prints=True)
+def validate_key_id(file_path: str, template_path: str, node_list: list[str], output_file) -> None:
+    """Validate key id of entire manifest"""
+    section_title = "\nFor the '_id' key properties, only the following characters can be included: English letters, Arabic numerals, period (.), hyphen (-), underscore (_), at symbol (@), and the pound sign (#).\nFor values that do not match, they will be reported below:\n----------\n"
+
+    # create file_object and template_object
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    template_object = CheckCCDI(ccdi_manifest=template_path)
+    validate_key_id_future =  validate_key_id_single_sheet.map(node_list, file_object, template_object)
+    validate_key_id_str = "".join([i.result() for i in validate_key_id_future])
+    return_str = section_title + validate_key_id_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
 
 @flow(
     name="CCDI_ValidationRy_refactor",
@@ -1161,7 +1357,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
 
     # crete a list of all properties and a list of required properties
-    all_properties = set(dict_df["Property"])
+    # all_properties = set(dict_df["Property"]) # this variable not used in original script
     required_properties = set(dict_df[dict_df["Required"].notna()]["Property"])
 
     # Try not to read every df into a single dict variable
@@ -1191,27 +1387,53 @@ def ValidationRy_new(file_path: str, template_path: str):
     )
 
     # validate whitespace in proprety values
+    validation_logger.info("Checking whitespace in property values")
     validate_whitespace(nodes_to_validate, file_path, output_file)
 
     # validate terms and value sets
+    validation_logger.info("Checking term and value sets")
     validate_terms_value_sets(file_path, template_path, nodes_to_validate, output_file)
 
     # validate integer and numeric vlaues
+    validation_logger.info("Checking integer and numeric values")
     validate_integer_numeric_checks(
         file_path, template_path, nodes_to_validate, output_file
     )
 
     # validate regex
+    validation_logger.info("Checking regular expression")
     validate_regex(nodes_to_validate, file_path, template_path, output_file)
 
     # validate unique keys
+    validation_logger.info("Checking unique keys")
     validate_unique_key(nodes_to_validate, file_path, template_path, output_file)
 
     # validate file metadata (size, md5sum regex, and file basename in url)
-    validate_file_metadata(node_list=nodes_to_validate, file_path=file_path, template_path=template_path, output_file=output_file)
+    validation_logger.info("Checking object file metadata, size, md5sum regex, and file basename")
+    validate_file_metadata(
+        node_list=nodes_to_validate,
+        file_path=file_path,
+        template_path=template_path,
+        output_file=output_file,
+    )
 
     # validate bucket content
-    validate_bucket_content(node_list=nodes_to_validate, file_path=file_path, template_path=template_path, output_file=output_file)
-    
+    validation_logger.info("Checking bucket contents against manifest file objects")
+    validate_bucket_content(
+        node_list=nodes_to_validate,
+        file_path=file_path,
+        template_path=template_path,
+        output_file=output_file,
+    )
+
+    # validate cross links
+    validation_logger.info("Checking cross links between nodes")
+    validate_cross_links(node_list=nodes_to_validate, file_path=file_path, output_file=output_file)
+
+    # validate key id pattern
+    validation_logger.info("Checking key id patterns")
+    validate_key_id(file_path=file_path, template_path=template_path, node_list = nodes_to_validate, output_file=output_file)
+
+    validation_logger.info(f"Process Complete. The output file can be found here: {output_file}")
 
     return output_file
