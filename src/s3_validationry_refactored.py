@@ -885,8 +885,8 @@ def count_buckets(df_file: DataFrame) -> list:
     return bucket_list
 
 
-def check_buckets_access(bucket_list: list[str], output_file: str) -> list:
-    invalid_buckets = []
+def check_buckets_access(bucket_list: list[str]) -> dict:
+    invalid_buckets = {"bucket":[], "error_message":[]}
     s3_client = set_s3_session_client()
     for bucket in bucket_list:
         try:
@@ -894,11 +894,13 @@ def check_buckets_access(bucket_list: list[str], output_file: str) -> list:
         except ClientError as err:
             err_code = err.response["Error"]["Code"]
             err_message = err.response["Error"]["Message"]
-            with open(output_file, "a+") as outf:
-                outf.write(
-                    f"\tFail to read bucket {bucket}: {err_code} {err_message}\n"
-                )
-            invalid_buckets.append(bucket)
+            #with open(output_file, "a+") as outf:
+            #    outf.write(
+            #        f"\tFail to read bucket {bucket}: {err_code} {err_message}\n"
+            #    )
+            # invalid_buckets.append(bucket)
+            invalid_buckets["bucket"].append(bucket)
+            invalid_buckets["error_message"].append(err_code+" "+err_message)
     s3_client.close()
     return invalid_buckets
 
@@ -1082,10 +1084,14 @@ def validate_bucket_content(
     invalid_buckets = check_buckets_access(
         bucket_list=bucket_list, output_file=output_file
     )
+    invalid_buckets_df = pd.DataFrame.from_dict(invalid_buckets)
     if len(invalid_buckets) > 0:
         with open(output_file, "a+") as outf:
             outf.write(
-                f"\tAWS bucket content validation won't perform validation for buckets: {*invalid_buckets,}\n"
+                f"\tAWS bucket content validation won't perform validation for buckets:\n\t"
+                + invalid_buckets_df.to_markdown(
+                    tablefmt="pipe", index=False
+                ).replace("\n","\n\t") + "\n"
             )
     else:
         pass
