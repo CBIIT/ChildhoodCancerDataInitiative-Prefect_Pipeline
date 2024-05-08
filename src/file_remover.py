@@ -149,7 +149,7 @@ def parse_bucket_folder_path(bucket_folder_path: str) -> tuple:
     return bucket, folder_path
 
 
-@task
+@task(retries=3, retry_delay_seconds=0.5)
 def construct_staging_bucket_key(
     object_prod_bucket_key: str, prod_bucket_path: str, staging_bucket_path: str
 ) -> str:
@@ -165,7 +165,7 @@ def construct_staging_bucket_key(
     _, prod_prefix = parse_bucket_folder_path(bucket_folder_path=prod_bucket_path)
     object_prod_bucket_key = object_prod_bucket_key.strip("/")
     # remove the prefix part in prod bucket
-    object_without_prod_prefix = object_prod_bucket_key[len(prod_prefix) :].strip("/")
+    object_without_prod_prefix = object_prod_bucket_key[len(prod_prefix):].strip("/")
     # parse staging bucket path to staging bucket name, staging prefix
     staging_bucket, staging_prefix = parse_bucket_folder_path(
         bucket_folder_path=staging_bucket_path
@@ -240,8 +240,7 @@ def objects_staging_key(
     staging_keys_future = construct_staging_bucket_key.map(
         object_prod_key_list, prod_bucket_path, staging_bucket_path
     )
-    staging_keys_list = [i.result() for i in staging_keys_future]
-    return staging_keys_list
+    return [i.result() for i in staging_keys_future]
 
 
 @flow
