@@ -222,12 +222,9 @@ def objects_md5sum(list_keys: list[str], bucket_name: str) -> list[str]:
         bucket_name = "ccdi-staging"
     """
     s3_client = set_s3_session_client()
-    logger = get_run_logger()
     md5sum_futures = get_md5sum.map(list_keys, bucket_name, s3_client=s3_client)
-    md5sum_list = [i.result() for i in md5sum_futures]
-    logger.info(f"md5sum list return is: {*md5sum_list,}")
     s3_client.close()
-    return md5sum_list
+    return [i.result() for i in md5sum_futures]
 
 
 @flow
@@ -252,9 +249,8 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     """
     s3_client = set_s3_session_client()
     if_exist_future = if_object_exists.map(key_path_list, bucket, s3_client, logger)
-    if_exist_list = [i.result() for i in if_exist_future]
     s3_client.close()
-    return if_exist_list
+    return [i.result() for i in if_exist_future]
 
 
 @task(
@@ -287,7 +283,6 @@ def delete_objects_by_uri(uri_list, logger) -> None:
     """Delete a list of s3 uri"""
     s3_client = set_s3_session_client()
     delete_responses = delete_single_object_by_uri.map(uri_list, s3_client, logger)
-    # delete_status_list = [i.result() for i in delete_responses]
     s3_client.close()
     return [i.result() for i in delete_responses]
 
@@ -411,30 +406,6 @@ def create_matching_object_manifest(
     )
     logger.info(f"Files found under prod bucket path: {len(objects_prod_list)}")
     objects_prod_key_list = [i["Key"] for i in objects_prod_list]
-    # calculate md5sum of pbjects in prod bucket. If more than 100 objects, split them into chunks
-    logger.info("Start calculating md5sum of objects under prod bucket path")
-    if len(objects_prod_key_list) > 100:
-        objects_prod_key_chunks = list_to_chunks(
-            mylist=objects_prod_key_list, chunk_len=100
-        )
-        logger.info(
-            f"md5sum calculation will be processed in {len(objects_prod_key_chunks)} chunks"
-        )
-        objects_prod_md5sum = []
-        for i in range(len(objects_prod_key_chunks)):
-            i_md5sum_list = objects_md5sum(
-                list_keys=objects_prod_key_chunks[i], bucket_name=prod_bucket
-            )
-            logger.info(
-                f"md5sum calculation progress: {i+1}/{len(objects_prod_key_chunks)}"
-            )
-            objects_prod_md5sum.extend(i_md5sum_list)
-        logger.info("md5sum calculation of prod keys finished")
-    else:
-        objects_prod_md5sum = objects_md5sum(
-            list_keys=objects_prod_key_list, bucket_name=prod_bucket
-        )
-        logger.info("md5sum calculation of prod keys finished")
 
     # reconstruct the key in staging bucket
     # This is before validating whether the key in staging bucket exists or not
@@ -468,6 +439,33 @@ def create_matching_object_manifest(
             staging_bucket_path=staging_bucket_path,
         )
         logger.info("Object staging keys reconstruction finished")
+
+
+    # calculate md5sum of pbjects in prod bucket. If more than 100 objects, split them into chunks
+    logger.info("Start calculating md5sum of objects under prod bucket path")
+    if len(objects_prod_key_list) > 100:
+        objects_prod_key_chunks = list_to_chunks(
+            mylist=objects_prod_key_list, chunk_len=100
+        )
+        logger.info(
+            f"md5sum calculation will be processed in {len(objects_prod_key_chunks)} chunks"
+        )
+        objects_prod_md5sum = []
+        for i in range(len(objects_prod_key_chunks)):
+            i_md5sum_list = objects_md5sum(
+                list_keys=objects_prod_key_chunks[i], bucket_name=prod_bucket
+            )
+            logger.info(
+                f"md5sum calculation progress: {i+1}/{len(objects_prod_key_chunks)}"
+            )
+            objects_prod_md5sum.extend(i_md5sum_list)
+        logger.info("md5sum calculation of prod keys finished")
+    else:
+        objects_prod_md5sum = objects_md5sum(
+            list_keys=objects_prod_key_list, bucket_name=prod_bucket
+        )
+        logger.info("md5sum calculation of prod keys finished")
+
 
     # check if staging key exists
     logger.info(
