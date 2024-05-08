@@ -629,7 +629,7 @@ def validate_regex_one_sheet(
                 WARN_FLAG = False
                 print_str = (
                     print_str
-                    + "\tERROR: For the {node} node, the {string_prop} property contains a value that matches a regular expression for dates/social security number/phone number/zip code:\n"
+                    + f"\tERROR: For the {node_name} node, the {string_prop} property contains a value that matches a regular expression for dates/social security number/phone number/zip code:\n"
                 )
             else:
                 pass
