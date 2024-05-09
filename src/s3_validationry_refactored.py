@@ -932,7 +932,7 @@ def check_buckets_access(bucket_list: list[str]) -> dict:
 @task(name="if a single obj exists in bucket", retries=3, retry_delay_seconds=0.5)
 def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client) -> bool:
     """Checks if an obj exists in AWS by using a s3 uri
-    Returns True if exist, False if not exist, and None
+    Returns (True, {file size}) if exist, or (False, np.nan) if not exist
     """
     obj_bucket, obj_key = parse_file_url_in_cds(url=s3_uri)
     try:
@@ -1170,8 +1170,11 @@ def validate_bucket_content(
         else:
             with open(output_file, "a+") as outf:
                 outf.write(
-                    f"\tAll files under READABLE buckets {*readable_buckets,} can be found in AWS bucket"
+                    f"\tAll files under READABLE buckets {*readable_buckets,} can be found in AWS bucket\n"
                 )
+            print(
+                f"\tAll files under READABLE buckets {*readable_buckets,} can be found in AWS bucket\n"
+            )
 
         # write summary of manifest obj size comparison in bucket
         if (
@@ -1188,7 +1191,7 @@ def validate_bucket_content(
                 .reset_index(name="counts")
             )
             size_compare_fail_df = df_file_validated[
-                df_file_validated["if_exist" == True]
+                df_file_validated["if_exist"] == True
                 & df_file_validated["size_compare"]
                 == False
             ][["node", "file_name", "file_size", "bucket_obj_size"]]
@@ -1219,6 +1222,9 @@ def validate_bucket_content(
                 outf.write(
                     f"\tAll files that passed the exist check PASSED the file size check\n"
                 )
+            print(
+                f"\tAll files that passed the exist check PASSED the file size check\n"
+            )
         del df_file_validated
 
         # Check if the bucket content can be found in the manifest
