@@ -1222,6 +1222,7 @@ def validate_bucket_content(
         del df_file_validated
 
         # Check if the bucket content can be found in the manifest
+        print("Start checking if all bucket objs can be found in the manifest")
         bucket_objs_unfound = validate_bucket_objs_in_manifest(
             file_object=file_object,
             file_node_list=file_nodes_to_check,
