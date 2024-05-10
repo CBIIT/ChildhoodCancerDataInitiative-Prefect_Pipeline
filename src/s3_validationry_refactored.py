@@ -929,7 +929,7 @@ def check_buckets_access(bucket_list: list[str]) -> dict:
     return invalid_buckets
 
 
-@task(name="if a single obj exists in bucket", retries=3, retry_delay_seconds=0.5)
+@task(name="if a single obj exists in bucket", retries=3, retry_delay_seconds=0.5, tags=["validation-tag"])
 def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client) -> bool:
     """Checks if an obj exists in AWS by using a s3 uri
     Returns (True, {file size}) if exist, or (False, np.nan) if not exist
