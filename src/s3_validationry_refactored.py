@@ -1007,6 +1007,8 @@ def validate_objs_loc_size(
     bucket_obj_size = []
     s3_client = set_s3_session_client()
     print(f"Number of uri to be tested: {len(uri_list)}")
+
+    """
     if len(uri_list) > 100:
         uri_list_chunk = list_to_chunks(uri_list, 100)
         for i in range(len(uri_list_chunk)):
@@ -1026,6 +1028,19 @@ def validate_objs_loc_size(
         for k in uri_list_validation:
             if_exist.append(k[0])
             bucket_obj_size.append(k[1])
+    """
+    progress_bar = 1
+    for i in uri_list:
+        # avoid using task, try to avoid crash in prefect
+        i_if_exist, i_size = validate_single_manifest_obj_in_bucket.fn(s3_uri=i, s3_client=s3_client)
+        if_exist.append(i_if_exist)
+        bucket_obj_size.append(i_size)
+        if progress_bar % 100 == 0:
+            print(f"progress: {progress_bar}/{len(uri_list)}")
+        else:
+            pass
+        progress_bar += 1
+
     df_file.loc[df_file["if_bucket_readable"] == True, "if_exist"] = if_exist
     df_file.loc[df_file["if_bucket_readable"] == True, "bucket_obj_size"] = (
         bucket_obj_size
