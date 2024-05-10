@@ -160,10 +160,7 @@ def validate_required_properties_one_sheet(
 def validate_required_properties(
     file_path: str, node_list: list, required_properties: list, output_file: str
 ):
-    section_title = """\n\nThis section is for required properties for all nodes that contain data.
-For information on required properties per node, please see the 'Dictionary' page of the template file.
-For each entry, it is expected that all required information has a value:\n----------\n
-    """
+    section_title = "\n\n" + header_str("Required Properties Check")+"\nThis section is for required properties for all nodes that contain data.\nFor information on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, it is expected that all required information has a value:\n----------\n"
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_required_properties_one_sheet.map(
         node_list, file_object, unmapped(required_properties)
@@ -230,8 +227,7 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
     log_prints=True,
 )
 def validate_whitespace(node_list: list[str], file_path: str, output_file: str) -> None:
-    section_title = """\n\nThis section checks for white space issues in all properties.\n----------\n
-    """
+    section_title = "\n\n" + header_str("Whitespace Check") + "\nThis section checks for white space issues in all properties.\n----------\n"
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_whitespace_one_sheet.map(node_list, file_object)
     validate_str = "".join([i.result() for i in validate_str_future])
@@ -427,9 +423,7 @@ def validate_terms_value_sets(
     # tavs_df: DataFrame,
     output_file: str,
 ) -> None:
-    section_title = """\n\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file. 
-If the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n
-    """
+    section_title = "\n\n" + header_str("Terms and Value Sets Check") + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\n If the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
@@ -563,7 +557,7 @@ def validate_integer_numeric_checks_one_sheet(
 def validate_integer_numeric_checks(
     file_path: str, template_path: str, node_list: list[str], output_file: str
 ):
-    section_title = "\n\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
+    section_title = "\n\n" + header_str("Numeric and Integer Check") +"\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
 
@@ -652,7 +646,7 @@ def validate_regex_one_sheet(
 def validate_regex(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
-    section_title = """\n\nThis section will display any values in properties that can accept strings, which are thought to contain PII/PHI based on regex suggestions from dbGaP:\n----------\n"""
+    section_title = "\n\n" + header_str("Regular Expression Check")+"\nThis section will display any values in properties that can accept strings, which are thought to contain PII/PHI based on regex suggestions from dbGaP:\n----------\n"
     # create file_object and template_object
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -758,7 +752,7 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
 def validate_unique_key(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
-    section_title = "\n\nThe following will check for multiples of key values, which are expected to be unique.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    section_title = "\n\n" + header_str("Unique Key Value Check") + "\nThe following will check for multiples of key values, which are expected to be unique.\nIf there are any unexpected values, they will be reported below:\n----------\n"
     # create file_object and template_object
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -1026,7 +1020,7 @@ def validate_file_metadata(
     """Validate if manifest file objs have none zero file size, correct md5sum regex
     and if file name matches to s3 uri
     """
-    section_title = "\n\nThe following section will check the manifest for expected file metadata.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    section_title = "\n\n" + header_str("Object File Metadata Check") + "\nThe following section will check the manifest for expected file metadata.\nIf there are any unexpected values, they will be reported below:\n----------\n"
     return_str = "" + section_title
     # create file_object and template_object
     template_object = CheckCCDI(ccdi_manifest=template_path)
@@ -1062,7 +1056,7 @@ def validate_file_metadata(
 def validate_bucket_content(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
-    section_title = "\n\nThe following section will compare the manifest against the reported buckets and note if there are unexpected results where the file is represented equally in both sources.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    section_title = "\n\n" + header_str("AWS Bucket Content Check") + "\nThe following section will compare the manifest against the reported buckets and note if there are unexpected results where the file is represented equally in both sources.\nIf there are any unexpected values, they will be reported below:\n----------\n"
     with open(output_file, "a+") as outf:
         outf.write(section_title)
     # create file_object and template_object
@@ -1300,7 +1294,7 @@ def validate_cross_links(
     file_path: str, output_file: str, node_list: list[str]
 ) -> None:
     """Performs cross link validation between nodes of entire manifest file"""
-    section_title = "\n\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
+    section_title = "\n\n" + header_str("Cross Links Check") + "\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
 
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -1386,7 +1380,7 @@ def validate_key_id(
     file_path: str, template_path: str, node_list: list[str], output_file
 ) -> None:
     """Validate key id of entire manifest"""
-    section_title = "\n\nFor the '_id' key properties, only the following characters can be included: English letters, Arabic numerals, period (.), hyphen (-), underscore (_), at symbol (@), and the pound sign (#).\nFor values that do not match, they will be reported below:\n----------\n"
+    section_title = "\n\n" + header_str("Key ID Check") + "\nFor the '_id' key properties, only the following characters can be included: English letters, Arabic numerals, period (.), hyphen (-), underscore (_), at symbol (@), and the pound sign (#).\nFor values that do not match, they will be reported below:\n----------\n"
 
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -1511,3 +1505,12 @@ def ValidationRy_new(file_path: str, template_path: str):
     )
 
     return output_file
+
+
+def header_str(section_name: str) -> str:
+    return_str = "#" * (8 + len(section_name))+ "\n"
+    return_str = return_str + "#" + " "*(6+len(section_name)) + "#\n"
+    return_str = return_str + "#   " + section_name + "   #\n"
+    return_str = return_str + "#" + " " * (6 + len(section_name)) + "#\n"
+    return_str = return_str + "#" * (8 + len(section_name))
+    return return_str
