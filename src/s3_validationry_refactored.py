@@ -886,11 +886,13 @@ def check_file_basename(file_df: DataFrame) -> str:
                 print_str
                 + f"\tWARNING: There are files that have a file_name that does not match the file name in the url:\n"
             )
+            print_df = filename_not_match[["node", "file_name", "file_url_in_cds"]]
+            print_df["file_name"] = print_df["file_name"].str.wrap(40)
+            print_df["file_url_in_cds"] = print_df["file_url_in_cds"].str.wrap(40)
             print_str = (
                 print_str
                 + "\n\t"
-                + filename_not_match[["node", "file_name", "file_url_in_cds"]]
-                .to_markdown(tablefmt="rounded_grid", index=False)
+                + print_df.to_markdown(tablefmt="rounded_grid", index=False)
                 .replace("\n", "\n\t")
                 + "\n\n"
             )
@@ -938,7 +940,8 @@ def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client) -> bool:
     try:
         object_meta = s3_client.head_object(Bucket=obj_bucket, Key=obj_key)
         object_size = object_meta["ContentLength"]
-        return True, object_size
+        # convert the content length to str
+        return True, str(object_size)
     except ClientError as err:
         return False, np.nan
 
@@ -1132,7 +1135,7 @@ def validate_bucket_content(
             )
     invalid_buckets = check_buckets_access(bucket_list=bucket_list)
     invalid_buckets_df = pd.DataFrame.from_dict(invalid_buckets)
-    if len(invalid_buckets) > 0:
+    if invalid_buckets.shape[0] > 0:
         with open(output_file, "a+") as outf:
             outf.write(
                 f"\tAWS bucket content validation won't perform validation for buckets:\n\t"
@@ -1209,13 +1212,13 @@ def validate_bucket_content(
                 (df_file_validated["if_exist"] == True)
                 & (df_file_validated["size_compare"] == False)
             ][["node", "file_name", "file_size", "bucket_obj_size"]]
-            size_compare_fail_str = "\tWARNING: There are manifest files that exist in AWS bucket, but failed size comparison check.\n\n"
+            size_compare_fail_str = "\tWARNING: There are manifest files that exist in AWS bucket, but failed size comparison check.\n\n\t"
             size_compare_fail_str = (
                 size_compare_fail_str
                 + size_comparison_summary.to_markdown(
                     tablefmt="rounded_grid", index=False
                 ).replace("\n", "\n\t")
-                + "\n\n"
+                + "\n\n\t"
                 + size_compare_fail_df.to_markdown(
                     tablefmt="rounded_grid", index=False
                 ).replace("\n", "\n\t")
