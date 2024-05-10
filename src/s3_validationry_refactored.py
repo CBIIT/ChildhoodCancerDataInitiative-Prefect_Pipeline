@@ -1135,7 +1135,7 @@ def validate_bucket_content(
             )
     invalid_buckets = check_buckets_access(bucket_list=bucket_list)
     invalid_buckets_df = pd.DataFrame.from_dict(invalid_buckets)
-    if invalid_buckets.shape[0] > 0:
+    if invalid_buckets_df.shape[0] > 0:
         with open(output_file, "a+") as outf:
             outf.write(
                 f"\tAWS bucket content validation won't perform validation for buckets:\n\t"
