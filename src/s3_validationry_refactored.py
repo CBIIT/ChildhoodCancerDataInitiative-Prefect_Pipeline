@@ -1185,10 +1185,10 @@ def validate_bucket_content(
         else:
             with open(output_file, "a+") as outf:
                 outf.write(
-                    f"\tAll files under READABLE buckets {*readable_buckets,} can be found in AWS bucket\n"
+                    f"\tAll files in the manifest under READABLE buckets {*readable_buckets,} can be found in AWS bucket\n"
                 )
             print(
-                f"\tAll files under READABLE buckets {*readable_buckets,} can be found in AWS bucket\n"
+                f"All files in the manifest under READABLE buckets {*readable_buckets,} can be found in AWS bucket"
             )
 
         # write summary of manifest obj size comparison in bucket
@@ -1206,9 +1206,8 @@ def validate_bucket_content(
                 .reset_index(name="counts")
             )
             size_compare_fail_df = df_file_validated[
-                df_file_validated["if_exist"] == True
-                & df_file_validated["size_compare"]
-                == False
+                (df_file_validated["if_exist"] == True)
+                & (df_file_validated["size_compare"] == False)
             ][["node", "file_name", "file_size", "bucket_obj_size"]]
             size_compare_fail_str = "\tWARNING: There are manifest files that exist in AWS bucket, but failed size comparison check.\n\n"
             size_compare_fail_str = (
