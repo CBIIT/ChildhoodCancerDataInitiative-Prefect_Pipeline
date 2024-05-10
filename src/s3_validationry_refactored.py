@@ -160,7 +160,7 @@ def validate_required_properties_one_sheet(
 def validate_required_properties(
     file_path: str, node_list: list, required_properties: list, output_file: str
 ):
-    section_title = "\n\n" + header_str("Required Properties Check")+"\nThis section is for required properties for all nodes that contain data.\nFor information on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, it is expected that all required information has a value:\n----------\n"
+    section_title = header_str("Required Properties Check")+"\nThis section is for required properties for all nodes that contain data.\nFor information on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, it is expected that all required information has a value:\n----------\n"
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_required_properties_one_sheet.map(
         node_list, file_object, unmapped(required_properties)
