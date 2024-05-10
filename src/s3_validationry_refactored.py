@@ -332,8 +332,8 @@ def validate_terms_value_sets_one_sheet(
                             WARN_FLAG = False
                             # test to see if string;enum
                             enum_strings = dict_df[
-                                dict_df["Type"].str.contains("string")
-                                & dict_df["Type"].str.contains("enum")
+                                (dict_df["Type"].str.contains("string"))
+                                & (dict_df["Type"].str.contains("enum"))
                             ]["Property"].tolist()
                             # if the enum is an string;enum
                             if property in enum_strings:
@@ -384,8 +384,8 @@ def validate_terms_value_sets_one_sheet(
                                 WARN_FLAG = False
                                 # test to see if string;enum
                                 enum_strings = dict_df[
-                                    dict_df["Type"].str.contains("string")
-                                    & dict_df["Type"].str.contains("enum")
+                                    (dict_df["Type"].str.contains("string"))
+                                    & (dict_df["Type"].str.contains("enum"))
                                 ]["Property"].tolist()
                                 # if the enum is an string;enum
                                 if property in enum_strings:
@@ -956,7 +956,7 @@ def validate_manifest_objs_in_bucket(s3_uri_list: list, s3_client) -> list:
 
 @flow(name="if bucket objects exist in manifest")
 def validate_bucket_objs_in_manifest(
-    file_object: str, file_node_list: list[str], readable_buckets: list[str]
+    file_object, file_node_list: list[str], readable_buckets: list[str]
 ) -> list:
     """Returns a list of object found in bucket, but not found in the manifest"""
     df_file = extract_object_file_meta(
