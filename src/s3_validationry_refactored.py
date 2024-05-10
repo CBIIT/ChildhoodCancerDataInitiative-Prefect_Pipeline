@@ -149,7 +149,6 @@ def validate_required_properties_one_sheet(
                 )
         else:
             pass
-    print(print_str)
     return print_str
 
 
@@ -173,7 +172,6 @@ For each entry, it is expected that all required information has a value:\n-----
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-    print(return_str)
     return None
 
 
@@ -223,7 +221,6 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
                 pass
         else:
             pass
-    print(print_str)
     return print_str
 
 
@@ -241,7 +238,6 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-    print(return_str)
     return None
 
 
@@ -415,7 +411,6 @@ def validate_terms_value_sets_one_sheet(
                             print_str = print_str + enum_print + "\n\n"
                     else:
                         pass
-    print(print_str)
     return print_str
 
 
@@ -444,7 +439,6 @@ If the values present do not match, they will noted and in some cases the values
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-    print(return_str)
     return None
 
 
@@ -558,7 +552,6 @@ def validate_integer_numeric_checks_one_sheet(
                 pass
         else:
             pass
-    print(print_str)
     return print_str
 
 
@@ -581,7 +574,6 @@ def validate_integer_numeric_checks(
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-    print(return_str)
     return None
 
 
@@ -653,7 +645,6 @@ def validate_regex_one_sheet(
 
         else:
             pass
-    print(print_str)
     return print_str
 
 
@@ -691,7 +682,6 @@ def validate_regex(
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-    print(return_str)
     return None
 
 
@@ -761,7 +751,6 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
                 pass
         else:
             pass
-    print(print_str)
     return print_str
 
 
@@ -782,7 +771,6 @@ def validate_unique_key(
     # print the return_str to the output file
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-    print(return_str)
     return None
 
 
@@ -1010,28 +998,6 @@ def validate_objs_loc_size(
     bucket_obj_size = []
     s3_client = set_s3_session_client()
     print(f"Number of uri to be tested: {len(uri_list)}")
-
-    """
-    if len(uri_list) > 100:
-        uri_list_chunk = list_to_chunks(uri_list, 100)
-        for i in range(len(uri_list_chunk)):
-            i_validation = validate_manifest_objs_in_bucket(
-                s3_uri_list=uri_list_chunk[i], s3_client=s3_client
-            )
-            print(f"Progress: {i+1}/{len(uri_list_chunk)}")
-            # add validation results to if_exist and bucket_obj_size list
-            for j in i_validation:
-                if_exist.append(j[0])
-                bucket_obj_size.append(j[1])
-
-    else:
-        uri_list_validation = validate_manifest_objs_in_bucket(
-            s3_uri_list=uri_list, s3_client=s3_client
-        )
-        for k in uri_list_validation:
-            if_exist.append(k[0])
-            bucket_obj_size.append(k[1])
-    """
     progress_bar = 1
     for i in uri_list:
         # avoid using task, try to avoid crash in prefect
@@ -1088,7 +1054,7 @@ def validate_file_metadata(
     # print the return_str to output_file
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-    print(return_str)
+
     return None
 
 
@@ -1181,8 +1147,6 @@ def validate_bucket_content(
                 ).replace("\n", "\n\t")
                 + "\n\n"
             )
-            print(not_exist_summary.to_markdown(tablefmt="rounded_grid", index=False))
-            print(not_exist_node_filename.to_markdown(tablefmt="rounded_grid", index=False))
             with open(output_file, "a+") as outf:
                 outf.write(not_exist_str)
         else:
@@ -1190,10 +1154,6 @@ def validate_bucket_content(
                 outf.write(
                     f"\tAll files in the manifest under READABLE buckets {*readable_buckets,} can be found in AWS bucket\n"
                 )
-            print(
-                f"All files in the manifest under READABLE buckets {*readable_buckets,} can be found in AWS bucket"
-            )
-
         # write summary of manifest obj size comparison in bucket
         if (
             sum(
@@ -1223,14 +1183,6 @@ def validate_bucket_content(
                     tablefmt="rounded_grid", index=False
                 ).replace("\n", "\n\t")
                 + "\n\n"
-            )
-            print(
-                size_comparison_summary.to_markdown(
-                    tablefmt="rounded_grid", index=False
-                )
-            )
-            print(
-                size_compare_fail_df.to_markdown(tablefmt="rounded_grid", index=False)
             )
             with open(output_file, "a+") as outf:
                 outf.write(size_compare_fail_str)
@@ -1329,11 +1281,10 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
                 ].tolist()
 
                 # for each mismatched value, throw an error.
-                for mis_match_value in mis_match_values:
-                    print_str = (
-                        print_str
-                        + f"\tERROR: For the node, {node_name}, the following linking property, {link_prop}, has a value that is not found in the parent node: {mis_match_value}\n"
-                    )
+                print_str = (
+                    print_str
+                    + f"\tERROR: For the node, {node_name}, the following linking property, {link_prop}, has a value that is not found in the parent node:\n\t{*mis_match_values,}\n"
+                )
             else:
                 print_str = (
                     print_str
@@ -1341,7 +1292,6 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
                 )
         else:
             pass
-    print(print_str)
     return print_str
 
 
