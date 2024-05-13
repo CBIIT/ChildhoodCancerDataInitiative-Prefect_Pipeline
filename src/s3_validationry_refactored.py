@@ -116,22 +116,21 @@ def validate_required_properties_one_sheet(
 ) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
-    line_length = 25
-    print_str = ""
-    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+    line_length = 15
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
+    check_list = []
     for property in properties:
         WARN_FLAG = True
         if property in required_properties:
+            proprety_dict = {}
+            proprety_dict["node"] = node_name
+            proprety_dict["property"] = property
             if node_df[property].isna().any():
                 bad_positions = np.where(node_df[property].isna())[0] + 2
-
                 # Flag to turn on explanation of error/warning
                 if WARN_FLAG:
                     WARN_FLAG = False
-                    print_str = (
-                        print_str
-                        + f"\tERROR: The values for the node, {node_name}, in the the required property, {property}, are missing:\n"
-                    )
+
                 # print out the row number contains missing value
                 pos_print = ""
                 for i, pos in enumerate(bad_positions):
@@ -141,14 +140,20 @@ def validate_required_properties_one_sheet(
                     else:
                         pass
                     pos_print = pos_print + str(pos) + ","
-                print_str = print_str + pos_print + "\n\n"
+                # print_str = print_str + pos_print + "\n\n"
+                proprety_dict["error row"] = pos_print
             else:
-                print_str = (
-                    print_str
-                    + f"\tPASS: For the node, {node_name}, the required property, {property}, contains values for all expexted entries.\n"
-                )
+                proprety_dict["error row"]= "PASS"
+                # print_str = (
+                #    print_str
+                #    + f"\tPASS: For the node, {node_name}, the required property, {property}, contains values for all expexted entries.\n"
+                # )
+            check_list.append(proprety_dict)
         else:
             pass
+    print_str = print_str + pd.DataFrame.from_records(check_list).to_markdown(
+        tablefmt="rounded_grid", index=False
+    ).replace("\n","\n\t") + "\n"
     return print_str
 
 
