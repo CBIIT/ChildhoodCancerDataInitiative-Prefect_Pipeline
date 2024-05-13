@@ -397,7 +397,8 @@ def validate_terms_value_sets_one_sheet(
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
         check_df["error value"] = check_df["error value"].str.wrap(30)
-        check_df["property"] = check_df["property"].str.wrap(25)
+        check_df["property"] = check_df["property"].str.wrap(20)
+        check_df["node"] = check_df["node"].str.wrap(20)
     else:
         pass
     print_str = (
