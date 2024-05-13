@@ -393,7 +393,7 @@ def validate_terms_value_sets_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
-        check_df["error value"] = check_df["error value"].str.wrap(25)
+        check_df["error value"] = check_df["error value"].str.wrap(30)
         check_df["property"] = check_df["property"].str.wrap(25)
     else:
         pass
@@ -532,7 +532,7 @@ def validate_integer_numeric_checks_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
-        check_df["error row"] = check_df["error row"].str.wrap(25)
+        check_df["error row"] = check_df["error row"].str.wrap(30)
         check_df["property"] = check_df["property"].str.wrap(25)
     else:
         pass
@@ -596,11 +596,13 @@ def validate_regex_one_sheet(
     else:
         pass
 
-    line_length = 5
-    print_str = ""
-    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
+    check_list = []
     for string_prop in string_props:
         WARN_FLAG = True
+        property_dict = {}
+        property_dict["node"] = node_name
+        property_dict["property"] = string_prop
         # find all unique values
         string_values = node_df[string_prop].dropna().unique()
 
@@ -618,24 +620,28 @@ def validate_regex_one_sheet(
             # Flag to turn on explanation of error/warning
             if WARN_FLAG:
                 WARN_FLAG = False
-                print_str = (
-                    print_str
-                    + f"\tERROR: For the {node_name} node, the {string_prop} property contains a value that matches a regular expression for dates/social security number/phone number/zip code:\n"
-                )
+                property_dict["check"] = "ERROR"
             else:
                 pass
             # itterate over that list and print out the values
-            enum_print = ""
-            for i, string_val in enumerate(bad_regex_strings):
-                if i % line_length == 0:
-                    enum_print = enum_print + "\n\t\t"
-                else:
-                    pass
-                enum_print = enum_print + str(string_val) + ","
-            print_str = print_str + enum_print + "\n\n"
-
+            enum_print = ",".join(bad_regex_strings)
+            property_dict["error value"] =  enum_print
+            check_list.append(property_dict)
         else:
             pass
+    check_df = pd.DataFrame.from_records(check_list)
+    if check_df.shape[0] > 0:
+        check_df["error value"] = check_df["error value"].str.wrap(30)
+        check_df["property"] = check_df["property"].str.wrap(25)
+    else:
+        pass
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
     return print_str
 
 
@@ -692,25 +698,24 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
     ]["Property"].values
 
     line_length = 5
-    print_str = ""
-    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
-
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
+    check_list = []
     for key_value_prop in key_value_props:
         WARN_FLAG = True
+        property_dict = {}
         # if a property is found in the data frame
         if key_value_prop in node_df.columns.tolist():
             # as long as there are some values in the key column
             if node_df[key_value_prop].notna().any():
+                property_dict["node"] = node_name
+                property_dict["property"] = key_value_prop
                 # if the length of the data frame is not the same length of the unique key property values, then we have some non-unique values
                 if len(node_df[key_value_prop].dropna()) != len(
                     node_df[key_value_prop].dropna().unique()
                 ):
                     if WARN_FLAG:
                         WARN_FLAG = False
-                        print_str = (
-                            print_str
-                            + f"\tERROR: The {node_name} node, has multiple instances of the same key value, which should be unique, in the property, {key_value_prop}:\n"
-                        )
+                        property_dict["check"] = "ERROR"
                     else:
                         pass
                     # create a table of values and counts
@@ -727,21 +732,28 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
                     )
 
                     # itterate over that list and print out the values
-                    enum_print = ""
-                    for i, not_unique_key_value in enumerate(not_unique_key_values):
-                        if i % line_length == 0:
-                            enum_print = enum_print + "\n\t\t"
-                        else:
-                            pass
-                        enum_print = enum_print + str(not_unique_key_value) + ","
-                    print_str = print_str + enum_print + "\n\n"
+                    enum_print = ",".join(not_unique_key_values)
+                    property_dict["error value"] =  enum_print
+                    check_list.append(property_dict)
                 else:
                     pass
-
             else:
                 pass
         else:
             pass
+    check_df = pd.DataFrame.from_records(check_list)
+    if check_df.shape[0] > 0:
+        check_df["error value"] = check_df["error value"].str.wrap(30)
+        check_df["property"] = check_df["property"].str.wrap(25)
+    else:
+        pass
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
     return print_str
 
 
@@ -1232,13 +1244,13 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
 
     # if there are more than one linking property
     if len(link_props) > 1:
-        for _, row in node_df.iterrows():
+        for index, row in node_df.iterrows():
             row_values = row[link_props].dropna().tolist()
             # if there are entries that have more than one linking property value
             if len(set(row_values)) > 1:
                 print_str = (
                     print_str
-                    + "\tWARNING: The entry on row {index+1} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n"
+                    + f"\tWARNING: The entry on row {index+3} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n"
                 )
             else:
                 pass
@@ -1246,13 +1258,17 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
         # skip multiple linking property check if only one parent node found
         pass
 
+    check_list = []
     # for the linking property
     for link_prop in link_props:
+        property_dict =  {}
         # find the unique values of that linking property
         link_values = node_df[link_prop].dropna().unique().tolist()
 
         # if there are values in parent link
         if len(link_values) > 0:
+            property_dict["node"] = node_name
+            property_dict["property"] = link_prop
             # determine the linking node and property.
             linking_node = str.split(link_prop, ".")[0]
             linking_prop = str.split(link_prop, ".")[1]
@@ -1272,17 +1288,27 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
                 ].tolist()
 
                 # for each mismatched value, throw an error.
-                print_str = (
-                    print_str
-                    + f"\tERROR: For the node, {node_name}, the following linking property, {link_prop}, has a value that is not found in the parent node:\n\t{*mis_match_values,}\n"
-                )
+                property_dict["check"] = "ERROR"
+                property_dict["error value"] = ",".join(mis_match_values)
             else:
-                print_str = (
-                    print_str
-                    + f"\tPASS: The links for the node, {node_name}, have corresponding values in the parent node, {linking_node}.\n"
-                )
+                property_dict["check"] = "PASS"
+                property_dict["error value"] = ""
+            check_list.append(property_dict)
         else:
             pass
+    check_df = pd.DataFrame.from_records(check_list)
+    if check_df.shape[0] > 0:
+        check_df["error value"] = check_df["error value"].str.wrap(30)
+        check_df["property"] = check_df["property"].str.wrap(25)
+    else:
+        pass
+    print_str = (
+        print_str + "\t"
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
     return print_str
 
 
@@ -1312,7 +1338,7 @@ def validate_cross_links(
 )
 def validate_key_id_single_sheet(node_name: str, file_object, template_object) -> str:
     """Validate key id of a single sheet"""
-    print_str = f"\n\t{node_name}:\n\t----------\n"
+    print_str = f"\n\t{node_name}:\n\t----------\n\t"
 
     # get node df
     node_df = file_object.read_sheet_na(sheetname=node_name)
@@ -1323,6 +1349,7 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
     # pull out only the key ids that are present in the node
     key_ids = list(set(id_props) & set(key_id_props))
 
+    check_list = []
     for key_id in key_ids:
         # find the unique values of that linking property
         id_values = node_df[key_id].dropna().unique().tolist()
@@ -1330,6 +1357,8 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
         # if there are values with ";", unpack them
         # for instance ["apple;orange", "milk;yogurt", "cabbage;carrot"] -> ['apple', 'orange', 'milk', 'yogurt', 'cabbage', 'carrot']
         if len(id_values) > 0:
+            property_dict = {}
+            property_dict["node"] = node_name
             # if there is an array of link values, pull the array apart and delete the old value.
             remove_id_value = []
             append_id_value = []
@@ -1344,31 +1373,35 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
             new_id_values = [i for i in id_values if i not in remove_id_value]
             id_values = new_id_values
 
-            WARN_FLAG = True
             # for each id value
             troubled_id_value = []
             for id_value in id_values:
                 # if it does not match the following regex, throw an error.
                 if not re.match(pattern=r"^[a-zA-Z0-9_.@#;-]*$", string=id_value):
-                    if WARN_FLAG:
-                        WARN_FLAG = False
-                        print_str = (
-                            print_str
-                            + f"\tERROR: The following IDs have an illegal character (acceptable: A-z,0-9,_,.,-,@,#) in the property:\n"
-                        )
-                    else:
-                        pass
                     troubled_id_value.append(id_value)
                 else:
                     pass
-
             if len(troubled_id_value) > 0:
-                print_str = print_str + "\t\t" + ", ".join(troubled_id_value) + "\n"
+                property_dict["check"] = "ERROR\nillegal character"
+                property_dict["error value"] = ",".join(troubled_id_value)
+                check_list.append(property_dict)
             else:
                 pass
         else:
             pass
-
+    check_df = pd.DataFrame.from_records(check_list)
+    if check_df.shape[0] > 0:
+        check_df["error value"] = check_df["error value"].str.wrap(30)
+    else:
+        pass
+    print_str = (
+        print_str
+        + "\t"
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
     return print_str
 
 
