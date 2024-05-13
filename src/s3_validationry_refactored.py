@@ -340,13 +340,13 @@ def validate_terms_value_sets_one_sheet(
                                 #    print_str
                                 #    + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n"
                                 # )
-                                property_dict["check"] = "WARNING: but can handle free strings"
+                                property_dict["check"] = "WARNING\nfree strings allowed"
                             else:
                                 # print_str = (
                                 #    print_str
                                 #    + f"\tERROR: {property} property contains a value that is not recognized:\n"
                                 # )
-                                property_dict["check"] = "ERROR: unrecognized value"
+                                property_dict["check"] = "ERROR\nunrecognized value"
                         else:
                             pass
 
@@ -397,14 +397,14 @@ def validate_terms_value_sets_one_sheet(
                                     #    print_str
                                     #    + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n"
                                     # )
-                                    property_dict["check"] = "WARNING: but can handle free strings"
+                                    property_dict["check"] = "WARNING\nfree strings allowed"
 
                                 else:
                                     # print_str = (
                                     #    print_str
                                     #    + f"\tERROR: {property} property contains a value that is not recognized:\n"
                                     # )
-                                    property_dict["check"] = "ERROR: unrecognized value"
+                                    property_dict["check"] = "ERROR\nunrecognized value"
 
                             # for each unique value, check it against the TaVs data frame
                             for unique_value in unique_values:
@@ -433,6 +433,7 @@ def validate_terms_value_sets_one_sheet(
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
         check_df["error value"] = check_df["error value"].str.wrap(25)
+        check_df["proprety"] = check_df["proprety"].str.wrap(25)
     else:
         pass
     print_str = (
@@ -480,19 +481,22 @@ def validate_integer_numeric_checks_one_sheet(
     node_df = file_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     line_length = 25
-    print_str = ""
-    print_str = print_str + f"\n\t{node_name}\n\t----------\n"
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
 
     # read dict_df, create int_props, and num_props
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
     int_props = dict_df[dict_df["Type"] == "integer"]["Property"].unique().tolist()
     num_props = dict_df[dict_df["Type"] == "number"]["Property"].unique().tolist()
 
+    check_list = []
     for property in properties:
         WARN_FLAG = False
         # NUMBER PROPS CHECK
         # if that property is a number property
+        property_dict = {}
         if property in num_props:
+            property_dict["node"] = node_name
+            property_dict["proprety"] = property
             if len(node_df[property].dropna().tolist()) > 0:
                 error_rows = []
                 # go throw each row
@@ -516,19 +520,15 @@ def validate_integer_numeric_checks_one_sheet(
             # if the warning flag was tripped
             if WARN_FLAG:
                 WARN_FLAG = False
+                property_dict["check"] = "Error"
                 print_str = (
                     print_str
                     + f"\tERROR: {property} property contains a value that is not a number:\n"
                 )
                 # itterate over that list and print out the values
-                enum_print = ""
-                for i, row in enumerate(error_rows):
-                    if i % line_length == 0:
-                        enum_print = enum_print + "\n\t\t"
-                    else:
-                        pass
-                    enum_print = enum_print + str(row) + ","
-                print_str = print_str + enum_print + "\n\n"
+                enum_print = ",".join([str(i) for i in error_rows])
+                property_dict["error row"] = enum_print
+                check_list.append(property_dict)
             else:
                 pass
         # property not an num_props
@@ -538,6 +538,8 @@ def validate_integer_numeric_checks_one_sheet(
         # INTEGER props check
         # if that property is a integer property
         if property in int_props:
+            property_dict["node"] = node_name
+            property_dict["proprety"] = property
             # if there are atleast one value
             if len(node_df[property].dropna().tolist()) > 0:
                 error_rows = []
@@ -562,23 +564,28 @@ def validate_integer_numeric_checks_one_sheet(
             # if the warning flag was tripped
             if WARN_FLAG:
                 WARN_FLAG = False
-                print_str = (
-                    print_str
-                    + f"\tERROR: {property} property contains a value that is not an integer:\n"
-                )
+                property_dict["check"] = "ERROR"
                 # itterate over that list and print out the values
-                enum_print = ""
-                for i, row in enumerate(error_rows):
-                    if i % line_length == 0:
-                        enum_print = enum_print + "\n\t\t"
-                    else:
-                        pass
-                    enum_print = enum_print + str(row) + ","
-                print_str = print_str + enum_print + "\n\n"
+                enum_print = ",".join([str(i) for i in error_rows])
+                property_dict["error row"] = enum_print
+                check_list.append(property_dict)
             else:
                 pass
         else:
             pass
+    check_df = pd.DataFrame.from_records(check_list)
+    if check_df.shape[0] > 0:
+        check_df["error row"] = check_df["error row"].str.wrap(25)
+        check_df["proprety"] = check_df["proprety"].str.wrap(25)
+    else:
+        pass
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
     return print_str
 
 
