@@ -37,13 +37,13 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
         runner_logger.error(f"Downloading ccdi-model-props.yml failed unexpectedly {er}")
         traceback.print_exc()
 
-    # download terms.yaml
+    # download terms.yml
     try:
         term_file = dl_file_from_url(ModelEndpoint.term_file)
     except ConnectionError as e:
         runner_logger.error(e)
     except Exception as er:
-        runner_logger.error(f"downloading terms.yaml failed unexpectedly. {er}")
+        runner_logger.error(f"downloading terms.yml failed unexpectedly. {er}")
         traceback.print_exc()
 
     runner_logger.info(

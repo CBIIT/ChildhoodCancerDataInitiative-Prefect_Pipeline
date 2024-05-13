@@ -31,7 +31,7 @@ class ModelEndpoint:
         "https://raw.githubusercontent.com/CBIIT/ccdi-model/main/model-desc/ccdi-model-props.yml"
     )
     term_file: str = (
-        "https://raw.githubusercontent.com/CBIIT/ccdi-model/main/model-desc/terms.yaml"
+        "https://raw.githubusercontent.com/CBIIT/ccdi-model/main/model-desc/terms.yml"
     )
 
 
@@ -232,7 +232,7 @@ class GetCCDIModel():
         return prop_description, prop_type, prop_example, prop_required, prop_CDE
 
     def _get_prop_cde_version(self, prop_name: str, term_dict: dict) -> str:
-        """Extracts CDE version of a property from a dict derived from terms.yaml
+        """Extracts CDE version of a property from a dict derived from terms.yml
 
         Example blob of a prop term:
         {'Origin': 'caDSR',
