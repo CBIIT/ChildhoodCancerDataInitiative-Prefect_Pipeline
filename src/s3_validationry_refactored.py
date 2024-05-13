@@ -136,7 +136,10 @@ def validate_required_properties_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     # wrape the text of error row if the length exceeds 25
-    check_df["error row"] = check_df["error row"].str.wrap(25)
+    if check_df.shape[0] > 0:
+        check_df["error row"] = check_df["error row"].str.wrap(25)
+    else:
+        pass
     print_str = print_str + check_df.to_markdown(
         tablefmt="rounded_grid", index=False
     ).replace("\n","\n\t") + "\n"
@@ -201,7 +204,10 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
             pass
     check_df =  pd.DataFrame.from_records(check_list)
     # wrape the text of error row if the length exceeds 25
-    check_df["error row"] = check_df["error row"].str.wrap(25)
+    if check_df.shape[0] > 0:
+        check_df["error row"] = check_df["error row"].str.wrap(25)
+    else:
+        pass
     print_str = (
         print_str
         + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
@@ -424,7 +430,10 @@ def validate_terms_value_sets_one_sheet(
             # proprety not in TaVs data frame
             pass
     check_df = pd.DataFrame.from_records(check_list)
-    check_df["error value"] = check_df["error value"].str.wrap(25)
+    if check_df.shape[0] > 0:
+        check_df["error value"] = check_df["error value"].str.wrap(25)
+    else:
+        pass
     print_str = (
         print_str
         + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
