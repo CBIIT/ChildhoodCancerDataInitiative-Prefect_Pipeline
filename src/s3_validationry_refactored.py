@@ -196,13 +196,14 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
 
                 # itterate over that list and print out the values
                 pos_print = ",".join([str(i) for i in bad_positions])
-                property_dict["error_row"] = pos_print
+                property_dict["error row"] = pos_print
                 check_list.append(property_dict)
             else:
                 pass
         else:
             pass
     check_df =  pd.DataFrame.from_records(check_list)
+    print(check_df)
     # wrape the text of error row if the length exceeds 25
     if check_df.shape[0] > 0:
         check_df["error row"] = check_df["error row"].str.wrap(25)
