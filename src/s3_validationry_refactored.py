@@ -128,9 +128,11 @@ def validate_required_properties_one_sheet(
 
                 # print out the row number contains missing value
                 pos_print = ",".join([str(i) for i in bad_positions])
+                proprety_dict["check"] = "ERROR"
                 proprety_dict["error row"] = pos_print
             else:
-                proprety_dict["error row"]= "PASS"
+                proprety_dict["check"] = "PASS"
+                proprety_dict["error row"]= ""
             check_list.append(proprety_dict)
         else:
             pass
@@ -196,6 +198,7 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
 
                 # itterate over that list and print out the values
                 pos_print = ",".join([str(i) for i in bad_positions])
+                property_dict["check"] = "ERROR"
                 property_dict["error row"] = pos_print
                 check_list.append(property_dict)
             else:
@@ -1250,7 +1253,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
             if len(set(row_values)) > 1:
                 print_str = (
                     print_str
-                    + f"\tWARNING: The entry on row {index+3} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n"
+                    + f"\tWARNING: The entry on row {index+2} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n"
                 )
             else:
                 pass
@@ -1396,7 +1399,6 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
         pass
     print_str = (
         print_str
-        + "\t"
         + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
             "\n", "\n\t"
         )
