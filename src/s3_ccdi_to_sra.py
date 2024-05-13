@@ -448,6 +448,9 @@ def reformat_sra_values(
     sra_df["library_strategy (click for details)"][
         sra_df["library_strategy (click for details)"].str.contains("Other", na=False)
     ] = "OTHER"
+    sra_df["library_strategy (click for details)"][
+        sra_df["library_strategy (click for details)"].str.contains("Archer_Fusion", na=False)
+    ] = "RNA-Seq"
     # after hardcoding strategy values, check for unacceptable values
     unknown_library_strategy_index = find_new_value_in_col(
         sra_df["library_strategy (click for details)"],
@@ -495,6 +498,12 @@ def reformat_sra_values(
     sra_df["instrument_model"][
         sra_df["instrument_model"] == "Illumina NovaSeq"
     ] = "Illumina NovaSeq 6000"
+    sra_df["instrument_model"][
+        sra_df["instrument_model"] == "Illumina NextSeq 2000"
+    ] = "NextSeq 2000"
+    sra_df["instrument_model"][
+        sra_df["instrument_model"] == "Illumina NextSeq 1000"
+    ] = "NextSeq 1000"
 
     # fix library layout value
     sra_df["library_layout"][

@@ -20,6 +20,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # get logger
     logger = get_logger(loggername="CCDI_to_CDS_submission", log_level="info")
+    # logger file name
+    logger_file_name = "CCDI_to_CDS_submission_" + get_date() + ".log"
     logger.info("The CCDI to CDS conversion has begun")
 
     # Download CDS model template from GitHub repo
@@ -1164,8 +1166,5 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     logger.info(
         f"Process Complete. The output file can be found here: {file_dir_path}/{output_file}"
     )
-
-    # logger file name
-    logger_file_name = "CCDI_to_CDS_submission_" + get_date() + ".log"
 
     return (output_file_path, logger_file_name)
