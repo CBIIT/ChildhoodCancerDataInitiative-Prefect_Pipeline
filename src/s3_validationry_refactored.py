@@ -116,7 +116,7 @@ def validate_required_properties_one_sheet(
 ) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
-    line_length = 15
+    # line_length = 15
     print_str = f"\n\t{node_name}\n\t----------\n\t"
     check_list = []
     for property in properties:
@@ -134,11 +134,11 @@ def validate_required_properties_one_sheet(
                 # print out the row number contains missing value
                 pos_print = ""
                 for i, pos in enumerate(bad_positions):
-                    if i % line_length == 0:
-                        pos_print = pos_print + "\n\t\t"
-                        # print_str = print_str + "\n\t\t\n"
-                    else:
-                        pass
+                    # if i % line_length == 0:
+                    #    pos_print = pos_print + "\n\t\t"
+                    #    # print_str = print_str + "\n\t\t\n"
+                    # else:
+                    #    pass
                     pos_print = pos_print + str(pos) + ","
                 # print_str = print_str + pos_print + "\n\n"
                 proprety_dict["error row"] = pos_print
@@ -151,7 +151,10 @@ def validate_required_properties_one_sheet(
             check_list.append(proprety_dict)
         else:
             pass
-    print_str = print_str + pd.DataFrame.from_records(check_list).to_markdown(
+    check_df = pd.DataFrame.from_records(check_list)
+    # wrape the text of error row if the length exceeds 10
+    check_df["error row"] = check_df["error row"].str.wrap(10)
+    print_str = print_str + check_df.to_markdown(
         tablefmt="rounded_grid", index=False
     ).replace("\n","\n\t") + "\n"
     return print_str
