@@ -119,21 +119,15 @@ def validate_required_properties_one_sheet(
     print_str = f"\n\t{node_name}\n\t----------\n\t"
     check_list = []
     for property in properties:
-        WARN_FLAG = True
         if property in required_properties:
             proprety_dict = {}
             proprety_dict["node"] = node_name
             proprety_dict["property"] = property
             if node_df[property].isna().any():
                 bad_positions = np.where(node_df[property].isna())[0] + 2
-                # Flag to turn on explanation of error/warning
-                if WARN_FLAG:
-                    WARN_FLAG = False
 
                 # print out the row number contains missing value
-                pos_print = ""
-                for i, pos in enumerate(bad_positions):
-                    pos_print = pos_print + str(pos) + ","
+                pos_print = ",".join([str(i) for i in bad_positions])
                 proprety_dict["error row"] = pos_print
             else:
                 proprety_dict["error row"]= "PASS"
@@ -177,16 +171,18 @@ def validate_required_properties(
 def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
-    line_length = 25
-    print_str = f"\n\t{node_name}\n\t----------\n"
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
+    check_list = []
     for property in properties:
-        WARN_FLAG = True
         # if the property is not completely empty:
         if not node_df[property].isna().all():
+            property_dict = {}
             # if there are some values that do not match when positions are stripped of white space
             if (
                 node_df[property].fillna("") != node_df[property].str.strip().fillna("")
             ).any():
+                property_dict["node"] = node_name
+                property_dict["property"] = property
                 bad_positions = (
                     np.where(
                         node_df[property].fillna("")
@@ -194,27 +190,25 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
                     )[0]
                     + 2
                 )
-                # Flag to turn on explanation of error/warning
-                if WARN_FLAG:
-                    WARN_FLAG = False
-                    print_str = (
-                        print_str
-                        + f"\tERROR: The values for the node, {node_name}, in the property, {property}, have white space issues:\n"
-                    )
 
                 # itterate over that list and print out the values
-                pos_print = ""
-                for i, pos in enumerate(bad_positions):
-                    if i % line_length == 0:
-                        pos_print = pos_print + "\n\t\t"
-                    else:
-                        pass
-                    pos_print = pos_print + str(pos) + ","
-                print_str = print_str + pos_print + "\n\n"
+                pos_print = ",".join([str(i) for i in bad_positions])
+                property_dict["error_row"] = pos_print
+                check_list.append(property_dict)
             else:
                 pass
         else:
             pass
+    check_df =  pd.DataFrame.from_records(check_list)
+    # wrape the text of error row if the length exceeds 25
+    check_df["error row"] = check_df["error row"].str.wrap(25)
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
     return print_str
 
 
