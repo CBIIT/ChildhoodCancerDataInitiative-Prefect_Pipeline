@@ -23,28 +23,34 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     try:
         model_file = dl_file_from_url(ModelEndpoint.model_file)
     except ConnectionError as e:
-        runner_logger.error(e)
+        runner_logger.error(f"Failed to download ccdi-model.yml due to ConnectionError: {e}")
+        raise
     except Exception as er:
         runner_logger.error(f"Downloading ccdi-model.yml failed unexpectedly. {er}")
         traceback.print_exc()
+        raise
 
     # download ccdi-model-props.yml
     try:
         prop_file = dl_file_from_url(ModelEndpoint.prop_file)
     except ConnectionError as e:
-        runner_logger.error(e)
+        runner_logger.error(f"Failed to download ccdi-model-props.yml due to ConnectionError: {e}")
+        raise
     except Exception as er:
         runner_logger.error(f"Downloading ccdi-model-props.yml failed unexpectedly {er}")
         traceback.print_exc()
+        raise
 
     # download terms.yml
     try:
         term_file = dl_file_from_url(ModelEndpoint.term_file)
     except ConnectionError as e:
-        runner_logger.error(e)
+        runner_logger.error(f"Failed to download terms.yml due to ConnectionError: {e}")
+        raise
     except Exception as er:
         runner_logger.error(f"downloading terms.yml failed unexpectedly. {er}")
         traceback.print_exc()
+        raise
 
     runner_logger.info(
         f"Downloaded models files: {model_file}, {prop_file}, {term_file}"
@@ -60,18 +66,23 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
         runner_logger.info(f"Model version captured in ccdi-model.yml is {model_version}")
     except KeyError as e:
         runner_logger.error("Can't find Version information in ccdi-model.yml")
+        raise
     except Exception as er:
         runner_logger.error(f"Failed to collect Version from ccdi-model.yml. {er}")
         traceback.print_exc()
+        raise
 
     # get dictionary dataframe which can be used for Dictionary sheet
     try:
         dict_df = getmodel.get_prop_dict_df()
     except KeyError as e:
-        runner_logger.error(e)
+        runner_logger.error(f"Failed to generate the dataframe for Dictionary sheet due to KeyError: {e}")
+        traceback.print_exc()
+        raise
     except Exception as er:
         runner_logger.error(f"Failed to generate the dataframe for Dictionay sheet. {er}")
         traceback.print_exc()
+        raise
 
     # get terms dataframe which can be used for terms and values set sheet
     terms_df = getmodel.get_terms_df()
