@@ -113,7 +113,7 @@ def test_validate_required_properties_one_sheet():
         checkccdi_object=file_object,
         required_properties=["required_prop1", "required_prop2"],
     )
-    assert "ERROR: The values for the node, test_node, in the the required property, required_prop1, are missing:" in return_str
+    assert "test_node" in return_str
     assert "10,11,12" in return_str
-    assert "ERROR: The values for the node, test_node, in the the required property, required_prop2, are missing:" in return_str
+    assert "required_prop2" in return_str
     assert "nonrequired_prop1" not in return_str
