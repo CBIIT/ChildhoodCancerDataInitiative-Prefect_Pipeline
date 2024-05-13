@@ -240,8 +240,7 @@ def validate_terms_value_sets_one_sheet(
 ):
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
-    line_length = 5
-    print_str = f"\n\t{node_name}\n\t----------\n"
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
 
     # create tavs_df and dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
@@ -264,6 +263,7 @@ def validate_terms_value_sets_one_sheet(
             "race",
         ]
 
+    check_list = []
     for property in properties:
         WARN_FLAG = True
         tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
@@ -271,6 +271,9 @@ def validate_terms_value_sets_one_sheet(
         if len(tavs_df_prop) > 0:
             # if the property is not completely empty:
             if not node_df[property].isna().all():
+                property_dict = {}
+                property_dict["node"] = node_name
+                property_dict["property"] = property
                 # if the property is an enum
                 if property in enum_arrays:
                     # obtain a list of value strings
@@ -296,15 +299,21 @@ def validate_terms_value_sets_one_sheet(
                                 unique_value = list(set(unique_value.split(";")))
                                 for value in unique_value:
                                     unique_values = np.append(unique_values, value)
+                            else:
+                                pass
+                        else:
+                            pass
                     # make sure list is unique
                     unique_values = list(set(unique_values))
 
                     if set(unique_values).issubset(set(tavs_df_prop["Term"])):
+                        property_dict["check"] = "PASS"
+                        property_dict["error value"] = ""
                         # if yes, then
-                        print_str = (
-                            print_str
-                            + f"\tPASS: {property}, property contains all valid values.\n"
-                        )
+                        # print_str = (
+                        #    print_str
+                        #    + f"\tPASS: {property}, property contains all valid values.\n"
+                        # )
                     else:
                         # if no, then
                         # for each unique value
@@ -320,15 +329,17 @@ def validate_terms_value_sets_one_sheet(
                             ]["Property"].tolist()
                             # if the enum is an string;enum
                             if property in enum_strings:
-                                print_str = (
-                                    print_str
-                                    + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n"
-                                )
+                                # print_str = (
+                                #    print_str
+                                #    + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n"
+                                # )
+                                property_dict["check"] = "WARNING: but can handle free strings"
                             else:
-                                print_str = (
-                                    print_str
-                                    + f"\tERROR: {property} property contains a value that is not recognized:\n"
-                                )
+                                # print_str = (
+                                #    print_str
+                                #    + f"\tERROR: {property} property contains a value that is not recognized:\n"
+                                # )
+                                property_dict["check"] = "ERROR: unrecognized value"
                         else:
                             pass
 
@@ -338,14 +349,15 @@ def validate_terms_value_sets_one_sheet(
                                 bad_enum_list.append(unique_value)
 
                         # itterate over that list and print out the values
-                        enum_print = ""
-                        for i, enum in enumerate(bad_enum_list):
-                            if i % line_length == 0:
-                                enum_print = enum_print + "\n\t\t"
-                            else:
-                                pass
-                            enum_print = enum_print + str(enum) + ","
-                        print_str = print_str + enum_print + "\n\n"
+                        enum_print = ",".join(bad_enum_list)
+                        # for i, enum in enumerate(bad_enum_list):
+                        #    if i % line_length == 0:
+                        #        enum_print = enum_print + "\n\t\t"
+                        #    else:
+                        #        pass
+                        #    enum_print = enum_print + str(enum) + ","
+                        # print_str = print_str + enum_print + "\n\n"
+                        property_dict["error value"] =  enum_print
                 # if the property is not an enum
                 else:
                     unique_values = node_df[property].dropna().unique()
@@ -354,10 +366,12 @@ def validate_terms_value_sets_one_sheet(
                         # are all the values found in the TaVs terms
                         if set(unique_values).issubset(set(tavs_df_prop["Term"])):
                             # if yes, then
-                            print_str = (
-                                print_str
-                                + f"\tPASS: {property}, property contains all valid values.\n"
-                            )
+                            # print_str = (
+                            #    print_str
+                            #    + f"\tPASS: {property}, property contains all valid values.\n"
+                            # )
+                            property_dict["check"] = "PASS"
+                            property_dict["error value"] = ""
                         else:
                             # if no, then
                             bad_enum_list = []
@@ -372,32 +386,52 @@ def validate_terms_value_sets_one_sheet(
                                 ]["Property"].tolist()
                                 # if the enum is an string;enum
                                 if property in enum_strings:
-                                    print_str = (
-                                        print_str
-                                        + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n"
-                                    )
+                                    # print_str = (
+                                    #    print_str
+                                    #    + f"\tWARNING: {property} property contains a value that is not recognized, but can handle free strings:\n"
+                                    # )
+                                    property_dict["check"] = "WARNING: but can handle free strings"
 
                                 else:
-                                    print_str = (
-                                        print_str
-                                        + f"\tERROR: {property} property contains a value that is not recognized:\n"
-                                    )
+                                    # print_str = (
+                                    #    print_str
+                                    #    + f"\tERROR: {property} property contains a value that is not recognized:\n"
+                                    # )
+                                    property_dict["check"] = "ERROR: unrecognized value"
 
                             # for each unique value, check it against the TaVs data frame
                             for unique_value in unique_values:
                                 if unique_value not in tavs_df_prop["Term"].values:
                                     bad_enum_list.append(unique_value)
 
-                            enum_print = ""
-                            for i, enum in enumerate(bad_enum_list):
-                                if i % line_length == 0:
-                                    enum_print = enum_print + "\n\t\t"
-                                else:
-                                    pass
-                                enum_print = enum_print + str(enum) + ","
-                            print_str = print_str + enum_print + "\n\n"
+                            enum_print = ",".join(bad_enum_list)
+                            # for i, enum in enumerate(bad_enum_list):
+                            #    if i % line_length == 0:
+                            #        enum_print = enum_print + "\n\t\t"
+                            #    else:
+                            #        pass
+                            #    enum_print = enum_print + str(enum) + ","
+                            # print_str = print_str + enum_print + "\n\n"
+                            property_dict["error value"] = enum_print
                     else:
-                        pass
+                        property_dict["check"] = "PASS"
+                        property_dict["error value"] = ""
+                check_list.append(property_dict)
+            else:
+                # column empty
+                pass
+        else:
+            # proprety not in TaVs data frame
+            pass
+    check_df = pd.DataFrame.from_records(check_list)
+    check_df["error value"] = check_df["error value"].str.wrap(25)
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
     return print_str
 
 
@@ -410,11 +444,9 @@ def validate_terms_value_sets(
     file_path: str,
     template_path: str,
     node_list: list[str],
-    # dict_df: DataFrame,
-    # tavs_df: DataFrame,
     output_file: str,
 ) -> None:
-    section_title = "\n\n" + header_str("Terms and Value Sets Check") + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\n If the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
+    section_title = "\n\n" + header_str("Terms and Value Sets Check") + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\nIf the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
