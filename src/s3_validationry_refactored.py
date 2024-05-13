@@ -496,7 +496,7 @@ def validate_integer_numeric_checks_one_sheet(
         property_dict = {}
         if property in num_props:
             property_dict["node"] = node_name
-            property_dict["proprety"] = property
+            property_dict["property"] = property
             if len(node_df[property].dropna().tolist()) > 0:
                 error_rows = []
                 # go throw each row
@@ -521,10 +521,6 @@ def validate_integer_numeric_checks_one_sheet(
             if WARN_FLAG:
                 WARN_FLAG = False
                 property_dict["check"] = "Error"
-                print_str = (
-                    print_str
-                    + f"\tERROR: {property} property contains a value that is not a number:\n"
-                )
                 # itterate over that list and print out the values
                 enum_print = ",".join([str(i) for i in error_rows])
                 property_dict["error row"] = enum_print
@@ -539,7 +535,7 @@ def validate_integer_numeric_checks_one_sheet(
         # if that property is a integer property
         if property in int_props:
             property_dict["node"] = node_name
-            property_dict["proprety"] = property
+            property_dict["property"] = property
             # if there are atleast one value
             if len(node_df[property].dropna().tolist()) > 0:
                 error_rows = []
@@ -576,7 +572,7 @@ def validate_integer_numeric_checks_one_sheet(
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
         check_df["error row"] = check_df["error row"].str.wrap(25)
-        check_df["proprety"] = check_df["proprety"].str.wrap(25)
+        check_df["property"] = check_df["property"].str.wrap(25)
     else:
         pass
     print_str = (
