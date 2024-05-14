@@ -941,17 +941,6 @@ def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client) -> bool:
         return False, np.nan
 
 
-@flow(task_runner=ConcurrentTaskRunner(), name="If objects exist in bucket")
-def validate_manifest_objs_in_bucket(s3_uri_list: list, s3_client) -> list:
-    """Checks if a list of uri exists in AWS by using a s3 uri
-    Returns a list of True if exist, False if not exist, and None
-    """
-    exist_list_future = validate_single_manifest_obj_in_bucket.map(
-        s3_uri_list, s3_client
-    )
-    return [i.result() for i in exist_list_future]
-
-
 @flow(name="if bucket objects exist in manifest")
 def validate_bucket_objs_in_manifest(
     file_object, file_node_list: list[str], readable_buckets: list[str]

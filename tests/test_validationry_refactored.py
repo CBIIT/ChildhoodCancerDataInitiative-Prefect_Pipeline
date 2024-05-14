@@ -6,6 +6,7 @@ import pandas as pd
 from unittest.mock import MagicMock
 import numpy as np
 from pathlib import Path
+from botocore.exceptions import ClientError
 
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -27,6 +28,9 @@ from src.s3_validationry_refactored import (
     check_file_basename,
     validate_cross_links_single_sheet,
     validate_key_id_single_sheet,
+    count_buckets,
+    check_buckets_access,
+    validate_single_manifest_obj_in_bucket,
 )
 
 
@@ -59,6 +63,7 @@ def test_if_template_valid_fail(mock_ExcelFile):
     ):
         if_template_valid(template_path="test_file")
 
+
 def test_if_string_float():
     """test for if_string_floa
     float(3) won't raise ValueError
@@ -67,6 +72,7 @@ def test_if_string_float():
     fail_again_string = if_string_float("test")
     assert pass_string
     assert fail_again_string is False
+
 
 def test_if_string_int():
     """test for if_string_int"""
@@ -83,43 +89,46 @@ def test_cleanup_manifest_nodes(mock_checkccdi):
     logger = MagicMock()
     mock_checkccdi.return_value = mock_file_object
     mock_file_object.get_sheetnames.return_value = [
-            "README and INSTRUCTIONS",
-            "apple",
-            "Dictionary",
-            "pear",
-            "Terms and Value Sets",
-            "grape"
-        ]
-    mock_file_object.read_sheet_na.side_effect = [
-        pd.DataFrame({
-            "type":[],
-            "apple_id":[]
-        }), 
-        pd.DataFrame({
-            "type":["pear","pear"],
-            "pear_id":["pear_1","pear_2"],
-            "pear_color": ["green","yellow"]
-        }), 
-        pd.DataFrame({
-            "type":["grape"]*3,
-            "grape_id":["grape_1","grape_2","grape_3"],
-            "grape_color": ["purple","purple","green"]
-        })
+        "README and INSTRUCTIONS",
+        "apple",
+        "Dictionary",
+        "pear",
+        "Terms and Value Sets",
+        "grape",
     ]
-    template_node_list = ["grape","apple","pear"]
-    ordered_nodes = cleanup_manifest_nodes.fn(file_path="test_file_path", template_node_list=template_node_list, logger=logger)
-    assert ordered_nodes == ["grape","pear"]
+    mock_file_object.read_sheet_na.side_effect = [
+        pd.DataFrame({"type": [], "apple_id": []}),
+        pd.DataFrame(
+            {
+                "type": ["pear", "pear"],
+                "pear_id": ["pear_1", "pear_2"],
+                "pear_color": ["green", "yellow"],
+            }
+        ),
+        pd.DataFrame(
+            {
+                "type": ["grape"] * 3,
+                "grape_id": ["grape_1", "grape_2", "grape_3"],
+                "grape_color": ["purple", "purple", "green"],
+            }
+        ),
+    ]
+    template_node_list = ["grape", "apple", "pear"]
+    ordered_nodes = cleanup_manifest_nodes.fn(
+        file_path="test_file_path", template_node_list=template_node_list, logger=logger
+    )
+    assert ordered_nodes == ["grape", "pear"]
 
 
 def test_validate_required_properties_one_sheet():
     """test for validate_required_properties_one_sheet task"""
-    file_object=MagicMock()
+    file_object = MagicMock()
     test_df = pd.DataFrame(
         {
             "type": ["type"] * 25,
             "required_prop1": ["anything"] * 8 + [np.nan] * 3 + ["anything"] * 14,
             "required_prop2": ["anything"] * 21 + [np.nan] * 4,
-            "nonrequired_prop1": ["anything"] * 7 + [np.nan] * 3 + ["anything"] * 15
+            "nonrequired_prop1": ["anything"] * 7 + [np.nan] * 3 + ["anything"] * 15,
         }
     )
     file_object.read_sheet_na.return_value = test_df
@@ -139,13 +148,15 @@ def test_validate_whitespace_one_sheet():
     file_object = MagicMock()
     test_df = pd.DataFrame(
         {
-        "type": ["test_type"] * 3,
-        "prop1": ["apple","orange","pear   "],
-        "prop2": ["   milk","juice","wine"]
+            "type": ["test_type"] * 3,
+            "prop1": ["apple", "orange", "pear   "],
+            "prop2": ["   milk", "juice", "wine"],
         }
     )
     file_object.read_sheet_na.return_value = test_df
-    return_str = validate_whitespace_one_sheet.fn(node_name="test_node", checkccdi_object=file_object)
+    return_str = validate_whitespace_one_sheet.fn(
+        node_name="test_node", checkccdi_object=file_object
+    )
     assert "prop1" in return_str
     assert "prop2" in return_str
     assert "4" in return_str
@@ -162,7 +173,7 @@ ALL_FILES = pytest.mark.datafiles(
 
 @ALL_FILES
 def test_validate_terms_value_sets_one_sheet(datafiles):
-    """ test for validate_terms_value_sets_one_sheet task"""
+    """test for validate_terms_value_sets_one_sheet task"""
     for item in datafiles.iterdir():
         if "Exampler" in item.name:
             file_path = str(item)
@@ -183,7 +194,7 @@ def test_validate_terms_value_sets_one_sheet(datafiles):
 
 @ALL_FILES
 def test_validate_terms_value_sets_one_sheet_no_error(datafiles):
-    """ test for validate_terms_value_sets_one_sheet task"""
+    """test for validate_terms_value_sets_one_sheet task"""
     for item in datafiles.iterdir():
         if "Exampler" in item.name:
             file_path = str(item)
@@ -210,7 +221,9 @@ def test_validate_integer_numeric_checks_one_sheet(datafiles):
     temp_object = CheckCCDI(temp_path)
     file_object = CheckCCDI(file_path)
     validate_str = validate_integer_numeric_checks_one_sheet.fn(
-        node_name="single_cell_sequencing_file", file_object=file_object, template_object=temp_object
+        node_name="single_cell_sequencing_file",
+        file_object=file_object,
+        template_object=temp_object,
     )
     assert "coverage" in validate_str
 
@@ -252,6 +265,7 @@ def test_check_file_size_zero(datafiles):
     print_str = check_file_size_zero(file_df=file_df)
     assert print_str.count("radiology_file") == 2
     assert print_str.count("sequencing_file") == 1
+
 
 @ALL_FILES
 def test_check_file_md5sum_regex(datafiles):
@@ -305,10 +319,10 @@ def test_validate_cross_links_single_sheet(datafiles):
     file_object = CheckCCDI(file_path)
     print_str = validate_cross_links_single_sheet.fn(
         node_name="single_cell_sequencing_file", file_object=file_object
-
     )
     assert "diligent_overwrought_80" in print_str
     assert print_str.count("pdx.pdx_id") == 1
+
 
 @ALL_FILES
 def test_validate_key_id_single_sheet(datafiles):
@@ -325,3 +339,84 @@ def test_validate_key_id_single_sheet(datafiles):
     )
     assert print_str.count("pdx") == 2
     assert "diligent_overwrought_80&" in print_str
+
+
+def test_count_buckets():
+    test_df = pd.DataFrame(
+        {
+            "type": ["test_type"] * 4,
+            "file_url_in_cds": [
+                "s3://bucket1/folder/file1",
+                "s3://bucket1/folder/file2",
+                "s3://bucket2/folder/file1",
+                "s3://bucket3/folder/file3",
+            ],
+        }
+    )
+    bucket_list = count_buckets(df_file=test_df)
+    print(bucket_list)
+    assert len(bucket_list) == 3
+    assert "bucket3" in bucket_list
+
+
+@mock.patch("src.s3_validationry_refactored.set_s3_session_client")
+def test_check_buckets_access_all_success(mock_s3client):
+    s3_client = MagicMock()
+    mock_s3client.return_value = s3_client
+    s3_client.head_bucket.side_effect = [True, True]
+    invalid_buckets = check_buckets_access(bucket_list=["test-bucket1", "test-bucket2"])
+    assert len(invalid_buckets["bucket"]) == 0
+
+
+@mock.patch("src.s3_validationry_refactored.set_s3_session_client")
+def test_check_buckets_access_with_fail(mock_s3client):
+    s3_client = MagicMock()
+    mock_s3client.return_value = s3_client
+    s3_client.head_bucket.side_effect = [
+        True,
+        ClientError(
+            operation_name="InvalidKey",
+            error_response={
+                "Error": {
+                    "Code": "TestErrorCode",
+                    "Message": "This is a custom message",
+                }
+            },
+        ),
+    ]
+    invalid_buckets = check_buckets_access(bucket_list=["test-bucket1", "test-bucket2"])
+    assert len(invalid_buckets["bucket"]) == 1
+    assert (
+        invalid_buckets["error_message"][0] == "TestErrorCode This is a custom message"
+    )
+
+
+def test_validate_single_manifest_obj_in_bucket_success():
+    s3_client = MagicMock()
+    s3_client.head_object.return_value = {
+        "Key": "folder/file.txt",
+        "ContentLength": "123",
+    }
+    if_exist, file_size = validate_single_manifest_obj_in_bucket.fn(
+        s3_uri="s3://test-bucket/folder/file.txt", s3_client=s3_client
+    )
+    assert if_exist
+    assert file_size == "123"
+
+
+def test_validate_single_manifest_obj_in_bucket_fail():
+    s3_client = MagicMock()
+    s3_client.head_object.side_effect = ClientError(
+        operation_name="InvalidKey",
+        error_response={
+            "Error": {
+                "Code": "TestErrorCode",
+                "Message": "This is a custom message",
+            }
+        },
+    )
+    if_exist, file_size = validate_single_manifest_obj_in_bucket.fn(
+        s3_uri="s3://test-bucket/folder/file.txt", s3_client=s3_client
+    )
+    assert not if_exist
+    assert np.isnan(file_size)
