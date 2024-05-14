@@ -117,8 +117,13 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     )
 
     # sort sheets order
-    sorted_sheet_list = getmodel._get_sorted_node_list(node_list=model_node.keys())
-    manifest_wb.sort_sheets(sorted_node_list=sorted_sheet_list)
+    try:
+        sorted_sheet_list = getmodel._get_sorted_node_list(node_list=model_node.keys())
+        manifest_wb.sort_sheets(sorted_node_list=sorted_sheet_list)
+    except ValueError as err:
+        runner_logger.error(f"Failed to sort sheets in wb, likely due to outdated GetCCDIModel.node_preferred_order: {err}")
+        traceback.print_exc()
+        raise
 
     # save manifest submission file
     output_wb_name = "CCDI_Submission_Template_" + model_version + ".xlsx"
