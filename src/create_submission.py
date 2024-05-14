@@ -84,7 +84,7 @@ class GetCCDIModel():
         "methylation_array_file",
         "cytogenomic_file",
         "pathology_file",
-        "single_cell_sequencing_file",
+        #"single_cell_sequencing_file",
         "synonym",
     ]
 
