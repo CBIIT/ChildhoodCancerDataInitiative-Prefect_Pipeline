@@ -67,7 +67,7 @@ class GetCCDIModel():
         "participant",
         "family_relationship",
         "diagnosis",
-        "therapeutic_procedure",
+        #"therapeutic_procedure",
         "medical_history",
         "exposure",
         "radiology_file",
