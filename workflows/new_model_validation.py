@@ -6,7 +6,7 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from model_to_submission import create_submission_manifest
 from src.template_exampler import make_template_example
-from src.s3_validationry import ValidationRy
+from src.s3_validationry_refactored import ValidationRy_new
 from src.utils import get_date, get_time, file_ul
 from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
@@ -91,7 +91,7 @@ def validate_new_model(
         new_model_validation_out, "validation_output_" + currenttime
     )
     try:
-        validation_out_file = ValidationRy(file_path=exampler_file, template_path=manifest_file)
+        validation_out_file = ValidationRy_new(file_path=exampler_file, template_path=manifest_file)
         file_ul(
             bucket=bucket,
             output_folder=validation_output_folder,
