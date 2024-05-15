@@ -16,7 +16,7 @@ sys.path.append(parent_dir)
 from src.s3_ccdi_to_sra import CCDI_to_SRA
 from src.s3_ccdi_to_dbgap import CCDI_to_dbGaP
 from src.s3_catcherry import CatchERRy
-from src.s3_validationry import ValidationRy
+from src.s3_validationry_refactored import ValidationRy_new
 from src.s3_ccdi_to_cds import CCDI_to_CDS
 from src.s3_ccdi_to_index import CCDI_to_IndexeRy
 from src.s3_ccdi_to_tabbreakery import tabBreakeRy
@@ -213,7 +213,7 @@ def runner(
         # run ValidationRy
         runner_logger.info("Running ValidationRy flow")
         try:
-            validation_out_file = ValidationRy(catcherr_out_file, input_template)
+            validation_out_file = ValidationRy_new(catcherr_out_file, input_template)
         except:
             validation_out_file = None
         # upload ValidationRy output
