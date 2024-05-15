@@ -107,7 +107,7 @@ def count_success_fail(deletion_status: list) -> tuple:
     return count_success, count_fail
 
 
-@task(retries=3, retry_delay_seconds=0.5)
+@task(name="if single object exists",retries=3, retry_delay_seconds=0.5)
 def if_object_exists(key_path: str, bucket: str, s3_client, logger) -> None:
     """Retrives the metadata of an object without returning the
     object itself
@@ -227,30 +227,55 @@ def objects_md5sum(list_keys: list[str], bucket_name: str) -> list[str]:
     return [i.result() for i in md5sum_futures]
 
 
-@flow
+@flow(name="Construct a list of staging key", log_prints=True)
 def objects_staging_key(
     object_prod_key_list: list[str], prod_bucket_path: str, staging_bucket_path: str
 ) -> list[str]:
     """Returns a list of proposed keys of objects in staging bucket, given object paths in prod bucket,
     prod bucket name and staging bucket path
     """
-    staging_keys_future = construct_staging_bucket_key.map(
-        object_prod_key_list, prod_bucket_path, staging_bucket_path
-    )
-    return [i.result() for i in staging_keys_future]
+    # staging_keys_future = construct_staging_bucket_key.map(
+    #     object_prod_key_list, prod_bucket_path, staging_bucket_path
+    # )
+    # return [i.result() for i in staging_keys_future]
+    staging_key_list = []
+    progress_count = 1
+    for i in object_prod_key_list:
+        i_staging_key = construct_staging_bucket_key.fn(object_prod_bucket_key=i, prod_bucket_path=prod_bucket_path, staging_bucket_path=staging_bucket_path)
+        staging_key_list.append(i_staging_key)
+        if progress_count % 100 == 0:
+            # this log can be only seen under delete_objects_by_uri flow
+            print(f"progress: {progress_count}/{len(object_prod_key_list)}")
+        else:
+            pass
+        progress_count += 1
+    return staging_key_list
 
 
-@flow
+@flow(name="if a list of objects exist", log_prints=True)
 def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     """Returns a list of boolean indicating if the object exists
 
     This flow takes logger input so the parent flow can log objects
     aren't existed
     """
+    # s3_client = set_s3_session_client()
+    # if_exist_future = if_object_exists.map(key_path_list, bucket, s3_client, logger)
+    # s3_client.close()
+    # return [i.result() for i in if_exist_future]
+    if_exist_list = []
+    progress_count = 1
     s3_client = set_s3_session_client()
-    if_exist_future = if_object_exists.map(key_path_list, bucket, s3_client, logger)
-    s3_client.close()
-    return [i.result() for i in if_exist_future]
+    for i in key_path_list:
+        i_if_exist = if_object_exists.fn(key_path = i, bucket=bucket, s3_client=s3_client, logger=logger)
+        if_exist_list.append(i_if_exist)
+        if progress_count % 100 == 0:
+            # this log can be only seen under delete_objects_by_uri flow
+            print(f"progress: {progress_count}/{len(key_path_list)}")
+        else:
+            pass
+        progress_count += 1
+    return if_exist_list
 
 
 @task(
@@ -278,13 +303,26 @@ def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
     return delete_status
 
 
-@flow(name="Delete S3 Objects")
-def delete_objects_by_uri(uri_list, logger) -> None:
+@flow(name="Delete S3 Objects", log_prints=True)
+def delete_objects_by_uri(uri_list: list[str], logger) -> list:
     """Delete a list of s3 uri"""
+    # s3_client = set_s3_session_client()
+    # delete_responses = delete_single_object_by_uri.map(uri_list, s3_client, logger)
+    # s3_client.close()
+    # return [i.result() for i in delete_responses]
+    delete_status_list = []
     s3_client = set_s3_session_client()
-    delete_responses = delete_single_object_by_uri.map(uri_list, s3_client, logger)
-    s3_client.close()
-    return [i.result() for i in delete_responses]
+    progress_count = 1
+    for i in uri_list:
+        i_delete_status = delete_single_object_by_uri.fn(object_uri=i,s3_client=s3_client, logger=logger)
+        delete_status_list.append(i_delete_status)
+        if progress_count % 100 == 0:
+            # this log can be only seen under delete_objects_by_uri flow
+            print(f"progress: {progress_count}/{len(uri_list)}")
+        else:
+            pass
+        progress_count += 1
+    return delete_status_list
 
 
 @flow
@@ -413,33 +451,12 @@ def create_matching_object_manifest(
     logger.info(
         f"Start reconstructing staging object keys given the info of staging bucket path: {staging_bucket_path}"
     )
-    if len(objects_prod_key_list) > 100:
-        objects_prod_key_chunks = list_to_chunks(
-            mylist=objects_prod_key_list, chunk_len=100
-        )
-        logger.info(
-            f"Object staging keys reconstruction will be processed in {len(objects_prod_key_chunks)} chunks"
-        )
-        objects_staging_key_list = []
-        for j in range(len(objects_prod_key_chunks)):
-            j_staging_key_list = objects_staging_key(
-                object_prod_key_list=objects_prod_key_chunks[j],
-                prod_bucket_path=prod_bucket_path,
-                staging_bucket_path=staging_bucket_path,
-            )
-            logger.info(
-                f"Object staging keys reconstruction progress: {j+1}/{len(objects_prod_key_chunks)}"
-            )
-            objects_staging_key_list.extend(j_staging_key_list)
-        logger.info("Object staging keys reconstruction finished")
-    else:
-        objects_staging_key_list = objects_staging_key(
-            object_prod_key_list=objects_prod_key_list,
-            prod_bucket_path=prod_bucket_path,
-            staging_bucket_path=staging_bucket_path,
-        )
-        logger.info("Object staging keys reconstruction finished")
-
+    objects_staging_key_list = objects_staging_key(
+        object_prod_key_list=objects_prod_key_list,
+        prod_bucket_path=prod_bucket_path,
+        staging_bucket_path=staging_bucket_path,
+    )
+    logger.info("Object staging keys reconstruction finished")
 
     # calculate md5sum of pbjects in prod bucket. If more than 100 objects, split them into chunks
     logger.info("Start calculating md5sum of objects under prod bucket path")
@@ -466,35 +483,14 @@ def create_matching_object_manifest(
         )
         logger.info("md5sum calculation of prod keys finished")
 
-
     # check if staging key exists
     logger.info(
         f"Start checking if objects exist under staging bucket path: {staging_bucket_path}"
     )
-    if len(objects_staging_key_list) > 100:
-        objects_staging_key_chunks = list_to_chunks(
-            mylist=objects_staging_key_list, chunk_len=100
-        )
-        logger.info(
-            f"Checking if object staging keys exist will be processed in {len(objects_staging_key_chunks)} chunks"
-        )
-        if_staging_objects_exist = []
-        for h in range(len(objects_staging_key_chunks)):
-            h_staging_if_exist = objects_if_exist(
-                key_path_list=objects_staging_key_chunks[h],
-                bucket=staging_bucket,
-                logger=logger,
-            )
-            logger.info(
-                f"Checking if object staging keys exist progress: {h+1}/{len(objects_staging_key_chunks)}"
-            )
-            if_staging_objects_exist.extend(h_staging_if_exist)
-        logger.info("Checking if object staging keys exist finished")
-    else:
-        if_staging_objects_exist = objects_if_exist(
-            key_path_list=objects_staging_key_list, bucket=staging_bucket, logger=logger
-        )
-        logger.info("Checking if object staging keys exist finished")
+    if_staging_objects_exist = objects_if_exist(
+        key_path_list=objects_staging_key_list, bucket=staging_bucket, logger=logger
+    )
+    logger.info("Checking if object staging keys exist finished")
 
     logger.info(
         f"files exist under staging bucket path: {sum(if_staging_objects_exist)} / {len(if_staging_objects_exist)}"
@@ -632,22 +628,9 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str):
         ].tolist()
     logger.info(f"Number of objects to be deleted: {len(delete_uri_list)}")
 
-    if len(delete_uri_list) > 100:
-        delete_chunks = list_to_chunks(delete_uri_list, 100)
-        logger.info(
-            f"Objects deletion will be performed in {len(delete_chunks)} chunks"
-        )
-        delete_status = []
-        for i in range(len(delete_chunks)):
-            i_delete_list = delete_chunks[i]
-            i_delete_status = delete_objects_by_uri(
-                uri_list=i_delete_list, logger=logger
-            )
-            logger.info(f"Objects deletion progress: {i+1}/{len(delete_chunks)}")
-            delete_status.extend(i_delete_status)
-    else:
-        delete_status = delete_objects_by_uri(uri_list=delete_uri_list, logger=logger)
-        logger.info("Objects deletion finished")
+    logger.info("Start deleting objects")
+    delete_status = delete_objects_by_uri(uri_list=delete_uri_list, logger=logger)
+    logger.info("Objects deletion finished")
 
     success_count, fail_count = count_success_fail(deletion_status=delete_status)
     deletion_counts_df = pd.DataFrame(
