@@ -635,13 +635,12 @@ def reformat_sra_values(
     # cram or bam
     # change missing value into "Not Reported"
     sra_df.loc[
-        sra_df["filetype"].isin(["cram", "bam", "crai", "bai"])
-        & pd.isna(sra_df["reference_genome_assembly (or accession)"]),
+        pd.isna(sra_df["reference_genome_assembly (or accession)"]),
         "reference_genome_assembly (or accession)",
     ] = "Not Reported"
+
     sra_df.loc[
-        sra_df["filetype"].isin(["cram", "bam", "crai", "bai"])
-        & pd.isna(sra_df["alignment_software"]),
+        pd.isna(sra_df["alignment_software"]),
         "alignment_software",
     ] = "Not Reported"
 
@@ -654,6 +653,17 @@ def reformat_sra_values(
     sra_df["alignment_software"] = alignment_software_clean
 
     return sra_df
+
+@task
+def sra_filetype_filter(sra_df: DataFrame, filetype_list: list, logger) -> DataFrame:
+    sra_filtered_df = sra_df[sra_df["filetype"].isin(filetype_list)].reset_index(
+        drop=True
+    )
+    filter_rows = sra_df.shape[0] - sra_filtered_df.shape[0]
+    logger.info(
+        f"Rows removed due to invalid SRA filestypes {*filetype_list,}: {filter_rows}"
+    )
+    return sra_filtered_df
 
 
 @task
@@ -1286,6 +1296,21 @@ def CCDI_to_SRA(
     logger.info("Start reformatting values in the Sequence Data Dataframe")
     sra_df = reformat_sra_values(sra_df, sra_term_dict=sra_terms_dict, logger=logger)
     logger.info("Reformatting the value in the Seuquence Data Dataframe Done.")
+
+    # remove invalid SRA filetypes before verification
+    logger.info("Removing any filtypes that are unacceptable for SRA submission")
+    sra_df = sra_filetype_filter(sra_df, sra_terms_dict["type"]["filetype"], logger)
+    # check if any rows left
+    # abort the script if no row left
+    if sra_df.shape[0] == 0:
+        logger.error(
+            "No row left after filtering filetypes. The script returns an empty SRA submission file"
+        )
+        sra_output_path = "(EMPTY)_SRA_submission.xlsx"
+        copy(src=template, dst=sra_output_path)
+        return (sra_output_path, logger_filename)
+    else:
+        pass
 
     # check sample_ID and library_ID is one to many relationship
     # Many library_ID can be derived from same sample_ID
