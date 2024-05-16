@@ -68,7 +68,7 @@ def runner(
 
     # get study phs and create output_folder name
     phs_accession = get_manifest_phs(os.path.basename(file_path))
-    output_folder = runner + "/" + phs_accession + "_outputs_" + get_time()
+    output_folder = runner.rstrip("/") + "/" + phs_accession + "_outputs_" + get_time()
 
     # download CCDI template if not provided
     if template_path != "path_to/ccdi_template/in/s3/bucket":
