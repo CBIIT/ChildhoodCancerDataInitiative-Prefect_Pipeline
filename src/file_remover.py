@@ -227,9 +227,8 @@ def objects_md5sum(list_keys: list[str], bucket_name: str) -> list[str]:
     return [i.result() for i in md5sum_futures]
 
 
-@flow(name="Construct a list of staging key", log_prints=True)
 def objects_staging_key(
-    object_prod_key_list: list[str], prod_bucket_path: str, staging_bucket_path: str
+    object_prod_key_list: list[str], prod_bucket_path: str, staging_bucket_path: str, logger
 ) -> list[str]:
     """Returns a list of proposed keys of objects in staging bucket, given object paths in prod bucket,
     prod bucket name and staging bucket path
@@ -241,14 +240,13 @@ def objects_staging_key(
         staging_key_list.append(i_staging_key)
         if progress_count % 100 == 0:
             # this log can be only seen under objects_staging_key flow
-            print(f"progress: {progress_count}/{len(object_prod_key_list)}")
+            logger.info(f"progress: {progress_count}/{len(object_prod_key_list)}")
         else:
             pass
         progress_count += 1
     return staging_key_list
 
 
-@flow(name="if a list of objects exist", log_prints=True)
 def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     """Returns a list of boolean indicating if the object exists
 
@@ -263,7 +261,7 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
         if_exist_list.append(i_if_exist)
         if progress_count % 100 == 0:
             # this log can be only seen under objects_if_exist flow
-            print(f"progress: {progress_count}/{len(key_path_list)}")
+            logger.info(f"progress: {progress_count}/{len(key_path_list)}")
         else:
             pass
         progress_count += 1
@@ -295,18 +293,17 @@ def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
     return delete_status
 
 
-@flow(name="Delete S3 Objects", log_prints=True)
 def delete_objects_by_uri(uri_list: list[str], logger) -> list:
     """Delete a list of s3 uri"""
     delete_status_list = []
     s3_client = set_s3_session_client()
     progress_count = 1
     for i in uri_list:
-        i_delete_status = delete_single_object_by_uri.fn(object_uri=i,s3_client=s3_client, logger=logger)
+        i_delete_status = delete_single_object_by_uri.fn(object_uri=i, s3_client=s3_client, logger=logger)
         delete_status_list.append(i_delete_status)
         if progress_count % 100 == 0:
             # this log can be only seen under delete_objects_by_uri flow
-            print(f"progress: {progress_count}/{len(uri_list)}")
+            logger.info(f"progress: {progress_count}/{len(uri_list)}")
         else:
             pass
         progress_count += 1
@@ -443,6 +440,7 @@ def create_matching_object_manifest(
         object_prod_key_list=objects_prod_key_list,
         prod_bucket_path=prod_bucket_path,
         staging_bucket_path=staging_bucket_path,
+        logger=logger
     )
     logger.info("Object staging keys reconstruction finished")
 
