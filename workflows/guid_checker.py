@@ -30,6 +30,9 @@ def pull_guids(row):
     hash_value = row["md5sum"]
     size = row["file_size"]
     guid = row["dcf_indexd_guid"]
+    file_url = row["file_url_in_cds"]
+    file_name= os.path.basename(file_url)
+    file_path= os.path.dirname(file_url)
 
     # guidcheck_logger.info(f"Making API call for {hash_value} of size: {size}.")
 
@@ -52,18 +55,15 @@ def pull_guids(row):
         data = response.json()
         # Extract the relevant information from the response and append to results
 
-        if len(data["records"]) > 1:
-            if data["records"][0]["acl"] != None:
-                if len(data["records"]) > 1:
-                    for pos in range(len(data["records"])):
-                        if data["records"][pos]["file_name"] == None:
-                            guid = data["records"][pos]["did"]
-                        else:
-                            pass
+        if len(data["records"]) > 0:
+            for record in data['records']:
+                if os.path.basename(str(record["urls"][0])) == file_name:
+                    if os.path.dirname(str(record["urls"][0])) == file_path:
+                            guid = record["did"]
+                    else:
+                        pass
                 else:
                     pass
-            else:
-                pass
         else:
             pass
     else:
