@@ -40,7 +40,12 @@ def paginate_parameter(bucket_path: str) -> tuple:
         bucket_path = bucket_path[5:]
     else:
         pass
-    bucket_path = bucket_path.strip("/")
+    # make sure path ends with "/" even only bucket name
+    if not bucket_path.endswith("/"):
+        bucket_path = bucket_path + "/"
+    else:
+        pass
+    #bucket_path = bucket_path.strip("/")
     if "/" not in bucket_path:
         bucket_name = bucket_path
         prefix = ""

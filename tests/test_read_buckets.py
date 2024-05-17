@@ -159,8 +159,8 @@ def test_read_bucket_content(mock_s3_client, paginate_return_iter):
 @pytest.mark.parametrize(
         "bucket_path,expected",
         [("my-bucket",{"Bucket":"my-bucket", "Prefix":""}),
-         ("my-bucket/test_subdir/",{"Bucket":"my-bucket","Prefix":"test_subdir"}),
-         ("my-bucket/subdir/more_subdir/",{"Bucket":"my-bucket", "Prefix":"subdir/more_subdir"})
+         ("my-bucket/test_subdir/",{"Bucket":"my-bucket","Prefix":"test_subdir/"}),
+         ("my-bucket/subdir/more_subdir/",{"Bucket":"my-bucket", "Prefix":"subdir/more_subdir/"})
         ]
 )
 def test_paginate_parameter(bucket_path, expected):
