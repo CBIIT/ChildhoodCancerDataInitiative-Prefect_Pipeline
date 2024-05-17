@@ -69,6 +69,7 @@ class GetCCDIModel():
         "survival",
         "treatment",
         "treatment_response",
+        "synonym",
         "family_relationship",
         #"therapeutic_procedure",
         "medical_history",
@@ -85,7 +86,6 @@ class GetCCDIModel():
         "cytogenomic_file",
         "pathology_file",
         #"single_cell_sequencing_file",
-        "synonym",
     ]
 
     def __init__(self, model_file: str, prop_file: str, term_file: str) -> None:
