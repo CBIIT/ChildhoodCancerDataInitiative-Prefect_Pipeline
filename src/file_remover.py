@@ -234,17 +234,13 @@ def objects_staging_key(
     """Returns a list of proposed keys of objects in staging bucket, given object paths in prod bucket,
     prod bucket name and staging bucket path
     """
-    # staging_keys_future = construct_staging_bucket_key.map(
-    #     object_prod_key_list, prod_bucket_path, staging_bucket_path
-    # )
-    # return [i.result() for i in staging_keys_future]
     staging_key_list = []
     progress_count = 1
     for i in object_prod_key_list:
         i_staging_key = construct_staging_bucket_key.fn(object_prod_bucket_key=i, prod_bucket_path=prod_bucket_path, staging_bucket_path=staging_bucket_path)
         staging_key_list.append(i_staging_key)
         if progress_count % 100 == 0:
-            # this log can be only seen under delete_objects_by_uri flow
+            # this log can be only seen under objects_staging_key flow
             print(f"progress: {progress_count}/{len(object_prod_key_list)}")
         else:
             pass
@@ -259,10 +255,6 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
     This flow takes logger input so the parent flow can log objects
     aren't existed
     """
-    # s3_client = set_s3_session_client()
-    # if_exist_future = if_object_exists.map(key_path_list, bucket, s3_client, logger)
-    # s3_client.close()
-    # return [i.result() for i in if_exist_future]
     if_exist_list = []
     progress_count = 1
     s3_client = set_s3_session_client()
@@ -270,7 +262,7 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
         i_if_exist = if_object_exists.fn(key_path = i, bucket=bucket, s3_client=s3_client, logger=logger)
         if_exist_list.append(i_if_exist)
         if progress_count % 100 == 0:
-            # this log can be only seen under delete_objects_by_uri flow
+            # this log can be only seen under objects_if_exist flow
             print(f"progress: {progress_count}/{len(key_path_list)}")
         else:
             pass
@@ -306,10 +298,6 @@ def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
 @flow(name="Delete S3 Objects", log_prints=True)
 def delete_objects_by_uri(uri_list: list[str], logger) -> list:
     """Delete a list of s3 uri"""
-    # s3_client = set_s3_session_client()
-    # delete_responses = delete_single_object_by_uri.map(uri_list, s3_client, logger)
-    # s3_client.close()
-    # return [i.result() for i in delete_responses]
     delete_status_list = []
     s3_client = set_s3_session_client()
     progress_count = 1
