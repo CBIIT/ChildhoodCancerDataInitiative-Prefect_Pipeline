@@ -175,7 +175,7 @@ def construct_staging_bucket_key(
     return object_staging_bucket_key
 
 
-@task(retries=3, retry_delay_seconds=0.5)
+@task(retries=3, retry_delay_seconds=0.5, tags=["file-remover-tag"])
 def get_md5sum(object_key: str, bucket_name: str, s3_client) -> str:
     """
     Calculate md5sum of an object using url
