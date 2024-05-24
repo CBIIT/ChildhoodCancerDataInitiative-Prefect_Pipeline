@@ -64,7 +64,7 @@ def dcf_index_manifest(
     # add acl and authz
     combined_df = pd.DataFrame(combined_dict)
     del combined_dict
-    logger.info(f"Number of objects in total: {combined_df.shape[0]}")
+    logger.info(f"Number of objects in total before duplcates removed: {combined_df.shape[0]}")
     if sum(combined_df["if_guid_missing"])>0:
         # upload modified_manifest_file only if missing guid objects were found
         counts_of_missing_guid = sum(combined_df["if_guid_missing"])
