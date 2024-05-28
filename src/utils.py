@@ -1178,7 +1178,7 @@ def extract_dcf_index_single_sheet(
     # if the sheet_ff is not empty
     else:
         # insert type column back as the first column
-        sheet_df = sheet_df.insert(loc=0, column="type", value=[sheetname]*sheet_df.shape[0])
+        sheet_df.insert(loc=0, column="type", value=[sheetname]*sheet_df.shape[0])
         # add extra column at the end
         print(sheet_df)
         print(sheet_df.columns)
