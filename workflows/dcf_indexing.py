@@ -2,7 +2,8 @@ from prefect import flow, get_run_logger
 import os
 import sys
 import pandas as pd
-from shutil import copy
+from shutil import copy2
+import hashlib
 
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -36,10 +37,12 @@ def dcf_index_manifest(
     file_dl(bucket=bucket, filename=manifest_path)
     manifest_file = os.path.basename(manifest_path)
     manifest_obj = CheckCCDI(ccdi_manifest=manifest_file)
-    
+
     # copy the manifest and rename for potential new guids assigned
     modified_manifest_file = manifest_file.rsplit(".", 1)[0] + "_GUIDadded" + get_date() + ".xlsx"
-    copy(manifest_file, modified_manifest_file)
+    copy2(manifest_file, modified_manifest_file)
+    hashlib.md5(open(manifest_file, "rb").read()).hexdigest()
+    hashlib.md5(open(modified_manifest_file, "rb").read()).hexdigest()
 
     # extract study accession of the manifest
     study_accession = manifest_obj.get_study_id()
