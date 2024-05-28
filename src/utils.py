@@ -1180,6 +1180,8 @@ def extract_dcf_index_single_sheet(
         # insert type column back as the first column
         sheet_df = sheet_df.insert(loc=0, column="type", value=[sheetname]*sheet_df.shape[0])
         # add extra column at the end
+        print(sheet_df["dcf_indexd_guid"])
+        print(sheet_df["dcf_indexd_guid"].isna())
         sheet_df["if_guid_missing"] = sheet_df["dcf_indexd_guid"].isna()
         # assign guid if guid is missing
         # have to take care of the same file appearing in multiple lines
