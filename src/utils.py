@@ -1198,6 +1198,8 @@ def extract_dcf_index_single_sheet(
                 .reset_index()
                 .rename(columns={0: "new_guid"})
             )
+            print("below is the new_guid_df")
+            print(new_guid_df)
             for i in range(new_guid_df.shape[0]):
                 i_md5 = new_guid_df.loc[i, "md5sum"]
                 i_url = new_guid_df.loc[i, "file_url_in_cds"]
@@ -1212,6 +1214,9 @@ def extract_dcf_index_single_sheet(
             del new_guid_df
             # rewrite sheet content for this node in modified manifest
             rewrite_df = sheet_df.drop(columns=["if_guid_missing"])
+            print("below is the df to be added to modified manifest")
+            print(rewrite_df)
+            print(rewrite_df.columns)
             with pd.ExcelWriter(
                 modified_manifest, mode="a", engine="openpyxl", if_sheet_exists="overlay"
             ) as writer:
