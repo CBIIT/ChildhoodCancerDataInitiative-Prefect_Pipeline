@@ -1194,7 +1194,7 @@ def extract_dcf_index_single_sheet(
             # new guid df has three columns, "md5sum","file_url_in_cds","new_guid"
             new_guid_df = (
                 sheet_df[sheet_df["dcf_indexd_guid"].isna()] # subset only rows with missing guid
-                .groupby(["md5sum", "file_url_in_cds"])
+                .groupby(["md5sum", "file_url_in_cds"]).apply(lambda x: "dg.4DFC/" + str(uuid.uuid4()))
                 .reset_index()
                 .rename(columns={0: "new_guid"})
             )
