@@ -1259,10 +1259,11 @@ def extract_dcf_index(
 ) -> list[dict]:
     """Extracts columns for dcf indexing of a given list sheetnames"""
     logger = get_run_logger()
-    list_dicts_future_objs = extract_dcf_index_single_sheet.map(
-        sheetname_list, CCDI_manifest=CCDI_manifest, logger=logger, modified_manifest=modified_manifest
-    )
-    return [i.result() for i in list_dicts_future_objs]
+    list_dict = []
+    for sheet_name in sheetname_list:
+        return_dict = extract_dcf_index_single_sheet(sheetname=sheet_name, CCDI_manifest=CCDI_manifest, logger=logger, modified_manifest=modified_manifest)
+        list_dict.append(return_dict)
+    return list_dict
 
 
 @task(name="Combine dcf index dicts")
