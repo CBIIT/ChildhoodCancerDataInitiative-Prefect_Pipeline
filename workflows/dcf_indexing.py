@@ -40,7 +40,7 @@ def dcf_index_manifest(
 
     # copy the manifest and rename for potential new guids assigned
     modified_manifest_file = manifest_file.rsplit(".", 1)[0] + "_GUIDadded" + get_date() + ".xlsx"
-    copy2(manifest_file, modified_manifest_file)
+    copy2(src=manifest_file, dst=modified_manifest_file)
     hashlib.md5(open(manifest_file, "rb").read()).hexdigest()
     hashlib.md5(open(modified_manifest_file, "rb").read()).hexdigest()
 
