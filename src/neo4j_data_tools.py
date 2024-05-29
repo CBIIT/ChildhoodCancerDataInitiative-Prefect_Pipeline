@@ -715,10 +715,11 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     df_wide.columns = df_wide.columns.str.strip('"')
     df_wide.columns = df_wide.columns.str.strip("'")
 
-    df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
-    df_wide = df_wide.applymap(lambda x: x.strip("]") if isinstance(x, str) else x)
+    # remove double quotes and double quotes with brackets, but preserve quote and brackets, which are acl.
+    df_wide = df_wide.applymap(lambda x: x.strip('["') if isinstance(x, str) else x)
+    df_wide = df_wide.applymap(lambda x: x.strip('"]') if isinstance(x, str) else x)
     df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
-    df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
+    #df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
 
     # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
