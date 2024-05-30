@@ -718,6 +718,8 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     # Only fix the node label and nothing else.
     df_wide["startNodeLabels"]=df_wide["startNodeLabels"].str.strip("['")
     df_wide["startNodeLabels"]=df_wide["startNodeLabels"].str.strip("']")
+    df_wide["linkedNodeLabels"]=df_wide["linkedNodeLabels"].str.strip("['")
+    df_wide["linkedNodeLabels"]=df_wide["linkedNodeLabels"].str.strip("']")
 
     # removed as it was affecting acl property.
     # df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
