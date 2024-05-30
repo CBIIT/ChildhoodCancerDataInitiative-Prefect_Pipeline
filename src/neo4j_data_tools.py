@@ -390,9 +390,9 @@ def pull_node_ids_all_studies_write(
     logger.info(
         f"ingested studies dataframe has rows of {studies_dataframe.shape[0]} and size of {studies_dataframe.size}"
     )
-    study_id_list = studies_dataframe['study_id'].tolist()
+    study_id_list = studies_dataframe["study_id"].tolist()
     study_id_chunks = list_to_chunks(study_id_list, 50)
-    node_list = studies_dataframe['node'].tolist()
+    node_list = studies_dataframe["node"].tolist()
     node_chunks = list_to_chunks(node_list, 50)
     for i in range(len(node_chunks)):
         # print(f"study_id_list: {*study_id_chunks[i],}")
@@ -531,7 +531,9 @@ def validate_DB_with_input_tsvs(
     ingested_studies_dataframe = parse_tsv_files(tsv_files)
 
     db_id_list_all_studies = pull_node_ids_all_studies(
-        driver=driver, studies_dataframe=ingested_studies_dataframe[["study_id","node"]], logger=logger
+        driver=driver,
+        studies_dataframe=ingested_studies_dataframe[["study_id", "node"]],
+        logger=logger,
     )
 
     comparison_df = compare_id_input_db(
@@ -707,6 +709,9 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
             on="startNodeId",
         )
 
+        df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
+        df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
+
     else:
         pass
 
@@ -716,10 +721,8 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     df_wide.columns = df_wide.columns.str.strip("'")
 
     # Only fix the node label and nothing else.
-    df_wide["startNodeLabels"]=df_wide["startNodeLabels"].str.strip("['")
-    df_wide["startNodeLabels"]=df_wide["startNodeLabels"].str.strip("']")
-    df_wide["linkedNodeLabels"]=df_wide["linkedNodeLabels"].str.strip("['")
-    df_wide["linkedNodeLabels"]=df_wide["linkedNodeLabels"].str.strip("']")
+    df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("['")
+    df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("']")
 
     # removed as it was affecting acl property.
     # df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
