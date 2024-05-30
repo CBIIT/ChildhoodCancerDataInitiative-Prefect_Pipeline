@@ -715,10 +715,15 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     df_wide.columns = df_wide.columns.str.strip('"')
     df_wide.columns = df_wide.columns.str.strip("'")
 
-    df_wide = df_wide.applymap(lambda x: x.strip('[') if isinstance(x, str) else x)
-    df_wide = df_wide.applymap(lambda x: x.strip(']') if isinstance(x, str) else x)
-    df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
-    df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
+    # Only fix the node label and nothing else.
+    df_wide["startNodeLabels"]=df_wide["startNodeLabels"].str.strip("['")
+    df_wide["startNodeLabels"]=df_wide["startNodeLabels"].str.strip("']")
+
+    # removed as it was affecting acl property.
+    # df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
+    # df_wide = df_wide.applymap(lambda x: x.strip("]") if isinstance(x, str) else x)
+    # df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
+    # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
 
     # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
