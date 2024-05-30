@@ -15,6 +15,7 @@ import pandas as pd
 import boto3
 from botocore.config import Config
 import re
+import uuid
 import requests
 import typing
 import tempfile
@@ -59,7 +60,7 @@ class CCDI_Tags(Task):
         self.tags_api = "https://api.github.com/repos/CBIIT/ccdi-model/tags"
 
     def get_tags(self) -> List[Dict]:
-        github_token =  get_github_token()
+        github_token = get_github_token()
         headers = {"Authorization": "token " + github_token}
         api_re = requests.get(self.tags_api, headers=headers)
         tags_list = api_re.json()
@@ -140,7 +141,7 @@ class CCDI_Tags(Task):
 
 def get_ccdi_latest_release() -> str:
     latest_url = GithubAPTendpoint.ccdi_model_recent_release
-    github_token =  get_github_token()
+    github_token = get_github_token()
     headers = {"Authorization": "token " + github_token}
     response = requests.get(latest_url, headers=headers)
     if "tag_name" in response.json().keys():
@@ -188,7 +189,9 @@ def dl_ccdi_template() -> None:
     """Downloads the latest version of CCDI manifest"""
     github_token = get_github_token()
     headers = {"Authorization": "token " + github_token}
-    manifest_page_response = requests.get(GithubAPTendpoint.ccdi_model_manifest, headers=headers)
+    manifest_page_response = requests.get(
+        GithubAPTendpoint.ccdi_model_manifest, headers=headers
+    )
     manifest_dict_list = manifest_page_response.json()
     if not isinstance(manifest_dict_list, list):
         print("Github API return was not a list: " + str(manifest_dict_list))
@@ -205,7 +208,9 @@ def dl_ccdi_template() -> None:
         and re.search(r"v(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\.xlsx$", i)
     ]
     manifest_response = [j for j in manifest_dict_list if j["name"] == manifest[0]]
-    manifest_dl_url = requests.get(manifest_response[0]["url"], headers=headers).json()["download_url"]
+    manifest_dl_url = requests.get(manifest_response[0]["url"], headers=headers).json()[
+        "download_url"
+    ]
     manifest_dl_res = requests.get(manifest_dl_url, headers=headers)
     manifest_file = open(manifest[0], "wb")
     manifest_file.write(manifest_dl_res.content)
@@ -271,12 +276,12 @@ def set_s3_session_client():
     else:
         # Create a custom retry configuration
         custom_retry_config = Config(
-            connect_timeout = 300,
-            read_timeout = 300,
+            connect_timeout=300,
+            read_timeout=300,
             retries={
                 "max_attempts": 5,  # Maximum number of retry attempts
                 "mode": "standard",  # Retry on HTTP status codes considered retryable
-            }
+            },
         )
         s3_client = boto3.client("s3", config=custom_retry_config)
     return s3_client
@@ -298,7 +303,9 @@ def file_dl(bucket, filename):
     except ClientError as ex:
         ex_code = ex.response["Error"]["Code"]
         ex_message = ex.response["Error"]["Message"]
-        print(f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}")
+        print(
+            f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}"
+        )
         raise
 
 
@@ -359,7 +366,9 @@ def folder_dl(bucket: str, remote_folder: str) -> None:
             bucket_obj.download_file(obj.key, obj.key)
         except NotADirectoryError as err:
             err_str = repr(err)
-            print(f"Error downloading folder {remote_folder} from bucket {bucket}: {err_str}")
+            print(
+                f"Error downloading folder {remote_folder} from bucket {bucket}: {err_str}"
+            )
     return None
 
 
@@ -986,23 +995,25 @@ class CheckCCDI:
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
-    
+
     def get_all_sheet_dfs(self):
         meta_dfs = {}
-        sheet_names =  self.get_sheetnames()
+        sheet_names = self.get_sheetnames()
         for sheet_name in sheet_names:
             meta_dfs[sheet_name] = self.read_sheet_na(sheetname=sheet_name)
         return meta_dfs
 
 
 @flow(log_prints=True)
-def get_github_credentials()-> None:
+def get_github_credentials() -> None:
     runner_logger = get_run_logger()
     github_credentials_block = GitHubCredentials.load("fnlccdidatacuration")
     token_value = github_credentials_block.token.get_secret_value()
     headers = {"Authorization": "token " + token_value}
     # try to get api return
-    response = requests.get(GithubAPTendpoint.ccdi_model_recent_release, headers=headers)
+    response = requests.get(
+        GithubAPTendpoint.ccdi_model_recent_release, headers=headers
+    )
     runner_logger.info(json.dumps(response.json(), indent=4))
     return None
 
@@ -1012,7 +1023,7 @@ def get_github_token() -> str:
     token_value = github_credentials_block.token.get_secret_value()
     return token_value
 
-  
+
 def list_to_chunks(mylist: list, chunk_len: int) -> list:
     """Break a list into a list of chunks"""
     chunks = [
@@ -1086,7 +1097,7 @@ def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
         return md5sum_value
     except Exception as err:
         print(f"Error reading md5sum {s3uri}: {err}")
-        err_str= repr(err)
+        err_str = repr(err)
         return err_str
 
 
@@ -1110,7 +1121,11 @@ def calculate_single_size_task(s3uri: str, s3_client) -> str:
         return err_str
 
 
-@flow(task_runner=ConcurrentTaskRunner(), name="Calculate objects md5sum Concurrently", log_prints=True)
+@flow(
+    task_runner=ConcurrentTaskRunner(),
+    name="Calculate objects md5sum Concurrently",
+    log_prints=True,
+)
 def calculate_list_md5sum(s3uri_list: list[str]) -> list[str]:
     s3_client = set_s3_session_client()
     md5sum_value_list = calculate_single_md5sum_task.map(s3uri_list, s3_client)
@@ -1118,7 +1133,11 @@ def calculate_list_md5sum(s3uri_list: list[str]) -> list[str]:
     return [i.result() for i in md5sum_value_list]
 
 
-@flow(task_runner=ConcurrentTaskRunner(), name="Fetch objects size Concurrently", log_prints=True)
+@flow(
+    task_runner=ConcurrentTaskRunner(),
+    name="Fetch objects size Concurrently",
+    log_prints=True,
+)
 def calculate_list_size(s3uri_list: list[str]) -> list[str]:
     s3_client = set_s3_session_client()
     size_value_list = calculate_single_size_task.map(s3uri_list, s3_client)
@@ -1129,8 +1148,11 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
 @task(
     name="Extract one sheet dcf index info",
     log_prints=True,
+    task_run_name="extract dcf index info of {sheetname}"
 )
-def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI, logger) -> dict:
+def extract_dcf_index_single_sheet(
+    sheetname: str, CCDI_manifest: CheckCCDI, logger, modified_manifest: str
+) -> dict:
     """Extracts columns for dcf indexing of a single sheet
 
     columns: ["file_size", "md5sum", "file_url_in_cds", "dcf_indexd_guid"]
@@ -1138,22 +1160,86 @@ def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI, log
     """
     logger.info(f"Reading sheet {sheetname}")
     sheet_df = CCDI_manifest.read_sheet_na(sheetname=sheetname)
+    # type is removed here to test if the
     sheet_df.drop(columns=["type"], inplace=True)
     sheet_df.dropna(how="all", inplace=True)
     logger.info(f"Count of objects found in sheet {sheetname}: {sheet_df.shape[0]}")
-    return_dict = {"GUID":[], "md5":[],"urls":[], "size": []}
+
+    # if the sheet_df is empty
     if sheet_df.empty:
-        return return_dict
+        return_dict = {
+            "GUID": [],
+            "md5": [],
+            "urls": [],
+            "size": [],
+            "node": [],
+            "if_guid_missing": [],
+        }
+    # if the sheet_ff is not empty
     else:
-        md5sum_list =  sheet_df["md5sum"].tolist()
-        return_dict["md5"] = md5sum_list
-        file_url_list = sheet_df["file_url_in_cds"].tolist()
-        return_dict["urls"] = file_url_list
-        size_list = sheet_df["file_size"].tolist()
-        return_dict["size"] =  size_list
-        guid_list = sheet_df["dcf_indexd_guid"].tolist()
-        return_dict["GUID"] = guid_list
-        return return_dict
+        # insert type column back as the first column
+        sheet_df.insert(loc=0, column="type", value=[sheetname]*sheet_df.shape[0])
+        # add extra column at the end
+        sheet_df["if_guid_missing"] = sheet_df["dcf_indexd_guid"].isna()
+        # assign guid if guid is missing
+        # have to take care of the same file appearing in multiple lines
+        # in case there is a file pointing back to multiple sample
+
+        # if there is a missing value in col "dcf_indexd_guid"
+        if sum(sheet_df["if_guid_missing"]) > 0:
+            # new guid df has three columns, "md5sum","file_url_in_cds","new_guid"
+            new_guid_df = (
+                sheet_df[sheet_df["dcf_indexd_guid"].isna()] # subset only rows with missing guid
+                .groupby(["md5sum", "file_url_in_cds"]).apply(lambda x: "dg.4DFC/" + str(uuid.uuid4()))
+                .reset_index()
+                .rename(columns={0: "new_guid"})
+            )
+            print("below is the new_guid_df")
+            print(new_guid_df)
+            for i in range(new_guid_df.shape[0]):
+                i_md5 = new_guid_df.loc[i, "md5sum"]
+                i_url = new_guid_df.loc[i, "file_url_in_cds"]
+                i_new_guid = new_guid_df.loc[i, "new_guid"]
+
+                # assign new guid value back to sheet_df
+                sheet_df.loc[
+                    (sheet_df["md5sum"] == i_md5)
+                    & (sheet_df["file_url_in_cds"] == i_url),
+                    "dcf_indexd_guid",
+                ] = i_new_guid
+            del new_guid_df
+            # rewrite sheet content for this node in modified manifest
+            rewrite_df = sheet_df.drop(columns=["if_guid_missing"])
+            with pd.ExcelWriter(
+                modified_manifest, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+            ) as writer:
+                rewrite_df.to_excel(writer, sheet_name = sheetname, index=False, header=False, startrow=1)
+            del rewrite_df
+        else:
+            pass
+
+        # Only keep 6 columns
+        subset_sheet_df = sheet_df[
+            [
+                "dcf_indexd_guid",
+                "md5sum",
+                "file_url_in_cds",
+                "file_size",
+                "type",
+                "if_guid_missing",
+            ]
+        ]
+        subset_sheet_df = subset_sheet_df.rename(
+            columns={
+                "dcf_indexd_guid": "GUID",
+                "md5sum": "md5",
+                "file_url_in_cds": "urls",
+                "file_size": "size",
+                "type": "node",
+            }
+        )
+        return_dict = subset_sheet_df.to_dict(orient="list")
+    return return_dict
 
 
 @flow(
@@ -1161,20 +1247,30 @@ def extract_dcf_index_single_sheet(sheetname: str, CCDI_manifest: CheckCCDI, log
     name="Extract all sheets dcf index info",
     log_prints=True,
 )
-def extract_dcf_index(CCDI_manifest: CheckCCDI, sheetname_list: list[str]) -> list[dict]:
-    """Extracts columns for dcf indexing of a given list sheetnames
-    """
+def extract_dcf_index(
+    CCDI_manifest: CheckCCDI, sheetname_list: list[str], modified_manifest: str
+) -> list[dict]:
+    """Extracts columns for dcf indexing of a given list sheetnames"""
     logger = get_run_logger()
-    list_dicts_future_objs =  extract_dcf_index_single_sheet.map(sheetname_list, CCDI_manifest=CCDI_manifest, logger=logger)
-    return [i.result() for i in list_dicts_future_objs]
+    list_dict = []
+    for sheet_name in sheetname_list:
+        return_dict = extract_dcf_index_single_sheet(sheetname=sheet_name, CCDI_manifest=CCDI_manifest, logger=logger, modified_manifest=modified_manifest)
+        list_dict.append(return_dict)
+    return list_dict
 
 
-@task(
-    name =  "Combine dcf index dicts"
-)
-def combine_dcf_dicts(list_dicts:list[dict]) -> dict:
-    combined_dict = {"GUID": [], "md5": [], "urls": [], "size": []}
+@task(name="Combine dcf index dicts")
+def combine_dcf_dicts(list_dicts: list[dict]) -> dict:
+    combined_dict = {
+        "GUID": [],
+        "md5": [],
+        "urls": [],
+        "size": [],
+        "node": [],
+        "if_guid_missing": [],
+    }
     for i_dict in list_dicts:
-        combined_dict =  {key: value + i_dict[key] for key, value in combined_dict.items()}
+        combined_dict = {
+            key: value + i_dict[key] for key, value in combined_dict.items()
+        }
     return combined_dict
-
