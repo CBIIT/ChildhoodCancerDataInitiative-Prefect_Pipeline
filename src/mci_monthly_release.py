@@ -40,7 +40,6 @@ def read_mci_staing_folder(bucket_path: str):
     download_list=[]
     for page in pages:
         if "Contents" in page.keys():
-            file_count += len(page["Contents"])
             for obj_dict in page["Contents"]:
                 object_key=obj_dict["Key"]
                 object_basename = os.path.basename(object_key)
