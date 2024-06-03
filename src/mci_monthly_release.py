@@ -7,23 +7,23 @@ from src.read_buckets import paginate_parameter
 from dataclasses import dataclass
 
 
-class ProceedtoDownloadInput(RunInput):
-    proceed_to_download: str
+class ProceedtoMergeInput(RunInput):
+    proceed_to_merge: str
 
 
 @dataclass
 class MCIInputDescriptionMD:
     """dataclass for wait for input description MD"""
 
-    proceed_to_download_md: str = (
+    proceed_to_merge_md: str = (
         """
 **Please Review Newly Added Manifest List!**
 Today's Date: *{today_date}*
 Diff file bucket: *{bucket}*
 Diff file path: *{output_folder}/{diff_filename}*
 
-Do you want to **Download** all the diff manifests identified and merge into a single CCDI manifest:
-- **proceed_to_download**: y/n
+Do you want to create a mega-merged manifest of all the diff manifests identified:
+- **proceed_to_merge**: y/n
 
 """
     )
