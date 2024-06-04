@@ -16,7 +16,7 @@ from src.file_mover import parse_file_url_in_cds
 from src.submission_cruncher import concatenate_submissions
 
 
-@flow(name="MCI monthly release manifest")
+@flow(name="MCI monthly release manifest", log_prints=True)
 def mci_release_manifest(
     mci_manifests_bucket_path: str,
     bucket: str,
