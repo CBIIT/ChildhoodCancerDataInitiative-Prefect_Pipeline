@@ -89,7 +89,10 @@ def download_diff_files(bucket: str, diff_file_list: list[dict]):
         h_key = h["object_key"]
         h_dict = {"object_key":h_key, "download_dst": h_dst}
         download_file_list.append(h_dict)
+    print(bucket)
+    print(diff_file_list)
     print(f"Downloading {len(diff_file_list)} files")
+    print([i["object_key"] for i in download_file_list])
     print([i["download_dst"] for i in download_file_list])
     progress = 1
     for i in download_file_list:
