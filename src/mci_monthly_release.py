@@ -82,6 +82,9 @@ def find_newly_added(download_list: list[dict], prev_pulled_list:str):
 def download_diff_files(bucket: str, diff_file_list: list[dict]):
     s3_client = set_s3_session_client()
     downloading_folder = "newly_added_manifests/"
+    # create the folder for downloaded files 
+    os.makedirs(downloading_folder[:-1], exist_ok=True)
+    
     download_file_list = []
     for h in diff_file_list:
         h_filename = h["filename"]
