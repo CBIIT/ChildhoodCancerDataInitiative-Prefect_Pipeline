@@ -75,6 +75,8 @@ def mci_release_manifest(
         f"Uploaded 3 files to bucket {bucket} folder {output_folder}:\n- {prev_pull_list}\n- {latest_pull_filename}\n- {diff_filename}"
     )
 
+    print(diff_list)
+
     proceed_input = pause_flow_run(
         wait_for_input=ProceedtoMergeInput.with_initial_data(
             description=MCIInputDescriptionMD.proceed_to_merge_md.format(

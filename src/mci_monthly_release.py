@@ -78,7 +78,7 @@ def find_newly_added(download_list: list[dict], prev_pulled_list:str):
     return diff_list, diff_filename
 
 
-@flow(name="download diff files")
+@flow(name="download diff files", log_prints=True)
 def download_diff_files(bucket: str, diff_file_list: list[dict]):
     s3_client = set_s3_session_client()
     downloading_folder = "newly_added_manifests/"
@@ -90,6 +90,7 @@ def download_diff_files(bucket: str, diff_file_list: list[dict]):
         h_dict = {"object_key":h_key, "download_dst": h_dst}
         download_file_list.append(h_dict)
     print(f"Downloading {len(diff_file_list)} files")
+    print([i["download_dst"] for i in diff_file_list])
     progress = 1
     for i in download_file_list:
         i_key = i["object_key"]
