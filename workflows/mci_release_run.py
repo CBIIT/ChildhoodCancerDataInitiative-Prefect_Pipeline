@@ -87,7 +87,7 @@ def mci_release_manifest(
         )
     )
 
-    if proceed_input.proceed_to_download == "y":
+    if proceed_input.proceed_to_merge == "y":
         logger.info("Start downloading newly added manifest files")
         # download the diff manifests
         # this returns a folder name downloading_folder which contains all the newly added manifests since last release
