@@ -150,7 +150,7 @@ def evaludate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tu
 
 @flow(name="validate mapping", log_prints=True)
 def validate_mapping(
-    manifest_path: str, template_path: str, mapping_path: str, logger
+    manifest_path: str, template_path: str, mapping_path: str
 ) -> None:
     """Validate if the mapping file includes all properties found in the manifest
 
