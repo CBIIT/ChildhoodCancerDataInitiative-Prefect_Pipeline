@@ -166,9 +166,9 @@ def validate_mapping(
     mapping_from_df = mapping_df[mapping_col_dict["lift_from"]]
     mapping_to_df = mapping_df[mapping_col_dict["lift_to"]]
 
-    manifest_object = CheckCCDI(manifest_path=manifest_path)
+    manifest_object = CheckCCDI(ccdi_manifest=manifest_path)
     manifest_version = manifest_object.get_version()
-    template_object = CheckCCDI(manifest_path=template_path)
+    template_object = CheckCCDI(ccdi_manifest=template_path)
     template_version = template_object.get_version()
 
     mapping_report = f"mapping_validation_report_{todaydate}.txt"
