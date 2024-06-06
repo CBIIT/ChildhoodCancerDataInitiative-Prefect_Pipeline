@@ -38,8 +38,8 @@ def manifest_liftover(
     lift_from_tag, lift_to_tag = liftover_tags(liftover_mapping_path=mapping_file)
     logger.info(f"Extracted tags from mapping file:\n\t- lift from version: {lift_from_tag}\n\t- lift to version: {lift_to_tag}")
 
-    lift_from_validation = tags_validation(manifest_path=ccdi_manifest, tag=lift_from_tag)
-    lift_to_validation = tags_validation(manifest_path=ccdi_template, tag=lift_to_tag)
+    lift_from_validation = tags_validation(manifest_path=ccdi_manifest, tag=lift_from_tag, logger=logger)
+    lift_to_validation = tags_validation(manifest_path=ccdi_template, tag=lift_to_tag, logger=logger)
     if lift_from_validation == True and lift_to_validation == True:
         pass
     else:
