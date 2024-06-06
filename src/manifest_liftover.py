@@ -26,8 +26,8 @@ def liftover_tags(liftover_mapping_path: str) -> tuple:
     lift_to_version columns, respectively
     """
     mapping_df = pd.read_csv(liftover_mapping_path, sep="\t")
-    lift_from = mapping_df["lift_from_version"].unique().tolist()
-    lift_to = mapping_df["lift_to_version"].unique().tolist()
+    lift_from = mapping_df["lift_from_version"].dropna().unique().tolist()
+    lift_to = mapping_df["lift_to_version"].dropna().unique().tolist()
     if len(lift_from) > 1:
         print(
             f"More than one lift from versions were found in mapping file: {*lift_from,}"
