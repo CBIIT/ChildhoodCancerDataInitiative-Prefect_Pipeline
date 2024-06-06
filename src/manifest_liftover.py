@@ -199,59 +199,68 @@ def validate_mapping(
 
     with open(mapping_report, "w") as report_file:
         report_file.write(
-            f"Manifest file: {manifest_path}\nTemplate file: {template_path}\nMapping file: {mapping_path}\n\n"
+            f"Manifest file: {manifest_path}\nTemplate file: {template_path}\nMapping file: {mapping_path}\n\n\n"
         )
-        report_file.write("######################\n")
 
         # manifest file against mapping
         report_file.write(
-            f"If the mapping file misses any proprety in the manifest\n{manifest_path}\n"
+            f"If the mapping file misses any proprety in the manifest\n{manifest_path}\n\n"
         )
         report_file.write(
-            manifest_mapping_missing.to_markdown(index=False, tablefmt="rst") + "\n"
+            manifest_mapping_missing.to_markdown(index=False, tablefmt="rounded_grid")
+            + "\n\n"
         )
         report_file.write(
-            f"If the mapping file contains any extra proprety in the manifest\n{manifest_path}\n"
+            f"If the mapping file contains any extra proprety in the manifest\n{manifest_path}\n\n"
         )
         report_file.write(
-            manifest_mapping_extra.to_markdown(index=False, tablefmt="rst") + "\n"
+            manifest_mapping_extra.to_markdown(index=False, tablefmt="rounded_grid")
+            + "\n\n"
         )
 
         # template file against mapping
         report_file.write(
-            f"If the mapping file misses any proprety in the template\n{template_path}\n"
+            f"If the mapping file misses any proprety in the template\n{template_path}\n\n"
         )
         report_file.write(
-            template_mapping_missing.to_markdown(index=False, tablefmt="rst") + "\n"
+            template_mapping_missing.to_markdown(index=False, tablefmt="rounded_grid")
+            + "\n\n"
         )
         report_file.write(
-            f"If the mapping file contains any extra proprety in the template\n{template_path}\n"
+            f"If the mapping file contains any extra proprety in the template\n{template_path}\n\n"
         )
         report_file.write(
-            template_mapping_extra.to_markdown(index=False, tablefmt="rst") + "\n"
+            template_mapping_extra.to_markdown(index=False, tablefmt="rounded_grid")
+            + "\n\n"
         )
 
         # evaluate mapping file
-        report_file.write(f"Properties in {manifest_version} model that are unmapped in the {template_version} model\n")
+        report_file.write(f"Properties in {manifest_version} model that are unmapped in the {template_version} model\n\n")
         report_file.write(
-            manifest_unmapped_df.to_markdown(index=False, tablefmt="rst") + "\n"
+            manifest_unmapped_df.to_markdown(index=False, tablefmt="rounded_grid")
+            + "\n\n"
         )
         report_file.write(
-            f"Properties in {template_version} model that are unmapped in the {manifest_version} model\n"
+            f"Properties in {template_version} model that are unmapped in the {manifest_version} model\n\n"
         )
         report_file.write(
-            template_unmapped_df.to_markdown(index=False, tablefmt="rst") + "\n"
+            template_unmapped_df.to_markdown(index=False, tablefmt="rounded_grid")
+            + "\n\n"
         )
-        report_file.write(f"Multiple props in {template_version} model mapped to {manifest_version}\n")
+        report_file.write(f"Multiple props in {template_version} model mapped to {manifest_version}\n\n")
         report_file.write(
-            manifest_props_multiple_summary.to_markdown(index=False, tablefmt="rst")
-            + "\n"
+            manifest_props_multiple_summary.to_markdown(
+                index=False, tablefmt="rounded_grid"
+            )
+            + "\n\n"
         )
         report_file.write(
-            f"Multiple props in {manifest_version} model mapped to {template_version}\n"
+            f"Multiple props in {manifest_version} model mapped to {template_version}\n\n"
         )
         report_file.write(
-            template_props_multiple_summary.to_markdown(index=False, tablefmt="rst")
-            + "\n"
+            template_props_multiple_summary.to_markdown(
+                index=False, tablefmt="rounded_grid"
+            )
+            + "\n\n"
         )
     return mapping_report
