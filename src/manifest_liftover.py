@@ -148,10 +148,22 @@ def evaludate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tu
     )
 
 
+def multiple_mapping_summary_cleanup(df: DataFrame, manifest_version: str, template_version: str) -> DataFrame:
+    df.rename(
+            columns={
+                "lift_from_node": f"{manifest_version}_node",
+                "lift_from_property": f"{manifest_version}_property",
+                "lift_to_node": f"{template_version}_node",
+                "lift_to_property": f"{template_version}_property"
+            },
+            inplace=True,
+    )
+    df.drop(columns=["lift_from_version","lift_to_version"], inplace=True)
+    return df
+
+
 @flow(name="validate mapping", log_prints=True)
-def validate_mapping(
-    manifest_path: str, template_path: str, mapping_path: str
-) -> None:
+def validate_mapping(manifest_path: str, template_path: str, mapping_path: str) -> None:
     """Validate if the mapping file includes all properties found in the manifest
 
     The mapping file excludes properties type, id.*
@@ -235,19 +247,28 @@ def validate_mapping(
         )
 
         # evaluate mapping file
-        report_file.write(f"Properties in {manifest_version} model that are unmapped in the {template_version} model\n\n")
+        report_file.write(
+            f"Properties in {manifest_version} model that are unmapped in the {template_version} model\nUnmapped propreties would be lifted over\n\n"
+        )
         report_file.write(
             manifest_unmapped_df.to_markdown(index=False, tablefmt="rounded_grid")
             + "\n\n"
         )
         report_file.write(
-            f"Properties in {template_version} model that are unmapped in the {manifest_version} model\n\n"
+            f"Properties in {template_version} model that are unmapped in the {manifest_version} model\nUnmapped propreties would be lifted over\n\n"
         )
         report_file.write(
             template_unmapped_df.to_markdown(index=False, tablefmt="rounded_grid")
             + "\n\n"
         )
-        report_file.write(f"Multiple props in {template_version} model mapped to {manifest_version}\n\n")
+        report_file.write(
+            f"Multiple props in {template_version} model mapped to {manifest_version}\n\n"
+        )
+        manifest_props_multiple_summary = multiple_mapping_summary_cleanup(
+            df=manifest_props_multiple_summary,
+            manifest_version=manifest_version,
+            template_version = template_version
+        )
         report_file.write(
             manifest_props_multiple_summary.to_markdown(
                 index=False, tablefmt="rounded_grid"
@@ -256,6 +277,11 @@ def validate_mapping(
         )
         report_file.write(
             f"Multiple props in {manifest_version} model mapped to {template_version}\n\n"
+        )
+        template_props_multiple_summary = multiple_mapping_summary_cleanup(
+            df=template_props_multiple_summary,
+            manifest_version=manifest_version,
+            template_version=template_version
         )
         report_file.write(
             template_props_multiple_summary.to_markdown(
