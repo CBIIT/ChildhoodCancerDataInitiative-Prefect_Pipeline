@@ -1,8 +1,10 @@
 from prefect import flow, task, get_run_logger
-from src.utils import CheckCCDI, get_date
+from src.utils import CheckCCDI, get_date, get_logger
 from enum import Enum
 from typing import TypeVar
+import os
 import pandas as pd
+from shutil import copy
 
 DataFrame = TypeVar("DataFrame")
 
@@ -148,17 +150,19 @@ def evaludate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tu
     )
 
 
-def multiple_mapping_summary_cleanup(df: DataFrame, manifest_version: str, template_version: str) -> DataFrame:
+def multiple_mapping_summary_cleanup(
+    df: DataFrame, manifest_version: str, template_version: str
+) -> DataFrame:
     df.rename(
-            columns={
-                "lift_from_node": f"{manifest_version}_node",
-                "lift_from_property": f"{manifest_version}_property",
-                "lift_to_node": f"{template_version}_node",
-                "lift_to_property": f"{template_version}_property"
-            },
-            inplace=True,
+        columns={
+            "lift_from_node": f"{manifest_version}_node",
+            "lift_from_property": f"{manifest_version}_property",
+            "lift_to_node": f"{template_version}_node",
+            "lift_to_property": f"{template_version}_property",
+        },
+        inplace=True,
     )
-    df.drop(columns=["lift_from_version","lift_to_version"], inplace=True)
+    df.drop(columns=["lift_from_version", "lift_to_version"], inplace=True)
     return df
 
 
@@ -267,7 +271,7 @@ def validate_mapping(manifest_path: str, template_path: str, mapping_path: str) 
         manifest_props_multiple_summary = multiple_mapping_summary_cleanup(
             df=manifest_props_multiple_summary,
             manifest_version=manifest_version,
-            template_version = template_version
+            template_version=template_version,
         )
         report_file.write(
             manifest_props_multiple_summary.to_markdown(
@@ -281,7 +285,7 @@ def validate_mapping(manifest_path: str, template_path: str, mapping_path: str) 
         template_props_multiple_summary = multiple_mapping_summary_cleanup(
             df=template_props_multiple_summary,
             manifest_version=manifest_version,
-            template_version=template_version
+            template_version=template_version,
         )
         report_file.write(
             template_props_multiple_summary.to_markdown(
@@ -290,3 +294,151 @@ def validate_mapping(manifest_path: str, template_path: str, mapping_path: str) 
             + "\n\n"
         )
     return mapping_report
+
+
+def remove_index_cols(col_list: list) -> list:
+    cleanup_col = []
+    for i in col_list:
+        if i != "type" and i != "id":
+            if not i.startswith("id."):
+                cleanup_col.append(i)
+            else:
+                pass
+        else:
+            pass
+    return cleanup_col
+
+
+def find_nonempty_nodes(ccdi_object) -> list[str]:
+    node_names = ccdi_object.get_sheetnames()
+    instruction_nodes = [
+        "README and INSTRUCTIONS",
+        "Dictionary",
+        "Terms and Value Sets",
+    ]
+    node_names = [i for i in node_names if i not in instruction_nodes]
+    nonempty_list = []
+    for i in node_names:
+        i_df = ccdi_object.read_sheet_na(sheetname=i)
+        i_cols = remove_index_cols(col_list=i_df.columns.tolist())
+        i_df_subset = i_df[i_cols].dropna(how=all)
+        if not i_df_subset.empty:
+            nonempty_list.append(i)
+        else:
+            pass
+        del i_df
+    return nonempty_list
+
+
+def single_node_liftover(
+    mapping_df: DataFrame, template_node: str, template_object, manifest_object, logger
+) -> DataFrame:
+    """Lift values from manifest file to a sheet of templat file
+
+    # the mapping_df needs to be subset of original mapping df. it only contains
+    nodes that are found not empty in the manifest
+    """
+    # create an empty dataframe
+    template_node_df = template_object.read_sheet_na(sheetname=template_node)
+    # if multiple nodes in manifest is associated with template node
+    # get a list of manifest nodes
+    manifest_nodes = (
+        mapping_df[mapping_df["lift_to_node"] == template_node]["lift_from_node"]
+        .dropna()
+        .unique()
+        .tolist()
+    )
+    concatenate_df = pd.DataFrame(columns=template_node_df.columns)
+    if len(manifest_nodes) > 1:
+        logger.warning(
+            f"Template sheet {template_node} has lifted value of more than one sheet in manifest: {*manifest_nodes,}"
+        )
+    else:
+        logger.info(
+            f"Template sheet {template_node} has lifted value from one sheet in manifest: {*manifest_nodes,}"
+        )
+    for n in manifest_nodes:
+        # n is the manifest node name, not necessarily equals to template node
+        template_n_df = pd.DataFrame(columns=template_node_df.columns)
+        manifest_n_df = manifest_object.read_sheet_na()
+        n_mapping = mapping_df[
+            (mapping_df["lift_to_node"] == template_node)
+            & (mapping_df["lift_from_node"] == n)
+        ]
+        for index, row in n_mapping.iterrows():
+            row_property_from = row["lift_from_property"]
+            row_property_to = row["lift_to_property"]
+            template_n_df[row_property_to] = manifest_n_df[row_property_from]
+        # add value to the type node
+        template_n_df["type"] = template_node
+        # append template_n_df to the concatenate_df
+        concatenate_df = pd.concat([concatenate_df, template_n_df], axis=1)
+    return concatenate_df
+
+
+@flow(name="lifting value between two files", log_prints=True)
+def liftover_to_template(
+    mapping_file: str, manifest_file: str, template_file: str
+) -> tuple:
+    """Lift the content of manifest to the template based off mappping fil
+
+    The function returns a lifted template file and a log file
+    """
+    logger = get_logger(
+        loggername=f"ccdi_liftover_workflow", log_level="info"
+    )
+    log_name = "ccdi_liftover_workflow_" + get_date() + ".log"
+
+    template_object = CheckCCDI(ccdi_manifest=template_file)
+    template_version = template_object.get_version()
+
+    # copy template file to output_file
+    output_file = (
+        os.path.basename(manifest_file).rsplit(".", 1)[0]
+        + f"liftover_{template_version}_"
+        + get_date()
+        + ".xlsx"
+    )
+    copy(template_file, output_file)
+
+    manifest_object = CheckCCDI(ccdi_manifest=manifest_file)
+    nonempty_nodes_manifest = find_nonempty_nodes(ccdi_object=manifest_object)
+    logger.info(
+        f"Nonempty nodes in the manifest {manifest_file}: {*nonempty_nodes_manifest,}"
+    )
+    print(
+        f"Nonempty nodes in the manifest {manifest_file}: {*nonempty_nodes_manifest,}"
+    )
+
+    mapping_df = pd.read_csv(mapping_file, sep="\t")
+    # filter mapping df based on nonempty nodes in manifest
+    # we only need to look at the sheet that are not empty
+    mapping_df = mapping_df[mapping_df["lift_from_node"].isin(nonempty_nodes_manifest)]
+
+    # how many unique lift_to_node found in filtered mapping df
+    # these are the nodes we need to be filled with info
+    template_nodes = mapping_df["lift_to_node"].dropna().unique().tolist()
+    logger.info(
+        f"Nodes in template file {template_file} that will have lifted value: {*template_nodes,}"
+    )
+    print(
+        f"Nodes in template file {template_file} that will have lifted value: {*template_nodes,}"
+    )
+
+    # now go through every item of template_nodes
+    for node in template_nodes:
+        print(f"lifting value for template node {node}")
+        template_df_to_add = single_node_liftover(
+            mapping_df=mapping_df,
+            template_node=node,
+            template_object=template_object,
+            manifest_object=manifest_object,
+            logger=logger,
+        )
+        with pd.ExcelWriter(
+            output_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+        ) as writer:
+            template_df_to_add.to_excel(
+                writer, sheet_name=node, index=False, header=False, startrow=1
+            )
+    return output_file, log_name
