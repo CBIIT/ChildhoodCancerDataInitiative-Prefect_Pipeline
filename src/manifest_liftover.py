@@ -321,7 +321,7 @@ def find_nonempty_nodes(checkccdi_object) -> list[str]:
     for i in node_names:
         i_df = checkccdi_object.read_sheet_na(sheetname=i)
         i_cols = remove_index_cols(col_list=i_df.columns.tolist())
-        i_df_subset = i_df[i_cols].dropna(how=all)
+        i_df_subset = i_df[i_cols].dropna(how="all")
         if not i_df_subset.empty:
             nonempty_list.append(i)
         else:
@@ -398,7 +398,7 @@ def liftover_to_template(
     # copy template file to output_file
     output_file = (
         os.path.basename(manifest_file).rsplit(".", 1)[0]
-        + f"liftover_{template_version}_"
+        + f"_liftover_{template_version}_"
         + get_date()
         + ".xlsx"
     )
