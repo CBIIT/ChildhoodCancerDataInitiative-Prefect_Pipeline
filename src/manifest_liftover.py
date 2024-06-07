@@ -309,7 +309,8 @@ def remove_index_cols(col_list: list) -> list:
     return cleanup_col
 
 
-def find_nonempty_nodes(ccdi_object) -> list[str]:
+def find_nonempty_nodes(manifest_path: str) -> list[str]:
+    ccdi_object =  CheckCCDI(ccdi_manifest=manifest_path)
     node_names = ccdi_object.get_sheetnames()
     instruction_nodes = [
         "README and INSTRUCTIONS",
@@ -384,6 +385,9 @@ def liftover_to_template(
 
     The function returns a lifted template file and a log file
     """
+    print(manifest_file)
+    print(template_file)
+    print(mapping_file)
     logger = get_logger(
         loggername=f"ccdi_liftover_workflow", log_level="info"
     )
@@ -399,10 +403,11 @@ def liftover_to_template(
         + get_date()
         + ".xlsx"
     )
+    print(f"output name is {output_file}")
     copy(template_file, output_file)
 
     manifest_object = CheckCCDI(ccdi_manifest=manifest_file)
-    nonempty_nodes_manifest = find_nonempty_nodes(ccdi_object=manifest_object)
+    nonempty_nodes_manifest = find_nonempty_nodes(manifest_path=manifest_file)
     logger.info(
         f"Nonempty nodes in the manifest {manifest_file}: {*nonempty_nodes_manifest,}"
     )
