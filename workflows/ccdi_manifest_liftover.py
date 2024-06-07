@@ -83,8 +83,8 @@ def manifest_liftover(
     logger.info("Start lifting values")
     output_file, liftover_log = liftover_to_template(
         mapping_file=mapping_file,
-        manifest_file=mapping_file,
-        template_file=ccdi_manifest,
+        manifest_file=ccdi_manifest,
+        template_file=ccdi_template,
     )
     file_ul(
         bucket=bucket, output_folder=output_file, sub_folder="", newfile=output_file

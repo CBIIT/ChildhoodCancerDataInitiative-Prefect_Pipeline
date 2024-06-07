@@ -309,9 +309,8 @@ def remove_index_cols(col_list: list) -> list:
     return cleanup_col
 
 
-def find_nonempty_nodes(manifest_path: str) -> list[str]:
-    ccdi_object =  CheckCCDI(ccdi_manifest=manifest_path)
-    node_names = ccdi_object.get_sheetnames()
+def find_nonempty_nodes(checkccdi_object) -> list[str]:
+    node_names = checkccdi_object.get_sheetnames()
     instruction_nodes = [
         "README and INSTRUCTIONS",
         "Dictionary",
@@ -320,7 +319,7 @@ def find_nonempty_nodes(manifest_path: str) -> list[str]:
     node_names = [i for i in node_names if i not in instruction_nodes]
     nonempty_list = []
     for i in node_names:
-        i_df = ccdi_object.read_sheet_na(sheetname=i)
+        i_df = checkccdi_object.read_sheet_na(sheetname=i)
         i_cols = remove_index_cols(col_list=i_df.columns.tolist())
         i_df_subset = i_df[i_cols].dropna(how=all)
         if not i_df_subset.empty:
@@ -407,7 +406,7 @@ def liftover_to_template(
     copy(template_file, output_file)
 
     manifest_object = CheckCCDI(ccdi_manifest=manifest_file)
-    nonempty_nodes_manifest = find_nonempty_nodes(manifest_path=manifest_file)
+    nonempty_nodes_manifest = find_nonempty_nodes(checkccdi_object=manifest_object)
     logger.info(
         f"Nonempty nodes in the manifest {manifest_file}: {*nonempty_nodes_manifest,}"
     )
