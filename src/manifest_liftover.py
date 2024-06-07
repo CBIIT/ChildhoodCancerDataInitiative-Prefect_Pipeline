@@ -360,7 +360,7 @@ def single_node_liftover(
     for n in manifest_nodes:
         # n is the manifest node name, not necessarily equals to template node
         template_n_df = pd.DataFrame(columns=template_node_df.columns)
-        manifest_n_df = manifest_object.read_sheet_na()
+        manifest_n_df = manifest_object.read_sheet_na(sheetname=n)
         n_mapping = mapping_df[
             (mapping_df["lift_to_node"] == template_node)
             & (mapping_df["lift_from_node"] == n)
