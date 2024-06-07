@@ -443,6 +443,6 @@ def liftover_to_template(
             output_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
         ) as writer:
             template_df_to_add.to_excel(
-                writer, sheet_name=node, index=False, header=False, startrow=1
+                writer, sheet_name=node, index=False, header=False, startrow=1, startcol=0
             )
     return output_file, log_name
