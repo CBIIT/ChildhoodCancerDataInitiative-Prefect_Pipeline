@@ -87,11 +87,11 @@ def manifest_liftover(
         template_file=ccdi_template,
     )
     file_ul(
-        bucket=bucket, output_folder=output_file, sub_folder="", newfile=output_file
+        bucket=bucket, output_folder=output_folder, sub_folder="", newfile=output_file
     )
     logger.info(f"Uploaded output {output_file} to the bucket {bucket} folder {output_folder}")
     file_ul(
-        bucket=bucket, output_folder=output_file, sub_folder="", newfile=liftover_log
+        bucket=bucket, output_folder=output_folder, sub_folder="", newfile=liftover_log
     )
     logger.info(
         f"Uploaded output {liftover_log} to the bucket {bucket} folder {output_folder}"
