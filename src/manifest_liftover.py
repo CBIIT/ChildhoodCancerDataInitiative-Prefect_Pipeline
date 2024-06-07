@@ -372,7 +372,7 @@ def single_node_liftover(
         # add value to the type node
         template_n_df["type"] = template_node
         # append template_n_df to the concatenate_df
-        concatenate_df = pd.concat([concatenate_df, template_n_df], axis=1)
+        concatenate_df = pd.concat([concatenate_df, template_n_df], axis=0)
     return concatenate_df
 
 
@@ -443,6 +443,6 @@ def liftover_to_template(
             output_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
         ) as writer:
             template_df_to_add.to_excel(
-                writer, sheet_name=node, index=False, header=False, startrow=1, startcol=0
+                writer, sheet_name=node, index=False, header=False, startrow=1
             )
     return output_file, log_name
