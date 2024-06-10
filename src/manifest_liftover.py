@@ -4,6 +4,7 @@ from enum import Enum
 from typing import TypeVar
 import os
 import pandas as pd
+import numpy as np
 from shutil import copy
 
 DataFrame = TypeVar("DataFrame")
@@ -100,6 +101,12 @@ def evaludate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tu
     manifest_unmapped_df = mapping_df.loc[
         empty_in_template_rows,
         ["lift_from_version", "lift_from_node", "lift_from_property"],
+    ]
+    # only manifest unmapped proprety need to pay attention to unmapped linking property
+    # especially for nodes which have fewer number of parent nodes in the newer model
+    manifest_unmapped_df["If_lose_links"] = [
+        "YES" if ("." in i) and (i.endswith("_id")) else np.nan
+        for i in manifest_unmapped_df["lift_from_property"].tolist()
     ]
 
     # find props not mapped from
@@ -252,14 +259,14 @@ def validate_mapping(manifest_path: str, template_path: str, mapping_path: str) 
 
         # evaluate mapping file
         report_file.write(
-            f"Properties in {manifest_version} model that are unmapped in the {template_version} model\nUnmapped propreties would be lifted over\n\n"
+            f"Properties in {manifest_version} model that are unmapped in the {template_version} model\nUnmapped propreties wouldn't be lifted over\nWARNING: Unmapped linking properties will LOSE LINKS between nodes\n\n"
         )
         report_file.write(
             manifest_unmapped_df.to_markdown(index=False, tablefmt="rounded_grid")
             + "\n\n"
         )
         report_file.write(
-            f"Properties in {template_version} model that are unmapped in the {manifest_version} model\nUnmapped propreties would be lifted over\n\n"
+            f"Properties in {template_version} model that are unmapped in the {manifest_version} model\nUnmapped propreties wouldn't be lifted over\nWARNING: Unmapped linking properties will LOSE LINKS between nodes\n\n"
         )
         report_file.write(
             template_unmapped_df.to_markdown(index=False, tablefmt="rounded_grid")
@@ -387,9 +394,7 @@ def liftover_to_template(
     print(manifest_file)
     print(template_file)
     print(mapping_file)
-    logger = get_logger(
-        loggername=f"ccdi_liftover_workflow", log_level="info"
-    )
+    logger = get_logger(loggername=f"ccdi_liftover_workflow", log_level="info")
     log_name = "ccdi_liftover_workflow_" + get_date() + ".log"
 
     template_object = CheckCCDI(ccdi_manifest=template_file)
