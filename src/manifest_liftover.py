@@ -102,10 +102,10 @@ def evaludate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tu
         empty_in_template_rows,
         ["lift_from_version", "lift_from_node", "lift_from_property"],
     ]
-    # only manifest unmapped proprety need to pay attention to unmapped linking property
+    # only manifest unmapped property need to pay attention to unmapped linking property
     # especially for nodes which have fewer number of parent nodes in the newer model
     manifest_unmapped_df["If_lose_links"] = [
-        "YES" if ("." in i) and (i.endswith("_id")) else np.nan
+        "YES" if ("." in i) and (i.endswith("_id")) else ""
         for i in manifest_unmapped_df["lift_from_property"].tolist()
     ]
 
@@ -113,6 +113,11 @@ def evaludate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tu
     empty_in_manifest_rows = mapping_df[mapping_from_cols].isna().all(axis=1)
     template_unmapped_df = mapping_df.loc[
         empty_in_manifest_rows, ["lift_to_version", "lift_to_node", "lift_to_property"]
+    ]
+    # template unmapped property need will have no value
+    template_unmapped_df["if_links"] = [
+        "YES" if ("." in i) and (i.endswith("_id")) else ""
+        for i in template_unmapped_df["lift_to_property"].tolist()
     ]
 
     # find if multiple template props maps to manifest prop
@@ -266,7 +271,7 @@ def validate_mapping(manifest_path: str, template_path: str, mapping_path: str) 
             + "\n\n"
         )
         report_file.write(
-            f"Properties in {template_version} model that are unmapped in the {manifest_version} model\nUnmapped propreties wouldn't be lifted over\nWARNING: Unmapped linking properties will LOSE LINKS between nodes\n\n"
+            f"Properties in {template_version} model that are unmapped in the {manifest_version} model\nWARNING: Unmapped linking properties will have no links in the final liftover output because this is a new linkage compared to lift_from data model\n\n"
         )
         report_file.write(
             template_unmapped_df.to_markdown(index=False, tablefmt="rounded_grid")
