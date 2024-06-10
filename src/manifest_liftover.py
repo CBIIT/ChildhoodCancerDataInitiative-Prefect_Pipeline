@@ -42,10 +42,10 @@ def liftover_tags(liftover_mapping_path: str) -> tuple:
         pass
     if len(lift_to) > 1:
         print(
-            f"More than one lift from versions were found in mapping file: {*lift_to,}"
+            f"More than one lift to versions were found in mapping file: {*lift_to,}"
         )
         raise ValueError(
-            f"More than one lift from versions were found in mapping file: {*lift_to,}"
+            f"More than one lift to versions were found in mapping file: {*lift_to,}"
         )
     else:
         pass
@@ -92,7 +92,7 @@ def mapping_coverage(
 
 
 @task(name="find unmapped props", log_prints=True)
-def evaludate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tuple:
+def evaluate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tuple:
     mapping_from_cols = mapping_col_dict["lift_from"]
     mapping_to_cols = mapping_col_dict["lift_to"]
 
@@ -221,7 +221,7 @@ def validate_mapping(manifest_path: str, template_path: str, mapping_path: str) 
         template_unmapped_df,
         manifest_props_multiple_summary,
         template_props_multiple_summary,
-    ) = evaludate_mapping_props(
+    ) = evaluate_mapping_props(
         mapping_df=mapping_df, mapping_col_dict=mapping_col_dict
     )
 
@@ -309,6 +309,9 @@ def validate_mapping(manifest_path: str, template_path: str, mapping_path: str) 
 
 
 def remove_index_cols(col_list: list) -> list:
+    """Removes type, id and id.* column names from col_list
+    Returns a list
+    """
     cleanup_col = []
     for i in col_list:
         if i != "type" and i != "id":
