@@ -162,7 +162,7 @@ def test_validate_whitespace_one_sheet():
     assert "4" in return_str
 
 
-# Dir containing 8 files
+# Dir containing some files
 FIXTURE_DIR = Path(__file__).parent.resolve() / "test_files"
 ALL_FILES = pytest.mark.datafiles(
     FIXTURE_DIR / "CCDI_Submission_Template_v1.7.2.xlsx",
