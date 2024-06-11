@@ -132,7 +132,8 @@ def trim_seq_df(seq_df: DataFrame) -> DataFrame:
         "sample.sample_id",
         "library_id",
         "library_strategy",
-        "library_source",
+        "library_source_material",  # in 1.8.0, library_source is replaced with library_source_material
+        # "library_source",
         "library_selection",
         "library_layout",
         "platform",
@@ -151,6 +152,8 @@ def trim_seq_df(seq_df: DataFrame) -> DataFrame:
     ]
     seq_df_subset = seq_df[cols_to_keep]
     seq_df_subset["sample_ID"] = seq_df_subset["sample.sample_id"]
+    # rename library_source_material back to library_source to avoid error in the downstream
+    seq_df_subset.rename(columns={"library_source_material": "library_source"}, inplace=True)
     return seq_df_subset
 
 
