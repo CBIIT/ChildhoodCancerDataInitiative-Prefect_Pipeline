@@ -12,6 +12,7 @@ DataFrame = TypeVar("DataFrame")
 
 @task(name="version validation", log_prints=True)
 def tags_validation(manifest_path: str, tag: str, logger) -> bool:
+    """Test if manifest_path equals to tag value"""
     manifest_object = CheckCCDI(ccdi_manifest=manifest_path)
     manifest_version = manifest_object.get_version()
     logger.info(f"Version in manifest {manifest_path}: {manifest_version}")
@@ -56,6 +57,9 @@ def liftover_tags(liftover_mapping_path: str) -> tuple:
 def mapping_coverage(
     mapping_df: DataFrame, node_colname: str, prop_colname: str, manifest_object
 ) -> str:
+    """Find any property in the model but not found in the mapping file
+    Find any property in the mapping file but not found in the model
+    """
     sheet_list = manifest_object.get_sheetnames()
     sheet_list = [
         i
@@ -93,6 +97,9 @@ def mapping_coverage(
 
 @task(name="find unmapped props", log_prints=True)
 def evaluate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tuple:
+    """Find unmapped properties between two models
+    Find many to one and one to many properties between two models
+    """
     mapping_from_cols = mapping_col_dict["lift_from"]
     mapping_to_cols = mapping_col_dict["lift_to"]
 
@@ -165,6 +172,8 @@ def evaluate_mapping_props(mapping_df: DataFrame, mapping_col_dict: dict) -> tup
 def multiple_mapping_summary_cleanup(
     df: DataFrame, manifest_version: str, template_version: str
 ) -> DataFrame:
+    """Rename a mapping df with name column names
+    """
     df.rename(
         columns={
             "lift_from_node": f"{manifest_version}_node",
@@ -325,6 +334,9 @@ def remove_index_cols(col_list: list) -> list:
 
 
 def find_nonempty_nodes(checkccdi_object) -> list[str]:
+    """Look through sheets of ccdi manifest object and
+    find the sheet names that are not empty
+    """
     node_names = checkccdi_object.get_sheetnames()
     instruction_nodes = [
         "README and INSTRUCTIONS",
@@ -372,6 +384,8 @@ def single_node_liftover(
         logger.info(
             f"Template sheet {template_node} has lifted value from one sheet in manifest: {*manifest_nodes,}"
         )
+    # for each manifest node, create a separate dataframe in the mapped template node
+    # after liftover, append the df to the concatenate_df
     for n in manifest_nodes:
         # n is the manifest node name, not necessarily equals to template node
         template_n_df = pd.DataFrame(columns=template_node_df.columns)
@@ -399,9 +413,6 @@ def liftover_to_template(
 
     The function returns a lifted template file and a log file
     """
-    print(manifest_file)
-    print(template_file)
-    print(mapping_file)
     logger = get_logger(loggername=f"ccdi_liftover_workflow", log_level="info")
     log_name = "ccdi_liftover_workflow_" + get_date() + ".log"
 
@@ -415,6 +426,7 @@ def liftover_to_template(
         + get_date()
         + ".xlsx"
     )
+    logger.info(f"The name of manifest with lifted value: {output_file}")
     print(f"output name is {output_file}")
     copy(template_file, output_file)
 
