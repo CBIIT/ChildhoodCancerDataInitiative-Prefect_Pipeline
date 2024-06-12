@@ -8,8 +8,6 @@ import warnings
 import re
 from src.utils import set_s3_session_client, get_time, get_date, CheckCCDI
 from src.file_mover import parse_file_url_in_cds
-from src.file_remover import list_to_chunks
-import boto3
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
 from typing import TypeVar
@@ -1235,7 +1233,18 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
     link_props = node_df.filter(like="_id", axis=1)
     link_props = link_props.filter(like=".", axis=1).columns.tolist()
 
+    # if there is no linking value
+    for index, row in node_df.iterrows():
+        row_values = row[link_props].dropna().tolist()
+        if len(set(row_values)) == 0:
+            print_str = (
+                print_str + f"\tERROR: The entry on row {index+2} contains ZERO links. Every entry (except study node) should have one link to a parent node\n"
+            )
+        else:
+            pass
+
     # if there are more than one linking property
+    # check if any entry has more than one links
     if len(link_props) > 1:
         for index, row in node_df.iterrows():
             row_values = row[link_props].dropna().tolist()
