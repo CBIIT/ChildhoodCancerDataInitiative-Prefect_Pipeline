@@ -357,6 +357,31 @@ def find_nonempty_nodes(checkccdi_object) -> list[str]:
     return nonempty_list
 
 
+def find_unlifted_properties(checkccdi_object, nonempty_nodes: list[str], mapping_file: str) -> DataFrame:
+    mapping_df = pd.read_csv(mapping_file, sep="\t")
+    empty_in_template_rows = mapping_df[["lift_to_version","lift_to_node","lift_to_property"]].isna().all(axis=1)
+    manifest_unmapped_df = mapping_df.loc[
+        empty_in_template_rows,
+        ["lift_from_version", "lift_from_node", "lift_from_property"],
+    ]
+    unlift_prop_list = []
+    for index, row in  manifest_unmapped_df.iterrows():
+        row_node = row["lift_from_node"]
+        if row_node in nonempty_nodes:
+            row_prop = row["lift_from_property"]
+            row_df = checkccdi_object.read_sheet_na(sheetname=row_node)
+            row_prop_list =  row_df[row_prop].dropna().tolist()
+            if len(row_prop_list) > 0:
+                unlift_prop_list.append({"node":row_node,"property":row_prop})
+            else:
+                pass
+        else:
+            # node found empty in the manifest, pass
+            pass
+    unlift_prop_df = pd.DataFrame.from_records(unlift_prop_list, columns=["node","property"])
+    return unlift_prop_df
+
+
 def single_node_liftover(
     mapping_df: DataFrame, template_node: str, template_object, manifest_object, logger
 ) -> DataFrame:
@@ -440,6 +465,17 @@ def liftover_to_template(
     print(
         f"Nonempty nodes in the manifest {manifest_file}: {*nonempty_nodes_manifest,}"
     )
+
+    unlifted_properties = find_unlifted_properties(
+        checkccdi_object=manifest_object, nonempty_nodes=nonempty_nodes_manifest, mapping_file=mapping_file
+    )
+    unlifted_properties_str = unlifted_properties.to_markdown(
+        index=False, tablefmt="rounded_grid"
+    )
+    if unlifted_properties.shape[0] > 0:
+        logger.warning(f"There are properties with values in the manifest that won't be lifted because of absence of mapping:\n{unlifted_properties_str}\n")
+    else:
+        logger.info("Unmapped properties in the manifest are found empty. No vlaue is lost during liftover.")
 
     mapping_df = pd.read_csv(mapping_file, sep="\t")
     # filter mapping df based on nonempty nodes in manifest
