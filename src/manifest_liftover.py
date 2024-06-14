@@ -425,7 +425,15 @@ def single_node_liftover(
         for index, row in n_mapping.iterrows():
             row_property_from = row["lift_from_property"]
             row_property_to = row["lift_to_property"]
-            template_n_df[row_property_to] = manifest_n_df[row_property_from]
+            # if column row_property_to has no value assigned to it
+            if len(template_n_df[row_property_to].dropna()) == 0:
+                template_n_df[row_property_to] = manifest_n_df[row_property_from]
+            else:
+                template_n_df[row_property_to] = (
+                    template_n_df[row_property_to] + manifest_n_df[row_property_from].astype(str)
+                )
+                logger.warning(f"Property {row_property_to} in template node {template_node} contains concatenated values from multiple properties from the same node in the manifest")
+
         # remove any row with all missing value
         template_n_df.dropna(axis=0, how="all", inplace=True)
         # add value to the type node
