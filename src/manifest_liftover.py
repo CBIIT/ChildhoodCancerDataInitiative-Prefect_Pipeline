@@ -430,9 +430,11 @@ def single_node_liftover(
                 template_n_df[row_property_to] = manifest_n_df[row_property_from]
             else:
                 template_n_df[row_property_to] = (
-                    template_n_df[row_property_to] + manifest_n_df[row_property_from].astype(str)
+                    template_n_df[row_property_to] + ";" + manifest_n_df[row_property_from].astype(str)
                 )
-                logger.warning(f"Property {row_property_to} in template node {template_node} contains concatenated values from multiple properties from the same node in the manifest")
+                # strip off any ";" 
+                template_n_df[row_property_to] = template_n_df[row_property_to].str.strip(";")
+                logger.warning(f"Property {row_property_to} in template node {template_node} contains concatenated values from multiple properties from the same node in manifest")
 
         # remove any row with all missing value
         template_n_df.dropna(axis=0, how="all", inplace=True)
