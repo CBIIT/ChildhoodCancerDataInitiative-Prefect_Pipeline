@@ -358,6 +358,9 @@ def find_nonempty_nodes(checkccdi_object) -> list[str]:
 
 
 def find_unlifted_properties(checkccdi_object, nonempty_nodes: list[str], mapping_file: str) -> DataFrame:
+    """Report any property that are unmapped in the lift to template, but has value in the manifest
+    These are the info that will be lost during liftover
+    """
     mapping_df = pd.read_csv(mapping_file, sep="\t")
     empty_in_template_rows = mapping_df[["lift_to_version","lift_to_node","lift_to_property"]].isna().all(axis=1)
     manifest_unmapped_df = mapping_df.loc[
