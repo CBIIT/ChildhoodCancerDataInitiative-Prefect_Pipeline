@@ -398,6 +398,8 @@ def single_node_liftover(
             row_property_from = row["lift_from_property"]
             row_property_to = row["lift_to_property"]
             template_n_df[row_property_to] = manifest_n_df[row_property_from]
+        # remove any row with all missing value
+        template_n_df.dropna(axis=0, how="all", inplace=True)
         # add value to the type node
         template_n_df["type"] = template_node
         # append template_n_df to the concatenate_df
