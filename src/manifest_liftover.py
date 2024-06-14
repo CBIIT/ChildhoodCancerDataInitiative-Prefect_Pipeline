@@ -476,7 +476,7 @@ def liftover_to_template(
         index=False, tablefmt="rounded_grid"
     )
     if unlifted_properties.shape[0] > 0:
-        logger.warning(f"There are properties with values in the manifest that won't be lifted because of absence of mapping:\n{unlifted_properties_str}\n")
+        logger.warning(f"There are properties with values in the manifest that won't be lifted because of mapping absence:\n{unlifted_properties_str}\n")
     else:
         logger.info("Unmapped properties in the manifest are found empty. No vlaue is lost during liftover.")
 
