@@ -47,7 +47,8 @@ lift_from_version	lift_from_node	lift_from_property	lift_to_version	lift_to_node
 1.7.2	publication	publication_id	1.8.0	publication	publication_id
 1.7.2	publication	pubmed_id	1.8.0	publication	pubmed_id
 1.7.2	participant	study.study_id	1.8.0	participant	study.study_id
-1.7.2	participant	alternate_participant_id			
+1.7.2	participant	alternate_participant_id	1.8.0	synonym	synonym_id
+1.7.2	participant	participant_id	1.8.0	synonym	participant.participant_id
 1.7.2	participant	ethnicity			
 1.7.2	participant	id	1.8.0	participant	id
 1.7.2	participant	participant_id	1.8.0	participant	participant_id
@@ -60,7 +61,6 @@ lift_from_version	lift_from_node	lift_from_property	lift_to_version	lift_to_node
 1.7.2	family_relationship	related_to_participant_id	1.8.0	family_relationship	related_to_participant_id
 1.7.2	family_relationship	relationship	1.8.0	family_relationship	relationship
 1.7.2	diagnosis	participant.participant_id	1.8.0	diagnosis	participant.participant_id
-			1.8.0	diagnosis	sample.sample_id
 1.7.2	diagnosis	age_at_diagnosis	1.8.0	diagnosis	age_at_diagnosis
 1.7.2	diagnosis	age_at_last_known_disease_status	1.8.0	diagnosis	age_at_last_known_disease_status
 1.7.2	diagnosis	age_at_recurrence	1.8.0	diagnosis	age_at_recurrence
@@ -161,6 +161,7 @@ lift_from_version	lift_from_node	lift_from_property	lift_to_version	lift_to_node
 1.7.2	radiology_file	steadyStatePulseSequenceCode	1.8.0	radiology_file	steadyStatePulseSequenceCode
 1.7.2	radiology_file	timeOfFlightContrastIndicator	1.8.0	radiology_file	timeOfFlightContrastIndicator
 1.7.2	follow_up	participant.participant_id	1.8.0	survival	participant.participant_id
+1.7.2	follow_up	participant.participant_id	1.8.0	treatment_response	participant.participant_id
 1.7.2	follow_up	adverse_event	1.8.0	survival	adverse_event
 			1.8.0	survival	age_at_event_free_survival_status
 1.7.2	follow_up	age_at_follow_up	1.8.0	survival	age_at_last_known_survival_status
@@ -216,26 +217,28 @@ lift_from_version	lift_from_node	lift_from_property	lift_to_version	lift_to_node
 1.7.2	sample	participant.participant_id	1.8.0	sample	participant.participant_id
 1.7.2	sample	cell_line.cell_line_id	1.8.0	sample	cell_line.cell_line_id
 1.7.2	sample	pdx.pdx_id	1.8.0	sample	pdx.pdx_id
-1.7.2	sample	age_at_last_known_disease_status			
-1.7.2	sample	alternate_sample_id			
+1.7.2	sample	age_at_last_known_disease_status	1.8.0	diagnosis	age_at_last_known_disease_status
+1.7.2	sample	alternate_sample_id	1.8.0	synonym	synonym_id
 1.7.2	sample	anatomic_site	1.8.0	sample	anatomic_site
-1.7.2	sample	diagnosis_basis			
-1.7.2	sample	diagnosis_classification			
-1.7.2	sample	diagnosis_classification_system			
-1.7.2	sample	diagnosis_comment			
+1.7.2	sample	diagnosis_basis	1.8.0	diagnosis	diagnosis_basis
+1.7.2	sample	diagnosis_classification	1.8.0	diagnosis	diagnosis
+1.7.2	sample	diagnosis_classification_system	1.8.0	diagnosis	diagnosis_classification_system
+1.7.2	sample	diagnosis_comment	1.8.0	diagnosis	diagnosis_comment
 1.7.2	sample	diagnosis_verification_status			
 1.7.2	sample	id	1.8.0	sample	id
-1.7.2	sample	last_known_disease_status			
+1.7.2	sample	last_known_disease_status	1.8.0	diagnosis	last_known_disease_status
 1.7.2	sample	participant_age_at_collection	1.8.0	sample	participant_age_at_collection
 1.7.2	sample	sample_description	1.8.0	sample	sample_description
 1.7.2	sample	sample_id	1.8.0	sample	sample_id
+1.7.2	sample	sample_id	1.8.0	diagnosis	sample.sample_id
 1.7.2	sample	sample_tumor_status	1.8.0	sample	sample_tumor_status
-1.7.2	sample	toronto_childhood_cancer_staging			
+1.7.2	sample	toronto_childhood_cancer_staging	1.8.0	diagnosis	toronto_childhood_cancer_staging
 1.7.2	sample	tumor_classification	1.8.0	sample	tumor_classification
-1.7.2	sample	tumor_grade			
-1.7.2	sample	tumor_stage_clinical_m			
-1.7.2	sample	tumor_stage_clinical_n			
-1.7.2	sample	tumor_stage_clinical_t			
+1.7.2	sample	tumor_classification	1.8.0	diagnosis	tumor_classification
+1.7.2	sample	tumor_grade	1.8.0	diagnosis	tumor_grade
+1.7.2	sample	tumor_stage_clinical_m	1.8.0	diagnosis	tumor_stage_clinical_m
+1.7.2	sample	tumor_stage_clinical_n	1.8.0	diagnosis	tumor_stage_clinical_n
+1.7.2	sample	tumor_stage_clinical_t	1.8.0	diagnosis	tumor_stage_clinical_t
 1.7.2	cell_line	study.study_id	1.8.0	cell_line	study.study_id
 1.7.2	cell_line	sample.sample_id	1.8.0	cell_line	sample.sample_id
 1.7.2	cell_line	participant.participant_id			
@@ -406,7 +409,7 @@ lift_from_version	lift_from_node	lift_from_property	lift_to_version	lift_to_node
 1.7.2	synonym	id	1.8.0	synonym	id
 1.7.2	synonym	repository_of_synonym_id	1.8.0	synonym	repository_of_synonym_id
 1.7.2	synonym	synonym_id	1.8.0	synonym	synonym_id
-			1.8.0	treatment_response	participant.participant_id
+1.7.2	sample	sample_id	1.8.0	synonym	sample.sample_id
 			1.8.0	treatment_response	age_at_response
 			1.8.0	treatment_response	id
 			1.8.0	treatment_response	response_category

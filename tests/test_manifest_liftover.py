@@ -12,6 +12,7 @@ sys.path.append(parent_dir)
 from src.manifest_liftover import (
     remove_index_cols,
     find_nonempty_nodes,
+    find_unlifted_properties,
     multiple_mapping_summary_cleanup,
     tags_validation,
     liftover_tags,
@@ -146,6 +147,7 @@ ALL_FILES = pytest.mark.datafiles(
     FIXTURE_DIR / "liftover_1.7.2_to_1.8.0.tsv",
     FIXTURE_DIR / "CCDI_Submission_Template_v1.7.2.xlsx",
     FIXTURE_DIR / "liftover_error_1.7.2_to_1.8.0.tsv",
+    FIXTURE_DIR / "CCDI_v1.7.2_20Exampler.xlsx",
 )
 
 @ALL_FILES
@@ -186,3 +188,19 @@ def test_mapping_coverage_error(datafiles):
     assert missing_prop_df["prop"].tolist() == ["study_short_title"]
     assert missing_prop_df.shape[0] == 1
     assert extra_prop_df["prop"].tolist() == ["test_extra_1", "test_extra_2"]
+
+@ALL_FILES
+def test_find_unlifted_properties(datafiles):
+    """test for find_unlifted_properties"""
+    for item in datafiles.iterdir():
+        if "liftover_1.7.2_to_1.8.0.tsv" in item.name:
+            mapping_filepath = str(item)
+        elif "CCDI_v1.7.2_20Exampler.xlsx" in item.name:
+            manifest_filepath = str(item)
+        else:
+            pass
+    manifest_object = CheckCCDI(ccdi_manifest=manifest_filepath)
+    nonempty_nodes = find_nonempty_nodes(manifest_object)
+    unlifted_props = find_unlifted_properties(mapping_file=mapping_filepath, nonempty_nodes=nonempty_nodes, checkccdi_object=manifest_object)
+    assert sum(unlifted_props["node"]=="pathology_file") == 2
+    assert sum(unlifted_props["property"] == "diagnosis_verification_status") == 2
