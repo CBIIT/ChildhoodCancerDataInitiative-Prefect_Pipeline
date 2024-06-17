@@ -236,7 +236,13 @@ def get_manifest_phs(manifest_path: str) -> str:
     manifest_excel = pd.ExcelFile(manifest_path)
     warnings.simplefilter(action="ignore", category=UserWarning)
     study_sheet_df = pd.read_excel(manifest_excel, "study", dtype=str)
-    phs_accession = study_sheet_df["phs_accession"].tolist()[0]
+    if "phs_accession" in study_sheet_df.columns:
+        phs_accession = study_sheet_df["phs_accession"].tolist()[0]
+    elif "dbgap_accession" in study_sheet_df.columns:
+        phs_accession = study_sheet_df["dbgap_accession"].tolist()[0]
+    else:
+        raise KeyError("Can't find a column phs_accession or dbgap_accession in study sheet. Failed to get the dbgap accession number")
+
     return phs_accession
 
 
