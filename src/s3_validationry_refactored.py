@@ -8,8 +8,6 @@ import warnings
 import re
 from src.utils import set_s3_session_client, get_time, get_date, CheckCCDI
 from src.file_mover import parse_file_url_in_cds
-from src.file_remover import list_to_chunks
-import boto3
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
 from typing import TypeVar
@@ -132,7 +130,7 @@ def validate_required_properties_one_sheet(
                 proprety_dict["error row"] = pos_print
             else:
                 proprety_dict["check"] = "PASS"
-                proprety_dict["error row"]= ""
+                proprety_dict["error row"] = ""
             check_list.append(proprety_dict)
         else:
             pass
@@ -142,9 +140,13 @@ def validate_required_properties_one_sheet(
         check_df["error row"] = check_df["error row"].str.wrap(25)
     else:
         pass
-    print_str = print_str + check_df.to_markdown(
-        tablefmt="rounded_grid", index=False
-    ).replace("\n","\n\t") + "\n"
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
     return print_str
 
 
@@ -156,7 +158,10 @@ def validate_required_properties_one_sheet(
 def validate_required_properties(
     file_path: str, node_list: list, required_properties: list, output_file: str
 ):
-    section_title = header_str("Required Properties Check")+"\nThis section is for required properties for all nodes that contain data.\nFor information on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, it is expected that all required information has a value:\n----------\n"
+    section_title = (
+        header_str("Required Properties Check")
+        + "\nThis section is for required properties for all nodes that contain data.\nFor information on required properties per node, please see the 'Dictionary' page of the template file.\nFor each entry, it is expected that all required information has a value:\n----------\n"
+    )
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_required_properties_one_sheet.map(
         node_list, file_object, unmapped(required_properties)
@@ -205,7 +210,7 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
                 pass
         else:
             pass
-    check_df =  pd.DataFrame.from_records(check_list)
+    check_df = pd.DataFrame.from_records(check_list)
     print(check_df)
     # wrape the text of error row if the length exceeds 25
     if check_df.shape[0] > 0:
@@ -228,7 +233,11 @@ def validate_whitespace_one_sheet(node_name: str, checkccdi_object) -> str:
     log_prints=True,
 )
 def validate_whitespace(node_list: list[str], file_path: str, output_file: str) -> None:
-    section_title = "\n\n" + header_str("Whitespace Check") + "\nThis section checks for white space issues in all properties.\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("Whitespace Check")
+        + "\nThis section checks for white space issues in all properties.\n----------\n"
+    )
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_whitespace_one_sheet.map(node_list, file_object)
     validate_str = "".join([i.result() for i in validate_str_future])
@@ -348,7 +357,7 @@ def validate_terms_value_sets_one_sheet(
 
                         # itterate over that list and print out the values
                         enum_print = ",".join(bad_enum_list)
-                        property_dict["error value"] =  enum_print
+                        property_dict["error value"] = enum_print
                 # if the property is not an enum
                 else:
                     unique_values = node_df[property].dropna().unique()
@@ -372,7 +381,9 @@ def validate_terms_value_sets_one_sheet(
                                 ]["Property"].tolist()
                                 # if the enum is an string;enum
                                 if property in enum_strings:
-                                    property_dict["check"] = "WARNING\nfree strings allowed"
+                                    property_dict["check"] = (
+                                        "WARNING\nfree strings allowed"
+                                    )
 
                                 else:
                                     property_dict["check"] = "ERROR\nunrecognized value"
@@ -422,7 +433,11 @@ def validate_terms_value_sets(
     node_list: list[str],
     output_file: str,
 ) -> None:
-    section_title = "\n\n" + header_str("Terms and Value Sets Check") + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\nIf the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("Terms and Value Sets Check")
+        + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\nIf the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
+    )
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
@@ -558,7 +573,11 @@ def validate_integer_numeric_checks_one_sheet(
 def validate_integer_numeric_checks(
     file_path: str, template_path: str, node_list: list[str], output_file: str
 ):
-    section_title = "\n\n" + header_str("Numeric and Integer Check") +"\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("Numeric and Integer Check")
+        + "\nThis section will display any values in properties that are expected to be either numeric or integer based on the Dictionary, but have values that are not:\n----------\n"
+    )
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
 
@@ -629,7 +648,7 @@ def validate_regex_one_sheet(
                 pass
             # itterate over that list and print out the values
             enum_print = ",".join(bad_regex_strings)
-            property_dict["error value"] =  enum_print
+            property_dict["error value"] = enum_print
             check_list.append(property_dict)
         else:
             pass
@@ -653,7 +672,11 @@ def validate_regex_one_sheet(
 def validate_regex(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
-    section_title = "\n\n" + header_str("Regular Expression Check")+"\nThis section will display any values in properties that can accept strings, which are thought to contain PII/PHI based on regex suggestions from dbGaP:\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("Regular Expression Check")
+        + "\nThis section will display any values in properties that can accept strings, which are thought to contain PII/PHI based on regex suggestions from dbGaP:\n----------\n"
+    )
     # create file_object and template_object
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -737,7 +760,7 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
 
                     # itterate over that list and print out the values
                     enum_print = ",".join(not_unique_key_values)
-                    property_dict["error value"] =  enum_print
+                    property_dict["error value"] = enum_print
                     check_list.append(property_dict)
                 else:
                     pass
@@ -765,7 +788,11 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
 def validate_unique_key(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
-    section_title = "\n\n" + header_str("Unique Key Value Check") + "\nThe following will check for multiples of key values, which are expected to be unique.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("Unique Key Value Check")
+        + "\nThe following will check for multiples of key values, which are expected to be unique.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    )
     # create file_object and template_object
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -887,8 +914,9 @@ def check_file_basename(file_df: DataFrame) -> str:
             print_str = (
                 print_str
                 + "\n\t"
-                + print_df.to_markdown(tablefmt="rounded_grid", index=False)
-                .replace("\n", "\n\t")
+                + print_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+                    "\n", "\n\t"
+                )
                 + "\n\n"
             )
         else:
@@ -926,7 +954,12 @@ def check_buckets_access(bucket_list: list[str]) -> dict:
     return invalid_buckets
 
 
-@task(name="if a single obj exists in bucket", retries=3, retry_delay_seconds=0.5, tags=["validation-tag"])
+@task(
+    name="if a single obj exists in bucket",
+    retries=3,
+    retry_delay_seconds=0.5,
+    tags=["validation-tag"],
+)
 def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client) -> bool:
     """Checks if an obj exists in AWS by using a s3 uri
     Returns (True, {file size}) if exist, or (False, np.nan) if not exist
@@ -997,7 +1030,9 @@ def validate_objs_loc_size(
     progress_bar = 1
     for i in uri_list:
         # avoid using task, try to avoid crash in prefect
-        i_if_exist, i_size = validate_single_manifest_obj_in_bucket.fn(s3_uri=i, s3_client=s3_client)
+        i_if_exist, i_size = validate_single_manifest_obj_in_bucket.fn(
+            s3_uri=i, s3_client=s3_client
+        )
         if_exist.append(i_if_exist)
         bucket_obj_size.append(i_size)
         if progress_bar % 100 == 0:
@@ -1022,7 +1057,11 @@ def validate_file_metadata(
     """Validate if manifest file objs have none zero file size, correct md5sum regex
     and if file name matches to s3 uri
     """
-    section_title = "\n\n" + header_str("Object File Metadata Check") + "\nThe following section will check the manifest for expected file metadata.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("Object File Metadata Check")
+        + "\nThe following section will check the manifest for expected file metadata.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    )
     return_str = "" + section_title
     # create file_object and template_object
     template_object = CheckCCDI(ccdi_manifest=template_path)
@@ -1058,7 +1097,11 @@ def validate_file_metadata(
 def validate_bucket_content(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
-    section_title = "\n\n" + header_str("AWS Bucket Content Check") + "\nThe following section will compare the manifest against the reported buckets and note if there are unexpected results where the file is represented equally in both sources.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("AWS Bucket Content Check")
+        + "\nThe following section will compare the manifest against the reported buckets and note if there are unexpected results where the file is represented equally in both sources.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+    )
     with open(output_file, "a+") as outf:
         outf.write(section_title)
     # create file_object and template_object
@@ -1235,18 +1278,44 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
     link_props = node_df.filter(like="_id", axis=1)
     link_props = link_props.filter(like=".", axis=1).columns.tolist()
 
+    # if there is no linking value
+    if node_name != "study":
+        # skip study node
+        link_missing_row = []
+        for index, row in node_df.iterrows():
+            row_values = row[link_props].dropna().tolist()
+            if len(set(row_values)) == 0:
+                link_missing_row.append(index + 2)
+            else:
+                pass
+        if len(link_missing_row) > 0:
+            print_str = (
+                print_str
+                + f"\tERROR: The entry on row {*link_missing_row,} contains ZERO links. Every entry (except study node) should have one link to a parent node\n"
+            )
+        else:
+            pass
+    else:
+        pass
+
     # if there are more than one linking property
+    # check if any entry has more than one links
     if len(link_props) > 1:
+        link_multiple_row = []
         for index, row in node_df.iterrows():
             row_values = row[link_props].dropna().tolist()
             # if there are entries that have more than one linking property value
             if len(set(row_values)) > 1:
-                print_str = (
-                    print_str
-                    + f"\tWARNING: The entry on row {index+2} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n"
-                )
+                link_multiple_row.append(index + 2)
             else:
                 pass
+        if len(link_multiple_row) > 0:
+            print_str = (
+                print_str
+                + f"\tWARNING: The entry on row {*link_multiple_row,} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n"
+            )
+        else:
+            pass
     else:
         # skip multiple linking property check if only one parent node found
         pass
@@ -1254,7 +1323,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
     check_list = []
     # for the linking property
     for link_prop in link_props:
-        property_dict =  {}
+        property_dict = {}
         # find the unique values of that linking property
         link_values = node_df[link_prop].dropna().unique().tolist()
 
@@ -1296,7 +1365,8 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
     else:
         pass
     print_str = (
-        print_str + "\t"
+        print_str
+        + "\t"
         + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
             "\n", "\n\t"
         )
@@ -1310,7 +1380,11 @@ def validate_cross_links(
     file_path: str, output_file: str, node_list: list[str]
 ) -> None:
     """Performs cross link validation between nodes of entire manifest file"""
-    section_title = "\n\n" + header_str("Cross Links Check") + "\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("Cross Links Check")
+        + "\nIf there are unexpected or missing values in the linking values between nodes, they will be reported below:\n----------\n"
+    )
 
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -1402,7 +1476,11 @@ def validate_key_id(
     file_path: str, template_path: str, node_list: list[str], output_file
 ) -> None:
     """Validate key id of entire manifest"""
-    section_title = "\n\n" + header_str("Key ID Check") + "\nFor the '_id' key properties, only the following characters can be included: English letters, Arabic numerals, period (.), hyphen (-), underscore (_), at symbol (@), and the pound sign (#).\nFor values that do not match, they will be reported below:\n----------\n"
+    section_title = (
+        "\n\n"
+        + header_str("Key ID Check")
+        + "\nFor the '_id' key properties, only the following characters can be included: English letters, Arabic numerals, period (.), hyphen (-), underscore (_), at symbol (@), and the pound sign (#).\nFor values that do not match, they will be reported below:\n----------\n"
+    )
 
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -1530,8 +1608,8 @@ def ValidationRy_new(file_path: str, template_path: str):
 
 
 def header_str(section_name: str) -> str:
-    return_str = "#" * (8 + len(section_name))+ "\n"
-    return_str = return_str + "#" + " "*(6+len(section_name)) + "#\n"
+    return_str = "#" * (8 + len(section_name)) + "\n"
+    return_str = return_str + "#" + " " * (6 + len(section_name)) + "#\n"
     return_str = return_str + "#   " + section_name + "   #\n"
     return_str = return_str + "#" + " " * (6 + len(section_name)) + "#\n"
     return_str = return_str + "#" * (8 + len(section_name))

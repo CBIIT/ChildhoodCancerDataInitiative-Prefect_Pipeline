@@ -40,17 +40,20 @@ def get_study_name(workbook_dict: Dict) -> str:
 
 
 def get_study_contact(workbook_dict: Dict, logger) -> tuple:
-    """Returns contact information for SRA front page
-    """
+    """Returns contact information for SRA front page"""
     study_phs = get_acl(workbook_dict)
     df_study_personnel = workbook_dict["study_personnel"]
     if df_study_personnel.shape[0] == 0:
-        logger.error("The sheet of study_personnel is EMPTY. Please find the study contact source elsewhere")
+        logger.error(
+            "The sheet of study_personnel is EMPTY. Please find the study contact source elsewhere"
+        )
         return study_phs, "", ""
     else:
         if "PI" in df_study_personnel["personnel_type"].unique():
             # use first entry of PI
-            pi_df = df_study_personnel[df_study_personnel["personnel_type"]=="PI"].reset_index(drop=True)
+            pi_df = df_study_personnel[
+                df_study_personnel["personnel_type"] == "PI"
+            ].reset_index(drop=True)
             contact_name = pi_df.loc[0, "personnel_name"]
             contact_email = pi_df.loc[0, "email_address"]
         elif "Co-PI" in df_study_personnel["personnel_type"].unique():
@@ -59,7 +62,7 @@ def get_study_contact(workbook_dict: Dict, logger) -> tuple:
                 df_study_personnel["personnel_type"] == "Co-PI"
             ].reset_index(drop=True)
             contact_name = copi_df.loc[0, "personnel_name"]
-            contact_email = copi_df.loc[0, "email_address"]      
+            contact_email = copi_df.loc[0, "email_address"]
         else:
             # If no PI or Co-PI found, use the first entry
             contact_name = df_study_personnel.loc[0, "personnel_name"]
@@ -120,6 +123,38 @@ def concat_seq_single_seq(seq_df: DataFrame, single_df: DataFrame) -> DataFrame:
                 sample_ID.append(i_row["cell_line.cell_line_id"])
     combined_df["sample_ID"] = sample_ID
     return combined_df
+
+
+def trim_seq_df(seq_df: DataFrame) -> DataFrame:
+    """Returns a dataframe with selected columns"""
+    # cols_to_keep got rid of pdx.pdx.id and cell_line.cell_line_id
+    cols_to_keep = [
+        "sample.sample_id",
+        "library_id",
+        "library_strategy",
+        "library_source_material",  # in 1.8.0, library_source is replaced with library_source_material
+        # "library_source",
+        "library_selection",
+        "library_layout",
+        "platform",
+        "instrument_model",
+        "design_description",
+        "reference_genome_assembly",
+        "sequence_alignment_software",
+        "file_type",
+        "file_name",
+        "md5sum",
+        "number_of_bp",
+        "number_of_reads",
+        "coverage",
+        "avg_read_length",
+        "file_url_in_cds",
+    ]
+    seq_df_subset = seq_df[cols_to_keep]
+    seq_df_subset["sample_ID"] = seq_df_subset["sample.sample_id"]
+    # rename library_source_material back to library_source to avoid error in the downstream
+    seq_df_subset.rename(columns={"library_source_material": "library_source"}, inplace=True)
+    return seq_df_subset
 
 
 def remove_redundant_cols(df: DataFrame) -> DataFrame:
@@ -449,7 +484,9 @@ def reformat_sra_values(
         sra_df["library_strategy (click for details)"].str.contains("Other", na=False)
     ] = "OTHER"
     sra_df["library_strategy (click for details)"][
-        sra_df["library_strategy (click for details)"].str.contains("Archer_Fusion", na=False)
+        sra_df["library_strategy (click for details)"].str.contains(
+            "Archer_Fusion", na=False
+        )
     ] = "RNA-Seq"
     # after hardcoding strategy values, check for unacceptable values
     unknown_library_strategy_index = find_new_value_in_col(
@@ -653,6 +690,7 @@ def reformat_sra_values(
     sra_df["alignment_software"] = alignment_software_clean
 
     return sra_df
+
 
 @task
 def sra_filetype_filter(sra_df: DataFrame, filetype_list: list, logger) -> DataFrame:
@@ -1153,15 +1191,26 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
             i_design_description = ";".join(
                 i_df["design_description"].dropna().unique().tolist()
             )
-            sra_df.loc[
-                sra_df["check_sample_id"] == i, "design_description"
-            ] = i_design_description
+            sra_df.loc[sra_df["check_sample_id"] == i, "design_description"] = (
+                i_design_description
+            )
         else:
             pass
         # concatenate reference genome assembly if more than one unique value were found
-        if len(i_df["reference_genome_assembly (or accession)"].dropna().unique().tolist()) > 1:
+        if (
+            len(
+                i_df["reference_genome_assembly (or accession)"]
+                .dropna()
+                .unique()
+                .tolist()
+            )
+            > 1
+        ):
             i_reference_genome = ";".join(
-                i_df["reference_genome_assembly (or accession)"].dropna().unique().tolist()
+                i_df["reference_genome_assembly (or accession)"]
+                .dropna()
+                .unique()
+                .tolist()
             )
             sra_df.loc[
                 sra_df["check_sample_id"] == i,
@@ -1182,7 +1231,9 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
             pass
         # concatenate active location url if more than one unique value were found
         if len(i_df["active_location_URL"].dropna().unique().tolist()) > 1:
-            i_active_url = ";".join(i_df["active_location_URL"].dropna().unique().tolist())
+            i_active_url = ";".join(
+                i_df["active_location_URL"].dropna().unique().tolist()
+            )
             sra_df.loc[
                 sra_df["check_sample_id"] == i,
                 "active_location_URL",
@@ -1258,21 +1309,40 @@ def CCDI_to_SRA(
 
     # If there is no seuqencing record in CCDI manifest, exit execution
     sequencing_file_df = workbook_dict["sequencing_file"]
-    single_sequencing_file_df = workbook_dict["single_cell_sequencing_file"]
-    if sequencing_file_df.empty and single_sequencing_file_df.empty:
-        logger.info(
-            "No seuqneincg file or single cell sequencing file found in CCDI submission file, and no SRA submission file will be generated"
-        )
-        sra_output_path = "(EMPTY)_SRA_submission.xlsx"
-        copy(src=template, dst=sra_output_path)
-        return (sra_output_path, logger_filename)
+    if "single_cell_sequencing_file" in workbook_dict.keys():
+        single_sequencing_file_df = workbook_dict["single_cell_sequencing_file"]
+        # test if both sequencing_file node and single_cell_sequencing_file node are empty
+        if sequencing_file_df.empty and single_sequencing_file_df.empty:
+            logger.info(
+                "No seuqneincg file or single cell sequencing file found in CCDI submission file, and no SRA submission file will be generated"
+            )
+            sra_output_path = "(EMPTY)_SRA_submission.xlsx"
+            copy(src=template, dst=sra_output_path)
+            return (sra_output_path, logger_filename)
+        else:
+            pass
     else:
-        pass
+        # if no single_cell_sequencing_file node, only checks if sequencing_file node is empty
+        if sequencing_file_df.empty:
+            logger.info(
+                "No seuqneincg file found in CCDI submission file, and no SRA submission file will be generated"
+            )
+            sra_output_path = "(EMPTY)_SRA_submission.xlsx"
+            copy(src=template, dst=sra_output_path)
+            return (sra_output_path, logger_filename)
+        else:
+            pass
 
-    # Combine records from sheets sequencing_file and single_cell_sequencing_file
-    sequencing_df = concat_seq_single_seq(
-        seq_df=sequencing_file_df, single_df=single_sequencing_file_df
-    )
+    try:
+        # if no NameError calling single_sequencing_file_df
+        single_sequencing_file_df
+        # Combine records from sheets sequencing_file and single_cell_sequencing_file
+        sequencing_df = concat_seq_single_seq(
+            seq_df=sequencing_file_df, single_df=single_sequencing_file_df
+        )
+    except NameError:
+        sequencing_df = trim_seq_df(seq_df=sequencing_file_df)
+    # report how many files found in (combined) sequencing_df
     logger.info(
         f"A total of {sequencing_df.shape[0]} sequencing files were found in the provided manifest"
     )
@@ -1406,9 +1476,11 @@ def CCDI_to_SRA(
 
     logger.info(f"Script finished!")
     sra_wb = openpyxl.load_workbook(sra_output_path)
-    sra_contact_ws =  sra_wb['Instructions and Contact Info']
-    phs_accession, contact_name, contact_email =  get_study_contact(workbook_dict=workbook_dict, logger=logger)
-    sra_contact_ws['B1'] = phs_accession
+    sra_contact_ws = sra_wb["Instructions and Contact Info"]
+    phs_accession, contact_name, contact_email = get_study_contact(
+        workbook_dict=workbook_dict, logger=logger
+    )
+    sra_contact_ws["B1"] = phs_accession
     sra_contact_ws["B2"] = contact_name
     sra_contact_ws["B3"] = contact_email
     # style the cell format
