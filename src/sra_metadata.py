@@ -98,6 +98,7 @@ def get_sra_metadata(uri_list: list[str]) -> None:
             "coverage": coverage,
             "AvgReadLength": avgreadlength,
         }
+        print(record_dict)
         metadata_records.append(record_dict)
         os.remove(filename)
         print(f"Progress: {count}/{len(uri_list)}")
