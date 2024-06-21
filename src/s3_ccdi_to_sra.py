@@ -132,7 +132,10 @@ def trim_seq_df(seq_df: DataFrame) -> DataFrame:
         "sample.sample_id",
         "library_id",
         "library_strategy",
-        "library_source_material",  # in 1.8.0, library_source is replaced with library_source_material
+        # in 1.8.0, library_source in 1.7.2 is mapped to library_source_material
+        # however, library_source_molecule should be used. This property is empty after liftover
+        # data curator needs to add values for this property themselves before running SRA
+        "library_source_molecule",
         # "library_source",
         "library_selection",
         "library_layout",
