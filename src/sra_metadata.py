@@ -32,6 +32,8 @@ def extract_base_reads_readlength(filename: str) -> tuple:
     file = open(filename, "r")
     lines = file.readlines()
     for line in lines:
+        # remove new line
+        line=line.strip()
         if "SN	raw total sequences:	" in line:
             line_list = line.split("\t")
             read_count = line_list[2]
@@ -61,16 +63,20 @@ def get_bam_stats(filename: str):
     stats = pysam.stats(filename)
     with open(stat_filename, "w") as stats_f:
         stats_f.write(stats)
+    print(f"created stats file: {stat_filename}")
 
     reads, bases, avgreadlength = extract_base_reads_readlength(filename=stat_filename)
     os.remove(stat_filename)
+    print(f"removed stats file: {stat_filename}")
 
     coverage = pysam.coverage(filename)
     coverage_filename = filename_wo_ext + "_coverage.txt"
     with open(coverage_filename, "w") as cov_f:
         cov_f.write(coverage)
+    print(f"created coverage file: {coverage_filename}")
     coverage = extract_coverage(filename=coverage_filename)
     os.remove(coverage_filename)
+    print(f"removed coverage file: {coverage_filename}")
     return bases, reads, coverage, avgreadlength
 
 
