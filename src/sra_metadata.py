@@ -1,5 +1,5 @@
 from prefect import flow, task, get_run_logger
-from utils import list_to_chunks, set_s3_resource, get_time, file_ul
+from utils import list_to_chunks, set_s3_resource, get_time, file_ul, get_logger, get_date()
 from file_mover import copy_file_task, parse_file_url_in_cds
 import pysam
 import os
@@ -56,7 +56,7 @@ def extract_coverage(filename: str) -> float:
 
 
 @task(name="get bam sra stats", log_prints=True)
-def get_bam_stats(filename: str):
+def get_bam_stats(filename: str, logger) -> tuple:
     """Get the bam stats from pysam stats"""
     try:
         filename_wo_ext = filename.rsplit(".", 1)[0]
@@ -71,7 +71,7 @@ def get_bam_stats(filename: str):
         print(f"removed stats file: {stat_filename}")
     except Exception as err:
         reads, bases, avgreadlength = "Error", "Error", "Error"
-        print(f"Error occurred: {repr(err)}")
+        logger.error(f"Error occurred extracting stats of {filename}: {repr(err)}")
 
     try:
         coverage = pysam.coverage(filename)
@@ -84,7 +84,7 @@ def get_bam_stats(filename: str):
         print(f"removed coverage file: {coverage_filename}")
     except Exception as er:
         coverage = "Erorr"
-        print(f"Error occurred: {repr(er)}")
+        logger.error(f"Error occurred extracting coverage of {filename}: {repr(er)}")
 
     return bases, reads, coverage, avgreadlength
 
@@ -93,13 +93,17 @@ def get_bam_stats(filename: str):
 def get_sra_metadata(uri_list: list[str]) -> None:
     metadata_records = []
     print(f"Number of objects: {len(uri_list)}")
+
+    logger = get_logger(loggername="sra_metadata_extraction", log_level="info")
+    logger_file = "sra_metadata_extraction" + "_" + get_date() + ".log"
+    logger.info(f"Number of objects: {len(uri_list)}")
     count = 1
     for i in uri_list:
         # download the file
         filename = download_object_to_local(cds_url=i)
 
         # extract sra metadata of object i
-        bases, reads, coverage, avgreadlength = get_bam_stats(filename=filename)
+        bases, reads, coverage, avgreadlength = get_bam_stats(filename=filename, logger=logger)
         record_dict = {
             "uri": i,
             "Bases": bases,
@@ -107,7 +111,6 @@ def get_sra_metadata(uri_list: list[str]) -> None:
             "coverage": coverage,
             "AvgReadLength": avgreadlength,
         }
-        print(record_dict)
         metadata_records.append(record_dict)
         os.remove(filename)
         print(f"Progress: {count}/{len(uri_list)}")
@@ -117,7 +120,7 @@ def get_sra_metadata(uri_list: list[str]) -> None:
     outputfile = "SRA_metadata_extraction_" + get_time() + ".tsv"
     metadata_df.to_csv(outputfile, sep="\t", index=False)
     del metadata_df
-    return outputfile
+    return outputfile, logger_file
 
 
 @flow(name="SRA metadata flow")
@@ -130,10 +133,11 @@ def sra_metadata_extraction(bucket: str, runner: str, uri_list: list[str]) -> No
     )
 
     # get the metadata report file
-    output_file = get_sra_metadata(uri_list=uri_list)
+    output_file, logger_file = get_sra_metadata(uri_list=uri_list)
 
-    # upload the file to the bucket
+    # upload the output and logger to the bucket
     file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=output_file)
+    file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=logger_file)
     logger.info(f"output file {output_file} has been uploaded to bucket {bucket} path {output_folder}")
 
     return None
