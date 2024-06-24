@@ -1,5 +1,5 @@
 from prefect import flow, task, get_run_logger
-from utils import list_to_chunks, set_s3_resource, get_time, file_ul, get_logger, get_date()
+from utils import list_to_chunks, set_s3_resource, get_time, file_ul, get_logger, get_date
 from file_mover import copy_file_task, parse_file_url_in_cds
 import pysam
 import os
