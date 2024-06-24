@@ -58,25 +58,34 @@ def extract_coverage(filename: str) -> float:
 @task(name="get bam sra stats", log_prints=True)
 def get_bam_stats(filename: str):
     """Get the bam stats from pysam stats"""
-    filename_wo_ext = filename.rsplit(".", 1)[0]
-    stat_filename = filename_wo_ext + "_stats.txt"
-    stats = pysam.stats(filename)
-    with open(stat_filename, "w") as stats_f:
-        stats_f.write(stats)
-    print(f"created stats file: {stat_filename}")
+    try:
+        filename_wo_ext = filename.rsplit(".", 1)[0]
+        stat_filename = filename_wo_ext + "_stats.txt"
+        stats = pysam.stats(filename)
+        with open(stat_filename, "w") as stats_f:
+            stats_f.write(stats)
+        print(f"created stats file: {stat_filename}")
 
-    reads, bases, avgreadlength = extract_base_reads_readlength(filename=stat_filename)
-    os.remove(stat_filename)
-    print(f"removed stats file: {stat_filename}")
+        reads, bases, avgreadlength = extract_base_reads_readlength(filename=stat_filename)
+        os.remove(stat_filename)
+        print(f"removed stats file: {stat_filename}")
+    except Exception as err:
+        reads, bases, avgreadlength = "Error", "Error", "Error"
+        print(f"Error occurred: {repr(err)}")
 
-    coverage = pysam.coverage(filename)
-    coverage_filename = filename_wo_ext + "_coverage.txt"
-    with open(coverage_filename, "w") as cov_f:
-        cov_f.write(coverage)
-    print(f"created coverage file: {coverage_filename}")
-    coverage = extract_coverage(filename=coverage_filename)
-    os.remove(coverage_filename)
-    print(f"removed coverage file: {coverage_filename}")
+    try:
+        coverage = pysam.coverage(filename)
+        coverage_filename = filename_wo_ext + "_coverage.txt"
+        with open(coverage_filename, "w") as cov_f:
+            cov_f.write(coverage)
+        print(f"created coverage file: {coverage_filename}")
+        coverage = extract_coverage(filename=coverage_filename)
+        os.remove(coverage_filename)
+        print(f"removed coverage file: {coverage_filename}")
+    except Exception as er:
+        coverage = "Erorr"
+        print(f"Error occurred: {repr(er)}")
+
     return bases, reads, coverage, avgreadlength
 
 
