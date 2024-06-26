@@ -37,7 +37,7 @@ def mci_release_manifest(
     output_folder = os.path.join(runner, "MCI_monthly_release_" + get_time())
 
     # download previous template. bucket here is mostly likely to be ccdi-validation
-    file_dl(bucket=bucket, filename=previous_template_path)
+    file_dl(bucket=bucket, filename=previous_pull_list_path)
     prev_pull_list = os.path.basename(previous_pull_list_path)
     logger.info(f"Downlaoded previously pulled manifest list: {prev_pull_list}")
 
