@@ -31,8 +31,8 @@ def pull_guids(row):
     size = row["file_size"]
     guid = row["dcf_indexd_guid"]
     file_url = row["file_url_in_cds"]
-    file_name= os.path.basename(file_url)
-    file_path= os.path.dirname(file_url)
+    file_name = os.path.basename(file_url)
+    file_path = os.path.dirname(file_url)
 
     # guidcheck_logger.info(f"Making API call for {hash_value} of size: {size}.")
 
@@ -56,22 +56,24 @@ def pull_guids(row):
         # Extract the relevant information from the response and append to results
 
         if len(data["records"]) > 0:
-            for record in data['records']:
+            for record in data["records"]:
                 if os.path.basename(str(record["urls"][0])) == file_name:
                     if os.path.dirname(str(record["urls"][0])) == file_path:
-                            guid = record["did"]
+                        guid = record["did"]
                     else:
                         pass
                 else:
                     pass
         else:
-            pass
+            with open("API_indexd_calls.log", "a") as logfile:
+                logfile.write(f"WARNING: no match for {hash_value} of size: {size}.\n")
+            guidcheck_logger.warning(
+                f"No match for hash='{hash_value}' and size='{size}'"
+            )
     else:
         with open("API_indexd_calls.log", "a") as logfile:
             logfile.write(f"ERROR: no response for {hash_value} of size: {size}.\n")
-        guidcheck_logger.error(
-            f"Failed to fetch data for hash='{hash_value}' and size='{size}'"
-        )
+        guidcheck_logger.error(f"No response for hash='{hash_value}' and size='{size}'")
 
     return guid
 
@@ -172,7 +174,7 @@ def guid_checker(file_path: str):  # removed profile
             guidcheck_logger.info(f"Checking {node}.")
             df = meta_dfs[node]
 
-            total_rows = len(df)
+            #total_rows = len(df)
 
             for index, row in df.iterrows():
                 df.at[index, "dcf_indexd_guid"] = pull_guids(row)
