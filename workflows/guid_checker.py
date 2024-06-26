@@ -68,7 +68,7 @@ def pull_guids(row):
             with open("API_indexd_calls.log", "a") as logfile:
                 logfile.write(f"WARNING: no match for {hash_value} of size: {size}.\n")
             guidcheck_logger.error(
-                f"Failed to fetch data for hash='{hash_value}' and size='{size}'"
+                f"No match for hash='{hash_value}' and size='{size}'"
             )
     else:
         with open("API_indexd_calls.log", "a") as logfile:
