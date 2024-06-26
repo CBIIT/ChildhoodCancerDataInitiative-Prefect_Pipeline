@@ -21,7 +21,7 @@ def mci_release_manifest(
     mci_manifests_bucket_path: str,
     bucket: str,
     template_tag: str,
-    previous_template_path: str,
+    previous_pull_list_path: str,
     runner: str,
 ):
     logger = get_run_logger()
@@ -38,7 +38,7 @@ def mci_release_manifest(
 
     # download previous template. bucket here is mostly likely to be ccdi-validation
     file_dl(bucket=bucket, filename=previous_template_path)
-    prev_pull_list = os.path.basename(previous_template_path)
+    prev_pull_list = os.path.basename(previous_pull_list_path)
     logger.info(f"Downlaoded previously pulled manifest list: {prev_pull_list}")
 
     # identify all files in mci manifests bucket path
