@@ -20,7 +20,7 @@ def ccdi_to_cds_liftover(
 ) -> None:
     logger = get_run_logger()
 
-    output_folder = os.path.join(runner, f"liftover_ccdi_template_{get_time()}")
+    output_folder = os.path.join(runner, f"liftover_ccdi_to_cds_{get_time()}")
 
     # download mapping file
     file_dl(bucket=bucket, filename=mapping_filepath)
