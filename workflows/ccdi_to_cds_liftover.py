@@ -9,7 +9,7 @@ from src.manifest_liftover import liftover_tags, tags_validation
 from src.ccdi_liftover_cds import validate_mapping_cds, liftover_to_cds_template
 
 
-@flow(name="CCDI to CDS liftover")
+@flow(name="CCDI to CDS liftover", log_prints=True)
 def ccdi_to_cds_liftover(
     bucket: str,
     mapping_filepath: str,
