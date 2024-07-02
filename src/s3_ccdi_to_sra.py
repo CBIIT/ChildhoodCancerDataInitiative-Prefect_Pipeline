@@ -155,8 +155,10 @@ def trim_seq_df(seq_df: DataFrame) -> DataFrame:
     ]
     seq_df_subset = seq_df[cols_to_keep]
     seq_df_subset["sample_ID"] = seq_df_subset["sample.sample_id"]
-    # rename library_source_material back to library_source to avoid error in the downstream
-    seq_df_subset.rename(columns={"library_source_material": "library_source"}, inplace=True)
+    # rename library_source_molecule back to library_source to avoid error in the downstream
+    seq_df_subset.rename(
+        columns={"library_source_molecule": "library_source"}, inplace=True
+    )
     return seq_df_subset
 
 

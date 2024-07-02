@@ -17,8 +17,6 @@ from src.s3_ccdi_to_sra import CCDI_to_SRA
 from src.s3_ccdi_to_dbgap import CCDI_to_dbGaP
 from src.s3_catcherry import CatchERRy
 from src.s3_validationry_refactored import ValidationRy_new
-from src.s3_ccdi_to_cds import CCDI_to_CDS
-from src.s3_ccdi_to_index import CCDI_to_IndexeRy
 from src.s3_ccdi_to_tabbreakery import tabBreakeRy
 from src.utils import (
     get_time,
@@ -35,7 +33,8 @@ from src.utils import (
     get_ccdi_latest_release,
     ccdi_wf_inputs_ul,
     ccdi_wf_outputs_ul,
-    identify_data_curation_log_file
+    identify_data_curation_log_file,
+    ccdi_to_dcf_index
 )
 
 
@@ -273,46 +272,23 @@ def runner(
             sub_folder="4_dbGaP_submisison_output",
         )
 
-        # run CCDI to CDS
-        runner_logger.info("Runnning CCDI to CDS conversion flow")
+        # run CCDI to dcf index
+        runner_logger.info("Running CCDI to DCF Index files flow")
         try:
-            (cds_output_file, cds_output_log) = CCDI_to_CDS(
-                manifest_path=catcherr_out_file
-            )
+            (dcf_index_file, dcf_index_log) = ccdi_to_dcf_index(ccdi_manifest=catcherr_out_file)
         except:
-            cds_output_file = None
-            cds_output_log = identify_data_curation_log_file(
-                start_str="CCDI_to_CDS_submission_"
+            dcf_index_file = None
+            dcf_index_log = identify_data_curation_log_file(
+                start_str="CCDI_to_DCF_Index_"
             )
-            # cds_output_log = "CCDI_to_CDS_submission_" + get_date() + ".log"
-        runner_logger.info(f"Uploading outputs of CDS to bucket {bucket}")
+        runner_logger.info(f"Uploading outputs of DCF index ofile to bucket {bucket}")
         ccdi_wf_outputs_ul(
             bucket=bucket,
             output_folder=output_folder,
-            output_path=cds_output_file,
-            output_log=cds_output_log,
-            wf_step="CCDI-to-CDS",
-            sub_folder="5_CDS_output",
-        )
-
-        # run CCDI to index
-        runner_logger.info("Running CCDI to Index files flow")
-        try:
-            (index_out_file, index_out_log) = CCDI_to_IndexeRy(
-                manifest_path=catcherr_out_file
-            )
-        except:
-            index_out_file = None
-            index_out_log = identify_data_curation_log_file(start_str="CCDI_to_Index_")
-            # index_out_log = "CCDI_to_Index_" + get_date() + ".log"
-        runner_logger.info(f"Uploading outputs of Index to bucket {bucket}")
-        ccdi_wf_outputs_ul(
-            bucket=bucket,
-            output_folder=output_folder,
-            output_path=index_out_file,
-            output_log=index_out_log,
-            wf_step="CCDI-to-index",
-            sub_folder="6_Index_output",
+            output_path=dcf_index_file,
+            output_log=dcf_index_log,
+            wf_step="CCDI-to-DCF-Index",
+            sub_folder="5_DCF_index_output"
         )
 
         # run CCDI to tabbreaker
@@ -334,7 +310,7 @@ def runner(
             output_path=tabbreaker_output_folder,
             output_log=tabbreaker_out_log,
             wf_step="CCDI-to-TabBreaker",
-            sub_folder="7_TabBreaker_output",
+            sub_folder="6_TabBreaker_output",
         )
 
     else:
