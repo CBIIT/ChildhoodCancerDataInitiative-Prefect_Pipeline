@@ -1348,7 +1348,7 @@ def ccdi_to_dcf_index(ccdi_manifest: str) -> tuple:
     # save df to tsv and upload to bucket
     output_filename = "dcf_index_" + study_accession + "_" + current_time + ".tsv"
     combined_df.to_csv(output_filename, sep="\t", index=False)
-    logger.info()
+    logger.info(f"writing dcf index manifest to file {output_filename}")
     del combined_df
 
     return output_filename, log_name
