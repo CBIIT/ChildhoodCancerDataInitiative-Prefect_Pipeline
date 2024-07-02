@@ -28,6 +28,7 @@ from botocore.exceptions import ClientError
 from prefect_github import GitHubCredentials
 import hashlib
 from urllib.parse import urlparse
+from shutil import copy2
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -1173,7 +1174,7 @@ def extract_dcf_index_single_sheet(
     # if the sheet_df is empty
     if sheet_df.empty:
         return_dict = {
-            "GUID": [],
+            "guid": [],
             "md5": [],
             "urls": [],
             "size": [],
@@ -1236,7 +1237,7 @@ def extract_dcf_index_single_sheet(
         ]
         subset_sheet_df = subset_sheet_df.rename(
             columns={
-                "dcf_indexd_guid": "GUID",
+                "dcf_indexd_guid": "guid",
                 "md5sum": "md5",
                 "file_url_in_cds": "urls",
                 "file_size": "size",
@@ -1267,7 +1268,7 @@ def extract_dcf_index(
 @task(name="Combine dcf index dicts")
 def combine_dcf_dicts(list_dicts: list[dict]) -> dict:
     combined_dict = {
-        "GUID": [],
+        "guid": [],
         "md5": [],
         "urls": [],
         "size": [],
@@ -1279,3 +1280,75 @@ def combine_dcf_dicts(list_dicts: list[dict]) -> dict:
             key: value + i_dict[key] for key, value in combined_dict.items()
         }
     return combined_dict
+
+
+@flow(name="ccdi to dcf index module", log_prints=True)
+def ccdi_to_dcf_index(ccdi_manifest: str) -> tuple:
+    """This flow serves as a component in ccdi data curation pipe
+    that extract information from data file nodes in ccdi manifest and
+    generates a dcf index manifest
+    """
+    current_time = get_time()
+
+    manifest_obj =  CheckCCDI(ccdi_manifest=ccdi_manifest)
+    manifest_name =  os.path.basename(ccdi_manifest)
+    logger = get_logger(loggername="CCDI_to_DCF_Index", log_level="info")
+    log_name = "CCDI_to_DCF_Index_" + get_date() + ".log"
+
+    # extract study accession of the manifest
+    study_accession = manifest_obj.get_study_id()
+    acl = f"['{study_accession}']"
+    authz = f"['/programs/{study_accession}']"
+    logger.info(f"Study accesion: {study_accession}")
+
+    # copy the manifest and rename for potential new guids assigned
+    # no guid will be generated in this case because the input for this workflow
+    # would be catcherr file
+    modified_manifest_file = (
+        manifest_name.rsplit(".", 1)[0] + "_GUIDadded" + get_date() + ".xlsx"
+    )
+    copy2(src=ccdi_manifest, dst=modified_manifest_file)
+
+    # find the data file sheets/nodes
+    obj_sheets = manifest_obj.find_file_nodes()
+    logger.info(f"Sheets of data files: {*obj_sheets,}")
+
+    # extract columns related to dcf indexing
+    logger.info("Extracting columns for DCF indexing")
+    list_dicts = extract_dcf_index(
+        CCDI_manifest=manifest_obj,
+        sheetname_list=obj_sheets,
+        modified_manifest=modified_manifest_file,
+    )
+
+    # combined these dicts into a single dict
+    combined_dict = combine_dcf_dicts(list_dicts=list_dicts)
+    del list_dicts
+
+    # Convert combined_dict into a dataframe
+    combined_df = pd.DataFrame(combined_dict)
+    del combined_dict
+    logger.info(
+        f"Number of objects in total before duplcates removed: {combined_df.shape[0]}"
+    )
+    combined_df.drop_duplicates(inplace=True, ignore_index=True)
+    logger.info(
+        f"Number of objects in total after removing duplicates: {combined_df.shape[0]}"
+    )
+
+    # add acl and authz, phs_accession
+    # finish up with the dcf index df
+    combined_df.drop(columns=["node", "if_guid_missing"], inplace=True)
+    combined_df["acl"] = acl
+    combined_df["authz"] = authz
+    combined_df["phs_accession"] = study_accession
+    col_order = ["guid", "md5", "size", "acl", "authz", "urls", "phs_accession"]
+    combined_df = combined_df[col_order]
+
+    # save df to tsv and upload to bucket
+    output_filename = "dcf_index_" + study_accession + "_" + current_time + ".tsv"
+    combined_df.to_csv(output_filename, sep="\t", index=False)
+    logger.info()
+    del combined_df
+
+    return output_filename, log_name
