@@ -172,7 +172,7 @@ def populate_exampler(
     for node in populated_dfs.items():
         node_df =  populated_dfs[node]
         if 'acl' in node_df.columns:
-            node_df['acl'] =  "['" + study_df["acl"].astype(str) + "']"
+            node_df['acl'] =  "['" + node_df["acl"].astype(str) + "']"
             populated_dfs[node] = node_df
 
     return populated_dfs
