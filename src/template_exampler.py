@@ -168,11 +168,11 @@ def populate_exampler(
     # 3 entries for publication
     populated_dfs["publication"] = populated_dfs["publication"].head(3)
 
-    # fix acl value in study node, adding [ and ]
-    for node in populated_dfs.items():
+    # fix acl value in file nodes, adding [ and ]
+    for node in populated_dfs.keys():
         node_df =  populated_dfs[node]
         if 'acl' in node_df.columns:
-            node_df['acl'] =  "['" + study_df["acl"].astype(str) + "']"
+            node_df['acl'] =  "['" + node_df["acl"].astype(str) + "']"
             populated_dfs[node] = node_df
 
     return populated_dfs
