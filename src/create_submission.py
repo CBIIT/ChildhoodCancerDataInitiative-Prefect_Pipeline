@@ -497,8 +497,8 @@ class ManifestSheet():
         # format required and nonrequired property cell
         row_number = 1
         for row in dataframe_to_rows(dict_df, index=False, header=True):
-            # if prop is id, file_url_in_cds or dcf_indexd_guid
-            if row[0] in ["id", "file_url_in_cds", "dcf_indexd_guid"]:
+            # if prop is id, file_url, dcf_indexd_guid, authz, or acl
+            if row[0] in ["id", "file_url", "dcf_indexd_guid", "authz", "acl"]:
                 sheet_dictionary["A" + str(row_number)].font = (
                     ManifestStyle.meta_index_font
                 )
@@ -763,7 +763,7 @@ class ManifestSheet():
                 logger=logger,
             )
             if if_h_prop_req:
-                if h_prop in ["file_url_in_cds", "dcf_indexd_guid"]:
+                if h_prop in ["file_url", "dcf_indexd_guid", "authz", "acl"]:
                     ws_node[cell_h_col].fill = ManifestStyle.meta_index_pattern
                     ws_node[cell_h_col].font = ManifestStyle.meta_index_font
                 else:
