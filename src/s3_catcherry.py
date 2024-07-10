@@ -418,7 +418,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 authz_value = f"['/programs/{dbgap_accession}']"
 
                 # for each row, determine if the ACL is properly formed and fix otherwise
-                for index, row in df.itterows():
+                for index, row in df.iterrows():
                     file_access_value = df.at[index, "file_access"]
 
                     if file_access_value == "Open":
