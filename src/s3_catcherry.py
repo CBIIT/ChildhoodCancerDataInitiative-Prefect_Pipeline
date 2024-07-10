@@ -436,6 +436,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         )
 
                 meta_dfs[node] = df
+        
+        print(
+            "\nFile access checks and value creation complete.\n",
+            file=outf,
+        )
 
         ##############
         #
