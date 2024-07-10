@@ -376,22 +376,20 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         non_html_array = "|".join(non_html_array)
 
         for node in dict_nodes:
-            # for a column called file_url_in_cds
-            if "file_url_in_cds" in meta_dfs[node].columns:
+            # for a column called file_url
+            if "file_url" in meta_dfs[node].columns:
                 df = meta_dfs[node]
                 # check for any of the values in the array
-                if df["file_url_in_cds"].str.contains(non_html_array).any():
+                if df["file_url"].str.contains(non_html_array).any():
                     # only if they have an issue, then print out the node.
                     print(f"\n{node}\n----------", file=outf)
-                    rows = np.where(df["file_url_in_cds"].str.contains(non_html_array))[
-                        0
-                    ]
+                    rows = np.where(df["file_url"].str.contains(non_html_array))[0]
                     for i in range(0, len(rows)):
                         print(
                             f"\tWARNING: The url contained a non-HTML encoded character on row and was fixed: {rows[i]+1}\n",
                             file=outf,
                         )
-                df["file_url_in_cds"] = df["file_url_in_cds"].map(
+                df["file_url"] = df["file_url"].map(
                     lambda x: (
                         x.replace(" ", "%20").replace(",", "%2C").replace("#", "%23")
                         if isinstance(x, str)
@@ -402,60 +400,42 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
-        # ACL pattern check
+        # File_access check and ACL/authz creation
         #
         ##############
 
         print(
-            "\nThe value for ACL will be check to determine it follows the required structure, ['.*'].\n----------",
+            "\nThe following section will check the file_access values, and create derived values for acl and authz.\n----------",
             file=outf,
         )
 
         # check each node to find the acl property (it has been in study and study_admin)
         for node in dict_nodes:
-            if "acl" in meta_dfs[node].columns:
+            if "file_access" in meta_dfs[node].columns:
                 df = meta_dfs[node]
-                acl_value = df["acl"]
+                dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
+                acl_value = f"['{dbgap_accession}']"
+                authz_value = f"['/programs/{dbgap_accession}']"
 
-        # if there is more than one value
-        if len(acl_value) > 1:
-            print(
-                f"\tERROR: There is more than one ACL associated with this study and workbook. Please only submit one ACL and corresponding data to a workbook.\n",
-                file=outf,
-            )
-        # if there is only one value
-        elif len(acl_value) == 1:
-            acl_value = acl_value[0]
-            # if it is NA
-            if pd.isna(acl_value):
-                print(
-                    f"\tERROR: Please submit an ACL value to the 'acl' property in the {node} node.\n",
-                    file=outf,
-                )
-            # if it is not NA
-            elif not pd.isna(acl_value):
-                acl_test = acl_value.startswith("['") and acl_value.endswith("']")
-                # if it is properly formed
-                if acl_test:
-                    print(
-                        f"\tThe ACL found in the {node} node, matches the required structure: {acl_value}",
-                        file=outf,
-                    )
-                # otherwise fix it
-                else:
-                    acl_fix = f"['{acl_value}']"
-                    df["acl"] = acl_fix
-                    print(
-                        f"\tThe ACL found in the {node} node, does not match the required structure, it will be changed:",
-                        file=outf,
-                    )
-                    print(f"\t\t{acl_value} ---> {acl_fix}", file=outf)
-        # catch-all, something is very wrong
-        else:
-            print(
-                f"\tERROR: Something is wrong with the ACL value submitted in the {node} node.\n",
-                file=outf,
-            )
+                # for each row, determine if the ACL is properly formed and fix otherwise
+                for index, row in df.itterows():
+                    file_access_value = df.at[index, "file_access"]
+
+                    if file_access_value == "Open":
+                        df.at[index, "acl"] = "['*']"
+                        df.at[index, "authz"] = "['/open']"
+
+                    elif file_access_value == "Controlled":
+                        df.at[index, "acl"] = acl_value
+                        df.at[index, "authz"] = authz_value
+
+                    else:
+                        print(
+                            f"\tERROR: The value for file_access is missing for {node} node at row {index +1}.\n",
+                            file=outf,
+                        )
+
+                meta_dfs[node] = df
 
         ##############
         #
@@ -464,20 +444,20 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         ##############
 
         print(
-            "\nCheck the following url columns (file_url_in_cds), to make sure the full file url is present and fix entries that are not:\n----------\n\nWARNING: If you are seeing a large number of 'ERROR: There is an unresolvable issue...', it is likely there are two or more buckets and this is the script trying and failing at checks against the other bucket for the file.",
+            "\nCheck the following url columns (file_url), to make sure the full file url is present and fix entries that are not:\n----------\n\nWARNING: If you are seeing a large number of 'ERROR: There is an unresolvable issue...', it is likely there are two or more buckets and this is the script trying and failing at checks against the other bucket for the file.",
             file=outf,
         )
 
         # check each node
         for node in dict_nodes:
-            # for a column called file_url_in_cds
-            if "file_url_in_cds" in meta_dfs[node].columns:
+            # for a column called file_url
+            if "file_url" in meta_dfs[node].columns:
                 df = meta_dfs[node]
 
                 # revert HTML code changes that might exist so that it can be handled with correct AWS calls
                 # this is then reverted after this section, which allows for this check to be made multiple times against the same file.
 
-                df["file_url_in_cds"] = df["file_url_in_cds"].map(
+                df["file_url"] = df["file_url"].map(
                     lambda x: (
                         x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
                         if isinstance(x, str)
@@ -489,16 +469,16 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
                 # discover all possible base bucket urls in the file node
 
-                node_all_urls = df["file_url_in_cds"].dropna()
+                node_all_urls = df["file_url"].dropna()
                 node_urls = pd.DataFrame(node_all_urls)
 
-                node_urls["bucket"] = node_urls["file_url_in_cds"].apply(
+                node_urls["bucket"] = node_urls["file_url"].apply(
                     lambda x: x.split("/")[2]
                 )
 
                 node_urls = node_urls["bucket"].unique().tolist()
 
-                # for each possible bucket based on the base urls in file_url_in_cds
+                # for each possible bucket based on the base urls in file_url
                 # go through and see if the values for the url can be filled in based on file_name and size
                 if len(node_urls) > 0:
                     for node_url in node_urls:
@@ -552,7 +532,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     )
 
                     # find bad url locs based on the full file path and whether it can be found in the url bucket manifest.
-                    bad_url_locs = df["file_url_in_cds"].isin(df_bucket["file_path"])
+                    bad_url_locs = df["file_url"].isin(df_bucket["file_path"])
 
                     # Go through each bad location and determine if the correct url location can be determined on file_name and file_size.
                     for loc in range(len(bad_url_locs)):
@@ -577,13 +557,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     file=outf,
                                 )
                                 print(
-                                    f"\t\t{df['file_url_in_cds'][loc]} ---> {filtered_df['file_path'].values[0]}",
+                                    f"\t\t{df['file_url'][loc]} ---> {filtered_df['file_path'].values[0]}",
                                     file=outf,
                                 )
 
-                                df["file_url_in_cds"][loc] = filtered_df[
-                                    "file_path"
-                                ].values[0]
+                                df["file_url"][loc] = filtered_df["file_path"].values[0]
 
                             else:
                                 print(
@@ -607,11 +585,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         ##############
 
         for node in dict_nodes:
-            # for a column called file_url_in_cds
-            if "file_url_in_cds" in meta_dfs[node].columns:
+            # for a column called file_url
+            if "file_url" in meta_dfs[node].columns:
                 df = meta_dfs[node]
                 # check for any of the values in the array and make changes.
-                df["file_url_in_cds"] = df["file_url_in_cds"].map(
+                df["file_url"] = df["file_url"].map(
                     lambda x: (
                         x.replace(" ", "%20").replace(",", "%2C").replace("#", "%23")
                         if isinstance(x, str)
@@ -632,8 +610,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         # check each node
         for node in dict_nodes:
-            # if file_url_in_cds exists in the node
-            if "file_url_in_cds" in meta_dfs[node].columns:
+            # if file_url exists in the node
+            if "file_url" in meta_dfs[node].columns:
                 df = meta_dfs[node]
                 # identify posistions without guids
                 no_guids = df["dcf_indexd_guid"].isna()
@@ -641,20 +619,20 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     # apply guids to files that don't have guids
                     new_guids = (
                         df[no_guids]
-                        .groupby(["file_url_in_cds", "md5sum"])
+                        .groupby(["file_url", "md5sum"])
                         .apply(lambda x: "dg.4DFC/" + str(uuid.uuid4()))
                         .reset_index()
                         .rename(columns={0: "dcf_indexd_guid"})
                     )
                     # merge the new UUIDs back into the original dataframe but not via merge as it replaces one version over another
                     for row in range(0, len(new_guids)):
-                        fuic_value = new_guids.loc[row].file_url_in_cds
+                        fuic_value = new_guids.loc[row].file_url
                         md5_value = new_guids.loc[row].md5sum
                         dig_value = new_guids.loc[row].dcf_indexd_guid
 
                         # locate the row position via file_url and md5sum values and then apply the guid
                         df.loc[
-                            (df["file_url_in_cds"] == fuic_value)
+                            (df["file_url"] == fuic_value)
                             & (df["md5sum"] == md5_value),
                             "dcf_indexd_guid",
                         ] = dig_value
