@@ -7,7 +7,7 @@ import numpy as np
 import warnings
 import re
 from src.utils import set_s3_session_client, get_time, get_date, CheckCCDI
-from src.file_mover import parse_file_url_in_cds
+from src.file_mover import parse_file_url
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
 from typing import TypeVar
@@ -814,7 +814,7 @@ def extract_object_file_meta(nodes_list: list[str], file_object):
         "file_name",
         "file_size",
         "md5sum",
-        "file_url_in_cds",
+        "file_url",
         "node",
     ]
     df_file = pd.DataFrame(columns=file_node_props)
@@ -823,7 +823,7 @@ def extract_object_file_meta(nodes_list: list[str], file_object):
         node_df["node"] = node
         node_df["file_id"] = node_df[f"{node}_id"]
         df_file = pd.concat([df_file, node_df[file_node_props]], ignore_index=True)
-    df_file["file_url_in_cds"] = df_file["file_url_in_cds"].map(
+    df_file["file_url"] = df_file["file_url"].map(
         lambda x: (
             x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
             if isinstance(x, str)
@@ -893,10 +893,10 @@ def check_file_md5sum_regex(file_df: DataFrame) -> str:
 
 
 def check_file_basename(file_df: DataFrame) -> str:
-    """Checks if the file_name value matches to the basename of file_url_in_cds"""
+    """Checks if the file_name value matches to the basename of file_url"""
     WARN_FLAG = True
     print_str = ""
-    url_list = file_df["file_url_in_cds"].tolist()
+    url_list = file_df["file_url"].tolist()
     file_df["url_basename"] = [os.path.split(os.path.relpath(i))[1] for i in url_list]
     filename_not_match = file_df[
         np.logical_not(file_df["file_name"] == file_df["url_basename"])
@@ -908,9 +908,9 @@ def check_file_basename(file_df: DataFrame) -> str:
                 print_str
                 + f"\tWARNING: There are files that have a file_name that does not match the file name in the url:\n"
             )
-            print_df = filename_not_match[["node", "file_name", "file_url_in_cds"]]
+            print_df = filename_not_match[["node", "file_name", "file_url"]]
             print_df["file_name"] = print_df["file_name"].str.wrap(40)
-            print_df["file_url_in_cds"] = print_df["file_url_in_cds"].str.wrap(40)
+            print_df["file_url"] = print_df["file_url"].str.wrap(40)
             print_str = (
                 print_str
                 + "\n\t"
@@ -923,13 +923,13 @@ def check_file_basename(file_df: DataFrame) -> str:
             pass
     else:
         print_str = (
-            print_str + "\tINFO: all file names were found in their file_url_in_cds.\n"
+            print_str + "\tINFO: all file names were found in their file_url.\n"
         )
     return print_str
 
 
 def count_buckets(df_file: DataFrame) -> list:
-    df_file["bucket"] = df_file["file_url_in_cds"].str.split("/").str[2]
+    df_file["bucket"] = df_file["file_url"].str.split("/").str[2]
     bucket_list = list(set(df_file["bucket"].values.tolist()))
     return bucket_list
 
@@ -964,7 +964,7 @@ def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client) -> bool:
     """Checks if an obj exists in AWS by using a s3 uri
     Returns (True, {file size}) if exist, or (False, np.nan) if not exist
     """
-    obj_bucket, obj_key = parse_file_url_in_cds(url=s3_uri)
+    obj_bucket, obj_key = parse_file_url(url=s3_uri)
     try:
         object_meta = s3_client.head_object(Bucket=obj_bucket, Key=obj_key)
         object_size = object_meta["ContentLength"]
@@ -982,7 +982,7 @@ def validate_bucket_objs_in_manifest(
     df_file = extract_object_file_meta(
         nodes_list=file_node_list, file_object=file_object
     )
-    df_file_urls = df_file["file_url_in_cds"].tolist()
+    df_file_urls = df_file["file_url"].tolist()
     del df_file
     s3_client = set_s3_session_client()
     # create a paginator to itterate through each 1000 objs
@@ -1016,12 +1016,12 @@ def validate_objs_loc_size(
     df_file = extract_object_file_meta(
         nodes_list=file_node_list, file_object=file_object
     )
-    df_file["if_bucket_readable"] = df_file["file_url_in_cds"].apply(
-        lambda x: True if parse_file_url_in_cds(x)[0] in readable_bucket_list else False
+    df_file["if_bucket_readable"] = df_file["file_url"].apply(
+        lambda x: True if parse_file_url(x)[0] in readable_bucket_list else False
     )
     # extract a list of url with readable bucket list only
     uri_list = df_file.loc[
-        df_file["if_bucket_readable"] == True, "file_url_in_cds"
+        df_file["if_bucket_readable"] == True, "file_url"
     ].tolist()
     if_exist = []
     bucket_obj_size = []
@@ -1069,7 +1069,7 @@ def validate_file_metadata(
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    file_nodes = dict_df[dict_df["Property"] == "file_url_in_cds"][
+    file_nodes = dict_df[dict_df["Property"] == "file_url"][
         "Node"
     ].values.tolist()
     file_nodes_to_check = [i for i in node_list if i in file_nodes]
@@ -1110,7 +1110,7 @@ def validate_bucket_content(
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    file_nodes = dict_df[dict_df["Property"] == "file_url_in_cds"][
+    file_nodes = dict_df[dict_df["Property"] == "file_url"][
         "Node"
     ].values.tolist()
     file_nodes_to_check = [i for i in node_list if i in file_nodes]

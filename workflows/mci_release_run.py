@@ -12,7 +12,7 @@ from src.mci_monthly_release import (
     MCIInputDescriptionMD,
 )
 from src.utils import file_dl, CCDI_Tags, get_time, file_ul, get_date
-from src.file_mover import parse_file_url_in_cds
+from src.file_mover import parse_file_url
 from src.submission_cruncher import concatenate_submissions
 
 
@@ -26,7 +26,7 @@ def mci_release_manifest(
 ):
     logger = get_run_logger()
 
-    manifest_bucket, manifest_folder = parse_file_url_in_cds(
+    manifest_bucket, manifest_folder = parse_file_url(
         url=mci_manifests_bucket_path
     )
     logger.info(

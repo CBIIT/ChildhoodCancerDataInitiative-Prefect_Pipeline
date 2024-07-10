@@ -99,7 +99,7 @@ def concat_seq_single_seq(seq_df: DataFrame, single_df: DataFrame) -> DataFrame:
         "number_of_reads",
         "coverage",
         "avg_read_length",
-        "file_url_in_cds",
+        "file_url",
     ]
     seq_df_subset = seq_df[cols_to_keep]
     single_df_subset = single_df[cols_to_keep]
@@ -151,7 +151,7 @@ def trim_seq_df(seq_df: DataFrame) -> DataFrame:
         "number_of_reads",
         "coverage",
         "avg_read_length",
-        "file_url_in_cds",
+        "file_url",
     ]
     seq_df_subset = seq_df[cols_to_keep]
     seq_df_subset["sample_ID"] = seq_df_subset["sample.sample_id"]
@@ -213,7 +213,7 @@ def sra_match_manifest_seq(
     sra_seq_df["coverage"] = manifest_seq_df["coverage"]
     sra_seq_df["AvgReadLength"] = manifest_seq_df["avg_read_length"]
     sra_seq_df["active_location_URL"] = [
-        os.path.dirname(i) + "/" for i in manifest_seq_df["file_url_in_cds"].tolist()
+        os.path.dirname(i) + "/" for i in manifest_seq_df["file_url"].tolist()
     ]
     return sra_seq_df
 

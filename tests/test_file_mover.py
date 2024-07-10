@@ -8,7 +8,7 @@ from unittest.mock import MagicMock
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.file_mover import (
-    parse_file_url_in_cds,
+    parse_file_url,
     dest_object_url,
     compare_md5sum_task,
     copy_object_parameter,
@@ -17,8 +17,8 @@ from src.file_mover import (
 
 
 def test_parse_url():
-    """test for parse_file_url_in_cds()"""
-    bucket_name, object_key = parse_file_url_in_cds(
+    """test for parse_file_url()"""
+    bucket_name, object_key = parse_file_url(
         "s3://mytest-bucket/folder_1/folder2/test_object.fastq"
     )
     assert bucket_name == "mytest-bucket"

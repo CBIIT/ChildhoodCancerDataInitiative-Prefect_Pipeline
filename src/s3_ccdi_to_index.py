@@ -250,8 +250,8 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
                 node_df.drop(columns=[col_x, col_y], inplace=True)
 
         # clean up the data frame, drop empty columns, rows that don't have files, reset index and remove duplicates.
-        if "file_url_in_cds" in node_df.columns:
-            node_df = node_df.dropna(subset=["file_url_in_cds"])
+        if "file_url" in node_df.columns:
+            node_df = node_df.dropna(subset=["file_url"])
         node_df = node_df.dropna(axis=1, how="all")
         node_df = node_df.reset_index(drop=True)
         node_df = node_df.drop_duplicates()
@@ -750,7 +750,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
         authz = "['/programs/" + authz[2:]
         index_df["authz"] = authz
 
-    simple_add("url", "file_url_in_cds")
+    simple_add("url", "file_url")
 
     # add information for CGC
     # study information
@@ -793,7 +793,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     simple_add("file_type", "file_type")
     simple_add("file_size", "file_size")
     simple_add("md5sum", "md5sum")
-    simple_add("file_url_in_cds", "file_url_in_cds")
+    simple_add("file_url_in_cds", "file_url")
 
     # library information
     simple_add("library_id", "library_id")
@@ -837,7 +837,7 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     simple_add("tumor_stage_clinical_m", "tumor_stage_clinical_m")
 
     # Remove any rows where there is not a file associated with the entry
-    index_df = index_df.dropna(subset=["file_url_in_cds"])
+    index_df = index_df.dropna(subset=["file_url"])
 
     index_df = index_df.drop_duplicates()
 
@@ -878,13 +878,13 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     ##############
 
     # Quick stats to check the conversion, make sure things are working as we think they should be.
-    file_total = len(df_file.loc[:, ["md5sum", "file_name", "file_url_in_cds"]])
+    file_total = len(df_file.loc[:, ["md5sum", "file_name", "file_url"]])
 
     file_expected = len(
-        df_file.loc[:, ["md5sum", "file_name", "file_url_in_cds"]].drop_duplicates()
+        df_file.loc[:, ["md5sum", "file_name", "file_url"]].drop_duplicates()
     )
     file_returned = len(
-        index_df.loc[:, ["md5sum", "file_name", "file_url_in_cds"]].drop_duplicates()
+        index_df.loc[:, ["md5sum", "file_name", "file_url"]].drop_duplicates()
     )
     logger.info(
         f"For the following conversion:\n\tUnique files expected: {file_expected}\n\tUnique files returned: {file_returned}"

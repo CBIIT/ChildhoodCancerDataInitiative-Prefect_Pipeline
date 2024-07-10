@@ -66,7 +66,7 @@ def fake_sheet_df():
                 "dg.4DFC/guid2",
                 "dg.4DFC/guid3",
             ],
-            "file_url_in_cds": [
+            "file_url": [
                 "s3://some-bucket/testfolder/file1.tsv",
                 "s3://some-bucket/testfolder/file2.tsv",
                 "s3://some-bucket/testfolder/file3.tsv",
@@ -84,7 +84,7 @@ def empty_sheet_df():
             "file_size": [np.nan],
             "md5sum": [np.nan],
             "dcf_indexd_guid": [np.nan],
-            "file_url_in_cds": [np.nan],
+            "file_url": [np.nan],
         }
     )
     return return_df
