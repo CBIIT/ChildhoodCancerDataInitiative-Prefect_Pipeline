@@ -995,7 +995,7 @@ class CheckCCDI:
 
     def find_file_nodes(self):
         dict_df = self.get_dict_df()
-        file_node_list = dict_df[dict_df["Property"] == "file_url_in_cds"][
+        file_node_list = dict_df[dict_df["Property"] == "file_url"][
             "Node"
         ].tolist()
         # remove any duplcates
@@ -1039,7 +1039,7 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
     return chunks
 
 
-def parse_file_url_in_cds(url: str) -> tuple:
+def parse_file_url(url: str) -> tuple:
     parsed_url = urlparse(url)
     bucket_name = parsed_url.netloc
     object_key = parsed_url.path
@@ -1062,7 +1062,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
     # specify a chunk size to get object
     chunk_size = 536870912
     # get object size
-    bucket_name, object_key = parse_file_url_in_cds(url)
+    bucket_name, object_key = parse_file_url(url)
     object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
         "ContentLength"
     ]
@@ -1116,7 +1116,7 @@ def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
 )
 def calculate_single_size_task(s3uri: str, s3_client) -> str:
     try:
-        bucket_name, object_key = parse_file_url_in_cds(s3uri)
+        bucket_name, object_key = parse_file_url(s3uri)
         object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
             "ContentLength"
         ]
@@ -1161,7 +1161,7 @@ def extract_dcf_index_single_sheet(
 ) -> dict:
     """Extracts columns for dcf indexing of a single sheet
 
-    columns: ["file_size", "md5sum", "file_url_in_cds", "dcf_indexd_guid"]
+    columns: ["file_size", "md5sum", "file_url", "dcf_indexd_guid"]
     The task returns a dictionary of lists
     """
     logger.info(f"Reading sheet {sheetname}")
@@ -1193,10 +1193,10 @@ def extract_dcf_index_single_sheet(
 
         # if there is a missing value in col "dcf_indexd_guid"
         if sum(sheet_df["if_guid_missing"]) > 0:
-            # new guid df has three columns, "md5sum","file_url_in_cds","new_guid"
+            # new guid df has three columns, "md5sum","file_url","new_guid"
             new_guid_df = (
                 sheet_df[sheet_df["dcf_indexd_guid"].isna()] # subset only rows with missing guid
-                .groupby(["md5sum", "file_url_in_cds"]).apply(lambda x: "dg.4DFC/" + str(uuid.uuid4()))
+                .groupby(["md5sum", "file_url"]).apply(lambda x: "dg.4DFC/" + str(uuid.uuid4()))
                 .reset_index()
                 .rename(columns={0: "new_guid"})
             )
@@ -1204,13 +1204,13 @@ def extract_dcf_index_single_sheet(
             print(new_guid_df)
             for i in range(new_guid_df.shape[0]):
                 i_md5 = new_guid_df.loc[i, "md5sum"]
-                i_url = new_guid_df.loc[i, "file_url_in_cds"]
+                i_url = new_guid_df.loc[i, "file_url"]
                 i_new_guid = new_guid_df.loc[i, "new_guid"]
 
                 # assign new guid value back to sheet_df
                 sheet_df.loc[
                     (sheet_df["md5sum"] == i_md5)
-                    & (sheet_df["file_url_in_cds"] == i_url),
+                    & (sheet_df["file_url"] == i_url),
                     "dcf_indexd_guid",
                 ] = i_new_guid
             del new_guid_df
@@ -1229,7 +1229,7 @@ def extract_dcf_index_single_sheet(
             [
                 "dcf_indexd_guid",
                 "md5sum",
-                "file_url_in_cds",
+                "file_url",
                 "file_size",
                 "type",
                 "if_guid_missing",
@@ -1239,7 +1239,7 @@ def extract_dcf_index_single_sheet(
             columns={
                 "dcf_indexd_guid": "guid",
                 "md5sum": "md5",
-                "file_url_in_cds": "urls",
+                "file_url": "urls",
                 "file_size": "size",
                 "type": "node",
             }

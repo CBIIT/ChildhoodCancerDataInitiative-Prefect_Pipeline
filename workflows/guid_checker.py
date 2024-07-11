@@ -30,7 +30,7 @@ def pull_guids(row):
     hash_value = row["md5sum"]
     size = row["file_size"]
     guid = row["dcf_indexd_guid"]
-    file_url = row["file_url_in_cds"]
+    file_url = row["file_url"]
     file_name = os.path.basename(file_url)
     file_path = os.path.dirname(file_url)
 
@@ -170,7 +170,7 @@ def guid_checker(file_path: str):  # removed profile
     guidcheck_logger.info("Calling Indexd API")
 
     for node in dict_nodes:
-        if "file_url_in_cds" in meta_dfs[node].columns:
+        if "file_url" in meta_dfs[node].columns:
             guidcheck_logger.info(f"Checking {node}.")
             df = meta_dfs[node]
 

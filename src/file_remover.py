@@ -1,7 +1,7 @@
 from prefect import flow, task, get_run_logger
 from src.utils import set_s3_session_client
 from src.read_buckets import paginate_parameter
-from src.file_mover import parse_file_url_in_cds
+from src.file_mover import parse_file_url
 from botocore.exceptions import ClientError
 from dataclasses import dataclass
 from prefect.input import RunInput
@@ -276,7 +276,7 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
 )
 def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
     """Delete a single s3 uri"""
-    bucket_name, object_key = parse_file_url_in_cds(url=object_uri)
+    bucket_name, object_key = parse_file_url(url=object_uri)
     try:
         # check if the object exist before deletion.
         # if not found, return status "not found"

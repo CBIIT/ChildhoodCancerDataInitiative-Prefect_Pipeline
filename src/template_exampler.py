@@ -81,9 +81,9 @@ def populate_exampler(
                 j_populated_df[m] = [
                     fake_data_generater.get_fake_md5sum() for k in range(entry_count)
                 ]
-            elif m == "file_url_in_cds":
+            elif m == "file_url":
                 j_populated_df[m] = [
-                    fake_data_generater.get_fake_file_url_in_cds(
+                    fake_data_generater.get_fake_file_url(
                         random_words=filter_words
                     )
                     for k in range(entry_count)
@@ -244,7 +244,7 @@ class GetFakeValue:
         two_random_words.append(str(one_random_int))
         return "_".join(two_random_words)
 
-    def get_fake_file_url_in_cds(self, random_words):
+    def get_fake_file_url(self, random_words):
         """Generate fake s3 file url"""
         fake_str = self.get_fake_str(random_words=random_words)
         fake_url = "s3://" + fake_str

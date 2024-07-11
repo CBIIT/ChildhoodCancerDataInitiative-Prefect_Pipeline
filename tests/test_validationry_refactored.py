@@ -345,7 +345,7 @@ def test_count_buckets():
     test_df = pd.DataFrame(
         {
             "type": ["test_type"] * 4,
-            "file_url_in_cds": [
+            "file_url": [
                 "s3://bucket1/folder/file1",
                 "s3://bucket1/folder/file2",
                 "s3://bucket2/folder/file1",

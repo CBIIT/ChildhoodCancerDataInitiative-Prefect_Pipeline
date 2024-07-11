@@ -289,8 +289,8 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
                 node_df[col_base] = node_df[col_x].combine_first(node_df[col_y])
                 node_df.drop(columns=[col_x, col_y], inplace=True)
         # clean up the data frame, drop empty columns, rows that don't have files, reset index and remove duplicates.
-        if "file_url_in_cds" in node_df.columns:
-            node_df = node_df.dropna(subset=["file_url_in_cds"])
+        if "file_url" in node_df.columns:
+            node_df = node_df.dropna(subset=["file_url"])
         node_df = node_df.dropna(axis=1, how="all").reset_index(drop=True)
         # node_df = node_df.reset_index(drop=True)
         node_df = node_df.drop_duplicates()
@@ -961,7 +961,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     simple_add("file_name", "file_name")
     simple_add("file_size", "file_size")
     simple_add("file_type", "file_type")
-    simple_add("file_url_in_cds", "file_url_in_cds")
+    simple_add("file_url_in_cds", "file_url")
     simple_add("instrument_model", "instrument_model")
     simple_add("library_id", "library_id")
     simple_add("library_layout", "library_layout")
@@ -1010,7 +1010,7 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
     # simple_add('age_at_diagnosis','age_at_diagnosis')
 
     # Remove any rows where there is not a file associated with the entry
-    cds_df = cds_df.dropna(subset=["file_url_in_cds"])
+    cds_df = cds_df.dropna(subset=["file_url"])
 
     # Minor fix, if sample_id has no value, then sample_type/sample_anatomic_site should not have a value.
     cds_df.loc[cds_df["sample_id"].isnull(), "sample_type"] = None
@@ -1029,10 +1029,10 @@ def CCDI_to_CDS(manifest_path: str) -> tuple:
 
     # Quick stats to check the conversion, make sure things are working as we think they should be.
     file_expected = len(
-        df_file.loc[:, ["md5sum", "file_name", "file_url_in_cds"]].drop_duplicates()
+        df_file.loc[:, ["md5sum", "file_name", "file_url"]].drop_duplicates()
     )
     file_returned = len(
-        cds_df.loc[:, ["md5sum", "file_name", "file_url_in_cds"]].drop_duplicates()
+        cds_df.loc[:, ["md5sum", "file_name", "file_url"]].drop_duplicates()
     )
 
     logger.info(

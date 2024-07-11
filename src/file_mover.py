@@ -27,7 +27,7 @@ from typing import TypeVar
 DataFrame = TypeVar("DataFrame")
 
 
-def parse_file_url_in_cds(url: str) -> tuple:
+def parse_file_url(url: str) -> tuple:
     """Parse an s3 uri into bucket name and key"""
     # add s3:// if missing
     if not url.startswith("s3://"):
@@ -55,9 +55,9 @@ def copy_object_parameter(url_in_cds: str, dest_bucket_path: str) -> dict:
         'Bucket': 'my-source-bucket',
         'CopySource': 'ccdi-validation/QL/file2.txt',
         'Key': 'new_release/QL/file2.txt'
-     }
+    }
     """
-    origin_bucket, object_key = parse_file_url_in_cds(url=url_in_cds)
+    origin_bucket, object_key = parse_file_url(url=url_in_cds)
     if "/" not in dest_bucket_path:
         dest_bucket_path = dest_bucket_path + "/"
     else:
@@ -78,7 +78,7 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     Expected Return
     "s3://new-bucket/release5/QL/inputs/file1.txt"
     """
-    orgin_bucket, object_key = parse_file_url_in_cds(url=url_in_cds)
+    orgin_bucket, object_key = parse_file_url(url=url_in_cds)
     dest_url = os.path.join("s3://", dest_bucket_path, object_key)
     return dest_url
 
@@ -377,7 +377,7 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
     flow_run_name="move-manifest-files-" + f"{get_time()}",
 )
 def move_manifest_files(manifest_path: str, dest_bucket_path: str):
-    """Checks file node sheets and replaces the "file_url_in_cds"
+    """Checks file node sheets and replaces the "file_url"
     with a new url in prod bucket
     Returns a new manifest with new
     """
@@ -434,7 +434,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             runner_logger.info(
                 f"Number of file objects in node {node}: {node_df_rmna.shape[0]}"
             )
-            node_file_urls = node_df["file_url_in_cds"].tolist()
+            node_file_urls = node_df["file_url"].tolist()
             new_node_file_urls = [
                 dest_object_url(url_in_cds=i, dest_bucket_path=dest_bucket_path)
                 for i in node_file_urls
@@ -455,7 +455,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             # concatenate node_transfer_df to transfer_df
             transfer_df = pd.concat([transfer_df, node_transfer_df], ignore_index=True)
             # replace the old url with new url in the output
-            node_df["file_url_in_cds"] = new_node_file_urls
+            node_df["file_url"] = new_node_file_urls
             with pd.ExcelWriter(
                 output_name, mode="a", engine="openpyxl", if_sheet_exists="overlay"
             ) as writer:

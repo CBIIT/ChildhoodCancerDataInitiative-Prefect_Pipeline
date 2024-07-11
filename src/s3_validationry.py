@@ -710,7 +710,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
         # Make one large flattened data frame that contains all files from each node. This will make it easier to not only determine errors, but might catch errors that would not be noticed as they dont exist on the same page.
-        file_nodes = dict_df[dict_df["Property"] == "file_url_in_cds"][
+        file_nodes = dict_df[dict_df["Property"] == "file_url"][
             "Node"
         ].values.tolist()
         file_node_props = [
@@ -718,7 +718,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
             "file_name",
             "file_size",
             "md5sum",
-            "file_url_in_cds",
+            "file_url",
             "node",
         ]
         df_file = pd.DataFrame(columns=file_node_props)
@@ -733,7 +733,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                 df_file = pd.concat([df_file, df[file_node_props]], ignore_index=True)
 
         # revert HTML code changes that might exist so that it can be handled with correct AWS calls
-        df_file["file_url_in_cds"] = df_file["file_url_in_cds"].map(
+        df_file["file_url"] = df_file["file_url"].map(
             lambda x: (
                 x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
                 if isinstance(x, str)
@@ -743,7 +743,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
 
         file_ids = df_file["file_id"].dropna().unique().tolist()
         file_names = df_file["file_name"].dropna().unique().tolist()
-        file_urls = df_file["file_url_in_cds"].dropna().unique().tolist()
+        file_urls = df_file["file_url"].dropna().unique().tolist()
 
         ##########################################
         # file metadata checks
@@ -801,7 +801,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
         for file_name in file_names:
             # determine file url
             file_url = df_file[df_file["file_name"] == file_name][
-                "file_url_in_cds"
+                "file_url"
             ].values[0]
             if file_name != os.path.split(os.path.relpath(file_url))[1]:
                 if WARN_FLAG:
@@ -826,7 +826,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
         # for file_name in file_names:
         #     # determine file url
         #     file_url = (
-        #         df_file[df_file["file_name"] == file_name]["file_url_in_cds"]
+        #         df_file[df_file["file_name"] == file_name]["file_url"]
         #         .unique()
         #         .tolist()
         #     )
@@ -846,7 +846,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
         #         # check to see if file_id is unique even if file name isn't
         #         multi_urls = []
         #         for per_file_url in file_url:
-        #             multi_urls = df_file[df_file["file_url_in_cds"] == per_file_url][
+        #             multi_urls = df_file[df_file["file_url"] == per_file_url][
         #                 "file_name"
         #             ].unique().tolist()
         #             print(
@@ -865,7 +865,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
         WARN_FLAG = True
 
         # create bucket column from file data frame
-        df_file["bucket"] = df_file["file_url_in_cds"].str.split("/").str[2]
+        df_file["bucket"] = df_file["file_url"].str.split("/").str[2]
         # print(df_file[df_file.isna().any(axis=1)][["file_name","node","bucket"]].to_markdown())
 
         # return the unique list of buckets
@@ -929,10 +929,10 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                             file=outf,
                         )
 
-                    current_node = df_file[df_file["file_url_in_cds"] == file_url][
+                    current_node = df_file[df_file["file_url"] == file_url][
                         "node"
                     ].values[0]
-                    file_name = df_file[df_file["file_url_in_cds"] == file_url][
+                    file_name = df_file[df_file["file_url"] == file_url][
                         "file_name"
                     ].values[0]
 
@@ -961,7 +961,7 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
             for file_url in file_urls:
                 if file_url in set(df_bucket["url"]):
                     file_size_test = str(
-                        df_file[df_file["file_url_in_cds"] == file_url]["file_size"]
+                        df_file[df_file["file_url"] == file_url]["file_size"]
                         .unique()
                         .tolist()[0]
                     )
@@ -977,10 +977,10 @@ def ValidationRy(file_path: str, template_path: str):  # removed profile
                                 file=outf,
                             )
 
-                        current_node = df_file[df_file["file_url_in_cds"] == file_url][
+                        current_node = df_file[df_file["file_url"] == file_url][
                             "node"
                         ].values[0]
-                        file_name = df_file[df_file["file_url_in_cds"] == file_url][
+                        file_name = df_file[df_file["file_url"] == file_url][
                             "file_name"
                         ].values[0]
 
