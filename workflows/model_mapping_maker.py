@@ -131,8 +131,8 @@ def user_input_location(
     missing_version_col,
     base_mode,
 ):
-    runner_logger=get_run_logger()
-    #looking at the missing values in one column, determine values to map to each node and property.
+    runner_logger = get_run_logger()
+    # looking at the missing values in one column, determine values to map to each node and property.
     df_missing = df[df[missing_property_col].isna()]
     # for each row with missing information in the column of interest
     for index, row in df_missing.iterrows():
@@ -140,7 +140,7 @@ def user_input_location(
             f"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
         )
 
-        #if in base mode, skip inputs and keep it all blank
+        # if in base mode, skip inputs and keep it all blank
         if base_mode:
             user_input_node = ""
             user_input_prop = ""
@@ -161,10 +161,10 @@ def user_input_location(
         if user_input_prop == "":
             user_input_prop = None
 
-        #obtain the model version based on the input missing column
+        # obtain the model version based on the input missing column
         new_model_version = df[missing_version_col].dropna().unique()[0]
 
-        #apply values to the data frame
+        # apply values to the data frame
         df.at[index, missing_node_col] = user_input_node
         df.at[index, missing_property_col] = user_input_prop
         df.at[index, missing_version_col] = new_model_version
@@ -189,7 +189,7 @@ def runner(
     # create a logging object
     runner_logger = get_run_logger()
 
-    #Null out the suggested file path if not overwritten
+    # Null out the suggested file path if not overwritten
     if nodes_mapping_file == "path_to/nodes_file/in/s3_bucket":
         nodes_mapping_file = None
     if relationship_mapping_file == "path_to/nodes_file/in/s3_bucket":
@@ -252,7 +252,7 @@ def runner(
     merged_df_relate = src_dst_to_node_prop(merged_df_relate, "src_old", "dst_old")
     merged_df_relate = src_dst_to_node_prop(merged_df_relate, "src_new", "dst_new")
 
-    #get rid of old columns
+    # get rid of old columns
     merged_df_relate.drop(
         columns=["src_old", "dst_old", "src_new", "dst_new"], inplace=True
     )
@@ -278,11 +278,10 @@ def runner(
     else:
         merged_df = pd.read_csv(nodes_mapping_file, sep="\t")
 
-
     # Create new df based on input for the diffs that were noted.
     new_merged = []
 
-    #for the property node mapping file, clean it up
+    # for the property node mapping file, clean it up
     for index, row in merged_df.iterrows():
         # Add rows where 'node_new' is NA or None
         if pd.isna(row["node_new"]) or row["node_new"] in ["NA", "none"]:
@@ -290,6 +289,7 @@ def runner(
             new_merged.append(new_row)
 
         else:
+            # check for node values that are a list and split them out
             node_values = (
                 row["node_new"].split(";")
                 if ";" in row["node_new"]
@@ -318,37 +318,38 @@ def runner(
     # Do final fixes to remove new mappings that have been accounted for.
     indexes_to_remove = []
     for index, row in new_merged_df.iterrows():
-        #if the old node or property is blank
+        # if the old node or property is blank
         if pd.isna(row["node_old"]) or pd.isna(row["property_old"]):
+            print(row)
+            print(index)
 
-            #look at the new node and property
+            # look at the new node and property
             new_node_value = new_merged_df.at[index, "node_new"]
             new_property_value = new_merged_df.at[index, "property_new"]
 
-            #then create a filter that looks for any other instances where there are duplicates of the new node/property value found in other places.
+            # then create a filter that looks for any other instances where there are duplicates of the new node/property value found in other places.
             mask = (new_merged_df["node_new"] == new_node_value) & (
                 new_merged_df["property_new"] == new_property_value
             )
 
-            #add those indexes of duplicate new node/property values to a list
+            # add those indexes of duplicate new node/property values to a list
             indexes = new_merged_df.index[mask].tolist()
-            #drop the original version
-            indexes.remove(index)
 
             # If other instances exist for this, see if there is a conversion from an older version
             # If there is, then remove this blanked version for the new node and property.
-            if len(indexes) > 0:
+            if len(indexes) > 1:
                 for other_index in indexes:
                     other_row = new_merged_df.iloc[other_index]
-                    if not pd.isna(other_row["node_old"]) and not pd.isna(
+                    if pd.isna(other_row["node_old"]) and pd.isna(
                         other_row["property_old"]
                     ):
                         indexes_to_remove.append(index)
+                        indexes_to_remove = list(set(indexes_to_remove))
 
             else:
                 pass
 
-    #remove redundant or incomplete rows
+    # remove redundant or incomplete rows compared to already existing rows
     new_merged_df = new_merged_df.drop(indexes_to_remove)
 
     new_merged_df.to_csv(
