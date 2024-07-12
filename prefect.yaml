@@ -428,7 +428,7 @@ deployments:
   # base metadata
   - name: TEST-model-mapping-maker-8gb
     version: null
-    tags: ["Production"]
+    tags: ["TEST"]
     description: null
     entrypoint: workflows/model_mapping_maker.py:runner
     schedule: null
