@@ -440,8 +440,8 @@ deployments:
       model_repository: "ccdi-model"
       #old_model_version: ""
       #new_model_version: ""
-      nodes_mapping_file: str = "path_to/nodes_file/in/s3_bucket"
-      relationship_mapping_file: str = "path_to/nodes_file/in/s3_bucket"
+      nodes_mapping_file: "path_to/nodes_file/in/s3_bucket"
+      relationship_mapping_file: "path_to/nodes_file/in/s3_bucket"
       base_mode:  False      
 
     # infra-specific fields
