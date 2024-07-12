@@ -18,7 +18,7 @@ pull:
   - prefect.projects.steps.git_clone_project:
       id: clone-step
       repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-      branch: main
+      branch: CCDIDC-1198-9-Model_mapping
   - prefect.projects.steps.pip_install_requirements:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
@@ -422,5 +422,30 @@ deployments:
     # infra-specific fields
     work_pool:
       name: ccdi-curation-2gb
+      work_queue_name: null
+      job_variables: {}
+
+  # base metadata
+  - name: TEST-model-mapping-maker-8gb
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/model_mapping_maker.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "your_uniq_id"
+      model_repository: "ccdi-model"
+      #old_model_version: ""
+      #new_model_version: ""
+      nodes_mapping_file: str = "path_to/nodes_file/in/s3_bucket"
+      relationship_mapping_file: str = "path_to/nodes_file/in/s3_bucket"
+      base_mode:  False      
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
       work_queue_name: null
       job_variables: {}
