@@ -48,7 +48,6 @@ def read_yaml_from_github(url):
 @flow(
     name="Extract_properties",
     log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",
 )
 def extract_properties(yaml_data):
     properties = []
@@ -68,7 +67,6 @@ def extract_properties(yaml_data):
 @flow(
     name="Extract_relationships",
     log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",
 )
 def extract_relationships(yaml_data):
 
@@ -93,7 +91,6 @@ def extract_relationships(yaml_data):
 @flow(
     name="Source_Destination_to_Node_Properties",
     log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",
 )
 def src_dst_to_node_prop(df, src_col, dst_col):
     # quick logic to determine if the node / prop column is new or old.
@@ -121,7 +118,6 @@ def src_dst_to_node_prop(df, src_col, dst_col):
 @flow(
     name="User_Supplied_Input",
     log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",
 )
 # user determines where deleted properties go
 def user_input_location(
