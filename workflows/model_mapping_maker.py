@@ -534,7 +534,7 @@ if __name__ == "__main__":
     bucket = "my-source-bucket"
 
     # test new version manifest and latest version template
-    file_path = "inputs/test_file.xlsx"
+    # file_path = "inputs/test_file.xlsx"
     # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
     # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
     # sra_previous_file_path = "QL/phs002790_outputs_20240129_T113511/3_SRA_submisison_output/phs002790_SRA_submission.xlsx"
@@ -542,7 +542,7 @@ if __name__ == "__main__":
 
     runner(
         bucket=bucket,
-        file_path=file_path,
+        # file_path=file_path,
         # template_path=template_path,
         # sra_template_path=sra_template_path,
         runner="SVB",
