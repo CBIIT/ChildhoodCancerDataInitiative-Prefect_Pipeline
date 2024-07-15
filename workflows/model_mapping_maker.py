@@ -85,7 +85,6 @@ def extract_relationships(yaml_data):
             dst = ends.get("Dst")
             relationships.append({"Src": src, "Dst": dst, "version": version})
 
-    print(relationships)
     return pd.DataFrame(relationships)
 
 
@@ -247,6 +246,8 @@ def runner(
         right_on=["src_new", "dst_new"],
         how="outer",
     )
+
+    print (merged_df_relate)
 
     # convert source/destination values into node/property values
     merged_df_relate = src_dst_to_node_prop(merged_df_relate, "src_old", "dst_old")
