@@ -253,10 +253,14 @@ def runner(
     merged_df_relate = src_dst_to_node_prop(merged_df_relate, "src_old", "dst_old")
     merged_df_relate = src_dst_to_node_prop(merged_df_relate, "src_new", "dst_new")
 
+    print(merged_df_relate)
+
     # get rid of old columns
     merged_df_relate.drop(
         columns=["src_old", "dst_old", "src_new", "dst_new"], inplace=True
     )
+
+    print(merged_df_relate)
 
     # if there isn't an input file, run through asking for input
     if not nodes_mapping_file:
