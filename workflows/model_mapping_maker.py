@@ -275,7 +275,7 @@ def runner(
         )
     # use the mapping file
     else:
-        merged_df = pd.read_csv(nodes_mapping_file, sep="\t")
+        merged_df = pd.read_csv(os.path.basename(nodes_mapping_file), sep="\t")
 
     # Create new df based on input for the diffs that were noted.
     new_merged = []
@@ -414,7 +414,7 @@ def runner(
         merged_df_relate = merged_df_relate.drop_duplicates()
 
     else:
-        merged_df_relate = pd.read_csv(relationship_mapping_file, sep="\t")
+        merged_df_relate = pd.read_csv(os.path.basename(relationship_mapping_file), sep="\t")
 
     # reorder relationship df to match the node property one.
     merged_df_relate = merged_df_relate[new_merged_df.columns]
