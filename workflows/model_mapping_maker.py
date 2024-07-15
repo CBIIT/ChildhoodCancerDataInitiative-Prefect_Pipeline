@@ -107,7 +107,8 @@ def src_dst_to_node_prop(df, src_col, dst_col):
     # for each row create a node / prop_id entry based on the src / dst mapping.
     for index, row in df.iterrows():
         if pd.isna(df.at[index, src_col]) or pd.isna(df.at[index, dst_col]):
-            pass
+            df.at[index, node] = None
+            df.at[index, property] = None
         else:
             df.at[index, node] = df.at[index, src_col]
             df.at[index, property] = f"{df.at[index,dst_col]}.{df.at[index,dst_col]}_id"
