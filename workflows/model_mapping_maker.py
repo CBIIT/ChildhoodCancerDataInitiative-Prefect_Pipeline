@@ -349,6 +349,7 @@ def runner(
 
     # remove redundant or incomplete rows compared to already existing rows
     new_merged_df = new_merged_df.drop(indexes_to_remove)
+    new_merged_df = new_merged_df.fillna('')
 
     nodes_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_nodes_{current_date}.tsv"
@@ -414,6 +415,7 @@ def runner(
 
     # reorder relationship df to match the node property one.
     merged_df_relate = merged_df_relate[new_merged_df.columns]
+    merged_df_relate = merged_df_relate.fillna('')
 
     relationship_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_relationship_{current_date}.tsv"
@@ -435,7 +437,10 @@ def runner(
         newfile=relationship_mapping_file_name,
     )
 
+    # Create concatenation of mapping and nodes plus clean up
     final_merged = pd.concat([new_merged_df, merged_df_relate], ignore_index=True)
+    final_merged = final_merged.fillna('')
+    final_merged = final_merged.drop_duplicates()
 
     final_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_MAPPING_{current_date}.tsv"
@@ -503,8 +508,10 @@ def runner(
     # Create a new DataFrame from the results list
     comparison_df = pd.DataFrame(results)
 
-    # Drop rows where state is 'SAME'
+    # Drop rows where state is 'SAME' and clean up
     comparison_df = comparison_df[comparison_df["state"] != "SAME"]
+    comparison_df = comparison_df.fillna('')
+    comparison_df = comparison_df.drop_duplicates()
 
     comparison_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_comparison_{current_date}.tsv"
