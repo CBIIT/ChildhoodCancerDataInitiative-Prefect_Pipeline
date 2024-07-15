@@ -85,6 +85,7 @@ def extract_relationships(yaml_data):
             dst = ends.get("Dst")
             relationships.append({"Src": src, "Dst": dst, "version": version})
 
+    print(relationships)
     return pd.DataFrame(relationships)
 
 
@@ -112,6 +113,7 @@ def src_dst_to_node_prop(df, src_col, dst_col):
             df.at[index, node] = df.at[index, src_col]
             df.at[index, property] = f"{df.at[index,dst_col]}.{df.at[index,dst_col]}_id"
 
+    print(df)
     return df
 
 
