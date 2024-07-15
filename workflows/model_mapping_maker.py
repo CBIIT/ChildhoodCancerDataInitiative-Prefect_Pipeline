@@ -113,7 +113,6 @@ def src_dst_to_node_prop(df, src_col, dst_col):
             df.at[index, node] = df.at[index, src_col]
             df.at[index, property] = f"{df.at[index,dst_col]}.{df.at[index,dst_col]}_id"
 
-    print(df)
     return df
 
 
@@ -248,20 +247,14 @@ def runner(
         how="outer",
     )
 
-    print (merged_df_relate)
-
     # convert source/destination values into node/property values
     merged_df_relate = src_dst_to_node_prop(merged_df_relate, "src_old", "dst_old")
     merged_df_relate = src_dst_to_node_prop(merged_df_relate, "src_new", "dst_new")
-
-    print(merged_df_relate)
 
     # get rid of old columns
     merged_df_relate.drop(
         columns=["src_old", "dst_old", "src_new", "dst_new"], inplace=True
     )
-
-    print(merged_df_relate)
 
     # if there isn't an input file, run through asking for input
     if not nodes_mapping_file:
@@ -355,6 +348,11 @@ def runner(
     # remove redundant or incomplete rows compared to already existing rows
     new_merged_df = new_merged_df.drop(indexes_to_remove)
     new_merged_df = new_merged_df.fillna('')
+
+    #fix version columns, because the check is only one way, old to new,
+    #it doesn't know about columns that have new values but no value for the old one,
+    #thus it doesn't fill in the old version number
+    new_merged_df["version_old"]= new_merged_df["version_old"].dropna().unique().tolist()[0]
 
     nodes_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_nodes_{current_date}.tsv"
