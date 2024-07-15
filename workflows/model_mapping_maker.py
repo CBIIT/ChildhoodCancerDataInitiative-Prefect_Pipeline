@@ -4,12 +4,14 @@ import yaml
 import requests
 import pandas as pd
 from datetime import date
+import os
 from prefect import flow, get_run_logger
 from src.utils import (
     get_time,
     get_date,
     get_manifest_phs,
     file_dl,
+    file_ul,
     folder_dl,
     view_all_s3_objects,
     markdown_input_task,
@@ -352,10 +354,25 @@ def runner(
     # remove redundant or incomplete rows compared to already existing rows
     new_merged_df = new_merged_df.drop(indexes_to_remove)
 
+    nodes_mapping_file_name = (
+        f"{old_model_version}_{new_model_version}_nodes_{current_date}.tsv"
+    )
+
     new_merged_df.to_csv(
-        f"{old_model_version}_{new_model_version}_nodes_{current_date}.tsv",
+        nodes_mapping_file_name,
         sep="\t",
         index=False,
+    )
+
+    # UPLOAD NODES file
+
+    output_folder = os.path.join(runner, "model_mapping_maker_" + get_time())
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=nodes_mapping_file_name,
     )
 
     # final setup to make sure that [node].[node]_ids get moved when a property moves from
@@ -402,21 +419,47 @@ def runner(
     # reorder relationship df to match the node property one.
     merged_df_relate = merged_df_relate[new_merged_df.columns]
 
+    relationship_mapping_file_name = (
+        f"{old_model_version}_{new_model_version}_relationship_{current_date}.tsv"
+    )
+
     # write out of relationship file
     merged_df_relate.to_csv(
-        f"{old_model_version}_{new_model_version}_relationship_{current_date}.tsv",
+        relationship_mapping_file_name,
         sep="\t",
         index=False,
     )
 
+    # UPLOAD RELATIONSHIP file
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=relationship_mapping_file_name,
+    )
+
     final_merged = pd.concat([new_merged_df, merged_df_relate], ignore_index=True)
+
+    final_mapping_file_name = (
+        f"{old_model_version}_{new_model_version}_MAPPING_{current_date}.tsv"
+    )
 
     # add the linkage properties onto the property data frame
 
     final_merged.to_csv(
-        f"{old_model_version}_{new_model_version}_MAPPING_{current_date}.tsv",
+        final_mapping_file_name,
         sep="\t",
         index=False,
+    )
+
+    # UPLOAD RELATIONSHIP file
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=final_mapping_file_name,
     )
 
     # Last step to create a more human readable format
@@ -467,10 +510,23 @@ def runner(
     # Drop rows where state is 'SAME'
     comparison_df = comparison_df[comparison_df["state"] != "SAME"]
 
+    comparison_mapping_file_name = (
+        f"{old_model_version}_{new_model_version}_comparison_{current_date}.tsv"
+    )
+
     comparison_df.to_csv(
-        f"{old_model_version}_{new_model_version}_comparison_{current_date}.tsv",
+        comparison_mapping_file_name,
         sep="\t",
         index=False,
+    )
+
+    # UPLOAD RELATIONSHIP file
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=comparison_mapping_file_name,
     )
 
 
