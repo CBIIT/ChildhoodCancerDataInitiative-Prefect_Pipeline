@@ -481,8 +481,8 @@ def runner(
         )
 
         # Check for NA/None values in new_values and old_values
-        new_values_na = any(pd.isna(value) for value in new_values)
-        old_values_na = any(pd.isna(value) for value in old_values)
+        new_values_na = any(value =="" for value in new_values)
+        old_values_na = any(value =="" for value in old_values)
 
         # logic flow to note if there are deletions, additions, rearrangements or static
 
