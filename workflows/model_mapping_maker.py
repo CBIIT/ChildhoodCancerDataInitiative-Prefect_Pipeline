@@ -285,7 +285,6 @@ def runner(
         if pd.isna(row["node_new"]) or row["node_new"] in ["NA", "none"]:
             new_row = row.copy()
             new_merged.append(new_row)
-
         else:
             # check for node values that are a list and split them out
             node_values = (
@@ -318,8 +317,6 @@ def runner(
     for index, row in new_merged_df.iterrows():
         # if the old node or property is blank
         if pd.isna(row["node_old"]) or pd.isna(row["property_old"]):
-            print(row)
-            print(index)
 
             # look at the new node and property
             new_node_value = new_merged_df.at[index, "node_new"]
