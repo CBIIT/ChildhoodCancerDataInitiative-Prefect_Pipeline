@@ -247,10 +247,11 @@ If these values were moved to a new location, please enter the new node and/or p
 - If a value is staying the same, write 'same'.
 - If a value is removed, write 'remove'.
 
-{index}. node: {existing_node}, property: {existing_property}
-
 - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
 - **property**: the new property name.
+
+**node**: {existing_node}
+**property**: {existing_property}
                             """
                     )
                 )
@@ -265,10 +266,11 @@ If these values are being pulled from an older location, please enter the old no
 - If a value is staying the same, write 'same'.
 - If a value is removed, write 'remove'.
 
-{index}. node: {existing_node}, property: {existing_property}
-
 - **node**: the old node/nodes the property is located in.
 - **property**: the old property name.
+
+**node**: {existing_node}
+**property**: {existing_property}
                             """
                     )
                 )
