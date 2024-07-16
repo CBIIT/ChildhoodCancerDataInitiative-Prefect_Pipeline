@@ -36,6 +36,10 @@ class InputValues(RunInput):
 
 @dataclass
 class InputDescription:
+    index: int
+    node: str
+    property: str
+
     """dataclass for wait for input description MD"""
 
     old_to_new_input: str = (
@@ -47,7 +51,7 @@ If these values were moved to a new location, please enter the new node and/or p
 - If a value is staying the same, write 'same'.
 - If a value is removed, write 'remove'.
 
-"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
+{index}. node: {node}, property: {property}
 
 - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
 - **property**: the new property name.
@@ -63,7 +67,7 @@ If these values are being pulled from an older location, please enter the old no
 - If a value is staying the same, write 'same'.
 - If a value is removed, write 'remove'.
 
-"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
+{index}. node: {node}, property: {property}
 
 - **node**: the old node/nodes the property is located in.
 - **property**: the old property name.
@@ -225,8 +229,10 @@ def user_input_location(
     df_missing = df[df[missing_property_col].isna()]
     # for each row with missing information in the column of interest
     for index, row in df_missing.iterrows():
+        node= row[value_node_col]
+        property=row[value_property_col]
         runner_logger.info(
-            f"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
+            f"{index}. node: {node}, property: {property}"
         )
 
         # if in base mode, skip inputs and keep it all blank
