@@ -226,8 +226,8 @@ def user_input_location(
     df_missing = df[df[missing_property_col].isna()]
     # for each row with missing information in the column of interest
     for index, row in df_missing.iterrows():
-        node = row[value_node_col]
-        property = row[value_property_col]
+        existing_node = row[value_node_col]
+        existing_property = row[value_property_col]
         runner_logger.info(f"{index}. node: {node}, property: {property}")
 
         # if in base mode, skip inputs and keep it all blank
@@ -247,7 +247,7 @@ def user_input_location(
                             - If a value is staying the same, write 'same'.
                             - If a value is removed, write 'remove'.
 
-                            {index}. node: {node}, property: {property}
+                            {index}. node: {existing_node}, property: {existing_property}
 
                             - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
                             - **property**: the new property name.
@@ -266,7 +266,7 @@ def user_input_location(
                             - If a value is staying the same, write 'same'.
                             - If a value is removed, write 'remove'.
 
-                            {index}. node: {node}, property: {property}
+                            {index}. node: {existing_node}, property: {existing_property}
 
                             - **node**: the old node/nodes the property is located in.
                             - **property**: the old property name.
