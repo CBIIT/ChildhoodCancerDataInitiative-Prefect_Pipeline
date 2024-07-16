@@ -317,11 +317,11 @@ def runner(
     bucket: str,
     runner: str,
     model_repository: str = "ccdi-model",
+    base_mode: bool = False,
     old_model_version: str = "",
     new_model_version: str = "",
     nodes_mapping_file: str = "path_to/nodes_file/in/s3_bucket",
     relationship_mapping_file: str = "path_to/nodes_file/in/s3_bucket",
-    base_mode: bool = False,
 ):
 
     # create a logging object
