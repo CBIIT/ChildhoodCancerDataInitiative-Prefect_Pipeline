@@ -240,7 +240,9 @@ def user_input_location(
                 value_inputs = pause_flow_run(
                     wait_for_input=InputValues.with_initial_data(
                         description=f"""
-# **Please provide inputs as shown below**
+# **Active Input**
+
+## **Instructions**
 
 If these values were moved to a new location, please enter the new node and/or property.
 
@@ -261,7 +263,9 @@ If these values were moved to a new location, please enter the new node and/or p
                 value_inputs = pause_flow_run(
                     wait_for_input=InputValues.with_initial_data(
                         description=f"""
-# **Please provide inputs as shown below**
+# **Active Input**
+
+## **Instructions**
 
 If these values are being pulled from an older location, please enter the old node and/or property.
 
