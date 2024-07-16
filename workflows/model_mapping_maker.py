@@ -5,7 +5,9 @@ import requests
 import pandas as pd
 from datetime import date
 import os
-from prefect import flow, get_run_logger
+from dataclasses import dataclass
+from prefect import flow, get_run_logger, pause_flow_run
+from prefect.input import RunInput
 from src.utils import (
     get_time,
     get_date,
@@ -25,6 +27,45 @@ from src.utils import (
     identify_data_curation_log_file,
     ccdi_to_dcf_index,
 )
+
+
+class InputValues(RunInput):
+    node: str
+    property: str
+
+
+@dataclass
+class InputDescription:
+    """dataclass for wait for input description MD"""
+
+    old_to_new_input: str = (
+        """
+**Please provide inputs as shown below**
+
+If these values were moved to a new location, please enter the new node and/or property.
+
+- If a value is staying the same, write 'same'.
+- If a value is removed, leave blank.
+
+- **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
+- **property**: the new property name.
+
+"""
+    )
+    new_to_old_input: str = (
+        """
+**Please provide inputs as shown below**
+
+If these values are being pulled from an older location, please enter the old node and/or property.
+
+- If a value is staying the same, write 'same'.
+- If a value is removed, leave blank.
+
+- **node**: the old node/nodes the property is located in.
+- **property**: the old property name.
+
+"""
+    )
 
 
 # obtain the date
@@ -116,7 +157,9 @@ def src_dst_to_node_prop(df, src_col, dst_col):
     return df
 
 
-def clean_up_partial_dups(df, empty_col_node, empty_col_prop, value_col_node, value_col_prop):
+def clean_up_partial_dups(
+    df, empty_col_node, empty_col_prop, value_col_node, value_col_prop
+):
     # Do final fixes to remove new mappings that have been accounted for.
     indexes_to_remove = []
     for index, row in df.iterrows():
@@ -151,7 +194,7 @@ def clean_up_partial_dups(df, empty_col_node, empty_col_prop, value_col_node, va
 
     # remove redundant or incomplete rows compared to already existing rows
     df = df.drop(indexes_to_remove)
-    df = df.fillna('')
+    df = df.fillna("")
 
     return df
 
@@ -169,8 +212,15 @@ def user_input_location(
     missing_property_col,
     missing_version_col,
     base_mode,
+    direction,
 ):
     runner_logger = get_run_logger()
+
+    if base_mode:
+        runner_logger.info("You are running in base mode, no need for input.")
+    else:
+        runner_logger.info("You are not running in base mode, input needed.")
+
     # looking at the missing values in one column, determine values to map to each node and property.
     df_missing = df[df[missing_property_col].isna()]
     # for each row with missing information in the column of interest
@@ -185,8 +235,27 @@ def user_input_location(
             user_input_prop = ""
         # else, allow user input
         else:
-            user_input_node = input("node: ")
-            user_input_prop = input("property: ")
+            if direction == "oldnew":
+                value_inputs = pause_flow_run(
+                    wait_for_input=InputValues.with_initial_data(
+                        description=InputDescription.old_to_new_input
+                    )
+                )
+            elif direction == "newold":
+                value_inputs = pause_flow_run(
+                    wait_for_input=InputValues.with_initial_data(
+                        description=InputDescription.new_to_old_input
+                    )
+                )
+
+            runner_logger.info(
+                "Inputs received:" + "\n"
+                + f"node: {value_inputs.node}"
+                + "\n"
+                + f"property: {value_inputs.property}"
+            )
+            user_input_node = value_inputs.node
+            user_input_prop = value_inputs.property
 
         # make things easier, if it is the same value, say "same".
         if user_input_node.lower() == "same":
@@ -299,11 +368,6 @@ def runner(
     # if there isn't an input file, run through asking for input
     if not nodes_mapping_file:
         # Take input to create the base mapping file for nodes and properties
-        runner_logger.info(
-            "If these values were moved to a new location, please enter the new node and/or property."
-        )
-        runner_logger.info("If a value is staying the same, write 'same'.")
-        runner_logger.info("If a value is totally removed, hit enter/return.")
         user_input_location(
             merged_df,
             "node_old",
@@ -312,6 +376,7 @@ def runner(
             "property_new",
             "version_new",
             base_mode,
+            "oldnew",
         )
     # use the mapping file
     else:
@@ -354,13 +419,16 @@ def runner(
     new_merged_df.reset_index(drop=True, inplace=True)
 
     # Do final fixes to remove new mappings that have been accounted for.
-    new_merged_df = clean_up_partial_dups(new_merged_df,"node_old","property_old","node_new","property_new")
+    new_merged_df = clean_up_partial_dups(
+        new_merged_df, "node_old", "property_old", "node_new", "property_new"
+    )
 
-
-    #fix version columns, because the check is only one way, old to new,
-    #it doesn't know about columns that have new values but no value for the old one,
-    #thus it doesn't fill in the old version number
-    new_merged_df["version_old"]= new_merged_df["version_old"].dropna().unique().tolist()[0]
+    # fix version columns, because the check is only one way, old to new,
+    # it doesn't know about columns that have new values but no value for the old one,
+    # thus it doesn't fill in the old version number
+    new_merged_df["version_old"] = (
+        new_merged_df["version_old"].dropna().unique().tolist()[0]
+    )
 
     nodes_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_nodes_{current_date}.tsv"
@@ -388,11 +456,6 @@ def runner(
 
     if not relationship_mapping_file:
         # Take inputs for relationship values that are found in the old model but are not located in the new model.
-        runner_logger.info(
-            "If these old relationship values were moved to a new location, please enter the new node and/or property."
-        )
-        runner_logger.info("If a value is staying the same, write 'same'.")
-        runner_logger.info("If a value is totally removed, hit enter/return.")
         user_input_location(
             merged_df_relate,
             "node_old",
@@ -401,14 +464,10 @@ def runner(
             "property_new",
             "version_new",
             base_mode,
+            "oldnew",
         )
 
         # Take inputs for relationship values that are found in the new model but are not located in the old model.
-        runner_logger.info(
-            "If these new relationship values need information from a current model relationship, please enter the new node and/or property."
-        )
-        runner_logger.info("If a value is staying the same, write 'same'.")
-        runner_logger.info("If a value is totally removed, hit enter/return.")
         user_input_location(
             merged_df_relate,
             "node_new",
@@ -417,21 +476,27 @@ def runner(
             "property_old",
             "version_old",
             base_mode,
+            "newold",
         )
 
         merged_df_relate = merged_df_relate.drop_duplicates()
 
     else:
-        merged_df_relate = pd.read_csv(os.path.basename(relationship_mapping_file), sep="\t")
+        merged_df_relate = pd.read_csv(
+            os.path.basename(relationship_mapping_file), sep="\t"
+        )
 
     # Do final fixes to remove new mappings that have been accounted for.
-    merged_df_relate = clean_up_partial_dups(merged_df_relate,"node_old","property_old","node_new","property_new")
-    merged_df_relate = clean_up_partial_dups(merged_df_relate,"node_new","property_new","node_old","property_old")
-
+    merged_df_relate = clean_up_partial_dups(
+        merged_df_relate, "node_old", "property_old", "node_new", "property_new"
+    )
+    merged_df_relate = clean_up_partial_dups(
+        merged_df_relate, "node_new", "property_new", "node_old", "property_old"
+    )
 
     # reorder relationship df to match the node property one.
     merged_df_relate = merged_df_relate[new_merged_df.columns]
-    merged_df_relate = merged_df_relate.fillna('')
+    merged_df_relate = merged_df_relate.fillna("")
 
     relationship_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_relationship_{current_date}.tsv"
@@ -455,7 +520,7 @@ def runner(
 
     # Create concatenation of mapping and nodes plus clean up
     final_merged = pd.concat([new_merged_df, merged_df_relate], ignore_index=True)
-    final_merged = final_merged.fillna('')
+    final_merged = final_merged.fillna("")
     final_merged = final_merged.drop_duplicates()
 
     final_mapping_file_name = (
@@ -494,8 +559,8 @@ def runner(
         )
 
         # Check for NA/None values in new_values and old_values
-        new_values_na = any(value =="" for value in new_values)
-        old_values_na = any(value =="" for value in old_values)
+        new_values_na = any(value == "" for value in new_values)
+        old_values_na = any(value == "" for value in old_values)
 
         # logic flow to note if there are deletions, additions, rearrangements or static
 
@@ -526,7 +591,7 @@ def runner(
 
     # Drop rows where state is 'SAME' and clean up
     comparison_df = comparison_df[comparison_df["state"] != "SAME"]
-    comparison_df = comparison_df.fillna('')
+    comparison_df = comparison_df.fillna("")
     comparison_df = comparison_df.drop_duplicates()
 
     comparison_mapping_file_name = (
