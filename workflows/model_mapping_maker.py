@@ -228,7 +228,7 @@ def user_input_location(
     for index, row in df_missing.iterrows():
         existing_node = row[value_node_col]
         existing_property = row[value_property_col]
-        runner_logger.info(f"{index}. node: {node}, property: {property}")
+        runner_logger.info(f"{index}. node: {existing_node}, property: {existing_property}")
 
         # if in base mode, skip inputs and keep it all blank
         if base_mode:
