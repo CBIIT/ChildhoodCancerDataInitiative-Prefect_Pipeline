@@ -45,7 +45,9 @@ class InputDescription:
 If these values were moved to a new location, please enter the new node and/or property.
 
 - If a value is staying the same, write 'same'.
-- If a value is removed, leave blank.
+- If a value is removed, write 'remove'.
+
+f"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
 
 - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
 - **property**: the new property name.
@@ -59,7 +61,9 @@ If these values were moved to a new location, please enter the new node and/or p
 If these values are being pulled from an older location, please enter the old node and/or property.
 
 - If a value is staying the same, write 'same'.
-- If a value is removed, leave blank.
+- If a value is removed, write 'remove'.
+
+f"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
 
 - **node**: the old node/nodes the property is located in.
 - **property**: the old property name.
@@ -199,10 +203,6 @@ def clean_up_partial_dups(
     return df
 
 
-@flow(
-    name="User_Supplied_Input",
-    log_prints=True,
-)
 # user determines where deleted properties go
 def user_input_location(
     df,
@@ -264,9 +264,9 @@ def user_input_location(
             user_input_prop = row[value_property_col]
 
         # make things easier, if it is no longer needed, ignore and leave blank.
-        if user_input_node == "":
+        if user_input_node.lower() == "remove":
             user_input_node = None
-        if user_input_prop == "":
+        if user_input_prop.lower() == "remove":
             user_input_prop = None
 
         # obtain the model version based on the input missing column
