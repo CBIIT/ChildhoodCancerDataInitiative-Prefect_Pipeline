@@ -116,6 +116,46 @@ def src_dst_to_node_prop(df, src_col, dst_col):
     return df
 
 
+def clean_up_partial_dups(df, empty_col_node, empty_col_prop, value_col_node, value_col_prop):
+    # Do final fixes to remove new mappings that have been accounted for.
+    indexes_to_remove = []
+    for index, row in df.iterrows():
+        # if the old node or property is blank
+        if pd.isna(row[empty_col_node]) or pd.isna(row[empty_col_prop]):
+
+            # look at the new node and property
+            new_node_value = df.at[index, value_col_node]
+            new_property_value = df.at[index, value_col_prop]
+
+            # then create a filter that looks for any other instances where there are duplicates of the new node/property value found in other places.
+            mask = (df[value_col_node] == new_node_value) & (
+                df[value_col_prop] == new_property_value
+            )
+
+            # add those indexes of duplicate new node/property values to a list
+            indexes = df.index[mask].tolist()
+
+            # If other instances exist for this, see if there is a conversion from an older version
+            # If there is, then remove this blanked version for the new node and property.
+            if len(indexes) > 1:
+                for other_index in indexes:
+                    other_row = df.iloc[other_index]
+                    if pd.isna(other_row[empty_col_node]) and pd.isna(
+                        other_row[empty_col_prop]
+                    ):
+                        indexes_to_remove.append(index)
+                        indexes_to_remove = list(set(indexes_to_remove))
+
+            else:
+                pass
+
+    # remove redundant or incomplete rows compared to already existing rows
+    df = df.drop(indexes_to_remove)
+    df = df.fillna('')
+
+    return df
+
+
 @flow(
     name="User_Supplied_Input",
     log_prints=True,
@@ -314,40 +354,8 @@ def runner(
     new_merged_df.reset_index(drop=True, inplace=True)
 
     # Do final fixes to remove new mappings that have been accounted for.
-    indexes_to_remove = []
-    for index, row in new_merged_df.iterrows():
-        # if the old node or property is blank
-        if pd.isna(row["node_old"]) or pd.isna(row["property_old"]):
+    new_merged_df = clean_up_partial_dups(new_merged_df,"node_old","property_old","node_new","property_new")
 
-            # look at the new node and property
-            new_node_value = new_merged_df.at[index, "node_new"]
-            new_property_value = new_merged_df.at[index, "property_new"]
-
-            # then create a filter that looks for any other instances where there are duplicates of the new node/property value found in other places.
-            mask = (new_merged_df["node_new"] == new_node_value) & (
-                new_merged_df["property_new"] == new_property_value
-            )
-
-            # add those indexes of duplicate new node/property values to a list
-            indexes = new_merged_df.index[mask].tolist()
-
-            # If other instances exist for this, see if there is a conversion from an older version
-            # If there is, then remove this blanked version for the new node and property.
-            if len(indexes) > 1:
-                for other_index in indexes:
-                    other_row = new_merged_df.iloc[other_index]
-                    if pd.isna(other_row["node_old"]) and pd.isna(
-                        other_row["property_old"]
-                    ):
-                        indexes_to_remove.append(index)
-                        indexes_to_remove = list(set(indexes_to_remove))
-
-            else:
-                pass
-
-    # remove redundant or incomplete rows compared to already existing rows
-    new_merged_df = new_merged_df.drop(indexes_to_remove)
-    new_merged_df = new_merged_df.fillna('')
 
     #fix version columns, because the check is only one way, old to new,
     #it doesn't know about columns that have new values but no value for the old one,
@@ -415,6 +423,11 @@ def runner(
 
     else:
         merged_df_relate = pd.read_csv(os.path.basename(relationship_mapping_file), sep="\t")
+
+    # Do final fixes to remove new mappings that have been accounted for.
+    merged_df_relate = clean_up_partial_dups(merged_df_relate,"node_old","property_old","node_new","property_new")
+    merged_df_relate = clean_up_partial_dups(merged_df_relate,"node_new","property_new","node_old","property_old")
+
 
     # reorder relationship df to match the node property one.
     merged_df_relate = merged_df_relate[new_merged_df.columns]
