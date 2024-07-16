@@ -240,18 +240,17 @@ def user_input_location(
                 value_inputs = pause_flow_run(
                     wait_for_input=InputValues.with_initial_data(
                         description=f"""
-                            **Please provide inputs as shown below**
+**Please provide inputs as shown below**
 
-                            If these values were moved to a new location, please enter the new node and/or property.
+If these values were moved to a new location, please enter the new node and/or property.
 
-                            - If a value is staying the same, write 'same'.
-                            - If a value is removed, write 'remove'.
+- If a value is staying the same, write 'same'.
+- If a value is removed, write 'remove'.
 
-                            {index}. node: {existing_node}, property: {existing_property}
+{index}. node: {existing_node}, property: {existing_property}
 
-                            - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
-                            - **property**: the new property name.
-
+- **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
+- **property**: the new property name.
                             """
                     )
                 )
@@ -259,18 +258,17 @@ def user_input_location(
                 value_inputs = pause_flow_run(
                     wait_for_input=InputValues.with_initial_data(
                         description=f"""
-                            **Please provide inputs as shown below**
+**Please provide inputs as shown below**
 
-                            If these values are being pulled from an older location, please enter the old node and/or property.
+If these values are being pulled from an older location, please enter the old node and/or property.
 
-                            - If a value is staying the same, write 'same'.
-                            - If a value is removed, write 'remove'.
+- If a value is staying the same, write 'same'.
+- If a value is removed, write 'remove'.
 
-                            {index}. node: {existing_node}, property: {existing_property}
+{index}. node: {existing_node}, property: {existing_property}
 
-                            - **node**: the old node/nodes the property is located in.
-                            - **property**: the old property name.
-
+- **node**: the old node/nodes the property is located in.
+- **property**: the old property name.
                             """
                     )
                 )
