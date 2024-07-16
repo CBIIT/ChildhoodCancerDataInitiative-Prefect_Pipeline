@@ -231,8 +231,8 @@ def user_input_location(
 
         # if in base mode, skip inputs and keep it all blank
         if base_mode:
-            user_input_node = ""
-            user_input_prop = ""
+            user_input_node = "remove"
+            user_input_prop = "remove"
         # else, allow user input
         else:
             if direction == "oldnew":
