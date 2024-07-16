@@ -244,13 +244,13 @@ def user_input_location(
             if direction == "oldnew":
                 value_inputs = pause_flow_run(
                     wait_for_input=InputValues.with_initial_data(
-                        description=InputDescription.old_to_new_input
+                        description=InputDescription.old_to_new_input(index,node,property)
                     )
                 )
             elif direction == "newold":
                 value_inputs = pause_flow_run(
                     wait_for_input=InputValues.with_initial_data(
-                        description=InputDescription.new_to_old_input
+                        description=InputDescription.new_to_old_input(index,node,property)
                     )
                 )
 
