@@ -250,6 +250,7 @@ If these values were moved to a new location, please enter the new node and/or p
 - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
 - **property**: the new property name.
 
+
 **node**: {existing_node}
 **property**: {existing_property}
                             """
@@ -268,6 +269,7 @@ If these values are being pulled from an older location, please enter the old no
 
 - **node**: the old node/nodes the property is located in.
 - **property**: the old property name.
+
 
 **node**: {existing_node}
 **property**: {existing_property}
