@@ -34,46 +34,43 @@ class InputValues(RunInput):
     property: str
 
 
-@dataclass
-class InputDescription:
-    index: int
-    node: str
-    property: str
+# @dataclass
+# class InputDescription:
 
-    """dataclass for wait for input description MD"""
+#     """dataclass for wait for input description MD"""
 
-    old_to_new_input: str = (
-        f"""
-**Please provide inputs as shown below**
+#     old_to_new_input: str = (
+#         f"""
+# **Please provide inputs as shown below**
 
-If these values were moved to a new location, please enter the new node and/or property.
+# If these values were moved to a new location, please enter the new node and/or property.
 
-- If a value is staying the same, write 'same'.
-- If a value is removed, write 'remove'.
+# - If a value is staying the same, write 'same'.
+# - If a value is removed, write 'remove'.
 
-{index}. node: {node}, property: {property}
+# {index}. node: {node}, property: {property}
 
-- **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
-- **property**: the new property name.
+# - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
+# - **property**: the new property name.
 
-"""
-    )
-    new_to_old_input: str = (
-        f"""
-**Please provide inputs as shown below**
+# """
+#     )
+#     new_to_old_input: str = (
+#         f"""
+# **Please provide inputs as shown below**
 
-If these values are being pulled from an older location, please enter the old node and/or property.
+# If these values are being pulled from an older location, please enter the old node and/or property.
 
-- If a value is staying the same, write 'same'.
-- If a value is removed, write 'remove'.
+# - If a value is staying the same, write 'same'.
+# - If a value is removed, write 'remove'.
 
-{index}. node: {node}, property: {property}
+# {index}. node: {node}, property: {property}
 
-- **node**: the old node/nodes the property is located in.
-- **property**: the old property name.
+# - **node**: the old node/nodes the property is located in.
+# - **property**: the old property name.
 
-"""
-    )
+# """
+#     )
 
 
 # obtain the date
@@ -229,11 +226,9 @@ def user_input_location(
     df_missing = df[df[missing_property_col].isna()]
     # for each row with missing information in the column of interest
     for index, row in df_missing.iterrows():
-        node= row[value_node_col]
-        property=row[value_property_col]
-        runner_logger.info(
-            f"{index}. node: {node}, property: {property}"
-        )
+        node = row[value_node_col]
+        property = row[value_property_col]
+        runner_logger.info(f"{index}. node: {node}, property: {property}")
 
         # if in base mode, skip inputs and keep it all blank
         if base_mode:
@@ -244,18 +239,45 @@ def user_input_location(
             if direction == "oldnew":
                 value_inputs = pause_flow_run(
                     wait_for_input=InputValues.with_initial_data(
-                        description=InputDescription.old_to_new_input(index=index,node=node,property=property)
+                        description=f"""
+                            **Please provide inputs as shown below**
+
+                            If these values were moved to a new location, please enter the new node and/or property.
+
+                            - If a value is staying the same, write 'same'.
+                            - If a value is removed, write 'remove'.
+
+                            {index}. node: {node}, property: {property}
+
+                            - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
+                            - **property**: the new property name.
+
+                            """
                     )
                 )
             elif direction == "newold":
                 value_inputs = pause_flow_run(
                     wait_for_input=InputValues.with_initial_data(
-                        description=InputDescription.new_to_old_input(index=index,node=node,property=property)
+                        description=f"""
+                            **Please provide inputs as shown below**
+
+                            If these values are being pulled from an older location, please enter the old node and/or property.
+
+                            - If a value is staying the same, write 'same'.
+                            - If a value is removed, write 'remove'.
+
+                            {index}. node: {node}, property: {property}
+
+                            - **node**: the old node/nodes the property is located in.
+                            - **property**: the old property name.
+
+                            """
                     )
                 )
 
             runner_logger.info(
-                "Inputs received:" + "\n"
+                "Inputs received:"
+                + "\n"
                 + f"node: {value_inputs.node}"
                 + "\n"
                 + f"property: {value_inputs.property}"
