@@ -39,7 +39,7 @@ class InputDescription:
     """dataclass for wait for input description MD"""
 
     old_to_new_input: str = (
-        """
+        f"""
 **Please provide inputs as shown below**
 
 If these values were moved to a new location, please enter the new node and/or property.
@@ -47,7 +47,7 @@ If these values were moved to a new location, please enter the new node and/or p
 - If a value is staying the same, write 'same'.
 - If a value is removed, write 'remove'.
 
-f"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
+"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
 
 - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
 - **property**: the new property name.
@@ -55,7 +55,7 @@ f"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
 """
     )
     new_to_old_input: str = (
-        """
+        f"""
 **Please provide inputs as shown below**
 
 If these values are being pulled from an older location, please enter the old node and/or property.
@@ -63,7 +63,7 @@ If these values are being pulled from an older location, please enter the old no
 - If a value is staying the same, write 'same'.
 - If a value is removed, write 'remove'.
 
-f"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
+"{index}. node: {row[value_node_col]}, property: {row[value_property_col]}"
 
 - **node**: the old node/nodes the property is located in.
 - **property**: the old property name.
