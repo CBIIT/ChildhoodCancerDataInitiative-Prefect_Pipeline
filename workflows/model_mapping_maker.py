@@ -681,6 +681,34 @@ def runner(
         newfile=comparison_mapping_file_name,
     )
 
+    #Reupload fixed MAPPING file with new headers
+
+    # Change column names for prefect script
+    final_merged_out.columns = [
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
+
+    # add the linkage properties onto the property data frame
+
+    final_merged_out.to_csv(
+        final_mapping_file_name,
+        sep="\t",
+        index=False,
+    )
+
+    # UPLOAD RELATIONSHIP file
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=final_mapping_file_name,
+    )
 
 # if __name__ == "__main__":
 #     bucket = "my-source-bucket"
