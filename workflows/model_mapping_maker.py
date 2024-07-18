@@ -655,16 +655,16 @@ def runner(
     )
 
     comparison_df_out = comparison_df
-    # Change column names for prefect script
-    comparison_df_out.columns = [
-        "state",
-        "lift_from_node",
-        "lift_from_property",
-        "lift_from_version",
-        "lift_to_node",
-        "lift_to_property",
-        "lift_to_version",
-    ]
+    # # Change column names for prefect script
+    # comparison_df_out.columns = [
+    #     "state",
+    #     "lift_from_node",
+    #     "lift_from_property",
+    #     "lift_from_version",
+    #     "lift_to_node",
+    #     "lift_to_property",
+    #     "lift_to_version",
+    # ]
 
     comparison_df_out.to_csv(
         comparison_mapping_file_name,
