@@ -654,8 +654,9 @@ def runner(
         f"{old_model_version}_{new_model_version}_comparison_{current_date}.tsv"
     )
 
+    comparison_df_out = comparison_df
     # Change column names for prefect script
-    comparison_df.columns = [
+    comparison_df_out.columns = [
         "state",
         "lift_from_node",
         "lift_from_property",
@@ -665,7 +666,7 @@ def runner(
         "lift_to_version",
     ]
 
-    comparison_df.to_csv(
+    comparison_df_out.to_csv(
         comparison_mapping_file_name,
         sep="\t",
         index=False,
