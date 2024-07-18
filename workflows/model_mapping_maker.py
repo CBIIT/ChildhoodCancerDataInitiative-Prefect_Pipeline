@@ -228,7 +228,9 @@ def user_input_location(
     for index, row in df_missing.iterrows():
         existing_node = row[value_node_col]
         existing_property = row[value_property_col]
-        runner_logger.info(f"{index}. node: {existing_node}, property: {existing_property}")
+        runner_logger.info(
+            f"{index}. node: {existing_node}, property: {existing_property}"
+        )
 
         # if in base mode, skip inputs and keep it all blank
         if base_mode:
@@ -563,6 +565,15 @@ def runner(
         f"{old_model_version}_{new_model_version}_MAPPING_{current_date}.tsv"
     )
 
+    # Change column names for prefect script
+    final_merged.columns = [
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
     # add the linkage properties onto the property data frame
 
     final_merged.to_csv(
@@ -650,22 +661,17 @@ def runner(
     )
 
 
-if __name__ == "__main__":
-    bucket = "my-source-bucket"
+# if __name__ == "__main__":
+#     bucket = "my-source-bucket"
 
-    # test new version manifest and latest version template
-    # file_path = "inputs/test_file.xlsx"
-    # template_path = "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
-    # sra_template_path = "path_to/sra_template/in/ccdi-curation/bucket"
-    # sra_previous_file_path = "QL/phs002790_outputs_20240129_T113511/3_SRA_submisison_output/phs002790_SRA_submission.xlsx"
-    # dbgap_previous_path = "QL/phs002790_outputs_20240129_T113511/4_dbGaP_submisison_output/phs002790_dbGaP_submission_2024-01-29"
+#     # test new version manifest and latest version template
+#     # file_path = "inputs/test_file.xlsx"
 
-    runner(
-        bucket=bucket,
-        # file_path=file_path,
-        # template_path=template_path,
-        # sra_template_path=sra_template_path,
-        runner="SVB",
-        # sra_previous_file_path=sra_previous_file_path,
-        # dbgap_previous_dir_path=dbgap_previous_path,
-    )
+#     runner(
+#         bucket=bucket,
+#         # file_path=file_path,
+#         # template_path=template_path,
+#         # sra_template_path=sra_template_path,
+#         runner="SVB",
+
+#     )
