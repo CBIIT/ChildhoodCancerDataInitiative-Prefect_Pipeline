@@ -556,16 +556,6 @@ def runner(
         f"{old_model_version}_{new_model_version}_relationship_{current_date}.tsv"
     )
 
-    # Change column names for prefect script
-    merged_df_relate.columns = [
-        "lift_from_node",
-        "lift_from_property",
-        "lift_from_version",
-        "lift_to_node",
-        "lift_to_property",
-        "lift_to_version",
-    ]
-
     # write out of relationship file
     merged_df_relate.to_csv(
         relationship_mapping_file_name,
@@ -591,15 +581,6 @@ def runner(
         f"{old_model_version}_{new_model_version}_MAPPING_{current_date}.tsv"
     )
 
-    # Change column names for prefect script
-    final_merged.columns = [
-        "lift_from_node",
-        "lift_from_property",
-        "lift_from_version",
-        "lift_to_node",
-        "lift_to_property",
-        "lift_to_version",
-    ]
     # add the linkage properties onto the property data frame
 
     final_merged.to_csv(
