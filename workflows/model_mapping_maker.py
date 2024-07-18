@@ -478,16 +478,6 @@ def runner(
         f"{old_model_version}_{new_model_version}_nodes_{current_date}.tsv"
     )
 
-    # Change column names for prefect script
-    new_merged_df.columns = [
-        "lift_from_node",
-        "lift_from_property",
-        "lift_from_version",
-        "lift_to_node",
-        "lift_to_property",
-        "lift_to_version",
-    ]
-
     new_merged_df.to_csv(
         nodes_mapping_file_name,
         sep="\t",
@@ -581,9 +571,20 @@ def runner(
         f"{old_model_version}_{new_model_version}_MAPPING_{current_date}.tsv"
     )
 
+    final_merged_out = final_merged
+        # Change column names for prefect script
+    final_merged_out.columns = [
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
+
     # add the linkage properties onto the property data frame
 
-    final_merged.to_csv(
+    final_merged_out.to_csv(
         final_mapping_file_name,
         sep="\t",
         index=False,
