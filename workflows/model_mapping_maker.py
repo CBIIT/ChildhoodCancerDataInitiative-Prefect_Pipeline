@@ -100,9 +100,9 @@ def extract_properties(yaml_data):
 
     if "Version" in yaml_data:
         versions = yaml_data["Version"]
-        version_update = [
-            version.replace("v.", "").replace("v", "") for version in versions
-        ]
+        # version_update = [
+        #     version.replace("v.", "").replace("v", "") for version in versions
+        # ]
 
     else:
         version_update = "insert version"
@@ -572,15 +572,16 @@ def runner(
     )
 
     final_merged_out = final_merged
-        # Change column names for prefect script
-    final_merged_out.columns = [
-        "lift_from_node",
-        "lift_from_property",
-        "lift_from_version",
-        "lift_to_node",
-        "lift_to_property",
-        "lift_to_version",
-    ]
+
+    # # Change column names for prefect script
+    # final_merged_out.columns = [
+    #     "lift_from_node",
+    #     "lift_from_property",
+    #     "lift_from_version",
+    #     "lift_to_node",
+    #     "lift_to_property",
+    #     "lift_to_version",
+    # ]
 
     # add the linkage properties onto the property data frame
 
@@ -654,15 +655,15 @@ def runner(
     )
 
     # Change column names for prefect script
-    comparison_df.columns = [
-        "state",
-        "lift_from_node",
-        "lift_from_property",
-        "lift_from_version",
-        "lift_to_node",
-        "lift_to_property",
-        "lift_to_version",
-    ]
+    # comparison_df.columns = [
+    #     "state",
+    #     "lift_from_node",
+    #     "lift_from_property",
+    #     "lift_from_version",
+    #     "lift_to_node",
+    #     "lift_to_property",
+    #     "lift_to_version",
+    # ]
 
     comparison_df.to_csv(
         comparison_mapping_file_name,
