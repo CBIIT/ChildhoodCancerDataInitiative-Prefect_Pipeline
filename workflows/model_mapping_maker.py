@@ -478,6 +478,16 @@ def runner(
         f"{old_model_version}_{new_model_version}_nodes_{current_date}.tsv"
     )
 
+    # Change column names for prefect script
+    new_merged_df.columns = [
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
+
     new_merged_df.to_csv(
         nodes_mapping_file_name,
         sep="\t",
@@ -545,6 +555,16 @@ def runner(
     relationship_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_relationship_{current_date}.tsv"
     )
+
+    # Change column names for prefect script
+    merged_df_relate.columns = [
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
 
     # write out of relationship file
     merged_df_relate.to_csv(
@@ -650,6 +670,17 @@ def runner(
     comparison_mapping_file_name = (
         f"{old_model_version}_{new_model_version}_comparison_{current_date}.tsv"
     )
+
+    # Change column names for prefect script
+    comparison_df.columns = [
+        "state",
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
 
     comparison_df.to_csv(
         comparison_mapping_file_name,
