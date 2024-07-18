@@ -99,18 +99,18 @@ def extract_properties(yaml_data):
     properties = []
 
     if "Version" in yaml_data:
-        version = yaml_data["Version"]
-        # version_update = [
-        #     version.replace("v.", "").replace("v", "") for version in versions
-        # ]
+        versions = yaml_data["Version"]
+        version_update = [
+            version.replace("v.", "").replace("v", "") for version in versions
+        ]
 
     else:
-        version = "insert version"
+        version_update = "insert version"
 
     for Nodes, Props in yaml_data["Nodes"].items():
         for Prop in Props["Props"]:
             properties.append(
-                {"node": Nodes, "property": Prop, "version": version}
+                {"node": Nodes, "property": Prop, "version": version_update}
             )
 
     return pd.DataFrame(properties)
@@ -574,14 +574,14 @@ def runner(
     final_merged_out = final_merged
 
     # # Change column names for prefect script
-    # final_merged_out.columns = [
-    #     "lift_from_node",
-    #     "lift_from_property",
-    #     "lift_from_version",
-    #     "lift_to_node",
-    #     "lift_to_property",
-    #     "lift_to_version",
-    # ]
+    final_merged_out.columns = [
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
 
     # add the linkage properties onto the property data frame
 
@@ -655,15 +655,15 @@ def runner(
     )
 
     # Change column names for prefect script
-    # comparison_df.columns = [
-    #     "state",
-    #     "lift_from_node",
-    #     "lift_from_property",
-    #     "lift_from_version",
-    #     "lift_to_node",
-    #     "lift_to_property",
-    #     "lift_to_version",
-    # ]
+    comparison_df.columns = [
+        "state",
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
 
     comparison_df.to_csv(
         comparison_mapping_file_name,
