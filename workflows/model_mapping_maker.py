@@ -574,14 +574,14 @@ def runner(
     final_merged_out = final_merged
 
     # # Change column names for prefect script
-    final_merged_out.columns = [
-        "lift_from_node",
-        "lift_from_property",
-        "lift_from_version",
-        "lift_to_node",
-        "lift_to_property",
-        "lift_to_version",
-    ]
+    # final_merged_out.columns = [
+    #     "lift_from_node",
+    #     "lift_from_property",
+    #     "lift_from_version",
+    #     "lift_to_node",
+    #     "lift_to_property",
+    #     "lift_to_version",
+    # ]
 
     # add the linkage properties onto the property data frame
 
