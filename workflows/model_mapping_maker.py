@@ -99,18 +99,18 @@ def extract_properties(yaml_data):
     properties = []
 
     if "Version" in yaml_data:
-        versions = yaml_data["Version"]
+        version = yaml_data["Version"]
         # version_update = [
         #     version.replace("v.", "").replace("v", "") for version in versions
         # ]
 
     else:
-        version_update = "insert version"
+        version = "insert version"
 
     for Nodes, Props in yaml_data["Nodes"].items():
         for Prop in Props["Props"]:
             properties.append(
-                {"node": Nodes, "property": Prop, "version": version_update}
+                {"node": Nodes, "property": Prop, "version": version}
             )
 
     return pd.DataFrame(properties)
