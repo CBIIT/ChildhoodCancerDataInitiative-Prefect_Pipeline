@@ -960,7 +960,8 @@ class CheckCCDI:
 
     def get_study_id(self):
         study_df = self.read_sheet(sheetname="study")
-        study_id = study_df["study_id"][0]
+        # get accession id from dbgap_accesion since 1.9.1
+        study_id = study_df["dbgap_accession"][0]
         return study_id
 
     def get_dict_df(self):
@@ -1163,6 +1164,11 @@ def extract_dcf_index_single_sheet(
 
     columns: ["file_size", "md5sum", "file_url", "dcf_indexd_guid"]
     The task returns a dictionary of lists
+
+    This function is compatible for ccdi data model 1.9.0 and after
+    All fille node will have "acl" and "authz properties
+    The return df will have 8 cols, "guid", "md5sum", "urls", "size", "node", 
+    "if_guid_missing", "acl", "authz" 
     """
     logger.info(f"Reading sheet {sheetname}")
     sheet_df = CCDI_manifest.read_sheet_na(sheetname=sheetname)
@@ -1174,6 +1180,8 @@ def extract_dcf_index_single_sheet(
     # if the sheet_df is empty
     if sheet_df.empty:
         return_dict = {
+            "acl": [],
+            "authz": [],
             "guid": [],
             "md5": [],
             "urls": [],
@@ -1224,9 +1232,11 @@ def extract_dcf_index_single_sheet(
         else:
             pass
 
-        # Only keep 6 columns
+        # Only keep 8 columns
         subset_sheet_df = sheet_df[
             [
+                "acl",
+                "authz",
                 "dcf_indexd_guid",
                 "md5sum",
                 "file_url",
@@ -1268,6 +1278,8 @@ def extract_dcf_index(
 @task(name="Combine dcf index dicts")
 def combine_dcf_dicts(list_dicts: list[dict]) -> dict:
     combined_dict = {
+        "acl": [],
+        "authz": [],
         "guid": [],
         "md5": [],
         "urls": [],
@@ -1297,8 +1309,6 @@ def ccdi_to_dcf_index(ccdi_manifest: str) -> tuple:
 
     # extract study accession of the manifest
     study_accession = manifest_obj.get_study_id()
-    acl = f"['{study_accession}']"
-    authz = f"['/programs/{study_accession}']"
     logger.info(f"Study accesion: {study_accession}")
 
     # copy the manifest and rename for potential new guids assigned
@@ -1339,8 +1349,6 @@ def ccdi_to_dcf_index(ccdi_manifest: str) -> tuple:
     # add acl and authz, phs_accession
     # finish up with the dcf index df
     combined_df.drop(columns=["node", "if_guid_missing"], inplace=True)
-    combined_df["acl"] = acl
-    combined_df["authz"] = authz
     combined_df["phs_accession"] = study_accession
     col_order = ["guid", "md5", "size", "acl", "authz", "urls", "phs_accession"]
     combined_df = combined_df[col_order]

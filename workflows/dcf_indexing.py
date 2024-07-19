@@ -46,8 +46,6 @@ def dcf_index_manifest(
 
     # extract study accession of the manifest
     study_accession = manifest_obj.get_study_id()
-    acl = f"['{study_accession}']"
-    authz = f"['/programs/{study_accession}']"
     logger.info(f"Study accesion: {study_accession}")
 
     # find the data file sheets/nodes
@@ -89,9 +87,8 @@ def dcf_index_manifest(
 
     # finish up with the dcf index df
     combined_df.drop(columns=["node","if_guid_missing"], inplace=True)
-    combined_df["acl"] = acl
-    combined_df["authz"] = authz
-    col_order = ["GUID", "md5", "size", "acl", "authz", "urls"]
+    combined_df["phs_accession"] = study_accession
+    col_order = ["guid", "md5", "size", "acl", "authz", "urls", "phs_accession"]
     combined_df = combined_df[col_order]
 
     # save df to tsv and upload to bucket
