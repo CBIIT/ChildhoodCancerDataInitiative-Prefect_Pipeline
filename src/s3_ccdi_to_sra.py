@@ -1277,7 +1277,7 @@ def duplicate_filename_fix(sra_df: DataFrame, logger) -> DataFrame:
         logger.warning("Duplicate filenames were found")
         report_duplicate_df = pd.DataFrame(columns=["library_ID", "filename","MD5_checksum","new_filename"])
         for i in duplicate_filenames:
-            i_df = sra_df[sra_df["filename" == i]][
+            i_df = sra_df[sra_df["filename"] == i][
                 ["library_ID", "filename", "MD5_checksum"]
             ]
             i_df["new_filename"] = i_df["MD5_checksum"].astype(str).str[-4:] + "_" + i_df["filename"]
