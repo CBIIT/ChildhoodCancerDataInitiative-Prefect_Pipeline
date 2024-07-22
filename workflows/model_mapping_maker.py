@@ -5,72 +5,18 @@ import requests
 import pandas as pd
 from datetime import date
 import os
-from dataclasses import dataclass
 from prefect import flow, get_run_logger, pause_flow_run
 from prefect.input import RunInput
 from src.utils import (
     get_time,
-    get_date,
-    get_manifest_phs,
     file_dl,
     file_ul,
-    folder_dl,
-    view_all_s3_objects,
-    markdown_input_task,
-    markdown_output_task,
-    check_ccdi_version,
-    dl_ccdi_template,
-    dl_sra_template,
-    get_ccdi_latest_release,
-    ccdi_wf_inputs_ul,
-    ccdi_wf_outputs_ul,
-    identify_data_curation_log_file,
-    ccdi_to_dcf_index,
 )
 
 
 class InputValues(RunInput):
     node: str
     property: str
-
-
-# @dataclass
-# class InputDescription:
-
-#     """dataclass for wait for input description MD"""
-
-#     old_to_new_input: str = (
-#         f"""
-# **Please provide inputs as shown below**
-
-# If these values were moved to a new location, please enter the new node and/or property.
-
-# - If a value is staying the same, write 'same'.
-# - If a value is removed, write 'remove'.
-
-# {index}. node: {node}, property: {property}
-
-# - **node**: the new node/nodes the property is located in. For lists, use ';' as the separator.
-# - **property**: the new property name.
-
-# """
-#     )
-#     new_to_old_input: str = (
-#         f"""
-# **Please provide inputs as shown below**
-
-# If these values are being pulled from an older location, please enter the old node and/or property.
-
-# - If a value is staying the same, write 'same'.
-# - If a value is removed, write 'remove'.
-
-# {index}. node: {node}, property: {property}
-
-# - **node**: the old node/nodes the property is located in.
-# - **property**: the old property name.
-
-# """
-#     )
 
 
 # obtain the date
@@ -330,10 +276,13 @@ If these values are being pulled from an older location, please enter the old no
 def runner(
     bucket: str,
     runner: str,
-    model_repository: str = "ccdi-model",
-    base_mode: bool = False,
+    old_model_repository: str = "ccdi-model",
+    new_model_repository: str = "ccdi-model",
     old_model_version: str = "",
     new_model_version: str = "",
+    old_model_file_location: str = "model-desc/ccdi-model.yml",
+    new_model_file_location: str = "model-desc/ccdi-model.yml",
+    base_mode: bool = False,
     nodes_mapping_file: str = "path_to/nodes_file/in/s3_bucket",
     relationship_mapping_file: str = "path_to/nodes_file/in/s3_bucket",
 ):
@@ -359,14 +308,14 @@ def runner(
     current_date = refresh_date()
 
     # URL of the raw YAML file on GitHub
-    new_model_url = f"https://raw.githubusercontent.com/CBIIT/{model_repository}/{new_model_version}/model-desc/ccdi-model.yml"
-    old_model_url = f"https://raw.githubusercontent.com/CBIIT/{model_repository}/{old_model_version}/model-desc/ccdi-model.yml"
+    new_model_url = f"https://raw.githubusercontent.com/CBIIT/{new_model_repository}/{new_model_version}/{new_model_file_location}"
+    old_model_url = f"https://raw.githubusercontent.com/CBIIT/{old_model_repository}/{old_model_version}/{old_model_file_location}"
 
     # Read the YAML content from the URL
     yaml_content_new = read_yaml_from_github(new_model_url)
-    runner_logger.info(f"{model_repository} at {new_model_version} found.")
+    runner_logger.info(f"{new_model_repository} at {new_model_version} found.")
     yaml_content_old = read_yaml_from_github(old_model_url)
-    runner_logger.info(f"{model_repository} at {old_model_version} found.")
+    runner_logger.info(f"{old_model_repository} at {old_model_version} found.")
 
     # Extract properties from the YAML data
     df_new = extract_properties(yaml_content_new)
@@ -681,7 +630,7 @@ def runner(
         newfile=comparison_mapping_file_name,
     )
 
-    #Reupload fixed MAPPING file with new headers
+    # Reupload fixed MAPPING file with new headers
 
     # Change column names for prefect script
     final_merged_out.columns = [
@@ -709,18 +658,3 @@ def runner(
         sub_folder="",
         newfile=final_mapping_file_name,
     )
-
-# if __name__ == "__main__":
-#     bucket = "my-source-bucket"
-
-#     # test new version manifest and latest version template
-#     # file_path = "inputs/test_file.xlsx"
-
-#     runner(
-#         bucket=bucket,
-#         # file_path=file_path,
-#         # template_path=template_path,
-#         # sra_template_path=sra_template_path,
-#         runner="SVB",
-
-#     )
