@@ -78,6 +78,9 @@ def get_study_contact(workbook_dict: Dict, logger) -> tuple:
 def concat_seq_single_seq(seq_df: DataFrame, single_df: DataFrame) -> DataFrame:
     """Returns a dataframe that combines sequencing_file
     and single_cell_sequencing_file sheets
+    
+    This function will only execute for models before 1.8.0 when single cell sequencing 
+    node still exist
     """
     cols_to_keep = [
         "sample.sample_id",
@@ -100,7 +103,8 @@ def concat_seq_single_seq(seq_df: DataFrame, single_df: DataFrame) -> DataFrame:
         "number_of_reads",
         "coverage",
         "avg_read_length",
-        "file_url",
+        # file_url_in_cds is only found for model before 1.8.0
+        "file_url_in_cds",
     ]
     seq_df_subset = seq_df[cols_to_keep]
     single_df_subset = single_df[cols_to_keep]
