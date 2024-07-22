@@ -8,6 +8,7 @@ from shutil import copy
 from src.utils import get_date, get_time, get_logger, ccdi_manifest_to_dict
 import openpyxl
 from openpyxl.styles import Font
+import numpy as np
 
 
 ExcelReader = TypeVar("ExcelReader")
@@ -1249,6 +1250,42 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
     return sra_df
 
 
+def duplicate_filename_fix(sra_df: DataFrame, logger) -> DataFrame:
+    """Identifies any duplicate filenames in the sra_df. If found, concatenate
+    last 4 digits of file md5sum and filename to make it unique. Reports these files
+    in the logger
+
+    For instance, f046_RNA-927590_1.fq.gz.
+    """
+    duplicate_filenames = (
+        sra_df.groupby(["filename"])
+        .size()
+        .loc[lambda x: x > 1].index
+    )
+    if len(duplicate_filenames) == 0:
+        logger.info("No duplicate filenames were found")
+    else:
+        logger.warning("Duplicate filenames were found")
+        report_duplicate_df = pd.DataFrame(columns=["library_ID", "filename","MD5_checksum","new_filename"])
+        for i in duplicate_filenames:
+            i_df = sra_df[sra_df["filename" == i]][
+                ["library_ID", "filename", "MD5_checksum"]
+            ]
+            i_df["new_filename"] = i_df["MD5_checksum"].astype(str).str[-4:] + "_" + i_df["filename"]
+            report_duplicate_df = pd.concat([report_duplicate_df, i_df], ignore_index=True)
+            for _, row in i_df.iterrows():
+                index_new_filename = row["new_filename"]
+                sra_df.loc[
+                    (sra_df["filename"] == i)
+                    & (sra_df["MD5_checksum"] == row["MD5_checksum"]),
+                    "filename",
+                ] = index_new_filename
+        logger.warning(
+            "Duplicated filenames have been changed. New filenames include last 4 digits of their md5sum value\n"
+            + report_duplicate_df.to_markdown(tablefmt="fancy_grid", index=False)
+        )
+    return sra_df
+
 @flow(
     name="CCDI_to_SRA_submission",
     flow_run_name="CCDI_to_SRA_submission_" + f"{get_time()}",
@@ -1452,6 +1489,12 @@ def CCDI_to_SRA(
     # the same sample_ID and sharing SAME library source, selection, and strategy
     sra_df = concatenate_library_id(sra_df=sra_df)
 
+    
+    # identify any any files sharing the same filename and concatenate
+    # filename with last 4 digits of its md5sum. For some reason, SRA treats
+    # filename in the nature of an ID that needs to be unique
+    sra_df = duplicate_filename_fix(sra_df=sra_df, logger=logger)
+    
     # data frame manipulation, spread sra_df if multiple sequencing files are
     # sharing same library_ID. This function won't result multiple row sharing
     # same libary_ID
