@@ -268,6 +268,7 @@ If these values are being pulled from an older location, please enter the old no
         df.at[index, missing_version_col] = new_model_version
 
 
+# Here is the main flow of the script
 @flow(
     name="Model Mapping Maker",
     log_prints=True,
@@ -521,16 +522,6 @@ def runner(
     )
 
     final_merged_out = final_merged
-
-    # Change column names for prefect script
-    # final_merged_out.columns = [
-    #     "lift_from_node",
-    #     "lift_from_property",
-    #     "lift_from_version",
-    #     "lift_to_node",
-    #     "lift_to_property",
-    #     "lift_to_version",
-    # ]
 
     # add the linkage properties onto the property data frame
 
