@@ -1166,7 +1166,7 @@ def extract_dcf_index_single_sheet(
     The task returns a dictionary of lists
 
     This function is compatible for ccdi data model 1.9.0 and after
-    All fille node will have "acl" and "authz properties
+    All file nodes will have "acl" and "authz" properties
     The return df will have 8 cols, "guid", "md5sum", "urls", "size", "node", 
     "if_guid_missing", "acl", "authz" 
     """
