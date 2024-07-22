@@ -32,6 +32,8 @@ def run_ccdi_to_sra(
     output_folder = os.path.join(runner, "ccdi_to_sra_outputs_" + get_time())
 
     print("Start generating SRA submission file")
+
+    """
     try:
         (sra_out_file, sra_out_log) = CCDI_to_SRA(
             manifest=manifest_name,
@@ -43,6 +45,13 @@ def run_ccdi_to_sra(
         sra_out_log = identify_data_curation_log_file(
             start_str="CCDI_to_SRA_submission_"
         )
+    """
+    (sra_out_file, sra_out_log) = CCDI_to_SRA(
+        manifest=manifest_name,
+        template=template_name,
+        pre_submission=None,
+    )
+
     print(f"Two outputs:\n - {sra_out_file}\n - {sra_out_log}")
 
     # upload outputs
