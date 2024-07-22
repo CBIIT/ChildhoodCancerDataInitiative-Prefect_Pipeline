@@ -217,9 +217,14 @@ def sra_match_manifest_seq(
     sra_seq_df["Reads"] = manifest_seq_df["number_of_reads"]
     sra_seq_df["coverage"] = manifest_seq_df["coverage"]
     sra_seq_df["AvgReadLength"] = manifest_seq_df["avg_read_length"]
-    sra_seq_df["active_location_URL"] = [
-        os.path.dirname(i) + "/" for i in manifest_seq_df["file_url"].tolist()
-    ]
+    if "file_url" in manifest_seq_df.columns:
+        sra_seq_df["active_location_URL"] = [
+            os.path.dirname(i) + "/" for i in manifest_seq_df["file_url"].tolist()
+        ]
+    else:
+        sra_seq_df["active_location_URL"] = [
+            os.path.dirname(i) + "/" for i in manifest_seq_df["file_url_in_cds"].tolist()
+        ]
     return sra_seq_df
 
 
