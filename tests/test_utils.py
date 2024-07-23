@@ -71,6 +71,8 @@ def fake_sheet_df():
                 "s3://some-bucket/testfolder/file2.tsv",
                 "s3://some-bucket/testfolder/file3.tsv",
             ],
+            "acl": ["fake_acl", "fake_acl", "fake_acl"],
+            "authz": ["fake_authz", "fake_authz", "fake_authz"],
         }
     )
     return return_df
@@ -85,6 +87,8 @@ def empty_sheet_df():
             "md5sum": [np.nan],
             "dcf_indexd_guid": [np.nan],
             "file_url": [np.nan],
+            "acl": [np.nan],
+            "authz": [np.nan]
         }
     )
     return return_df
@@ -143,7 +147,6 @@ def test_CCDI_Tags_get_tag_element(mock_requests, my_ccdi_tags, fake_tags_api_re
     assert tag_element["zipball_url"] == "http://url/tags/0.1.0"
 
 
-
 @mock.patch("src.utils.requests", autospec=True)
 def test_get_ccdi_latest_release_valid(mock_requests):
     request_return = mock_requests.get.return_value
@@ -159,7 +162,7 @@ def test_get_ccdi_latest_release_invalid(mock_requests):
     latest_release = get_ccdi_latest_release()
     assert latest_release == "unknown"
 
-    
+
 def test_list_to_chunks():
     test_list = [1, 2, 3, 4, 5]
     chunked_list = list_to_chunks(mylist=test_list, chunk_len=2)
@@ -198,31 +201,57 @@ def test_calculate_single_size_task(mock_client):
 def test_extract_dcf_index_single_sheet(fake_sheet_df):
     test_manifest = MagicMock()
     test_logger = MagicMock()
+    test_manifest_for_modification = MagicMock()
     test_manifest.read_sheet_na.return_value = fake_sheet_df
     test_dict = extract_dcf_index_single_sheet.fn(
-        CCDI_manifest=test_manifest, sheetname="anysheet", logger=test_logger
+        CCDI_manifest=test_manifest,
+        sheetname="anysheet",
+        logger=test_logger,
+        modified_manifest=test_manifest_for_modification,
     )
-    assert test_dict["GUID"][1] == "dg.4DFC/guid2"
+    assert test_dict["guid"][1] == "dg.4DFC/guid2"
     assert "size" in test_dict.keys()
     assert test_dict["urls"][2] == "s3://some-bucket/testfolder/file3.tsv"
 
 
-def test_extract_dcf_index_single_sheet(empty_sheet_df):
+def test_extract_dcf_index_single_sheet_empty(empty_sheet_df):
     test_manifest = MagicMock()
     test_logger = MagicMock()
+    test_manifest_for_modification = MagicMock()
     test_manifest.read_sheet_na.return_value = empty_sheet_df
     test_dict = extract_dcf_index_single_sheet.fn(
-        CCDI_manifest=test_manifest, sheetname="anysheet", logger=test_logger
+        CCDI_manifest=test_manifest,
+        sheetname="anysheet",
+        logger=test_logger,
+        modified_manifest=test_manifest_for_modification,
     )
-    assert len(test_dict["GUID"]) == 0
+    assert len(test_dict["guid"]) == 0
     assert "size" in test_dict.keys()
     assert test_dict["size"] == []
 
 
 def test_combine_dcf_dicts():
-    dict1 = {"GUID": [1,2], "md5": [3,4], "urls": [5,6], "size": [7,8]}
-    dict2 = {"GUID": [10], "md5": [11], "urls": [12], "size": [13]}
+    dict1 = {
+        "guid": [1, 2],
+        "md5": [3, 4],
+        "urls": [5, 6],
+        "size": [7, 8],
+        "acl": [12, 13],
+        "authz": [22, 23],
+        "node": ["node1","node1"],
+        "if_guid_missing": ["",""]
+    }
+    dict2 = {
+        "guid": [10],
+        "md5": [11],
+        "urls": [12],
+        "size": [13],
+        "acl": [20],
+        "authz": [24],
+        "node": ["node2"],
+        "if_guid_missing": [""],
+    }
     combined_df = combine_dcf_dicts.fn([dict1, dict2])
-    assert combined_df["GUID"] == [1,2,10]
-    assert len(combined_df["urls"]) == 3
-    assert len(combined_df.keys()) == 4 
+    assert combined_df["guid"] == [1, 2, 10]
+    assert len(combined_df["acl"]) == 3
+    assert len(combined_df.keys()) == 8
