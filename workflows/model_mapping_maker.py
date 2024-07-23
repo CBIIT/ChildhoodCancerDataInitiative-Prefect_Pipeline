@@ -45,10 +45,8 @@ def extract_properties(yaml_data):
     properties = []
 
     if "Version" in yaml_data:
-        versions = yaml_data["Version"]
-        version_update = [
-            version.replace("v.", "").replace("v", "") for version in versions
-        ]
+        version = yaml_data["Version"]
+        version_update = [version.replace("v.", "").replace("v", "")]
 
     else:
         version_update = "insert version"
