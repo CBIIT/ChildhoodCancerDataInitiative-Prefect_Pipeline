@@ -423,7 +423,7 @@ def runner(
     )
 
     nodes_mapping_file_name = (
-        f"{old_model_version}_{new_model_version}_nodes_{current_date}.tsv"
+        f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_nodes_{current_date}.tsv"
     )
 
     new_merged_df.to_csv(
@@ -491,7 +491,7 @@ def runner(
     merged_df_relate = merged_df_relate.fillna("")
 
     relationship_mapping_file_name = (
-        f"{old_model_version}_{new_model_version}_relationship_{current_date}.tsv"
+        f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_relationship_{current_date}.tsv"
     )
 
     # write out of relationship file
@@ -516,7 +516,7 @@ def runner(
     final_merged = final_merged.drop_duplicates()
 
     final_mapping_file_name = (
-        f"{old_model_version}_{new_model_version}_MAPPING_{current_date}.tsv"
+        f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_MAPPING_{current_date}.tsv"
     )
 
     final_merged_out = final_merged
@@ -589,7 +589,7 @@ def runner(
     comparison_df = comparison_df.drop_duplicates()
 
     comparison_mapping_file_name = (
-        f"{old_model_version}_{new_model_version}_comparison_{current_date}.tsv"
+        f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_comparison_{current_date}.tsv"
     )
 
     comparison_df_out = comparison_df
