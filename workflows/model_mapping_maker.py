@@ -258,7 +258,6 @@ If these values are being pulled from an older location, please enter the old no
             user_input_prop = None
 
         # obtain the model version based on the input missing column
-        runner_logger.info(df)
         new_model_version = df[missing_version_col].dropna().unique()[0]
 
         # apply values to the data frame
