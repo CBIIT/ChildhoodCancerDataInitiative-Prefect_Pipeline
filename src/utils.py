@@ -29,6 +29,7 @@ from prefect_github import GitHubCredentials
 import hashlib
 from urllib.parse import urlparse
 from shutil import copy2
+from file_remover import paginate_parameter
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -291,6 +292,25 @@ def set_s3_session_client():
         )
         s3_client = boto3.client("s3", config=custom_retry_config)
     return s3_client
+
+
+@task(name="list URI of all objects under a s3 bucket dir")
+def list_dir_content_uri(dir_path: str) -> list[str]:
+    s3 = set_s3_session_client()
+    s3_paginator = s3.get_paginator("list_objects_v2")
+    operation_parameters = paginate_parameter(bucket_path=dir_path)
+    bucket_name = operation_parameters["Bucket"]
+    pages = s3_paginator.paginate(**operation_parameters)
+    return_list = []
+    for page in pages:
+        if "Contents" in page.keys():
+            for obj in page["Contents"]:
+                obj_key = obj["Key"]
+                obj_uri = os.path.join(bucket_name, obj_key)
+                return_list.append(obj_uri)
+        else:
+            pass
+    return return_list
 
 
 @task(name="Download file", task_run_name="download_file_{filename}", log_prints=True)
