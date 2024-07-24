@@ -1118,6 +1118,8 @@ def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
 def calculate_single_size_task(s3uri: str, s3_client) -> str:
     try:
         bucket_name, object_key = parse_file_url(s3uri)
+        print(bucket_name)
+        print(object_key)
         object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
             "ContentLength"
         ]
