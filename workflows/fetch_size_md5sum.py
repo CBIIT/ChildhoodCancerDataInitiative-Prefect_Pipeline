@@ -12,10 +12,8 @@ from src.utils import (
     calculate_list_size,
     file_ul,
     list_to_chunks,
-    set_s3_session_client,
     list_dir_content_uri
 )
-from src.read_buckets import paginate_parameter
 import pandas as pd
 
 
