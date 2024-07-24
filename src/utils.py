@@ -29,7 +29,7 @@ from prefect_github import GitHubCredentials
 import hashlib
 from urllib.parse import urlparse
 from shutil import copy2
-from file_remover import paginate_parameter
+from src.file_remover import paginate_parameter
 
 
 ExcelFile = TypeVar("ExcelFile")
