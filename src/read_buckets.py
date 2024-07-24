@@ -35,7 +35,7 @@ def count_df(mydict: Dict, newitem: str) -> Dict:
     return mydict
 
 
-def paginate_parameter(bucket_path: str) -> tuple:
+def paginate_parameter(bucket_path: str) -> dict:
     if bucket_path.startswith("s3://"):
         bucket_path = bucket_path[5:]
     else:

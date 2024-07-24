@@ -1041,6 +1041,11 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
 
 
 def parse_file_url(url: str) -> tuple:
+    # in case the url doesn't start with s3://
+    if not url.startswith("s3://"):
+        url = "s3://" + url
+    else:
+        pass
     parsed_url = urlparse(url)
     bucket_name = parsed_url.netloc
     object_key = parsed_url.path
