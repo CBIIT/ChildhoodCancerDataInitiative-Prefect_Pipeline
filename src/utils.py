@@ -310,6 +310,7 @@ def list_dir_content_uri(dir_path: str) -> list[str]:
                 return_list.append(obj_uri)
         else:
             pass
+    s3.close()
     return return_list
 
 
