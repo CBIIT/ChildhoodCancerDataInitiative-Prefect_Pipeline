@@ -50,7 +50,6 @@ def list_dir_content_uri(dir_path: str) -> list[str]:
 @flow(
     name="Calculate md5sum and size of url list",
     log_prints=True,
-    flow_run_name="{runner}-" + f"{get_time()}",
 )
 def fetch_size_md5sum_with_urls(s3uri_list: list[str]) -> None:
     logger = get_run_logger()
