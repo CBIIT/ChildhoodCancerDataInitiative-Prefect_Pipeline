@@ -12,8 +12,9 @@ from src.utils import (
     calculate_list_size,
     file_ul,
     list_to_chunks,
-    list_dir_content_uri
+    set_s3_session_client
 )
+from src.file_remover import paginate_parameter
 import pandas as pd
 
 
@@ -23,6 +24,26 @@ class DirectoryListInput(RunInput):
 
 class UriListInput(RunInput):
     url_list: list[str]
+
+
+@task(name="list URI of all objects under a s3 bucket dir")
+def list_dir_content_uri(dir_path: str) -> list[str]:
+    s3 = set_s3_session_client()
+    s3_paginator = s3.get_paginator("list_objects_v2")
+    operation_parameters = paginate_parameter(bucket_path=dir_path)
+    bucket_name = operation_parameters["Bucket"]
+    pages = s3_paginator.paginate(**operation_parameters)
+    return_list = []
+    for page in pages:
+        if "Contents" in page.keys():
+            for obj in page["Contents"]:
+                obj_key = obj["Key"]
+                obj_uri = os.path.join(bucket_name, obj_key)
+                return_list.append(obj_uri)
+        else:
+            pass
+    s3.close()
+    return return_list
 
 
 @flow(
