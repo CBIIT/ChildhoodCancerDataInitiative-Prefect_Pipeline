@@ -362,6 +362,7 @@ def validate_terms_value_sets_one_sheet(
                                 bad_enum_list.append(unique_value)
 
                         # itterate over that list and print out the values
+                        bad_enum_list = ["(" + i + ")" for i in bad_enum_list]
                         enum_print = "\n".join(bad_enum_list)
                         property_dict["error value"] = enum_print
                 # if the property is not an array
@@ -399,6 +400,7 @@ def validate_terms_value_sets_one_sheet(
                                 if unique_value not in tavs_df_prop["Term"].values:
                                     bad_enum_list.append(unique_value)
 
+                            bad_enum_list = ["(" + i + ")" for i in bad_enum_list]
                             enum_print = "\n".join(bad_enum_list)
                             property_dict["error value"] = enum_print
                     else:
@@ -413,7 +415,7 @@ def validate_terms_value_sets_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
-        check_df["error value"] = check_df["error value"].str.wrap(30)
+        check_df["error value"] = check_df["error value"].str.wrap(45)
         check_df["property"] = check_df["property"].str.wrap(20)
         check_df["node"] = check_df["node"].str.wrap(20)
     else:
@@ -660,7 +662,7 @@ def validate_regex_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
-        check_df["error value"] = check_df["error value"].str.wrap(30)
+        check_df["error value"] = check_df["error value"].str.wrap(45)
         check_df["property"] = check_df["property"].str.wrap(25)
     else:
         pass
