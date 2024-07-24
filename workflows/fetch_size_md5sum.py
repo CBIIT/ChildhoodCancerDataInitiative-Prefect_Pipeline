@@ -71,6 +71,8 @@ def fetch_size_md5sum_with_urls(s3uri_list: list[str]) -> None:
             md5sum_list.extend(i_md5sum_list)
             logger.info(f"Progress: {process_bar}/{len(chunk_list)}")
             process_bar += 1
+    # fix uri if s3:// is missing
+    s3uri_list =  ["s3://" + i if not i.startswith("s3://") else i for i in s3uri_list]
     # creates a pandas df and writes it into a tsv file
     return_df = pd.DataFrame(
         {"S3_URI": s3uri_list, "Size": size_list, "md5sum": md5sum_list}
