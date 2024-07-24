@@ -298,6 +298,7 @@ def validate_terms_value_sets_one_sheet(
                     # obtain a list of value strings
                     unique_values = node_df[property].dropna().unique()
                     # pull out a complete list of all values in sub-arrays
+                    uniq_item_toss = []
                     for unique_value in unique_values:
                         # if there is a semi-colon
                         if ";" in unique_value:
@@ -306,6 +307,7 @@ def validate_terms_value_sets_one_sheet(
                                 unique_value
                                 not in tavs_df_prop["Term"].unique().tolist()
                             ):
+                                """
                                 # find the position
                                 unique_value_pos = np.where(
                                     unique_values == unique_value
@@ -314,14 +316,18 @@ def validate_terms_value_sets_one_sheet(
                                 unique_values = np.delete(
                                     unique_values, unique_value_pos
                                 )
+                                """
+                                uniq_item_toss.append(unique_value)
                                 # rework the entry and apply back to list
-                                unique_value = list(set(unique_value.split(";")))
-                                for value in unique_value:
+                                unique_value_split = list(set(unique_value.split(";")))
+                                for value in unique_value_split:
                                     unique_values = np.append(unique_values, value)
                             else:
                                 pass
                         else:
                             pass
+                    # remove item with ; in value
+                    unique_values = [i for i in unique_values if i not in uniq_item_toss]
                     # make sure list is unique
                     unique_values = list(set(unique_values))
 
@@ -356,9 +362,9 @@ def validate_terms_value_sets_one_sheet(
                                 bad_enum_list.append(unique_value)
 
                         # itterate over that list and print out the values
-                        enum_print = ",".join(bad_enum_list)
+                        enum_print = "\n".join(bad_enum_list)
                         property_dict["error value"] = enum_print
-                # if the property is not an enum
+                # if the property is not an array
                 else:
                     unique_values = node_df[property].dropna().unique()
                     # as long as there are unique values
@@ -393,7 +399,7 @@ def validate_terms_value_sets_one_sheet(
                                 if unique_value not in tavs_df_prop["Term"].values:
                                     bad_enum_list.append(unique_value)
 
-                            enum_print = ",".join(bad_enum_list)
+                            enum_print = "\n".join(bad_enum_list)
                             property_dict["error value"] = enum_print
                     else:
                         property_dict["check"] = "PASS"
