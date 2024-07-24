@@ -1041,6 +1041,11 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
 
 
 def parse_file_url(url: str) -> tuple:
+    # in case the url doesn't start with s3://
+    if not url.startswith("s3://"):
+        url = "s3://" + url
+    else:
+        pass
     parsed_url = urlparse(url)
     bucket_name = parsed_url.netloc
     object_key = parsed_url.path
@@ -1118,8 +1123,6 @@ def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
 def calculate_single_size_task(s3uri: str, s3_client) -> str:
     try:
         bucket_name, object_key = parse_file_url(s3uri)
-        print(bucket_name)
-        print(object_key)
         object_size = s3_client.get_object(Bucket=bucket_name, Key=object_key)[
             "ContentLength"
         ]
