@@ -327,7 +327,9 @@ def validate_terms_value_sets_one_sheet(
                         else:
                             pass
                     # remove item with ; in value
-                    unique_values = [i for i in unique_values if i not in uniq_item_toss]
+                    unique_values = [
+                        i for i in unique_values if i not in uniq_item_toss
+                    ]
                     # make sure list is unique
                     unique_values = list(set(unique_values))
 
@@ -363,7 +365,8 @@ def validate_terms_value_sets_one_sheet(
 
                         # itterate over that list and print out the values
                         bad_enum_list = ["(" + i + ")" for i in bad_enum_list]
-                        enum_print = "\n".join(bad_enum_list)
+                        enum_print = ",\n".join(bad_enum_list)
+                        print(f"Invalid terms for property {property}:\n" + enum_print)
                         property_dict["error value"] = enum_print
                 # if the property is not an array
                 else:
@@ -401,7 +404,10 @@ def validate_terms_value_sets_one_sheet(
                                     bad_enum_list.append(unique_value)
 
                             bad_enum_list = ["(" + i + ")" for i in bad_enum_list]
-                            enum_print = "\n".join(bad_enum_list)
+                            enum_print = ",\n".join(bad_enum_list)
+                            print(
+                                f"Invalid terms for property {property}:\n" + enum_print
+                            )
                             property_dict["error value"] = enum_print
                     else:
                         property_dict["check"] = "PASS"
@@ -415,7 +421,7 @@ def validate_terms_value_sets_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
-        check_df["error value"] = check_df["error value"].str.wrap(45)
+        # check_df["error value"] = check_df["error value"].str.wrap(45)
         check_df["property"] = check_df["property"].str.wrap(20)
         check_df["node"] = check_df["node"].str.wrap(20)
     else:
@@ -930,9 +936,7 @@ def check_file_basename(file_df: DataFrame) -> str:
         else:
             pass
     else:
-        print_str = (
-            print_str + "\tINFO: all file names were found in their file_url.\n"
-        )
+        print_str = print_str + "\tINFO: all file names were found in their file_url.\n"
     return print_str
 
 
@@ -1028,9 +1032,7 @@ def validate_objs_loc_size(
         lambda x: True if parse_file_url(x)[0] in readable_bucket_list else False
     )
     # extract a list of url with readable bucket list only
-    uri_list = df_file.loc[
-        df_file["if_bucket_readable"] == True, "file_url"
-    ].tolist()
+    uri_list = df_file.loc[df_file["if_bucket_readable"] == True, "file_url"].tolist()
     if_exist = []
     bucket_obj_size = []
     s3_client = set_s3_session_client()
@@ -1077,9 +1079,7 @@ def validate_file_metadata(
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    file_nodes = dict_df[dict_df["Property"] == "file_url"][
-        "Node"
-    ].values.tolist()
+    file_nodes = dict_df[dict_df["Property"] == "file_url"]["Node"].values.tolist()
     file_nodes_to_check = [i for i in node_list if i in file_nodes]
     df_file = extract_object_file_meta(
         nodes_list=file_nodes_to_check, file_object=file_object
@@ -1118,9 +1118,7 @@ def validate_bucket_content(
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    file_nodes = dict_df[dict_df["Property"] == "file_url"][
-        "Node"
-    ].values.tolist()
+    file_nodes = dict_df[dict_df["Property"] == "file_url"]["Node"].values.tolist()
     file_nodes_to_check = [i for i in node_list if i in file_nodes]
     if len(file_nodes_to_check) == 0:
         with open(output_file, "a+") as outf:
@@ -1593,7 +1591,6 @@ def ValidationRy_new(file_path: str, template_path: str):
         output_file=output_file,
     )
     """
-    
 
     # validate cross links
     validation_logger.info("Checking cross links between nodes")
