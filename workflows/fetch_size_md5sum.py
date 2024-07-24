@@ -30,7 +30,6 @@ class UriListInput(RunInput):
 def list_dir_content_uri(dir_path: str) -> list[str]:
     s3 = set_s3_session_client()
     s3_paginator = s3.get_paginator("list_objects_v2")
-    print(dir_path)
     operation_parameters = paginate_parameter(bucket_path=dir_path)
     bucket_name = operation_parameters["Bucket"]
     pages = s3_paginator.paginate(**operation_parameters)
@@ -133,6 +132,7 @@ def get_size_md5sum(bucket: str, runner: str, dir_or_uri: str) -> None:
         raise ValueError(f"Invalid value for dir_or_uri was received: {dir_or_uri}")
 
     # start fetching object size and calculate md5sum with uri_list
+    print(uri_list)
     logger.info(f"Number of objects to report: {len(uri_list)}")
     output_file = fetch_size_md5sum_with_urls(s3uri_list=uri_list)
 
