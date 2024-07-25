@@ -436,7 +436,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         )
 
                 meta_dfs[node] = df
-        
+
         print(
             "\nFile access checks and value creation complete.\n",
             file=outf,
@@ -653,6 +653,21 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         df = df.fillna("")
         df = df.drop_duplicates()
         meta_dfs[node] = df
+
+    ##############
+    #
+    # Replace any no-break space before writing output
+    #
+    ##############
+    def replace_no_break_space(meta_dfs: dict, dict_nodes: list[str]) -> dict:
+        for node in dict_nodes:
+            node_df = meta_dfs[node]
+            node_df_str_cols = [col for col, dt in node_df.dtypes.items() if dt == object]
+            for col_i in node_df_str_cols:
+                node_df[col_i] = node_df[col_i].str.replace(u"\u00A0", " ")
+            meta_dfs[node] = node_df
+        return meta_dfs
+    meta_dfs =  replace_no_break_space(meta_dfs=meta_dfs, dict_nodes=dict_nodes)
 
     ##############
     #
