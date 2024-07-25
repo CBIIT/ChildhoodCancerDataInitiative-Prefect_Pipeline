@@ -286,6 +286,7 @@ def validate_terms_value_sets_one_sheet(
     for property in properties:
         WARN_FLAG = True
         tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
+       
         # if the property is in the TaVs data frame
         if len(tavs_df_prop) > 0:
             # if the property is not completely empty:
@@ -298,6 +299,7 @@ def validate_terms_value_sets_one_sheet(
                     # obtain a list of value strings
                     unique_values = node_df[property].dropna().unique()
                     # pull out a complete list of all values in sub-arrays
+                    uniq_item_toss = []
                     for unique_value in unique_values:
                         # if there is a semi-colon
                         if ";" in unique_value:
@@ -306,6 +308,7 @@ def validate_terms_value_sets_one_sheet(
                                 unique_value
                                 not in tavs_df_prop["Term"].unique().tolist()
                             ):
+                                """
                                 # find the position
                                 unique_value_pos = np.where(
                                     unique_values == unique_value
@@ -314,14 +317,20 @@ def validate_terms_value_sets_one_sheet(
                                 unique_values = np.delete(
                                     unique_values, unique_value_pos
                                 )
+                                """
+                                uniq_item_toss.append(unique_value)
                                 # rework the entry and apply back to list
-                                unique_value = list(set(unique_value.split(";")))
-                                for value in unique_value:
+                                unique_value_split = list(set(unique_value.split(";")))
+                                for value in unique_value_split:
                                     unique_values = np.append(unique_values, value)
                             else:
                                 pass
                         else:
                             pass
+                    # remove item with ; in value
+                    unique_values = [
+                        i for i in unique_values if i not in uniq_item_toss
+                    ]
                     # make sure list is unique
                     unique_values = list(set(unique_values))
 
@@ -356,9 +365,11 @@ def validate_terms_value_sets_one_sheet(
                                 bad_enum_list.append(unique_value)
 
                         # itterate over that list and print out the values
-                        enum_print = ",".join(bad_enum_list)
+                        bad_enum_list = ["[" + i + "]" for i in bad_enum_list]
+                        enum_print = ",\n".join(bad_enum_list)
+                        print(f"Invalid terms for property {property}:\n" + enum_print)
                         property_dict["error value"] = enum_print
-                # if the property is not an enum
+                # if the property is not an array
                 else:
                     unique_values = node_df[property].dropna().unique()
                     # as long as there are unique values
@@ -393,7 +404,11 @@ def validate_terms_value_sets_one_sheet(
                                 if unique_value not in tavs_df_prop["Term"].values:
                                     bad_enum_list.append(unique_value)
 
-                            enum_print = ",".join(bad_enum_list)
+                            bad_enum_list = ["[" + i + "]" for i in bad_enum_list]
+                            enum_print = ",\n".join(bad_enum_list)
+                            print(
+                                f"Invalid terms for property {property}:\n" + enum_print
+                            )
                             property_dict["error value"] = enum_print
                     else:
                         property_dict["check"] = "PASS"
@@ -407,7 +422,6 @@ def validate_terms_value_sets_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
-        check_df["error value"] = check_df["error value"].str.wrap(30)
         check_df["property"] = check_df["property"].str.wrap(20)
         check_df["node"] = check_df["node"].str.wrap(20)
     else:
@@ -654,7 +668,7 @@ def validate_regex_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
-        check_df["error value"] = check_df["error value"].str.wrap(30)
+        check_df["error value"] = check_df["error value"].str.wrap(45)
         check_df["property"] = check_df["property"].str.wrap(25)
     else:
         pass
@@ -922,9 +936,7 @@ def check_file_basename(file_df: DataFrame) -> str:
         else:
             pass
     else:
-        print_str = (
-            print_str + "\tINFO: all file names were found in their file_url.\n"
-        )
+        print_str = print_str + "\tINFO: all file names were found in their file_url.\n"
     return print_str
 
 
@@ -1020,9 +1032,7 @@ def validate_objs_loc_size(
         lambda x: True if parse_file_url(x)[0] in readable_bucket_list else False
     )
     # extract a list of url with readable bucket list only
-    uri_list = df_file.loc[
-        df_file["if_bucket_readable"] == True, "file_url"
-    ].tolist()
+    uri_list = df_file.loc[df_file["if_bucket_readable"] == True, "file_url"].tolist()
     if_exist = []
     bucket_obj_size = []
     s3_client = set_s3_session_client()
@@ -1069,9 +1079,7 @@ def validate_file_metadata(
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    file_nodes = dict_df[dict_df["Property"] == "file_url"][
-        "Node"
-    ].values.tolist()
+    file_nodes = dict_df[dict_df["Property"] == "file_url"]["Node"].values.tolist()
     file_nodes_to_check = [i for i in node_list if i in file_nodes]
     df_file = extract_object_file_meta(
         nodes_list=file_nodes_to_check, file_object=file_object
@@ -1110,9 +1118,7 @@ def validate_bucket_content(
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    file_nodes = dict_df[dict_df["Property"] == "file_url"][
-        "Node"
-    ].values.tolist()
+    file_nodes = dict_df[dict_df["Property"] == "file_url"]["Node"].values.tolist()
     file_nodes_to_check = [i for i in node_list if i in file_nodes]
     if len(file_nodes_to_check) == 0:
         with open(output_file, "a+") as outf:
