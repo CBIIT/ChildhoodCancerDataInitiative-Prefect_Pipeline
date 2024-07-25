@@ -286,6 +286,7 @@ def validate_terms_value_sets_one_sheet(
     for property in properties:
         WARN_FLAG = True
         tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
+       
         # if the property is in the TaVs data frame
         if len(tavs_df_prop) > 0:
             # if the property is not completely empty:
@@ -364,9 +365,10 @@ def validate_terms_value_sets_one_sheet(
                                 bad_enum_list.append(unique_value)
 
                         # itterate over that list and print out the values
-                        bad_enum_list = ["(" + i + ")" for i in bad_enum_list]
+                        bad_enum_list = ["[" + i + "]" for i in bad_enum_list]
                         enum_print = ",\n".join(bad_enum_list)
                         print(f"Invalid terms for property {property}:\n" + enum_print)
+                        print(tavs_df_prop["Term"].values)
                         property_dict["error value"] = enum_print
                 # if the property is not an array
                 else:
@@ -403,11 +405,12 @@ def validate_terms_value_sets_one_sheet(
                                 if unique_value not in tavs_df_prop["Term"].values:
                                     bad_enum_list.append(unique_value)
 
-                            bad_enum_list = ["(" + i + ")" for i in bad_enum_list]
+                            bad_enum_list = ["[" + i + "]" for i in bad_enum_list]
                             enum_print = ",\n".join(bad_enum_list)
                             print(
                                 f"Invalid terms for property {property}:\n" + enum_print
                             )
+                            print(tavs_df_prop["Term"].values)
                             property_dict["error value"] = enum_print
                     else:
                         property_dict["check"] = "PASS"
