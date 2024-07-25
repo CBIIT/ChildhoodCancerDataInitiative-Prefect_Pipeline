@@ -368,7 +368,6 @@ def validate_terms_value_sets_one_sheet(
                         bad_enum_list = ["[" + i + "]" for i in bad_enum_list]
                         enum_print = ",\n".join(bad_enum_list)
                         print(f"Invalid terms for property {property}:\n" + enum_print)
-                        print(tavs_df_prop["Term"].values)
                         property_dict["error value"] = enum_print
                 # if the property is not an array
                 else:
@@ -410,7 +409,6 @@ def validate_terms_value_sets_one_sheet(
                             print(
                                 f"Invalid terms for property {property}:\n" + enum_print
                             )
-                            print(tavs_df_prop["Term"].values)
                             property_dict["error value"] = enum_print
                     else:
                         property_dict["check"] = "PASS"
@@ -424,7 +422,6 @@ def validate_terms_value_sets_one_sheet(
             pass
     check_df = pd.DataFrame.from_records(check_list)
     if check_df.shape[0] > 0:
-        # check_df["error value"] = check_df["error value"].str.wrap(45)
         check_df["property"] = check_df["property"].str.wrap(20)
         check_df["node"] = check_df["node"].str.wrap(20)
     else:
@@ -1584,7 +1581,7 @@ def ValidationRy_new(file_path: str, template_path: str):
         template_path=template_path,
         output_file=output_file,
     )
-    """
+
     # validate bucket content
     validation_logger.info("Checking bucket contents against manifest file objects")
     validate_bucket_content(
@@ -1593,7 +1590,6 @@ def ValidationRy_new(file_path: str, template_path: str):
         template_path=template_path,
         output_file=output_file,
     )
-    """
 
     # validate cross links
     validation_logger.info("Checking cross links between nodes")
