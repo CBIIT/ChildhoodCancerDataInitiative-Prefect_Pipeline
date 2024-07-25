@@ -70,8 +70,10 @@ def extract_relationships(yaml_data):
 
     if "Version" in yaml_data:
         version = yaml_data["Version"]
+        version_update = version.replace("v.", "").replace("v", "")
+
     else:
-        version = "insert version"
+        version_update = "insert version"
 
     for relationship in yaml_data["Relationships"].items():
         relationship = relationship[1]["Ends"]
@@ -79,7 +81,7 @@ def extract_relationships(yaml_data):
         for ends in relationship:
             src = ends.get("Src")
             dst = ends.get("Dst")
-            relationships.append({"Src": src, "Dst": dst, "version": version})
+            relationships.append({"Src": src, "Dst": dst, "version": version_update})
 
     return pd.DataFrame(relationships)
 
