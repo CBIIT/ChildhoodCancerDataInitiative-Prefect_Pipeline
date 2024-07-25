@@ -8,6 +8,7 @@ from shutil import copy
 from src.utils import get_date, get_time, get_logger, ccdi_manifest_to_dict
 import openpyxl
 from openpyxl.styles import Font
+import numpy as np
 
 
 ExcelReader = TypeVar("ExcelReader")
@@ -77,6 +78,9 @@ def get_study_contact(workbook_dict: Dict, logger) -> tuple:
 def concat_seq_single_seq(seq_df: DataFrame, single_df: DataFrame) -> DataFrame:
     """Returns a dataframe that combines sequencing_file
     and single_cell_sequencing_file sheets
+    
+    This function will only execute for models before 1.8.0 when single cell sequencing 
+    node still exist
     """
     cols_to_keep = [
         "sample.sample_id",
@@ -99,7 +103,8 @@ def concat_seq_single_seq(seq_df: DataFrame, single_df: DataFrame) -> DataFrame:
         "number_of_reads",
         "coverage",
         "avg_read_length",
-        "file_url",
+        # file_url_in_cds is only found for model before 1.8.0
+        "file_url_in_cds",
     ]
     seq_df_subset = seq_df[cols_to_keep]
     single_df_subset = single_df[cols_to_keep]
@@ -212,9 +217,14 @@ def sra_match_manifest_seq(
     sra_seq_df["Reads"] = manifest_seq_df["number_of_reads"]
     sra_seq_df["coverage"] = manifest_seq_df["coverage"]
     sra_seq_df["AvgReadLength"] = manifest_seq_df["avg_read_length"]
-    sra_seq_df["active_location_URL"] = [
-        os.path.dirname(i) + "/" for i in manifest_seq_df["file_url"].tolist()
-    ]
+    if "file_url" in manifest_seq_df.columns:
+        sra_seq_df["active_location_URL"] = [
+            os.path.dirname(i) + "/" for i in manifest_seq_df["file_url"].tolist()
+        ]
+    else:
+        sra_seq_df["active_location_URL"] = [
+            os.path.dirname(i) + "/" for i in manifest_seq_df["file_url_in_cds"].tolist()
+        ]
     return sra_seq_df
 
 
@@ -1249,6 +1259,42 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
     return sra_df
 
 
+def duplicate_filename_fix(sra_df: DataFrame, logger) -> DataFrame:
+    """Identifies any duplicate filenames in the sra_df. If found, concatenate
+    last 4 digits of file md5sum and filename to make it unique. Reports these files
+    in the logger
+
+    For instance, f046_RNA-927590_1.fq.gz.
+    """
+    duplicate_filenames = (
+        sra_df.groupby(["filename"])
+        .size()
+        .loc[lambda x: x > 1].index
+    )
+    if len(duplicate_filenames) == 0:
+        logger.info("No duplicate filenames were found")
+    else:
+        logger.warning("Duplicated filenames were found")
+        report_duplicate_df = pd.DataFrame(columns=["library_ID", "filename","MD5_checksum","new_filename"])
+        for i in duplicate_filenames:
+            i_df = sra_df[sra_df["filename"] == i][
+                ["library_ID", "filename", "MD5_checksum"]
+            ]
+            i_df["new_filename"] = i_df["MD5_checksum"].astype(str).str[-4:] + "_" + i_df["filename"]
+            report_duplicate_df = pd.concat([report_duplicate_df, i_df], ignore_index=True)
+            for _, row in i_df.iterrows():
+                index_new_filename = row["new_filename"]
+                sra_df.loc[
+                    (sra_df["filename"] == i)
+                    & (sra_df["MD5_checksum"] == row["MD5_checksum"]),
+                    "filename",
+                ] = index_new_filename
+        logger.warning(
+            "Duplicated filenames have been changed. New filenames include last 4 digits of their md5sum value\n"
+            + report_duplicate_df.to_markdown(tablefmt="fancy_grid", index=False)
+        )
+    return sra_df
+
 @flow(
     name="CCDI_to_SRA_submission",
     flow_run_name="CCDI_to_SRA_submission_" + f"{get_time()}",
@@ -1452,6 +1498,12 @@ def CCDI_to_SRA(
     # the same sample_ID and sharing SAME library source, selection, and strategy
     sra_df = concatenate_library_id(sra_df=sra_df)
 
+    
+    # identify any any files sharing the same filename and concatenate
+    # filename with last 4 digits of its md5sum. For some reason, SRA treats
+    # filename in the nature of an ID that needs to be unique
+    sra_df = duplicate_filename_fix(sra_df=sra_df, logger=logger)
+    
     # data frame manipulation, spread sra_df if multiple sequencing files are
     # sharing same library_ID. This function won't result multiple row sharing
     # same libary_ID
