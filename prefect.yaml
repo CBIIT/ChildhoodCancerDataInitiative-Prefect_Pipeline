@@ -424,3 +424,31 @@ deployments:
       name: ccdi-curation-2gb
       work_queue_name: null
       job_variables: {}
+
+  # base metadata
+  - name: model-mapping-maker-8gb
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/model_mapping_maker.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "your_uniq_id"
+      old_model_repository: "ccdi-model"
+      new_model_repository: "ccdi-model"
+      old_model_file_location: "model-desc/ccdi-model.yml"
+      new_model_file_location: "model-desc/ccdi-model.yml"
+      old_model_version: ""
+      new_model_version: ""
+      base_mode:  False 
+      nodes_mapping_file: "path_to/nodes_file/in/s3_bucket"
+      relationship_mapping_file: "path_to/nodes_file/in/s3_bucket"
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}
