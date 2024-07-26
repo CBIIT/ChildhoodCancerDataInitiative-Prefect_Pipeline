@@ -424,9 +424,7 @@ def runner(
         new_merged_df["version_old"].dropna().unique().tolist()[0]
     )
 
-    nodes_mapping_file_name = (
-        f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_nodes_{current_date}.tsv"
-    )
+    nodes_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_nodes_{current_date}.tsv"
 
     new_merged_df.to_csv(
         nodes_mapping_file_name,
@@ -492,9 +490,7 @@ def runner(
     merged_df_relate = merged_df_relate[new_merged_df.columns]
     merged_df_relate = merged_df_relate.fillna("")
 
-    relationship_mapping_file_name = (
-        f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_relationship_{current_date}.tsv"
-    )
+    relationship_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_relationship_{current_date}.tsv"
 
     # write out of relationship file
     merged_df_relate.to_csv(
@@ -517,9 +513,7 @@ def runner(
     final_merged = final_merged.fillna("")
     final_merged = final_merged.drop_duplicates()
 
-    final_mapping_file_name = (
-        f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_MAPPING_{current_date}.tsv"
-    )
+    final_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_MAPPING_{current_date}.tsv"
 
     final_merged_out = final_merged
 
@@ -590,9 +584,7 @@ def runner(
     comparison_df = comparison_df.fillna("")
     comparison_df = comparison_df.drop_duplicates()
 
-    comparison_mapping_file_name = (
-        f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_comparison_{current_date}.tsv"
-    )
+    comparison_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_comparison_{current_date}.tsv"
 
     comparison_df_out = comparison_df
     # # Change column names for prefect script
@@ -649,3 +641,4 @@ def runner(
         sub_folder="",
         newfile=final_mapping_file_name,
     )
+
