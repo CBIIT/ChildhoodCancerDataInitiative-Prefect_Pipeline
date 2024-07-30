@@ -738,7 +738,6 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
     key_value_props = dict_df.loc[
         (dict_df["Key"] == "TRUE") & (dict_df["Node"] == node_name), "Property"
     ].tolist()
-    print(key_value_props)
 
     print_str = f"\n\t{node_name}\n\t----------\n\t"
     check_list = []
@@ -762,7 +761,6 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
                         property_dict["check"] = "ERROR"
                         # create a tavle of values and counts
                         freq_key_values = node_df[key_value_prop].value_counts()
-                        print(freq_key_values)
                         # pull out a unique list of values that have more than one instance
                         not_unique_key_values = (
                             node_df[
@@ -802,7 +800,6 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
         print_str = (
             print_str + f"WARNING: node {node_name} file contains no Key id property\n"
         )
-    print(print_str)
     return print_str
 
 
@@ -1430,14 +1427,11 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
     # pull out all the id properties in the node
     id_props = node_df.filter(like="_id", axis=1).columns.tolist()
-    print(id_props)
     # convert values under "Key" column to uppercase
     dict_df["Key"] = dict_df["Key"].str.upper()
     key_id_props = dict_df[dict_df["Key"] == "TRUE"]["Property"].unique().tolist()
-    print(key_id_props)
     # pull out only the key ids that are present in the node
     key_ids = list(set(id_props) & set(key_id_props))
-    print(key_ids)
 
     check_list = []
     for key_id in key_ids:
@@ -1560,19 +1554,6 @@ def ValidationRy_new(file_path: str, template_path: str):
     )
     validation_logger.info(f"Nodes will be validated: {*nodes_to_validate,}")
 
-    # validate unique keys
-    validation_logger.info("Checking unique keys")
-    validate_unique_key(nodes_to_validate, file_path, template_path, output_file)
-
-    # validate key id pattern
-    validation_logger.info("Checking key id patterns")
-    validate_key_id(
-        file_path=file_path,
-        template_path=template_path,
-        node_list=nodes_to_validate,
-        output_file=output_file,
-    )
-
     # starts validation of unempty node sheets
     validation_logger.info("Checking if required properties were filled")
     validate_required_properties(
@@ -1600,6 +1581,10 @@ def ValidationRy_new(file_path: str, template_path: str):
     validation_logger.info("Checking regular expression")
     validate_regex(nodes_to_validate, file_path, template_path, output_file)
 
+    # validate unique keys
+    validation_logger.info("Checking unique keys")
+    validate_unique_key(nodes_to_validate, file_path, template_path, output_file)
+
     # validate file metadata (size, md5sum regex, and file basename in url)
     validation_logger.info(
         "Checking object file metadata, size, md5sum regex, and file basename"
@@ -1611,7 +1596,6 @@ def ValidationRy_new(file_path: str, template_path: str):
         output_file=output_file,
     )
 
-    """
     # validate bucket content
     validation_logger.info("Checking bucket contents against manifest file objects")
     validate_bucket_content(
@@ -1620,12 +1604,20 @@ def ValidationRy_new(file_path: str, template_path: str):
         template_path=template_path,
         output_file=output_file,
     )
-    """
 
     # validate cross links
     validation_logger.info("Checking cross links between nodes")
     validate_cross_links(
         node_list=nodes_to_validate, file_path=file_path, output_file=output_file
+    )
+
+    # validate key id pattern
+    validation_logger.info("Checking key id patterns")
+    validate_key_id(
+        file_path=file_path,
+        template_path=template_path,
+        node_list=nodes_to_validate,
+        output_file=output_file,
     )
 
     validation_logger.info(
