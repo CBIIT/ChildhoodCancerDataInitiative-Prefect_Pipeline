@@ -730,14 +730,10 @@ def validate_regex(
 )
 def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
     node_df = file_object.read_sheet_na(sheetname=node_name)
-    print(node_name)
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    print(dict_df)
-    print(dict_df.columns)
-    print(dict_df[dict_df["Node"]==node_name][["Property", "Node", "Required", "Key"]])
-    print(dict_df[dict_df["Node"] == node_name]["Key"].dropna().tolist())
+    dict_df["Key"] = dict_df["Key"].str.upper()
     # pull out all key value properties
     key_value_props = dict_df.loc[
         (dict_df["Key"] == "TRUE") & (dict_df["Node"] == node_name), "Property"
@@ -806,6 +802,7 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
         print_str = (
             print_str + f"WARNING: node {node_name} file contains no Key id property\n"
         )
+    print(print_str)
     return print_str
 
 
@@ -1433,9 +1430,14 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
     # pull out all the id properties in the node
     id_props = node_df.filter(like="_id", axis=1).columns.tolist()
-    key_id_props = dict_df[dict_df["Key"] == "True"]["Property"].unique().tolist()
+    print(id_props)
+    # convert values under "Key" column to uppercase
+    dict_df["Key"] = dict_df["Key"].str.upper()
+    key_id_props = dict_df[dict_df["Key"] == "TRUE"]["Property"].unique().tolist()
+    print(key_id_props)
     # pull out only the key ids that are present in the node
     key_ids = list(set(id_props) & set(key_id_props))
+    print(key_ids)
 
     check_list = []
     for key_id in key_ids:
