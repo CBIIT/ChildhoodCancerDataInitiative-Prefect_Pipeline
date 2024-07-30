@@ -1555,6 +1555,10 @@ def ValidationRy_new(file_path: str, template_path: str):
     )
     validation_logger.info(f"Nodes will be validated: {*nodes_to_validate,}")
 
+    # validate unique keys
+    validation_logger.info("Checking unique keys")
+    validate_unique_key(nodes_to_validate, file_path, template_path, output_file)
+    
     # starts validation of unempty node sheets
     validation_logger.info("Checking if required properties were filled")
     validate_required_properties(
@@ -1581,10 +1585,6 @@ def ValidationRy_new(file_path: str, template_path: str):
     # validate regex
     validation_logger.info("Checking regular expression")
     validate_regex(nodes_to_validate, file_path, template_path, output_file)
-
-    # validate unique keys
-    validation_logger.info("Checking unique keys")
-    validate_unique_key(nodes_to_validate, file_path, template_path, output_file)
 
     # validate file metadata (size, md5sum regex, and file basename in url)
     validation_logger.info(
