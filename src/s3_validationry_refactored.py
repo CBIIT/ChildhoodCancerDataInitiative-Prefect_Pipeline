@@ -1443,15 +1443,16 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
     for key_id in key_ids:
         # find the unique values of that linking property
         id_values = node_df[key_id].dropna().unique().tolist()
-
-        # if there are values with ";", unpack them
-        # for instance ["apple;orange", "milk;yogurt", "cabbage;carrot"] -> ['apple', 'orange', 'milk', 'yogurt', 'cabbage', 'carrot']
+        # if that key id column is not empty
         if len(id_values) > 0:
             property_dict = {}
             property_dict["node"] = node_name
+            property_dict["property"] = key_id
             # if there is an array of link values, pull the array apart and delete the old value.
             remove_id_value = []
             append_id_value = []
+            # if there are values with ";", unpack them
+            # for instance ["apple;orange", "milk;yogurt", "cabbage;carrot"] -> ['apple', 'orange', 'milk', 'yogurt', 'cabbage', 'carrot']
             for id_value in id_values:
                 if ";" in id_value:
                     value_splits = str.split(id_value, ";")
@@ -1474,9 +1475,11 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
             if len(troubled_id_value) > 0:
                 property_dict["check"] = "ERROR\nillegal character"
                 property_dict["error value"] = ",".join(troubled_id_value)
-                check_list.append(property_dict)
+                
             else:
-                pass
+                property_dict["check"] = "PASS"
+                property_dict["error value"] = ""
+            check_list.append(property_dict)
         else:
             pass
     check_df = pd.DataFrame.from_records(check_list)
@@ -1560,7 +1563,16 @@ def ValidationRy_new(file_path: str, template_path: str):
     # validate unique keys
     validation_logger.info("Checking unique keys")
     validate_unique_key(nodes_to_validate, file_path, template_path, output_file)
-    
+
+    # validate key id pattern
+    validation_logger.info("Checking key id patterns")
+    validate_key_id(
+        file_path=file_path,
+        template_path=template_path,
+        node_list=nodes_to_validate,
+        output_file=output_file,
+    )
+
     # starts validation of unempty node sheets
     validation_logger.info("Checking if required properties were filled")
     validate_required_properties(
@@ -1614,15 +1626,6 @@ def ValidationRy_new(file_path: str, template_path: str):
     validation_logger.info("Checking cross links between nodes")
     validate_cross_links(
         node_list=nodes_to_validate, file_path=file_path, output_file=output_file
-    )
-
-    # validate key id pattern
-    validation_logger.info("Checking key id patterns")
-    validate_key_id(
-        file_path=file_path,
-        template_path=template_path,
-        node_list=nodes_to_validate,
-        output_file=output_file,
     )
 
     validation_logger.info(
