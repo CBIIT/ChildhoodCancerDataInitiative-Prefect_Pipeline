@@ -733,10 +733,12 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    print(dict_df)
     # pull out all key value properties
     key_value_props = dict_df[
         (dict_df["Key"] == "True") & (dict_df["Node"] == node_name)
     ]["Property"].values
+    print(key_value_props)
 
     print_str = f"\n\t{node_name}\n\t----------\n\t"
     check_list = []
