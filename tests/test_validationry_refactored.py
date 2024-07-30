@@ -337,7 +337,7 @@ def test_validate_key_id_single_sheet(datafiles):
     print_str = validate_key_id_single_sheet.fn(
         node_name="pdx", file_object=file_object, template_object=temp_object
     )
-    assert print_str.count("pdx") == 2
+    assert print_str.count("pdx") == 3
     assert "diligent_overwrought_80&" in print_str
 
 
