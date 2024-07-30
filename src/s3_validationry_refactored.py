@@ -733,68 +733,73 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
 
     # read dict_df
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    dict_df["Key"] = dict_df["Key"].str.upper()
     # pull out all key value properties
-    key_value_props = dict_df[
-        (dict_df["Key"] == "True") & (dict_df["Node"] == node_name)
-    ]["Property"].values
+    key_value_props = dict_df.loc[
+        (dict_df["Key"] == "TRUE") & (dict_df["Node"] == node_name), "Property"
+    ].tolist()
 
-    line_length = 5
     print_str = f"\n\t{node_name}\n\t----------\n\t"
     check_list = []
-    for key_value_prop in key_value_props:
-        WARN_FLAG = True
-        property_dict = {}
-        # if a property is found in the data frame
-        if key_value_prop in node_df.columns.tolist():
-            # as long as there are some values in the key column
-            if node_df[key_value_prop].notna().any():
-                property_dict["node"] = node_name
-                property_dict["property"] = key_value_prop
-                # if the length of the data frame is not the same length of the unique key property values, then we have some non-unique values
-                if len(node_df[key_value_prop].dropna()) != len(
-                    node_df[key_value_prop].dropna().unique()
-                ):
-                    if WARN_FLAG:
-                        WARN_FLAG = False
+    if len(key_value_props) > 0:
+        # there is at least one key for the {node_name}
+        # for CCDI all nodes have a key id which may not be the case in other
+        # data models
+        for key_value_prop in key_value_props:
+            # loop through key ids
+            property_dict = {}
+            property_dict["node"] = node_name
+            property_dict["property"] = key_value_prop
+            # if key id property is found in the data frame
+            if key_value_prop in node_df.columns.tolist():
+                # as long as there are values under this key id property
+                if node_df[key_value_prop].notna().any():
+                    # if the length of the data frame is not the same length of the unique key property values, then we have some non-unique values
+                    if len(node_df[key_value_prop].dropna()) != len(
+                        node_df[key_value_prop].dropna().unique()
+                    ):
                         property_dict["check"] = "ERROR"
+                        # create a tavle of values and counts
+                        freq_key_values = node_df[key_value_prop].value_counts()
+                        # pull out a unique list of values that have more than one instance
+                        not_unique_key_values = (
+                            node_df[
+                                node_df[key_value_prop].isin(
+                                    freq_key_values[freq_key_values > 1].index
+                                )
+                            ][key_value_prop]
+                            .unique()
+                            .tolist()
+                        )
+                        # itterate over that list and print out the values
+                        enum_print = ",".join(not_unique_key_values)
+                        property_dict["error value"] = enum_print
                     else:
-                        pass
-                    # create a table of values and counts
-                    freq_key_values = node_df[key_value_prop].value_counts()
-                    # pull out a unique list of values that have more than one instance
-                    not_unique_key_values = (
-                        node_df[
-                            node_df[key_value_prop].isin(
-                                freq_key_values[freq_key_values > 1].index
-                            )
-                        ][key_value_prop]
-                        .unique()
-                        .tolist()
-                    )
-
-                    # itterate over that list and print out the values
-                    enum_print = ",".join(not_unique_key_values)
-                    property_dict["error value"] = enum_print
-                    check_list.append(property_dict)
+                        property_dict["check"] = "PASS"
+                        property_dict["error value"] = ""
                 else:
-                    pass
+                    property_dict["check"] = "empty"
+                    property_dict["error value"] = ""
+                check_list.append(property_dict)
             else:
-                pass
+                print_str = print_str + f"WARNING: {key_value_prop} not found in node {node_name} file\n\t"
+        check_df = pd.DataFrame.from_records(check_list)
+        if check_df.shape[0] > 0:
+            check_df["error value"] = check_df["error value"].str.wrap(30)
+            check_df["property"] = check_df["property"].str.wrap(25)
         else:
             pass
-    check_df = pd.DataFrame.from_records(check_list)
-    if check_df.shape[0] > 0:
-        check_df["error value"] = check_df["error value"].str.wrap(30)
-        check_df["property"] = check_df["property"].str.wrap(25)
-    else:
-        pass
-    print_str = (
-        print_str
-        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
-            "\n", "\n\t"
+        print_str = (
+            print_str
+            + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+                "\n", "\n\t"
+            )
+            + "\n"
         )
-        + "\n"
-    )
+    else:
+        print_str = (
+            print_str + f"WARNING: node {node_name} file contains no Key id property\n"
+        )
     return print_str
 
 
@@ -836,7 +841,11 @@ def extract_object_file_meta(nodes_list: list[str], file_object):
         node_df = file_object.read_sheet_na(sheetname=node)
         node_df["node"] = node
         node_df["file_id"] = node_df[f"{node}_id"]
-        df_file = pd.concat([df_file, node_df[file_node_props]], ignore_index=True)
+        if "file_url" in node_df.columns:
+            df_file = pd.concat([df_file, node_df[file_node_props]], ignore_index=True)
+        else:
+            node_df["file_url"] = node_df["file_url_in_cds"]
+            df_file = pd.concat([df_file, node_df[file_node_props]], ignore_index=True)
     df_file["file_url"] = df_file["file_url"].map(
         lambda x: (
             x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
@@ -1418,7 +1427,9 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
     # pull out all the id properties in the node
     id_props = node_df.filter(like="_id", axis=1).columns.tolist()
-    key_id_props = dict_df[dict_df["Key"] == "True"]["Property"].unique().tolist()
+    # convert values under "Key" column to uppercase
+    dict_df["Key"] = dict_df["Key"].str.upper()
+    key_id_props = dict_df[dict_df["Key"] == "TRUE"]["Property"].unique().tolist()
     # pull out only the key ids that are present in the node
     key_ids = list(set(id_props) & set(key_id_props))
 
@@ -1426,15 +1437,16 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
     for key_id in key_ids:
         # find the unique values of that linking property
         id_values = node_df[key_id].dropna().unique().tolist()
-
-        # if there are values with ";", unpack them
-        # for instance ["apple;orange", "milk;yogurt", "cabbage;carrot"] -> ['apple', 'orange', 'milk', 'yogurt', 'cabbage', 'carrot']
+        # if that key id column is not empty
         if len(id_values) > 0:
             property_dict = {}
             property_dict["node"] = node_name
+            property_dict["property"] = key_id
             # if there is an array of link values, pull the array apart and delete the old value.
             remove_id_value = []
             append_id_value = []
+            # if there are values with ";", unpack them
+            # for instance ["apple;orange", "milk;yogurt", "cabbage;carrot"] -> ['apple', 'orange', 'milk', 'yogurt', 'cabbage', 'carrot']
             for id_value in id_values:
                 if ";" in id_value:
                     value_splits = str.split(id_value, ";")
@@ -1457,9 +1469,11 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
             if len(troubled_id_value) > 0:
                 property_dict["check"] = "ERROR\nillegal character"
                 property_dict["error value"] = ",".join(troubled_id_value)
-                check_list.append(property_dict)
+                
             else:
-                pass
+                property_dict["check"] = "PASS"
+                property_dict["error value"] = ""
+            check_list.append(property_dict)
         else:
             pass
     check_df = pd.DataFrame.from_records(check_list)

@@ -230,7 +230,7 @@ def test_validate_integer_numeric_checks_one_sheet(datafiles):
 
 @ALL_FILES
 def test_validate_unique_key_one_sheet(datafiles):
-    """test for validate_integer_numeric_checks_one_sheet task"""
+    """test for validate_unique_key_one_sheet task"""
     for item in datafiles.iterdir():
         if "Exampler" in item.name:
             file_path = str(item)
@@ -337,7 +337,7 @@ def test_validate_key_id_single_sheet(datafiles):
     print_str = validate_key_id_single_sheet.fn(
         node_name="pdx", file_object=file_object, template_object=temp_object
     )
-    assert print_str.count("pdx") == 2
+    assert print_str.count("pdx") == 3
     assert "diligent_overwrought_80&" in print_str
 
 
