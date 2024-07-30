@@ -230,7 +230,7 @@ def test_validate_integer_numeric_checks_one_sheet(datafiles):
 
 @ALL_FILES
 def test_validate_unique_key_one_sheet(datafiles):
-    """test for validate_integer_numeric_checks_one_sheet task"""
+    """test for validate_unique_key_one_sheet task"""
     for item in datafiles.iterdir():
         if "Exampler" in item.name:
             file_path = str(item)
