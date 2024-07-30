@@ -1591,6 +1591,7 @@ def ValidationRy_new(file_path: str, template_path: str):
         output_file=output_file,
     )
 
+    """
     # validate bucket content
     validation_logger.info("Checking bucket contents against manifest file objects")
     validate_bucket_content(
@@ -1599,6 +1600,7 @@ def ValidationRy_new(file_path: str, template_path: str):
         template_path=template_path,
         output_file=output_file,
     )
+    """
 
     # validate cross links
     validation_logger.info("Checking cross links between nodes")
