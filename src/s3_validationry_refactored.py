@@ -740,7 +740,7 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
     print(dict_df[dict_df["Node"] == node_name]["Key"].dropna().tolist())
     # pull out all key value properties
     key_value_props = dict_df.loc[
-        (dict_df["Key"] == True) & (dict_df["Node"] == node_name), "Property"
+        (dict_df["Key"] == "TRUE") & (dict_df["Node"] == node_name), "Property"
     ].tolist()
     print(key_value_props)
 
