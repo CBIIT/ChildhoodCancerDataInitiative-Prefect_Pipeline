@@ -452,3 +452,4 @@ deployments:
       name: ccdi-curation-8gb
       work_queue_name: null
       job_variables: {}
+      

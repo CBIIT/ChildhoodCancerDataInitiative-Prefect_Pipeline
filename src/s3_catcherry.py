@@ -56,7 +56,12 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     def read_xlsx(file_path: str, sheet: str):
         # Read in excel file
         warnings.simplefilter(action="ignore", category=UserWarning)
-        return pd.read_excel(file_path, sheet, dtype="string")
+        df = pd.read_excel(file_path, sheet, dtype="string")
+        
+        # Remove leading and trailing whitespace from all cells
+        df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
+        
+        return df
 
     # create workbook
     xlsx_model = pd.ExcelFile(template_path)
