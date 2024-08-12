@@ -1462,7 +1462,7 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
             troubled_id_value = []
             for id_value in id_values:
                 # if it does not match the following regex, throw an error.
-                if not re.match(pattern=r"^[a-zA-Z0-9_.@#;-]*$", string=id_value):
+                if not re.match(pattern=r"^[a-zA-Z0-9_.@#;:-]*$", string=id_value):
                     troubled_id_value.append(id_value)
                 else:
                     pass
