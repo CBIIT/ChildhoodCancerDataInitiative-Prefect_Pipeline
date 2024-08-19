@@ -295,7 +295,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         else:
                             unique_values = df[property].dropna().unique()
                             print(f"Found unique values in property {property}: {*unique_values,}")
-                            print(f"Terms in template: {*tavs_df_prop["Term"].values,}")
+                            term_values = tavs_df_prop["Term"].values.tolist()
+                            print(f"Terms in template: {*term_values,}")
                             # as long as there are unique values
                             if len(unique_values) > 0:
                                 # are all the values found in the TaVs terms
