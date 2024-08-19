@@ -56,7 +56,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     def read_xlsx(file_path: str, sheet: str):
         # Read in excel file
         warnings.simplefilter(action="ignore", category=UserWarning)
-        df = pd.read_excel(file_path, sheet, dtype="string")
+        df = pd.read_excel(file_path, sheet, dtype="string", keep_default_na=False, na_values=['', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'None', 'n/a', 'nan', 'null'])
 
         # Remove leading and trailing whitespace from all cells
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
