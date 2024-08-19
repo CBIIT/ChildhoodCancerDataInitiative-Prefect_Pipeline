@@ -57,10 +57,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # Read in excel file
         warnings.simplefilter(action="ignore", category=UserWarning)
         df = pd.read_excel(file_path, sheet, dtype="string")
-        
+
         # Remove leading and trailing whitespace from all cells
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-        
+
         return df
 
     # create workbook
@@ -190,6 +190,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
             # for each property
             for property in properties:
+                print(property)
                 tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
                 # if the property is in the TaVs data frame
                 if len(tavs_df_prop) > 0:
@@ -214,6 +215,16 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             unique_values = df[property].dropna().unique()
 
                             # pull out a complete list of all values in sub-arrays
+                            cmplt_unique_values = []
+                            for unique_value in unique_values:
+                                if ";" in unique_value:
+                                    unique_value_list = list(set(unique_value.split(";")))
+                                    cmplt_unique_values.extend(unique_value_list)
+                                else:
+                                    cmplt_unique_values.append(unique_value)
+                            unique_values = cmplt_unique_values
+
+                            """
                             for unique_value in unique_values:
                                 if ";" in unique_value:
                                     # find the position
@@ -227,7 +238,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     # rework the entry and apply back to list
                                     unique_value = list(set(unique_value.split(";")))
                                     for value in unique_value:
-                                        unique_values = np.append(unique_values, value)
+                                        unique_values = np.append(unique_values, value)        
+                            """
 
                             # make sure list is unique
                             unique_values = list(set(unique_values))
@@ -282,6 +294,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         # if the property is not an enum
                         else:
                             unique_values = df[property].dropna().unique()
+                            print(f"Found unique values in property {property}: {*unique_values,}")
+                            print(f"Terms in template: {*tavs_df_prop["Term"].values,}")
                             # as long as there are unique values
                             if len(unique_values) > 0:
                                 # are all the values found in the TaVs terms
