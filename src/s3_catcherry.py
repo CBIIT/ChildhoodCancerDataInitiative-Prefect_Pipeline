@@ -56,11 +56,37 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     def read_xlsx(file_path: str, sheet: str):
         # Read in excel file
         warnings.simplefilter(action="ignore", category=UserWarning)
-        df = pd.read_excel(file_path, sheet, dtype="string")
-        
+        df = pd.read_excel(
+            file_path,
+            sheet,
+            dtype="string",
+            keep_default_na=False,
+            na_values=[
+                "",
+                "#N/A",
+                "#N/A N/A",
+                "#NA",
+                "-1.#IND",
+                "-1.#QNAN",
+                "-NaN",
+                "-nan",
+                "1.#IND",
+                "1.#QNAN",
+                "<NA>",
+                "N/A",
+                "NA",
+                "NULL",
+                "NaN",
+                #"None",
+                "n/a",
+                "nan",
+                "null",
+            ],
+        )
+
         # Remove leading and trailing whitespace from all cells
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-        
+
         return df
 
     # create workbook
@@ -214,20 +240,16 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             unique_values = df[property].dropna().unique()
 
                             # pull out a complete list of all values in sub-arrays
+                            cmplt_unique_values = []
                             for unique_value in unique_values:
                                 if ";" in unique_value:
-                                    # find the position
-                                    unique_value_pos = np.where(
-                                        unique_values == unique_value
-                                    )[0][0]
-                                    # delete entry
-                                    unique_values = np.delete(
-                                        unique_values, unique_value_pos
+                                    unique_value_list = list(
+                                        set(unique_value.split(";"))
                                     )
-                                    # rework the entry and apply back to list
-                                    unique_value = list(set(unique_value.split(";")))
-                                    for value in unique_value:
-                                        unique_values = np.append(unique_values, value)
+                                    cmplt_unique_values.extend(unique_value_list)
+                                else:
+                                    cmplt_unique_values.append(unique_value)
+                            unique_values = cmplt_unique_values
 
                             # make sure list is unique
                             unique_values = list(set(unique_values))
@@ -667,12 +689,15 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     def replace_no_break_space(meta_dfs: dict, dict_nodes: list[str]) -> dict:
         for node in dict_nodes:
             node_df = meta_dfs[node]
-            node_df_str_cols = [col for col, dt in node_df.dtypes.items() if dt == object]
+            node_df_str_cols = [
+                col for col, dt in node_df.dtypes.items() if dt == object
+            ]
             for col_i in node_df_str_cols:
-                node_df[col_i] = node_df[col_i].str.replace(u"\u00A0", " ")
+                node_df[col_i] = node_df[col_i].str.replace("\u00A0", " ")
             meta_dfs[node] = node_df
         return meta_dfs
-    meta_dfs =  replace_no_break_space(meta_dfs=meta_dfs, dict_nodes=dict_nodes)
+
+    meta_dfs = replace_no_break_space(meta_dfs=meta_dfs, dict_nodes=dict_nodes)
 
     ##############
     #
