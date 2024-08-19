@@ -56,7 +56,33 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     def read_xlsx(file_path: str, sheet: str):
         # Read in excel file
         warnings.simplefilter(action="ignore", category=UserWarning)
-        df = pd.read_excel(file_path, sheet, dtype="string", keep_default_na=False, na_values=['', '#N/A', '#N/A N/A', '#NA', '-1.#IND', '-1.#QNAN', '-NaN', '-nan', '1.#IND', '1.#QNAN', '<NA>', 'N/A', 'NA', 'NULL', 'NaN', 'None', 'n/a', 'nan', 'null'])
+        df = pd.read_excel(
+            file_path,
+            sheet,
+            dtype="string",
+            keep_default_na=False,
+            na_values=[
+                "",
+                "#N/A",
+                "#N/A N/A",
+                "#NA",
+                "-1.#IND",
+                "-1.#QNAN",
+                "-NaN",
+                "-nan",
+                "1.#IND",
+                "1.#QNAN",
+                "<NA>",
+                "N/A",
+                "NA",
+                "NULL",
+                "NaN",
+                #"None",
+                "n/a",
+                "nan",
+                "null",
+            ],
+        )
 
         # Remove leading and trailing whitespace from all cells
         df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
@@ -218,7 +244,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             cmplt_unique_values = []
                             for unique_value in unique_values:
                                 if ";" in unique_value:
-                                    unique_value_list = list(set(unique_value.split(";")))
+                                    unique_value_list = list(
+                                        set(unique_value.split(";"))
+                                    )
                                     cmplt_unique_values.extend(unique_value_list)
                                 else:
                                     cmplt_unique_values.append(unique_value)
@@ -294,7 +322,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         # if the property is not an enum
                         else:
                             unique_values = df[property].dropna().unique()
-                            print(f"Found unique values in property {property}: {*unique_values,}")
+                            print(
+                                f"Found unique values in property {property}: {*unique_values,}"
+                            )
                             term_values = tavs_df_prop["Term"].values.tolist()
                             print(f"Terms in template: {*term_values,}")
                             # as long as there are unique values
@@ -682,12 +712,15 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     def replace_no_break_space(meta_dfs: dict, dict_nodes: list[str]) -> dict:
         for node in dict_nodes:
             node_df = meta_dfs[node]
-            node_df_str_cols = [col for col, dt in node_df.dtypes.items() if dt == object]
+            node_df_str_cols = [
+                col for col, dt in node_df.dtypes.items() if dt == object
+            ]
             for col_i in node_df_str_cols:
-                node_df[col_i] = node_df[col_i].str.replace(u"\u00A0", " ")
+                node_df[col_i] = node_df[col_i].str.replace("\u00A0", " ")
             meta_dfs[node] = node_df
         return meta_dfs
-    meta_dfs =  replace_no_break_space(meta_dfs=meta_dfs, dict_nodes=dict_nodes)
+
+    meta_dfs = replace_no_break_space(meta_dfs=meta_dfs, dict_nodes=dict_nodes)
 
     ##############
     #
