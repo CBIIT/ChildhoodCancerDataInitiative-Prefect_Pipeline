@@ -216,7 +216,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
             # for each property
             for property in properties:
-                print(property)
                 tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
                 # if the property is in the TaVs data frame
                 if len(tavs_df_prop) > 0:
@@ -251,23 +250,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                 else:
                                     cmplt_unique_values.append(unique_value)
                             unique_values = cmplt_unique_values
-
-                            """
-                            for unique_value in unique_values:
-                                if ";" in unique_value:
-                                    # find the position
-                                    unique_value_pos = np.where(
-                                        unique_values == unique_value
-                                    )[0][0]
-                                    # delete entry
-                                    unique_values = np.delete(
-                                        unique_values, unique_value_pos
-                                    )
-                                    # rework the entry and apply back to list
-                                    unique_value = list(set(unique_value.split(";")))
-                                    for value in unique_value:
-                                        unique_values = np.append(unique_values, value)        
-                            """
 
                             # make sure list is unique
                             unique_values = list(set(unique_values))
@@ -322,11 +304,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         # if the property is not an enum
                         else:
                             unique_values = df[property].dropna().unique()
-                            print(
-                                f"Found unique values in property {property}: {*unique_values,}"
-                            )
-                            term_values = tavs_df_prop["Term"].values.tolist()
-                            print(f"Terms in template: {*term_values,}")
                             # as long as there are unique values
                             if len(unique_values) > 0:
                                 # are all the values found in the TaVs terms
