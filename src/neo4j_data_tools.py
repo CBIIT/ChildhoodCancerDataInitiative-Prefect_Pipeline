@@ -63,7 +63,7 @@ RETURN
     )
     all_nodes_entries_study_cypher_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..7]-(node)
+MATCH (study:study {{study_id: "{study_id}"}})-[*1..7]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
     )
