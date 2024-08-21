@@ -282,14 +282,17 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     # run the cypher query with specified study and node
     result = tx.run(cypher_query)
     db_id_list = [record["id"] for record in result]
-    print(f"study {study_id} node {node} has ids: {*db_id_list,}")
+    # print(f"study {study_id} node {node} has ids: {*db_id_list,}")
     study_node_id_df = pd.DataFrame(columns=["study_id", "node", "id"])
     study_node_id_df["id"] = db_id_list
     study_node_id_df["study_id"] = study_id
     study_node_id_df["node"] = node
     output_filepath = os.path.join(output_dir, f"{study_id}_{node}_id_list.csv")
     study_node_id_df.to_csv(output_filepath, index=False)
-    print(study_node_id_df)
+    if study_node_id_df.shape[0] == 0:
+        print(f"study {study_id} node {node} returns zero records")
+        print(result)
+        print(study_node_id_df)
     return None
 
 
