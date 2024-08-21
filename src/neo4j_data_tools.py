@@ -352,7 +352,6 @@ def parse_tsv_files(filelist: list) -> DataFrame:
     return return_df
 
 
-@task
 def compare_id_input_db(
     db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, logger
 ) -> DataFrame:
@@ -543,12 +542,14 @@ def validate_DB_with_input_tsvs(
     tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
     ingested_studies_dataframe = parse_tsv_files(tsv_files)
 
+    logger.info("pulled all ids based off the nodes and studies from tsv provided")
     db_id_list_all_studies = pull_node_ids_all_studies(
         driver=driver,
         studies_dataframe=ingested_studies_dataframe[["study_id", "node"]],
         logger=logger,
     )
 
+    logger.info("Start comparing db pulled id with ids in tsv files")
     comparison_df = compare_id_input_db(
         db_id_pulled_dict=db_id_list_all_studies,
         parsed_tsv_file_df=ingested_studies_dataframe,
@@ -556,7 +557,7 @@ def validate_DB_with_input_tsvs(
     )
 
     merged_summary_table = pd.merge(
-        studies_dataframe, comparison_df, on=["study_id", "node"], how="left"
+        studies_dataframe, comparison_df, on=["study_id", "node"], how="outer"
     )
     merged_summary_table.drop(columns=["tsv_id"], inplace=True)
 
