@@ -408,7 +408,7 @@ def pull_node_ids_all_studies_write(
     return temp_folder_name
 
 
-@flow
+@flow(log_prints=True)
 def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> Dict:
     """Returns a dictionary of db id list using study id and node name
 
