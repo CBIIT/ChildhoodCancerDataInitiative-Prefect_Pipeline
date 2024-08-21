@@ -423,6 +423,7 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
     for file in csv_list:
         file_path = os.path.join(csv_folder, file)
         file_df = pd.read_csv(file_path, header=0)
+        print(file_df)
         file_study = file_df["study_id"].unique().tolist()[0]
         if file_study not in ids_dict.keys():
             ids_dict[file_study] = {}
