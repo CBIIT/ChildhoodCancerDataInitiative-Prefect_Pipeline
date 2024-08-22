@@ -292,14 +292,6 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     study_node_id_df["node"] = node
     output_filepath = os.path.join(output_dir, f"{study_id}_{node}_id_list.csv")
     study_node_id_df.to_csv(output_filepath, index=False)
-    """
-    # only write to csv if there is some return records
-    if study_node_id_df.shape[0] == 0:
-        print(f"study {study_id} node {node} returns zero records")
-        print(study_node_id_df)
-    else:
-        pass
-    """
     
     return None
 
