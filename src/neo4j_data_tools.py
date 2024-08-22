@@ -63,7 +63,7 @@ RETURN
     )
     all_nodes_entries_study_cypher_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..7]-(node)
+MATCH (study:study {{study_id: "{study_id}"}})-[*1..7]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
     )
@@ -282,12 +282,17 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     # run the cypher query with specified study and node
     result = tx.run(cypher_query)
     db_id_list = [record["id"] for record in result]
+    # print(f"study {study_id} node {node} has ids: {*db_id_list,}")
     study_node_id_df = pd.DataFrame(columns=["study_id", "node", "id"])
-    study_node_id_df["id"] = db_id_list
+    if len(db_id_list) == 0:
+        study_node_id_df["id"] = [pd.NA]
+    else:
+        study_node_id_df["id"] = db_id_list
     study_node_id_df["study_id"] = study_id
     study_node_id_df["node"] = node
     output_filepath = os.path.join(output_dir, f"{study_id}_{node}_id_list.csv")
     study_node_id_df.to_csv(output_filepath, index=False)
+    
     return None
 
 
@@ -339,7 +344,6 @@ def parse_tsv_files(filelist: list) -> DataFrame:
     return return_df
 
 
-@task
 def compare_id_input_db(
     db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, logger
 ) -> DataFrame:
@@ -408,7 +412,7 @@ def pull_node_ids_all_studies_write(
     return temp_folder_name
 
 
-@flow
+@flow(log_prints=True)
 def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> Dict:
     """Returns a dictionary of db id list using study id and node name
 
@@ -429,7 +433,7 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
         else:
             pass
         file_node = file_df["node"].unique().tolist()[0]
-        ids_dict[file_study][file_node] = file_df["id"].tolist()
+        ids_dict[file_study][file_node] = file_df["id"].dropna().tolist()
     return ids_dict
 
 
@@ -530,12 +534,14 @@ def validate_DB_with_input_tsvs(
     tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
     ingested_studies_dataframe = parse_tsv_files(tsv_files)
 
+    logger.info("pulled all ids based off the nodes and studies from tsv provided")
     db_id_list_all_studies = pull_node_ids_all_studies(
         driver=driver,
         studies_dataframe=ingested_studies_dataframe[["study_id", "node"]],
         logger=logger,
     )
 
+    logger.info("Start comparing db pulled id with ids in tsv files")
     comparison_df = compare_id_input_db(
         db_id_pulled_dict=db_id_list_all_studies,
         parsed_tsv_file_df=ingested_studies_dataframe,
@@ -543,7 +549,7 @@ def validate_DB_with_input_tsvs(
     )
 
     merged_summary_table = pd.merge(
-        studies_dataframe, comparison_df, on=["study_id", "node"], how="left"
+        studies_dataframe, comparison_df, on=["study_id", "node"], how="outer"
     )
     merged_summary_table.drop(columns=["tsv_id"], inplace=True)
 
