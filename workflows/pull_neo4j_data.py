@@ -20,6 +20,15 @@ def pull_neo4j_data(
     username_parameter: str = "username",
     password_parameter: str = "password",
 ):
+    """Pipeline that pulls all ingested studies from a Neo4j database
+
+    Args:
+        bucket (str): Bucket name of where output goes to
+        runner (str): Unique runner name
+        uri_parameter (str, optional): uri parameter. Defaults to "uri".
+        username_parameter (str, optional): username parameter. Defaults to "username".
+        password_parameter (str, optional): password parameter. Defaults to "password".
+    """    
     logger = get_run_logger()
 
     # create a unqiue folder name for final outputs

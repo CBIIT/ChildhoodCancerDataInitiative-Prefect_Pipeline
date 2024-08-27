@@ -19,7 +19,15 @@ def run_template_exampler(
     runner: str,
     number_of_entries: int,
     ccdi_manifest_version: str = "default_to_latest",
-):
+) -> None:
+    """Pipelinei that generates simulated data for CCDI manifest
+
+    Args:
+        bucket (str): Bucket name of where the output goes to
+        runner (str): Unique runner name
+        number_of_entries (int): Number of data enteries in each node
+        ccdi_manifest_version (str, optional): The tag name of CCDI manifest. Defaults to "default_to_latest".
+    """    
     # create run logger
     runner_logger = get_run_logger()
 

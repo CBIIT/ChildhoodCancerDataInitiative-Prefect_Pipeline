@@ -14,6 +14,14 @@ from src.utils import get_time, file_dl, file_ul
     flow_run_name="file-mover-{runner}-" + f"{get_time()}",
 )
 def file_mover(bucket: str, file_path: str, runner: str, dest_bucket_path: str) -> None:
+    """Pipeline that moves file objects in a CCDI manifest to a designated bucket folder, and generates a new CCDI manifest with updated S3 uri
+
+    Args:
+        bucket (str): Bucket name of where the manifest located at and output goes to
+        file_path (str): File path of CCDI manifest
+        runner (str): Unique runner name
+        dest_bucket_path (str): Destination bucket path, e.g., dest-bucket-name/somefolder
+    """    
     # create a logging object
     runner_logger = get_run_logger()
 

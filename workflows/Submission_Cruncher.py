@@ -19,6 +19,14 @@ def submission_cruncher(
     runner: str,
     template_path: str = "default_to_latest",
 ) -> None:
+    """Pipeline that combines all manifests in a bucket folder path into a single manifest
+
+    Args:
+        bucket (str): Bucket name of where the manifests located in and the output goes to
+        submission_folder_path (str): A folder path of the manifests folder
+        runner (str): Unique runner name
+        template_path (str, optional): A CCDI template path in the given bucket to combine manifests. Defaults to "default_to_latest".
+    """    
     runner_logger = get_run_logger()
 
     # dl submission_folder_path

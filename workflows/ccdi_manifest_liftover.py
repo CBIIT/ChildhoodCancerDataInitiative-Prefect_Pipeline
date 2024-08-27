@@ -21,6 +21,18 @@ def manifest_liftover(
     liftover_mapping_filepath: str,
     runner: str,
 ) -> None:
+    """Pipeline that lifts a CCDI manifest to a different version using a mapping file
+
+    Args:
+        bucket (str): Bucket name of where the lift from manifest located in and the output goes to
+        lift_from_filepath (str): File path of CCDI manifest in the given bucket
+        lift_to_tag (str): The tag name of lifted to manifest
+        liftover_mapping_filepath (str): File path of mapping file in the given bucket
+        runner (str): Unique runner name
+
+    Raises:
+        ValueError: Value Error raised if pipeline fails to proceed
+    """    
     logger = get_run_logger()
 
     output_folder = os.path.join(runner, f"liftover_ccdi_template_{get_time()}")

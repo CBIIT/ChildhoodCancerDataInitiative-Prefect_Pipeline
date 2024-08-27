@@ -18,11 +18,24 @@ from src.join_tsv_to_manifest import (
     flow_run_name="joinry-tsv-to-manifest-{runner}-" + f"{get_time()}",
 )
 def join_tsv_to_manifest(
+    bucket: str,
     runner: str,
     tsv_folder_path: str,
-    ccdi_template_tag: str,
-    bucket: str = "ccdi-validation",
-):
+    ccdi_template_tag: str
+    
+) -> None:
+    """Pipeline that combines a folder of tsv files into a single CCDI manifest
+
+    Args:
+        bucket (str): Bucket name of where tsv files located in and output goes to
+        runner (str): Unique runner name
+        tsv_folder_path (str): Folder path of tsv files in the bucket 
+        ccdi_template_tag (str): Tag name of CCDI manifest
+        
+
+    Raises:
+        ValueError: Value Error raised if pipeline fails to proceed
+    """      
     logger = get_run_logger()
     current_time = get_time()
 

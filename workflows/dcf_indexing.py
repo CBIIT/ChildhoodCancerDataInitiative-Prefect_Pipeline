@@ -24,8 +24,16 @@ from src.utils import (
     flow_run_name="create-dcf-index-manifest-{runner}-" + f"{get_time()}",
 )
 def dcf_index_manifest(
-    manifest_path: str, runner: str, bucket: str = "ccdi-validation"
+    bucket: str, manifest_path: str, runner: str
 ) -> None:
+    """Pipeline that creates DCF indexing manifest from a CCDI manifest
+
+    Args:
+        bucket (str): Bucket name of where the manifest located in and output goes to
+        manifest_path (str): File path of a CCDI manifest
+        runner (str): Unique runner name
+        
+    """ 
     logger = get_run_logger()
 
     # get time
