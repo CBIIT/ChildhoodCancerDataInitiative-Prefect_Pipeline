@@ -18,12 +18,21 @@ from src.submission_cruncher import concatenate_submissions
 
 @flow(name="MCI monthly release manifest", log_prints=True)
 def mci_release_manifest(
-    mci_manifests_bucket_path: str,
     bucket: str,
+    mci_manifests_bucket_path: str,
     template_tag: str,
     previous_pull_list_path: str,
     runner: str,
-):
+) -> None:
+    """Pipeline that finds newly added manifests in a given bucket folder and combines them into a single CCDI manifest
+
+    Args:
+        bucket (str): Bucket name of where output goes to
+        mci_manifests_bucket_path (str): Bucket path where newly added manifests are
+        template_tag (str): A CCDI template tag to use for combining new manifests
+        previous_pull_list_path (str): A file path in the given bucket that contains a list of previously pulled file names
+        runner (str): Unique runner name
+    """    
     logger = get_run_logger()
 
     manifest_bucket, manifest_folder = parse_file_url(

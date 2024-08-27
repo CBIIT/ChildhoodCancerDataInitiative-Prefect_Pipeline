@@ -22,11 +22,21 @@ from src.neo4j_data_tools import (
 def validate_neo4j_data(
     bucket: str,
     runner: str,
-    tsv_folder: str = "path/to/ingestion_folder/in/s3/bucket",
+    tsv_folder: str = "",
     uri_parameter: str = "uri",
     username_parameter: str = "username",
     password_parameter: str = "password",
-):
+) -> None:
+    """Pipeline to validate submission tsv files agianst Neo4j database or generate a summary table of Neo4j database
+
+    Args:
+        bucket (str): Bucket name where output goes to
+        runner (str): Unique runner name
+        tsv_folder (str, optional): Folder path in the provided bucket. Defaults to "".
+        uri_parameter (str, optional): uri parameter. Defaults to "uri".
+        username_parameter (str, optional): username parameter. Defaults to "username".
+        password_parameter (str, optional): password parameter. Defaults to "password".
+    """    
     logger = get_run_logger()
 
     # query counts per node per study
@@ -39,13 +49,13 @@ def validate_neo4j_data(
     )
 
     # download folder from bucket
-    if tsv_folder != "path/to/ingestion_folder/in/s3/bucket":
+    if tsv_folder != "":
         logger.info(f"Downloading folder {tsv_folder}")
         folder_dl(bucket=bucket, remote_folder=tsv_folder)
     else:
         logger.info("No ingestion files folder path provided")
 
-    if tsv_folder != "path/to/ingestion_folder/in/s3/bucket":
+    if tsv_folder != "":
         # validate db info with files in tsv folder
         logger.info("Reading tsv files and validating records between tsv files and DB")
         validate_df = validate_DB_with_input_tsvs(

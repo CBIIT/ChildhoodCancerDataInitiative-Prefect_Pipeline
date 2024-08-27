@@ -23,13 +23,16 @@ import traceback
     log_prints=True,
     flow_run_name="bucket-reader-{runner}-" + f"{get_time()}",
 )
-def reader(buckets: list[str], runner: str):
+def reader(buckets: list[str], runner: str) -> None:
+    """Pipeline that reads contents of a list of bucket names/paths
+
+    Args:
+        buckets (list[str]): A list of bucket name/path, e.g., ["my-first-bucket", "my-second-bucket/subdir"]. Click "Add item" to add more list item.
+        runner (str): Unique runner name
+    """
     # create a logging object
     runner_logger = get_run_logger()
 
-    # remove default items from buckets list
-    buckets =  [i for i in buckets if i not in ["my-first-bucket", "my-second-bucket/subdir"]]
-    
     md_str = ""
 
     for bucket in buckets:
@@ -57,7 +60,6 @@ def reader(buckets: list[str], runner: str):
         except Exception as error:
             runner_logger.error(f"Fetching contents in bucket {bucket} Failed: {type(error).__name__}, {error}")
             traceback.print_exc()
-
 
     runner_logger.info("Generating markdown output")
     if md_str != "":

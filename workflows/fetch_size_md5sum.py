@@ -89,6 +89,13 @@ def fetch_size_md5sum_with_urls(s3uri_list: list[str]) -> None:
     flow_run_name="{runner}-" + f"{get_time()}",
 )
 def get_size_md5sum(bucket: str, runner: str, dir_or_uri: str) -> None:
+    """Pipeline that calculates objects size and md5sum
+
+    Args:
+        bucket (str): Bucekt name where the output goes to
+        runner (str): Unique runner name
+        dir_or_uri (str): Start the pipeline with S3 folder path(dir) or S3 uri(uri). Acceptable value is either dir or uri
+    """    
     logger = get_run_logger()
 
     time_rightnow = get_time()

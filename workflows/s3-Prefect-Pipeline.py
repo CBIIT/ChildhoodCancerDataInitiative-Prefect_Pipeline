@@ -47,11 +47,25 @@ def runner(
     bucket: str,
     file_path: str,
     runner: str,
-    template_path: str = "path_to/ccdi_template/in/s3/bucket",
-    sra_template_path: str = "path_to/sra_template/in/s3/bucket",
-    sra_previous_file_path: str = "path_to/sra_previous_file/in/s3/bucket",
-    dbgap_previous_dir_path: str = "path_to/dbgap_previous_dir/in/s3/bucket",
+    template_path: str = "",
+    sra_template_path: str = "",
+    sra_previous_file_path: str = "",
+    dbgap_previous_dir_path: str = "",
 ):
+    """CCDI data curation pipeline
+
+    Args:
+        bucket (str): Bucket name of where the manifest is located in and the output goes to
+        file_path (str): File path of the CCDI manifest
+        runner (str): Unique runner name
+        template_path (str, optional): File path of the CCDI manifest template. Defaults to "" to use the latest version.
+        sra_template_path (str, optional): File path of the SRA template. Defaults to "" to use a template from GitHub repo.
+        sra_previous_file_path (str, optional): File path of previous SRA submission file, if applicable. Defaults to "".
+        dbgap_previous_dir_path (str, optional): Folder path of previous dbGaP submission folder, if applicable. Defaults to "".
+
+    Raises:
+        ValueError: Value Error occurs when the pipeline fails to proceed.
+    """
     # create a logging object
     runner_logger = get_run_logger()
 
@@ -70,7 +84,7 @@ def runner(
     output_folder = runner.rstrip("/") + "/" + phs_accession + "_outputs_" + get_time()
 
     # download CCDI template if not provided
-    if template_path != "path_to/ccdi_template/in/s3/bucket":
+    if template_path != "":
         file_dl(bucket, template_path)
         input_template = os.path.basename(template_path)
         runner_logger.info("A CCDI template was provided")
@@ -117,7 +131,7 @@ def runner(
                 )
 
     # download SRA template if not provided
-    if sra_template_path != "path_to/sra_template/in/s3/bucket":
+    if sra_template_path != "":
         file_dl(bucket, sra_template_path)
         input_sra_template = os.path.basename(sra_template_path)
         runner_logger.info("An SRA template was provided")
@@ -130,7 +144,7 @@ def runner(
     input_file = os.path.basename(file_path)
 
     # download sra previous submission or dbgap previous submission if provided
-    if sra_previous_file_path != "path_to/sra_previous_file/in/s3/bucket":
+    if sra_previous_file_path != "":
         runner_logger.info(
             f"User provided SRA previous submission file at s3 bucket {sra_previous_file_path}"
         )
@@ -149,7 +163,7 @@ def runner(
         runner_logger.info("No SRA previous submission file provided")
         sra_previous_submission = None
 
-    if dbgap_previous_dir_path != "path_to/dbgap_previous_dir/in/s3/bucket":
+    if dbgap_previous_dir_path != "":
         runner_logger.info(
             f"User provided dbGaP previous submission folder at s3 bucket {dbgap_previous_dir_path}"
         )

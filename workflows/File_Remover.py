@@ -18,21 +18,16 @@ from src.file_remover import (
 
 
 @flow(name="File Remover Pipeline", log_prints=True)
-def run_file_remover(do_you_have_tsv_manifest:str):
-    logger = get_run_logger()
-    #current_time = get_time()
+def run_file_remover(do_you_have_tsv_manifest:str) -> None:
+    """Pipeline that deletes file objects from a given tsv manifest or bucket folder path
 
-    """
-    user_input = pause_flow_run(
-        wait_for_input=FlowPathInput.with_initial_data(
-            description=InputDescriptionMD.have_manifest_md.format(
-                current_time=current_time
-            ),
-            have_manifest="y",
-        )
-    )
-    """
-    
+    Args:
+        do_you_have_tsv_manifest (str): Do you have a manifest that contains a column of s3 object uri to be deleted. Acceptable value is either y or n
+
+    Raises:
+        ValueError: Value Error raised if the input parameter is invalid
+    """    
+    logger = get_run_logger()
 
     #if user_input.have_manifest == "y":
     if do_you_have_tsv_manifest == "y":

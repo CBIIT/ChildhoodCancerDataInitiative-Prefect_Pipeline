@@ -22,6 +22,13 @@ def validate_new_model(
     runner: str,
     release_title: str
 ) -> None:
+    """Pipeline that creates a manifest using model files in GitHub repo main branch, generates a manifest with simulated data, and performs validation using the current validation pipeline
+
+    Args:
+        bucket (str): Bucket name that output goes to
+        runner (str): Unique runner name
+        release_title (str): Release title to use in new model
+    """    
     # create a logging object
     runner_logger = get_run_logger()
 
