@@ -144,9 +144,11 @@ def join_tsv_to_manifest_single_study(
                 j.split("::")[1] if isinstance(j, str) and "::" in j else j
                 for j in tsv_df[i_col].tolist()
             ]
-            tsv_df[i_col] = ""
-        # remove the content of col "id"
-        tsv_df["id"] = ""
+            # keep the i_col content
+            # tsv_df[i_col] = ""
+        # keep the content of col "id"
+        # tsv_df["id"] = ""
+        
         # reorder columns in tsv according to sheet
         tsv_df =  tsv_df[manifest_df.columns.tolist()]
         # write tsv_df to excel sheet
