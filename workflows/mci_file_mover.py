@@ -44,19 +44,19 @@ def create_file_mover_metadata(tsv_df: DataFrame, newfolder: str) -> DataFrame:
     log_prints=True,
     flow_run_name="mci-file-mover-{runner}-" + f"{get_time()}",
 )
-def mci_file_mover(runner: str, obj_list_tsv_path: str, move_to_folder: str, bucket: str = "ccdi-validation") -> None:
+def mci_file_mover(bucket: str, runner: str, obj_list_tsv_path: str, move_to_folder: str) -> None:
     """Moves objects listed in a tsv file to a new folder in the same bucket
 
     Args:
+        bucket (str): Bucket of where tsv lives and output goes to.
         runner (str): unique runner name
         obj_list_tsv_path (str): A file contains a column of s3 uri (s3://{bucket-name}/{file-path}). NO header needed
         move_to_folder (str): Folder name of where the obj will be moved to. New uri will be s3://{bucket-name}/{dest-folder}/{file-path}
-        bucket (str, optional): Bucket of where tsv lives and output goes to. Defaults to "ccdi-validation".
     """
     current_time = get_time()
 
     file_dl(bucket=bucket, filename = obj_list_tsv_path)
-    tsv_name = os.path.basename(i=obj_list_tsv_path)
+    tsv_name = os.path.basename(obj_list_tsv_path)
     tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])
 
     meta_df = create_file_mover_metadata(tsv_df=tsv_df, newfolder=move_to_folder)
