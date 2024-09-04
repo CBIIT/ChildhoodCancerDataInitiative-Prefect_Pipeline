@@ -55,7 +55,8 @@ def mci_file_mover(runner: str, obj_list_tsv_path: str, move_to_folder: str, buc
     """
     current_time = get_time()
 
-    tsv_name = file_dl(bucket=bucket, filename = obj_list_tsv_path)
+    file_dl(bucket=bucket, filename = obj_list_tsv_path)
+    tsv_name = os.path.basename(i=obj_list_tsv_path)
     tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])
 
     meta_df = create_file_mover_metadata(tsv_df=tsv_df, newfolder=move_to_folder)
