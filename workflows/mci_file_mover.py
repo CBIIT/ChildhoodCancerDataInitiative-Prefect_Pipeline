@@ -49,10 +49,10 @@ def mci_file_mover(runner: str, obj_list_tsv_path: str, move_to_folder: str, buc
 
     Args:
         runner (str): unique runner name
-        obj_list_tsv_path (str): A file contains a column of s3 uri (s3://<bucket-name>/<file-path>). NO header needed
-        move_to_folder (str): Folder name of where the obj will be moved to. New uri will be s3://<bucket-name>/<dest-folder>/<file-path>
+        obj_list_tsv_path (str): A file contains a column of s3 uri (s3://{bucket-name}/{file-path}). NO header needed
+        move_to_folder (str): Folder name of where the obj will be moved to. New uri will be s3://{bucket-name}/{dest-folder}/{file-path}
         bucket (str, optional): Bucket of where tsv lives and output goes to. Defaults to "ccdi-validation".
-    """    
+    """
     current_time = get_time()
 
     tsv_name = file_dl(bucket=bucket, filename = obj_list_tsv_path)
@@ -66,4 +66,3 @@ def mci_file_mover(runner: str, obj_list_tsv_path: str, move_to_folder: str, buc
     file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=meta_output)
 
     return None
-
