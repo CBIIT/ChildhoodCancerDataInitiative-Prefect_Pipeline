@@ -41,6 +41,24 @@ def create_file_mover_metadata(tsv_df: DataFrame, newfolder: str) -> DataFrame:
 
 
 @flow(
+        name="Check if AWS Directory",
+        log_prints=True,
+)
+def check_if_directory(uri_path: str) -> None:
+    s3_client=set_s3_session_client()
+    bucket, keypath = parse_file_url(url=uri_path)
+    
+    result = s3_client.list_objects(Bucket=bucket, Prefix=keypath, MaxKeys=1)
+    exists = False
+    if 'Contents' in result:
+        exists=True
+    print(exists)
+    s3_client.close()
+    return None
+    
+
+
+@flow(
     name="mci file mover",
     log_prints=True,
     flow_run_name="mci-file-mover-{runner}-" + f"{get_time()}",
