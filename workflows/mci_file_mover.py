@@ -118,6 +118,8 @@ def mci_file_mover(bucket: str, runner: str, obj_list_tsv_path: str, move_to_fol
     # identify if the uri in the tsv file dir or obj
     uri_list = identify_obj_dir(uri_list=tsv_df["original_uri"].tolist(), logger=logger)
     tsv_df = pd.DataFrame({"original_uri": uri_list})
+    logger.info(f"A total of {tsv_df.shape[0]} objects will be moved")
+    runner_logger.info(f"A total of {tsv_df.shape[0]} objects will be moved")
 
     runner_logger.info("Creating destination s3 uri")
     meta_df = create_file_mover_metadata(tsv_df=tsv_df, newfolder=move_to_folder)
