@@ -3,6 +3,7 @@ import os
 import sys
 import pandas as pd
 from typing import TypeVar
+from botocore.errorfactory import ClientError
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -45,18 +46,30 @@ def create_file_mover_metadata(tsv_df: DataFrame, newfolder: str) -> DataFrame:
         log_prints=True,
 )
 def check_if_directory(uri_path: str) -> None:
+    logger = get_run_logger()
     s3_client=set_s3_session_client()
     bucket, keypath = parse_file_url(url=uri_path)
-    
-    result = s3_client.list_objects(Bucket=bucket, Prefix=keypath, MaxKeys=1)
-    print(result)
-    exists = False
-    if 'Contents' in result:
-        exists=True
-    print(exists)
+    try:
+        s3_client.head_object(Bucket=bucket, Key=keypath)
+        if_dir = "object"
+    except ClientError as e:
+        err_code = e.response["Error"]["Code"]
+        err_message = e.response["Error"]["Message"]
+        logger.error(f"{err_code}: {err_message} uri_path")
+        try:
+            result = s3_client.list_objects(Bucket=bucket, Prefix=keypath, MaxKeys=1)
+            if 'Contents' in result:
+                if_dir = "directory"
+            else:
+                if_dir = "invalid"
+        except ClientError as err:
+            err_code = err.response["Error"]["Code"]
+            err_message = err.response["Error"]["Message"]
+            logger.error(f"{err_code}: {err_message} uri_path")
+
+    print(if_dir)
     s3_client.close()
     return None
-    
 
 
 @flow(
