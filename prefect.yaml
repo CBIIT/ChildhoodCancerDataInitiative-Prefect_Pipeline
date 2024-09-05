@@ -253,7 +253,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: mci-file-copier
+  - name: ccdi-file-copier
     version: null
     tags: ["Production"]
     description: null
