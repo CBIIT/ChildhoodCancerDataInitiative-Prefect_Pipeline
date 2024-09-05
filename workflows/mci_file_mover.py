@@ -49,6 +49,7 @@ def check_if_directory(uri_path: str) -> None:
     bucket, keypath = parse_file_url(url=uri_path)
     
     result = s3_client.list_objects(Bucket=bucket, Prefix=keypath, MaxKeys=1)
+    print(result)
     exists = False
     if 'Contents' in result:
         exists=True
