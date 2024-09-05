@@ -89,11 +89,11 @@ def identify_obj_dir(uri_list: list, logger) -> list:
 
 
 @flow(
-    name="mci file mover",
+    name="file mover and delete",
     log_prints=True,
-    flow_run_name="mci-file-mover-{runner}-" + f"{get_time()}",
+    flow_run_name="file-mover-delete-{runner}-" + f"{get_time()}",
 )
-def mci_file_mover(bucket: str, runner: str, obj_list_tsv_path: str, move_to_folder: str) -> None:
+def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_folder: str) -> None:
     """Moves objects listed in a tsv file to a new folder in the same bucket
 
     Args:
@@ -105,8 +105,8 @@ def mci_file_mover(bucket: str, runner: str, obj_list_tsv_path: str, move_to_fol
     current_time = get_time()
     # create logger
     runner_logger = get_run_logger()
-    logger = get_logger(loggername="mci_file_mover_workflow", log_level="info")
-    logger_filename = "mci_file_mover_workflow_" + get_date() + ".log"
+    logger = get_logger(loggername="file_mover_delete_workflow", log_level="info")
+    logger_filename = "file_mover_delete_workflow_" + get_date() + ".log"
 
     file_dl(bucket=bucket, filename = obj_list_tsv_path)
     runner_logger.info(f"Downloaded list of s3 uri file: {obj_list_tsv_path}")
@@ -152,8 +152,8 @@ def mci_file_mover(bucket: str, runner: str, obj_list_tsv_path: str, move_to_fol
     meta_df["md5sum_check"] = compare_md5sum_status
 
     # upload files to bucket
-    output_folder = os.path.join(runner, "mci_file_mover_outputs_" + current_time)
-    meta_output = f"mci_file_mover_manifest_{get_date()}.tsv"
+    output_folder = os.path.join(runner, "file_mover_delete_outputs_" + current_time)
+    meta_output = f"file_mover_delete_manifest_{get_date()}.tsv"
     meta_df.to_csv(meta_output, sep="\t", index=False)
     file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=meta_output)
     file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=logger_filename)
