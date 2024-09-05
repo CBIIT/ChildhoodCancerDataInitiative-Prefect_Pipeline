@@ -9,7 +9,7 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.utils import get_time, file_dl, file_ul, get_date, set_s3_session_client, get_logger
 from src.file_mover import copy_object_parameter, dest_object_url, copy_file_task, parse_file_url, compare_md5sum_task
-from src.file_remover import objects_deletion
+from src.file_remover import objects_deletion, retrieve_objects_from_bucket_path
 
 DataFrame = TypeVar("DataFrame")
 
@@ -41,13 +41,7 @@ def create_file_mover_metadata(tsv_df: DataFrame, newfolder: str) -> DataFrame:
     return tsv_df
 
 
-@flow(
-        name="Check if AWS Directory",
-        log_prints=True,
-)
-def check_if_directory(uri_path: str) -> None:
-    logger = get_run_logger()
-    s3_client=set_s3_session_client()
+def check_if_directory(s3_client, uri_path: str) -> None:
     bucket, keypath = parse_file_url(url=uri_path)
     try:
         s3_client.head_object(Bucket=bucket, Key=keypath)
@@ -55,7 +49,7 @@ def check_if_directory(uri_path: str) -> None:
     except ClientError as e:
         err_code = e.response["Error"]["Code"]
         err_message = e.response["Error"]["Message"]
-        logger.error(f"{err_code}: {err_message} uri_path")
+        print(f"{err_code}: {err_message} {uri_path}")
         try:
             result = s3_client.list_objects(Bucket=bucket, Prefix=keypath, MaxKeys=1)
             if 'Contents' in result:
@@ -65,11 +59,31 @@ def check_if_directory(uri_path: str) -> None:
         except ClientError as err:
             err_code = err.response["Error"]["Code"]
             err_message = err.response["Error"]["Message"]
-            logger.error(f"{err_code}: {err_message} uri_path")
+            print(f"{err_code}: {err_message} {uri_path}")
 
     print(if_dir)
-    s3_client.close()
-    return None
+    return if_dir
+
+@flow(
+        name="If Directory",
+        log_prints=True
+)
+def identify_obj_dir(uri_list: list, logger) -> list:
+    obj_list = []
+    s3_client = set_s3_session_client()
+    for uri in uri_list:
+        uri_check =  check_if_directory(s3_client=s3_client, uri_path=uri)
+        if uri_check == "object":
+            obj_list.append(uri)
+        elif uri_check ==  "directory":
+            uri_item_list = retrieve_objects_from_bucket_path(bucket_folder_path=uri)
+            uri_path_list = ["s3://" + i["Bucket"] + "/" + i["Key"] for i in uri_item_list]
+            obj_list.extend(uri_path_list)
+        else:
+            logger.error(f"uri {uri} is not valid. Neither obj nor dir")
+            print(f"uri {uri} is not valid. Neither obj nor dir")
+
+    return obj_list
 
 
 @flow(
@@ -96,6 +110,10 @@ def mci_file_mover(bucket: str, runner: str, obj_list_tsv_path: str, move_to_fol
     runner_logger.info(f"Downloaded list of s3 uri file: {obj_list_tsv_path}")
     tsv_name = os.path.basename(obj_list_tsv_path)
     tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])
+
+    # identify if the uri in the tsv file dir or obj
+    uri_list = identify_obj_dir(uri_list=tsv_df["original_uri"].tolist(), logger=logger)
+    tsv_df = pd.DataFrame({"original_uri": uri_list})
 
     runner_logger.info("Creating destination s3 uri")
     meta_df = create_file_mover_metadata(tsv_df=tsv_df, newfolder=move_to_folder)
@@ -132,6 +150,7 @@ def mci_file_mover(bucket: str, runner: str, obj_list_tsv_path: str, move_to_fol
     meta_output = f"mci_file_mover_manifest_{get_date()}.tsv"
     meta_df.to_csv(meta_output, sep="\t", index=False)
     file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=meta_output)
+    file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=logger_filename)
     runner_logger.info(f"Uploaded file {meta_output} to the bucket {bucket} folder {output_folder}")
 
     if len(meta_df["md5sum_check"].unique().tolist()) == 1 and meta_df["md5sum_check"].unique().tolist()[0] == "Pass":
