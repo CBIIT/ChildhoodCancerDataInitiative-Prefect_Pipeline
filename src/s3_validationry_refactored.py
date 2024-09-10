@@ -829,7 +829,7 @@ def validate_unique_key(
     return None
 
 
-@flow(name="Validate unique key extendedly", log_print=True)
+@flow(name="Validate unique key extendedly", log_prints=True)
 def validate_unique_key_across_study(
     file_path: str, template_path: str, output_file: str
 ) -> None:
