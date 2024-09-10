@@ -847,6 +847,7 @@ def validate_unique_key_across_study(
     dict_df["Key"] = dict_df["Key"].str.upper()
     # pull out all key value properties of entire manifest
     key_value_props = dict_df[dict_df["Key"] == "TRUE"][["Property","Node"]]
+    print(key_value_props)
 
     # validation starts
     print_str = ""
@@ -854,6 +855,7 @@ def validate_unique_key_across_study(
     dup_key = []
     key_record = {}
     if key_value_props.shape[0] > 0:
+        print(f"number of keys: {key_value_props.shape[0]}")
         for i in range(key_value_props.shape[0]):
             i_key_id, i_node = key_value_props.loc[i].values.tolist()
             i_node_df = file_object.read_sheet_na(sheetname=i_node)
