@@ -846,7 +846,7 @@ def validate_unique_key_across_study(
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
     dict_df["Key"] = dict_df["Key"].str.upper()
     # pull out all key value properties of entire manifest
-    key_value_props = dict_df[dict_df["Key"] == "TRUE"][["Property","Node"]]
+    key_value_props = dict_df[dict_df["Key"] == "TRUE"][["Property","Node"]].reset_index(drop=True)
     print(key_value_props)
 
     # validation starts
@@ -857,6 +857,7 @@ def validate_unique_key_across_study(
     if key_value_props.shape[0] > 0:
         print(f"number of keys: {key_value_props.shape[0]}")
         for i in range(key_value_props.shape[0]):
+            print(i)
             i_key_id, i_node = key_value_props.loc[i].values.tolist()
             i_node_df = file_object.read_sheet_na(sheetname=i_node)
             # if key id property is found in the data frame
