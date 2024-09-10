@@ -286,7 +286,7 @@ def validate_terms_value_sets_one_sheet(
     for property in properties:
         WARN_FLAG = True
         tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
-       
+
         # if the property is in the TaVs data frame
         if len(tavs_df_prop) > 0:
             # if the property is not completely empty:
@@ -783,7 +783,10 @@ def validate_unique_key_one_sheet(node_name: str, file_object, template_object):
                     property_dict["error value"] = ""
                 check_list.append(property_dict)
             else:
-                print_str = print_str + f"WARNING: {key_value_prop} not found in node {node_name} file\n\t"
+                print_str = (
+                    print_str
+                    + f"WARNING: {key_value_prop} not found in node {node_name} file\n\t"
+                )
         check_df = pd.DataFrame.from_records(check_list)
         if check_df.shape[0] > 0:
             check_df["error value"] = check_df["error value"].str.wrap(30)
@@ -846,8 +849,9 @@ def validate_unique_key_across_study(
     dict_df = template_object.read_sheet_na(sheetname="Dictionary")
     dict_df["Key"] = dict_df["Key"].str.upper()
     # pull out all key value properties of entire manifest
-    key_value_props = dict_df[dict_df["Key"] == "TRUE"][["Property","Node"]].reset_index(drop=True)
-    print(key_value_props)
+    key_value_props = dict_df[dict_df["Key"] == "TRUE"][
+        ["Property", "Node"]
+    ].reset_index(drop=True)
 
     # validation starts
     print_str = ""
@@ -857,12 +861,11 @@ def validate_unique_key_across_study(
     if key_value_props.shape[0] > 0:
         print(f"number of keys: {key_value_props.shape[0]}")
         for i in range(key_value_props.shape[0]):
-            print(i)
             i_key_id, i_node = key_value_props.loc[i].values.tolist()
             i_node_df = file_object.read_sheet_na(sheetname=i_node)
             # if key id property is found in the data frame
             if i_key_id in i_node_df.columns.tolist():
-                i_id_all =  i_node_df[i_key_id].dropna().tolist()
+                i_id_all = i_node_df[i_key_id].dropna().tolist()
                 # there is at least one key id value in the df
                 if len(i_id_all) > 0:
                     for h in i_id_all:
@@ -882,12 +885,23 @@ def validate_unique_key_across_study(
             if len(key_record[id]) > 1:
                 affected_nodes = key_record[id]
                 for j in range(len(affected_nodes)):
-                    dup_key.append({"key_id_value":id, "node":affected_nodes[j]})
+                    node_key = key_value_props.loc[
+                        key_value_props["Node"] == affected_nodes[j], "Property"
+                    ].values[0]
+                    dup_key.append(
+                        {
+                            "key value": id,
+                            "key prop name": node_key,
+                            "node": affected_nodes[j],
+                        }
+                    )
             else:
                 pass
         # non-unique key_id found in file
         if len(dup_key) > 0:
-            print_str = print_str + "Error: Found non-unique key id value in the manifest\n\t"
+            print_str = (
+                print_str + "Error: Found non-unique key id value in the manifest\n\t"
+            )
             dup_key_df = pd.DataFrame.from_records(dup_key)
             print_str = (
                 print_str
@@ -897,7 +911,9 @@ def validate_unique_key_across_study(
                 + "\n"
             )
         else:
-            print_str = print_str + "INFO: All key id values are unique across the study\n"
+            print_str = (
+                print_str + "INFO: All key id values are unique across the study\n"
+            )
     else:
         print_str = print_str + f"WARNING: manifest file contains no Key id property\n"
     # print the return_str to the output file
@@ -1548,7 +1564,7 @@ def validate_key_id_single_sheet(node_name: str, file_object, template_object) -
             if len(troubled_id_value) > 0:
                 property_dict["check"] = "ERROR\nillegal character"
                 property_dict["error value"] = ",".join(troubled_id_value)
-                
+
             else:
                 property_dict["check"] = "PASS"
                 property_dict["error value"] = ""
@@ -1666,7 +1682,9 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # validate unique key across the entire study
     validation_logger.info("Checking unique keys across the study")
-    validate_unique_key_across_study(file_path=file_path, template_path=template_path, output_file=output_file)
+    validate_unique_key_across_study(
+        file_path=file_path, template_path=template_path, output_file=output_file
+    )
 
     # validate file metadata (size, md5sum regex, and file basename in url)
     validation_logger.info(
