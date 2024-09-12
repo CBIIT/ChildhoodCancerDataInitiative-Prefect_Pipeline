@@ -756,7 +756,7 @@ deployments:
     version: null
     tags: ["TEST"]
     description: null
-    entrypoint: workflows/neo4j_stats:pull_neo4j_stats
+    entrypoint: workflows/neo4j_stats.py:pull_neo4j_stats
     schedule: null
 
     # flow-specific parameters
