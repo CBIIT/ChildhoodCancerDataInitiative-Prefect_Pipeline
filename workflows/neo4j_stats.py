@@ -14,7 +14,7 @@ from src.neo4j_data_tools import (
     log_prints=True,
     flow_run_name="neo4j-stats-{runner}-" + f"{get_time()}",
 )
-def pull_neo4j_data(
+def pull_neo4j_stats(
     bucket: str,
     runner: str,
     uri_parameter: str = "uri",
