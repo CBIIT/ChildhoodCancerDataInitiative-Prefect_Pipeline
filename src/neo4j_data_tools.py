@@ -1067,7 +1067,7 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
 
 # Functions for stats query pipeline
 @flow(log_prints=True)
-def stats_pull_graph_data_study(query: str, query_topic: str):
+def stats_pull_graph_data_study(uri: str, username:str, password:str, query: str, query_topic: str):
     with GraphDatabase.driver(uri, auth=(username, password)) as driver:
         with driver.session() as session:
             # Initialize an empty list to store dataframes
@@ -1113,7 +1113,7 @@ def stats_pull_graph_data_study(query: str, query_topic: str):
     return final_df
 
 @flow(log_prints=True)
-def stats_pull_graph_data_nodes(query: str, query_topic: str):
+def stats_pull_graph_data_nodes(uri:str, username:str, password:str, query: str, query_topic: str):
     with GraphDatabase.driver(uri, auth=(username, password)) as driver:
         with driver.session() as session:
             # Initialize an empty list to store dataframes
