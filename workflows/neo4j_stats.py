@@ -246,7 +246,6 @@ def pull_neo4j_stats(
     file_ul(
         bucket=bucket,
         output_folder=bucket_folder,
-        destination=bucket_folder,
         sub_folder="",
         newfile=output_file,
     )
