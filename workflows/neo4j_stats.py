@@ -21,7 +21,7 @@ def pull_neo4j_stats(
     username_parameter: str = "username",
     password_parameter: str = "password",
 ):
-    """Pipeline that pulls all ingested studies from a Neo4j database
+    """Pipeline that pulls specific stats from ingested studies from a Neo4j database
 
     Args:
         bucket (str): Bucket name of where output goes to
@@ -35,7 +35,7 @@ def pull_neo4j_stats(
 
     bucket_folder = runner + "/db_stats_outputs_" + get_time()
 
-    output_file = f"neo4j_stats_{get_time()}.tsv"
+    output_file = f"db_stats_{get_time()}.tsv"
 
     logger.info("Getting uri, username and password parameter from AWS")
     # get uri, username, and password value
