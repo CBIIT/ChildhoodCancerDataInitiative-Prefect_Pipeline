@@ -19,8 +19,10 @@ Series = TypeVar("Series")
 
 def get_acl(workbook_dict: Dict) -> str:
     """Takes a workbook dict and returns acl value"""
-    if "dbgap_accesion" in workbook_dict["study"].columns:
-        acl_list = workbook_dict["study"]["dbgap_accesion"].tolist()
+    print(workbook_dict["study"].columns)
+    if "dbgap_accession" in workbook_dict["study"].columns:
+        acl_list = workbook_dict["study"]["dbgap_accession"].tolist()
+        print(acl_list)
         # we only expect to find one acl at a time
         acl = acl_list[0].strip("[]'")
     elif "acl" in workbook_dict["study"].columns:
@@ -1301,6 +1303,7 @@ def duplicate_filename_fix(sra_df: DataFrame, logger) -> DataFrame:
 
 @flow(
     name="CCDI_to_SRA_submission",
+    log_prints=True,
     flow_run_name="CCDI_to_SRA_submission_" + f"{get_time()}",
 )
 def CCDI_to_SRA(
