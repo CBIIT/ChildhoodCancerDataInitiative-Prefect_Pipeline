@@ -1,4 +1,5 @@
 import pandas as pd
+import os
 from prefect import flow, get_run_logger
 from src.utils import get_time, file_ul, file_dl
 from src.neo4j_data_tools import (
@@ -20,6 +21,7 @@ def pull_neo4j_stats(
     uri_parameter: str = "uri",
     username_parameter: str = "username",
     password_parameter: str = "password",
+    additional_info_file: str = "",
 ):
     """Pipeline that pulls specific stats from ingested studies from a Neo4j database
 
@@ -29,6 +31,7 @@ def pull_neo4j_stats(
         uri_parameter (str, optional): uri parameter. Defaults to "uri".
         username_parameter (str, optional): username parameter. Defaults to "username".
         password_parameter (str, optional): password parameter. Defaults to "password".
+        additional_info_file (str, optional): An extra information tsv file with one line per study in a study_id column.
     """
 
     logger = get_run_logger()
@@ -237,6 +240,15 @@ def pull_neo4j_stats(
 
     # Reorder the DataFrame
     df_wide = df_wide[columns_to_move_to_front + remaining_columns]
+
+    if additional_info_file:
+        file_ul(bucket=bucket, filename=additional_info_file)
+        extra_df = pd.read_csv(os.path.basename(additional_info_file), sep='\t')
+        if 'study_id' not in extra_df.columns:
+            logger.warning(f"The file supplied {additional_info_file}, does not contain a `study_id` column.")
+        else:
+            df_wide = pd.merge(df_wide, extra_df, on= "study_id", how="right")
+
 
     # write out
     df_wide.to_csv(output_file, sep="\t", index=False)
