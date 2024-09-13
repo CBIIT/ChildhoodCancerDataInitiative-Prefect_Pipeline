@@ -1410,7 +1410,6 @@ def CCDI_to_SRA(
 
     # extract study acl and name
     sequencing_df["acl"] = get_acl(workbook_dict)
-    print(f"found acl: {sequencing_df["acl"].tolist()[0]}")
     sequencing_df["study_name"] = get_study_name(workbook_dict)
     logger.info("Extracted study name and study acl")
 
