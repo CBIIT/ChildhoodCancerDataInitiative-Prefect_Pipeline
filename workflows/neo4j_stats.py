@@ -242,7 +242,7 @@ def pull_neo4j_stats(
     df_wide = df_wide[columns_to_move_to_front + remaining_columns]
 
     if additional_info_file:
-        file_ul(bucket=bucket, filename=additional_info_file)
+        file_dl(bucket=bucket, filename=additional_info_file)
         extra_df = pd.read_csv(os.path.basename(additional_info_file), sep='\t')
         if 'study_id' not in extra_df.columns:
             logger.warning(f"The file supplied {additional_info_file}, does not contain a `study_id` column.")
