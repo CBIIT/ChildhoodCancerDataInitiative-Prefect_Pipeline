@@ -223,6 +223,8 @@ def runner(
     )
 
     if catcherr_out_file is not None:
+
+        """
         # run ValidationRy
         runner_logger.info("Running ValidationRy flow")
         try:
@@ -239,6 +241,8 @@ def runner(
             wf_step="ValidationRy",
             sub_folder="2_ValidationRy_output",
         )
+        """
+        
 
         # run CCDI to SRA
         runner_logger.info("Running CCDI to SRA submission file flow")

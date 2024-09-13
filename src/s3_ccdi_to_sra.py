@@ -20,8 +20,7 @@ Series = TypeVar("Series")
 def get_acl(workbook_dict: Dict) -> str:
     """Takes a workbook dict and returns acl value"""
     if "dbgap_accession" in workbook_dict["study"].columns:
-        acl_list = workbook_dict["study"]["dbgap_accesion"].tolist()
-        print(acl_list)
+        acl_list = workbook_dict["study"]["dbgap_accession"].tolist()
         # we only expect to find one acl at a time
         acl = acl_list[0].strip("[]'")
     elif "acl" in workbook_dict["study"].columns:
