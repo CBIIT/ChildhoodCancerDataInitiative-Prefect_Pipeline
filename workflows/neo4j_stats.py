@@ -247,7 +247,7 @@ def pull_neo4j_stats(
         if 'study_id' not in extra_df.columns:
             logger.warning(f"The file supplied {additional_info_file}, does not contain a `study_id` column.")
         else:
-            df_wide = pd.merge(df_wide, extra_df, on= "study_id", how="right")
+            df_wide = pd.merge(extra_df, df_wide, on= "study_id", how="left")
 
 
     # write out
