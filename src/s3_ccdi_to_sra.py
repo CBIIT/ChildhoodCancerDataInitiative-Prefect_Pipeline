@@ -1198,7 +1198,7 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
 
     Note:
     If more than one active location url value is found, new library_id should be
-    created for each unique active_location_url
+    created for each unique active_location_URL
     """
     sra_df["check_sample_id"] = (
         sra_df["sample_ID"]
@@ -1222,17 +1222,17 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
 
         # check for rows of sra_df["check_sample_id"] == i, if more than one active_location_url are found
         # at this point, subset of sra_df["check_sample_id"] == i should be sharing the same library_id
-        if len(i_df["active_location_url"].dropna().unique().tolist()) > 1:
+        if len(i_df["active_location_URL"].dropna().unique().tolist()) > 1:
             # the library_id for the subset of sra_df[sra_df["check_sample_id"] == i]
             # all library_id should be the same for the subset
             i_library_id = sra_df[sra_df["check_sample_id"] == i]["library_ID"].tolist()[0]
             # loop through each unique location
             loc_count = 1
-            for j_loc in i_df["active_location_url"].dropna().unique().tolist():
+            for j_loc in i_df["active_location_URL"].dropna().unique().tolist():
                 # rename the library_id to be <original_library_id>_<number>
                 sra_df.loc[
                     (sra_df["check_sample_id"] == i)
-                    & (sra_df["active_location_url"] == j_loc),
+                    & (sra_df["active_location_URL"] == j_loc),
                     "library_ID",
                 ] = i_library_id + "_" + str(loc_count)
                 loc_count += 1
