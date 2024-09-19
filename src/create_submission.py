@@ -195,12 +195,12 @@ class GetCCDIModel:
                 # string, integar, number
                 prop_type = prop_dict["Type"]
             elif isinstance(prop_dict["Type"], dict):
-                if prop_dict["Type"]["vlaue_type"] != "list":
+                if prop_dict["Type"]["value_type"] != "list":
                     # in some cases, value_type can be number integer
                     # and item_type can be unit, unitType in schema
-                    prop_type = prop_dict["Type"]["vlaue_type"]
+                    prop_type = prop_dict["Type"]["value_type"]
                 else:
-                    # prop_dict["Type"]["vlaue_type"] == "list"
+                    # prop_dict["Type"]["value_type"] == "list"
                     # for listType based off mdf schema
                     if isinstance(prop_dict["Type"]["item_type"], list):
                         prop_enum_list = prop_dict["Type"]["item_type"]
