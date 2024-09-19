@@ -204,7 +204,7 @@ class GetCCDIModel:
                     # for listType based off mdf schema
                     if isinstance(prop_dict["Type"]["item_type"], list):
                         prop_enum_list = prop_dict["Type"]["item_type"]
-                        if "Strict" in prop_dict.keys:
+                        if "Strict" in prop_dict.keys():
                             if prop_dict["Strict"] == False:
                                 prop_type = "array[string;enum]"
                             else:
@@ -218,7 +218,7 @@ class GetCCDIModel:
             elif isinstance(prop_dict["Type"], list):
                 prop_enum_list = prop_dict["Type"]
                 # some people might list enum list under Type
-                if "Strict" in prop_dict.keys:
+                if "Strict" in prop_dict.keys():
                     if prop_dict["Strict"] == False:
                         prop_type = "array[string;enum]"
                     else:
