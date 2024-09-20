@@ -77,7 +77,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 "NA",
                 "NULL",
                 "NaN",
-                #"None",
+                # "None",
                 "n/a",
                 "nan",
                 "null",
@@ -461,6 +461,43 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             f"\tERROR: The value for file_access is missing for {node} node at row {index +1}.\n",
                             file=outf,
                         )
+
+                meta_dfs[node] = df
+
+        print(
+            "\nFile access checks and value creation complete.\n",
+            file=outf,
+        )
+
+        ##############
+        #
+        # File_mapping_level check and ACL/authz creation
+        #
+        ##############
+
+        print(
+            "\nThe following section will check the file_mapping_level (fml) values, and create values when blank.\n----------",
+            file=outf,
+        )
+
+        # check each node to find the acl property (it has been in study and study_admin)
+        for node in dict_nodes:
+            if "file_mapping_level" in meta_dfs[node].columns:
+                df = meta_dfs[node]
+
+                # for each row, determine if the fml value is present and if not, determine the value
+                for index, row in df.iterrows():
+                    fml_value = df.at[index, "file_mapping_level"]
+
+                    if fml_value:
+                        pass
+
+                    else:
+                        for column in df.columns:
+                            if "." in column and pd.notna(row[column]):
+                                key_name = column
+                                fml_value = str.split(key_name, sep=".")[1]
+                                df.at[index, "file_mapping_level"] = fml_value
 
                 meta_dfs[node] = df
 

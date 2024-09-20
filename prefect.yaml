@@ -778,3 +778,37 @@ deployments:
       name: ccdi-curation-60gb
       work_queue_name: null
       job_variables: {}
+  
+  - name: TEST-ccdi-data-curation-8gb
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/s3-Prefect-Pipeline.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
+      #runner: "your_uniq_id"
+      #optional parmaeters below, uncomment if needed
+      #output_folder: "output_folder_name"
+      #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+      #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1113-CatchERR_file_mapping_fill-in
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}
