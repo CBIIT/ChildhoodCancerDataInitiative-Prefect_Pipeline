@@ -489,10 +489,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 for index, row in df.iterrows():
                     fml_value = df.at[index, "file_mapping_level"]
 
-                    if fml_value:
-                        pass
-
-                    else:
+                    if pd.isna(fml_value):
                         for column in df.columns:
                             if "." in column and pd.notna(row[column]):
                                 key_name = column
