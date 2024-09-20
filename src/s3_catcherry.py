@@ -471,7 +471,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
-        # File_mapping_level check and ACL/authz creation
+        # File_mapping_level check
         #
         ##############
 
@@ -496,7 +496,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         for column in df.columns:
                             if "." in column and pd.notna(row[column]):
                                 key_name = column
-                                fml_value = str.split(key_name, sep=".")[1]
+                                fml_value = str.split(key_name, sep=".")[0]
                                 df.at[index, "file_mapping_level"] = fml_value
 
                 meta_dfs[node] = df
