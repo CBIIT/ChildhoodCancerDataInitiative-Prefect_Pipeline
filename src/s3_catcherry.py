@@ -484,7 +484,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         for node in dict_nodes:
             if "file_mapping_level" in meta_dfs[node].columns:
                 df = meta_dfs[node]
-                error_index = []
+
+                #empty rows
+                error_index=df.index[pd.isna(df['file_mapping_level'])]
 
                 # for each row, determine if the fml value is present and if not, determine the value
                 for index, row in df.iterrows():
@@ -496,7 +498,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                 key_name = column
                                 fml_value = str.split(key_name, sep=".")[0]
                                 df.at[index, "file_mapping_level"] = fml_value
-                                error_index = error_index.append(index)
 
                 meta_dfs[node] = df
                 print(
