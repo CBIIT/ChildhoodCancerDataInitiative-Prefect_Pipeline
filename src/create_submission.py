@@ -230,19 +230,13 @@ class GetCCDIModel:
                 raise TypeError(
                     "Can not categorize property type. Need to modify GetCCDIModel._read_each_prop method"
                 )
-        # if no prop_enum_list has been defined, assign np.nan value to prop_example
+        # if no prop_enum_list has been defined, prop_enum_list is []
         try:
-            prop_enum_list
-            if len(prop_enum_list) <= 4:
-                prop_example = ";".join(prop_enum_list)
-            else:
-                prop_example = (
-                    ";".join(prop_enum_list[0:4]) + ";etc (see Terms and Values Sets)"
-                )
+            prop_enum_list        
         except NameError:
-            prop_example = np.nan
+            prop_enum_list = []
 
-        return prop_description, prop_type, prop_example, prop_required, prop_CDE
+        return prop_description, prop_type, prop_enum_list, prop_required, prop_CDE
 
     def _get_prop_cde_version(self, prop_name: str, term_dict: dict) -> str:
         """Extracts CDE version of a property from a dict derived from terms.yml
@@ -271,13 +265,11 @@ class GetCCDIModel:
         return node_sort_list
 
     def _if_enum_prop(self, prop_dict: dict) -> bool:
-        if isinstance(prop_dict["Type"], dict):
-            if "Enum" in prop_dict["Type"].keys():
-                return True
-            else:
-                return False
+        _, prop_type, _, _, _ = self._read_each_prop(prop_dict=prop_dict)
+        if "enum" in prop_type:
+            return True
         else:
-            False
+            return False
 
     def get_prop_dict_df(self):
         """Returns a dataframe that is ready to be loaded as "Dictionary" sheet"""
@@ -309,10 +301,19 @@ class GetCCDIModel:
                 (
                     prop_description,
                     prop_type,
-                    prop_example,
+                    #prop_example,
+                    prop_enum_list,
                     prop_required,
                     prop_cde,
                 ) = self._read_each_prop(prop_dict=prop_dict[property])
+                # create enum_example value
+                if len(prop_enum_list) <= 4:
+                    prop_example = ";".join(prop_enum_list)
+                else:
+                    prop_example = (
+                        ";".join(prop_enum_list[0:4]) + ";etc (see Terms and Values Sets)"
+                    ) 
+
                 prop_cde_version = self._get_prop_cde_version(
                     prop_name=property, term_dict=term_dict
                 )
