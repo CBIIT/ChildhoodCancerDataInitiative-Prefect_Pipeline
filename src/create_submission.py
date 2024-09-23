@@ -371,7 +371,9 @@ class GetCCDIModel:
         for prop in prop_dict.keys():
             prop_context = prop_dict[prop]
             if self._if_enum_prop(prop_dict=prop_context):
-                prop_enum_list = prop_context["Type"]["Enum"]
+                _, _, prop_enum_list, _, _ = self._read_each_prop(
+                    prop_dict=prop_context
+                )
                 term_definition_list = []
                 for i in prop_enum_list:
                     if i in term_dict.keys():
