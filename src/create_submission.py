@@ -56,7 +56,7 @@ class ManifestStyle:
     term_pattern_B: Any = PatternFill(fill_type="solid", fgColor="DEE6F0")
 
 
-class GetCCDIModel():
+class GetCCDIModel:
     node_preferred_order = [
         "study",
         "study_admin",
@@ -71,11 +71,11 @@ class GetCCDIModel():
         "treatment_response",
         "synonym",
         "family_relationship",
-        #"therapeutic_procedure",
+        # "therapeutic_procedure",
         "medical_history",
         "exposure",
         "radiology_file",
-        #"follow_up",
+        # "follow_up",
         "molecular_test",
         "sample",
         "cell_line",
@@ -85,7 +85,7 @@ class GetCCDIModel():
         "methylation_array_file",
         "cytogenomic_file",
         "pathology_file",
-        #"single_cell_sequencing_file",
+        # "single_cell_sequencing_file",
     ]
 
     def __init__(self, model_file: str, prop_file: str, term_file: str) -> None:
@@ -151,7 +151,7 @@ class GetCCDIModel():
             ],
             "Type": {
                 "value_type": "list",
-                "Enum": [
+                "item_type": [
                     "Hispanic or Latino",
                     "Not Allowed to Collect",
                     "Not Hispanic or Latino",
@@ -163,6 +163,9 @@ class GetCCDIModel():
             "Strict": False,
             "Private": False,
         }
+
+        After 1.9.1, enum or string;enum is is no longer specified under Type key
+        Enum key is expected to appear under prop_dict
         """
         prop_description = prop_dict["Desc"]
         if "Term" in prop_dict.keys():
@@ -174,65 +177,66 @@ class GetCCDIModel():
                 prop_CDE = np.nan
         else:
             prop_CDE = np.nan
+        # in CCDI, every prop has a req key, which is not the case in other projects
         prop_required = prop_dict["Req"]
-        if isinstance(prop_dict["Type"], str):
-            # this covers string, integar, number
-            prop_type = prop_dict["Type"]
-        elif (
-            prop_dict["Type"]["value_type"] == "string"
-            and "Enum" in prop_dict["Type"].keys()
-            and prop_dict["Strict"] == False
-        ):
-            # this covers string;enum
-            prop_type = "string;enum"
 
-        elif (
-            prop_dict["Type"]["value_type"] == "string"
-            and "Enum" in prop_dict["Type"].keys()
-            and prop_dict["Strict"] == True
-        ):
-            # this covers enum
-            prop_type = "enum"
-        elif (
-            prop_dict["Type"]["value_type"] == "list"
-            and "Type" in prop_dict["Type"].keys()
-        ):
-            # this covers array[string]
-            prop_type = "array[string]"
-        elif (
-            prop_dict["Type"]["value_type"] == "list"
-            and "Enum" in prop_dict["Type"].keys()
-            and prop_dict["Strict"] == True
-        ):
-            # this covers array[enum]
-            prop_type = "array[enum]"
-        elif (
-            prop_dict["Type"]["value_type"] == "list"
-            and "Enum" in prop_dict["Type"].keys()
-            and prop_dict["Strict"] == False
-        ):
-            # this covers array[string;enum]
-            prop_type = "array[string;enum]"
-        else:
-            print(json.dumps(prop_dict, indent=4))
-            raise TypeError(
-                "Can not categorize property type. Need to modify GetCCDIModel._read_each_prop method"
-            )
-        if isinstance(prop_dict["Type"], dict):
-            if "Enum" in prop_dict["Type"].keys():
-                prop_enum_list = prop_dict["Type"]["Enum"]
-                if len(prop_enum_list) <= 4:
-                    prop_example = ";".join(prop_enum_list)
+        if "Enum" in prop_dict.keys():
+            prop_enum_list = prop_dict["Enum"]
+            if "Strict" in prop_dict.keys():
+                if prop_dict["Strict"] == False:
+                    prop_type = "string;enum"
                 else:
-                    prop_example = (
-                        ";".join(prop_enum_list[0:4])
-                        + ";etc (see Terms and Values Sets)"
-                    )
+                    prop_type = "enum"
             else:
-                prop_example = np.nan
-        else:
-            prop_example = np.nan
-        return prop_description, prop_type, prop_example, prop_required, prop_CDE
+                prop_type = "enum"
+        elif "Type" in prop_dict.keys():
+            if isinstance(prop_dict["Type"], str):
+                # this covers simple type
+                # string, integar, number
+                prop_type = prop_dict["Type"]
+            elif isinstance(prop_dict["Type"], dict):
+                if prop_dict["Type"]["value_type"] != "list":
+                    # in some cases, value_type can be number integer
+                    # and item_type can be unit, unitType in schema
+                    prop_type = prop_dict["Type"]["value_type"]
+                else:
+                    # prop_dict["Type"]["value_type"] == "list"
+                    # for listType based off mdf schema
+                    if isinstance(prop_dict["Type"]["item_type"], list):
+                        prop_enum_list = prop_dict["Type"]["item_type"]
+                        if "Strict" in prop_dict.keys():
+                            if prop_dict["Strict"] == False:
+                                prop_type = "array[string;enum]"
+                            else:
+                                prop_type = "array[enum]"
+                        else:
+                            prop_type = "array[enum]"
+                    else:
+                        # item_type is not list
+                        item_type = prop_dict["Type"]["item_type"]
+                        prop_type = f"array[{item_type}]"
+            elif isinstance(prop_dict["Type"], list):
+                prop_enum_list = prop_dict["Type"]
+                # some people might list enum list under Type
+                if "Strict" in prop_dict.keys():
+                    if prop_dict["Strict"] == False:
+                        prop_type = "array[string;enum]"
+                    else:
+                        prop_type = "array[enum]"
+                else:
+                    prop_type = "array[enum]"
+            else:
+                print(json.dumps(prop_dict, indent=4))
+                raise TypeError(
+                    "Can not categorize property type. Need to modify GetCCDIModel._read_each_prop method"
+                )
+        # if no prop_enum_list has been defined, prop_enum_list is []
+        try:
+            prop_enum_list        
+        except NameError:
+            prop_enum_list = []
+
+        return prop_description, prop_type, prop_enum_list, prop_required, prop_CDE
 
     def _get_prop_cde_version(self, prop_name: str, term_dict: dict) -> str:
         """Extracts CDE version of a property from a dict derived from terms.yml
@@ -261,13 +265,11 @@ class GetCCDIModel():
         return node_sort_list
 
     def _if_enum_prop(self, prop_dict: dict) -> bool:
-        if isinstance(prop_dict["Type"], dict):
-            if "Enum" in prop_dict["Type"].keys():
-                return True
-            else:
-                return False
+        _, prop_type, _, _, _ = self._read_each_prop(prop_dict=prop_dict)
+        if "enum" in prop_type:
+            return True
         else:
-            False
+            return False
 
     def get_prop_dict_df(self):
         """Returns a dataframe that is ready to be loaded as "Dictionary" sheet"""
@@ -299,10 +301,19 @@ class GetCCDIModel():
                 (
                     prop_description,
                     prop_type,
-                    prop_example,
+                    #prop_example,
+                    prop_enum_list,
                     prop_required,
                     prop_cde,
                 ) = self._read_each_prop(prop_dict=prop_dict[property])
+                # create enum_example value
+                if len(prop_enum_list) <= 4:
+                    prop_example = ";".join(prop_enum_list)
+                else:
+                    prop_example = (
+                        ";".join(prop_enum_list[0:4]) + ";etc (see Terms and Values Sets)"
+                    ) 
+
                 prop_cde_version = self._get_prop_cde_version(
                     prop_name=property, term_dict=term_dict
                 )
@@ -360,7 +371,9 @@ class GetCCDIModel():
         for prop in prop_dict.keys():
             prop_context = prop_dict[prop]
             if self._if_enum_prop(prop_dict=prop_context):
-                prop_enum_list = prop_context["Type"]["Enum"]
+                _, _, prop_enum_list, _, _ = self._read_each_prop(
+                    prop_dict=prop_context
+                )
                 term_definition_list = []
                 for i in prop_enum_list:
                     if i in term_dict.keys():
@@ -408,7 +421,7 @@ class GetCCDIModel():
         return terms_value_df
 
 
-class ManifestSheet():
+class ManifestSheet:
     release_api = "https://api.github.com/repos/CBIIT/ccdi-model/releases"
 
     def __init__(self) -> None:
@@ -463,7 +476,7 @@ class ManifestSheet():
 
     def release_api_return(self) -> List[Dict]:
         """Get a return from github repo ccdi-model release api"""
-        github_token =  get_github_token()
+        github_token = get_github_token()
         headers = {"Authorization": "token " + github_token}
         release_endpoint_response = requests.get(self.release_api, headers=headers)
         response_list = release_endpoint_response.json()
@@ -523,8 +536,7 @@ class ManifestSheet():
         return None
 
     def readme_sheet(self, model_version: str, release_title: str) -> None:
-        """Creates README and INSTRUCTIONS sheet
-        """
+        """Creates README and INSTRUCTIONS sheet"""
         top_df_dict = {
             "col1": [
                 "CCDI SUBMISSION METADATA TEMPLATE",
