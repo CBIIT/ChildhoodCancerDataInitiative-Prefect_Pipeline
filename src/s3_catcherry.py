@@ -496,7 +496,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         for column in df.columns:
                             if "." in column and pd.notna(row[column]):
                                 key_name = column
-                                fml_value = str.split(key_name, sep=".")[0]
+                                fml_value = str.split(key_name, sep=".")[0].capitalize()
                                 df.at[index, "file_mapping_level"] = fml_value
 
                 meta_dfs[node] = df
