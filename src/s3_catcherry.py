@@ -788,3 +788,4 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     )
 
     return (catcherr_out_file, catcherr_out_log)
+
