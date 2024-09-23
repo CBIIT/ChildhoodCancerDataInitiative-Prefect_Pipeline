@@ -502,8 +502,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 print(
                     f"\n\t{node}/
                     \n\t----------/
-                    \n\t\t{error_index},
-                    file=outf,"
+                    \n\t\t{error_index}",
+                    file=outf,
                 )
 
 
