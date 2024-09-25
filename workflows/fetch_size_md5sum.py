@@ -15,6 +15,7 @@ from src.utils import (
     file_dl,
     list_to_chunks,
     set_s3_session_client,
+    parse_file_url
 )
 from src.file_remover import paginate_parameter
 import pandas as pd
@@ -145,7 +146,8 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices) -> No
         )
         file_bucket_path = file_input.file_bucket_path
         filename =  os.path.basename(file_bucket_path)
-        file_dl(file_bucket_path)
+        bucket_name, obj_key = parse_file_url(url=file_bucket_path)
+        file_dl(bucket=bucket_name, filename = obj_key)
 
         uri_df = pd.read_csv(filename, header=None, names=["uri_list"])
         uri_list = uri_df["uri_list"].tolist()
