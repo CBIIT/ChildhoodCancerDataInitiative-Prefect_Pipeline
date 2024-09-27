@@ -10,6 +10,7 @@ from src.utils import (
     get_time,
     get_date,
     calculate_list_md5sum,
+    calculate_list_md5sum_consecutively,
     calculate_list_size,
     file_ul,
     file_dl,
@@ -32,6 +33,7 @@ class FileInput(RunInput):
     file_bucket_path : str
 
 DropDownChoices = Literal["s3_directory", "list_of_s3_uri", "file_containing_s3_uri"]
+ConcurrencyDropDownChoices = Literal["yes","no"]
 DataFrame = TypeVar("DataFrame")
 
 
@@ -59,7 +61,7 @@ def list_dir_content_uri(dir_path: str) -> list[str]:
     name="Calculate md5sum and size of url list",
     log_prints=True,
 )
-def fetch_size_md5sum_with_urls(s3uri_list: list[str]) -> DataFrame:
+def fetch_size_md5sum_with_urls(s3uri_list: list[str], if_concurrency: str) -> DataFrame:
     """Returns a dataframe containing 3 columns of s3_uri, size, and md5sum
 
     Args:
@@ -69,7 +71,10 @@ def fetch_size_md5sum_with_urls(s3uri_list: list[str]) -> DataFrame:
         DataFrame: A pandas DataFrame that contains 3 columns, s3_uri, size, and md5sum
     """    
     size_list = calculate_list_size(s3uri_list=s3uri_list)
-    md5sum_list = calculate_list_md5sum(s3uri_list=s3uri_list)
+    if if_concurrency == "yes":
+        md5sum_list = calculate_list_md5sum(s3uri_list=s3uri_list)
+    else:
+        md5sum_list = calculate_list_md5sum_consecutively(s3uri_list=s3uri_list)
     # fix uri if s3:// is missing
     s3uri_list =  ["s3://" + i if not i.startswith("s3://") else i for i in s3uri_list]
     # creates a pandas df and writes it into a tsv file
@@ -84,13 +89,14 @@ def fetch_size_md5sum_with_urls(s3uri_list: list[str]) -> DataFrame:
     log_prints=True,
     flow_run_name="{runner}-" + f"{get_time()}",
 )
-def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices) -> None:
+def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_concurrency: ConcurrencyDropDownChoices) -> None: 
     """Pipeline that calculates objects size and md5sum
 
     Args:
         bucket (str): Bucekt name where the output goes to
         runner (str):
         input_type (DropDownChoices): The type of input you can provide. Acceptable values are s3_directory, list_of_s3_uri, file_containing_s3_uri. If your list of uri is long (over 100), we recommond to put them in a file so the flow can read them through a file
+        run_concurrency (ConcurrencyDropDownChoices): If you would like to run tasks concurrently
     """
     logger = get_run_logger()
 
@@ -162,10 +168,12 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices) -> No
         uri_chunk_list = list_to_chunks(mylist=uri_list, chunk_len=100)
         result_df =  pd.DataFrame(columns=["s3_uri","size","md5sum"])
         for i in uri_chunk_list:
-            i_df =  fetch_size_md5sum_with_urls(s3uri_list=i)
+            i_df =  fetch_size_md5sum_with_urls(s3uri_list=i, if_concurrency=run_concurrency)
             result_df =  pd.concat([result_df, i_df], ignore_index=True)
     else:
-        result_df = fetch_size_md5sum_with_urls(s3uri_list = uri_list)
+        result_df = fetch_size_md5sum_with_urls(
+            s3uri_list=uri_list, if_concurrency=run_concurrency
+        )
     # write result_df to a file
     output_file = "fetch_size_md5sum_" + get_date() + ".tsv"
     result_df.to_csv(output_file, sep="\t", index=False)
