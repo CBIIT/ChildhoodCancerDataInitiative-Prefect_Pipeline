@@ -760,6 +760,7 @@ def validate_age_one_sheet(node_name: str, file_object):
     for property in properties:
         # if a property name contains the values "age_at"
         property_dict = {}
+        WARN_FLAG = False
         if "age_at" in property:
             property_dict["node"] = node_name
             property_dict["property"] = property
