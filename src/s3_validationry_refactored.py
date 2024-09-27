@@ -1798,6 +1798,10 @@ def ValidationRy_new(file_path: str, template_path: str):
     validation_logger.info("Checking regular expression")
     validate_regex(nodes_to_validate, file_path, template_path, output_file)
 
+    # validate age
+    validation_logger.info("Checking age_at PII")
+    validate_age(nodes_to_validate, file_path, output_file)
+
     # validate unique keys
     validation_logger.info("Checking unique keys")
     validate_unique_key(nodes_to_validate, file_path, template_path, output_file)
