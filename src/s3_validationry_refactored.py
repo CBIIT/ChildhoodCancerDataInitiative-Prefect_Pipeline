@@ -755,6 +755,7 @@ def validate_age_one_sheet(node_name: str, file_object):
     # pull the properties of the tab
     properties = node_df.columns
 
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
     check_list = []
     # for those properties
     for property in properties:
