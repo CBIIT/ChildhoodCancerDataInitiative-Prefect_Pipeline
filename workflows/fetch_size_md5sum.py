@@ -166,10 +166,16 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
     logger.info(f"Number of objects to report: {len(uri_list)}")
     if len(uri_list) > 100:
         uri_chunk_list = list_to_chunks(mylist=uri_list, chunk_len=100)
+        logger.info(
+            f"size and md5sum calculation is going to be executed in {len(uri_chunk_list)} chuncks"
+        )
         result_df =  pd.DataFrame(columns=["s3_uri","size","md5sum"])
+        progress = 1
         for i in uri_chunk_list:
             i_df =  fetch_size_md5sum_with_urls(s3uri_list=i, if_concurrency=run_concurrency)
             result_df =  pd.concat([result_df, i_df], ignore_index=True)
+            logger.info(f"Progress: {progress}/{len(uri_chunk_list)}")
+            progress += 1
     else:
         result_df = fetch_size_md5sum_with_urls(
             s3uri_list=uri_list, if_concurrency=run_concurrency

@@ -1152,9 +1152,12 @@ def calculate_list_md5sum(s3uri_list: list[str]) -> list[str]:
 def calculate_list_md5sum_consecutively(s3uri_list: list[str]) -> list[str]:
     s3_client = set_s3_session_client()
     md5sum_value_list = []
+    progress = 1
     for i in s3uri_list:
         i_md5sum =  calculate_single_md5sum_task.fn(i, s3_client)
         md5sum_value_list.append(i_md5sum)
+        print(f"progress: {progress}/{len(s3uri_list)}")
+        progress += 1
     s3_client.close()
     return md5sum_value_list
 
