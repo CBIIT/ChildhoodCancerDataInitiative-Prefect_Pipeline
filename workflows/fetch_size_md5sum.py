@@ -163,6 +163,9 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
 
     # start fetching object size and calculate md5sum with uri_list
     # print(uri_list)
+    today_date = get_date()
+    output_folder = os.path.join(runner, "fetch_size_md5sum_outputs_" + get_time())
+    output_file = "fetch_size_md5sum_" + today_date + ".tsv"
     logger.info(f"Number of objects to report: {len(uri_list)}")
     if len(uri_list) > 100:
         uri_chunk_list = list_to_chunks(mylist=uri_list, chunk_len=100)
@@ -175,26 +178,33 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
             i_df =  fetch_size_md5sum_with_urls(s3uri_list=i, if_concurrency=run_concurrency)
             result_df =  pd.concat([result_df, i_df], ignore_index=True)
             logger.info(f"Progress: {progress}/{len(uri_chunk_list)}")
+            # writing that result to output_file and upload to bucket. 
+            # in case the flow failed in the middle
+            # this is going to be overwritten till all the objs has been checked
+            result_df.to_csv(output_file, sep="\t", index=False)
+            file_ul(
+                bucket=bucket,
+                output_folder=output_folder,
+                sub_folder="",
+                newfile=output_file,
+            )
+            logger.info(
+                f"Uploaded file {output_file} to bucket {bucket} folder {output_folder}"
+            )
             progress += 1
     else:
         result_df = fetch_size_md5sum_with_urls(
             s3uri_list=uri_list, if_concurrency=run_concurrency
         )
-    # write result_df to a file
-    output_file = "fetch_size_md5sum_" + get_date() + ".tsv"
-    result_df.to_csv(output_file, sep="\t", index=False)
-    logger.info(f"Created output file: {output_file}")
-
-    # upload summary table to bucket
-    time_rightnow = get_time()
-    output_folder = os.path.join(runner, "fetch_size_md5sum_outputs_" + time_rightnow)
-    file_ul(
-        bucket=bucket,
-        output_folder=output_folder,
-        sub_folder="",
-        newfile=output_file,
-    )
-    logger.info(
-        f"Uploaded file {output_file} to bucket {bucket} folder {output_folder}"
-    )
+        result_df.to_csv(output_file, sep="\t", index=False)
+        file_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            sub_folder="",
+            newfile=output_file,
+        )
+        logger.info(
+            f"Uploaded file {output_file} to bucket {bucket} folder {output_folder}"
+        )
+    
     logger.info("Workflow finished")
