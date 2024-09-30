@@ -735,11 +735,6 @@ def validate_regex(
 
 
 
-
-
-
-
-
 @task(
     name="Validate age of one sheet",
     log_prints=True,
@@ -768,13 +763,11 @@ def validate_age_one_sheet(node_name: str, file_object):
             # create a new error collection list
             error_rows = []
             # for each row in that column
-            for index in node_df[property]:
-                # create a test value
-                age_test = int(node_df[index, property])
-                # if the test value isn't NA
-                if pd.notna(age_test):
+            for index, value in enumerate(node_df[property]):
+                # if the value isn't NA
+                if pd.notna(value):
                     # then see if it greater than 90 in days
-                    if age_test > less_than_90:
+                    if value > less_than_90:
                         # when it is, append to the list, create a warning flag
                         error_rows.append(index + 2)
                         WARN_FLAG = True
