@@ -723,18 +723,6 @@ def validate_regex(
     return None
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 @task(
     name="Validate age of one sheet",
     log_prints=True,
@@ -805,9 +793,7 @@ def validate_age_one_sheet(node_name: str, file_object):
 
 
 @flow(name="Validate age", log_prints=True, task_runner=ConcurrentTaskRunner())
-def validate_age(
-    node_list: list[str], file_path: str, output_file: str
-):
+def validate_age(node_list: list[str], file_path: str, output_file: str):
     section_title = (
         "\n\n"
         + header_str("Age PII Check")
@@ -817,27 +803,12 @@ def validate_age(
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
 
-    validate_str_future = validate_age_one_sheet.map(
-        node_list, file_object
-    )
+    validate_str_future = validate_age_one_sheet.map(node_list, file_object)
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
     return None
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 @task(
