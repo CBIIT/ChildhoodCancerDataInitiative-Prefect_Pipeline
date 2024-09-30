@@ -58,7 +58,7 @@ def list_dir_content_uri(dir_path: str) -> list[str]:
 
 
 @flow(
-    name="Calculate md5sum and size of url list",
+    name="Calculate md5sum and size of uri list",
     log_prints=True,
 )
 def fetch_size_md5sum_with_urls(s3uri_list: list[str], if_concurrency: str) -> DataFrame:
@@ -143,7 +143,7 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
                     f"""
 **Please provide the bucket path of the file containing s3 uri**
 
-**ATTENTION**: No column needed in the file. Please make sure only one s3 uri per line.
+**ATTENTION**: No column name needed in the file. Please make sure only one s3 uri per line.
 
 - **file_bucket_path**: e.g., s3://ccdi-validation/QL/input/test_file.txt             
 """
