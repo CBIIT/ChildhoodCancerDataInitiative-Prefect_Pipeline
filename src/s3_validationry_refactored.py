@@ -770,7 +770,7 @@ def validate_age_one_sheet(node_name: str, file_object):
             # for each row in that column
             for index in node_df[property]:
                 # create a test value
-                age_test = node_df[index, property]
+                age_test = int(node_df[index, property])
                 # if the test value isn't NA
                 if pd.notna(age_test):
                     # then see if it greater than 90 in days
