@@ -152,7 +152,7 @@ class GetCCDIModel:
         """Returns CDE code of a prop"""
         props_term_list = prop_obj.concept.terms
         # set default value for prop_cde_code
-        prop_cde_code = pd.nan
+        prop_cde_code = np.nan
         for i in props_term_list.keys():
             if i[1] == "caDSR":
                 prop_cde_code = props_term_list[i].origin_id
