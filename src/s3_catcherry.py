@@ -77,7 +77,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 "NA",
                 "NULL",
                 "NaN",
-                #"None",
+                # "None",
                 "n/a",
                 "nan",
                 "null",
@@ -179,7 +179,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         for node in dict_nodes:
             df = meta_dfs[node]
-            df = df.drop_duplicates()
+            df = df.drop_duplicates(ignore_index=True)
             meta_dfs[node] = df
 
         ##############
@@ -471,6 +471,47 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
+        # File_mapping_level check
+        #
+        ##############
+
+        print(
+            "\nThe following section will check the file_mapping_level (fml) values, and create values when blank.\n----------",
+            file=outf,
+        )
+
+        # check each node to find the acl property (it has been in study and study_admin)
+        for node in dict_nodes:
+            if "file_mapping_level" in meta_dfs[node].columns:
+                df = meta_dfs[node]
+
+                # empty rows
+                error_index = df.index[pd.isna(df["file_mapping_level"])].tolist()
+
+                # for each row, determine if the fml value is present and if not, determine the value
+                for index, row in df.iterrows():
+                    fml_value = df.at[index, "file_mapping_level"]
+
+                    if pd.isna(fml_value):
+                        for column in df.columns:
+                            if "." in column and pd.notna(row[column]):
+                                key_name = column
+                                fml_value = str.split(key_name, sep=".")[0].capitalize()
+                                df.at[index, "file_mapping_level"] = fml_value
+
+                meta_dfs[node] = df
+                print(
+                    f"\n\t{node}\n\t----------\n\t\t{error_index}",
+                    file=outf,
+                )
+
+        print(
+            "\nFile mapping level checks and value creation complete.\n",
+            file=outf,
+        )
+
+        ##############
+        #
         # Fix URL paths
         #
         ##############
@@ -678,7 +719,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     for node in dict_nodes:
         df = meta_dfs[node]
         df = df.fillna("")
-        df = df.drop_duplicates()
+        df = df.drop_duplicates(ignore_index=True)
         meta_dfs[node] = df
 
     ##############

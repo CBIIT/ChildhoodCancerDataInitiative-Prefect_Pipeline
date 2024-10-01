@@ -724,6 +724,94 @@ def validate_regex(
 
 
 @task(
+    name="Validate age of one sheet",
+    log_prints=True,
+    task_run_name="Validate age properties of node {node_name}",
+)
+def validate_age_one_sheet(node_name: str, file_object):
+    # value of 89 years, 364 days
+    less_than_90 = 32849
+
+    # create data frame of tab
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+
+    # pull the properties of the tab
+    properties = node_df.columns
+
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
+    check_list = []
+    # for those properties
+    for property in properties:
+        # if a property name contains the values "age_at"
+        property_dict = {}
+        WARN_FLAG = False
+        if "age_at" in property:
+            property_dict["node"] = node_name
+            property_dict["property"] = property
+            # create a new error collection list
+            error_rows = []
+            # for each row in that column
+            for index, value in enumerate(node_df[property]):
+                # if the value isn't NA
+                if pd.notna(value):
+                    # then see if it greater than 90 in days
+                    if abs(int(value)) > less_than_90:
+                        # when it is, append to the list, create a warning flag
+                        error_rows.append(index + 2)
+                        WARN_FLAG = True
+
+                    else:
+                        pass
+                else:
+                    pass
+
+        # if the warning flag was tripped
+        if WARN_FLAG:
+            WARN_FLAG = False
+            property_dict["check"] = "Error"
+            # itterate over that list and print out the values
+            enum_print = ",".join([str(i) for i in error_rows])
+            property_dict["error row"] = enum_print
+            check_list.append(property_dict)
+        else:
+            pass
+
+    check_df = pd.DataFrame.from_records(check_list)
+    if check_df.shape[0] > 0:
+        check_df["error row"] = check_df["error row"].str.wrap(30)
+        check_df["property"] = check_df["property"].str.wrap(25)
+    else:
+        pass
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
+    return print_str
+
+
+@flow(name="Validate age", log_prints=True, task_runner=ConcurrentTaskRunner())
+def validate_age(node_list: list[str], file_path: str, output_file: str):
+    section_title = (
+        "\n\n"
+        + header_str("Age PII Check")
+        + "\nThis section will display locations in age properties which contain ages 90 and over in days (90 years == 32850 days):\n----------\n"
+    )
+
+    # create file_object and template_object
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+
+    validate_str_future = validate_age_one_sheet.map(node_list, file_object)
+    validate_str = "".join([i.result() for i in validate_str_future])
+    return_str = section_title + validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
+
+@task(
     name="Validate unique key of one sheet",
     log_prints=True,
     task_run_name="Validate unique key of node {node_name}",
@@ -1675,6 +1763,10 @@ def ValidationRy_new(file_path: str, template_path: str):
     # validate regex
     validation_logger.info("Checking regular expression")
     validate_regex(nodes_to_validate, file_path, template_path, output_file)
+
+    # validate age
+    validation_logger.info("Checking age_at PII")
+    validate_age(nodes_to_validate, file_path, output_file)
 
     # validate unique keys
     validation_logger.info("Checking unique keys")

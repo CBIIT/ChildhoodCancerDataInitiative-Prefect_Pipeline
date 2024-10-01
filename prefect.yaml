@@ -49,7 +49,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.5
+          branch: 1.0.12
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -83,7 +83,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.5
+          branch: 1.0.12
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -117,7 +117,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.5
+          branch: 1.0.12
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -151,7 +151,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.5
+          branch: 1.0.12
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -185,7 +185,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.5
+          branch: 1.0.12
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -752,6 +752,35 @@ deployments:
       job_variables: {}
 
 
+  - name: ccdi-to-sra
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/ccdi_to_sra.py:run_ccdi_to_sra
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1334_sra_library_id
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-60gb
+      work_queue_name: null
+      job_variables: {}
+      
+      
   - name: neo4j-stats
     version: null
     tags: ["Production"]
@@ -778,4 +807,4 @@ deployments:
     work_pool:
       name: ccdi-curation-32gb
       work_queue_name: null
-      job_variables: {}
+      job_variables: {}  

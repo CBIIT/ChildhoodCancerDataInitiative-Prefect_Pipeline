@@ -35,15 +35,18 @@ test_prop_parametrize_list = [
         {
             "Desc": "test description 1",
             "Term": [{"Origin": "caDSR", "Code": "112233", "Value": "test caDSR"}],
-            "Type": {
-                "value_type": "string",
-                "Enum": ["Yes", "No", "Unknown", "Not Reported"],
-            },
+            "Enum": ["Yes", "No", "Unknown", "Not Reported"],
             "Req": False,
             "Strict": True,
             "Private": False,
         },
-        ("test description 1", "enum", "Yes;No;Unknown;Not Reported", False, "112233"),
+        (
+            "test description 1",
+            "enum",
+            ["Yes", "No", "Unknown", "Not Reported"],
+            False,
+            "112233",
+        ),
     ),
     (
         # test string;enum type
@@ -56,16 +59,13 @@ test_prop_parametrize_list = [
                     "Value": "test caDSR",
                 }
             ],
-            "Type": {
-                "value_type": "string",
-                "Enum": [
-                    "Within 5 Minutes",
-                    "6-30 Minutes",
-                    "31-60 Minutes",
-                    "After 60 Minutes",
-                    "Unknown",
-                ],
-            },
+            "Enum": [
+                "Within 5 Minutes",
+                "6-30 Minutes",
+                "31-60 Minutes",
+                "After 60 Minutes",
+                "Unknown",
+            ],
             "Req": False,
             "Strict": False,
             "Private": False,
@@ -73,7 +73,13 @@ test_prop_parametrize_list = [
         (
             "test description 2",
             "string;enum",
-            "Within 5 Minutes;6-30 Minutes;31-60 Minutes;After 60 Minutes;etc (see Terms and Values Sets)",
+            [
+                "Within 5 Minutes",
+                "6-30 Minutes",
+                "31-60 Minutes",
+                "After 60 Minutes",
+                "Unknown",
+            ],
             False,
             "223344",
         ),
@@ -91,7 +97,7 @@ test_prop_parametrize_list = [
             ],
             "Type": {
                 "value_type": "list",
-                "Enum": [
+                "item_type": [
                     "Cigarettes",
                     "Cigar",
                 ],
@@ -103,7 +109,10 @@ test_prop_parametrize_list = [
         (
             "test description 3",
             "array[string;enum]",
-            "Cigarettes;Cigar",
+            [
+                "Cigarettes",
+                "Cigar",
+            ],
             False,
             "334455",
         ),
