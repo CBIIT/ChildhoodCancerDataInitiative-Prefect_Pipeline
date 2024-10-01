@@ -74,6 +74,247 @@ RETURN node.id AS id
 """
     )
 
+#dataclass for stats query pipeline
+@dataclass
+class StatsNeo4jCypherQuery:
+    """Dataclass for Stat Related Cypher Queries"""
+
+    #######################
+    # STUDY LEVEL QUERIES #
+    #######################
+
+    # Query to obtain all unique studies in the database
+    stats_get_unique_study_query: str = (
+        """
+MATCH (s:study)
+WITH s.study_id as study_id, s.study_name as study_name
+RETURN DISTINCT study_id, study_name
+"""
+    )
+
+    # Querty to obtain the study PI
+    stats_get_pi_query: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..2]-(n:study_personnel {{personnel_type: "PI"}})
+WITH labels(n) AS NodeType, COLLECT(n.personnel_name) AS Value
+RETURN
+    NodeType,
+    Value
+"""
+    )
+
+    # Querty to obtain the study institution based on PI
+    stats_get_institution_query: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..2]-(n:study_personnel {{personnel_type: "PI"}})
+WITH labels(n) AS NodeType, n.institution AS Value
+RETURN
+    NodeType,
+    Value
+"""
+    )
+
+    # Querty to obtain prescence of clinical data in study
+    stats_get_study_clinical: str = (
+        """
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:clinical_measure_file)
+WITH
+    CASE 
+        WHEN n IS NOT NULL THEN 'Yes'
+        ELSE 'No'
+    END AS Value,
+    CASE
+        WHEN n IS NOT NULL THEN labels(n)
+        ELSE ['clinical_measure_file']
+    END AS NodeType
+RETURN DISTINCT
+    NodeType,
+    Value
+"""
+    )
+
+    # Querty to obtain prescence of pathology data in study
+    stats_get_study_pathology: str = (
+        """
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:pathology_file)
+WITH
+    CASE 
+        WHEN n IS NOT NULL THEN 'Yes'
+        ELSE 'No'
+    END AS Value,
+    CASE
+        WHEN n IS NOT NULL THEN labels(n)
+        ELSE ['pathology_file']
+    END AS NodeType
+RETURN DISTINCT
+    NodeType,
+    Value
+"""
+    )
+
+    # Querty to obtain prescence of radiology data in study
+    stats_get_study_radiology: str = (
+        """
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:radiology_file)
+WITH
+    CASE 
+        WHEN n IS NOT NULL THEN 'Yes'
+        ELSE 'No'
+    END AS Value,
+    CASE
+        WHEN n IS NOT NULL THEN labels(n)
+        ELSE ['radiology_file']
+    END AS NodeType
+RETURN DISTINCT
+    NodeType,
+    Value
+"""
+    )
+
+    # Querty to obtain prescence of methylation_array data in study
+    stats_get_study_methylation_array: str = (
+        """
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:methylation_array_file)
+WITH
+    CASE 
+        WHEN n IS NOT NULL THEN 'Yes'
+        ELSE 'No'
+    END AS Value,
+    CASE
+        WHEN n IS NOT NULL THEN labels(n)
+        ELSE ['methylation_array_file']
+    END AS NodeType
+RETURN DISTINCT
+    NodeType,
+    Value
+"""
+    )
+
+    # Querty to obtain prescence of cytogenomic data in study
+    stats_get_study_cytogenomic: str = (
+        """
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:cytogenomic_file)
+WITH
+    CASE 
+        WHEN n IS NOT NULL THEN 'Yes'
+        ELSE 'No'
+    END AS Value,
+    CASE
+        WHEN n IS NOT NULL THEN labels(n)
+        ELSE ['cytogenomic_file']
+    END AS NodeType
+RETURN DISTINCT
+    NodeType,
+    Value
+"""
+    )
+
+    # Query to get file count in study
+    stats_get_study_file_count: str = (
+        """
+WITH ['study_level_file'] AS NodeType
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n)
+WHERE n.file_size IS NOT NULL
+WITH count(n) as Value, NodeType
+RETURN DISTINCT
+    NodeType,
+    Value
+"""
+    )
+
+    # Query to get file size in study, based on unique file_urls
+    stats_get_study_file_size: str = (
+        """
+WITH ['study_level'] AS NodeType
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n)
+WHERE n.file_size IS NOT NULL AND n.file_url IS NOT NULL
+WITH n.file_url AS FileURL, 
+    COLLECT(DISTINCT n.file_size) AS FileSizes,
+    NodeType
+WITH FileURL, REDUCE(totalSize = 0, size IN FileSizes | totalSize + size) AS TotalFileSize, NodeType
+RETURN SUM(TotalFileSize) AS Value, NodeType
+"""
+    )
+
+    # Query to get the unique buckets found in each study
+    stats_get_study_buckets: str = (
+        """
+WITH ['study'] as NodeType
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..5]-(n)
+WHERE n.file_url IS NOT NULL
+WITH n.file_url AS fileUrl, NodeType
+WITH COLLECT(DISTINCT substring(fileUrl, 0, apoc.text.indexOf(fileUrl, "/", 5) + 1)) AS Value, NodeType
+RETURN 
+    NodeType,
+    Value
+"""
+    )
+
+    ######################
+    # NODE LEVEL QUERIES #
+    ######################
+
+    # Query for study nodes
+    stats_get_study_nodes: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n)
+UNWIND labels(n) AS NodeLabel
+RETURN DISTINCT NodeLabel
+"""
+    )
+
+    # Query to get all records per study in the database, with escaped curly braces
+    stats_get_study_node_counts: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+RETURN labels(n) AS NodeType, COUNT(n) AS Value
+"""
+    )
+
+    # Query to get file size
+    stats_get_study_node_file_size: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+WHERE n.file_size IS NOT NULL AND n.md5sum IS NOT NULL
+WITH n.md5sum AS md5, n.file_size AS fileSize, labels(n) as NodeType
+WITH md5, NodeType, MIN(fileSize) AS uniqueFileSize
+RETURN
+    NodeType,
+    SUM(uniqueFileSize) AS Value
+"""
+    )
+
+    # Query to get library strategies
+    stats_get_study_library_strategy: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
+WITH study, COLLECT(DISTINCT n.library_strategy) AS Value, labels(n) as NodeType   
+RETURN NodeType, Value
+"""
+    )
+
+    # Get file count by sequencing file library strategy
+    stats_get_study_library_strategy_count: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
+WITH [n.library_strategy] AS NodeType, COUNT(n) AS Value
+RETURN NodeType, Value
+"""
+    )
+
+    # Get file count by sequencing file library strategy
+    stats_get_study_library_strategy_size: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
+WITH [n.library_strategy] AS NodeType, sum(n.file_size) AS Value
+RETURN NodeType, Value
+"""
+    )
+
+
 
 def get_aws_parameter(parameter_name: str, logger) -> Dict:
     """Returns response from calling simple system manager with a
@@ -822,3 +1063,106 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
         logger.info(f"Writing tsv files for all studies from file: {file_path}")
         write_wider_df_all(wider_df, output_dir=export_folder, logger=logger)
     return export_folder
+
+
+# Functions for stats query pipeline
+@flow(log_prints=True)
+def stats_pull_graph_data_study(uri: str, username:str, password:str, query: str, query_topic: str):
+    with GraphDatabase.driver(uri, auth=(username, password)) as driver:
+        with driver.session() as session:
+            # Initialize an empty list to store dataframes
+            df_list = []
+            # Fetch unique study_ids
+            study_result = session.run(
+                StatsNeo4jCypherQuery.stats_get_unique_study_query
+            )
+            study_info = [
+                {
+                    "study_id": record["study_id"],
+                    "column_name": "study_name",
+                    "value": record["study_name"],
+                }
+                for record in study_result
+            ]
+            df_study = pd.DataFrame(study_info)
+            study_ids = [entry["study_id"] for entry in study_info]
+            # Iterate through each unique study_id and fetch records
+            for study_id in study_ids:
+                print(study_id)
+                # Format the query with the current study_id
+                study_query = query.format(study_id=study_id)
+                # Execute the query and fetch results
+                records = session.run(study_query)
+                # Convert the result to a dataframe
+                df = pd.DataFrame(
+                    [
+                        {
+                            "study_id": study_id,
+                            "column_name": f"{record['NodeType'][0]}_{query_topic}",  # Assuming one label per node
+                            "value": str(record["Value"]),
+                        }
+                        for record in records
+                    ]
+                )
+                # Append the dataframe to the list
+                df_list.append(df)
+            # Concatenate all dataframes into one
+            final_df = pd.concat(df_list, ignore_index=True)
+            final_df = pd.concat([final_df, df_study], axis=0, ignore_index=True)
+            final_df = final_df.drop_duplicates()
+    return final_df
+
+@flow(log_prints=True)
+def stats_pull_graph_data_nodes(uri:str, username:str, password:str, query: str, query_topic: str):
+    with GraphDatabase.driver(uri, auth=(username, password)) as driver:
+        with driver.session() as session:
+            # Initialize an empty list to store dataframes
+            df_list = []
+            # Fetch unique study_ids
+            study_result = session.run(
+                StatsNeo4jCypherQuery.stats_get_unique_study_query
+            )
+            study_info = [
+                {
+                    "study_id": record["study_id"],
+                    "column_name": "study_name",
+                    "value": record["study_name"],
+                }
+                for record in study_result
+            ]
+            df_study = pd.DataFrame(study_info)
+            study_ids = [entry["study_id"] for entry in study_info]
+            # Iterate through each unique study_id and fetch records
+            for study_id in study_ids:
+                print(study_id)
+                # Get file nodes based on data base
+                # Execute the query and fetch results
+                node_query = StatsNeo4jCypherQuery.stats_get_study_nodes.format(
+                    study_id=study_id
+                )
+                node_records = session.run(node_query)
+                nodes = [record["NodeLabel"] for record in node_records]
+                for node in nodes:
+                    print(node)
+                    # Format the query with the current study_id
+                    node_query = query.format(study_id=study_id, node=node)
+                    # Execute the query and fetch results
+                    records = session.run(node_query)
+                    # Convert the result to a dataframe
+                    df = pd.DataFrame(
+                        [
+                            {
+                                "study_id": study_id,
+                                "column_name": f"{record['NodeType'][0]}_{query_topic}",  # Assuming one label per node
+                                "value": str(record["Value"]),
+                            }
+                            for record in records
+                        ]
+                    )
+                    # Append the dataframe to the list
+                    df_list.append(df)
+            # Concatenate all dataframes into one
+            final_df = pd.concat(df_list, ignore_index=True)
+            final_df = pd.concat([final_df, df_study], axis=0, ignore_index=True)
+            final_df = final_df.drop_duplicates()
+    return final_df
