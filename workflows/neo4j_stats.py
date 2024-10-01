@@ -221,7 +221,7 @@ def pull_neo4j_stats(
         "study_bucket",
     ]
 
-    # Move data_exists column list to third position
+    # Move data_exists column list to a desired position
     columns_to_move_to_front[10:10] = columns_with_data_exist
 
     # Get the remaining columns that are not in columns_to_move
