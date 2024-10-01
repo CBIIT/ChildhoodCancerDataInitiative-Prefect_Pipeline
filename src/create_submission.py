@@ -13,6 +13,7 @@ from openpyxl import Workbook
 from typing import Any, TypeVar, Dict, List
 from openpyxl.styles import PatternFill, Font
 from src.utils import get_github_token
+from bento_mdf.mdf import MDF
 
 
 DataFrame = TypeVar("DataFrame")
@@ -93,49 +94,74 @@ class GetCCDIModel:
         self.prop_file = prop_file
         self.term_file = term_file
 
-    def _read_model(self) -> dict:
-        model_dict = yaml.safe_load(Path(self.model_file).read_text())
-        return model_dict
+    # fixed
+    def _read_model(self):
+        ccdi_main = MDF(self.model_file, self.prop_file, handle="ccdi")
+        ccdi_model = ccdi_main.model
+        return ccdi_model
 
-    def _read_prop(self) -> dict:
-        prop_dict = yaml.safe_load(Path(self.prop_file).read_text())
-        return prop_dict
+    def _list_nodes(self) -> list:
+        """Returns a list of nodes of a model"""
+        ccdi_model = self._read_model()
+        ccdi_nodes = [x for x in ccdi_model.nodes]
+        return ccdi_nodes
+
+    def _list_node_props(self, node_name: str) -> list:
+        """Returns a list of prop names of a given node"""
+        ccdi_model = self._read_model()
+        node_props = [x for x in ccdi_model.nodes[node_name].props]
+        return node_props
+
 
     def _read_term(self) -> dict:
         term_dict = yaml.safe_load(Path(self.term_file).read_text())
         return term_dict
 
+    # fixed
     def get_version(self) -> str:
         """Returns version value of data model"""
-        model_dict = self._read_model()
-        version = model_dict["Version"]
+        ccdi_model = self._read_model()
+        version = ccdi_model.version
         return version
 
-    def get_model_nodes(self) -> Dict:
-        """Returns a dict of node and properties of the node"""
-        model_dict = self._read_model()
-        nodes_dict = model_dict["Nodes"]
-        return nodes_dict
-
-    def get_parent_node(self):
+    # fixed
+    # [x.dst.handle for x in ccdi_model.edges_by_src(ccdi_model.nodes["sample"])]
+    # another way
+    # [x.dst.handle for x in ccdi_model.edges_out(ccdi_model.nodes["sample"])]
+    def get_parent_nodes(self) -> dict:
         """Gets parent nodes list of each node
         {
         "sample":["pdx","cell_line", "participant"],
         ...
         }
         """
-        get_relations = self._read_model()["Relationships"]
-        parent_node_dict = {}
-        for i in get_relations.keys():
-            child_node = i[3:]
-            i_parent = []
-            i_relation = get_relations[i]["Ends"]
-            for h in i_relation:
-                i_parent.append(h["Dst"])
-            parent_node_dict[child_node] = i_parent
-        return parent_node_dict
+        node_list = self._list_nodes()
+        ccdi_model = self._read_model()
+        return_dict = {}
+        for node in node_list:
+            parent_nodes_to_node = [
+                x.dst.handle for x in ccdi_model.edges_out(ccdi_model.nodes[node])
+            ]
+            return_dict[node] = parent_nodes_to_node
 
-    def _read_each_prop(self, prop_dict: dict) -> tuple:
+        return return_dict
+
+    # fixed
+    # this is going to be executed in side _read_each_prop
+    def _get_prop_cde_code(self, prop_obj) -> str:
+        """Returns CDE code of a prop"""
+        props_term_list = prop_obj.concept.terms
+        # set default value for prop_cde_code
+        prop_cde_code = pd.nan
+        for i in props_term_list.keys():
+            if i[1] == "caDSR":
+                prop_cde_code = props_term_list[i].origin_id
+            else:
+                pass
+
+        return prop_cde_code
+
+    def _read_each_prop(self, node_name: str, prop_name: str) -> tuple:
         """Extracts multiple prop information from a prop blob in a
         single prop dictionary
 
@@ -167,76 +193,51 @@ class GetCCDIModel:
         After 1.9.1, enum or string;enum is is no longer specified under Type key
         Enum key is expected to appear under prop_dict
         """
-        prop_description = prop_dict["Desc"]
-        if "Term" in prop_dict.keys():
-            term_list = prop_dict["Term"]
-            cde_term = [i for i in term_list if i["Origin"] == "caDSR"]
-            if len(cde_term) >= 1:
-                prop_CDE = cde_term[0]["Code"]
-            else:
-                prop_CDE = np.nan
-        else:
-            prop_CDE = np.nan
-        # in CCDI, every prop has a req key, which is not the case in other projects
-        prop_required = prop_dict["Req"]
+        ccdi_model = self._read_model()
+        prop_obj = ccdi_model.nodes[node_name].props[prop_name]
 
-        if "Enum" in prop_dict.keys():
-            prop_enum_list = prop_dict["Enum"]
-            if "Strict" in prop_dict.keys():
-                if prop_dict["Strict"] == False:
-                    prop_type = "string;enum"
-                else:
-                    prop_type = "enum"
-            else:
-                prop_type = "enum"
-        elif "Type" in prop_dict.keys():
-            if isinstance(prop_dict["Type"], str):
-                # this covers simple type
-                # string, integar, number
-                prop_type = prop_dict["Type"]
-            elif isinstance(prop_dict["Type"], dict):
-                if prop_dict["Type"]["value_type"] != "list":
-                    # in some cases, value_type can be number integer
-                    # and item_type can be unit, unitType in schema
-                    prop_type = prop_dict["Type"]["value_type"]
-                else:
-                    # prop_dict["Type"]["value_type"] == "list"
-                    # for listType based off mdf schema
-                    if isinstance(prop_dict["Type"]["item_type"], list):
-                        prop_enum_list = prop_dict["Type"]["item_type"]
-                        if "Strict" in prop_dict.keys():
-                            if prop_dict["Strict"] == False:
-                                prop_type = "array[string;enum]"
-                            else:
-                                prop_type = "array[enum]"
-                        else:
-                            prop_type = "array[enum]"
-                    else:
-                        # item_type is not list
-                        item_type = prop_dict["Type"]["item_type"]
-                        prop_type = f"array[{item_type}]"
-            elif isinstance(prop_dict["Type"], list):
-                prop_enum_list = prop_dict["Type"]
-                # some people might list enum list under Type
-                if "Strict" in prop_dict.keys():
-                    if prop_dict["Strict"] == False:
-                        prop_type = "array[string;enum]"
-                    else:
-                        prop_type = "array[enum]"
-                else:
-                    prop_type = "array[enum]"
-            else:
-                print(json.dumps(prop_dict, indent=4))
-                raise TypeError(
-                    "Can not categorize property type. Need to modify GetCCDIModel._read_each_prop method"
-                )
-        # if no prop_enum_list has been defined, prop_enum_list is []
-        try:
-            prop_enum_list        
-        except NameError:
+        # get_attr_dict of a prop
+        prop_attr_dict = prop_obj.get_attr_dict()
+
+        # get description
+        prop_description = prop_attr_dict["desc"]
+
+        # get if key
+        prop_if_key = prop_obj.is_key
+
+        # in CCDI, every prop has a req key, which is not the case in other projects
+        prop_required = prop_obj.is_required
+
+        # get cde code
+        prop_CDE = self._get_prop_cde_code(prop_obj=prop_obj)
+
+        # extract enum list if there is a list
+        if isinstance(prop_obj.values, list):
+            prop_enum_list = prop_obj.values
+        else:
             prop_enum_list = []
 
-        return prop_description, prop_type, prop_enum_list, prop_required, prop_CDE
+        prop_value_domain =  prop_attr_dict["value_domain"]
+        # prop has value_set as value_domain
+        if prop_value_domain == "value_set":
+            if prop_obj.is_strict:
+                prop_type = "enum"
+            else:
+                prop_type = "string;enum"
+        # prop is a list type
+        elif prop_value_domain == "list":
+            prop_item_type = prop_attr_dict["item_type"]
+            if prop_item_type == "value_set":
+                if prop_obj.is_strict:
+                    prop_type = "array[enum]"
+                else:
+                    prop_type = "array[string;enum]"
+            else:
+                prop_type = f"array[{prop_item_type}]"
+        else:
+            prop_type = prop_value_domain
+
+        return prop_description, prop_type, prop_enum_list, prop_required, prop_if_key, prop_CDE
 
     def _get_prop_cde_version(self, prop_name: str, term_dict: dict) -> str:
         """Extracts CDE version of a property from a dict derived from terms.yml
@@ -264,21 +265,12 @@ class GetCCDIModel:
         ]
         return node_sort_list
 
-    def _if_enum_prop(self, prop_dict: dict) -> bool:
-        _, prop_type, _, _, _ = self._read_each_prop(prop_dict=prop_dict)
-        if "enum" in prop_type:
-            return True
-        else:
-            return False
-
-    def get_prop_dict_df(self):
+    def get_prop_dict_df(self) -> DataFrame:
         """Returns a dataframe that is ready to be loaded as "Dictionary" sheet"""
-        # model_dict contains information of what properties in each node
-        model_dict = self.get_model_nodes()
-        # prop_dict contains property description, type, type, example value, and if the property is required
-        prop_dict = self._read_prop()["PropDefinitions"]
         # term_dict contains CDE verson info
         term_dict = self._read_term()["Terms"]
+
+        node_list =  self._list_nodes()
 
         # create a dictionary to be convereted to df later
         prop_return_df = pd.DataFrame(
@@ -295,17 +287,17 @@ class GetCCDIModel:
             ]
         )
 
-        for node in model_dict.keys():
-            node_property_list = model_dict[node]["Props"]
+        for node in node_list:
+            node_property_list = self._list_node_props(node_name=node)
             for property in node_property_list:
                 (
                     prop_description,
                     prop_type,
-                    #prop_example,
                     prop_enum_list,
                     prop_required,
+                    prop_if_key,
                     prop_cde,
-                ) = self._read_each_prop(prop_dict=prop_dict[property])
+                ) = self._read_each_prop(node_name=node, prop_name=property)
                 # create enum_example value
                 if len(prop_enum_list) <= 4:
                     prop_example = ";".join(prop_enum_list)
@@ -322,13 +314,7 @@ class GetCCDIModel:
                     prop_required = node
                 else:
                     prop_required = np.nan
-                # Mark Key property
-                if node + "_id" == property:
-                    prop_key = "TRUE"
-                elif property == "id":
-                    prop_key = "FALSE"
-                else:
-                    prop_key = np.nan
+
                 prop_append_line = {
                     "Property": [property],
                     "Description": [prop_description],
@@ -336,7 +322,7 @@ class GetCCDIModel:
                     "Type": [prop_type],
                     "Example value": [prop_example],
                     "Required": [prop_required],
-                    "Key": [prop_key],
+                    "Key": [prop_if_key],
                     "CDE": [prop_cde],
                     "CDE version": [prop_cde_version],
                 }
@@ -344,7 +330,7 @@ class GetCCDIModel:
                     [prop_return_df, pd.DataFrame(prop_append_line)], ignore_index=True
                 )
         # sort the df based on node_preferred_order
-        node_sort_list = self._get_sorted_node_list(node_list=model_dict.keys())
+        node_sort_list = self._get_sorted_node_list(node_list=self._list_nodes())
         prop_return_df.sort_values(
             by=["Node"],
             key=lambda column: column.map(lambda e: node_sort_list.index(e)),
@@ -352,10 +338,11 @@ class GetCCDIModel:
         )
         return prop_return_df
 
-    def get_terms_df(self):
+    # fixed
+    def get_terms_df(self) -> DataFrame:
         """Returns a dataframe that can be used for Terms and Value sets sheet"""
-        # prop_dict contains property description, type, type, example value, and if the property is required
-        prop_dict = self._read_prop()["PropDefinitions"]
+        ccdi_model = self._read_model()
+
         # term_dict contains CDE verson info
         term_dict = self._read_term()["Terms"]
 
@@ -367,47 +354,56 @@ class GetCCDIModel:
         # create a dictionary hosting df of each prop
         term_value_dict = {}
 
-        # loop through every property in prop_dict
-        for prop in prop_dict.keys():
-            prop_context = prop_dict[prop]
-            if self._if_enum_prop(prop_dict=prop_context):
-                _, _, prop_enum_list, _, _ = self._read_each_prop(
-                    prop_dict=prop_context
-                )
-                term_definition_list = []
-                for i in prop_enum_list:
-                    if i in term_dict.keys():
-                        term_definition_list.append(term_dict[i]["Definition"])
-                    else:
-                        term_definition_list.append(np.nan)
-                prop_value_set_list = [prop] * len(prop_enum_list)
-                subset_list = [np.nan] * len(prop_enum_list)
-                prop_term_df = pd.DataFrame(
-                    {
-                        "Value Set Name": prop_value_set_list,
-                        "(subset)": subset_list,
-                        "Term": prop_enum_list,
-                        "Definition": term_definition_list,
-                    }
-                )
-                # add an empty row
-                prop_term_df = pd.concat(
-                    [
-                        prop_term_df,
-                        pd.DataFrame(
+        prop_name_list = []
+        # read through each prop item
+        for node_prop, node_prop_meta in ccdi_model.props.items():
+            prop_name = node_prop[1]
+            # if prop_name hasn't appeared in prop_name_list
+            if prop_name not in prop_name_list:
+                if isinstance(node_prop_meta.values, list):
+                    prop_enum_list =  node_prop_meta.values
+                    term_definition_list = []
+                    for i in prop_enum_list:
+                        if i in term_dict.keys():
+                            term_definition_list.append(term_dict[i]["Definition"])
+                        else:
+                            term_definition_list.append(np.nan)
+                    prop_value_set_list = [prop_name] * len(prop_enum_list)
+                    subset_list = [np.nan] * len(prop_enum_list)
+                    prop_term_df = pd.DataFrame(
                             {
-                                "Value Set Name": [np.nan],
-                                "(subset)": [np.nan],
-                                "Term": [np.nan],
-                                "Definition": [np.nan],
+                                "Value Set Name": prop_value_set_list,
+                                "(subset)": subset_list,
+                                "Term": prop_enum_list,
+                                "Definition": term_definition_list,
                             }
-                        ),
-                    ],
-                    ignore_index=True,
-                )
-                term_value_dict[prop] = prop_term_df
+                        )
+                    # add an empty row
+                    prop_term_df = pd.concat(
+                        [
+                            prop_term_df,
+                            pd.DataFrame(
+                                {
+                                    "Value Set Name": [np.nan],
+                                    "(subset)": [np.nan],
+                                    "Term": [np.nan],
+                                    "Definition": [np.nan],
+                                }
+                            ),
+                        ],
+                        ignore_index=True,
+                    )
+                    term_value_dict[prop] = prop_term_df
+                    # add prop_name to prop_name_list
+                    prop_name_list.append(prop_name)
+                # prop doesn't have an enum value set
+                else:
+                    pass
+            # this prop has been added already
+            # for example, file_type appears in multiple nodes, e.g., sequencing_file, radiology_file...
             else:
                 pass
+
         # sort the key of dict term_Value_dict
         term_value_dict_keys = list(term_value_dict.keys())
         term_value_dict_keys.sort()
