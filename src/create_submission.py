@@ -93,6 +93,7 @@ class GetCCDIModel:
         self.model_file = model_file
         self.prop_file = prop_file
         self.term_file = term_file
+        self.ccdi_model =  self._read_model()
 
     # fixed
     def _read_model(self):
@@ -102,14 +103,12 @@ class GetCCDIModel:
 
     def _list_nodes(self) -> list:
         """Returns a list of nodes of a model"""
-        ccdi_model = self._read_model()
-        ccdi_nodes = [x for x in ccdi_model.nodes]
+        ccdi_nodes = [x for x in self.ccdi_model.nodes]
         return ccdi_nodes
 
     def _list_node_props(self, node_name: str) -> list:
         """Returns a list of prop names of a given node"""
-        ccdi_model = self._read_model()
-        node_props = [x for x in ccdi_model.nodes[node_name].props]
+        node_props = [x for x in self.ccdi_model.nodes[node_name].props]
         return node_props
 
 
@@ -120,8 +119,7 @@ class GetCCDIModel:
     # fixed
     def get_version(self) -> str:
         """Returns version value of data model"""
-        ccdi_model = self._read_model()
-        version = ccdi_model.version
+        version = self.ccdi_model.version
         return version
 
     # fixed
@@ -136,7 +134,7 @@ class GetCCDIModel:
         }
         """
         node_list = self._list_nodes()
-        ccdi_model = self._read_model()
+        ccdi_model = self.ccdi_model
         return_dict = {}
         for node in node_list:
             parent_nodes_to_node = [
@@ -158,7 +156,6 @@ class GetCCDIModel:
                 prop_cde_code = props_term_list[i].origin_id
             else:
                 pass
-
         return prop_cde_code
 
     def _read_each_prop(self, node_name: str, prop_name: str) -> tuple:
@@ -193,8 +190,7 @@ class GetCCDIModel:
         After 1.9.1, enum or string;enum is is no longer specified under Type key
         Enum key is expected to appear under prop_dict
         """
-        ccdi_model = self._read_model()
-        prop_obj = ccdi_model.nodes[node_name].props[prop_name]
+        prop_obj = self.ccdi_model.nodes[node_name].props[prop_name]
 
         # get_attr_dict of a prop
         prop_attr_dict = prop_obj.get_attr_dict()
@@ -289,6 +285,8 @@ class GetCCDIModel:
 
         for node in node_list:
             node_property_list = self._list_node_props(node_name=node)
+            print(node)
+            print(property)
             for property in node_property_list:
                 (
                     prop_description,
@@ -341,7 +339,7 @@ class GetCCDIModel:
     # fixed
     def get_terms_df(self) -> DataFrame:
         """Returns a dataframe that can be used for Terms and Value sets sheet"""
-        ccdi_model = self._read_model()
+        ccdi_model = self.ccdi_model
 
         # term_dict contains CDE verson info
         term_dict = self._read_term()["Terms"]
