@@ -221,7 +221,7 @@ class GetCCDIModel:
                 prop_type = "string;enum"
         # prop is a list type
         elif prop_value_domain == "list":
-            prop_item_type = prop_attr_dict["item_type"]
+            prop_item_type = prop_attr_dict["item_domain"]
             if prop_item_type == "value_set":
                 if prop_obj.is_strict:
                     prop_type = "array[enum]"
