@@ -111,7 +111,6 @@ class GetCCDIModel:
         node_props = [x for x in self.ccdi_model.nodes[node_name].props]
         return node_props
 
-
     def _read_term(self) -> dict:
         term_dict = yaml.safe_load(Path(self.term_file).read_text())
         return term_dict
@@ -286,8 +285,8 @@ class GetCCDIModel:
         for node in node_list:
             node_property_list = self._list_node_props(node_name=node)
             print(node)
-            print(property)
             for property in node_property_list:
+                print(property)
                 (
                     prop_description,
                     prop_type,
