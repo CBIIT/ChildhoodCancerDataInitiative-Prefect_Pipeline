@@ -214,7 +214,12 @@ class GetCCDIModel:
         prop_description = prop_attr_dict["desc"]
 
         # get if key
-        prop_if_key = prop_obj.is_key
+        if prop_obj.is_key:
+            prop_if_key = prop_obj.is_key
+        elif prop_name == "id":
+            prop_if_key = False
+        else:
+            prop_if_key = np.nan
 
         # in CCDI, every prop has a req key, which is not the case in other projects
         prop_required = prop_obj.is_required
