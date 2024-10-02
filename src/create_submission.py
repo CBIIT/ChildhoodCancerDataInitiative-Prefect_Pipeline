@@ -14,6 +14,7 @@ from typing import Any, TypeVar, Dict, List
 from openpyxl.styles import PatternFill, Font
 from src.utils import get_github_token
 from bento_mdf.mdf import MDF
+import bento_meta
 
 
 DataFrame = TypeVar("DataFrame")
@@ -147,14 +148,18 @@ class GetCCDIModel:
     # this is going to be executed in side _read_each_prop
     def _get_prop_cde_code(self, prop_obj) -> str:
         """Returns CDE code of a prop"""
-        props_term_list = prop_obj.concept.terms
         # set default value for prop_cde_code
         prop_cde_code = np.nan
-        for i in props_term_list.keys():
-            if i[1] == "caDSR":
-                prop_cde_code = props_term_list[i].origin_id
-            else:
-                pass
+        # test if the prop has bento_meta Concept obj
+        if isinstance(prop_obj.concept, bento_meta.objects.Concept):
+            props_term_list = prop_obj.concept.terms
+            for i in props_term_list.keys():
+                if i[1] == "caDSR":
+                    prop_cde_code = props_term_list[i].origin_id
+                else:
+                    pass
+        else:
+            pass
         return prop_cde_code
 
     def _read_each_prop(self, node_name: str, prop_name: str) -> tuple:
