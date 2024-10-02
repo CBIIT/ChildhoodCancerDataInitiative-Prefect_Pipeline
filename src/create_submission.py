@@ -719,6 +719,29 @@ class ManifestSheet:
             self.workbook.defined_names[i] = i_defined_name_object
         return None
 
+    def _sort_prop_order(self, node_name: str, prop_list: list[str]) -> list[str]:
+        """Rearrange a list of props of a node. [node]_id prop should be moved to the front.
+        "crdc_id" should be moved to the end if found.
+
+        Args:
+            node_name (str): a node name
+            prop_list (list[str]): list of props of a given node
+
+        Returns:
+            list[str]: rearranged prop list
+        """
+        node_id_prop = node_name + "_id"
+        # remove the node id prop and re-insert in the front
+        prop_list.remove(node_id_prop)
+        prop_list.insert(0,node_id_prop)
+        if "crdc_id" in prop_list:
+            # remove the crdc_id and add it as the last
+            prop_list.remove("crdc_id")
+            prop_list.append("crdc_id")
+        else:
+            pass
+        return prop_list
+
     def node_metadata_sheet(
         self,
         node: str,
@@ -743,6 +766,7 @@ class ManifestSheet:
             parent_nodes_index = []
 
         node_props = [i for i in model_node[node] if i != "id"]
+        node_props = self._sort_prop_order(node_name=node, prop_list=node_props)
         node_sheet_header = (
             ["type"] + parent_nodes_extended + node_props + ["id"] + parent_nodes_index
         )
