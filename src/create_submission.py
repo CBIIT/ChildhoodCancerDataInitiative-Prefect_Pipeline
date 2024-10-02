@@ -113,6 +113,7 @@ class GetCCDIModel:
         return node_props
 
     def _read_term(self) -> dict:
+        """Returns a dict from terms.yml"""
         term_dict = yaml.safe_load(Path(self.term_file).read_text())
         return term_dict
 
@@ -121,6 +122,16 @@ class GetCCDIModel:
         """Returns version value of data model"""
         version = self.ccdi_model.version
         return version
+
+    def get_model_nodes(self) -> dict:
+        """Returns a dictionary that has node as key and props as value"""
+        nodes = self._list_nodes()
+        return_dict = {}
+        for node in nodes:
+            node_props = self._list_node_props(node_name=node)
+            return_dict[node] = node_props
+        return return_dict
+      
 
     # fixed
     # [x.dst.handle for x in ccdi_model.edges_by_src(ccdi_model.nodes["sample"])]
@@ -731,7 +742,7 @@ class ManifestSheet:
             parent_nodes_extended = []
             parent_nodes_index = []
 
-        node_props = model_node[node]["Props"][:-1]
+        node_props = [i for i in model_node[node] if i != "id"]
         node_sheet_header = (
             ["type"] + parent_nodes_extended + node_props + ["id"] + parent_nodes_index
         )
