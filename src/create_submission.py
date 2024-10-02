@@ -395,7 +395,7 @@ class GetCCDIModel:
                         ],
                         ignore_index=True,
                     )
-                    term_value_dict[prop] = prop_term_df
+                    term_value_dict[prop_name] = prop_term_df
                     # add prop_name to prop_name_list
                     prop_name_list.append(prop_name)
                 # prop doesn't have an enum value set
