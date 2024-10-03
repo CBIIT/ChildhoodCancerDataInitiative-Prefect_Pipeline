@@ -41,8 +41,8 @@ def validate_new_model(
     # generate new submission manifest file using model files
     # downloaded from Github
     try:
-        new_model_folder = create_submission_manifest(bucket=bucket, runner=new_model_validation_out, release_title=release_title)
-        runner_logger.info(f"New model submission file has been uploaded to {new_model_folder}")
+        create_submission_manifest(bucket=bucket, runner=new_model_validation_out, release_title=release_title)
+        runner_logger.info(f"New model submission file has been created and uploaded")
     except:
         runner_logger.error("Creating submission manifest file using new model FAILED")
 
