@@ -304,9 +304,7 @@ class GetCCDIModel:
 
         for node in node_list:
             node_property_list = self._list_node_props(node_name=node)
-            print(node)
             for property in node_property_list:
-                print(property)
                 (
                     prop_description,
                     prop_type,

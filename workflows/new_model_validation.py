@@ -41,20 +41,19 @@ def validate_new_model(
     # generate new submission manifest file using model files
     # downloaded from Github
     try:
-        new_model_folder = create_submission_manifest(bucket=bucket, runner=new_model_validation_out, release_title=release_title)
-        runner_logger.info(f"New model submission file has been uploaded to {new_model_folder}")
+        create_submission_manifest(bucket=bucket, runner=new_model_validation_out, release_title=release_title)
+        runner_logger.info(f"New model submission file has been created and uploaded")
     except:
         runner_logger.error("Creating submission manifest file using new model FAILED")
 
-    # Get the filename of template file
-    if isinstance(new_model_folder, str):
-        filelist = os.listdir("./")
-        manifest_file = [i for i in filelist if "CCDI_Submission_Template" in i][0]
+    filelist = os.listdir("./")
+    manifest_file = [i for i in filelist if "CCDI_Submission_Template" in i]
+    if len(manifest_file) >= 0:
+        manifest_file = manifest_file[0]
     else:
         runner_logger.error("Failed to create a submission template using model files")
         return None
-
-    
+        
     # generate template exampler file with 30 entries
     template_exampler_output_folder = os.path.join(
         new_model_validation_out, "template_exampler_outputs_" + currenttime
