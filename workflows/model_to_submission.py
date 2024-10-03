@@ -116,7 +116,7 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # create node metadata sheets
     model_node = getmodel.get_model_nodes()
-    parent_node_dict = getmodel.get_parent_node()
+    parent_node_dict = getmodel.get_parent_nodes()
     manifest_wb.metadata_sheets(
         model_node=model_node,
         parent_node_dict=parent_node_dict,
