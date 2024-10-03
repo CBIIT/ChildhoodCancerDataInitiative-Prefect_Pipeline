@@ -5,19 +5,24 @@ import pytest
 import pandas as pd
 import random
 from openpyxl import Workbook
+from pathlib import Path
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.create_submission import GetCCDIModel, ManifestSheet
 import logging
 import numpy as np
+import bento_meta
 
 
 @pytest.fixture
 def getccdimodel_object():
     """GetCCDIModel object for testing purpose"""
+    model_yml = "./tests/test_files/test-ccdi-model.yml"
+    props_yml = "./tests/test_files/test-ccdi-model-props.yml"
+    terms_yml = "./tests/test_files/test-terms.yml"
     obj = GetCCDIModel(
-        model_file="test_model", prop_file="test_prop", term_file="test_term"
+        model_file=model_yml, prop_file=props_yml, term_file=terms_yml
     )
     return obj
 
@@ -29,130 +34,79 @@ def getmanifestsheet_object():
     return obj
 
 
-test_prop_parametrize_list = [
-    (
-        # test enum type and example value with enum item less that 5
-        {
-            "Desc": "test description 1",
-            "Term": [{"Origin": "caDSR", "Code": "112233", "Value": "test caDSR"}],
-            "Enum": ["Yes", "No", "Unknown", "Not Reported"],
-            "Req": False,
-            "Strict": True,
-            "Private": False,
-        },
-        (
-            "test description 1",
-            "enum",
-            ["Yes", "No", "Unknown", "Not Reported"],
-            False,
-            "112233",
-        ),
-    ),
-    (
-        # test string;enum type
-        {
-            "Desc": "test description 2",
-            "Term": [
-                {
-                    "Origin": "caDSR",
-                    "Code": "223344",
-                    "Value": "test caDSR",
-                }
-            ],
-            "Enum": [
-                "Within 5 Minutes",
-                "6-30 Minutes",
-                "31-60 Minutes",
-                "After 60 Minutes",
-                "Unknown",
-            ],
-            "Req": False,
-            "Strict": False,
-            "Private": False,
-        },
-        (
-            "test description 2",
-            "string;enum",
-            [
-                "Within 5 Minutes",
-                "6-30 Minutes",
-                "31-60 Minutes",
-                "After 60 Minutes",
-                "Unknown",
-            ],
-            False,
-            "223344",
-        ),
-    ),
-    (
-        # test array[string;enum]
-        {
-            "Desc": "test description 3",
-            "Term": [
-                {
-                    "Origin": "caDSR",
-                    "Code": "334455",
-                    "Value": "Tobacco Use Smoking Products Ever Used Regularly Type",
-                }
-            ],
-            "Type": {
-                "value_type": "list",
-                "item_type": [
-                    "Cigarettes",
-                    "Cigar",
-                ],
-            },
-            "Req": False,
-            "Strict": False,
-            "Private": False,
-        },
-        (
-            "test description 3",
-            "array[string;enum]",
-            [
-                "Cigarettes",
-                "Cigar",
-            ],
-            False,
-            "334455",
-        ),
-    ),
-]
-
-
 def test_getccdimodel_init(getccdimodel_object):
-    assert getccdimodel_object.model_file == "test_model"
-    assert getccdimodel_object.prop_file == "test_prop"
-    assert getccdimodel_object.term_file == "test_term"
-
-
-@pytest.mark.parametrize("prop_dict,expected", test_prop_parametrize_list)
-def test_read_each_prop(getccdimodel_object, prop_dict, expected):
-    assert getccdimodel_object._read_each_prop(prop_dict=prop_dict) == expected
-
-
-def test_get_cde_version(getccdimodel_object):
-    test_prop_term_dict = {
-        "test_prop": {
-            "Origin": "caDSR",
-            "Definition": "test definition.",
-            "Code": 23456789,
-            "Version": "2",
-            "Value": "Ethnic Group Category Text",
-        }
-    }
+    """test getccdimodel init"""
+    assert os.path.basename(getccdimodel_object.model_file) == "test-ccdi-model.yml"
+    assert os.path.basename(getccdimodel_object.prop_file) == "test-ccdi-model-props.yml"
     assert (
-        getccdimodel_object._get_prop_cde_version(
-            prop_name="test_prop", term_dict=test_prop_term_dict
-        )
-        == "2"
+        os.path.basename(getccdimodel_object.term_file) == "test-terms.yml"
     )
-    assert pd.isna(
-        getccdimodel_object._get_prop_cde_version(
-            prop_name="test_prop_notfound", term_dict=test_prop_term_dict
-        )
-    )
+    assert isinstance(getccdimodel_object.ccdi_model, bento_meta.model.Model)
 
+def test_getccdimodel_version(getccdimodel_object):
+    """test get version of model"""
+    assert getccdimodel_object.get_version() == "v1.9.1"
+
+def test_getccdimodel_list_node_props(getccdimodel_object):
+    """test _list_node_props"""
+    study_node_props =  getccdimodel_object._list_node_props(node_name = "study")
+    assert len(study_node_props) == 13
+    assert "study_acronym" in study_node_props
+
+def test_getccdimodel_parent_nodes(getccdimodel_object):
+    parent_nodes_dict = getccdimodel_object.get_parent_nodes()
+    assert parent_nodes_dict["sample"] == ["participant", "pdx", "cell_line"]
+    assert parent_nodes_dict["study_arm"] == ["study"]
+
+def test_getccdimodel_list_nodes(getccdimodel_object):
+    node_list = getccdimodel_object._list_nodes()
+    assert len(node_list) == 25
+    assert "sequencing_file" in node_list
+    assert "single_cell_seqeuncing_file" not in node_list
+
+def test_getccdimodel_get_prop_cde_code(getccdimodel_object):
+    prop_obj = getccdimodel_object.ccdi_model.nodes["radiology_file"].props[
+        "scanner_manufacturer"
+    ]
+    assert getccdimodel_object._get_prop_cde_code(prop_obj=prop_obj) == "2866141"
+    assert isinstance(prop_obj, bento_meta.objects.Property)
+
+def test_getccdimodel_read_each_prop(getccdimodel_object):
+    enum_strict_prop = getccdimodel_object._read_each_prop(
+        node_name="survival", prop_name="last_known_survival_status"
+    )
+    enum_nonstrict_prop = getccdimodel_object._read_each_prop(
+        node_name="survival", prop_name="follow_up_category"
+    )
+    list_enum_prop = getccdimodel_object._read_each_prop(
+        node_name="study", prop_name="study_data_types"
+    )
+    list_enum_prop_nonstrict = getccdimodel_object._read_each_prop(
+        node_name="diagnosis", prop_name="anatomic_site"
+    )
+    integer_prop = getccdimodel_object._read_each_prop(
+        node_name="survival", prop_name="age_at_last_known_survival_status"
+    )
+    number_prop = getccdimodel_object._read_each_prop(
+        node_name="exposure", prop_name="alcohol_drinks_per_day"
+    )
+    string_prop = getccdimodel_object._read_each_prop(
+        node_name = "sequencing_file", prop_name="md5sum"
+    )
+    key_prop = getccdimodel_object._read_each_prop(
+        node_name="study", prop_name="study_id"
+    )
+    assert enum_strict_prop[1] == "enum"
+    assert enum_nonstrict_prop[1] == "string;enum"
+    assert list_enum_prop[1] == "array[enum]"
+    assert list_enum_prop_nonstrict[1] == "array[string;enum]"
+    assert integer_prop[1] == "integer"
+    assert number_prop[1] == "number"
+    assert string_prop[1] == "string"
+    assert string_prop[3] # test if required
+    assert key_prop[4] # test if key
+    assert not number_prop[3] # test not required
+    assert string_prop[4] is np.nan # test if key, expect nan
 
 def test_get_sorted_node_list(getccdimodel_object):
     preferred_order = getccdimodel_object.node_preferred_order
@@ -232,3 +186,4 @@ def test_manifestsheet_release_api_return(mock_requests, getmanifestsheet_object
         "https://github.com/test/test_repo/releases/tag/0.1.0",
         "https://github.com/test/test_repo/releases/tag/0.1.1",
     ]
+

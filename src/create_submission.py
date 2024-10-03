@@ -202,8 +202,7 @@ class GetCCDIModel:
             "Private": False,
         }
 
-        After 1.9.1, enum or string;enum is is no longer specified under Type key
-        Enum key is expected to appear under prop_dict
+        The features of props are now accessed through bento-mdf model object from now on(09/30/2024)
         """
         prop_obj = self.ccdi_model.nodes[node_name].props[prop_name]
 

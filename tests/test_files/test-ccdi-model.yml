@@ -1,0 +1,711 @@
+Handle: CCDI
+Version: v1.9.1
+Nodes:
+  cell_line:
+    Desc: "The cell line node is comprised of properties which describe cell lines that are either derived from samples or commercially obtained."
+    Tags:
+      Category: biospecimen
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - cell_line_id
+      - source
+      - id
+  clinical_measure_file: # 09.20.22 pdunn
+    Desc: "The clinical measure file node is comprised of properties which describe file metadata for clinical and study level files."
+    Tags:
+      Category: data_file
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - clinical_measure_file_id
+      - file_name
+      - file_type
+      - file_description
+      - file_size
+      - md5sum
+      - file_mapping_level
+      - file_access
+      - acl
+      - authz
+      - file_url
+      - dcf_indexd_guid
+      - checksum_algorithm
+      - checksum_value
+      - participant_list
+      - id
+  cytogenomic_file:
+    Desc: "The cytogenomic file node is comprised of properties which describe file metadata for cytogenomic files."
+    Tags:
+      Category: data_file
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - cytogenomic_file_id
+      - file_name
+      - file_type
+      - file_description
+      - file_size
+      - md5sum
+      - file_mapping_level
+      - file_access
+      - acl
+      - authz
+      - file_url
+      - dcf_indexd_guid
+      - cytogenomic_platform
+      - id
+  diagnosis:
+    Desc: "The diagnosis node is comprised of properties which describe the participant's disease(s)."
+    Tags:
+      Category: clinical
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - diagnosis_id
+      - diagnosis
+      - diagnosis_classification_system
+      - diagnosis_basis
+      - diagnosis_comment
+      - disease_phase
+      - tumor_classification
+      - anatomic_site
+      - age_at_diagnosis
+      - toronto_childhood_cancer_staging
+      - tumor_stage_clinical_t
+      - tumor_stage_clinical_n
+      - tumor_stage_clinical_m
+      - tumor_stage_source
+      - tumor_grade
+      - tumor_grade_source
+      - id
+  exposure:
+    Desc: "The exposure node is comprised of properties which describe the participant's habits and environmental factors."
+    Tags:
+      Category: clinical
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - exposure_id
+      - age_at_exposure
+      - pack_years_smoked
+      - years_smoked
+      - alcohol_days_per_week
+      - alcohol_drinks_per_day
+      - alcohol_history
+      - alcohol_intensity
+      - asbestos_exposure
+      - cigarettes_per_day
+      - coal_dust_exposure
+      - environmental_tobacco_smoke_exposure
+      - radon_exposure
+      - respirable_crystalline_silica_exposure
+      - smoking_frequency
+      - time_between_waking_and_first_smoke
+      - tobacco_smoking_onset_year
+      - tobacco_smoking_quit_year
+      - tobacco_smoking_status
+      - type_of_smoke_exposure
+      - type_of_tobacco_used
+      - id
+  family_relationship:
+    Desc: "The family relationship node is comprised of properties which describe the participant's relationships among other participants."
+    Tags:
+      Category: participant
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - family_relationship_id
+      - related_to_participant_id
+      - relationship
+      - family_id
+      - id
+  medical_history:
+    Desc: "The medical history node is comprised of properties which describe the participant's previous medical conditions."
+    Tags:
+      Category: clinical
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - medical_history_id
+      - medical_history_category
+      - medical_history_condition
+      - id
+  molecular_test:
+    Desc: "The molecular test node is comprised of properties which describe varying tests results for participants."
+    Tags:
+      Category: analysis
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - molecular_test_id
+      - anatomic_site
+      - age_at_molecular_test
+      - gene_symbol
+      - molecular_analysis_method
+      - laboratory_test_name
+      - test_result_text
+      - test_result_numeric
+      - test_unit
+      - aa_change
+      - antigen
+      - blood_test_normal_range_upper
+      - blood_test_normal_range_lower
+      - cell_count
+      - copy_number
+      - cytoband
+      - exon
+      - gene_mutation_abnormality_type
+      - histone_family
+      - histone_variant
+      - intron
+      - loci_abnormal_count
+      - loci_count
+      - locus
+      - mismatch_repair_mutation
+      - pathogenicity
+      - ploidy
+      - second_exon
+      - second_gene_symbol
+      - specialized_molecular_test
+      - test_analyte_type
+      - transcript
+      - variant_origin
+      - variant_type
+      - zygosity  
+      - id
+  methylation_array_file:
+    Desc: "The methylation array file node is comprised of properties which describe file metadata specific to methylation array analysis."
+    Tags:
+      Category: data_file
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - methylation_array_file_id
+      - file_name
+      - file_type
+      - file_description
+      - file_size
+      - md5sum
+      - file_mapping_level
+      - file_access
+      - acl
+      - authz
+      - file_url
+      - dcf_indexd_guid
+      - methylation_platform
+      - reporter_label
+      - id
+  participant:
+    Desc: "The participant node is comprised of properties which describe the participant attributes."
+    Tags:
+      Category: participant
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - participant_id
+      - race       
+      - sex_at_birth
+      - id
+      - crdc_id
+      # - dbgap_subject_id : store in synonym
+  pathology_file: 
+    Desc: "The pathology file node is comprised of properties which describe file metadata about the pathology image files."
+    Tags:
+      Category: data_file
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - pathology_file_id
+      - file_name
+      - file_type
+      - file_description
+      - file_size
+      - md5sum
+      - file_mapping_level
+      - file_access
+      - acl
+      - authz
+      - file_url
+      - dcf_indexd_guid
+      - image_modality
+      - license
+      - magnification
+      - fixation_embedding_method
+      - staining_method
+      - deidentification_method
+      - percent_tumor
+      - percent_necrosis
+      - id
+  pdx:
+    Desc: "The pdx node is comprised of properties which describe the patient derived xenografts models either from samples or commercially obtained."
+    Tags:
+      Category: biospecimen
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props: 
+      - pdx_id
+      - model_id
+      - mouse_strain
+      - sample_type_for_implantation
+      - implantation_type
+      - implantation_site
+      - tumor_confirmed_not_to_be_mus_or_ebv_origin
+      - is_tumor_from_untreated_patient
+      - passage_number
+      - passages_tested
+      - validation_technique
+      - id
+  publication:
+    Desc: "The publication node is comprised of properties which describe the publications that were created this study."
+    Tags:
+      Category: study
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - publication_id
+      - pubmed_id
+      - id
+  radiology_file: 
+    Desc: "The radiology file node is comprised of properties which describe file metadata about the radiology image files."
+    Tags:
+      Category: data_file
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - radiology_file_id
+      - file_name
+      - file_type
+      - file_description
+      - file_size
+      - md5sum
+      - file_mapping_level
+      - file_access
+      - acl
+      - authz
+      - file_url
+      - dcf_indexd_guid
+      - anatomic_site
+      - participant_age_at_imaging
+      - image_modality
+      - deidentification_method
+      - magnetic_field_strength
+      - scanner_manufacturer
+      - scanner_model
+      - imaging_frequency
+      - repetition_time
+      - echo_time
+      - inversion_time
+      - flip_angle
+      - pixel_spacing
+      - slice_thickness
+      - echoPulseSequenceCategoryCode 
+      - diffusionBValue 
+      - diffusionDirectionalityCode 
+      - resonantNucleusCode 
+      - acquisitionContrastCode 
+      - inversionRecoveryIndicator 
+      - pulseSequenceName 
+      - multipleSpinEchoIndicator 
+      - phaseContrastIndicator 
+      - timeOfFlightContrastIndicator 
+      - arterialSpinLabelingContrastCode 
+      - steadyStatePulseSequenceCode 
+      - echoPlanarPulseSequenceIndicator 
+      - saturationRecoveryIndicator 
+      - spectrallySelectedSuppressionCode 
+      - mrImageReconstructionProtocolElement
+      - complexImageComponentCode
+      - id
+  sample:
+    Desc: "The sample node is comprised of properties which describe the sample attributes as collected from participant, cell line, or pdx model."
+    Tags:
+      Category: biospecimen
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - sample_id
+      - anatomic_site
+      - participant_age_at_collection
+      - sample_tumor_status
+      - tumor_classification
+      - sample_description
+      - id
+      - crdc_id
+  sequencing_file: 
+    Desc: "The sequencing file node is comprised of properties which describe file metadata for the sequencing file."
+    Tags:
+      Category: data_file
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - sequencing_file_id
+      - file_name
+      - file_type
+      - file_description
+      - file_size
+      - md5sum
+      - file_mapping_level
+      - file_access
+      - acl
+      - authz
+      - file_url
+      - dcf_indexd_guid
+      - library_id # sra req'd
+      - library_selection # sra req'd
+      - library_strategy  # sra req'd
+      - library_layout  # sra req'd # paired end, single, moved from submission
+      - library_source_material  # nee library_source for SRA req'd 
+      - library_source_molecule
+      - number_of_bp  # sra req'd
+      - number_of_reads  # sra req'd
+      - design_description
+      - platform
+      - instrument_model
+      - avg_read_length # sra req'd
+      - coverage  # sra req'd
+      - reference_genome_assembly  # sra req'd
+      - checksum_algorithm
+      - checksum_value
+      - custom_assembly_fasta_file_for_alignment
+      - sequence_alignment_software
+      - cDNA_read
+      - cDNA_read_size
+      - cDNA_read_offset
+      - cell_barcode_offset
+      - cell_barcode_read
+      - cell_barcode_size
+      - single_cell_entity
+      - dissociation_method
+      - end_bias
+      - total_number_of_input_cells
+      - library_construction_method
+      - library_strand
+      - protocols_link
+      - reverse_transcription_primer
+      - spike_in
+      - UMI_barcode_offset
+      - UMI_barcode_read
+      - UMI_barcode_size
+      - id
+  study:
+    Desc: "The study node is comprised of properties which describe high level metadata that applies to all facets of the study."
+    Tags:
+      Category: study
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - study_id
+      - dbgap_accession
+      - study_name
+      - study_acronym
+      - study_description
+      - consent
+      - consent_number
+      - external_url
+      - experimental_strategy_and_data_subtype
+      - study_data_types
+      - size_of_data_being_uploaded
+      - id
+      - crdc_id
+      # - bioproject_accession : store in synonym
+  study_admin:
+    Desc: "The study admin node is comprised of properties which describe the general structure of the study."
+    Tags:
+      Category: study
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - study_admin_id
+      - organism_species
+      - adult_or_childhood_study # adult, pediatric - needs review, there are many other facets of study type (interventional, longitudinal), should this be added after a query of study_subject.age
+      - data_types # generate from a DB query of list of data_types vs. template based entry?, generate from a query of list from enumerated values
+      - file_types_and_format
+      - number_of_participants
+      - number_of_samples
+      - id
+  study_arm: 
+    Desc: "The study arm node is comprised of properties which describe the arms that are present in the study."
+    Tags:
+      Category: study
+      Assignment: extended
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - study_arm_id
+      - study_arm_description
+      - clinical_trial_identifier
+      - clinical_trial_repository
+      - id
+  study_funding: # 0 or many grant or contract IDs
+    Desc: "The study funding node is comprised of properties which describe the funding sources associated with the study."
+    Tags:
+      Category: study
+      Assignment: core
+      Class: secondary
+      Template: 'Yes'
+    Props: 
+      - study_funding_id
+      - funding_agency # 0 or many per study
+      - grant_id #grant or contract ID, NIH or other
+      - funding_source_program_name
+      - id
+  study_personnel:
+    Desc: "The study personnel node is comprised of properties which describe the personnel and their position in the study."
+    Tags:
+      Category: study
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - study_personnel_id
+      - personnel_name
+      - personnel_type #enum: PI, Co-PI, Data Submitter, etc
+      - email_address
+      - institution
+      - orcid
+      - id
+  survival:
+    Desc: "The survival node is comprised of properties which describe metadata related to vital status and medical events at timepoints for a participant."
+    Tags:
+      Category: clinical
+      Assignment: core
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - survival_id
+      - last_known_survival_status
+      - age_at_last_known_survival_status
+      - first_event
+      - event_free_survival_status
+      - age_at_event_free_survival_status
+      - follow_up_category
+      - follow_up_other
+      - adverse_event
+      - comorbidity
+      - comorbidity_method_of_diagnosis
+      - risk_factor
+      - cause_of_death
+      - id
+  synonym:
+    Desc: "The synonym node is comprised of properties which describe how specific ids are related between multiple data repositories."
+    Tags:
+      Category: administrative
+      Assignment: core
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - synonym_id #the alternate or alias id in another repo
+      - repository_of_synonym_id #the name of the other repo
+      - id
+  treatment:
+    Desc: "The treatment node is comprised of properties which describe the treatment regiments and time periods for a participant."
+    Tags:
+      Category: clinical
+      Assignment: core
+      Class: primary
+      Template: 'Yes'
+    Props:
+      - treatment_id
+      - age_at_treatment_start
+      - age_at_treatment_end
+      - treatment_type
+      - treatment_agent
+      - id
+  treatment_response:
+    Desc: "The treatment response node is comprised of properties which describe the patient's response to a treatment."
+    Tags:
+      Category: clinical
+      Assignment: core
+      Class: secondary
+      Template: 'Yes'
+    Props:
+      - treatment_response_id
+      - response
+      - age_at_response
+      - response_category
+      - response_system
+      - id
+Relationships:
+  of_cell_line:
+    Props: null
+    Mul: many_to_one
+    Ends: 
+      - Src: cell_line
+        Dst: study  
+      - Src: cell_line
+        Dst: sample 
+  of_clinical_measure_file: # #09.20.22 pd
+    Props: null
+    Mul: many_to_one 
+    Ends:
+      - Src: clinical_measure_file
+        Dst: study
+      - Src: clinical_measure_file
+        Dst: participant
+  of_cytogenomic_file:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: cytogenomic_file
+        Dst: sample
+  of_diagnosis: 
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: diagnosis
+        Dst: participant
+      - Src: diagnosis
+        Dst: sample
+  of_exposure:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: exposure
+        Dst: participant
+  of_family_relationship:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: family_relationship
+        Dst: participant      
+  of_survival:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: survival
+        Dst: participant
+  of_pathology_file:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: pathology_file
+        Dst: sample
+  of_medical_history:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: medical_history
+        Dst: participant
+  of_methylation_array_file:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: methylation_array_file
+        Dst: sample
+  of_molecular_test:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: molecular_test
+        Dst: participant
+  of_participant:
+    Props: null
+    Mul: many_to_one #will need to mod this to many_to_many if a participant is in >1 study
+    Ends:
+      #- Src: participant
+      #  Dst: study_arm
+      - Src: participant
+        Dst: study
+  of_pdx: #27jan2023 pd
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: pdx
+        Dst: study
+      - Src: pdx
+        Dst: sample
+  of_publication: # 09.20.22 pd
+    Props: null
+    Mul: many_to_one
+    Ends:
+    - Src: publication
+      Dst: study
+  of_radiology_file:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: radiology_file
+        Dst: participant
+  of_sample: 
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: sample
+        Dst: participant 
+      - Src: sample
+        Dst: pdx
+      - Src: sample
+        Dst: cell_line 
+  of_sequencing_file: 
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: sequencing_file
+        Dst: sample
+  of_study_admin: 
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: study_admin
+        Dst: study
+  of_study_arm: 
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: study_arm
+        Dst: study
+  of_study_funding: 
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: study_funding  
+        Dst: study
+  of_study_personnel:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: study_personnel  
+        Dst: study     
+  of_synonym:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: synonym
+        Dst: study
+      - Src: synonym
+        Dst: participant
+      - Src: synonym
+        Dst: sample
+  of_treatment:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: treatment
+        Dst: participant
+  of_treatment_response:
+    Props: null
+    Mul: many_to_one
+    Ends:
+      - Src: treatment_response
+        Dst: participant
+
+
