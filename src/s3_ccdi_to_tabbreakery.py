@@ -25,6 +25,7 @@ def get_ccdi_id(x, study_id: str, node_name: str):
     else:
         ccdi_namespace = get_ccdi_namespace()
         x_str_input = study_id + "::" + node_name + "::" + x
+        #print(x_str_input)
         return get_uuid(uuid_namespace=ccdi_namespace, id_str=x_str_input)
 
 
@@ -93,9 +94,8 @@ def tabBreakeRy(manifest: str) -> tuple:
             elif column[-3:] != ".id" and "." in column:
                 prev_node = column.split(".")[0]
                 node_id = prev_node + ".id"
-                print(df[column])
                 df[node_id] = df[column].apply(
-                    lambda x: get_ccdi_id(x=x, study_id=project_id, node_name=node)
+                    lambda x: get_ccdi_id(x=x, study_id=project_id, node_name=prev_node)
                 )
             else:
                 pass
