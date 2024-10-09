@@ -87,6 +87,7 @@ def tabBreakeRy(manifest: str) -> tuple:
             elif column[-3:] != ".id" and "." in column:
                 prev_node = column.split(".")[0]
                 node_id = prev_node + ".id"
+                print(df[column])
                 df[node_id] = df[column].apply(
                     lambda x: get_ccdi_id(
                         uuid_namespace=uuid_namespace,
