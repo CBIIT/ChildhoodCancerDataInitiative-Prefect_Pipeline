@@ -14,9 +14,18 @@ def get_ccdi_namespace():
     return ccdi_namespace
 
 
-def get_ccdi_id(uuid_namespace, id_str: str) -> str:
+def get_uuid(uuid_namespace, id_str: str) -> str:
     return_uuid = uuid.uuid5(uuid_namespace, id_str)
     return str(return_uuid)
+
+
+def get_ccdi_id(x, study_id: str, node_name: str):
+    if pd.isna(x):
+        return x
+    else:
+        ccdi_namespace = get_ccdi_namespace()
+        x_str_input = study_id + "::" + node_name + "::" + x
+        return get_uuid(uuid_namespace=ccdi_namespace, id_str=x_str_input)
 
 
 @flow(
@@ -79,20 +88,14 @@ def tabBreakeRy(manifest: str) -> tuple:
         for column in df.columns:
             if column in keys:
                 df["id"] = df[column].apply(
-                    lambda x: get_ccdi_id(
-                        uuid_namespace=uuid_namespace,
-                        id_str=project_id + "::" + node + "::" + x,
-                    )
+                    lambda x: get_ccdi_id(x=x, study_id=project_id, node_name=node)
                 )
             elif column[-3:] != ".id" and "." in column:
                 prev_node = column.split(".")[0]
                 node_id = prev_node + ".id"
                 print(df[column])
                 df[node_id] = df[column].apply(
-                    lambda x: get_ccdi_id(
-                        uuid_namespace=uuid_namespace,
-                        id_str=project_id + "::" + node + "::" + x,
-                    )
+                    lambda x: get_ccdi_id(x=x, study_id=project_id, node_name=node)
                 )
             else:
                 pass
