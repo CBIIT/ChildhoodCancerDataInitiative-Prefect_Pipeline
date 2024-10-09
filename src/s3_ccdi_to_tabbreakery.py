@@ -25,7 +25,6 @@ def get_ccdi_id(x, study_id: str, node_name: str):
     else:
         ccdi_namespace = get_ccdi_namespace()
         x_str_input = study_id + "::" + node_name + "::" + x
-        #print(x_str_input)
         return get_uuid(uuid_namespace=ccdi_namespace, id_str=x_str_input)
 
 
@@ -75,9 +74,6 @@ def tabBreakeRy(manifest: str) -> tuple:
 
     # get keys of every node/sheet
     keys = dict_df[dict_df["Key"] == 1]["Property"].tolist()
-
-    # get namespace of ccdi
-    uuid_namespace = get_ccdi_namespace()
 
     for node in dict_nodes:
         df = check_ccdi.read_sheet_na(sheetname=node)
