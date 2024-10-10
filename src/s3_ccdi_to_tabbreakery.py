@@ -3,7 +3,29 @@ import sys
 import os
 import pandas as pd
 import json
+import uuid
+import hashlib
 from src.utils import get_logger, get_time, get_date, CheckCCDI
+
+
+def get_ccdi_namespace():
+    hex_string = hashlib.md5("ccdi".encode("UTF-8")).hexdigest()
+    ccdi_namespace = uuid.UUID(hex=hex_string)
+    return ccdi_namespace
+
+
+def get_uuid(uuid_namespace, id_str: str) -> str:
+    return_uuid = uuid.uuid5(uuid_namespace, id_str)
+    return str(return_uuid)
+
+
+def get_ccdi_id(x, study_id: str, node_name: str):
+    if pd.isna(x):
+        return x
+    else:
+        ccdi_namespace = get_ccdi_namespace()
+        x_str_input = study_id + "::" + node_name + "::" + x
+        return get_uuid(uuid_namespace=ccdi_namespace, id_str=x_str_input)
 
 
 @flow(
@@ -62,17 +84,21 @@ def tabBreakeRy(manifest: str) -> tuple:
         # their linkages.
         for column in df.columns:
             if column in keys:
-                df["id"] = df[column].apply(lambda x: project_id + "::" + x)
+                df["id"] = df[column].apply(
+                    lambda x: get_ccdi_id(x=x, study_id=project_id, node_name=node)
+                )
             elif column[-3:] != ".id" and "." in column:
                 prev_node = column.split(".")[0]
                 node_id = prev_node + ".id"
-                df[node_id] = df[column].apply(lambda x: project_id + "::" + x)
+                df[node_id] = df[column].apply(
+                    lambda x: get_ccdi_id(x=x, study_id=project_id, node_name=prev_node)
+                )
             else:
                 pass
 
         # Remove the old linking properties [node].[node]_id,
         # as that will cause issues in the data loader
-        columns_to_drop=[]
+        columns_to_drop = []
         for i in df.columns:
             if "." in i:
                 i_list = i.split(".")
@@ -89,7 +115,7 @@ def tabBreakeRy(manifest: str) -> tuple:
         df_content = df.drop(columns=["type"])
         if not df_content.dropna(how="all").empty:
             # columns_wo_type = [k for k in df.columns.tolist() if k != "type"]
-            columns_wo_type =  df_content.columns
+            columns_wo_type = df_content.columns
             if len([h for h in columns_wo_type if "." in h]) < len(columns_wo_type):
                 workbook_dict[node] = df
             else:
