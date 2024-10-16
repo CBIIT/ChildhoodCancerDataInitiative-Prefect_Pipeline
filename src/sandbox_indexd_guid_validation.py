@@ -64,6 +64,7 @@ def query_guid_meta_sandbox(phs_accession: str, data_model_tag: str, bucket: str
         node_list=file_nodes,
         driver=driver,
         out_dir=foldername,
+        logger=logger
     )
 
     # upload the folder to s3 bucket
