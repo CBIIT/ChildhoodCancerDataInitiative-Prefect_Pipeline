@@ -67,7 +67,7 @@ def check_guid_meta_against_indexd(file_name: str) -> str:
     """    
     tsv_df = pd.read_csv(file_name, sep="\t")
     api_url = (
-        f"https://nci-crdc.datacommons.io/index/index?ids={guid}"
+        "https://nci-crdc.datacommons.io/index/index?ids={guid}"
     )
     guid_exist = []
     md5sum_indexd = []
