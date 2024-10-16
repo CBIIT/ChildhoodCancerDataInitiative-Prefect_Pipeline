@@ -4,6 +4,7 @@ from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
 from neo4j import GraphDatabase
 import os
+from pathlib import Path
 
 
 @flow(task_runner=ConcurrentTaskRunner())
@@ -60,6 +61,8 @@ def query_guid_meta_sandbox(phs_accession: str, data_model_tag: str, bucket: str
 
     # start pulling guid metadata from sandbox of a given study
     foldername = phs_accession + "_guid_csv"
+    # create foldername folder if not exist
+    Path(foldername).mkdir(parents=True, exist_ok=True)
     pull_study_nodes_loop(
         study_accession=phs_accession,
         node_list=file_nodes,
