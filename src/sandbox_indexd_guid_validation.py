@@ -6,6 +6,8 @@ from neo4j import GraphDatabase
 import os
 from pathlib import Path
 import pandas as pd
+import numpy as np
+import requests
 
 
 @flow(task_runner=ConcurrentTaskRunner())
@@ -51,6 +53,59 @@ def concatenate_csv_files(folder_name: str) -> str:
     phs_accession = folder_name.split("_")[0]
     output_name = phs_accession + "_guid_meta_in_sandbox.tsv"
     combined_df.to_csv(output_name, sep="\t", index=False)
+    return output_name
+
+@task
+def check_guid_meta_against_indexd(file_name: str) -> str:
+    """check sandbox guid metadata against indexd record
+
+    Args:
+        file_name (str): file name of guid meta tsv file of a study
+
+    Returns:
+        str: output file name
+    """    
+    tsv_df = pd.read_csv(file_name, sep="\t")
+    api_url = (
+        f"https://nci-crdc.datacommons.io/index/index?ids={guid}"
+    )
+    guid_exist = []
+    md5sum_indexd = []
+    url_indexd = []
+    acl_indexd = []
+    size_indexd = []
+
+    for guid in tsv_df["guid"].tolist():
+        api_response = requests.get(api_url.format(guid=guid))
+        records = api_response.json()["records"]
+        if len(records) == 0:
+            guid_exist.append("No")
+            md5sum_indexd.append("")
+            url_indexd.append("")
+            acl_indexd.append("")
+            size_indexd.append("")
+        else:
+            record = records[0]
+            guid_exist.append("Yes")
+            acl_indexd.append(record["acl"]) # this one should be a list
+            url_indexd.append(record["urls"][0]) # assume there is only one url
+            md5sum_indexd.append(record["hashes"]["md5"])
+            size_indexd.append(record["size"])
+    tsv_df["indexd_guid_exist"] = guid_exist
+    tsv_df["indexd_acl"] = acl_indexd
+    tsv_df["indexd_md5sum"] = md5sum_indexd
+    tsv_df["indexd_url"] = url_indexd
+    tsv_df["indexd_size"] = size_indexd
+    tsv_df["acl_check"] = np.where(tsv_df["acl"]==tsv_df["indexd_acl"], "Pass", "Fail")
+    tsv_df["md5sum_check"] = np.where(tsv_df["md5sum"]==tsv_df["indexd_md5sum"], "Pass", "Fail")
+    tsv_df["url_check"] = np.where(
+        tsv_df["url"] == tsv_df["indexd_url"], "Pass", "Fail"
+    )
+    tsv_df["size_check"] = np.where(
+        tsv_df["file_size"] == tsv_df["indexd_size"], "Pass", "Fail"
+    )
+    output_name = file_name.split(".")[0].split("_")[0] + "_guid_meta_check_against_indexd.tsv"
+    tsv_df.to_csv(output_name, sep="\t", index=False)
     return output_name
 
 
@@ -106,6 +161,12 @@ def query_guid_meta_sandbox(phs_accession: str, data_model_tag: str, bucket: str
     file_ul(
         bucket=bucket, output_folder=output_folder, sub_folder="", newfile=tsv_guid_meta
     )
-    
+
     # check sandbox guid against indexd record
-    
+    guid_meta_check_output = check_guid_meta_against_indexd(file_name=tsv_guid_meta)
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=guid_meta_check_output,
+    )
