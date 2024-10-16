@@ -11,10 +11,12 @@ import requests
 
 
 @flow(task_runner=ConcurrentTaskRunner())
-def pull_guid_meta_nodes_loop(study_accession: str, node_list: list, driver, out_dir: str, logger) -> None:
+def pull_guid_meta_nodes_loop(
+    study_accession: str, node_list: list, driver, out_dir: str, logger
+) -> None:
     """Loops through a list of node labels and pulls data of a given study from a neo4j DB"""
-    phs_accession =  study_accession
-    guid_meta_query =  f"""
+    phs_accession = study_accession
+    guid_meta_query = f"""
 MATCH (s:study)-[*1..7]-(f:{{node_label}})
 WHERE s.dbgap_accession = "{phs_accession}"
 RETURN f.dcf_indexd_guid as guid, f.acl as acl, f.file_url as url, f.md5sum as md5sum, f.file_size as file_size
@@ -41,12 +43,12 @@ def concatenate_csv_files(folder_name: str) -> str:
 
     Returns:
         str: output filename
-    """    
+    """
     file_list = [os.path.join(folder_name, i) for i in os.listdir(folder_name)]
-    
+
     for index in range(len(file_list)):
         if index == 0:
-            combined_df =  pd.read_csv(file_list[index])
+            combined_df = pd.read_csv(file_list[index])
         else:
             file_df = pd.read_csv(file_list[index])
             combined_df = pd.concat([combined_df, file_df], ignore_index=True)
@@ -54,6 +56,7 @@ def concatenate_csv_files(folder_name: str) -> str:
     output_name = phs_accession + "_guid_meta_in_sandbox.tsv"
     combined_df.to_csv(output_name, sep="\t", index=False)
     return output_name
+
 
 @task
 def check_guid_meta_against_indexd(file_name: str) -> str:
@@ -64,11 +67,9 @@ def check_guid_meta_against_indexd(file_name: str) -> str:
 
     Returns:
         str: output file name
-    """    
+    """
     tsv_df = pd.read_csv(file_name, sep="\t")
-    api_url = (
-        "https://nci-crdc.datacommons.io/index/index?ids={guid}"
-    )
+    api_url = "https://nci-crdc.datacommons.io/index/index?ids={guid}"
     guid_exist = []
     md5sum_indexd = []
     url_indexd = []
@@ -87,8 +88,8 @@ def check_guid_meta_against_indexd(file_name: str) -> str:
         else:
             record = records[0]
             guid_exist.append("Yes")
-            acl_indexd.append(str(record["acl"])) # this one should be a list
-            url_indexd.append(record["urls"][0]) # assume there is only one url
+            acl_indexd.append(str(record["acl"]))  # this one should be a list
+            url_indexd.append(record["urls"][0])  # assume there is only one url
             md5sum_indexd.append(record["hashes"]["md5"])
             size_indexd.append(record["size"])
     tsv_df["indexd_guid_exist"] = guid_exist
@@ -96,21 +97,87 @@ def check_guid_meta_against_indexd(file_name: str) -> str:
     tsv_df["indexd_md5sum"] = md5sum_indexd
     tsv_df["indexd_url"] = url_indexd
     tsv_df["indexd_size"] = size_indexd
-    tsv_df["acl_check"] = np.where(tsv_df["acl"]==tsv_df["indexd_acl"], "Pass", "Fail")
-    tsv_df["md5sum_check"] = np.where(tsv_df["md5sum"]==tsv_df["indexd_md5sum"], "Pass", "Fail")
+    tsv_df["acl_check"] = np.where(
+        tsv_df["acl"] == tsv_df["indexd_acl"], "Pass", "Fail"
+    )
+    tsv_df["md5sum_check"] = np.where(
+        tsv_df["md5sum"] == tsv_df["indexd_md5sum"], "Pass", "Fail"
+    )
     tsv_df["url_check"] = np.where(
         tsv_df["url"] == tsv_df["indexd_url"], "Pass", "Fail"
     )
     tsv_df["size_check"] = np.where(
         tsv_df["file_size"] == tsv_df["indexd_size"], "Pass", "Fail"
     )
-    output_name = file_name.split(".")[0].split("_")[0] + "_guid_meta_check_against_indexd.tsv"
+    output_name = (
+        file_name.split(".")[0].split("_")[0] + "_guid_meta_check_against_indexd.tsv"
+    )
     tsv_df.to_csv(output_name, sep="\t", index=False)
     return output_name
 
 
+@flow(log_prints=True)
+def find_ghost_indexd_records(file_name: str, phs_accession: str) -> str:
+    """Find indexd records with an acl of a study that are not found in sandbox
+
+    Args:
+        file_name (str): A tsv file of all guids for a study
+        phs_accession (str): dbGaP accession number
+
+    Returns:
+        str: a tsv of any guids that are associated with a given acl in indexd but not found in the file
+    """
+    tsv_df = pd.read_csv(file_name, sep="\t")
+    all_guids = tsv_df["guid"].tolist()
+    del tsv_df
+
+    page = 0
+    ghost_guid = []
+    while True:
+        endpoint = f"https://nci-crdc.datacommons.io/index/index?acl={phs_accession}&limit=100&page={page}"
+        api_response = requests.get(endpoint)
+        while api_response.status_code != 200:
+            api_response = requests.get(endpoint)
+
+        api_data = api_response.json()
+
+        print(f"page: {page}")
+        records = api_data["records"]
+        for i in records:
+            i_guid = i["did"]
+            if i_guid in all_guids:
+                pass
+            else:
+                i_size = i["size"]
+                i_md5sum = i["hashes"]["md5"]
+                i_url = i["urls"]
+                i_acl = str(i["acl"])
+                i_authz = str(i["authz"])
+                ghost_guid.append(
+                    {
+                        "guid": i_guid,
+                        "md5": i_md5sum,
+                        "size": i_size,
+                        "acl": i_acl,
+                        "authz": i_authz,
+                        "urls": i_url,
+                    }
+                )
+        if len(records) < 100:
+            break
+        else:
+            page += 1
+    ghost_guid_df =  pd.DataFrame.from_records(ghost_guid)
+    print(f"Found {len(ghost_guid)} indexd records with an acl of {phs_accession} that are not found in sandbox")
+    output_name = phs_accession + "_indexd_records_unfound_in_sandbox.tsv"
+    ghost_guid_df.to_csv(output_name, sep="\t", index=False)
+    return output_name
+
+
 @flow
-def query_guid_meta_sandbox(phs_accession: str, data_model_tag: str, bucket: str, runner: str) -> None:
+def query_guid_meta_sandbox(
+    phs_accession: str, data_model_tag: str, bucket: str, runner: str
+) -> None:
     """Download guid metadata of all guids associated with a single study in sandbox
 
     Args:
@@ -118,10 +185,12 @@ def query_guid_meta_sandbox(phs_accession: str, data_model_tag: str, bucket: str
         data_model_tag (str): ccdi data model tag
         bucket (str): bucket name where output uploads to
         runner (str): unique runner name
-    """    
+    """
     current_time = get_time()
     logger = get_run_logger()
-    manifest_download = CCDI_Tags().download_tag_manifest(tag=data_model_tag, logger=logger)
+    manifest_download = CCDI_Tags().download_tag_manifest(
+        tag=data_model_tag, logger=logger
+    )
     file_nodes = CheckCCDI(ccdi_manifest=manifest_download).find_file_nodes()
 
     uri_parameter = "uri"
@@ -149,24 +218,39 @@ def query_guid_meta_sandbox(phs_accession: str, data_model_tag: str, bucket: str
         node_list=file_nodes,
         driver=driver,
         out_dir=foldername,
-        logger=logger
+        logger=logger,
     )
 
     # combined all sandbox guid metadata into one tsv
     tsv_guid_meta = concatenate_csv_files(folder_name=foldername)
 
-    # upload the folder to s3 bucket
-    output_folder = os.path.join(runner,"sandbox_guid_pull_" + current_time)
-    # folder_ul(local_folder=foldername, bucket=bucket, destination=output_folder, sub_folder="")
-    file_ul(
-        bucket=bucket, output_folder=output_folder, sub_folder="", newfile=tsv_guid_meta
-    )
+
+    output_folder = os.path.join(runner, "sandbox_guid_pull_" + current_time)
+    #file_ul(
+    #    bucket=bucket, output_folder=output_folder, sub_folder="", newfile=tsv_guid_meta
+    #)
 
     # check sandbox guid against indexd record
+    logger.info(f"Checking if all guid metadata for study {phs_accession} match to indexd record")
     guid_meta_check_output = check_guid_meta_against_indexd(file_name=tsv_guid_meta)
+    # upload sandbox guid metadata validation file to the bucket
     file_ul(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
         newfile=guid_meta_check_output,
     )
+
+    # find indexd record with an acl of phs_accession that are not found in sandbox
+    logger.info(f"Finding any indexd records of acl {phs_accession} that are not found in sandbox")
+    unused_guid_file = find_ghost_indexd_records(
+        phs_accession=phs_accession, file_name=tsv_guid_meta
+    )
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=unused_guid_file
+    )
+    logger.info("Finished!")
+    
