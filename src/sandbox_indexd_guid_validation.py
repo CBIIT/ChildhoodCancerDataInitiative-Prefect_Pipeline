@@ -14,7 +14,7 @@ def pull_study_nodes_loop(study_accession: str, node_list: list, driver, out_dir
     guid_meta_query =  f"""
 MATCH (s:study)-[*1..7]-(f:{{node_label}})
 WHERE s.dbgap_accession = "{phs_accession}"
-RETURN f.acl as acl, f.file_url as url, f.md5sum as md5sum, f.file_size as file_size
+RETURN f.dcf_indexd_guid as guid, f.acl as acl, f.file_url as url, f.md5sum as md5sum, f.file_size as file_size
 """
 
     for node_label in node_list:
