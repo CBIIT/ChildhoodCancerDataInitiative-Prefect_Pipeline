@@ -5,23 +5,24 @@ from prefect.task_runners import ConcurrentTaskRunner
 from neo4j import GraphDatabase
 import os
 
-guid_meta_query =  """
-MATCH (s:study)-[*1..7]-(f:{node_label}})
-WHERE s.dbgap_accession = "{phs_accession}"
-RETURN f.acl as acl, f.file_url as url, f.md5sum as md5sum, f.file_size as file_size
-"""
 
 @flow(task_runner=ConcurrentTaskRunner())
 def pull_study_nodes_loop(study_accession: str, node_list: list, driver, out_dir: str, logger) -> None:
     """Loops through a list of node labels and pulls data of a given study from a neo4j DB"""
-    cypher_phrase = guid_meta_query.format(phs_accession=study_accession)
+    phs_accession =  study_accession
+    guid_meta_query =  f"""
+MATCH (s:study)-[*1..7]-(f:{{node_label}})
+WHERE s.dbgap_accession = "{phs_accession}"
+RETURN f.acl as acl, f.file_url as url, f.md5sum as md5sum, f.file_size as file_size
+"""
+
     for node_label in node_list:
         logger.info(f"Pulling from Node {node_label}")
         pull_data_per_node.submit(
             driver=driver,
             data_to_csv=export_to_csv,
             node_label=node_label,
-            query_str=cypher_phrase,
+            query_str=guid_meta_query,
             output_dir=out_dir,
         )
     return None
