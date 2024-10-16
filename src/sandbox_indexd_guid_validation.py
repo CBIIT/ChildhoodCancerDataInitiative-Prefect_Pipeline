@@ -87,7 +87,7 @@ def check_guid_meta_against_indexd(file_name: str) -> str:
         else:
             record = records[0]
             guid_exist.append("Yes")
-            acl_indexd.append(record["acl"]) # this one should be a list
+            acl_indexd.append(str(record["acl"])) # this one should be a list
             url_indexd.append(record["urls"][0]) # assume there is only one url
             md5sum_indexd.append(record["hashes"]["md5"])
             size_indexd.append(record["size"])
