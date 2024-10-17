@@ -1,4 +1,4 @@
-from utils import CCDI_Tags, CheckCCDI, get_time, get_date, folder_ul, file_ul
+from utils import CCDI_Tags, CheckCCDI, get_time, file_ul
 from neo4j_data_tools import export_to_csv, pull_data_per_node, cypher_query_parameters
 from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
@@ -10,7 +10,7 @@ import numpy as np
 import requests
 
 
-@flow(task_runner=ConcurrentTaskRunner())
+@flow(task_runner=ConcurrentTaskRunner(), name="Pull guid metadata from sandbox")
 def pull_guid_meta_nodes_loop(
     study_accession: str, node_list: list, driver, out_dir: str, logger
 ) -> None:
@@ -42,7 +42,7 @@ RETURN f.dcf_indexd_guid as guid, f.acl as acl, f.file_url as url, f.md5sum as m
     return None
 
 
-@task
+@task(name="Create combined guid metadata tsv")
 def concatenate_csv_files(folder_name: str) -> str:
     """Merge all csv files of guid meta from one study
 
@@ -66,7 +66,7 @@ def concatenate_csv_files(folder_name: str) -> str:
     return output_name
 
 
-@task
+@task(name="Validate sandbox guid metadata against indexd record")
 def check_guid_meta_against_indexd(file_name: str) -> str:
     """Check sandbox guid metadata against indexd record
 
@@ -124,7 +124,7 @@ def check_guid_meta_against_indexd(file_name: str) -> str:
     return output_name
 
 
-@flow(log_prints=True)
+@flow(log_prints=True, name="Find inactive guids in indexd")
 def find_ghost_indexd_records(file_name: str, phs_accession: str) -> str:
     """Find indexd records with an acl of a study that are not found in sandbox
 
@@ -182,8 +182,8 @@ def find_ghost_indexd_records(file_name: str, phs_accession: str) -> str:
     return output_name
 
 
-@flow
-def query_guid_meta_sandbox(
+@flow(name="Guid validation between sandbox and indexd record")
+def guid_validation_between_sandbox_indexd(
     phs_accession: str, data_model_tag: str, bucket: str, runner: str
 ) -> None:
     """Download guid metadata of all guids associated with a single study in sandbox
@@ -221,6 +221,7 @@ def query_guid_meta_sandbox(
     foldername = phs_accession + "_guid_csv"
     # create foldername folder if not exist
     Path(foldername).mkdir(parents=True, exist_ok=True)
+    logger.info("Starting pulling guid metadata from Neo4j sandbox instance")
     pull_guid_meta_nodes_loop(
         study_accession=phs_accession,
         node_list=file_nodes,
@@ -229,13 +230,14 @@ def query_guid_meta_sandbox(
         logger=logger,
     )
 
-    # combined all sandbox guid metadata into one tsv
+    # combine all sandbox guid metadata csv files into one tsv
     tsv_guid_meta = concatenate_csv_files(folder_name=foldername)
 
+    # create an output folder name where outputs will be uploaded to
     output_folder = os.path.join(runner, "sandbox_indexd_guid_validation_" + phs_accession + "_" + current_time)
 
     # check sandbox guid against indexd record
-    logger.info(f"Checking if all guid metadata for study {phs_accession} match to indexd record")
+    logger.info(f"Checking if all guid metadata for study {phs_accession} matches to indexd record")
     guid_meta_check_output = check_guid_meta_against_indexd(file_name=tsv_guid_meta)
     # upload sandbox guid metadata validation file to the bucket
     file_ul(
