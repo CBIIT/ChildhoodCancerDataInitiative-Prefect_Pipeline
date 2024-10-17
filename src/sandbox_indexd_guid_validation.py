@@ -14,7 +14,15 @@ import requests
 def pull_guid_meta_nodes_loop(
     study_accession: str, node_list: list, driver, out_dir: str, logger
 ) -> None:
-    """Loops through a list of node labels and pulls data of a given study from a neo4j DB"""
+    """Pulls guids metadata from sandbox
+
+    Args:
+        study_accession (str): dbGaP accession number
+        node_list (list): a list of node names
+        driver (_type_): graph database driver
+        out_dir (str): output directory name
+        logger (_type_): logger object
+    """    
     phs_accession = study_accession
     guid_meta_query = f"""
 MATCH (s:study)-[*1..7]-(f:{{node_label}})
@@ -60,7 +68,7 @@ def concatenate_csv_files(folder_name: str) -> str:
 
 @task
 def check_guid_meta_against_indexd(file_name: str) -> str:
-    """check sandbox guid metadata against indexd record
+    """Check sandbox guid metadata against indexd record
 
     Args:
         file_name (str): file name of guid meta tsv file of a study
@@ -224,11 +232,7 @@ def query_guid_meta_sandbox(
     # combined all sandbox guid metadata into one tsv
     tsv_guid_meta = concatenate_csv_files(folder_name=foldername)
 
-
-    output_folder = os.path.join(runner, "sandbox_guid_pull_" + current_time)
-    #file_ul(
-    #    bucket=bucket, output_folder=output_folder, sub_folder="", newfile=tsv_guid_meta
-    #)
+    output_folder = os.path.join(runner, "sandbox_indexd_guid_validation_" + phs_accession + "_" + current_time)
 
     # check sandbox guid against indexd record
     logger.info(f"Checking if all guid metadata for study {phs_accession} match to indexd record")
