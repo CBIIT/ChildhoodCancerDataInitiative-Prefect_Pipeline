@@ -34,23 +34,50 @@ def check_subfolder(folder_path: str, logger) -> bool:
         )
 
 
-def check_same_study_files(file_list: list[str], logger) -> str:
-    study_accession_list = []
-    for i in file_list:
-        i_df = pd.read_csv(i, sep="\t")
-        # use "id" column in the tsv for n
-        study_accession = i_df["id"].tolist()[0].split("::")[0]
-        study_accession_list.append(study_accession)
-        del i_df
-    if len(list(set(study_accession_list))) == 1:
-        return study_accession_list[0]
-    else:
-        logger.error(
-            f"More than one study accessions were found among file list: {*study_accession_list,}"
+# new function to find the phs accession
+def get_study_accession(file_list: list[str]) -> str:
+    """Returns the study accession number
+
+    Args:
+        file_list (list[str]): list of file paths
+
+    Returns:
+        str: dbGaP accession number
+    """
+    for file in file_list:
+        file_df = pd.read_csv(file, sep="\t")
+        if file_df.loc[0, "type"] == "study":
+            dbgap_accession = file_df.loc[0, "dbgap_accession"]
+        else:
+            pass
+    try:
+        dbgap_accession
+        return dbgap_accession
+    except NameError as err:
+        raise NameError(
+            f"Missing the tsv for study node among the file list: {*file_list,}"
         )
-        raise ValueError(
-            f"More than one study accession were found in a given file list: {*file_list,}"
-        )
+
+
+# we need a mapping dictionary that maps id(uuid str) against key property value
+def create_key_id_mapping(file_list: list[str]) -> dict:
+    """Returns a dictionary of id and key property.
+    Loops through every tsv, and use the id column as key and [node]_id as value
+
+    Args:
+        file_list (list[str]): a list of file paths
+
+    Returns:
+        dict: dictionary of id column value as key and [node]_id column value as value
+    """
+    return_dict = {}
+    for file in file_list:
+        file_df = pd.read_csv(file, sep="\t")
+        file_type = file_df.loc[0, "type"]
+        file_key_prop = file_type + "_id"
+        file_mapping_dict = dict(zip(file_df["id"], file_df[file_key_prop]))
+        return_dict = {**return_dict, **file_mapping_dict}
+    return return_dict
 
 
 def find_missing_cols(tsv_cols: list, sheet_cols: list) -> list:
@@ -62,9 +89,10 @@ def find_id_cols(col_list: list) -> list:
     id_cols = [i for i in col_list if i.endswith(".id")]
     return id_cols
 
-def find_parent_id_cols(id_cols: list) ->list:
+
+def find_parent_id_cols(id_cols: list) -> list:
     parent_names = [i.split(".")[0] for i in id_cols]
-    extended_parent_names = [i+"." + i + "_id" for i in parent_names]
+    extended_parent_names = [i + "." + i + "_id" for i in parent_names]
     return extended_parent_names
 
 
@@ -80,15 +108,13 @@ def unpack_folder_list(folder_path_list: list[str]):
     return unpacked_folder_list
 
 
-@task(
-        name="Join tsv to Manifest",
-        log_prints=True
-)
-def join_tsv_to_manifest_single_study(
-    file_list: list[str], manifest_path: str
-) -> str:
+@task(name="Join tsv to Manifest", log_prints=True)
+def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) -> str:
     logger = get_run_logger()
-    study_accession = check_same_study_files(file_list=file_list, logger=logger)
+    # Remove the step of checking if only one phs is found under id column
+    # Because the
+    # study_accession = check_same_study_files(file_list=file_list, logger=logger)
+    study_accession = get_study_accession(file_list=file_list)
     logger.info(f"Creating CCDI manifest for study {study_accession}")
     logger.info(f"tsv files will be written to manifest: {len(file_list)}")
     output_file_name = (
@@ -120,6 +146,10 @@ def join_tsv_to_manifest_single_study(
             na_values=["NA", "na", "N/A", "n/a", ""],
             dtype="string",
         )
+
+        # create key prop and id(guid) mapping dict
+        key_id_mapping = create_key_id_mapping(file_list=file_list)
+
         # check if all columns in sheet can be found in tsv
         # and add the missing column in the tsv df
         missing_cols = find_missing_cols(
@@ -135,38 +165,42 @@ def join_tsv_to_manifest_single_study(
         # and remove content of [parent].id
         id_cols = find_id_cols(col_list=tsv_df.columns.tolist())
         logger.info(f"tsv parent id cols: {*id_cols,}")
-        parent_id_cols =  find_parent_id_cols(id_cols=id_cols)
+        parent_id_cols = find_parent_id_cols(id_cols=id_cols)
         logger.info(f"sheet parent id cols: {*parent_id_cols,}")
         for i in range(len(id_cols)):
             i_col = id_cols[i]
             parent_i_col = parent_id_cols[i]
             tsv_df[parent_i_col] = [
-                j.split("::")[1] if isinstance(j, str) and "::" in j else j
+                key_id_mapping[j] if not pd.isna(j) else j
                 for j in tsv_df[i_col].tolist()
             ]
             # keep the i_col content
             # tsv_df[i_col] = ""
         # keep the content of col "id"
         # tsv_df["id"] = ""
-        
+
         # reorder columns in tsv according to sheet
-        tsv_df =  tsv_df[manifest_df.columns.tolist()]
+        tsv_df = tsv_df[manifest_df.columns.tolist()]
         # write tsv_df to excel sheet
         logger.info(f"writing the tsv df to sheet {node_type} in CCDI manifest")
         with pd.ExcelWriter(
             output_file_name, mode="a", engine="openpyxl", if_sheet_exists="overlay"
         ) as writer:
-            tsv_df.to_excel(writer, sheet_name= node_type, index=False, header=False, startrow=1)
+            tsv_df.to_excel(
+                writer, sheet_name=node_type, index=False, header=False, startrow=1
+            )
 
     return output_file_name
 
 
 @flow(name="Join tsv to Manifest Concurrently")
-def multi_studies_tsv_join(folder_path_list:list, manifest_path: str) -> list[str]:
+def multi_studies_tsv_join(folder_path_list: list, manifest_path: str) -> list[str]:
     logger = get_run_logger()
     logger.info(f"Subfolder counts: {len(folder_path_list)}")
 
     unpacked_folder_list = unpack_folder_list(folder_path_list=folder_path_list)
     logger.info("Start creating manifest files concurrently")
-    manifest_outputs = join_tsv_to_manifest_single_study.map(unpacked_folder_list, manifest_path)
+    manifest_outputs = join_tsv_to_manifest_single_study.map(
+        unpacked_folder_list, manifest_path
+    )
     return [i.result() for i in manifest_outputs]
