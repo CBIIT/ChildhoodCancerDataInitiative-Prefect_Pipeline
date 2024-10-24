@@ -612,10 +612,12 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str):
         delete_uri_list = manifest_df.loc[
             ~manifest_df[delete_column_name].isna(), delete_column_name
         ].tolist()
-    logger.info(f"Number of objects to be deleted: {len(delete_uri_list)}")
+    logger.info(f"Number of objects found: {len(delete_uri_list)}")
+    uniq_uri_list = list(set(delete_uri_list))
+    logger.info(f"Unique objects to be deleted: {len(uniq_uri_list)}")
 
     logger.info("Start deleting objects")
-    delete_status = delete_objects_by_uri(uri_list=delete_uri_list, logger=logger)
+    delete_status = delete_objects_by_uri(uri_list=uniq_uri_list, logger=logger)
     logger.info("Objects deletion finished")
 
     success_count, fail_count = count_success_fail(deletion_status=delete_status)
@@ -631,7 +633,7 @@ def objects_deletion(manifest_file_path: str, delete_column_name: str):
     # prepare for file deletion output
     delete_output = "objects_deletion_summary_" + get_time() + ".tsv"
     logger.info(f"Writing objects deletion summary table to: {delete_output}")
-    delete_dict = {"s3_uri": delete_uri_list, "delete_status": delete_status}
+    delete_dict = {"s3_uri": uniq_uri_list, "delete_status": delete_status}
     delete_df = pd.DataFrame(delete_dict)
     delete_df.to_csv(delete_output, sep="\t", index=False)
     logger.info("Deleting objects finished!")
