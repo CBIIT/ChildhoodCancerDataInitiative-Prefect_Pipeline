@@ -597,7 +597,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.1
+          branch: 1.0.16
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -808,3 +808,25 @@ deployments:
       name: ccdi-curation-32gb
       work_queue_name: null
       job_variables: {}  
+
+  - name: join-tsv-to-manifest_OLD
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/db_tsv_to_manifest.py:join_tsv_to_manifest
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: 1.0.1
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
