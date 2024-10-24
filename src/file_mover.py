@@ -473,8 +473,10 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     )
 
     runner_logger.info(f"transfer_df counts: {transfer_df.shape[0]}")
-    # for index, row in transfer_df.iterrows():
-    #    runner_logger.info(json.dumps(row["cp_object_parameter"], indent=4))
+    logger.info(f"transfer_df counts: {transfer_df.shape[0]}")
+    transfer_df.drop_duplicates(ignore_index=True, keep="first", inplace=True)
+    runner_logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
+    logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
 
     # File transfer starts
     logger.info(f"Start transfering files to destination bucket {dest_bucket_path}")
