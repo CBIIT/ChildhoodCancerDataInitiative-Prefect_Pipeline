@@ -92,6 +92,10 @@ def populate_exampler(
                 j_populated_df[m] = [
                     fake_data_generater.get_fake_uuid() for k in range(entry_count)
                 ]
+            elif "age_at" in m:
+                j_populated_df[m] = [
+                    fake_data_generater.get_random_age() for k in range(entry_count)
+                ]
             else:
                 m_type = get_property_type(
                     dict_df=dict_df, property_name=m, sheet_name=j
@@ -261,6 +265,12 @@ class GetFakeValue:
         """Generates random float"""
         random_float = round(random.uniform(1, 1000000), 2)
         return random_float
+
+    @classmethod
+    def get_random_age(self):
+        """Generates a random age value"""
+        random_age = random.randint(0, 32849)
+        return random_age
 
     def get_random_enum_single(self, enum_list: List) -> str:
         """Generates fake value of enum type property"""

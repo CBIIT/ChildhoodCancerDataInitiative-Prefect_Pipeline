@@ -119,6 +119,10 @@ def test_getfakevalue_get_random_number(my_getfakevalue):
     assert isinstance(random_float, float)
     assert random_float < 1000000
 
+def test_getfakevalue_get_random_age(my_getfakevalue):
+    random_age = my_getfakevalue.get_random_age()
+    assert isinstance(random_age, int)
+    assert random_age < 32850
 
 def test_getfakevalue_random_enum_single(my_getfakevalue, test_enum_list):
     random_enum_single = my_getfakevalue.get_random_enum_single(test_enum_list)
