@@ -1343,8 +1343,11 @@ def validate_unique_guid(
         )
     else:
         return_str = (
+            return_str + "\n\tERROR: Found guid(s) that was assigned to more than one url."
+        )
+        return_str = (
             return_str
-            + "\n\t"
+            + "\t"
             + error_guid_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
                 "\n", "\n\t"
             )
