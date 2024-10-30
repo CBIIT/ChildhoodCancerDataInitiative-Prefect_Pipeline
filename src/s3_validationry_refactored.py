@@ -1308,7 +1308,7 @@ def validate_unique_guid(
     section_title = (
         "\n\n"
         + header_str("Unique GUID Validation")
-        + "\nThe following section will check if every unique guid is only responsible for one url.\nIf there are any unexpected values, they will be reported below:\n----------\n"
+        + "\nThe following section will check if every unique guid is only assigned for one url.\nIf there are any unexpected values, they will be reported below:\n----------\n"
     )
     return_str = "" + section_title
     # create file_object and template_object
@@ -1339,8 +1339,7 @@ def validate_unique_guid(
     )
     if error_guid_df.shape[0] == 0:
         return_str = (
-            return_str
-            + f"\tPASS: Every indexd guid is responsible for only one url.\n"
+            return_str + f"\tPASS: Every unique indexd guid is assigned for only one url.\n"
         )
     else:
         return_str = (
@@ -1355,7 +1354,7 @@ def validate_unique_guid(
     # print the return_str to output_file
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-    
+
     return None
 
 
@@ -1849,6 +1848,17 @@ def ValidationRy_new(file_path: str, template_path: str):
         "Checking object file metadata, size, md5sum regex, and file basename"
     )
     validate_file_metadata(
+        node_list=nodes_to_validate,
+        file_path=file_path,
+        template_path=template_path,
+        output_file=output_file,
+    )
+
+    # validate if every guid is only responsible for one url
+    validation_logger.info(
+        "Checking if every unique dcf indexd guid is only assigned for one url"
+    )
+    validate_unique_guid(
         node_list=nodes_to_validate,
         file_path=file_path,
         template_path=template_path,
