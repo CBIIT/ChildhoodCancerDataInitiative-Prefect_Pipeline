@@ -1293,6 +1293,57 @@ def validate_file_metadata(
     return None
 
 
+@task(name="validate unique guid task", log_prints=True)
+def validate_unique_guid_str(node_list: list[str], file_object) -> str:
+    """Returns str reporting guids assigned to more than one url
+
+    Args:
+        file_object (_type_): CheckCCDI object
+        node_list (list[str]): list of node names. 
+
+    Returns:
+        str: report str
+    """
+    guid_list = []
+    return_str = ""
+    for node in node_list:
+        node_df = file_object.read_sheet_na(sheetname=node)
+        for _, row in node_df.iterrows():
+            row_node = node
+            row_guid = row["dcf_indexd_guid"]
+            if "file_url" in row.keys():
+                row_url = row["file_url"]
+            else:
+                row_url = row["file_url_in_cds"]
+            guid_list.append([row_node, row_guid, row_url])
+    guid_df = pd.DataFrame(guid_list, columns=["node", "dcf_indexd_guid", "file_url"])
+    guid_df.drop_duplicates(subset=["dcf_indexd_guid", "file_url"], inplace=True)
+
+    # find guid responsible for more than one url
+    error_guid_df = (
+        guid_df.groupby("dcf_indexd_guid")
+        .filter(lambda x: len(x) > 1)
+        .reset_index(drop=True)
+    )
+    if error_guid_df.shape[0] == 0:
+        return_str = (
+            return_str + f"\tPASS: Every unique indexd guid is assigned for only one url.\n"
+        )
+    else:
+        return_str = (
+            return_str + "\n\tERROR: Found guid(s) that was assigned to more than one url."
+        )
+        return_str = (
+            return_str
+            + "\n\t"
+            + error_guid_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+                "\n", "\n\t"
+            )
+            + "\n\n"
+        )
+    return return_str
+
+
 @flow(name="Validate unique guid for each url", log_prints=True)
 def validate_unique_guid(
     node_list: list[str], file_path: str, template_path: str, output_file: str
@@ -1320,44 +1371,14 @@ def validate_unique_guid(
     file_nodes = dict_df[dict_df["Property"] == "file_url"]["Node"].values.tolist()
     file_nodes_to_check = [i for i in node_list if i in file_nodes]
 
-    guid_list = []
-    for node in file_nodes_to_check:
-        node_df = file_object.read_sheet_na(sheetname=node)
-        for index, row in node_df.iterrows():
-            row_node = node
-            row_guid = row["dcf_indexd_guid"]
-            row_url = row["file_url"]
-            guid_list.append([row_node, row_guid, row_url])
-    guid_df = pd.DataFrame(guid_list, columns=["node", "dcf_indexd_guid", "file_url"])
-    guid_df.drop_duplicates(subset=["dcf_indexd_guid", "file_url"], inplace=True)
-
-    # find guid responsible for more than one url
-    error_guid_df = (
-        guid_df.groupby("dcf_indexd_guid")
-        .filter(lambda x: len(x) > 1)
-        .reset_index(drop=True)
+    report_str = validate_unique_guid_str(
+        node_list=file_nodes_to_check, file_object=file_object
     )
-    if error_guid_df.shape[0] == 0:
-        return_str = (
-            return_str + f"\tPASS: Every unique indexd guid is assigned for only one url.\n"
-        )
-    else:
-        return_str = (
-            return_str + "\n\tERROR: Found guid(s) that was assigned to more than one url."
-        )
-        return_str = (
-            return_str
-            + "\n\t"
-            + error_guid_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
-                "\n", "\n\t"
-            )
-            + "\n\n"
-        )
+    return_str = return_str + report_str
 
     # print the return_str to output_file
     with open(output_file, "a+") as outf:
         outf.write(return_str)
-
     return None
 
 

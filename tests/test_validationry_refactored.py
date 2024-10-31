@@ -31,6 +31,7 @@ from src.s3_validationry_refactored import (
     count_buckets,
     check_buckets_access,
     validate_single_manifest_obj_in_bucket,
+    validate_unique_guid_str,
 )
 
 
@@ -339,6 +340,19 @@ def test_validate_key_id_single_sheet(datafiles):
     )
     assert print_str.count("pdx") == 3
     assert "diligent_overwrought_80&" in print_str
+
+@ALL_FILES
+def test_validate_unique_guid_str(datafiles):
+    """test for validate_unique_guid_str task"""
+    for item in datafiles.iterdir():
+        if "Exampler" in item.name:
+            file_path = str(item)
+        else:
+            temp_path = str(item)
+    file_object = CheckCCDI(file_path)
+    report_str = validate_unique_guid_str.fn(node_list=["radiology_file"], file_object=file_object)
+    assert report_str.count("radiology_file") == 2
+    assert "dg.4DFC/4f709698-24f0-4673-8827-5ee95b9efe9e" in report_str
 
 
 def test_count_buckets():
