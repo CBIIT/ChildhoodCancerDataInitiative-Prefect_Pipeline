@@ -1347,7 +1347,7 @@ def validate_unique_guid(
         )
         return_str = (
             return_str
-            + "\t"
+            + "\n\t"
             + error_guid_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
                 "\n", "\n\t"
             )
