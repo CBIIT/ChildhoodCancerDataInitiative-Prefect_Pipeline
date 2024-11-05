@@ -223,6 +223,7 @@ def runner(
     )
 
     if catcherr_out_file is not None:
+        """
         # run ValidationRy
         runner_logger.info("Running ValidationRy flow")
         try:
@@ -263,6 +264,7 @@ def runner(
             wf_step="CCDI-to-SRA",
             sub_folder="3_SRA_submisison_output",
         )
+        """
 
         # run CCDI to dbGaP
         runner_logger.info("Running CCDI to dbGaP submission file flow")
@@ -286,6 +288,7 @@ def runner(
             sub_folder="4_dbGaP_submisison_output",
         )
 
+        """
         # run CCDI to dcf index
         runner_logger.info("Running CCDI to DCF Index files flow")
         try:
@@ -326,6 +329,7 @@ def runner(
             wf_step="CCDI-to-TabBreaker",
             sub_folder="6_TabBreaker_output",
         )
+        """
 
     else:
         pass
