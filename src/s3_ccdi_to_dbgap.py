@@ -206,13 +206,16 @@ def check_synonym(synonym_df: DataFrame) -> tuple:
     if synonym_df.empty:
         pass
     else:
+        # filter rows of participant.participant_id nonempty and repository_of_synonym_id not equal to dbgap
         subject_synonym_df = synonym_df[
-            synonym_df["repository_of_synonym_id"] == "dbGaP"
+            (synonym_df["participant.participant_id"].notna())
+            & (synonym_df["repository_of_synonym_id"] != "dbGaP")
         ]
         if subject_synonym_df.empty:
             pass
         else:
             subject_synonym = True
+
         sample_synonym_df = synonym_df[
             synonym_df["repository_of_synonym_id"] == "BioSample"
         ]
@@ -359,8 +362,9 @@ class AddSynonym:
         self.synonym_df = synonym_df
 
     def slice_subject_synonym(self):
+        # filter rows with participant.participant_id nonempty, and the repository_of_synonym_id not equal to dbgap
         subject_synonym_df = self.synonym_df[
-            self.synonym_df["repository_of_synonym_id"] == "dbGaP"
+            (self.synonym_df["participant.participant_id"].notna()) & (self.synonym_df["repository_of_synonym_id"] != "dbGaP")
         ][
             ["participant.participant_id", "synonym_id", "repository_of_synonym_id"]
         ].dropna(
