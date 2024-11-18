@@ -996,12 +996,13 @@ def list_type_files(file_dir: str, file_type: str) -> list:
     return matched_files
 
 
-@task
+@task(log_prints=True)
 def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     """Pivot the long df to wider df
     It also removes quotes from column names and value
     """
     df_long = pd.read_csv(file_path)
+    print(df_long.head(10))
 
     # Pivot the DataFrame to wide format
     df_wide = df_long.pivot(
@@ -1009,6 +1010,7 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
         columns="startNodePropertyName",
         values="startNodePropertyValue",
     ).reset_index()
+    print(df_wide.head(10))
 
     df_wide = df_wide.merge(
         df_long[["startNodeId", "startNodeLabels"]].drop_duplicates(), on="startNodeId"
@@ -1045,11 +1047,14 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     # df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
     # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
 
+    print("df_wide before drop column")
+    print(df_wide.head(10))
     # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
     df_wide.drop(
         ["startNodeId", "created", "startNodeLabels", "uuid"], axis=1, inplace=True
     )
+    print(df_wide.head(10))
     return df_wide
 
 
@@ -1128,6 +1133,7 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
 
     # writing tsv files
     for file_path in csv_list:
+        logger.info(f"processing csv file: {file_path}")
         wider_df = pivot_long_df_wide_clean(file_path=file_path)
         wider_df = wide_df_setup_link(df_wide=wider_df)
         logger.info(f"Writing tsv files for all studies from file: {file_path}")
