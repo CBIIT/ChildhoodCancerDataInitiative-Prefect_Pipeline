@@ -31,21 +31,22 @@ UNWIND keys(props) AS propertyName
 RETURN  startNode.id AS startNodeId,
     labels(startNode) AS startNodeLabels,
     propertyName AS startNodePropertyName,
-    startNode[propertyName] AS startNodePropertyValue
+    startNode[propertyName] AS startNodePropertyValue,
+    startNode.study_id as dbgap_accession 
 """
     )
-    main_cypher_query: str = (
+    main_cypher_query_per_study_node: str = (
         """
-MATCH (startNode:{node_label})-[r]->(linkedNode)
-WITH startNode, linkedNode, properties(startNode) AS props
+MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
+WITH study, startNode, linkedNode, properties(startNode) AS props
 UNWIND keys(props) AS propertyName
-RETURN
-    startNode.id AS startNodeId,
-    labels(startNode) AS startNodeLabels,
-    propertyName AS startNodePropertyName,
-    startNode[propertyName] AS startNodePropertyValue,
-    linkedNode.id AS linkedNodeId, 
-    labels(linkedNode) AS linkedNodeLabels
+RETURN startNode.id AS startNodeId, 
+labels(startNode) AS startNodeLabels, 
+propertyName AS startNodePropertyName, 
+startNode[propertyName] AS startNodePropertyValue, 
+linkedNode.id AS linkedNodeId, 
+labels(linkedNode) AS linkedNodeLabels, 
+study.study_id AS dbgap_accession
 """
     )
     unique_nodes_query: str = (
@@ -74,7 +75,7 @@ RETURN node.id AS id
 """
     )
 
-#dataclass for stats query pipeline
+# dataclass for stats query pipeline
 @dataclass
 class StatsNeo4jCypherQuery:
     """Dataclass for Stat Related Cypher Queries"""
@@ -315,7 +316,6 @@ RETURN NodeType, Value
     )
 
 
-
 def get_aws_parameter(parameter_name: str, logger) -> Dict:
     """Returns response from calling simple system manager with a
     parameter name
@@ -370,12 +370,33 @@ def cypher_query_parameters(
     )
 
 
-def export_to_csv(tx, node_label: str, cypher_query: str, output_directory: str):
+def export_to_csv_per_node(tx, node_label: str, cypher_query: str, output_directory: str):
     """Export query results to csv file per node of all studies present in DB"""
     # Run the main Cypher query with the specified node_label
     result = tx.run(cypher_query.format(node_label=node_label))
 
     output_file_path = os.path.join(output_directory, f"{node_label}_output.csv")
+
+    with open(output_file_path, "w", newline="") as csvfile:
+        csv_writer = csv.writer(csvfile)
+
+        # Write header
+        header = result.keys()
+        csv_writer.writerow(header)
+
+        # Write data rows
+        for record in result:
+            csv_writer.writerow(record.values())
+
+
+def export_to_csv_per_node_per_study(
+    tx, study_name: str, node_label: str, cypher_query: str, output_directory: str
+):
+    """Export query results to csv file per node per study present in DB"""
+    # Run the main Cypher query with the specified node_label
+    result = tx.run(cypher_query.format(node_label=node_label, study_accession=study_name))
+
+    output_file_path = os.path.join(output_directory, f"{study_name}_{node_label}_output.csv")
 
     with open(output_file_path, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
@@ -407,19 +428,58 @@ def pull_data_per_node(
     return None
 
 
-@flow(task_runner=ConcurrentTaskRunner())
-def pull_nodes_loop(node_list: list, driver, out_dir: str, logger) -> None:
-    """Loops through a list of node labels and pulls data from a neo4j DB"""
-    cypher_phrase = Neo4jCypherQuery.main_cypher_query
-    for node_label in node_list:
-        logger.info(f"Pulling from Node {node_label}")
-        pull_data_per_node.submit(
-            driver=driver,
-            data_to_csv=export_to_csv,
-            node_label=node_label,
-            query_str=cypher_phrase,
-            output_dir=out_dir,
+@task(name="Pull node data per study", task_run_name="pull_node_data_{node_label}")
+def pull_data_per_node_per_study(
+    driver, data_to_csv, study_name: str, node_label: str, query_str: str, output_dir: str
+) -> None:
+    """Exports DB data by a given node"""
+    session = driver.session()
+    try:
+        session.execute_read(
+            data_to_csv, node_label, query_str.format(node_label=node_label, study_accession=study_name), output_dir
         )
+    except:
+        traceback.print_exc()
+        raise
+    finally:
+        session.close()
+    return None
+
+
+@flow(task_runner=ConcurrentTaskRunner())
+def pull_nodes_loop(study_list: list, node_list: list, driver, out_dir: str, logger) -> None:
+    """Loops through a list of node labels and pulls data from a neo4j DB"""
+    cypher_phrase = Neo4jCypherQuery.main_cypher_query_per_study_node
+    per_study_per_node_out_dir = os.path.join(os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study")
+    os.makedirs(per_study_per_node_out_dir, exist_ok=True)
+
+    for study in study_list:
+        for node_label in node_list:
+            logger.info(f"Pulling from Node {node_label}")
+            pull_data_per_node_per_study.submit(
+                driver=driver,
+                data_to_csv=export_to_csv_per_node_per_study,
+                study_name=study,
+                node_label=node_label,
+                query_str=cypher_phrase,
+                output_dir=per_study_per_node_out_dir,
+            )
+    # look at the out_dir and concatenate files for the same node,
+    # so each node can have one csv file
+    files_list = [os.path.join(per_study_per_node_out_dir, i) for i in os.listdir(per_study_per_node_out_dir)]
+    for node_label in node_list:
+        node_file_list  = [i for i in files_list if node_label in i]
+        node_df = pd.DataFrame(columns=["startNodeId", "startNodeLabels", "startNodePropertyName", "startNodePropertyValue", "linkedNodeId", "linkedNodeLabels", "dbgap_accession"])
+        for j in node_file_list:
+            j_df= pd.read_csv(j)
+            if j.shape[0] == 0:
+                pass
+            else:
+                node_df = pd.concat([node_df, j_df], ignore_index=True)
+        node_df_filename = node_label + "_output.csv"
+        node_df_dir = os.path.join(out_dir, node_df_filename)
+        node_df.to_csv(node_df_dir, index=False)
+
     return None
 
 
@@ -429,7 +489,7 @@ def pull_study_node(driver, out_dir: str) -> None:
     cypher_phrase = Neo4jCypherQuery.study_cypher_query
     pull_data_per_node(
         driver=driver,
-        data_to_csv=export_to_csv,
+        data_to_csv=export_to_csv_per_node,
         node_label="study",
         query_str=cypher_phrase,
         output_dir=out_dir,
@@ -891,15 +951,16 @@ def query_db_to_csv(
     logger.info("Creating GraphDatabase driver using uri, username, and password")
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
-    # fetch unique nodes
+    # fetch unique nodes and unique studies
     logger.info("Fetching all unique nodes DB")
     unique_nodes = pull_uniq_nodes(driver=driver)
+    unqiue_studies = pull_uniq_studies(driver=driver)
     logger.info(f"Nodes list: {*unique_nodes,}")
 
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
     pull_nodes_loop(
-        node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
+        study_list = unqiue_studies, node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
     )
 
     # Obtain study node data
@@ -1003,8 +1064,10 @@ def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
 
     else:
         pass
-    id_name = df_wide["type"].unique().tolist()[0] + "_id"
-    df_wide[["study", id_name]] = df_wide["id"].str.split("::", n=1, expand=True)
+    #id_name = df_wide["type"].unique().tolist()[0] + "_id"
+    #df_wide[["study", id_name]] = df_wide["id"].str.split("::", n=1, expand=True)
+    df_wide["study"] = df_wide["dbgap_accession"]
+    df_wide.drop("dbgap_accession", inplace=True)
     return df_wide
 
 
