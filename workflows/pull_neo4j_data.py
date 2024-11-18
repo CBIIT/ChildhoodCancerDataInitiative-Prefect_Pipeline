@@ -44,20 +44,24 @@ def pull_neo4j_data(
         password_parameter=password_parameter,
     )
 
-    # converting data pulled from DB (csv files) to tsv files
-    logger.info("Starting to convert DB pulled csv to tsv files")
-    export_folder = convert_csv_to_tsv(
-        db_pulled_outdir="./pulled_db_csv", output_dir="./"
+    # upload db pulled data csv files to the bucket
+    logger.info(
+        f"Uploading folder of {db_data_folder} to the bucket {bucket} at {bucket_folder}"
     )
-
-    # upload db pulled data csv files and converted tsv files to the bucket
-    logger.info(f"Uploading folder of {db_data_folder} to the bucket {bucket} at {bucket_folder}")
     folder_ul(
         local_folder=db_data_folder,
         bucket=bucket,
         destination=bucket_folder,
         sub_folder="",
     )
+
+    # converting data pulled from DB (csv files) to tsv files
+    logger.info("Starting to convert DB pulled csv to tsv files")
+    export_folder = convert_csv_to_tsv(
+        db_pulled_outdir="./pulled_db_csv", output_dir="./"
+    )
+
+    # upload converted tsv files to the bucket
     logger.info(f"Uploading folder of {export_folder} to the bucket {bucket} at {bucket_folder}")
     folder_ul(
         local_folder=export_folder,
