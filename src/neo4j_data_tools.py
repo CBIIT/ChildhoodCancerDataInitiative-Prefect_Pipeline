@@ -435,8 +435,15 @@ def pull_data_per_node_per_study(
     """Exports DB data by a given node"""
     session = driver.session()
     try:
+        #session.execute_read(
+        #    data_to_csv, study_name, node_label, query_str.format(node_label=node_label, study_accession=study_name), output_dir
+        #3)
         session.execute_read(
-            data_to_csv, study_name, node_label, query_str.format(node_label=node_label, study_accession=study_name), output_dir
+            data_to_csv,
+            study_name,
+            node_label,
+            query_str,
+            output_dir,
         )
     except:
         traceback.print_exc()
