@@ -480,9 +480,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
     transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].astype(str)
     transfer_df.drop_duplicates(ignore_index=True, keep="first", inplace=True)
     transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].apply(ast.literal_eval)
-    print(transfer_df.head(5))
-    # convert cp_object_parameter back to dict
-    # transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].apply(json.loads)
+    
     runner_logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
     logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
 
