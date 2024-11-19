@@ -453,7 +453,7 @@ def pull_data_per_node_per_study(
     return None
 
 
-@flow(task_runner=ConcurrentTaskRunner())
+@flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
 def pull_nodes_loop(study_list: list, node_list: list, driver, out_dir: str, logger) -> None:
     """Loops through a list of node labels and pulls data from a neo4j DB"""
     cypher_phrase = Neo4jCypherQuery.main_cypher_query_per_study_node
@@ -474,11 +474,16 @@ def pull_nodes_loop(study_list: list, node_list: list, driver, out_dir: str, log
     # look at the out_dir and concatenate files for the same node,
     # so each node can have one csv file
     files_list = [os.path.join(per_study_per_node_out_dir, i) for i in os.listdir(per_study_per_node_out_dir)]
+    
     for node_label in node_list:
+        print(node_label)
         node_file_list  = [i for i in files_list if node_label in i]
+        print(node_file_list)
         node_df = pd.DataFrame(columns=["startNodeId", "startNodeLabels", "startNodePropertyName", "startNodePropertyValue", "linkedNodeId", "linkedNodeLabels", "dbgap_accession"])
         for j in node_file_list:
             j_df= pd.read_csv(j)
+            print(j_df.columns)
+            print(j_df.head())
             if j.shape[0] == 0:
                 pass
             else:
@@ -486,7 +491,6 @@ def pull_nodes_loop(study_list: list, node_list: list, driver, out_dir: str, log
         node_df_filename = node_label + "_output.csv"
         node_df_dir = os.path.join(out_dir, node_df_filename)
         node_df.to_csv(node_df_dir, index=False)
-
     return None
 
 
