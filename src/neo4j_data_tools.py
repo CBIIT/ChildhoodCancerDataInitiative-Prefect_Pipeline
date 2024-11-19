@@ -1165,10 +1165,14 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
     # writing tsv files
     for file_path in csv_list:
         logger.info(f"processing csv file: {file_path}")
-        wider_df = pivot_long_df_wide_clean(file_path=file_path)
-        wider_df = wide_df_setup_link(df_wide=wider_df)
-        logger.info(f"Writing tsv files for all studies from file: {file_path}")
-        write_wider_df_all(wider_df, output_dir=export_folder, logger=logger)
+        file_df = pd.read_csv(file_path)
+        if file_df.shape[0] > 0:
+            wider_df = pivot_long_df_wide_clean(file_path=file_path)
+            wider_df = wide_df_setup_link(df_wide=wider_df)
+            logger.info(f"Writing tsv files for all studies from file: {file_path}")
+            write_wider_df_all(wider_df, output_dir=export_folder, logger=logger)
+        else:
+            pass
     return export_folder
 
 
