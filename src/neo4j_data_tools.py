@@ -995,7 +995,7 @@ def query_db_to_csv(
     #    study_list = unqiue_studies, node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
     # )
     pull_nodes_loop(
-        study_list = ["phs000460", "phs000470", "phs002518"], node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
+        study_list = ["phs000466", "phs000470", "phs002518", "phs002620"], node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
     )
 
     # combine all csv of same node into single file
