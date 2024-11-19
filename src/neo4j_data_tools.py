@@ -1041,7 +1041,8 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
         columns="startNodePropertyName",
         values="startNodePropertyValue",
     ).reset_index()
-    print(df_wide.head(10))
+    print("df_wide after pivot columns")
+    print(df_wide.columns)
 
     df_wide = df_wide.merge(
         df_long[["startNodeId", "startNodeLabels"]].drop_duplicates(), on="startNodeId"
@@ -1079,13 +1080,14 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
 
     print("df_wide before drop column")
-    print(df_wide.head(10))
+    print(df_wide.columns)
     # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
     df_wide.drop(
         ["startNodeId", "created", "startNodeLabels", "uuid"], axis=1, inplace=True
     )
-    print(df_wide.head(10))
+    print("df_wide after drop column")
+    print(df_wide.columns)
     return df_wide
 
 
