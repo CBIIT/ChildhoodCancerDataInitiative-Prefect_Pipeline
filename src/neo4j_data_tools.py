@@ -1113,12 +1113,14 @@ def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
         df_wide = df_wide_links
 
         # below should only work for non study nodes
-        print("df_wide columns")
-        print(df_wide.columns)
+        
         df_wide["study"] = df_wide["dbgap_accession"]
         df_wide.drop(columns=["dbgap_accession"], inplace=True)
+        print("df_wide columns")
+        print(df_wide.columns)
     else:
-        pass
+        # this is only for study node
+        df_wide["study"] = df_wide["study_id"]
     #id_name = df_wide["type"].unique().tolist()[0] + "_id"
     #df_wide[["study", id_name]] = df_wide["id"].str.split("::", n=1, expand=True)
     
