@@ -497,7 +497,8 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
     ]
 
     for node_label in node_list:
-        node_file_list  = [i for i in files_list if node_label in i]
+        node_label_phrase =  "_" + node_label + "_output.csv"
+        node_file_list  = [i for i in files_list if node_label_phrase in i]
         print(f"files belongs to node {node_label}: {*node_file_list,}")
         node_df = pd.DataFrame(columns=["startNodeId", "startNodeLabels", "startNodePropertyName", "startNodePropertyValue", "linkedNodeId", "linkedNodeLabels", "dbgap_accession"])
         for j in node_file_list:
