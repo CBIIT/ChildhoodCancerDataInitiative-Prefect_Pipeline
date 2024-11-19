@@ -504,7 +504,7 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
             j_df= pd.read_csv(j)
             print(j_df.columns)
             print(j_df.head())
-            if j.shape[0] == 0:
+            if j_df.shape[0] == 0:
                 pass
             else:
                 node_df = pd.concat([node_df, j_df], ignore_index=True)
