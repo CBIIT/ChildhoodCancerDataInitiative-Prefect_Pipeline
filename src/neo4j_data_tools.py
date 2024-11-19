@@ -429,11 +429,11 @@ def pull_data_per_node(
     return None
 
 
-@task(name="Pull node data per study", task_run_name="pull_node_data_{node_label}")
+@task(name="Pull node data per study", task_run_name="pull_node_data_{node_label}_{study_name}")
 def pull_data_per_node_per_study(
     driver, data_to_csv, study_name: str, node_label: str, query_str: str, output_dir: str
 ) -> None:
-    """Exports DB data by a given node"""
+    """Exports DB data by a given node and a given study"""
     session = driver.session()
     try:
         #session.execute_read(
@@ -473,17 +473,32 @@ def pull_nodes_loop(study_list: list, node_list: list, driver, out_dir: str, log
                 query_str=cypher_phrase,
                 output_dir=per_study_per_node_out_dir,
             )
+    return None
+
+
+@flow(log_prints=True)
+def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
+    """Look at csv query result files and combine the results from the same node together
+
+    Args:
+        folder_dir (str): folder that contains query result csv per node per study
+        node_list (list[str]): unique node list
+    """    
     # look at the out_dir and concatenate files for the same node,
     # so each node can have one csv file
     print("Below is the list of query results per study per node:")
-    print(os.listdir(per_study_per_node_out_dir))
-    files_list = [os.path.join(per_study_per_node_out_dir, i) for i in os.listdir(per_study_per_node_out_dir)]
-    print(files_list)
+    folder_dir = os.path.join(
+        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study"
+    )
+    print(os.listdir(folder_dir))
+    files_list = [
+        os.path.join(folder_dir, i)
+        for i in os.listdir(folder_dir)
+    ]
 
     for node_label in node_list:
-        print(node_label)
         node_file_list  = [i for i in files_list if node_label in i]
-        print(node_file_list)
+        print(f"files belongs to node {node_label}: {*node_file_list,}")
         node_df = pd.DataFrame(columns=["startNodeId", "startNodeLabels", "startNodePropertyName", "startNodePropertyValue", "linkedNodeId", "linkedNodeLabels", "dbgap_accession"])
         for j in node_file_list:
             j_df= pd.read_csv(j)
@@ -978,6 +993,8 @@ def query_db_to_csv(
     pull_nodes_loop(
         study_list = unqiue_studies, node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
     )
+    # combine all csv of same node into single file
+    combine_node_csv_all_studies(out_dir=output_dir, node_list=unique_nodes)
 
     # Obtain study node data
     logger.info("Pulling data from study node")
