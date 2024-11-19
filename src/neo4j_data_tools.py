@@ -387,11 +387,12 @@ def export_to_csv_per_node(tx, node_label: str, cypher_query: str, output_direct
         # Write data rows
         for record in result:
             csv_writer.writerow(record.values())
+    return None
 
 
 def export_to_csv_per_node_per_study(
     tx, study_name: str, node_label: str, cypher_query: str, output_directory: str
-):
+) -> None:
     """Export query results to csv file per node per study present in DB"""
     # Run the main Cypher query with the specified node_label
     result = tx.run(cypher_query.format(node_label=node_label, study_accession=study_name))
@@ -408,7 +409,7 @@ def export_to_csv_per_node_per_study(
         # Write data rows
         for record in result:
             csv_writer.writerow(record.values())
-
+    return None
 
 @task(name="Pull node data", task_run_name="pull_node_data_{node_label}")
 def pull_data_per_node(
@@ -458,6 +459,7 @@ def pull_nodes_loop(study_list: list, node_list: list, driver, out_dir: str, log
     """Loops through a list of node labels and pulls data from a neo4j DB"""
     cypher_phrase = Neo4jCypherQuery.main_cypher_query_per_study_node
     per_study_per_node_out_dir = os.path.join(os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study")
+    print(per_study_per_node_out_dir)
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
     for study in study_list:
@@ -473,8 +475,11 @@ def pull_nodes_loop(study_list: list, node_list: list, driver, out_dir: str, log
             )
     # look at the out_dir and concatenate files for the same node,
     # so each node can have one csv file
+    print("Below is the list of query results per study per node:")
+    print(os.listdir(per_study_per_node_out_dir))
     files_list = [os.path.join(per_study_per_node_out_dir, i) for i in os.listdir(per_study_per_node_out_dir)]
-    
+    print(files_list)
+
     for node_label in node_list:
         print(node_label)
         node_file_list  = [i for i in files_list if node_label in i]
