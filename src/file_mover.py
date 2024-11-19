@@ -23,6 +23,7 @@ import hashlib
 from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
 from typing import TypeVar
+import ast
 
 DataFrame = TypeVar("DataFrame")
 
@@ -474,7 +475,12 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
 
     runner_logger.info(f"transfer_df counts: {transfer_df.shape[0]}")
     logger.info(f"transfer_df counts: {transfer_df.shape[0]}")
+
+    # drop duplicates need to convert cp_object_parameter into str first
+    transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].astype(str)
     transfer_df.drop_duplicates(ignore_index=True, keep="first", inplace=True)
+    transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].apply(ast.literal_eval)
+    
     runner_logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
     logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
 
