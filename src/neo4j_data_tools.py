@@ -1045,7 +1045,7 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     print(df_wide.columns)
 
     df_wide = df_wide.merge(
-        df_long[["startNodeId", "startNodeLabels", "dbgap_accession"]].drop_duplicates(), on="startNodeId"
+        df_long[["startNodeId", "startNodeLabels"]].drop_duplicates(), on="startNodeId"
     )
 
     if "['study']" not in df_long["startNodeLabels"].unique().tolist():
@@ -1055,6 +1055,10 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
         )
         df_wide = df_wide.merge(
             df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(),
+            on="startNodeId",
+        )
+        df_wide = df_wide.merge(
+            df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
             on="startNodeId",
         )
 
@@ -1094,6 +1098,7 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
 @task(log_prints=True)
 def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
     """Setup links in wide df"""
+    print("setup links in wide df")
     if "study" not in df_wide["type"].unique().tolist():
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"] + ".id"
 
