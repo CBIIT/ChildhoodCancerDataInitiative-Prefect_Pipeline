@@ -991,11 +991,8 @@ def query_db_to_csv(
 
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
-    # pull_nodes_loop(
-    #    study_list = unqiue_studies, node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
-    # )
     pull_nodes_loop(
-        study_list = ["phs000466", "phs000470", "phs002518", "phs002620"], node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
+       study_list = unqiue_studies, node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
     )
 
     # combine all csv of same node into single file
@@ -1033,7 +1030,6 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     It also removes quotes from column names and value
     """
     df_long = pd.read_csv(file_path)
-    print(df_long.head(10))
 
     # Pivot the DataFrame to wide format
     df_wide = df_long.pivot(
@@ -1041,8 +1037,6 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
         columns="startNodePropertyName",
         values="startNodePropertyValue",
     ).reset_index()
-    print("df_wide after pivot columns")
-    print(df_wide.columns)
 
     df_wide = df_wide.merge(
         df_long[["startNodeId", "startNodeLabels"]].drop_duplicates(), on="startNodeId"
@@ -1083,15 +1077,11 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     # df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
     # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
 
-    print("df_wide before drop column")
-    print(df_wide.columns)
     # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
     df_wide.drop(
         ["startNodeId", "created", "startNodeLabels", "uuid"], axis=1, inplace=True
     )
-    print("df_wide after drop column")
-    print(df_wide.columns)
     return df_wide
 
 
@@ -1116,15 +1106,17 @@ def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
 
         df_wide["study"] = df_wide["dbgap_accession"]
         df_wide.drop(columns=["dbgap_accession"], inplace=True)
-        print("df_wide columns")
-        print(df_wide.columns)
+        if "updated" in df_wide.columns:
+            df_wide.drop(columns=["updated"], inplace=True)
+        else:
+            pass
     else:
         # this is only for study node
         df_wide["study"] = df_wide["study_id"]
-        df_wide.drop(columns=["updated"], inplace=True)
-    # id_name = df_wide["type"].unique().tolist()[0] + "_id"
-    # df_wide[["study", id_name]] = df_wide["id"].str.split("::", n=1, expand=True)
-
+        if "updated" in df_wide.columns:
+            df_wide.drop(columns=["updated"], inplace=True)
+        else:
+            pass
     return df_wide
 
 
