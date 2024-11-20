@@ -1137,6 +1137,7 @@ def write_wider_df_all(wider_df: DataFrame, output_dir: str, logger) -> None:
     studies = wider_df["study"].unique().tolist()
     for study in studies:
         df_to_write = wider_df[wider_df["study"] == study]
+        df_to_write.drop(columns=["study"], inplace=True)
 
         # create the output directory if not exist
         study_folder = os.path.join(output_dir, study)
