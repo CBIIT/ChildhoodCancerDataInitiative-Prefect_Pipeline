@@ -172,7 +172,7 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
             print(i_col)
             parent_i_col = i_col.split(".")[0] + "." + i_col.split(".")[0] + "_id" # participant.participant_id
             tsv_df[parent_i_col] = [
-                key_id_mapping[j] if not pd.isna(j) else j
+                key_id_mapping[j] if not (pd.isna(j) or j=="") else j
                 for j in tsv_df[i_col].tolist()
             ]
             # keep the i_col content
