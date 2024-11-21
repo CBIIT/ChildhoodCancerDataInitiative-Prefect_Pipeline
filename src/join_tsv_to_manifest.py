@@ -128,6 +128,8 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
     copy(manifest_path, output_file_name)
 
     # output_file = pd.ExcelFile(output_file_name)
+    # create key prop and id(guid) mapping dict
+    key_id_mapping = create_key_id_mapping(file_list=file_list)
 
     for tsv_file in file_list:
         logger.info(f"working on tsv file: {tsv_file}")
@@ -147,9 +149,6 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
             dtype="string",
         )
 
-        # create key prop and id(guid) mapping dict
-        key_id_mapping = create_key_id_mapping(file_list=file_list)
-
         # check if all columns in sheet can be found in tsv
         # and add the missing column in the tsv df
         missing_cols = find_missing_cols(
@@ -168,10 +167,10 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
         parent_id_cols = find_parent_id_cols(id_cols=id_cols)
         logger.info(f"sheet parent id cols: {*parent_id_cols,}")
         for i in range(len(id_cols)):
-            i_col = id_cols[i]
-            parent_i_col = parent_id_cols[i]
+            i_col = id_cols[i] # for example participant.id
+            parent_i_col = i_col.split(".")[0] + "." + i_col.split(".")[0] + "_id" # participant.participant_id
             tsv_df[parent_i_col] = [
-                key_id_mapping[j] if not pd.isna(j) else j
+                key_id_mapping[j] if not (pd.isna(j) or j=="") else j
                 for j in tsv_df[i_col].tolist()
             ]
             # keep the i_col content
