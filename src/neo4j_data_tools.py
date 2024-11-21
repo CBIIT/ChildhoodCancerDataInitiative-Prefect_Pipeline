@@ -607,7 +607,7 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
 
     Example content of csv file:
     study_id, node, id
-    phs000123, publication, phs000123::random_id
+    phs000123, publication, 3f048a5b-9594-5c11-b573-61afa00c2e7c
     """
     cypher_query = Neo4jCypherQuery.node_id_cypher_query_query.format(
         study_id=study_id, node=node
@@ -625,7 +625,7 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     study_node_id_df["node"] = node
     output_filepath = os.path.join(output_dir, f"{study_id}_{node}_id_list.csv")
     study_node_id_df.to_csv(output_filepath, index=False)
-    
+
     return None
 
 
@@ -657,9 +657,7 @@ def parse_tsv_files(filelist: list) -> DataFrame:
     return_df = pd.DataFrame(columns=["study_id", "node", "tsv_count", "tsv_id"])
     for file in filelist:
         tsv_df = pd.read_csv(file, sep="\t", low_memory=False)
-        tsv_study_id = (
-            tsv_df["id"].str.split(pat="::", n=1, expand=True)[0].unique().tolist()[0]
-        )
+        tsv_study_id = os.path.basename(file)[:9]
         tsv_node = tsv_df["type"].unique().tolist()[0]
         tsv_id_list = tsv_df["id"].tolist()
         tsv_id_count = tsv_df.shape[0]
