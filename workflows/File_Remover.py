@@ -1,6 +1,7 @@
 import sys
 import os
 from prefect import flow, pause_flow_run, get_run_logger
+from typing import Literal
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -16,21 +17,22 @@ from src.file_remover import (
     create_matching_object_manifest,
 )
 
+DropDownChoices = Literal["yes", "no"]
 
 @flow(name="File Remover Pipeline", log_prints=True)
-def run_file_remover(do_you_have_tsv_manifest:str) -> None:
+def run_file_remover(do_you_have_tsv_manifest: DropDownChoices) -> None:
     """Pipeline that deletes file objects from a given tsv manifest or bucket folder path
 
     Args:
-        do_you_have_tsv_manifest (str): Do you have a manifest that contains a column of s3 object uri to be deleted. Acceptable value is either y or n
+        do_you_have_tsv_manifest (DropDownChoices): Do you have a manifest that contains a column of s3 object uri to be deleted
 
     Raises:
         ValueError: Value Error raised if the input parameter is invalid
-    """    
+    """
     logger = get_run_logger()
 
-    #if user_input.have_manifest == "y":
-    if do_you_have_tsv_manifest == "y":
+    # if user_input.have_manifest == "yes":
+    if do_you_have_tsv_manifest == "yes":
         logger.info("You have a manifest for File Remover")
         manifest_path_inputs = pause_flow_run(
             wait_for_input=ManifestPathInput.with_initial_data(
@@ -86,8 +88,8 @@ def run_file_remover(do_you_have_tsv_manifest:str) -> None:
         )
         logger.info("File Remover workflow finished!")
 
-    #else:
-    elif do_you_have_tsv_manifest == "n":
+    # else you don't have a tsv manifest
+    elif do_you_have_tsv_manifest == "no":
         logger.info(
             "You don't have a manifest. To proceed, please provide a prod bucket path and a staging bucket path"
         )
