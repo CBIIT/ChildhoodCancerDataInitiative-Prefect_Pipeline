@@ -38,7 +38,7 @@ RETURN f.dcf_indexd_guid as guid, f.acl as acl, f.authz as authz, f.file_url as 
         logger.info(f"Pulling from Node {node_label}")
         pull_data_per_node.submit(
             driver=driver,
-            data_to_csv=export_to_csv,
+            data_to_csv=export_to_csv_per_node,
             node_label=node_label,
             query_str=guid_meta_query,
             output_dir=out_dir,
