@@ -27,7 +27,7 @@ def pull_guid_meta_nodes_loop(
     guid_meta_query = f"""
 MATCH (s:study)-[*1..7]-(f:{{node_label}})
 WHERE s.dbgap_accession = "{phs_accession}"
-RETURN f.dcf_indexd_guid as guid, f.acl as acl, f.file_url as url, f.md5sum as md5sum, f.file_size as file_size
+RETURN f.dcf_indexd_guid as guid, f.acl as acl, f.authz as authz, f.file_url as url, f.md5sum as md5sum, f.file_size as file_size
 """
 
     for node_label in node_list:
@@ -42,7 +42,7 @@ RETURN f.dcf_indexd_guid as guid, f.acl as acl, f.file_url as url, f.md5sum as m
     return None
 
 
-@task(name="Create combined guid metadata tsv")
+@task(name="Create combined guid metadata tsv", log_prints=True)
 def concatenate_csv_files(folder_name: str) -> str:
     """Merge all csv files of guid meta from one study
 
@@ -60,7 +60,14 @@ def concatenate_csv_files(folder_name: str) -> str:
         else:
             file_df = pd.read_csv(file_list[index])
             combined_df = pd.concat([combined_df, file_df], ignore_index=True)
+
     phs_accession = folder_name.split("_")[0]
+    print(f"A total of file records in study {phs_accession}: {combined_df.shape[0]}")
+    # remove duplicates if any
+    combined_df.drop_duplicates(inplace=True)
+    print(
+        f"A Total of file records in study {phs_accession} after removing duplicates: {combined_df.shape[0]}"
+    )
     output_name = phs_accession + "_guid_meta_in_sandbox.tsv"
     combined_df.to_csv(output_name, sep="\t", index=False)
     return output_name
@@ -82,6 +89,7 @@ def check_guid_meta_against_indexd(file_name: str) -> str:
     md5sum_indexd = []
     url_indexd = []
     acl_indexd = []
+    authz_indexd = []
     size_indexd = []
 
     for guid in tsv_df["guid"].tolist():
@@ -92,21 +100,27 @@ def check_guid_meta_against_indexd(file_name: str) -> str:
             md5sum_indexd.append("")
             url_indexd.append("")
             acl_indexd.append("")
+            authz_indexd.append("")
             size_indexd.append("")
         else:
             record = records[0]
             guid_exist.append("Yes")
             acl_indexd.append(str(record["acl"]))  # this one should be a list
+            authz_indexd.append(str(record["authz"])) # this one should be a list
             url_indexd.append(record["urls"][0])  # assume there is only one url
             md5sum_indexd.append(record["hashes"]["md5"])
             size_indexd.append(record["size"])
     tsv_df["indexd_guid_exist"] = guid_exist
     tsv_df["indexd_acl"] = acl_indexd
+    tsv_df["indexd_authz"] = authz_indexd
     tsv_df["indexd_md5sum"] = md5sum_indexd
     tsv_df["indexd_url"] = url_indexd
     tsv_df["indexd_size"] = size_indexd
     tsv_df["acl_check"] = np.where(
         tsv_df["acl"] == tsv_df["indexd_acl"], "Pass", "Fail"
+    )
+    tsv_df["authz_check"] = np.where(
+        tsv_df["authz"] == tsv_df["indexd_authz"], "Pass", "Fail"
     )
     tsv_df["md5sum_check"] = np.where(
         tsv_df["md5sum"] == tsv_df["indexd_md5sum"], "Pass", "Fail"
@@ -259,4 +273,3 @@ def guid_validation_between_sandbox_indexd(
         newfile=unused_guid_file
     )
     logger.info("Finished!")
-    
