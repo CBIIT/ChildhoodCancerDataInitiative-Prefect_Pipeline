@@ -830,3 +830,25 @@ deployments:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
+
+  - name: guid-meta-check
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: src/sandbox_indexd_guid_validation.py:guid_validation_between_sandbox_indexd
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: 1.1.7
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
