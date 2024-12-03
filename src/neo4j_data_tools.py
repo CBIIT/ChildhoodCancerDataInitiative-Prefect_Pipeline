@@ -1,4 +1,4 @@
-from src.utils import get_date
+from src.utils import get_date, file_dl, folder_ul, get_time
 from dataclasses import dataclass
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
@@ -74,6 +74,13 @@ MATCH (study:study{{study_id:"{study_id}"}})-[*0..7]-(node:{node})
 RETURN node.id AS id
 """
     )
+    node_property_uniq_value: str = (
+        """
+MATCH (n:{node})
+RETURN DISTINCT n.{property} as uniqueValues
+"""
+    )
+
 
 # dataclass for stats query pipeline
 @dataclass
@@ -370,7 +377,9 @@ def cypher_query_parameters(
     )
 
 
-def export_to_csv_per_node(tx, node_label: str, cypher_query: str, output_directory: str):
+def export_to_csv_per_node(
+    tx, node_label: str, cypher_query: str, output_directory: str
+):
     """Export query results to csv file per node of all studies present in DB"""
     # Run the main Cypher query with the specified node_label
     result = tx.run(cypher_query.format(node_label=node_label))
@@ -395,9 +404,13 @@ def export_to_csv_per_node_per_study(
 ) -> None:
     """Export query results to csv file per node per study present in DB"""
     # Run the main Cypher query with the specified node_label
-    result = tx.run(cypher_query.format(node_label=node_label, study_accession=study_name))
+    result = tx.run(
+        cypher_query.format(node_label=node_label, study_accession=study_name)
+    )
 
-    output_file_path = os.path.join(output_directory, f"{study_name}_{node_label}_output.csv")
+    output_file_path = os.path.join(
+        output_directory, f"{study_name}_{node_label}_output.csv"
+    )
 
     with open(output_file_path, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
@@ -410,6 +423,27 @@ def export_to_csv_per_node_per_study(
         for record in result:
             csv_writer.writerow(record.values())
     return None
+
+
+def export_uniq_values_node_property(
+    tx, node: str, property: str, cypher_query: str, output_directory: str
+) -> None:
+    """Export query results of unique value of a property of a node from DB into a csv file"""
+    # run the cypher query with node name and property name
+    result = tx.run(cypher_query.format(node=node, property=property))
+    output_file_path = os.path.join(output_directory, f"{node}_{property}_output.csv")
+    with open(output_file_path, "w", newline="") as csvfile:
+        csv_writer = csv.writer(csvfile)
+
+        # Write header
+        header = result.keys()
+        csv_writer.writerow(header)
+
+        # Write data rows
+        for record in result:
+            csv_writer.writerow(record.values())
+    return None
+
 
 @task(name="Pull node data", task_run_name="pull_node_data_{node_label}")
 def pull_data_per_node(
@@ -429,16 +463,24 @@ def pull_data_per_node(
     return None
 
 
-@task(name="Pull node data per study", task_run_name="pull_node_data_{node_label}_{study_name}")
+@task(
+    name="Pull node data per study",
+    task_run_name="pull_node_data_{node_label}_{study_name}",
+)
 def pull_data_per_node_per_study(
-    driver, data_to_csv, study_name: str, node_label: str, query_str: str, output_dir: str
+    driver,
+    data_to_csv,
+    study_name: str,
+    node_label: str,
+    query_str: str,
+    output_dir: str,
 ) -> None:
     """Exports DB data by a given node and a given study"""
     session = driver.session()
     try:
-        #session.execute_read(
+        # session.execute_read(
         #    data_to_csv, study_name, node_label, query_str.format(node_label=node_label, study_accession=study_name), output_dir
-        #3)
+        # 3)
         session.execute_read(
             data_to_csv,
             study_name,
@@ -454,11 +496,56 @@ def pull_data_per_node_per_study(
     return None
 
 
+@task(
+    name="Pull unique value of property from a node",
+    task_run_name="pull_uniqvalue_{node}_{property}",
+)
+def pull_uniqvalue_node_property(
+    driver, data_to_csv, node: str, property: str, query_str: str, output_dir: str
+) -> None:
+    """Export unqiue values of a property of a node"""
+    session = driver.session()
+    try:
+        session.execute_read(data_to_csv, node, property, query_str, output_dir)
+    except:
+        traceback.print_exc()
+        raise
+    finally:
+        session.close()
+    return None
+
+
+@flow(log_prints=True)
+def pull_uniqvalue_property_loop(node_property: DataFrame, driver, logger) -> str:
+    """Loops through a dataframe which contains node and property names, and exports unique values from a neo4j DB"""
+    cypher_phrase = Neo4jCypherQuery.node_property_uniq_value
+    out_dir = "./unique_values_node_property"
+    os.makedirs(out_dir, exist_ok=True)
+    logger.info("Pulling unique values of ")
+    for _, row in node_property.iterrows():
+        node = row["node"]
+        property = row["property"]
+        logger.info(f"Pulling unique value of property {property} of node {node}")
+        pull_uniqvalue_node_property(
+            driver=driver,
+            data_to_csv=export_uniq_values_node_property,
+            node=node,
+            property=property,
+            query_str=cypher_phrase,
+            output_dir=out_dir,
+        )
+    return out_dir
+
+
 @flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
-def pull_nodes_loop(study_list: list, node_list: list, driver, out_dir: str, logger) -> None:
+def pull_nodes_loop(
+    study_list: list, node_list: list, driver, out_dir: str, logger
+) -> None:
     """Loops through a list of node labels and pulls data from a neo4j DB"""
     cypher_phrase = Neo4jCypherQuery.main_cypher_query_per_study_node
-    per_study_per_node_out_dir = os.path.join(os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study")
+    per_study_per_node_out_dir = os.path.join(
+        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study"
+    )
     print(per_study_per_node_out_dir)
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
@@ -483,7 +570,7 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
     Args:
         folder_dir (str): folder that contains query result csv per node per study
         node_list (list[str]): unique node list
-    """    
+    """
     # look at the out_dir and concatenate files for the same node,
     # so each node can have one csv file
     print("Below is the list of query results per study per node:")
@@ -491,18 +578,25 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
         os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study"
     )
     print(os.listdir(folder_dir))
-    files_list = [
-        os.path.join(folder_dir, i)
-        for i in os.listdir(folder_dir)
-    ]
+    files_list = [os.path.join(folder_dir, i) for i in os.listdir(folder_dir)]
 
     for node_label in node_list:
-        node_label_phrase =  "_" + node_label + "_output.csv"
-        node_file_list  = [i for i in files_list if node_label_phrase in i]
+        node_label_phrase = "_" + node_label + "_output.csv"
+        node_file_list = [i for i in files_list if node_label_phrase in i]
         print(f"files belongs to node {node_label}: {*node_file_list,}")
-        node_df = pd.DataFrame(columns=["startNodeId", "startNodeLabels", "startNodePropertyName", "startNodePropertyValue", "linkedNodeId", "linkedNodeLabels", "dbgap_accession"])
+        node_df = pd.DataFrame(
+            columns=[
+                "startNodeId",
+                "startNodeLabels",
+                "startNodePropertyName",
+                "startNodePropertyValue",
+                "linkedNodeId",
+                "linkedNodeLabels",
+                "dbgap_accession",
+            ]
+        )
         for j in node_file_list:
-            j_df= pd.read_csv(j)
+            j_df = pd.read_csv(j)
             print(j_df.columns)
             print(j_df.head())
             if j_df.shape[0] == 0:
@@ -990,7 +1084,11 @@ def query_db_to_csv(
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
     pull_nodes_loop(
-       study_list = unqiue_studies, node_list=unique_nodes, driver=driver, out_dir=output_dir, logger=logger
+        study_list=unqiue_studies,
+        node_list=unique_nodes,
+        driver=driver,
+        out_dir=output_dir,
+        logger=logger,
     )
 
     # combine all csv of same node into single file
@@ -1183,7 +1281,9 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
 
 # Functions for stats query pipeline
 @flow(log_prints=True)
-def stats_pull_graph_data_study(uri: str, username:str, password:str, query: str, query_topic: str):
+def stats_pull_graph_data_study(
+    uri: str, username: str, password: str, query: str, query_topic: str
+):
     with GraphDatabase.driver(uri, auth=(username, password)) as driver:
         with driver.session() as session:
             # Initialize an empty list to store dataframes
@@ -1228,8 +1328,11 @@ def stats_pull_graph_data_study(uri: str, username:str, password:str, query: str
             final_df = final_df.drop_duplicates()
     return final_df
 
+
 @flow(log_prints=True)
-def stats_pull_graph_data_nodes(uri:str, username:str, password:str, query: str, query_topic: str):
+def stats_pull_graph_data_nodes(
+    uri: str, username: str, password: str, query: str, query_topic: str
+):
     with GraphDatabase.driver(uri, auth=(username, password)) as driver:
         with driver.session() as session:
             # Initialize an empty list to store dataframes
@@ -1282,3 +1385,53 @@ def stats_pull_graph_data_nodes(uri:str, username:str, password:str, query: str,
             final_df = pd.concat([final_df, df_study], axis=0, ignore_index=True)
             final_df = final_df.drop_duplicates()
     return final_df
+
+
+@flow(name="Get unique values of properties", log_prints=True)
+def report_unique_values_properties(
+    bucket: str,
+    file_path: str,
+    runner: str,
+    uri_parameter: str = "uri",
+    username_parameter: str =  "username",
+    password_parameter: str = "password",
+) -> None:
+    """Read a file containing property names and report  unique values
+
+    Args:
+        bucket (str): bucket name
+        file_path (str): file path in the bucket containing two columns(node and property)
+        runner (str): unique runner name
+    """    
+    logger=get_run_logger()
+    # downlaod file
+    file_dl(bucket=bucket, filename=file_path)
+    filename = os.path.basename(file_path)
+    logger.info(f"Downloaded file {filename}")
+
+    # read file
+    file_df = pd.read_csv(filename, sep="\t")
+    logger.info(f"properties found in the file: {file_df.shape[0]}")
+
+    logger.info("Getting uri, username and password parameter from AWS")
+    # get uri, username, and password value
+    uri, username, password = cypher_query_parameters(
+        uri_parameter=uri_parameter,
+        username_parameter=username_parameter,
+        password_parameter=password_parameter,
+        logger=logger,
+    )
+
+    # driver instance
+    logger.info("Creating GraphDatabase driver using uri, username, and password")
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+
+    logger.info("")
+    # pull unique values of properties
+    out_folder = pull_uniqvalue_property_loop(driver=driver, node_property=file_df, logger=logger)
+
+    # upload folder to the bucket
+    bucket_folder =  runner + "/property_unique_value_pull" + get_time()
+    folder_ul(bucket=bucket, local_folder=out_folder, destination=bucket_folder, sub_folder="")
+
+    return None
