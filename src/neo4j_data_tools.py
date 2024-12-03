@@ -1479,7 +1479,7 @@ def consolidate_uniquevalue_props(folder_path: str, prop_file_path: str):
             (model_dict["Node"] == row_node) & (model_dict["Property"] == row_prop),
             "Type",
         ]
-        filename = row_node + "_" + row_prop + ".csv"
+        filename = row_node + "_" + row_prop + "_output.csv"
         node_prop_file = [i for i in file_list if filename in i][0]
         node_prop_df = pd.read_csv(node_prop_file)
         node_prop_uniqvalues = node_prop_df["uniqueValues"].tolist()
