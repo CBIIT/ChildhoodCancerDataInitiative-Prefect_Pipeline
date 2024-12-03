@@ -1,4 +1,11 @@
-from src.utils import get_date, file_dl, folder_ul, get_time
+from src.utils import (
+    get_date,
+    file_dl,
+    folder_ul,
+    get_time,
+    dl_ccdi_template,
+    CheckCCDI,
+)
 from dataclasses import dataclass
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
@@ -1393,7 +1400,7 @@ def report_unique_values_properties(
     file_path: str,
     runner: str,
     uri_parameter: str = "uri",
-    username_parameter: str =  "username",
+    username_parameter: str = "username",
     password_parameter: str = "password",
 ) -> None:
     """Read a file containing property names and report  unique values
@@ -1402,8 +1409,8 @@ def report_unique_values_properties(
         bucket (str): bucket name
         file_path (str): file path in the bucket containing two columns(node and property)
         runner (str): unique runner name
-    """    
-    logger=get_run_logger()
+    """
+    logger = get_run_logger()
     # downlaod file
     file_dl(bucket=bucket, filename=file_path)
     filename = os.path.basename(file_path)
@@ -1428,10 +1435,108 @@ def report_unique_values_properties(
 
     logger.info("")
     # pull unique values of properties
-    out_folder = pull_uniqvalue_property_loop(driver=driver, node_property=file_df, logger=logger)
+    out_folder = pull_uniqvalue_property_loop(
+        driver=driver, node_property=file_df, logger=logger
+    )
+
+    # consolidate terms
+    new_folder = consolidate_uniquevalue_props(
+        folder_path=out_folder, prop_file_path=filename
+    )
 
     # upload folder to the bucket
-    bucket_folder =  runner + "/property_unique_value_pull" + get_time()
-    folder_ul(bucket=bucket, local_folder=out_folder, destination=bucket_folder, sub_folder="")
+    bucket_folder = runner + "/property_unique_terms_pull" + get_time()
+    folder_ul(
+        bucket=bucket, local_folder=new_folder, destination=bucket_folder, sub_folder=""
+    )
 
     return None
+
+
+@flow(name="consolidate unique values of properties")
+def consolidate_uniquevalue_props(folder_path: str, prop_file_path: str):
+    """Parses values if the prop is found list type. Combines file type props into a single file
+
+    Args:
+        folder_path (str): folder path containing csv
+    """
+    file_list = [os.path.join(folder_path, i) for i in os.listdir(folder_path)]
+
+    # download manifest
+    manifest = dl_ccdi_template()
+    manifest_file = CheckCCDI(ccdi_manifest=manifest)
+    model_dict = manifest_file.get_dict_df()
+
+    node_df = pd.read_csv(prop_file_path, sep="\t")
+
+    # consolidate prop values
+    new_folder = "./uniq_terms_prop_report"
+    os.makedirs(new_folder, exist_ok=True)
+    for _, row in node_df.iterrows():
+        row_node = row["node"]
+        row_prop = row["property"]
+        prop_type = model_dict.loc[
+            (model_dict["Node"] == row_node) & (model_dict["Property"] == row_prop),
+            "Type",
+        ]
+        filename = row_node + "_" + row_prop + ".csv"
+        node_prop_file = [i for i in file_list if filename in i][0]
+        node_prop_df = pd.read_csv(node_prop_file)
+        node_prop_uniqvalues = node_prop_df["uniqueValues"].tolist()
+        if "array" in prop_type:
+            unique_term = []
+            for i in node_prop_uniqvalues:
+                if ";" in i:
+                    i_list = i.split(";")
+                    for j in i_list:
+                        if j not in unique_term:
+                            unique_term.append(j)
+                        else:
+                            pass
+                else:
+                    if i not in unique_term:
+                        unique_term.append(i)
+                    else:
+                        pass
+        else:
+            unique_term = node_prop_uniqvalues
+        new_filename = row_node + "-" + row_prop + ".tsv"
+        unique_term_df = pd.DataFrame(columns=["unique_terms"])
+        unique_term_df["unique_terms"] = unique_term
+        new_filename_path = os.path.join(new_folder, new_filename)
+        unique_term_df.to_csv(new_filename_path, index=False, sep="\t")
+
+    # consolidate file type terms
+    file_props = [
+        "data_category",
+        "file_type",
+        "file_mapping_level",
+        "library_selection",
+        "library_source_material",
+        "library_strategy",
+        "library_source_molecule",
+    ]
+    tsv_filelist = [os.path.join(new_folder, i) for i in os.listdir(new_folder)]
+    for h in file_props:
+        print(h)
+        h_filelist = [j for j in tsv_filelist if h+".tsv" in j]
+        print(f"{h} prop files: {*h_filelist,}")
+        h_filename = "file_type_node-" + h + ".tsv"
+        file_uniq_terms = []
+        for k in h_filelist:
+            k_df = pd.read_csv(k, sep="\t")
+            k_term_list = k_df["unique_terms"].tolist()
+            for g in k_term_list:
+                if g not in file_uniq_terms:
+                    file_uniq_terms.append(g)
+                else:
+                    pass
+        file_uniq_terms_df = pd.DataFrame(columns=["unique_terms"])
+        file_uniq_terms_df["unique_terms"] = file_uniq_terms
+        file_uniq_terms_df.to_csv(os.path.join(new_folder, h_filename), sep="\t", index=False)
+
+        # remove file_props files for 6 nodes
+        for k in h_filelist:
+            os.remove(k)
+
+    return  new_folder
