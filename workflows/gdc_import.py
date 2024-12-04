@@ -16,6 +16,7 @@ from deepdiff import DeepDiff
 import pandas as pd
 from datetime import datetime
 
+import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
 from src.utils import (
