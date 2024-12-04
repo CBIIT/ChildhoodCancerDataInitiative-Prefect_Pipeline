@@ -12,9 +12,9 @@ import sys
 import os
 import argparse
 import logging
+from deepdiff import DeepDiff
 import pandas as pd
 from datetime import datetime
-from deepdiff import DeepDiff
 
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
