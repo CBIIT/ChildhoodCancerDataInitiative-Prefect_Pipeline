@@ -46,6 +46,9 @@ def read_json(dir_path: str):
 
 def loader(dir_path: str, node_type: str):
     """Checks that JSON file is a list of dicts and all nodes are of expected type and node type."""
+
+    runner_logger = get_run_logger()
+
     nodes = read_json(dir_path)
 
     if type(nodes) != list:
@@ -80,6 +83,8 @@ def read_token(dir_path: str):
 
 def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     """Query and return all nodes already submitted to GDC for project and node type"""
+    runner_logger = get_run_logger()
+
     offset_returns = []
     endpt = "https://api.gdc.cancer.gov/submission/graphql"
     null = '' #None
@@ -118,6 +123,8 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 
 def query_entities(node_uuids: list, project_id: list, token: list):
     """Query entity metadata from GDC to perform comparisons for nodes to update"""
+
+    runner_logger = get_run_logger()
 
     gdc_node_metadata = {}
 
@@ -183,6 +190,8 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
 def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
     """ Determine if nodes in submission file are new entities or already exist in GDC"""
 
+    runner_logger = get_run_logger()
+
     # retrieve node entities already in GDC
     gdc_nodes = retrieve_current_nodes(project_id, node_type, token)
 
@@ -235,6 +244,8 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
 def response_recorder(responses: list):
     """Parse and record responses"""
 
+    runner_logger = get_run_logger()
+
     errors = []
     success_uuid = []
 
@@ -264,6 +275,8 @@ def response_recorder(responses: list):
 
 def submit(nodes: list, project_id: str, token: str, submission_type: str):
     """Submission of new node entities with POST request"""
+
+    runner_logger = get_run_logger()
 
     assert submission_type in ['new', 'update'], "Invalid value. Allowed values: new, update"
 
@@ -354,7 +367,7 @@ def runner(
     new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
 
     #get time for file outputs
-    df = get_time()
+    dt = get_time()
 
     # submit nodes
     if new_nodes:
