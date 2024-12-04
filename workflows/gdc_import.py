@@ -265,8 +265,6 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
         # json comparison here
         for node in check_nodes:
             if json_compare(node, gdc_entities[node["submitter_id"]]):
-                print("submission file node\n", node)
-                print("\n GDC node\n", gdc_entities[node["submitter_id"]])
                 update_nodes.append(node)
             else:
                 pass  # if nodes are the same, ignore
@@ -372,7 +370,7 @@ def get_secret():
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         raise e
-    secret = get_secret_value_response["SecretString"]
+    secret = get_secret_value_response["gdc-token"]
 
     return secret
 
@@ -414,38 +412,17 @@ def runner(
     # check the manifest version before the workflow starts
     file_name = os.path.basename(file_path)
 
+    """# get token
+                pretoken = get_secret().strip()
+                try:
+                    token = json.loads(pretoken)['gdc-token']
+                except:
+                    runner_logger.warning("incorrect token parsing")"""
     # get token
-    pretoken = get_secret().strip()
-    try:
-        token = json.loads(pretoken)['gdc-token']
-    except:
-        runner_logger.warning("incorrect token parsing")
+    token = get_secret().strip()
 
     # load in nodes file
     nodes = loader(file_name, node_type)
-
-    # auth TESTING
-
-    endpt = "https://api.gdc.cancer.gov/submission/graphql"
-    null = ""  # None
-
-    query1 = (
-            "{\n\t"
-            + node_type
-            + '(project_id: "'
-            + project_id
-            + '", first: '
-            + str(1)
-            + ", offset:"
-            + str(1)
-            + "){\n\t\tsubmitter_id\n\t\tid\n\t}\n}"
-        )
-
-    query2 = {"query": query1, "variables": null}
-
-    response = requests.post(endpt, json=query2, headers={"X-Auth-Token": token})
-
-    print(response.text)
 
     # parse nodes into new and update nodes
     new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
