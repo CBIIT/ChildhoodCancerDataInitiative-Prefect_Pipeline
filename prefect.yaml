@@ -852,8 +852,6 @@ deployments:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
-
-
   # base metadata
   - name: ccdi-gdc-import
     version: null
@@ -887,4 +885,3 @@ deployments:
       name: ccdi-curation-8gb
       work_queue_name: null
       job_variables: {}
-
