@@ -415,7 +415,12 @@ def runner(
     file_name = os.path.basename(file_path)
 
     # get token
+    token = None
     token = get_secret()
+    if token:
+        runner_logger.info("YES TOKEN")
+    else:
+        runner_logger.error("NOOOO TOKEN")
 
     # load in nodes file
     nodes = loader(file_name, node_type)
