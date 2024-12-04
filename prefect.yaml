@@ -865,9 +865,9 @@ deployments:
       bucket: "ccdi-validation"
       file_path: ""
       runner: ""
-      token: "default"
-      project_id: "CCDI-MCI"
       node_type: "case"
+      secret_key_name: "gdc-token"
+      project_id: "CCDI-MCI"
 
     # pull action to overwrite from file pull action
     pull:

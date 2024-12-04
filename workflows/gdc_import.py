@@ -358,7 +358,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
     return response_recorder(responses)
 
 
-def get_secret():
+def get_secret(secret_key_name):
     secret_name = "ccdi/nonprod/inventory/gdc-token"
     region_name = "us-east-1"
     # Create a Secrets Manager client
@@ -370,9 +370,8 @@ def get_secret():
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         raise e
-    secret = get_secret_value_response["gdc-token"]
-
-    return secret
+    
+    return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
 
 
 @flow(
@@ -386,7 +385,7 @@ def runner(
     project_id: str,
     node_type: str,
     runner: str,
-    token: str,
+    secret_key_name: str,
 ):
     """CCDI data curation pipeline
 
@@ -394,7 +393,7 @@ def runner(
         bucket (str): Bucket name of where the manifest is located in and the output goes to
         file_path (str): File path of the CCDI manifest
         runner (str): Unique runner name
-        token (str): Authentication token for GDC submission
+        secret_key_name (str): Authentication token string secret key name for GDC submission
         project_id (str): GDC Project ID to submit to (e.g. CCDI-MCI, TARGET-AML)
         node_type (str): The GDC node type is being submitted
 
@@ -419,7 +418,7 @@ def runner(
                 except:
                     runner_logger.warning("incorrect token parsing")"""
     # get token
-    token = get_secret().strip()
+    token = get_secret(secret_key_name).strip()
 
     # load in nodes file
     nodes = loader(file_name, node_type)
