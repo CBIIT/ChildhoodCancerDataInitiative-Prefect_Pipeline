@@ -374,6 +374,8 @@ def get_secret():
         raise e
     secret = get_secret_value_response["SecretString"]
 
+    return secret
+
 
 @flow(
     name="GDC Import",
