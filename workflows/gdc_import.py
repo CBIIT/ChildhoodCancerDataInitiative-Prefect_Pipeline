@@ -26,15 +26,6 @@ from src.utils import (
     file_ul
 )
 
-##############
-#
-# Logging
-#
-##############
-
-
-#log any additional errors to logfile 
-sys.stderr = open(logfile, "a")
 
 ##############
 #
