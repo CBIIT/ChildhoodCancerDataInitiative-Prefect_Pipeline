@@ -16,6 +16,15 @@ import pandas as pd
 from datetime import datetime
 from deepdiff import DeepDiff
 
+from botocore.exceptions import ClientError
+from prefect import flow, get_run_logger
+from src.utils import (
+    get_time,
+    get_date,
+    file_dl,
+    folder_ul,
+    file_ul
+)
 
 ##############
 #
@@ -23,10 +32,6 @@ from deepdiff import DeepDiff
 #
 ##############
 
-
-logger = logging.getLogger(__name__)
-logfile = datetime.today().strftime("%Y%m%d_%H%M%S")+'.log'
-logging.basicConfig(filename=logfile, encoding='utf-8', filemode='w', level=logging.INFO)
 
 #log any additional errors to logfile 
 sys.stderr = open(logfile, "a")
@@ -59,15 +64,15 @@ def loader(dir_path: str, node_type: str):
 
 	for node in nodes:
 		if node['type'] != node_type:
-			logger.warning(f" Node with submitter_id {node['submitter_id']} has type {node['type']}, {node_type} is expected. Removing from node import list.")
+			runner_logger.warning(f" Node with submitter_id {node['submitter_id']} has type {node['type']}, {node_type} is expected. Removing from node import list.")
 		elif type(node) != dict:
-			logger.warning(f" Node with submitter_id {node['submitter_id']} type != dict. Removing from node import list.")
+			runner_logger.warning(f" Node with submitter_id {node['submitter_id']} type != dict. Removing from node import list.")
 		else:
 			parsed_nodes.append(node)
 
 	diff = len(nodes) - len(parsed_nodes)
 
-	logger.info(f" {str(diff)} nodes were parsed from file for submission.")
+	runner_logger.info(f" {str(diff)} nodes were parsed from file for submission.")
 
 	return parsed_nodes
 
@@ -91,8 +96,8 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 	# may need to increase max number to avoid missing data if more data added in future
 	for offset in range(0, 20000, 1000): 
 		
-		# print to logger that running query
-		logger.info(f" Checking for {node_type} nodes already present in {project_id}, offset is {offset}")
+		# print to runner_logger that running query
+		runner_logger.info(f" Checking for {node_type} nodes already present in {project_id}, offset is {offset}")
 
 		# format query to be read into GraphiQL endpoint
 		query1 = '{\n\t'+node_type+'(project_id: \"'+project_id+'\", first: '+str(1000)+', offset:'+str(offset)+'){\n\t\tsubmitter_id\n\t\tid\n\t}\n}'
@@ -105,7 +110,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 		try:
 			json.loads(response.text)['data'][node_type]
 		except: 
-			logger.error(f" Response is malformed: {str(json.loads(response.text))} for query {str(query2)}")
+			runner_logger.error(f" Response is malformed: {str(json.loads(response.text))} for query {str(query2)}")
 
 		# check if anymore hits, if not break to speed up process
 
@@ -137,7 +142,7 @@ def query_entities(node_uuids: list, project_id: list, token: list):
 		try:
 			entities = json.loads(temp.text)['entities']
 		except:
-			logger.error(f" Entities request output malformed: {json.loads(temp.text)}, for request {api+uuids_fmt}")
+			runner_logger.error(f" Entities request output malformed: {json.loads(temp.text)}, for request {api+uuids_fmt}")
 			sys.exit(1)
 
 		for entity in entities:
@@ -227,7 +232,7 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
 			else:
 				pass #if nodes are the same, ignore
 
-		logger.info(f" Out of {len(nodes)} nodes, {len(new_nodes)} are new entities and {len(check_nodes)} are previously submitted entities; of the previously submitted entities, {len(update_nodes)} need to be updated.")
+		runner_logger.info(f" Out of {len(nodes)} nodes, {len(new_nodes)} are new entities and {len(check_nodes)} are previously submitted entities; of the previously submitted entities, {len(update_nodes)} need to be updated.")
 
 	else:
 		update_nodes = []
@@ -247,7 +252,7 @@ def response_recorder(responses: list):
 		elif '20' in str(node[1]):
 			success_uuid.append([node[0], json.loads(node[2])['entities'][0]['id'], str(node[2])])
 		else:
-			logger.warning(f" Unknown submission response code and status, {node[1]} for submitter_id {node[0]}")
+			runner_logger.warning(f" Unknown submission response code and status, {node[1]} for submitter_id {node[0]}")
 
 	if errors:
 		error_df = pd.DataFrame(errors)
@@ -280,103 +285,102 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
 	if submission_type == 'new':
 		for node in nodes:
 			res = requests.post(url = api, json = node, headers={'X-Auth-Token': token, "Content-Type": "application/json"})
-			logger.info(f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}")
+			runner_logger.info(f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}")
 			responses.append([node['submitter_id'], res.status_code, res.text])
 	elif submission_type == 'update':
 		for node in nodes:
 			res = requests.put(url = api, json = node, headers={'X-Auth-Token': token, "Content-Type": "application/json"})
-			logger.info(f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}")
+			runner_logger.info(f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}")
 			responses.append([node['submitter_id'], res.status_code, res.text])
 	
 	return response_recorder(responses)
 
-def main():
-	start_time = datetime.now()
+def get_secret():
+    secret_name = "ccdi/nonprod/inventory/gdc-token"
+    region_name = "us-east-1"
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(
+        service_name='secretsmanager',
+        region_name=region_name
+    )
+    try:
+        get_secret_value_response = client.get_secret_value(
+            SecretId=secret_name
+        )
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+    secret = get_secret_value_response['SecretString']
 
-	logger.info(">>> Running GDC_IMPORT.py ....")
+@flow(
+    name="GDC Import",
+    log_prints=True,
+    flow_run_name="{runner}_" + f"{get_time()}",
+)
 
-	parser = argparse.ArgumentParser(
-		prog="GDC_IMPORT.py",
-		description="This script will take a JSON file of GDC formatted nodes and submit them to GDC API /submission endpoint.",
-	)
+def runner(
+    bucket: str,
+    file_path: str,
+    runner: str,
+    token: str,
+    project_id: str,
+    node_type: str
+):
+    """CCDI data curation pipeline
 
-	# remove built in argument group
-	parser._action_groups.pop() 
+    Args:
+        bucket (str): Bucket name of where the manifest is located in and the output goes to
+        file_path (str): File path of the CCDI manifest
+        runner (str): Unique runner name
+        token (str): Authentication token for GDC submission
+        project_id (str): GDC Project ID to submit to (e.g. CCDI-MCI, TARGET-AML)
+        node_type (str): The GDC node type is being submitted
+                
+    Raises:
+        ValueError: Value Error occurs when the pipeline fails to proceed.
+    """
+    # create a logging object
+    runner_logger = get_run_logger()
 
-	# create a required arguments group
-	required_arg = parser.add_argument_group("required arguments")
+    runner_logger.info(">>> Running GDC_IMPORT.py ....")
 
-	#required args are:  node types?
+    # download the file 
+    file_dl(bucket, file_path)
 
-	required_arg.add_argument(
-		"-f",
-		"--file_path",
-		type=str,
-		help="Path to JSON file containing GDC Data Dictionary formatted nodes for submission.",
-		required=True,
-	)
+    # check the manifest version before the workflow starts
+    file_name = os.path.basename(file_path)
 
-	required_arg.add_argument(
-		"-p",
-		"--project_id",
-		type=str,
-		help="Project ID of the project to submit nodes to (e.g. CCDI-MCI).",
-		required=True,
-	)
+    #get token
+    token = get_secret()
 
-	required_arg.add_argument(
-		"-t",
-		"--token",
-		type=str,
-		help="Path to file containing GDC authorization token to submit to GDC.",
-		required=True,
-	)
-
-	required_arg.add_argument(
-		"-n",
-		"--node_type",
-		type=str,
-		help="The GDC node entity type of the nodes in the submission file.",
-		required=True,
-	)
-
-	args = parser.parse_args()
-
-	# read in args
-	file_path = args.file_path
-	project_id = args.project_id
-	token = read_token(args.token)
-	node_type = args.node_type
-
-	# load in nodes file
-	nodes = loader(file_path, node_type)
+    # load in nodes file
+	nodes = loader(file_name, node_type)
 
 	# parse nodes into new and update nodes
 	new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
 
-	dt = datetime.today().strftime("%Y%m%d_%H%M%S")
+	#get time for file outputs
+	df = get_time()
 
 	# submit nodes
 	if new_nodes:
 		error_df, success_uuid_df = submit(new_nodes, project_id, token, 'new')
 
-		error_df.to_csv(f"{project_id}_{node_type}_{dt}_NEW_NODES_SUBMISSION_ERRORS.tsv", sep="\t", index=False)
-		success_uuid_df.to_csv(f"{project_id}_{node_type}_{dt}_NEW_NODES_SUBMISSION_SUCCESS.tsv", sep="\t", index=False)
+		error_df.to_csv(f"{project_id}_{node_type}_{dt}/NEW_NODES_SUBMISSION_ERRORS.tsv", sep="\t", index=False)
+		success_uuid_df.to_csv(f"{project_id}_{node_type}_{dt}/NEW_NODES_SUBMISSION_SUCCESS.tsv", sep="\t", index=False)
 
 	if update_nodes:
 		error_df, success_uuid_df = submit(update_nodes, project_id, token, 'update')
 
-		error_df.to_csv(f"{project_id}_{node_type}_{dt}_UPDATED_NODES_SUBMISSION_ERRORS.tsv", sep="\t", index=False)
-		success_uuid_df.to_csv(f"{project_id}_{node_type}_{dt}_UPDATED_NODES_SUBMISSION_SUCCESS.tsv", sep="\t", index=False)
+		error_df.to_csv(f"{project_id}_{node_type}_{dt}/UPDATED_NODES_SUBMISSION_ERRORS.tsv", sep="\t", index=False)
+		success_uuid_df.to_csv(f"{project_id}_{node_type}_{dt}/UPDATED_NODES_SUBMISSION_SUCCESS.tsv", sep="\t", index=False)
 
 
-	end_time = datetime.now()
-	time_diff = end_time - start_time
-	logger.info(" Time to Completion: " + str(time_diff))
-	# OTHER STATS?
-
-if __name__ == "__main__":
-	main()
-
-
-logging.shutdown()
+	# folder upload
+	folder_ul(
+		local_folder=f"{project_id}_{node_type}_{dt}",
+		bucket=bucket,
+		destination=runner+f"/{project_id}_{node_type}_{dt}",
+		sub_folder="")
