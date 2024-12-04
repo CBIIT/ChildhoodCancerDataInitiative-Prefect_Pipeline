@@ -1,0 +1,382 @@
+""" Script to submit node metadata to the GDC """
+
+##############
+#
+# Env. Setup
+#
+##############
+
+import requests
+import json
+import sys
+import os
+import argparse
+import logging
+import pandas as pd
+from datetime import datetime
+from deepdiff import DeepDiff
+
+
+##############
+#
+# Logging
+#
+##############
+
+
+logger = logging.getLogger(__name__)
+logfile = datetime.today().strftime("%Y%m%d_%H%M%S")+'.log'
+logging.basicConfig(filename=logfile, encoding='utf-8', filemode='w', level=logging.INFO)
+
+#log any additional errors to logfile 
+sys.stderr = open(logfile, "a")
+
+##############
+#
+# Functions
+#
+##############
+
+def read_json(dir_path: str):
+	"""Reads in submission JSON file and returns a list of dicts, checks node types.""" 
+	try:
+		nodes = json.load(open(dir_path))
+	except:
+		logging.error(f" Cannot read in JSON file {dir_path}")
+		sys.exit(1)
+
+	return nodes
+
+def loader(dir_path: str, node_type: str):
+	"""Checks that JSON file is a list of dicts and all nodes are of expected type and node type."""
+	nodes = read_json(dir_path)
+
+	if type(nodes) != list:
+		logging.error(f" JSON file {dir_path} not a list of dicts.")
+		sys.exit(1)
+
+	parsed_nodes = []
+
+	for node in nodes:
+		if node['type'] != node_type:
+			logger.warning(f" Node with submitter_id {node['submitter_id']} has type {node['type']}, {node_type} is expected. Removing from node import list.")
+		elif type(node) != dict:
+			logger.warning(f" Node with submitter_id {node['submitter_id']} type != dict. Removing from node import list.")
+		else:
+			parsed_nodes.append(node)
+
+	diff = len(nodes) - len(parsed_nodes)
+
+	logger.info(f" {str(diff)} nodes were parsed from file for submission.")
+
+	return parsed_nodes
+
+def read_token(dir_path: str):
+	"""Read in token file string"""
+	try:
+		token = open(dir_path).read().strip()
+	except ValueError as e:
+		logging.error(f" Error reading token file {dir_path}: {e}")
+		sys.exit(1)
+
+	return token
+
+def retrieve_current_nodes(project_id: str, node_type: str, token: str):
+	"""Query and return all nodes already submitted to GDC for project and node type"""
+	offset_returns = []
+	endpt = "https://api.gdc.cancer.gov/submission/graphql"
+	null = '' #None
+
+	# need to do run queries 1000 at a time to avoid time outs
+	# may need to increase max number to avoid missing data if more data added in future
+	for offset in range(0, 20000, 1000): 
+		
+		# print to logger that running query
+		logger.info(f" Checking for {node_type} nodes already present in {project_id}, offset is {offset}")
+
+		# format query to be read into GraphiQL endpoint
+		query1 = '{\n\t'+node_type+'(project_id: \"'+project_id+'\", first: '+str(1000)+', offset:'+str(offset)+'){\n\t\tsubmitter_id\n\t\tid\n\t}\n}'
+		query2 = {"query" : query1,"variables": null}
+
+		# retrieve response
+		response = requests.post(endpt, json = query2, headers={'X-Auth-Token': token})
+
+		# check if malformed
+		try:
+			json.loads(response.text)['data'][node_type]
+		except: 
+			logger.error(f" Response is malformed: {str(json.loads(response.text))} for query {str(query2)}")
+
+		# check if anymore hits, if not break to speed up process
+
+		if len(json.loads(response.text)['data'][node_type]) == 1000:
+			offset_returns += json.loads(response.text)['data'][node_type]
+		elif len(json.loads(response.text)['data'][node_type]) < 1000:
+			offset_returns += json.loads(response.text)['data'][node_type]
+			break
+		else: # i.e. len(json.loads(response.text)['data'][node_type]) == 0
+			break
+
+	return offset_returns
+
+def query_entities(node_uuids: list, project_id: list, token: list):
+	"""Query entity metadata from GDC to perform comparisons for nodes to update"""
+
+	gdc_node_metadata = {}
+
+	program = project_id.split("-")[0]
+	project = "-".join(project_id.split("-")[1:])
+
+	api = f"https://api.gdc.cancer.gov/submission/{program}/{project}/entities/"
+
+	uuids = [node['id'] for node in node_uuids]
+
+	for offset in range(0, len(uuids), 30): #query 30 at a time
+		uuids_fmt = ",".join(uuids[offset:offset+30])
+		temp = requests.get(api+uuids_fmt, headers={'X-Auth-Token': token})
+		try:
+			entities = json.loads(temp.text)['entities']
+		except:
+			logger.error(f" Entities request output malformed: {json.loads(temp.text)}, for request {api+uuids_fmt}")
+			sys.exit(1)
+
+		for entity in entities:
+
+			#remove GDC internal fields and handle null values of optional fields
+			entity_parse = entity_parser(entity['properties']) 
+
+			gdc_node_metadata[entity_parse['submitter_id']] = entity_parse
+
+	return gdc_node_metadata
+
+def entity_parser(node: dict):
+	"""Parse out unnecessary GDC internal fields and handle null values"""
+
+	del node['batch_id']
+	del node['state']
+	del node['projects']
+	del node['created_datetime']
+	del node['updated_datetime']
+	del node['id']
+
+	addn_rem = [] # optional props that have no value submitted to GDC currently (set as None)
+
+	for k, v in node.items():	
+		if v == None:
+			addn_rem.append(k)
+
+	for prop in addn_rem:
+		del node[prop]
+	
+	# add in projects.code to mimic submission file for case nodes
+	if node['type'] == "case":
+		node['projects'] = {"code" : "-".join(node['project_id'].split("-")[1:])}
+
+	return node
+
+def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
+	"""Compare node entity metadata; if node in submission file is different than in GDC
+	then slate for import, otherwise ignore; use DeepDiff"""
+
+	if DeepDiff(submit_file_metadata, gdc_node_metadata, ignore_order=True):
+		return True
+	else:
+		return False
+
+def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
+	""" Determine if nodes in submission file are new entities or already exist in GDC"""
+
+	# retrieve node entities already in GDC
+	gdc_nodes = retrieve_current_nodes(project_id, node_type, token)
+
+	# submitter_ids of node entities already in GDC
+	gdc_nodes_sub_ids = [node['submitter_id'] for node in gdc_nodes]
+
+	# submitter_ids of node entities in submission file
+	submission_nodes_sub_ids = [node['submitter_id'] for node in nodes]
+
+	# parse new node entities that do not exist in GDC yet by submitter_id
+	new_nodes = [node for node in nodes if node['submitter_id'] in \
+	list(set(submission_nodes_sub_ids) - set(gdc_nodes_sub_ids))]
+
+	# parse node entities in submission file that already exist in GDC
+	check_nodes = [node for node in nodes if node['submitter_id'] in \
+	list(set(submission_nodes_sub_ids) & set(gdc_nodes_sub_ids))]
+
+
+	# assess if node entities in submission file that already exist in GDC 
+	# need to be updated in GDC (i.e. entities in file and GDC are different)
+	
+	if check_nodes:
+
+		update_nodes = []
+
+		# grab UUIDS
+		check_nodes_ids = [node for node in gdc_nodes if node['submitter_id'] in \
+		[i['submitter_id'] for i in check_nodes]]
+		
+		# get GDC version of node entities, returns a dict with keys as submitter_id
+		gdc_entities = query_entities(check_nodes_ids, project_id, token)
+
+		#json comparison here 
+		for node in check_nodes:
+			if json_compare(node, gdc_entities[node['submitter_id']]):
+				print("submission file node\n", node)
+				print("\n GDC node\n", gdc_entities[node['submitter_id']])
+				update_nodes.append(node)
+			else:
+				pass #if nodes are the same, ignore
+
+		logger.info(f" Out of {len(nodes)} nodes, {len(new_nodes)} are new entities and {len(check_nodes)} are previously submitted entities; of the previously submitted entities, {len(update_nodes)} need to be updated.")
+
+	else:
+		update_nodes = []
+
+	# new nodes submit POST, update nodes submit PUT
+	return new_nodes, update_nodes
+
+def response_recorder(responses: list):
+	"""Parse and record responses"""
+
+	errors = []
+	success_uuid = []
+
+	for node in responses:
+		if '40' in str(node[1]):
+			errors.append([str(i) for i in node])
+		elif '20' in str(node[1]):
+			success_uuid.append([node[0], json.loads(node[2])['entities'][0]['id'], str(node[2])])
+		else:
+			logger.warning(f" Unknown submission response code and status, {node[1]} for submitter_id {node[0]}")
+
+	if errors:
+		error_df = pd.DataFrame(errors)
+		error_df.columns = ['submitter_id', 'status_code', 'message']
+	else:
+		error_df = pd.DataFrame(columns=['submitter_id', 'status_code', 'message'])
+
+	if success_uuid:
+		success_uuid_df = pd.DataFrame(success_uuid)
+		success_uuid_df.columns = ['submitter_id', 'uuid', 'message']
+	else:
+		success_uuid_df = pd.DataFrame(columns=['submitter_id', 'uuid', 'message'])
+
+
+
+	return error_df, success_uuid_df
+
+def submit(nodes: list, project_id: str, token: str, submission_type: str):
+	"""Submission of new node entities with POST request"""
+
+	assert submission_type in ['new', 'update'], "Invalid value. Allowed values: new, update"
+
+	responses = []
+
+	program = project_id.split("-")[0]
+	project = "-".join(project_id.split("-")[1:])
+
+	api = f"https://api.gdc.cancer.gov/submission/{program}/{project}/"
+
+	if submission_type == 'new':
+		for node in nodes:
+			res = requests.post(url = api, json = node, headers={'X-Auth-Token': token, "Content-Type": "application/json"})
+			logger.info(f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}")
+			responses.append([node['submitter_id'], res.status_code, res.text])
+	elif submission_type == 'update':
+		for node in nodes:
+			res = requests.put(url = api, json = node, headers={'X-Auth-Token': token, "Content-Type": "application/json"})
+			logger.info(f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}")
+			responses.append([node['submitter_id'], res.status_code, res.text])
+	
+	return response_recorder(responses)
+
+def main():
+	start_time = datetime.now()
+
+	logger.info(">>> Running GDC_IMPORT.py ....")
+
+	parser = argparse.ArgumentParser(
+		prog="GDC_IMPORT.py",
+		description="This script will take a JSON file of GDC formatted nodes and submit them to GDC API /submission endpoint.",
+	)
+
+	# remove built in argument group
+	parser._action_groups.pop() 
+
+	# create a required arguments group
+	required_arg = parser.add_argument_group("required arguments")
+
+	#required args are:  node types?
+
+	required_arg.add_argument(
+		"-f",
+		"--file_path",
+		type=str,
+		help="Path to JSON file containing GDC Data Dictionary formatted nodes for submission.",
+		required=True,
+	)
+
+	required_arg.add_argument(
+		"-p",
+		"--project_id",
+		type=str,
+		help="Project ID of the project to submit nodes to (e.g. CCDI-MCI).",
+		required=True,
+	)
+
+	required_arg.add_argument(
+		"-t",
+		"--token",
+		type=str,
+		help="Path to file containing GDC authorization token to submit to GDC.",
+		required=True,
+	)
+
+	required_arg.add_argument(
+		"-n",
+		"--node_type",
+		type=str,
+		help="The GDC node entity type of the nodes in the submission file.",
+		required=True,
+	)
+
+	args = parser.parse_args()
+
+	# read in args
+	file_path = args.file_path
+	project_id = args.project_id
+	token = read_token(args.token)
+	node_type = args.node_type
+
+	# load in nodes file
+	nodes = loader(file_path, node_type)
+
+	# parse nodes into new and update nodes
+	new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
+
+	dt = datetime.today().strftime("%Y%m%d_%H%M%S")
+
+	# submit nodes
+	if new_nodes:
+		error_df, success_uuid_df = submit(new_nodes, project_id, token, 'new')
+
+		error_df.to_csv(f"{project_id}_{node_type}_{dt}_NEW_NODES_SUBMISSION_ERRORS.tsv", sep="\t", index=False)
+		success_uuid_df.to_csv(f"{project_id}_{node_type}_{dt}_NEW_NODES_SUBMISSION_SUCCESS.tsv", sep="\t", index=False)
+
+	if update_nodes:
+		error_df, success_uuid_df = submit(update_nodes, project_id, token, 'update')
+
+		error_df.to_csv(f"{project_id}_{node_type}_{dt}_UPDATED_NODES_SUBMISSION_ERRORS.tsv", sep="\t", index=False)
+		success_uuid_df.to_csv(f"{project_id}_{node_type}_{dt}_UPDATED_NODES_SUBMISSION_SUCCESS.tsv", sep="\t", index=False)
+
+
+	end_time = datetime.now()
+	time_diff = end_time - start_time
+	logger.info(" Time to Completion: " + str(time_diff))
+	# OTHER STATS?
+
+if __name__ == "__main__":
+	main()
+
+
+logging.shutdown()
