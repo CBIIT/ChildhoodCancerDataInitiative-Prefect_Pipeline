@@ -419,6 +419,8 @@ def runner(
     token = get_secret()
     if token:
         runner_logger.info("YES TOKEN")
+        runner_logger.info(len(token))
+        runner_logger.info(type(token))
     else:
         runner_logger.error("NOOOO TOKEN")
 
