@@ -416,7 +416,10 @@ def runner(
 
     # get token
     pretoken = get_secret().strip()
-    token = json.loads(pretoken)['gdc-token']
+    try:
+        token = json.loads(pretoken)['gdc-token']
+    except:
+        runner_logger.warning("incorrect token parsing")
 
     # load in nodes file
     nodes = loader(file_name, node_type)
