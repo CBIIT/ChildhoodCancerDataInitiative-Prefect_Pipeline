@@ -93,7 +93,11 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 
     # need to do run queries 1000 at a time to avoid time outs
     # may need to increase max number to avoid missing data if more data added in future
-    for offset in range(0, 20000, 1000):
+    
+    #number nodes to query 
+    n_query = 500
+
+    for offset in range(0, 20000, n_query):
 
         # print to runner_logger that running query
         runner_logger.info(
@@ -107,7 +111,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
             + '(project_id: "'
             + project_id
             + '", first: '
-            + str(1000)
+            + str(n_query)
             + ", offset:"
             + str(offset)
             + "){\n\t\tsubmitter_id\n\t\tid\n\t}\n}"
@@ -127,9 +131,9 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 
         # check if anymore hits, if not break to speed up process
 
-        if len(json.loads(response.text)["data"][node_type]) == 1000:
+        if len(json.loads(response.text)["data"][node_type]) == n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
-        elif len(json.loads(response.text)["data"][node_type]) < 1000:
+        elif len(json.loads(response.text)["data"][node_type]) < n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
             break
         else:  # i.e. len(json.loads(response.text)['data'][node_type]) == 0
