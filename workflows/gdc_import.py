@@ -95,7 +95,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     # may need to increase max number to avoid missing data if more data added in future
     
     #number nodes to query 
-    n_query = 1
+    n_query = 500
 
     for offset in range(0, 20000, n_query):
 
@@ -119,7 +119,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
         query2 = {"query": query1, "variables": null}
 
         # retrieve response
-        response = requests.post(endpt, json=query2, headers={"X-Auth-Token": token})
+        response = requests.post(endpt, json=query2, headers={"X-Auth-Token": str(token)})
         print(response.text)
 
         # check if malformed
