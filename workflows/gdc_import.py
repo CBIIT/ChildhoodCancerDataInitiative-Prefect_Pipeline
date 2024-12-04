@@ -119,8 +119,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
         query2 = {"query": query1, "variables": null}
 
         # retrieve response
-        response = requests.post(endpt, json=query2, headers={"X-Auth-Token": str(token)})
-        print(response.text)
+        response = requests.post(endpt, json=query2, headers={"X-Auth-Token": token})
 
         # check if malformed
         try:
@@ -384,10 +383,10 @@ def get_secret():
 def runner(
     bucket: str,
     file_path: str,
-    runner: str,
-    token: str,
     project_id: str,
     node_type: str,
+    runner: str,
+    token: str,
 ):
     """CCDI data curation pipeline
 
@@ -418,6 +417,29 @@ def runner(
 
     # load in nodes file
     nodes = loader(file_name, node_type)
+
+    # auth TESTING
+
+    endpt = "https://api.gdc.cancer.gov/submission/graphql"
+    null = ""  # None
+
+    query1 = (
+            "{\n\t"
+            + node_type
+            + '(project_id: "'
+            + project_id
+            + '", first: '
+            + str(1)
+            + ", offset:"
+            + str(1)
+            + "){\n\t\tsubmitter_id\n\t\tid\n\t}\n}"
+        )
+
+    query2 = {"query": query1, "variables": null}
+
+    response = requests.post(endpt, json=query2, headers={"X-Auth-Token": token})
+
+    print(response.text)
 
     # parse nodes into new and update nodes
     new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
