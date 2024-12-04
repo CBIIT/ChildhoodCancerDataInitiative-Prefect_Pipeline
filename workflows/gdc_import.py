@@ -415,19 +415,8 @@ def runner(
     file_name = os.path.basename(file_path)
 
     # get token
-    token = None
-    token = get_secret().strip()
-    if token:
-        runner_logger.info("YES TOKEN")
-        runner_logger.info(len(token))
-        runner_logger.info(type(token))
-        if 'gdc-token' in token:
-            runner_logger.info("gdc-token in string")
-        else:
-            runner_logger.info("gdc-token NOT in string")
-
-    else:
-        runner_logger.error("NOOOO TOKEN")
+    pretoken = get_secret().strip()
+    token = json.loads(pretoken)['gdc-token']
 
     # load in nodes file
     nodes = loader(file_name, node_type)
