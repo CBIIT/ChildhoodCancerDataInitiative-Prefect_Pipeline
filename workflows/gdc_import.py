@@ -10,7 +10,6 @@ import requests
 import json
 import sys
 import os
-import argparse
 import logging
 from deepdiff import DeepDiff
 import pandas as pd
@@ -71,6 +70,45 @@ def loader(dir_path: str, node_type: str):
 
     return parsed_nodes
 
+def dbgap_retrieve(phs_id_version: str, nodes: list):
+    """With formatted phs ID and version, e.g. phs002790.v7, 
+    query dbGaP for released subjects"""
+
+    runner_logger = get_run_logger()
+
+    #number of entries to return on a page
+    page_size = 500
+
+    url = f"https://www.ncbi.nlm.nih.gov/gap/sstr/api/v1/study/{phs_id_version}/subjects?page=1&page_size={page_size}"
+
+    #intial request
+    response = requests.get(url)
+
+    if not str(response.status_code).startswith('20'):
+        runner_logger.error("ERROR with dbGaP request, check phs ID and url")
+
+    total_cases = json.loads(response.text)['pagination']['total']
+
+    #initialize list of subject IDs
+    subjects_dbgap = [subject['submitted_subject_id'] for subject in json.loads(response.text)['subjects']]
+
+    while json.loads(response.text)['pagination']['link']['next'] != None:
+        response = requests.get(json.loads(response.text)['pagination']['link']['next'])
+        if not str(response.status_code).startswith('20'):
+            runner_logger.error("ERROR with dbGaP request, check phs ID and url")
+        else:
+            runner_logger.info(f"Response page #: {str(json.loads(response.text)['pagination']['page'])}")
+        subjects_dbgap += [subject['submitted_subject_id'] for subject in json.loads(response.text)['subjects']]
+
+    parsed_subjects = []
+
+    for node in nodes:
+        if node['submitter_id'] in subjects_dbgap:
+            parsed_subjects.append(node)
+
+    runner_logger.info(f"Of {len(nodes)} case nodes in submission file, {len(parsed_subjects)} are released subjects in dbGaP and will move onto submission checking")
+
+    return parsed_subjects
 
 def read_token(dir_path: str):
     """Read in token file string"""
@@ -422,6 +460,7 @@ def runner(
     node_type: str,
     runner: str,
     secret_key_name: str,
+    sstr: str,
 ):
     """CCDI data curation pipeline
 
@@ -458,6 +497,14 @@ def runner(
 
     # load in nodes file
     nodes = loader(file_name, node_type)
+
+    # if phs ID provided and node type is case
+    # check that cases released already in dbGaP
+    if sstr != '' and node_type == 'case':
+        runner_logger.info("Checking case nodes against released subjects in dbGaP...")
+        nodes = dbgap_retrieve(sstr, nodes)
+    if sstr != '' and node_type != 'case':
+        runner_logger.warning("Can only run dbGaP checking for case nodes, provide empty string ('""') instead of phs ID.")
 
     # parse nodes into new and update nodes
     new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
