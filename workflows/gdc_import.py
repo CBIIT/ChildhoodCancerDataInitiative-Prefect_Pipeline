@@ -70,48 +70,60 @@ def loader(dir_path: str, node_type: str):
 
     return parsed_nodes
 
+
 @flow(
     name="gdc_import_dbgap_retrieve",
     log_prints=True,
     flow_run_name="gdc_import_dbgap_retrieve_" + f"{get_time()}",
 )
 def dbgap_retrieve(phs_id_version: str, nodes: list):
-    """With formatted phs ID and version, e.g. phs002790.v7, 
+    """With formatted phs ID and version, e.g. phs002790.v7,
     query dbGaP for released subjects"""
 
     runner_logger = get_run_logger()
 
-    #number of entries to return on a page
+    # number of entries to return on a page
     page_size = 500
 
     url = f"https://www.ncbi.nlm.nih.gov/gap/sstr/api/v1/study/{phs_id_version}/subjects?page=1&page_size={page_size}"
 
-    #intial request
+    # intial request
     response = requests.get(url)
 
-    if not str(response.status_code).startswith('20'):
+    if not str(response.status_code).startswith("20"):
         runner_logger.error("ERROR with dbGaP request, check phs ID and url")
 
-    #initialize list of subject IDs
-    subjects_dbgap = [subject['submitted_subject_id'] for subject in json.loads(response.text)['subjects']]
+    # initialize list of subject IDs
+    subjects_dbgap = [
+        subject["submitted_subject_id"]
+        for subject in json.loads(response.text)["subjects"]
+    ]
 
-    while json.loads(response.text)['pagination']['link']['next'] != None:
-        response = requests.get(json.loads(response.text)['pagination']['link']['next'])
-        if not str(response.status_code).startswith('20'):
+    while json.loads(response.text)["pagination"]["link"]["next"] != None:
+        response = requests.get(json.loads(response.text)["pagination"]["link"]["next"])
+        if not str(response.status_code).startswith("20"):
             runner_logger.error("ERROR with dbGaP request, check phs ID and url")
         else:
-            runner_logger.info(f"Response page #: {str(json.loads(response.text)['pagination']['page'])}")
-        subjects_dbgap += [subject['submitted_subject_id'] for subject in json.loads(response.text)['subjects']]
+            runner_logger.info(
+                f"Response page #: {str(json.loads(response.text)['pagination']['page'])}"
+            )
+        subjects_dbgap += [
+            subject["submitted_subject_id"]
+            for subject in json.loads(response.text)["subjects"]
+        ]
 
     parsed_subjects = []
 
     for node in nodes:
-        if node['submitter_id'] in subjects_dbgap:
+        if node["submitter_id"] in subjects_dbgap:
             parsed_subjects.append(node)
 
-    runner_logger.info(f"Of {len(nodes)} case nodes in submission file, {len(parsed_subjects)} are released subjects in dbGaP and will move onto submission checking")
+    runner_logger.info(
+        f"Of {len(nodes)} case nodes in submission file, {len(parsed_subjects)} are released subjects in dbGaP and will move onto submission checking"
+    )
 
     return parsed_subjects
+
 
 def read_token(dir_path: str):
     """Read in token file string"""
@@ -134,8 +146,8 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 
     # need to do run queries 1000 at a time to avoid time outs
     # may need to increase max number to avoid missing data if more data added in future
-    
-    #number nodes to query 
+
+    # number nodes to query
     n_query = 500
 
     for offset in range(0, 20000, n_query):
@@ -320,20 +332,21 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
     # new nodes submit POST, update nodes submit PUT
     return new_nodes, update_nodes
 
+
 def error_parser(response: str):
     """Read in a response and parse the returned message for output TSV files"""
 
-    #dict of types of responses with substring that appears in response message
+    # dict of types of responses with substring that appears in response message
     # substring in message : parsed message
     error_repsonses = {
-    "is not one of" : "Enum value not in list of acceptable values",
-    "already exists in the GDC" : "POST requst to already existing submitter_id", 
-    "Additional properties are not allowed" : "Extra, incorrect properties submitted with node", 
-    "is less than the minimum of -32872" : "int/num value for a field is less than minimum (-32872)", 
-    "is not in the current data model" : "Specified node type not in data model", 
-    "Invalid entity type" : "Specified node type not in data model", 
-    "is a required property" : "Missing a required property", 
-    "not found in dbGaP" : "Case not found in dbGaP",
+        "is not one of": "Enum value not in list of acceptable values",
+        "already exists in the GDC": "POST requst to already existing submitter_id",
+        "Additional properties are not allowed": "Extra, incorrect properties submitted with node",
+        "is less than the minimum of -32872": "int/num value for a field is less than minimum (-32872)",
+        "is not in the current data model": "Specified node type not in data model",
+        "Invalid entity type": "Specified node type not in data model",
+        "is a required property": "Missing a required property",
+        "not found in dbGaP": "Case not found in dbGaP",
     }
 
     # find error message from these
@@ -343,9 +356,10 @@ def error_parser(response: str):
             error_found = True
             return error_repsonses[error]
             break
-    
+
     if error_found == False:
-        return "NEW ERROR TO ADD TO PARSER: "+response
+        return "NEW ERROR TO ADD TO PARSER: " + response
+
 
 @flow(
     name="gdc_import_submission_response_recorder",
@@ -362,7 +376,7 @@ def response_recorder(responses: list):
 
     for node in responses:
         if "40" in str(node[1]):
-            #errors.append([str(i) for i in node])
+            # errors.append([str(i) for i in node])
             errors.append([str(node[0]), str(node[1]), error_parser(str(node[2]))])
         elif "20" in str(node[1]):
             success_uuid.append(
@@ -386,6 +400,7 @@ def response_recorder(responses: list):
         success_uuid_df = pd.DataFrame(columns=["submitter_id", "uuid", "message"])
 
     return error_df, success_uuid_df
+
 
 @flow(
     name="gdc_import_submission",
@@ -447,7 +462,7 @@ def get_secret(secret_key_name):
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         raise e
-    
+
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
 
 
@@ -503,11 +518,14 @@ def runner(
 
     # if phs ID provided and node type is case
     # check that cases released already in dbGaP
-    if sstr != '' and node_type == 'case':
+    if sstr != "" and node_type == "case":
         runner_logger.info("Checking case nodes against released subjects in dbGaP...")
         nodes = dbgap_retrieve(sstr, nodes)
-    if sstr != '' and node_type != 'case':
-        runner_logger.warning("Can only run dbGaP checking for case nodes, provide empty string ('""') instead of phs ID.")
+    if sstr != "" and node_type != "case":
+        runner_logger.warning(
+            "Can only run dbGaP checking for case nodes, provide empty string ('"
+            "') instead of phs ID."
+        )
 
     # parse nodes into new and update nodes
     new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
