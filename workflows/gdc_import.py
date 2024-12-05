@@ -279,7 +279,7 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
     # new nodes submit POST, update nodes submit PUT
     return new_nodes, update_nodes
 
-def error_parser(response: str),
+def error_parser(response: str):
     """Read in a response and parse the returned message for output TSV files"""
 
     #dict of types of responses with substring that appears in response message
