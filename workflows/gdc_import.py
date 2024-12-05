@@ -70,6 +70,11 @@ def loader(dir_path: str, node_type: str):
 
     return parsed_nodes
 
+@flow(
+    name="gdc_import_dbgap_retrieve",
+    log_prints=True,
+    flow_run_name="gdc_import_dbgap_retrieve_" + f"{get_time()}",
+)
 def dbgap_retrieve(phs_id_version: str, nodes: list):
     """With formatted phs ID and version, e.g. phs002790.v7, 
     query dbGaP for released subjects"""
@@ -86,8 +91,6 @@ def dbgap_retrieve(phs_id_version: str, nodes: list):
 
     if not str(response.status_code).startswith('20'):
         runner_logger.error("ERROR with dbGaP request, check phs ID and url")
-
-    total_cases = json.loads(response.text)['pagination']['total']
 
     #initialize list of subject IDs
     subjects_dbgap = [subject['submitted_subject_id'] for subject in json.loads(response.text)['subjects']]
