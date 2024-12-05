@@ -279,7 +279,38 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
     # new nodes submit POST, update nodes submit PUT
     return new_nodes, update_nodes
 
+def error_parser(response: str),
+    """Read in a response and parse the returned message for output TSV files"""
 
+    #dict of types of responses with substring that appears in response message
+    # substring in message : parsed message
+    error_repsonses = {
+    "is not one of" : "Enum value not in list of acceptable values",
+    "already exists in the GDC" : "POST requst to already existing submitter_id", 
+    "Additional properties are not allowed" : "Extra, incorrect properties submitted with node", 
+    "is less than the minimum of -32872" : "int/num value for a field is less than minimum (-32872)", 
+    "is not in the current data model" : "Specified node type not in data model", 
+    "Invalid entity type" : "Specified node type not in data model", 
+    "is a required property" : "Missing a required property", 
+    "not found in dbGaP" : "Case not found in dbGaP",
+    }
+
+    # find error message from these
+    error_found = False
+    for error in error_repsonses.keys():
+        if error in response:
+            error_found = True
+            return error_repsonses[error]
+            break
+    
+    if error_found == False:
+        return "NEW ERROR TO ADD TO PARSER: "+response
+
+@flow(
+    name="gdc_import_submission_response_recorder",
+    log_prints=True,
+    flow_run_name="gdc_import_submission_response_recorder_" + f"{get_time()}",
+)
 def response_recorder(responses: list):
     """Parse and record responses"""
 
@@ -290,7 +321,8 @@ def response_recorder(responses: list):
 
     for node in responses:
         if "40" in str(node[1]):
-            errors.append([str(i) for i in node])
+            #errors.append([str(i) for i in node])
+            errors.append([str(node[0]), str(node[1]), error_parser(str(node[2]))])
         elif "20" in str(node[1]):
             success_uuid.append(
                 [node[0], json.loads(node[2])["entities"][0]["id"], str(node[2])]
@@ -314,7 +346,11 @@ def response_recorder(responses: list):
 
     return error_df, success_uuid_df
 
-
+@flow(
+    name="gdc_import_submission",
+    log_prints=True,
+    flow_run_name="gdc_import_submission_" + f"{get_time()}",
+)
 def submit(nodes: list, project_id: str, token: str, submission_type: str):
     """Submission of new node entities with POST request"""
 
