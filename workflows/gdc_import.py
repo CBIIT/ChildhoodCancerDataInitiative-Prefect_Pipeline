@@ -474,6 +474,7 @@ def runner(
         secret_key_name (str): Authentication token string secret key name for GDC submission
         project_id (str): GDC Project ID to submit to (e.g. CCDI-MCI, TARGET-AML)
         node_type (str): The GDC node type is being submitted
+        sstr (str): For case node submission, the phs ID and version of study in dbGaP (e.g. phs002790.v7)
 
     Raises:
         ValueError: Value Error occurs when the pipeline fails to proceed.
