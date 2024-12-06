@@ -115,7 +115,7 @@ def dbgap_retrieve(phs_id_version: str):
     return subjects_dbgap
 
 def dbgap_compare(phs_id_version: str, nodes: list):
-    subjects_dbgap = dbgap_retrieve(sstr)
+    subjects_dbgap = dbgap_retrieve(phs_id_version)
 
     parsed_subjects = []
 
