@@ -115,6 +115,11 @@ def dbgap_retrieve(phs_id_version: str):
     return subjects_dbgap
 
 def dbgap_compare(phs_id_version: str, nodes: list):
+    """Perform comparison of dbGaP released cases 
+    for project to case nodes in submission file""" 
+    
+    runner_logger = get_run_logger()
+
     subjects_dbgap = dbgap_retrieve(phs_id_version)
 
     parsed_subjects = []
