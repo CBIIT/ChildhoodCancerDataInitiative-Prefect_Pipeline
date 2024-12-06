@@ -76,7 +76,7 @@ def loader(dir_path: str, node_type: str):
     log_prints=True,
     flow_run_name="gdc_import_dbgap_retrieve_" + f"{get_time()}",
 )
-def dbgap_retrieve(phs_id_version: str, nodes: list):
+def dbgap_retrieve(phs_id_version: str):
     """With formatted phs ID and version, e.g. phs002790.v7,
     query dbGaP for released subjects"""
 
@@ -112,6 +112,11 @@ def dbgap_retrieve(phs_id_version: str, nodes: list):
             for subject in json.loads(response.text)["subjects"]
         ]
 
+    return subjects_dbgap
+
+def dbgap_compare(phs_id_version: str, nodes: list):
+    subjects_dbgap = dbgap_retrieve(sstr)
+
     parsed_subjects = []
 
     for node in nodes:
@@ -123,7 +128,6 @@ def dbgap_retrieve(phs_id_version: str, nodes: list):
     )
 
     return parsed_subjects
-
 
 def read_token(dir_path: str):
     """Read in token file string"""
@@ -505,12 +509,6 @@ def runner(
     # check the manifest version before the workflow starts
     file_name = os.path.basename(file_path)
 
-    """# get token
-                pretoken = get_secret().strip()
-                try:
-                    token = json.loads(pretoken)['gdc-token']
-                except:
-                    runner_logger.warning("incorrect token parsing")"""
     # get token
     token = get_secret(secret_key_name).strip()
 
@@ -521,7 +519,7 @@ def runner(
     # check that cases released already in dbGaP
     if sstr != "" and node_type == "case":
         runner_logger.info("Checking case nodes against released subjects in dbGaP...")
-        nodes = dbgap_retrieve(sstr, nodes)
+        nodes = dbgap_compare(sstr, nodes)
     if sstr != "" and node_type != "case":
         runner_logger.warning(
             "Can only run dbGaP checking for case nodes, provide empty string ('"
