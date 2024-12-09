@@ -349,27 +349,57 @@ def error_parser(response: str):
 
     # dict of types of responses with substring that appears in response message
     # substring in message : parsed message
-    error_repsonses = {
+    """error_repsonses = {
         "is not one of": "Enum value not in list of acceptable values",
-        "already exists in the GDC": "POST requst to already existing submitter_id",
+        "already exists in the GDC": "POST requst to already existing submitter_id, try PUT instead",
         "Additional properties are not allowed": "Extra, incorrect properties submitted with node",
-        "is less than the minimum of -32872": "int/num value for a field is less than minimum (-32872)",
+        "is less than the minimum of -32872": "int/num value for a field is less than the minimum (-32872)",
         "is not in the current data model": "Specified node type not in data model",
         "Invalid entity type": "Specified node type not in data model",
         "is a required property": "Missing a required property",
         "not found in dbGaP": "Case not found in dbGaP",
-    }
+    }"""
 
     # find error message from these
-    error_found = False
-    for error in error_repsonses.keys():
+    #error_found = False
+    try:
+        enum_dict = json.loads(response)
+        new_dict = {}
+        for key in enum_dict.keys():
+            if key != "entities":
+                new_dict[key] = response[key]
+            else:
+                new_dict['affected_field'] = response["entities"][0]["errors"][0]["keys"][0]
+                #parse error message to first 150 chars for simplcity
+                new_dict['error_msg'] = response["entities"][0]["errors"][0]["message"][:150]+"..."
+        return json.dumps(new_dict)
+    except:
+        return response
+    """for error in error_repsonses.keys():
         if error in response:
             error_found = True
-            return error_repsonses[error]
-            break
+            if error_repsonses[error] == "Enum value not in list of acceptable values":
+                try:
+                    enum_dict = json.loads(response)
+                    new_dict = {}
+                    for key in enum_dict.keys():
+                        if key != "entities":
+                            new_dict[key] = response[key]
+                        else:
+                            new_dict['field'] = response["entities"][0]["errors"][0]["keys"][0]
+                            #parse error message to first 150 chars for simplcity
+                            new_dict['error_msg'] = response["entities"][0]["errors"][0]["message"][:150]+"..."
+                    return json.dumps(new_dict)
+                    break
+                except:
+                    return error_repsonses[error]
+                    break
+            else:
+                return error_repsonses[error]
+                break
 
     if error_found == False:
-        return "NEW ERROR TO ADD TO PARSER: " + response
+        return "NEW ERROR TO ADD TO PARSER: " + response"""
 
 
 @flow(
