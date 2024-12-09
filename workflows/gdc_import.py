@@ -539,6 +539,8 @@ def runner(
     # get time for file outputs
     dt = get_time()
 
+    os.mkdir(f"{project_id}_{node_type}_{dt}")
+
     # submit nodes
     if new_nodes:
         error_df, success_uuid_df = submit(new_nodes, project_id, token, "new")
