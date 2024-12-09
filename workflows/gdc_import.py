@@ -604,6 +604,6 @@ def runner(
     folder_ul(
         local_folder=f"{project_id}_{node_type}_{dt}",
         bucket=bucket,
-        destination=runner + f"/{project_id}_{node_type}_{dt}",
+        destination=runner + "/",
         sub_folder="",
     )
