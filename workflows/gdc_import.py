@@ -206,7 +206,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     return offset_returns
 
 
-def query_entities(node_uuids: list, project_id: str, token: str):
+def query_entities(node_uuids: list, project_id: list, token: list):
     """Query entity metadata from GDC to perform comparisons for nodes to update"""
 
     runner_logger = get_run_logger()
@@ -375,6 +375,31 @@ def error_parser(response: str):
         return json.dumps(new_dict)
     except:
         return response
+    """for error in error_repsonses.keys():
+        if error in response:
+            error_found = True
+            if error_repsonses[error] == "Enum value not in list of acceptable values":
+                try:
+                    enum_dict = json.loads(response)
+                    new_dict = {}
+                    for key in enum_dict.keys():
+                        if key != "entities":
+                            new_dict[key] = response[key]
+                        else:
+                            new_dict['field'] = response["entities"][0]["errors"][0]["keys"][0]
+                            #parse error message to first 150 chars for simplcity
+                            new_dict['error_msg'] = response["entities"][0]["errors"][0]["message"][:150]+"..."
+                    return json.dumps(new_dict)
+                    break
+                except:
+                    return error_repsonses[error]
+                    break
+            else:
+                return error_repsonses[error]
+                break
+
+    if error_found == False:
+        return "NEW ERROR TO ADD TO PARSER: " + response"""
 
 
 @flow(
@@ -424,7 +449,7 @@ def response_recorder(responses: list):
     flow_run_name="gdc_import_submission_" + f"{get_time()}",
 )
 def submit(nodes: list, project_id: str, token: str, submission_type: str):
-    """Submission of node entities with POST or PUT request"""
+    """Submission of new node entities with POST request"""
 
     runner_logger = get_run_logger()
 
@@ -548,25 +573,7 @@ def runner(
 
     # submit nodes
     if new_nodes:
-
-        #init error and success df
-
-        error_df_list = []
-        success_uuid_df_list = []
-
-        #chunk nodes to not overwhelm prefect
-
-        for node_set in range(0, len(new_nodes), 500):
-
-            error_df_temp, success_uuid_df_temp = submit(new_nodes[node_set:node_set+500], project_id, token, "new")
-
-            error_df_list = error_df.append(error_df_temp)
-            success_uuid_df_list = success_uuid_df.append(success_uuid_df_temp)
-        
-        # concat all temp dfs
-
-        error_df = pd.concat(error_df_list)
-        success_uuid_df = pd.concat(success_uuid_df_list)
+        error_df, success_uuid_df = submit(new_nodes, project_id, token, "new")
 
         error_df.to_csv(
             f"{project_id}_{node_type}_{dt}/NEW_NODES_SUBMISSION_ERRORS.tsv",
@@ -580,22 +587,7 @@ def runner(
         )
 
     if update_nodes:
-
-        error_df_list = []
-        success_uuid_df_list = []
-
-        #error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
-        for node_set in range(0, len(update_nodes), 500):
-
-            error_df_temp, success_uuid_df_temp = submit(update_nodes[node_set:node_set+500], project_id, token, "update")
-
-            error_df_list = error_df.append(error_df_temp)
-            success_uuid_df_list = success_uuid_df.append(success_uuid_df_temp)
-        
-        # concat all temp dfs
-
-        error_df = pd.concat(error_df_list)
-        success_uuid_df = pd.concat(success_uuid_df_list)
+        error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
 
         error_df.to_csv(
             f"{project_id}_{node_type}_{dt}/UPDATED_NODES_SUBMISSION_ERRORS.tsv",
