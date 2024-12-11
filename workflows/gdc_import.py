@@ -30,14 +30,37 @@ from src.utils import get_time, get_date, file_dl, folder_ul, file_ul
 
 def read_json(dir_path: str):
     """Reads in submission JSON file and returns a list of dicts, checks node types."""
+
+    runner_logger = get_run_logger()
+
     try:
         nodes = json.load(open(dir_path))
     except:
-        logging.error(f" Cannot read in JSON file {dir_path}")
+        runner_logger.error(f" Cannot read in JSON file {dir_path}")
         sys.exit(1)
 
     return nodes
 
+
+def message_parser(json_input: dict): #TODO: check if should be string or json input
+    """Parse returned requests response to redact token secret key from being
+    printed to console"""
+    
+    # key to look for
+    lookup_key = "token"
+
+    if isinstance(json_input, dict):
+        for k, v in json_input.items():
+            if k == lookup_key:
+                json_input[k] = "<REDACTED>"
+            else:
+                message_parser(v)
+
+    elif isinstance(json_input, list):
+        for item in json_input:
+            message_parser(item)
+
+    return json_input
 
 def loader(dir_path: str, node_type: str):
     """Checks that JSON file is a list of dicts and all nodes are of expected type and node type."""
@@ -185,12 +208,15 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
         # retrieve response
         response = requests.post(endpt, json=query2, headers={"X-Auth-Token": token})
 
+        sanitized_response = message_parser(json.loads(response.text))
+
         # check if malformed
         try:
-            json.loads(response.text)["data"][node_type]
+            #json.loads(response.text)["data"][node_type]
+            sanitized_response["data"][node_type]
         except:
             runner_logger.error(
-                f" Response is malformed: {str(json.loads(response.text))} for query {str(query2)}"
+                f" Response is malformed: {str(json.dumps(sanitized_response))} for query {str(query2)}" #loads > dumps
             )
 
         # check if anymore hits, if not break to speed up process
@@ -206,7 +232,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     return offset_returns
 
 
-def query_entities(node_uuids: list, project_id: list, token: list):
+def query_entities(node_uuids: list, project_id: str, token: str):
     """Query entity metadata from GDC to perform comparisons for nodes to update"""
 
     runner_logger = get_run_logger()
@@ -226,8 +252,9 @@ def query_entities(node_uuids: list, project_id: list, token: list):
         try:
             entities = json.loads(temp.text)["entities"]
         except:
+            sanitized_response = message_parser(json.loads(temp.text))
             runner_logger.error(
-                f" Entities request output malformed: {json.loads(temp.text)}, for request {api+uuids_fmt}"
+                f" Entities request output malformed: {json.dumps(sanitized_response)}, for request {api+uuids_fmt}" #loads > dumps
             )
             sys.exit(1)
 
@@ -375,31 +402,6 @@ def error_parser(response: str):
         return json.dumps(new_dict)
     except:
         return response
-    """for error in error_repsonses.keys():
-        if error in response:
-            error_found = True
-            if error_repsonses[error] == "Enum value not in list of acceptable values":
-                try:
-                    enum_dict = json.loads(response)
-                    new_dict = {}
-                    for key in enum_dict.keys():
-                        if key != "entities":
-                            new_dict[key] = response[key]
-                        else:
-                            new_dict['field'] = response["entities"][0]["errors"][0]["keys"][0]
-                            #parse error message to first 150 chars for simplcity
-                            new_dict['error_msg'] = response["entities"][0]["errors"][0]["message"][:150]+"..."
-                    return json.dumps(new_dict)
-                    break
-                except:
-                    return error_repsonses[error]
-                    break
-            else:
-                return error_repsonses[error]
-                break
-
-    if error_found == False:
-        return "NEW ERROR TO ADD TO PARSER: " + response"""
 
 
 @flow(
@@ -449,7 +451,7 @@ def response_recorder(responses: list):
     flow_run_name="gdc_import_submission_" + f"{get_time()}",
 )
 def submit(nodes: list, project_id: str, token: str, submission_type: str):
-    """Submission of new node entities with POST request"""
+    """Submission of node entities with POST or PUT request"""
 
     runner_logger = get_run_logger()
 
@@ -472,10 +474,12 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                 json=node,
                 headers={"X-Auth-Token": token, "Content-Type": "application/json"},
             )
+            sanitized_response = message_parser(res.text)
+
             runner_logger.info(
-                f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
+                f" POST request for node submitter_id {node['submitter_id']}: {json.dumps(sanitized_response)}"
             )
-            responses.append([node["submitter_id"], res.status_code, res.text])
+            responses.append([node["submitter_id"], res.status_code, json.dumps(sanitized_response)])
     elif submission_type == "update":
         for node in nodes:
             res = requests.put(
@@ -483,10 +487,12 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                 json=node,
                 headers={"X-Auth-Token": token, "Content-Type": "application/json"},
             )
+            sanitized_response = message_parser(res.text)
+
             runner_logger.info(
-                f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}"
+                f" PUT request for node submitter_id {node['submitter_id']}: {json.dumps(sanitized_response)}"
             )
-            responses.append([node["submitter_id"], res.status_code, res.text])
+            responses.append([node["submitter_id"], res.status_code, json.dumps(sanitized_response)])
 
     return response_recorder(responses)
 
@@ -573,7 +579,25 @@ def runner(
 
     # submit nodes
     if new_nodes:
-        error_df, success_uuid_df = submit(new_nodes, project_id, token, "new")
+
+        #init error and success df
+
+        error_df_list = []
+        success_uuid_df_list = []
+
+        #chunk nodes to not overwhelm prefect
+
+        for node_set in range(0, len(new_nodes), 500):
+
+            error_df_temp, success_uuid_df_temp = submit(new_nodes[node_set:node_set+500], project_id, token, "new")
+
+            error_df_list = error_df.append(error_df_temp)
+            success_uuid_df_list = success_uuid_df.append(success_uuid_df_temp)
+        
+        # concat all temp dfs
+
+        error_df = pd.concat(error_df_list)
+        success_uuid_df = pd.concat(success_uuid_df_list)
 
         error_df.to_csv(
             f"{project_id}_{node_type}_{dt}/NEW_NODES_SUBMISSION_ERRORS.tsv",
@@ -587,7 +611,22 @@ def runner(
         )
 
     if update_nodes:
-        error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
+
+        error_df_list = []
+        success_uuid_df_list = []
+
+        #error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
+        for node_set in range(0, len(update_nodes), 500):
+
+            error_df_temp, success_uuid_df_temp = submit(update_nodes[node_set:node_set+500], project_id, token, "update")
+
+            error_df_list = error_df.append(error_df_temp)
+            success_uuid_df_list = success_uuid_df.append(success_uuid_df_temp)
+        
+        # concat all temp dfs
+
+        error_df = pd.concat(error_df_list)
+        success_uuid_df = pd.concat(success_uuid_df_list)
 
         error_df.to_csv(
             f"{project_id}_{node_type}_{dt}/UPDATED_NODES_SUBMISSION_ERRORS.tsv",
