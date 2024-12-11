@@ -216,7 +216,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
             sanitized_response["data"][node_type]
         except:
             runner_logger.error(
-                f" Response is malformed: {str(json.dumps(sanitized_response))} for query {str(query2)}" #loads > dumps
+                f" Response is malformed: {str(sanitized_response)} for query {str(query2)}" #loads > dumps
             )
 
         # check if anymore hits, if not break to speed up process
@@ -254,7 +254,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         except:
             sanitized_response = message_parser(json.loads(temp.text))
             runner_logger.error(
-                f" Entities request output malformed: {json.dumps(sanitized_response)}, for request {api+uuids_fmt}" #loads > dumps
+                f" Entities request output malformed: {str(sanitized_response)}, for request {api+uuids_fmt}" #loads > dumps
             )
             sys.exit(1)
 
@@ -396,7 +396,7 @@ def error_parser(response: str):
                 new_dict['affected_field'] = response["entities"][0]["errors"][0]["keys"][0]
                 #parse error message to first 150 chars for simplcity
                 new_dict['error_msg'] = response["entities"][0]["errors"][0]["message"][:150]+"..."
-        return json.dumps(new_dict)
+        return str(new_dict)
     except:
         return response
 
@@ -474,9 +474,9 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
             sanitized_response = message_parser(res.text)
 
             runner_logger.info(
-                f" POST request for node submitter_id {node['submitter_id']}: {json.dumps(sanitized_response)}"
+                f" POST request for node submitter_id {node['submitter_id']}: {str(sanitized_response)}"
             )
-            responses.append([node["submitter_id"], res.status_code, json.dumps(sanitized_response)])
+            responses.append([node["submitter_id"], res.status_code, str(sanitized_response)])
     elif submission_type == "update":
         for node in nodes:
             res = requests.put(
@@ -487,9 +487,9 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
             sanitized_response = message_parser(res.text)
 
             runner_logger.info(
-                f" PUT request for node submitter_id {node['submitter_id']}: {json.dumps(sanitized_response)}"
+                f" PUT request for node submitter_id {node['submitter_id']}: {str(sanitized_response)}"
             )
-            responses.append([node["submitter_id"], res.status_code, json.dumps(sanitized_response)])
+            responses.append([node["submitter_id"], res.status_code, str(sanitized_response)])
 
     return response_recorder(responses)
 
