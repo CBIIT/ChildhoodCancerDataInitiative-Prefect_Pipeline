@@ -271,12 +271,9 @@ def query_entities(node_uuids: list, project_id: str, token: str):
 def entity_parser(node: dict):
     """Parse out unnecessary GDC internal fields and handle null values"""
 
-    del node["batch_id"]
-    del node["state"]
-    del node["projects"]
-    del node["created_datetime"]
-    del node["updated_datetime"]
-    del node["id"]
+    for prop in ["batch_id", "state", "projects", "created_datetime", "updated_datetime", "id"]:
+        if prop in node.keys():
+            del node[prop]
 
     addn_rem = (
         []
