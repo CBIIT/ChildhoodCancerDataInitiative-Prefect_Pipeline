@@ -54,11 +54,11 @@ def message_parser(json_input: dict): #TODO: check if should be string or json i
             if k == lookup_key:
                 json_input[k] = "<REDACTED>"
             else:
-                message_parser(v, lookup_key)
+                message_parser(v)
 
     elif isinstance(json_input, list):
         for item in json_input:
-            message_parser(item, lookup_key)
+            message_parser(item)
 
     return json_input
 
