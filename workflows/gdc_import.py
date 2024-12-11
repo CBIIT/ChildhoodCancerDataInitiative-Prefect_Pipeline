@@ -584,9 +584,13 @@ def runner(
 
         #chunk nodes to not overwhelm prefect
 
-        for node_set in range(0, len(new_nodes), 500):
+        chunk_size = 200
 
-            error_df_temp, success_uuid_df_temp = submit(new_nodes[node_set:node_set+500], project_id, token, "new")
+        for node_set in range(0, len(new_nodes), chunk_size):
+
+            runner_logger.info(f"Submitting chunk {round(node_set/chunk_size)} of {round(len(new_nodes)/chunk_size)} of new nodes")
+
+            error_df_temp, success_uuid_df_temp = submit(new_nodes[node_set:node_set+chunk_size], project_id, token, "new")
 
             error_df_list.append(error_df_temp)
             success_uuid_df_list.append(success_uuid_df_temp)
@@ -613,9 +617,11 @@ def runner(
         success_uuid_df_list = []
 
         #error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
-        for node_set in range(0, len(update_nodes), 500):
+        for node_set in range(0, len(update_nodes), chunk_size):
 
-            error_df_temp, success_uuid_df_temp = submit(update_nodes[node_set:node_set+500], project_id, token, "update")
+            runner_logger.info(f"Submitting chunk {round(node_set/chunk_size)} of {round(len(new_nodes)/chunk_size)} of updated nodes")
+
+            error_df_temp, success_uuid_df_temp = submit(update_nodes[node_set:node_set+chunk_size], project_id, token, "update")
 
             error_df_list.append(error_df_temp)
             success_uuid_df_list.append(success_uuid_df_temp)
