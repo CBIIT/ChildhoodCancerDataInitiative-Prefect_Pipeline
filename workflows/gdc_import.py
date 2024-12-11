@@ -588,8 +588,8 @@ def runner(
 
             error_df_temp, success_uuid_df_temp = submit(new_nodes[node_set:node_set+500], project_id, token, "new")
 
-            error_df_list = error_df_list.append(error_df_temp)
-            success_uuid_df_list = success_uuid_df_list.append(success_uuid_df_temp)
+            error_df_list.append(error_df_temp)
+            success_uuid_df_list.append(success_uuid_df_temp)
         
         # concat all temp dfs
 
@@ -617,8 +617,8 @@ def runner(
 
             error_df_temp, success_uuid_df_temp = submit(update_nodes[node_set:node_set+500], project_id, token, "update")
 
-            error_df_list = error_df.append(error_df_temp)
-            success_uuid_df_list = success_uuid_df.append(success_uuid_df_temp)
+            error_df_list.append(error_df_temp)
+            success_uuid_df_list.append(success_uuid_df_temp)
         
         # concat all temp dfs
 
