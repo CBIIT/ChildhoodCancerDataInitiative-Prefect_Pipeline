@@ -27,7 +27,18 @@ from src.utils import get_time, get_date, file_dl, folder_ul, file_ul
 #
 ##############
 
+def read_json(dir_path: str):
+    """Reads in submission JSON file and returns a list of dicts, checks node types."""
 
+    runner_logger = get_run_logger()
+
+    try:
+        nodes = json.load(open(dir_path))
+    except:
+        runner_logger.error(f" Cannot read in JSON file {dir_path}")
+        sys.exit(1)
+
+    return nodes
 
 def loader(dir_path: str, node_type: str):
     """Checks that JSON file is a list of dicts and all nodes are of expected type and node type."""
