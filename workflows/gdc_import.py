@@ -41,24 +41,29 @@ def read_json(dir_path: str):
 
     return nodes
 
-
-def message_parser(json_input: dict): #TODO: check if should be string or json input
+#recursion error?
+def message_parser(json_input: dict, depth=0, max_depth=1000): #TODO: check if should be string or json input
     """Parse returned requests response to redact token secret key from being
     printed to console"""
-    
-    # key to look for
-    lookup_key = "token"
 
-    if isinstance(json_input, dict):
-        for k, v in json_input.items():
-            if k == lookup_key:
-                json_input[k] = "<REDACTED>"
-            else:
-                message_parser(v)
+    if depth >= max_depth:
 
-    elif isinstance(json_input, list):
-        for item in json_input:
-            message_parser(item)
+        return json_input
+
+    else:
+        # key to look for
+        lookup_key = "token"
+
+        if isinstance(json_input, dict):
+            for k, v in json_input.items():
+                if k == lookup_key:
+                    json_input[k] = "<REDACTED>"
+                else:
+                    message_parser(v, depth + 1, max_depth)
+
+        elif isinstance(json_input, list):
+            for item in json_input:
+                message_parser(item, depth + 1, max_depth)
 
     return json_input
 
