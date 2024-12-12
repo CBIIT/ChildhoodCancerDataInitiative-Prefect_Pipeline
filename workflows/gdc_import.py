@@ -466,7 +466,19 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
             )
             responses.append([node["submitter_id"], res.status_code, str(res.text)])
 
-    return response_recorder(responses)
+    # need to chunk responses into response recorder to not overwhelm stuff
+    # start with 50 at a time?
+    errors = []
+    successes = []
+    chunk_size = 50
+
+    for chunk in range(0, len(responses), chunk_size):
+        error_temp, success_temp = response_recorder(responses[chunk:chunk+chunk_size])
+        errors.append(error_temp)
+        successes.append(success_temp)
+
+    #return response_recorder(responses)
+    return pd.concat(errors), pd.concat(successes)
 
 
 def get_secret(secret_key_name):
