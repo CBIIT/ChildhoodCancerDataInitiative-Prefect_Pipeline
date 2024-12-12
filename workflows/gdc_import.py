@@ -332,12 +332,12 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
             else:
                 pass  # if nodes are the same, ignore
 
-        runner_logger.info(
-            f" Out of {len(nodes)} nodes, {len(new_nodes)} are new entities and {len(check_nodes)} are previously submitted entities; of the previously submitted entities, {len(update_nodes)} need to be updated."
-        )
-
     else:
         update_nodes = []
+
+    runner_logger.info(
+            f" Out of {len(nodes)} nodes, {len(new_nodes)} are new entities and {len(check_nodes)} are previously submitted entities; of the previously submitted entities, {len(update_nodes)} need to be updated."
+        )
 
     # new nodes submit POST, update nodes submit PUT
     return new_nodes, update_nodes
