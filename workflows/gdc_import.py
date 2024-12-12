@@ -575,7 +575,7 @@ def runner(
 
         for node_set in range(0, len(new_nodes), chunk_size):
 
-            runner_logger.info(f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(new_nodes)/chunk_size)} of new nodes")
+            runner_logger.info(f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(new_nodes)/chunk_size)+1} of new nodes")
 
             error_df_temp, success_uuid_df_temp = submit(new_nodes[node_set:node_set+chunk_size], project_id, token, "new")
 
@@ -606,7 +606,7 @@ def runner(
         #error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
         for node_set in range(0, len(update_nodes), chunk_size):
 
-            runner_logger.info(f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(update_nodes)/chunk_size)} of updated nodes")
+            runner_logger.info(f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(update_nodes)/chunk_size)+1} of updated nodes")
 
             error_df_temp, success_uuid_df_temp = submit(update_nodes[node_set:node_set+chunk_size], project_id, token, "update")
 
