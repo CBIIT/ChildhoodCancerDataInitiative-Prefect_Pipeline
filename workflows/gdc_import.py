@@ -231,8 +231,10 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         "Grabbing comparison JSONs to check if already submitted nodes need updating"
     )
 
-    for offset in range(0, len(uuids), 30):  # query 30 at a time
-        uuids_fmt = ",".join(uuids[offset : offset + 30])
+    size = 10
+
+    for offset in range(0, len(uuids), size):  # query 10 at a time
+        uuids_fmt = ",".join(uuids[offset : offset + size])
         temp = requests.get(api + uuids_fmt, headers={"X-Auth-Token": token})
         try:
             entities = json.loads(temp.text)["entities"]
