@@ -101,7 +101,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
         bucket (str): Bucket of where tsv lives and output goes to.
         runner (str): unique runner name
         obj_list_tsv_path (str): A file contains a column of s3 uri (s3://{bucket-name}/{file-path}). NO header needed
-        move_to_folder (str): Folder name of where the obj will be moved to. New uri will be s3://{bucket-name}/{dest-folder}/{file-path}
+        move_to_bucket_folder (str): Bucker folder name of where the obj will be moved to. An example of bucker folder can be s3://dst-bucket/newfolder
     """
     current_time = get_time()
     # create logger
