@@ -246,6 +246,8 @@ def query_entities(node_uuids: list, project_id: str, token: str):
 def entity_parser(node: dict):
     """Parse out unnecessary GDC internal fields and handle null values"""
 
+    runner_logger = get_run_logger()
+
     for prop in ["batch_id", "state", "projects", "created_datetime", "updated_datetime", "id"]:
         if prop in node.keys():
             del node[prop]
@@ -260,6 +262,31 @@ def entity_parser(node: dict):
 
     for prop in addn_rem:
         del node[prop]
+
+    # remove extra link info from entity returned
+    to_replace = ''
+    replacement = []
+
+    for k, v in node.items():
+        if type(v) == dict: #checks/breadcrumbs to inform future parsing if needded
+            if len(node[k].keys()) > 1:
+                runner_logger.warning(f"For already submitted to GDC entitity comparison, entity {node['submitter_id']} of type {node['type']} is of dict class that has more than one key. Inspect for future comparisons.")
+            elif 'submitter_id' not in node[k].keys():
+                runner_logger.warning(f"For already submitted to GDC entitity comparison, entity {node['submitter_id']} of type {node['type']} is of dict class and does not contain 'submitter_id'. Inspect for future comparisons.")
+        elif type(v) == list: #parsing list of dicts
+            for field in v:
+                if type(field) == dict:
+                    for field_k, field_v in field.items():
+                        if field_k == 'submitter_id':
+                            replacement.append({field_k:field_v})
+                            to_replace = k #node key to replace with properly formatted list of dicts
+    #assuming that in the submission nodes file,
+    # that parent entity links are not formatted as a list of dicts when 
+    # there is only one entity; instead, just a dict
+    if len(replacement) == 1:
+        node[to_replace] = replacement[0]
+    else:
+        node[to_replace] = replacement
 
     # add in projects.code to mimic submission file for case nodes
     if node["type"] == "case":
