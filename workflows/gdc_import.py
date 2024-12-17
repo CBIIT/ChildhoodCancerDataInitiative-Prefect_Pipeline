@@ -600,11 +600,6 @@ def runner(
     if sstr != "" and node_type == "case":
         runner_logger.info("Checking case nodes against released subjects in dbGaP...")
         nodes = dbgap_compare(sstr, nodes)
-    if sstr != "" and node_type != "case":
-        runner_logger.warning(
-            "Can only run dbGaP checking for case nodes, provide empty string ('"
-            "') instead of phs ID."
-        )
 
     # parse nodes into new and update nodes
     new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
