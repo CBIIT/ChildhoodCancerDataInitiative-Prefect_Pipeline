@@ -27,6 +27,7 @@ from src.utils import get_time, get_date, file_dl, folder_ul, file_ul
 #
 ##############
 
+
 def read_json(dir_path: str):
     """Reads in submission JSON file and returns a list of dicts, checks node types."""
 
@@ -39,6 +40,7 @@ def read_json(dir_path: str):
         sys.exit(1)
 
     return nodes
+
 
 def loader(dir_path: str, node_type: str):
     """Checks that JSON file is a list of dicts and all nodes are of expected type and node type."""
@@ -188,11 +190,11 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 
         # check if malformed
         try:
-            #json.loads(response.text)["data"][node_type]
+            # json.loads(response.text)["data"][node_type]
             json.loads(response.text)["data"][node_type]
         except:
             runner_logger.error(
-                f" Response is malformed: {str(response.text)} for query {str(query2)}" #loads > dumps
+                f" Response is malformed: {str(response.text)} for query {str(query2)}"  # loads > dumps
             )
 
         # check if anymore hits, if not break to speed up process
@@ -201,6 +203,9 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
             offset_returns += json.loads(response.text)["data"][node_type]
         elif len(json.loads(response.text)["data"][node_type]) < n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
+            runner_logger.info(
+                f" Completed retrieval of previously submitted {node_type} submitter_ids"  # loads > dumps
+            )
             break
         else:  # i.e. len(json.loads(response.text)['data'][node_type]) == 0
             break
@@ -222,6 +227,10 @@ def query_entities(node_uuids: list, project_id: str, token: str):
 
     uuids = [node["id"] for node in node_uuids]
 
+    runner_logger.info(
+        "Grabbing comparison JSONs to check if already submitted nodes need updating"
+    )
+
     for offset in range(0, len(uuids), 30):  # query 30 at a time
         uuids_fmt = ",".join(uuids[offset : offset + 30])
         temp = requests.get(api + uuids_fmt, headers={"X-Auth-Token": token})
@@ -229,7 +238,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             entities = json.loads(temp.text)["entities"]
         except:
             runner_logger.error(
-                f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt}" #loads > dumps
+                f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt}"  # loads > dumps
             )
             sys.exit(1)
 
@@ -248,7 +257,14 @@ def entity_parser(node: dict):
 
     runner_logger = get_run_logger()
 
-    for prop in ["batch_id", "state", "projects", "created_datetime", "updated_datetime", "id"]:
+    for prop in [
+        "batch_id",
+        "state",
+        "projects",
+        "created_datetime",
+        "updated_datetime",
+        "id",
+    ]:
         if prop in node.keys():
             del node[prop]
 
@@ -264,24 +280,28 @@ def entity_parser(node: dict):
         del node[prop]
 
     # remove extra link info from entity returned
-    to_replace = ''
+    to_replace = ""
     replacement = []
 
     for k, v in node.items():
-        if type(v) == dict: #checks/breadcrumbs to inform future parsing if needded
+        if type(v) == dict:  # checks/breadcrumbs to inform future parsing if needded
             if len(node[k].keys()) > 1:
-                runner_logger.warning(f"For already submitted to GDC entitity comparison, entity {node['submitter_id']} of type {node['type']} is of dict class that has more than one key. Inspect for future comparisons.")
-            elif 'submitter_id' not in node[k].keys():
-                runner_logger.warning(f"For already submitted to GDC entitity comparison, entity {node['submitter_id']} of type {node['type']} is of dict class and does not contain 'submitter_id'. Inspect for future comparisons.")
-        elif type(v) == list: #parsing list of dicts
+                runner_logger.warning(
+                    f"For already submitted to GDC entitity comparison, entity {node['submitter_id']} of type {node['type']} is of dict class that has more than one key. Inspect for future comparisons."
+                )
+            elif "submitter_id" not in node[k].keys():
+                runner_logger.warning(
+                    f"For already submitted to GDC entitity comparison, entity {node['submitter_id']} of type {node['type']} is of dict class and does not contain 'submitter_id'. Inspect for future comparisons."
+                )
+        elif type(v) == list:  # parsing list of dicts
             for field in v:
                 if type(field) == dict:
                     for field_k, field_v in field.items():
-                        if field_k == 'submitter_id':
-                            replacement.append({field_k:field_v})
-                            to_replace = k #node key to replace with properly formatted list of dicts
-    #assuming that in the submission nodes file,
-    # that parent entity links are not formatted as a list of dicts when 
+                        if field_k == "submitter_id":
+                            replacement.append({field_k: field_v})
+                            to_replace = k  # node key to replace with properly formatted list of dicts
+    # assuming that in the submission nodes file,
+    # that parent entity links are not formatted as a list of dicts when
     # there is only one entity; instead, just a dict
     if len(replacement) == 1:
         node[to_replace] = replacement[0]
@@ -363,8 +383,8 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
         update_nodes = []
 
     runner_logger.info(
-            f" Out of {len(nodes)} nodes, {len(new_nodes)} are new entities and {len(check_nodes)} are previously submitted entities; of the previously submitted entities, {len(update_nodes)} need to be updated."
-        )
+        f" Out of {len(nodes)} nodes, {len(new_nodes)} are new entities and {len(check_nodes)} are previously submitted entities; of the previously submitted entities, {len(update_nodes)} need to be updated."
+    )
 
     # new nodes submit POST, update nodes submit PUT
     return new_nodes, update_nodes
@@ -387,7 +407,7 @@ def error_parser(response: str):
     }"""
 
     # find error message from these
-    #error_found = False
+    # error_found = False
     try:
         enum_dict = json.loads(response)
         new_dict = {}
@@ -395,9 +415,13 @@ def error_parser(response: str):
             if key != "entities":
                 new_dict[key] = response[key]
             else:
-                new_dict['affected_field'] = response["entities"][0]["errors"][0]["keys"][0]
-                #parse error message to first 150 chars for simplcity
-                new_dict['error_msg'] = response["entities"][0]["errors"][0]["message"][:150]+"..."
+                new_dict["affected_field"] = response["entities"][0]["errors"][0][
+                    "keys"
+                ][0]
+                # parse error message to first 150 chars for simplcity
+                new_dict["error_msg"] = (
+                    response["entities"][0]["errors"][0]["message"][:150] + "..."
+                )
         return str(new_dict)
     except:
         return response
@@ -473,7 +497,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                 json=node,
                 headers={"X-Auth-Token": token, "Content-Type": "application/json"},
             )
-            #sanitized_response = message_parser(res.text)
+            # sanitized_response = message_parser(res.text)
 
             runner_logger.info(
                 f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
@@ -486,7 +510,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                 json=node,
                 headers={"X-Auth-Token": token, "Content-Type": "application/json"},
             )
-            #sanitized_response = message_parser(res.text)
+            # sanitized_response = message_parser(res.text)
 
             runner_logger.info(
                 f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}"
@@ -500,11 +524,13 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
     chunk_size = 50
 
     for chunk in range(0, len(responses), chunk_size):
-        error_temp, success_temp = response_recorder(responses[chunk:chunk+chunk_size])
+        error_temp, success_temp = response_recorder(
+            responses[chunk : chunk + chunk_size]
+        )
         errors.append(error_temp)
         successes.append(success_temp)
 
-    #return response_recorder(responses)
+    # return response_recorder(responses)
     return pd.concat(errors), pd.concat(successes)
 
 
@@ -591,24 +617,28 @@ def runner(
     # submit nodes
     if new_nodes:
 
-        #init error and success df
+        # init error and success df
 
         error_df_list = []
         success_uuid_df_list = []
 
-        #chunk nodes to not overwhelm prefect
+        # chunk nodes to not overwhelm prefect
 
         chunk_size = 200
 
         for node_set in range(0, len(new_nodes), chunk_size):
 
-            runner_logger.info(f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(new_nodes)/chunk_size)+1} of new nodes")
+            runner_logger.info(
+                f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(new_nodes)/chunk_size)+1} of new nodes"
+            )
 
-            error_df_temp, success_uuid_df_temp = submit(new_nodes[node_set:node_set+chunk_size], project_id, token, "new")
+            error_df_temp, success_uuid_df_temp = submit(
+                new_nodes[node_set : node_set + chunk_size], project_id, token, "new"
+            )
 
             error_df_list.append(error_df_temp)
             success_uuid_df_list.append(success_uuid_df_temp)
-        
+
         # concat all temp dfs
 
         error_df = pd.concat(error_df_list)
@@ -630,16 +660,23 @@ def runner(
         error_df_list = []
         success_uuid_df_list = []
 
-        #error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
+        # error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
         for node_set in range(0, len(update_nodes), chunk_size):
 
-            runner_logger.info(f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(update_nodes)/chunk_size)+1} of updated nodes")
+            runner_logger.info(
+                f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(update_nodes)/chunk_size)+1} of updated nodes"
+            )
 
-            error_df_temp, success_uuid_df_temp = submit(update_nodes[node_set:node_set+chunk_size], project_id, token, "update")
+            error_df_temp, success_uuid_df_temp = submit(
+                update_nodes[node_set : node_set + chunk_size],
+                project_id,
+                token,
+                "update",
+            )
 
             error_df_list.append(error_df_temp)
             success_uuid_df_list.append(success_uuid_df_temp)
-        
+
         # concat all temp dfs
 
         error_df = pd.concat(error_df_list)
