@@ -38,6 +38,11 @@ def parse_file_url(url: str) -> tuple:
     parsed_url = urlparse(url)
     bucket_name = parsed_url.netloc
     object_key = parsed_url.path
+    # this is in case url is only bucket name, such as s3://my-bucket
+    if object_key == "":
+        object_key = "/"
+    else:
+        pass
     if object_key[0] == "/":
         object_key = object_key[1:]
     else:

@@ -14,30 +14,31 @@ from src.file_remover import objects_deletion, retrieve_objects_from_bucket_path
 DataFrame = TypeVar("DataFrame")
 
 @task
-def create_file_mover_metadata(tsv_df: DataFrame, newfolder: str) -> DataFrame:
+def create_file_mover_metadata(tsv_df: DataFrame, new_bucket_folder: str) -> DataFrame:
     """Add additional columns to tsv_df with copy parameter dict and destination path
 
     Args:
         tsv_df (DataFrame): A dataframe with one col of uri
-        newfolder (str): folder name to be used in the destination obj path
+        new_bucket_folder (str):  
 
     Returns:
         DataFrame: Dataframe which contains original url, dest uri, copy parameter which can be used for file copying
     """    
     uri_list = tsv_df["original_uri"].tolist()
-    newfolder = newfolder.strip("/")
+    #newfolder = newfolder.strip("/")
     copy_param_list = []
     dest_list = []
+    new_bucket, new_folder = parse_file_url(url=new_bucket_folder)
     for i in uri_list:
-        i_bucket, _ = parse_file_url(url=i)
-        i_dest = i_bucket + "/" + newfolder
+        #i_bucket, _ = parse_file_url(url=i)
+        #i_dest = i_bucket + "/" + newfolder
+        i_dest = new_bucket + "/" + new_folder
         i_copy_parameter = copy_object_parameter(url_in_cds=i, dest_bucket_path=i_dest)
         i_dest_path = dest_object_url(url_in_cds=i, dest_bucket_path=i_dest)
         copy_param_list.append(i_copy_parameter)
         dest_list.append(i_dest_path)
     tsv_df["dest_uri"] =  dest_list
     tsv_df["copy_parameter"] =  copy_param_list
-    
     return tsv_df
 
 
@@ -93,7 +94,7 @@ def identify_obj_dir(uri_list: list, logger) -> list:
     log_prints=True,
     flow_run_name="file-mover-delete-{runner}-" + f"{get_time()}",
 )
-def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_folder: str) -> None:
+def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_bucket_folder: str) -> None:
     """Moves objects listed in a tsv file to a new folder in the same bucket
 
     Args:
@@ -122,7 +123,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     runner_logger.info(f"A total of {tsv_df.shape[0]} objects will be moved")
 
     runner_logger.info("Creating destination s3 uri")
-    meta_df = create_file_mover_metadata(tsv_df=tsv_df, newfolder=move_to_folder)
+    meta_df = create_file_mover_metadata(tsv_df=tsv_df, new_bucket_folder=move_to_bucket_folder)
 
     # copy file to the dest uri
     runner_logger.info("Start moving files")
