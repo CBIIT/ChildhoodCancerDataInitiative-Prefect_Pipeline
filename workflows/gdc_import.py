@@ -212,7 +212,11 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 
     return offset_returns
 
-
+@flow(
+    name="gdc_import_query_entities",
+    log_prints=True,
+    flow_run_name="gdc_import_query_entities_" + f"{get_time()}",
+)
 def query_entities(node_uuids: list, project_id: str, token: str):
     """Query entity metadata from GDC to perform comparisons for nodes to update"""
 
