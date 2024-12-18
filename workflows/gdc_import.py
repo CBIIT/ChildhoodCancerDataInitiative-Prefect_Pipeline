@@ -661,6 +661,8 @@ def runner(
         error_df_list = []
         success_uuid_df_list = []
 
+        chunk_size = 200
+
         # error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
         for node_set in range(0, len(update_nodes), chunk_size):
 
