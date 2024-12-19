@@ -413,6 +413,8 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
 def error_parser(response: str):
     """Read in a response and parse the returned message for output TSV files"""
 
+    runner_logger = get_run_logger()
+
     # dict of types of responses with substring that appears in response message
     # substring in message : parsed message
     """error_repsonses = {
@@ -428,7 +430,8 @@ def error_parser(response: str):
 
     # find error message from these
     # error_found = False
-    try:
+    #TESTING DIFF HANDLING
+    """try:
         enum_dict = json.loads(response)
         new_dict = {}
         for key in enum_dict.keys():
@@ -443,6 +446,13 @@ def error_parser(response: str):
                     response["entities"][0]["errors"][0]["message"][:150] + "..."
                 )
         return str(new_dict)
+    except:
+        return response"""
+    try:
+        enum_dict = json.loads(response)
+        for key in enum_dict.keys():
+            runner_logger.info(key)
+        return str(response)[:150] #first 150 chars
     except:
         return response
 
@@ -640,7 +650,7 @@ def runner(
         # chunk nodes to not overwhelm prefect
 
         if node_type in ['diagnosis', 'treatment', 'other_clinical_attribute', 'follow_up']:
-            chunk_size = 5
+            chunk_size = 20
         else:
             chunk_size = 200
 
