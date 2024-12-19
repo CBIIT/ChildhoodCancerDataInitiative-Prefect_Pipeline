@@ -14,6 +14,7 @@ import logging
 from deepdiff import DeepDiff
 import pandas as pd
 from datetime import datetime
+import time
 
 import boto3
 from botocore.exceptions import ClientError
@@ -254,6 +255,8 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             entity_parse = entity_parser(entity["properties"])
 
             gdc_node_metadata[entity_parse["submitter_id"]] = entity_parse
+        
+        time.sleep(2)
 
     return gdc_node_metadata
 
