@@ -317,7 +317,9 @@ def entity_parser(node: dict):
     # add in projects.code to mimic submission file for case nodes
     if node["type"] == "case":
         node["projects"] = {"code": "-".join(node["project_id"].split("-")[1:])}
-        runner_logger.info(node)
+    
+    if '' in node.keys():
+        del node['']
 
     return node
 
