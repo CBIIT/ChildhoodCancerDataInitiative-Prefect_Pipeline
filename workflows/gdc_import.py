@@ -311,15 +311,14 @@ def entity_parser(node: dict):
     # there is only one entity; instead, just a dict
     if len(replacement) == 1:
         node[to_replace] = replacement[0]
-    else:
+    elif len(replacement) > 1:
         node[to_replace] = replacement
+    else:
+        pass
 
     # add in projects.code to mimic submission file for case nodes
     if node["type"] == "case":
         node["projects"] = {"code": "-".join(node["project_id"].split("-")[1:])}
-    
-    if '' in node.keys():
-        del node['']
 
     return node
 
