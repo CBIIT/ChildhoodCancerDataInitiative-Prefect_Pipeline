@@ -640,7 +640,7 @@ def runner(
         # chunk nodes to not overwhelm prefect
 
         if node_type in ['diagnosis', 'treatment', 'other_clinical_attribute', 'follow_up']:
-            chunk_size = 20
+            chunk_size = 5
         else:
             chunk_size = 200
 
