@@ -636,7 +636,10 @@ def runner(
 
         # chunk nodes to not overwhelm prefect
 
-        chunk_size = 200
+        if node_type in ['diagnosis', 'treatment', 'other_clinical_attribute', 'follow_up']:
+            chunk_size = 20
+        else:
+            chunk_size = 200
 
         for node_set in range(0, len(new_nodes), chunk_size):
 
@@ -672,7 +675,10 @@ def runner(
         error_df_list = []
         success_uuid_df_list = []
 
-        chunk_size = 50
+        if node_type in ['diagnosis', 'treatment', 'other_clinical_attribute', 'follow_up']:
+            chunk_size = 20
+        else:
+            chunk_size = 200
 
         # error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
         for node_set in range(0, len(update_nodes), chunk_size):
