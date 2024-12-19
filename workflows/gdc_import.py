@@ -375,8 +375,14 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
             if node["submitter_id"] in [i["submitter_id"] for i in check_nodes]
         ]
 
-        # get GDC version of node entities, returns a dict with keys as submitter_id
-        gdc_entities = query_entities(check_nodes_ids, project_id, token)
+        chunk_size = 200
+
+        gdc_entities = {}
+
+        for chunk in range(0, len(check_nodes_ids), chunk_size):
+            # get GDC version of node entities, returns a dict with keys as submitter_id
+            #gdc_entities = query_entities(check_nodes_ids, project_id, token)
+            gdc_entities.update(query_entities(check_nodes_ids[chunk:chunk+chunk_size], project_id, token))
 
         # json comparison here
         for node in check_nodes:
