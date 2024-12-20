@@ -161,7 +161,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
         f_name = os.path.basename(f_path)
 
         # check that file exists
-        if not os.path.isfile():
+        if not os.path.isfile(f_name):
             runner_logger.error(
                 f"File {f_name} not copied over or found from URL {row['s3_url']}"
             )
