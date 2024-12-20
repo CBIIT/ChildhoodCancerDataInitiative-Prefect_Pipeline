@@ -33,14 +33,16 @@ def read_input(file_path: str):
 
     runner_logger = get_run_logger()
 
+    f_name = os.path.basename(file_path)
+
     try:
-        file_metadata = pd.read_csv(file_path, sep="\t")[["id", "md5sum", "file_size"]]
+        file_metadata = pd.read_csv(f_name, sep="\t")[["id", "md5sum", "file_size"]]
     except:
-        runner_logger.error(f"Error reading and parsing file {file_path}.")
+        runner_logger.error(f"Error reading and parsing file {f_name}.")
         sys.exit(1)
 
     if len(file_metadata) == 0:
-        runner_logger.error(f"Error reading and parsing file {file_path}; empty file")
+        runner_logger.error(f"Error reading and parsing file {f_name}; empty file")
         sys.exit(1)
 
     return file_metadata
@@ -222,6 +224,7 @@ def runner(
 
     # download the input manifest file
     file_dl(bucket, file_path)
+    
 
     # extract file name before the workflow starts
     file_name = os.path.basename(file_path)
