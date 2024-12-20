@@ -173,7 +173,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                     headers={"X-Auth-Token": token},
                 )
             stream.close()
-            subresponses.append([row[id], response.status_code, response.text])
+            subresponses.append([row['id'], response.status_code, response.text])
 
         # delete file
         if os.path.exists(f_name):
