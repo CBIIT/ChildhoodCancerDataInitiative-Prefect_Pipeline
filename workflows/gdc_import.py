@@ -213,6 +213,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 
     return offset_returns
 
+
 @flow(
     name="gdc_import_query_entities",
     log_prints=True,
@@ -255,7 +256,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             entity_parse = entity_parser(entity["properties"])
 
             gdc_node_metadata[entity_parse["submitter_id"]] = entity_parse
-        
+
         time.sleep(2)
 
     return gdc_node_metadata
@@ -386,11 +387,15 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
 
         for chunk in range(0, len(check_nodes_ids), chunk_size):
             # get GDC version of node entities, returns a dict with keys as submitter_id
-            #gdc_entities = query_entities(check_nodes_ids, project_id, token)
+            # gdc_entities = query_entities(check_nodes_ids, project_id, token)
             runner_logger.info(
                 f"Querying chunk {round(chunk/chunk_size)+1} of {round(len(check_nodes_ids)/chunk_size)+1} for node entity comparison"
             )
-            gdc_entities.update(query_entities(check_nodes_ids[chunk:chunk+chunk_size], project_id, token))
+            gdc_entities.update(
+                query_entities(
+                    check_nodes_ids[chunk : chunk + chunk_size], project_id, token
+                )
+            )
 
         # json comparison here
         for node in check_nodes:
@@ -430,12 +435,11 @@ def error_parser(response: str):
 
     # find error message from these
     # error_found = False
-    
+
     try:
         enum_dict = json.loads(response)
         new_dict = {}
-        if 'entities' in enum_dict.keys():
-            print("YES")
+        if "entities" in enum_dict.keys():
             for key in enum_dict.keys():
                 if key != "entities":
                     new_dict[key] = enum_dict[key]
@@ -443,10 +447,16 @@ def error_parser(response: str):
                     new_dict["affected_field"] = enum_dict["entities"][0]["errors"][0][
                         "keys"
                     ][0]
-                    # parse error message to first 150 chars for simplcity
-                    new_dict["error_msg"] = (
-                        enum_dict["entities"][0]["errors"][0]["message"][:300] + "..."
-                    )
+                    # parse error message to first 300 chars for simplcity
+                    if len(enum_dict["entities"][0]["errors"][0]["message"]) > 300:
+                        new_dict["error_msg"] = (
+                            enum_dict["entities"][0]["errors"][0]["message"][:300]
+                            + "..."
+                        )
+                    else:
+                        new_dict["error_msg"] = enum_dict["entities"][0]["errors"][0][
+                            "message"
+                        ]
             return json.dumps(new_dict)
         else:
             return response
@@ -646,7 +656,12 @@ def runner(
 
         # chunk nodes to not overwhelm prefect
 
-        if node_type in ['diagnosis', 'treatment', 'other_clinical_attribute', 'follow_up']:
+        if node_type in [
+            "diagnosis",
+            "treatment",
+            "other_clinical_attribute",
+            "follow_up",
+        ]:
             chunk_size = 20
         else:
             chunk_size = 200
@@ -685,7 +700,12 @@ def runner(
         error_df_list = []
         success_uuid_df_list = []
 
-        if node_type in ['diagnosis', 'treatment', 'other_clinical_attribute', 'follow_up']:
+        if node_type in [
+            "diagnosis",
+            "treatment",
+            "other_clinical_attribute",
+            "follow_up",
+        ]:
             chunk_size = 20
         else:
             chunk_size = 200
