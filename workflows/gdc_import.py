@@ -430,29 +430,26 @@ def error_parser(response: str):
 
     # find error message from these
     # error_found = False
-    #TESTING DIFF HANDLING
-    """try:
-        enum_dict = json.loads(response)
-        new_dict = {}
-        for key in enum_dict.keys():
-            if key != "entities":
-                new_dict[key] = response[key]
-            else:
-                new_dict["affected_field"] = response["entities"][0]["errors"][0][
-                    "keys"
-                ][0]
-                # parse error message to first 150 chars for simplcity
-                new_dict["error_msg"] = (
-                    response["entities"][0]["errors"][0]["message"][:150] + "..."
-                )
-        return str(new_dict)
-    except:
-        return response"""
+    
     try:
         enum_dict = json.loads(response)
-        for key in enum_dict.keys():
-            runner_logger.info(key)
-        return str(response)[:150] #first 150 chars
+        new_dict = {}
+        if 'entities' in enum_dict.keys():
+            print("YES")
+            for key in enum_dict.keys():
+                if key != "entities":
+                    new_dict[key] = enum_dict[key]
+                else:
+                    new_dict["affected_field"] = enum_dict["entities"][0]["errors"][0][
+                        "keys"
+                    ][0]
+                    # parse error message to first 150 chars for simplcity
+                    new_dict["error_msg"] = (
+                        enum_dict["entities"][0]["errors"][0]["message"][:300] + "..."
+                    )
+            return json.dumps(new_dict)
+        else:
+            return response
     except:
         return response
 
