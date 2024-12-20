@@ -45,6 +45,9 @@ def read_input(file_path: str):
         runner_logger.error(f"Error reading and parsing file {f_name}; empty file")
         sys.exit(1)
 
+    #### TESTING ####
+    file_metadata = file_metadata.head(50)
+
     return file_metadata
 
 
@@ -111,12 +114,14 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     Returns:
         pd.DataFrame: DataFrame with s3 url appended to row for each file instance
     """
+    runner_logger = get_run_logger()
 
     chunk_size = 300  # how many rows to send into retrieve_s3_url
 
     subframes = []  # list to store dfs containing s3 urls + other metadata
 
     for chunk in range(0, len(file_metadata), chunk_size):
+        runner_logger.info(f"Querying s3 urls for chunk {round(chunk/chunk_size)+1} of {round(len(file_metadata)/chunk_size)+1} of files")
         subframe = retrieve_s3_url(file_metadata[chunk : chunk + chunk_size])
         subframes.append(subframe)
 
@@ -145,7 +150,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
 
     subresponses = []
 
-    for index, row in df:
+    for index, row in df.iterrows():
         f_bucket = row["s3_url"].split("/")[2]
         f_path = "/".join(row["s3_url"].split("/")[3:])
 
