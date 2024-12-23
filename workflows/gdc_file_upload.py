@@ -45,9 +45,6 @@ def read_input(file_path: str):
         runner_logger.error(f"Error reading and parsing file {f_name}; empty file")
         sys.exit(1)
 
-    #### TESTING ####
-    file_metadata = file_metadata.head(50)
-
     return file_metadata
 
 
