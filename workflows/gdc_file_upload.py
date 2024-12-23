@@ -6,11 +6,11 @@
 #
 ##############
 
-import json  
+import json
 import requests
 import os
 import sys
-#import subprocess
+
 import pandas as pd
 from datetime import datetime
 
@@ -118,13 +118,16 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     subframes = []  # list to store dfs containing s3 urls + other metadata
 
     for chunk in range(0, len(file_metadata), chunk_size):
-        runner_logger.info(f"Querying s3 urls for chunk {round(chunk/chunk_size)+1} of {round(len(file_metadata)/chunk_size)+1} of files")
+        runner_logger.info(
+            f"Querying s3 urls for chunk {round(chunk/chunk_size)+1} of {round(len(file_metadata)/chunk_size)+1} of files"
+        )
         subframe = retrieve_s3_url(file_metadata[chunk : chunk + chunk_size])
         subframes.append(subframe)
 
     df_s3 = pd.concat(subframes)
 
     return df_s3
+
 
 @flow(
     name="gdc_upload_uploader_api",
@@ -170,17 +173,17 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                     headers={"X-Auth-Token": token},
                 )
             stream.close()
-            subresponses.append([row['id'], response.status_code, response.text])
+            subresponses.append([row["id"], response.status_code, response.text])
 
         # delete file
         if os.path.exists(f_name):
             os.remove(f_name)
         else:
-            runner_logger.warning(f"The file {f_name} does not exist, cannot remove.") 
+            runner_logger.warning(f"The file {f_name} does not exist, cannot remove.")
 
         # check delete
         if os.path.exists(f_name):
-            runner_logger.warning(f"The file {f_name} still exists, error removing.") 
+            runner_logger.warning(f"The file {f_name} still exists, error removing.")
         else:
             pass
 
@@ -196,7 +199,6 @@ def runner(
     bucket: str,
     project_id: str,
     file_path: str,
-    #gdc_client_path: str, ##after confirming temp storage of token; providing will toggle gdc-client upload vs API upload?
     runner: str,
     secret_key_name: str,
 ):
@@ -206,7 +208,6 @@ def runner(
         bucket (str): Bucket name of where the manifest is located in and the response output goes to
         project_id (str): GDC Project ID to submit to (e.g. CCDI-MCI, TARGET-AML)
         file_path (str): File path of the CCDI file manifest in bucket
-        gdc_client_path (str): File path of gdc-client executable
         runner (str): Unique runner name
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
     """
@@ -221,12 +222,8 @@ def runner(
 
     os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
 
-    # download gdc-client executable to VM
-    #file_dl(bucket, gdc_client_path)
-
     # download the input manifest file
     file_dl(bucket, file_path)
-    
 
     # extract file name before the workflow starts
     file_name = os.path.basename(file_path)
