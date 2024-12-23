@@ -10,6 +10,7 @@ import json
 import requests
 import os
 import sys
+import time
 
 import pandas as pd
 from datetime import datetime
@@ -18,7 +19,7 @@ from datetime import datetime
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
-from src.utils import get_time, get_date, file_dl, folder_ul, file_ul
+from src.utils import get_time, file_dl, folder_ul, sanitize_return
 
 
 def read_input(file_path: str):
@@ -142,52 +143,61 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
         project_id (str): project ID of GDC project to upload to
         token (str): GDC Auth token string
     """
+    try:
 
-    runner_logger = get_run_logger()
+        runner_logger = get_run_logger()
 
-    program = project_id.split("-")[0]
-    project = "-".join(project_id.split("-")[1:])
+        program = project_id.split("-")[0]
+        project = "-".join(project_id.split("-")[1:])
 
-    subresponses = []
+        subresponses = []
 
-    for index, row in df.iterrows():
-        f_bucket = row["s3_url"].split("/")[2]
-        f_path = "/".join(row["s3_url"].split("/")[3:])
+        for index, row in df.iterrows():
+            f_bucket = row["s3_url"].split("/")[2]
+            f_path = "/".join(row["s3_url"].split("/")[3:])
 
-        # trying to re-use file_dl() function
-        file_dl(f_bucket, f_path)
+            # trying to re-use file_dl() function
+            file_dl(f_bucket, f_path)
 
-        # extract file name
-        f_name = os.path.basename(f_path)
+            # extract file name
+            f_name = os.path.basename(f_path)
 
-        # check that file exists
-        if not os.path.isfile(f_name):
-            runner_logger.error(
-                f"File {f_name} not copied over or found from URL {row['s3_url']}"
-            )
-        else:  # proceed to uploaded with API
-            with open(f_name, "rb") as stream:
-                response = requests.put(
-                    f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
-                    data=stream,
-                    headers={"X-Auth-Token": token},
+            # check that file exists
+            if not os.path.isfile(f_name):
+                runner_logger.error(
+                    f"File {f_name} not copied over or found from URL {row['s3_url']}"
                 )
-            stream.close()
-            subresponses.append([row["id"], response.status_code, response.text])
+            else:  # proceed to uploaded with API
+                with open(f_name, "rb") as stream:
+                    response = requests.put(
+                        f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
+                        data=stream,
+                        headers={"X-Auth-Token": token},
+                    )
+                stream.close()
+                subresponses.append([row["id"], response.status_code, response.text])
+                time.sleep(5)
 
-        # delete file
-        if os.path.exists(f_name):
-            os.remove(f_name)
-        else:
-            runner_logger.warning(f"The file {f_name} does not exist, cannot remove.")
+            # delete file
+            if os.path.exists(f_name):
+                os.remove(f_name)
+            else:
+                runner_logger.warning(f"The file {f_name} does not exist, cannot remove.")
 
-        # check delete
-        if os.path.exists(f_name):
-            runner_logger.warning(f"The file {f_name} still exists, error removing.")
-        else:
-            pass
+            # check delete
+            if os.path.exists(f_name):
+                runner_logger.warning(f"The file {f_name} still exists, error removing.")
+            else:
+                pass
 
-    return subresponses
+        return subresponses
+    
+    except Exception as e:
+        # sanitize exception of any token information
+        updated_error_message = sanitize_return(str(e), [token])
+        runner_logger.error(updated_error_message)
+        sys.exit(1)
+
 
 
 @flow(
