@@ -19,7 +19,7 @@ import time
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
-from src.utils import get_time, get_date, file_dl, folder_ul, file_ul
+from src.utils import get_time, file_dl, folder_ul, sanitize_return
 
 
 ##############
@@ -222,44 +222,52 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 def query_entities(node_uuids: list, project_id: str, token: str):
     """Query entity metadata from GDC to perform comparisons for nodes to update"""
 
-    runner_logger = get_run_logger()
+    try:
+        runner_logger = get_run_logger()
 
-    gdc_node_metadata = {}
+        gdc_node_metadata = {}
 
-    program = project_id.split("-")[0]
-    project = "-".join(project_id.split("-")[1:])
+        program = project_id.split("-")[0]
+        project = "-".join(project_id.split("-")[1:])
 
-    api = f"https://api.gdc.cancer.gov/submission/{program}/{project}/entities/"
+        api = f"https://api.gdc.cancer.gov/submission/{program}/{project}/entities/"
 
-    uuids = [node["id"] for node in node_uuids]
+        uuids = [node["id"] for node in node_uuids]
 
-    runner_logger.info(
-        "Grabbing comparison JSONs to check if already submitted nodes need updating"
-    )
+        runner_logger.info(
+            "Grabbing comparison JSONs to check if already submitted nodes need updating"
+        )
 
-    size = 10
+        size = 10
 
-    for offset in range(0, len(uuids), size):  # query 10 at a time
-        uuids_fmt = ",".join(uuids[offset : offset + size])
-        temp = requests.get(api + uuids_fmt, headers={"X-Auth-Token": token})
-        try:
-            entities = json.loads(temp.text)["entities"]
-        except:
-            runner_logger.error(
-                f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt}"  # loads > dumps
-            )
-            sys.exit(1)
+        for offset in range(0, len(uuids), size):  # query 10 at a time
+            uuids_fmt = ",".join(uuids[offset : offset + size])
+            temp = requests.get(api + uuids_fmt, headers={"X-Auth-Token": token})
+            try:
+                entities = json.loads(temp.text)["entities"]
+            except:
+                runner_logger.error(
+                    f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt}"  # loads > dumps
+                )
+                sys.exit(1)
 
-        for entity in entities:
+            for entity in entities:
 
-            # remove GDC internal fields and handle null values of optional fields
-            entity_parse = entity_parser(entity["properties"])
+                # remove GDC internal fields and handle null values of optional fields
+                entity_parse = entity_parser(entity["properties"])
 
-            gdc_node_metadata[entity_parse["submitter_id"]] = entity_parse
+                gdc_node_metadata[entity_parse["submitter_id"]] = entity_parse
 
-        time.sleep(4)
+            time.sleep(4)
 
-    return gdc_node_metadata
+        return gdc_node_metadata
+    
+    except Exception as e:
+        # sanitize exception of any token information
+        updated_error_message = sanitize_return(str(e), [token])
+        runner_logger.error(updated_error_message)
+        sys.exit(1)
+
 
 
 def entity_parser(node: dict):
@@ -515,60 +523,67 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
 
     runner_logger = get_run_logger()
 
-    assert submission_type in [
-        "new",
-        "update",
-    ], "Invalid value. Allowed values: new, update"
+    try:
+        assert submission_type in [
+            "new",
+            "update",
+        ], "Invalid value. Allowed values: new, update"
 
-    responses = []
+        responses = []
 
-    program = project_id.split("-")[0]
-    project = "-".join(project_id.split("-")[1:])
+        program = project_id.split("-")[0]
+        project = "-".join(project_id.split("-")[1:])
 
-    api = f"https://api.gdc.cancer.gov/submission/{program}/{project}/"
+        api = f"https://api.gdc.cancer.gov/submission/{program}/{project}/"
 
-    if submission_type == "new":
-        for node in nodes:
-            res = requests.post(
-                url=api,
-                json=node,
-                headers={"X-Auth-Token": token, "Content-Type": "application/json"},
+        if submission_type == "new":
+            for node in nodes:
+                res = requests.post(
+                    url=api,
+                    json=node,
+                    headers={"X-Auth-Token": token, "Content-Type": "application/json"},
+                )
+                # sanitized_response = message_parser(res.text)
+
+                runner_logger.info(
+                    f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
+                )
+                responses.append([node["submitter_id"], res.status_code, str(res.text)])
+        elif submission_type == "update":
+            for node in nodes:
+                res = requests.put(
+                    url=api,
+                    json=node,
+                    headers={"X-Auth-Token": token, "Content-Type": "application/json"},
+                )
+                # sanitized_response = message_parser(res.text)
+
+                runner_logger.info(
+                    f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}"
+                )
+                responses.append([node["submitter_id"], res.status_code, str(res.text)])
+
+        # need to chunk responses into response recorder to not overwhelm stuff
+        # start with 50 at a time?
+        errors = []
+        successes = []
+        chunk_size = 50
+
+        for chunk in range(0, len(responses), chunk_size):
+            error_temp, success_temp = response_recorder(
+                responses[chunk : chunk + chunk_size]
             )
-            # sanitized_response = message_parser(res.text)
+            errors.append(error_temp)
+            successes.append(success_temp)
 
-            runner_logger.info(
-                f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
-            )
-            responses.append([node["submitter_id"], res.status_code, str(res.text)])
-    elif submission_type == "update":
-        for node in nodes:
-            res = requests.put(
-                url=api,
-                json=node,
-                headers={"X-Auth-Token": token, "Content-Type": "application/json"},
-            )
-            # sanitized_response = message_parser(res.text)
-
-            runner_logger.info(
-                f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}"
-            )
-            responses.append([node["submitter_id"], res.status_code, str(res.text)])
-
-    # need to chunk responses into response recorder to not overwhelm stuff
-    # start with 50 at a time?
-    errors = []
-    successes = []
-    chunk_size = 50
-
-    for chunk in range(0, len(responses), chunk_size):
-        error_temp, success_temp = response_recorder(
-            responses[chunk : chunk + chunk_size]
-        )
-        errors.append(error_temp)
-        successes.append(success_temp)
-
-    # return response_recorder(responses)
-    return pd.concat(errors), pd.concat(successes)
+        # return response_recorder(responses)
+        return pd.concat(errors), pd.concat(successes)
+    
+    except Exception as e:
+        # sanitize exception of any token information
+        updated_error_message = sanitize_return(str(e), [token])
+        runner_logger.error(updated_error_message)
+        sys.exit(1)
 
 
 def get_secret(secret_key_name):
