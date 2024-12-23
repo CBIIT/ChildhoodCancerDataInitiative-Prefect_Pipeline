@@ -1,0 +1,4 @@
+[submodule "CCDI-C3DC-Dataloader"]
+	path = CCDI-C3DC-Dataloader
+	url = https://github.com/CBIIT/CCDI-C3DC-Dataloader
+	branch = 1.4.0
