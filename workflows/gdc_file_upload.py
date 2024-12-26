@@ -204,7 +204,6 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
 
                 runner_logger.info(f"Downloaded file {f_name}")
             except: 
-                pass
                 runner_logger.error(f"Cannot download file {f_name}")
 
             # check that file exists
@@ -226,9 +225,9 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                 if os.path.exists(f_name):
                     runner_logger.warning(f"The file {f_name} still exists, error removing.")
                 else:
-                    pass
+                    continue
 
-            return subresponses
+        return subresponses
     
     except Exception as e:
         # sanitize exception of any token information
