@@ -3,6 +3,7 @@ from collections import defaultdict
 import os
 from prefect import flow, task
 
+"""
 def process_item(key_counts, key_sums, item): 
     if isinstance(item, list):
         for sub_item in item:
@@ -12,7 +13,8 @@ def process_item(key_counts, key_sums, item):
             key_counts[key][json.dumps(value, sort_keys=True)] += 1
             key_sums[key] += 1  # Increment count for the key
             process_item(key_counts=key_counts, key_sums=key_sums, item=value)
-    return key_counts, key_sums
+    return key_counts, key_sums    
+"""
 
 @flow(name="Count nodes and records per node", log_prints=True)
 def count_values_per_key(data: dict) -> tuple:
@@ -27,9 +29,22 @@ def count_values_per_key(data: dict) -> tuple:
     key_counts = defaultdict(lambda: defaultdict(int))
     key_sums = defaultdict(int)
 
+    def process_item(item):
+        if isinstance(item, list):
+            for sub_item in item:
+                process_item(sub_item)
+        elif isinstance(item, dict):
+            for key, value in item.items():
+                key_counts[key][json.dumps(value, sort_keys=True)] += 1
+                key_sums[key] += 1  # Increment count for the key
+                process_item(value)
+
     for record_type, records in data.items():
         for record in records:
-            process_item(key_counts=key_counts, key_sums=key_sums, item=record)
+            process_item(record)
+    #for record_type, records in data.items():
+    #    for record in records:
+    #        process_item(key_counts=key_counts, key_sums=key_sums, item=record)
 
     return key_counts, key_sums
 
