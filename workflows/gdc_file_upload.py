@@ -202,7 +202,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                     f"File {f_name} not copied over or found from URL {row['s3_url']}"
                 )
             else:  # proceed to uploaded with API
-                subresponses.append(upload_request(f_name, project_id, row['id']))
+                subresponses.append(upload_request(f_name, project_id, row['id'], token))
                 time.sleep(10)
 
                 # delete file
