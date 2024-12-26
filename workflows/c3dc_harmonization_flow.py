@@ -59,6 +59,8 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
     # copy json folder under folder CCDI-C3DC-Dataloader, called /data
     data_foldername = os.path.join(current_dir, "CCDI-C3DC-Dataloader", "data")
     shutil.copytree(folder_name, data_foldername)
+    # create a temp folder under CCDI-C3DC-Dataloader
+    os.makedirs(os.path.join(current_dir, "CCDI-C3DC-Dataloader", "tmp"), exist_ok=True)
     # change directory to CCDO-C3DC-Dataloader
     os.chdir("./CCDI-C3DC-Dataloader")
     try:
@@ -70,8 +72,8 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
 
     # copy the transformer log file to the current_dir
     transformer_log = [
-        os.path.join("./CCDI-C3DC-Dataloader", log_file)
-        for log_file in os.listdir("./CCDI-C3DC-Dataloader") if log_file.endswith(".log")
+        os.path.join("./tmp", log_file)
+        for log_file in os.listdir("./tmp") if log_file.endswith(".log")
     ]
     if len(transformer_log) > 0:
         shutil.copy(transformer_log[0], current_dir)
