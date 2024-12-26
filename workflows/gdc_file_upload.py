@@ -129,6 +129,12 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
 
     return df_s3
 
+
+@flow(
+    name="gdc_upload_make_upload_request",
+    log_prints=True,
+    flow_run_name="gdc_upload_make_upload_request_" + f"{get_time()}",
+)
 def upload_request(f_name: str, project_id: str, uuid: str, token: str, max_retries=3, delay=10):
     """Funtion to upload file
 
@@ -283,7 +289,7 @@ def runner(
 
     for chunk in range(0, len(file_metadata_s3), chunk_size):
         runner_logger.info(
-            f"Uploading chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))} of files"
+            f"Uploading chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))} for files"
         )
         subresponses = uploader_api(
             file_metadata_s3[chunk : chunk + chunk_size], project_id, token
