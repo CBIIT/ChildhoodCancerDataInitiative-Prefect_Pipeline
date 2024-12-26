@@ -179,7 +179,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                     stream.close()
                     subresponses.append([row["id"], response.status_code, response.text])
                     time.sleep(20)
-                except ConnectionResetError:
+                except ConnectionResetError as e:
                     time.sleep(60)
                     try:
                         with open(f_name, "rb") as stream:
