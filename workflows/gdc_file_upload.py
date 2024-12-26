@@ -120,7 +120,7 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
 
     for chunk in range(0, len(file_metadata), chunk_size):
         runner_logger.info(
-            f"Querying s3 urls for chunk {round(chunk/chunk_size)+1} of {round(len(file_metadata)/chunk_size)+1} of files"
+            f"Querying s3 urls for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))} of files"
         )
         subframe = retrieve_s3_url(file_metadata[chunk : chunk + chunk_size])
         subframes.append(subframe)
@@ -257,7 +257,7 @@ def runner(
 
     for chunk in range(0, len(file_metadata_s3), chunk_size):
         runner_logger.info(
-            f"Uploading chunk {round(chunk/chunk_size)+1} of {round(len(file_metadata_s3)/chunk_size)+1} of files"
+            f"Uploading chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))} of files"
         )
         subresponses = uploader_api(
             file_metadata_s3[chunk : chunk + chunk_size], project_id, token
