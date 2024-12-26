@@ -177,7 +177,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                     )
                 stream.close()
                 subresponses.append([row["id"], response.status_code, response.text])
-                time.sleep(5)
+                time.sleep(10)
 
             # delete file
             if os.path.exists(f_name):
