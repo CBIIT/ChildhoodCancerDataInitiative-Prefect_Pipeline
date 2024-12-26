@@ -187,7 +187,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
         query2 = {"query": query1, "variables": null}
 
         # retrieve response
-        response = requests.post(endpt, json=query2, headers={"X-Auth-Token": token})
+        response = make_request("post", endpt, query2, token)
 
         # check if malformed
         try:
@@ -238,11 +238,11 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             "Grabbing comparison JSONs to check if already submitted nodes need updating"
         )
 
-        size = 2
+        size = 10
 
         for offset in range(0, len(uuids), size):  # query 10 at a time
             uuids_fmt = ",".join(uuids[offset : offset + size])
-            temp = requests.get(api + uuids_fmt, headers={"X-Auth-Token": token})
+            temp = make_request('get', api + uuids_fmt, token)
             try:
                 entities = json.loads(temp.text)["entities"]
             except:
@@ -268,7 +268,57 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         runner_logger.error(updated_error_message)
         sys.exit(1)
 
+def make_request(req_type: str, url: str, token:str, data="", max_retries=5, delay=15):
+    """Wrapper for request function to handle timeouts and connection errors
 
+    Args:
+        req_type (str): Type of request (GET, PUT or POST)
+        url (str): API URL to make request to
+        token (str): GDC auth token string
+        data (str, optional): JSON formatted data. Defaults to "" (no data).
+        max_retries (int, optional): _description_. Defaults to 3.
+        delay (int, optional): _description_. Defaults to 10.
+
+    Returns:
+        str: Request response
+    """
+    runner_logger = get_run_logger()
+    
+    retries = 0
+    if req_type.upper() == 'GET':
+        while retries < max_retries:
+            try:
+                response = requests.get(url, json=data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                return response
+            except Exception as e:
+                runner_logger.warning(f"Error with request: {e}. Retrying...")
+                retries += 1
+                time.sleep(delay)
+    elif req_type.upper() == 'POST':
+        while retries < max_retries:
+            try:
+                response = requests.post(url, json=data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                return response
+            except Exception as e:
+                runner_logger.warning(f"Error with request: {e}. Retrying...")
+                retries += 1
+                time.sleep(delay)
+    elif req_type.upper() == 'PUT':
+        while retries < max_retries:
+            try:
+                response = requests.put(url, json=data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                return response
+            except Exception as e:
+                runner_logger.warning(f"Error with request: {e}. Retrying...")
+                retries += 1
+                time.sleep(delay)
+    else:
+        runner_logger.error(f"{req_type} not one of ['GET', 'POST', 'PUT']")
+        sys.exit(1)
+
+
+    runner_logger.error(f"Max retries reached. {req_type.upper()} request {url} failed.")
+    return str(e)
 
 def entity_parser(node: dict):
     """Parse out unnecessary GDC internal fields and handle null values"""
@@ -539,12 +589,11 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
 
         if submission_type == "new":
             for node in nodes:
-                res = requests.post(
-                    url=api,
-                    json=node,
-                    headers={"X-Auth-Token": token, "Content-Type": "application/json"},
+                res = make_request("post",
+                    api,
+                    token,
+                    node
                 )
-                # sanitized_response = message_parser(res.text)
 
                 runner_logger.info(
                     f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
@@ -553,12 +602,11 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                 time.sleep(2)
         elif submission_type == "update":
             for node in nodes:
-                res = requests.put(
-                    url=api,
-                    json=node,
-                    headers={"X-Auth-Token": token, "Content-Type": "application/json"},
+                res = make_request("put",
+                    api,
+                    token,
+                    node
                 )
-                # sanitized_response = message_parser(res.text)
 
                 runner_logger.info(
                     f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}"
