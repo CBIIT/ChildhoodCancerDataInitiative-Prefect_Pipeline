@@ -188,6 +188,8 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
 
         runner_logger = get_run_logger()
 
+        runner_logger.info(f"size of df of upload files is {len(df)}")
+
         subresponses = []
 
         for index, row in df.iterrows():
@@ -199,8 +201,11 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
 
                 # extract file name
                 f_name = os.path.basename(f_path)
+
+                runner_logger.info(f"Downloaded file {f_name}")
             except: 
                 pass
+                runner_logger.error(f"Cannot download file {f_name}")
 
             # check that file exists
             if not os.path.isfile(f_name):
