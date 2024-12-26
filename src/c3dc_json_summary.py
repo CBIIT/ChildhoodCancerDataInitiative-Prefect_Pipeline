@@ -50,7 +50,7 @@ def count_values_per_key(json_file: str) -> tuple:
 
     return key_counts, key_sums
 
-@flow(name="Write summary of json file", log_prints=True)
+#@flow(name="Write summary of json file", log_prints=True)
 def write_c3dc_json_summary(filepath: str, json_filepath: str, key_counts: dict, key_sums: dict) -> None:
     """Write a detailed summary of the JSON file to a text file.
 
@@ -96,9 +96,11 @@ def create_c3dc_json_summaries(folder_path: str, output_dir: str) -> None:
     # process each json file
     for json_file in json_files:
         print(f"processing: {json_file}")
+        print("calculating key counts and sums")
         key_counts, key_sums = count_values_per_key(json_file=json_file)
         #print(key_counts)
         #print(key_sums)
         output_file = os.path.join(output_dir, f"{os.path.basename(json_file).replace('.json', '_summary.txt')}")
+        print(f"writing summary to: {output_file}")
         write_c3dc_json_summary(filepath=output_file, json_filepath=json_file, key_counts=key_counts, key_sums=key_sums)
     return None
