@@ -258,7 +258,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
 
                 gdc_node_metadata[entity_parse["submitter_id"]] = entity_parse
 
-            time.sleep(4)
+            time.sleep(10)
 
         return gdc_node_metadata
     
