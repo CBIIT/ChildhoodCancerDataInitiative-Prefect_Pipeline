@@ -169,15 +169,31 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                     f"File {f_name} not copied over or found from URL {row['s3_url']}"
                 )
             else:  # proceed to uploaded with API
-                with open(f_name, "rb") as stream:
-                    response = requests.put(
-                        f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
-                        data=stream,
-                        headers={"X-Auth-Token": token},
-                    )
-                stream.close()
-                subresponses.append([row["id"], response.status_code, response.text])
-                time.sleep(20)
+                try:
+                    with open(f_name, "rb") as stream:
+                        response = requests.put(
+                            f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
+                            data=stream,
+                            headers={"X-Auth-Token": token},
+                        )
+                    stream.close()
+                    subresponses.append([row["id"], response.status_code, response.text])
+                    time.sleep(20)
+                except ConnectionError:
+                    time.sleep(60)
+                    try:
+                        with open(f_name, "rb") as stream:
+                            response = requests.put(
+                                f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
+                                data=stream,
+                                headers={"X-Auth-Token": token},
+                            )
+                        stream.close()
+                        subresponses.append([row["id"], response.status_code, response.text])
+                        time.sleep(20)
+                    except ConnectionError as e:
+                        runner_logger.error(f"Cannot upload file UUID {row['id']} due to error: {e}")
+                        subresponses.append([row["id"], "NOT UPLOADED", str(e)])
 
             # delete file
             if os.path.exists(f_name):
