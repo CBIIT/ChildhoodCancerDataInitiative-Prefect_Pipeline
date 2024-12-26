@@ -209,10 +209,12 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
             json.loads(response.text)["data"][node_type]
         except:
             runner_logger.error(
-                f" Response is malformed: {str(response.text)} for query {str(query2)}"  # loads > dumps
+                f" Response is malformed: {str(response.text)} for query {str(query2)}, trying again..."  # loads > dumps
             )
+            response = make_request("post", endpt, token, req_data=query2)
 
         # check if anymore hits, if not break to speed up process
+
 
         if len(json.loads(response.text)["data"][node_type]) == n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
@@ -224,6 +226,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
             break
         else:  # i.e. len(json.loads(response.text)['data'][node_type]) == 0
             break
+
 
     return offset_returns
 
