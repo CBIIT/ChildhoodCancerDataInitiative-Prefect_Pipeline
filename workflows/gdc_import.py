@@ -15,6 +15,7 @@ from deepdiff import DeepDiff
 import pandas as pd
 from datetime import datetime
 import time
+import socket
 
 import boto3
 from botocore.exceptions import ClientError
@@ -28,6 +29,19 @@ from src.utils import get_time, file_dl, folder_ul, sanitize_return
 #
 ##############
 
+
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip
 
 def read_json(dir_path: str):
     """Reads in submission JSON file and returns a list of dicts, checks node types."""
@@ -685,6 +699,8 @@ def runner(
     runner_logger = get_run_logger()
 
     runner_logger.info(">>> Running GDC_IMPORT.py ....")
+
+    runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
 
     # download the file
     file_dl(bucket, file_path)
