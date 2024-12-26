@@ -187,7 +187,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
         query2 = {"query": query1, "variables": null}
 
         # retrieve response
-        response = make_request("post", endpt, query2, token)
+        response = make_request("post", endpt, token, req_data=query2)
 
         # check if malformed
         try:
@@ -268,7 +268,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         runner_logger.error(updated_error_message)
         sys.exit(1)
 
-def make_request(req_type: str, url: str, token:str, data={}, max_retries=5, delay=15):
+def make_request(req_type: str, url: str, token:str, req_data={}, max_retries=5, delay=15):
     """Wrapper for request function to handle timeouts and connection errors
 
     Args:
@@ -288,7 +288,7 @@ def make_request(req_type: str, url: str, token:str, data={}, max_retries=5, del
     if req_type.upper() == 'GET':
         while retries < max_retries:
             try:
-                response = requests.get(url, json=data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                response = requests.get(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
                 return response
             except Exception as e:
                 runner_logger.warning(f"Error with request: {e}. Retrying...")
@@ -297,7 +297,7 @@ def make_request(req_type: str, url: str, token:str, data={}, max_retries=5, del
     elif req_type.upper() == 'POST':
         while retries < max_retries:
             try:
-                response = requests.post(url, json=data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                response = requests.post(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
                 return response
             except Exception as e:
                 runner_logger.warning(f"Error with request: {e}. Retrying...")
@@ -306,7 +306,7 @@ def make_request(req_type: str, url: str, token:str, data={}, max_retries=5, del
     elif req_type.upper() == 'PUT':
         while retries < max_retries:
             try:
-                response = requests.put(url, json=data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                response = requests.put(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
                 return response
             except Exception as e:
                 runner_logger.warning(f"Error with request: {e}. Retrying...")
@@ -592,7 +592,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                 res = make_request("post",
                     api,
                     token,
-                    node
+                    req_data=node
                 )
 
                 runner_logger.info(
@@ -605,7 +605,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                 res = make_request("put",
                     api,
                     token,
-                    node
+                    req_data=node
                 )
 
                 runner_logger.info(
