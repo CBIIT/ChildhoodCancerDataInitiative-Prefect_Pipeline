@@ -880,3 +880,59 @@ deployments:
       name: ccdi-curation-8gb
       work_queue_name: null
       job_variables: {}  
+
+  - name: C3DC-validate-neo4j-data
+    version: null
+    tags: ["Production"]
+    description: null
+    entrypoint: workflows/validate_neo4j_data.py:validate_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "c3dc-curation"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: 1.1.5
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-c3dc-16gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: C3DC-harmonized-json-transform
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/c3dc_harmonization_flow.py:c3dc_data_summary_harmonization
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "c3dc-curation"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: C3DC-1225_transformation_automation
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-c3dc-16gb
+      work_queue_name: null
+      job_variables: {}
