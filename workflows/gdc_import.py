@@ -268,14 +268,14 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         runner_logger.error(updated_error_message)
         sys.exit(1)
 
-def make_request(req_type: str, url: str, token:str, data="", max_retries=5, delay=15):
+def make_request(req_type: str, url: str, token:str, data={}, max_retries=5, delay=15):
     """Wrapper for request function to handle timeouts and connection errors
 
     Args:
         req_type (str): Type of request (GET, PUT or POST)
         url (str): API URL to make request to
         token (str): GDC auth token string
-        data (str, optional): JSON formatted data. Defaults to "" (no data).
+        data (dict, optional): JSON formatted data. Defaults to {} (no data).
         max_retries (int, optional): _description_. Defaults to 3.
         delay (int, optional): _description_. Defaults to 10.
 
