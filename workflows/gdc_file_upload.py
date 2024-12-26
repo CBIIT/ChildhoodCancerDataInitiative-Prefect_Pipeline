@@ -129,13 +129,14 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
 
     return df_s3
 
-def upload_request(f_name: str, project_id: str, uuid, max_retries=3, delay=10):
+def upload_request(f_name: str, project_id: str, uuid: str, token: str, max_retries=3, delay=10):
     """Funtion to upload file
 
     Args:
         f_name (str): Name of file to upload
         project_id (str): Project ID in GDC to upload to
-        uuid (_type_): UUID of file in GDC
+        uuid (str): UUID of file in GDC
+        token (str): GDC auth token
         max_retries (int, optional): Max num retries for upload to attempt. Defaults to 3.
         delay (int, optional): Seconds to wait between retries. Defaults to 10.
 
@@ -150,7 +151,7 @@ def upload_request(f_name: str, project_id: str, uuid, max_retries=3, delay=10):
         try:
             with open(f_name, "rb") as stream:
                 response = requests.put(
-                    f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
+                    f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{uuid}",
                     data=stream,
                     headers={"X-Auth-Token": token},
                 )
