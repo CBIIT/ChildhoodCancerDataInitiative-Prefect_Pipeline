@@ -50,6 +50,8 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
 
     # create summary for json file per study
     runner_logger.info(f"Creating json summaries for harmonized json files")
+    print(folder_name)
+    print(json_summary_folder)
     create_c3dc_json_summaries(folder_path=folder_name, output_dir=json_summary_folder)
 
     # run json to tsv transformation
