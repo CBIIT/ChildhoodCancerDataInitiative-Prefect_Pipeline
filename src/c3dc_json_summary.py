@@ -97,8 +97,8 @@ def create_c3dc_json_summaries(folder_path: str, output_dir: str) -> None:
         with open(json_file, "r") as file:
             data = json.load(file)
         key_counts, key_sums = count_values_per_key(data)
-        print(key_counts)
-        print(key_sums)
+        #print(key_counts)
+        #print(key_sums)
         output_file = os.path.join(output_dir, f"{os.path.basename(json_file).replace('.json', '_summary.txt')}")
         write_c3dc_json_summary(filepath=output_file, json_filepath=json_file, key_counts=key_counts, key_sums=key_sums)
     return None
