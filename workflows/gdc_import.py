@@ -166,7 +166,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     n_query = 500
 
     for offset in range(0, 20000, n_query):
-        time.sleep(5)
+        time.sleep(30)
         # print to runner_logger that running query
         runner_logger.info(
             f" Checking for {node_type} nodes already present in {project_id}, offset is {offset}"
@@ -238,7 +238,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             "Grabbing comparison JSONs to check if already submitted nodes need updating"
         )
 
-        size = 10
+        size = 2
 
         for offset in range(0, len(uuids), size):  # query 10 at a time
             uuids_fmt = ",".join(uuids[offset : offset + size])
@@ -258,7 +258,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
 
                 gdc_node_metadata[entity_parse["submitter_id"]] = entity_parse
 
-            time.sleep(10)
+            time.sleep(30)
 
         return gdc_node_metadata
     
@@ -268,7 +268,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         runner_logger.error(updated_error_message)
         sys.exit(1)
 
-def make_request(req_type: str, url: str, token:str, req_data={}, max_retries=5, delay=15):
+def make_request(req_type: str, url: str, token:str, req_data={}, max_retries=5, delay=30):
     """Wrapper for request function to handle timeouts and connection errors
 
     Args:
@@ -599,7 +599,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                     f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
                 )
                 responses.append([node["submitter_id"], res.status_code, str(res.text)])
-                time.sleep(2)
+                time.sleep(30)
         elif submission_type == "update":
             for node in nodes:
                 res = make_request("put",
@@ -612,7 +612,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                     f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}"
                 )
                 responses.append([node["submitter_id"], res.status_code, str(res.text)])
-                time.sleep(2)
+                time.sleep(30)
 
         # need to chunk responses into response recorder to not overwhelm stuff
         # start with 50 at a time?
