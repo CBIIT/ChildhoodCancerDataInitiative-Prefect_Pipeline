@@ -17,15 +17,17 @@ def process_item(key_counts, key_sums, item):
 """
 
 @flow(name="Count nodes and records per node", log_prints=True)
-def count_values_per_key(data: dict) -> tuple:
+def count_values_per_key(json_file: str) -> tuple:
     """For each item, for each key, count the instances of that value and record the total number for each value and total in the key.
 
     Args:
-        data (dict): deserialized JSON data in the form of Python objects such as dictionaries, lists, strings, numbers, booleans, and null values.
+        json_file (str): json file path contains deserialized JSON data.
 
     Returns:
         tuple: A tuple containing key_counts and key_sums
     """
+    with open(json_file, "r") as file:
+        data = json.load(file)
     key_counts = defaultdict(lambda: defaultdict(int))
     key_sums = defaultdict(int)
 
@@ -42,7 +44,7 @@ def count_values_per_key(data: dict) -> tuple:
     for record_type, records in data.items():
         for record in records:
             process_item(record)
-    #for record_type, records in data.items():
+    # for record_type, records in data.items():
     #    for record in records:
     #        process_item(key_counts=key_counts, key_sums=key_sums, item=record)
 
@@ -93,10 +95,8 @@ def create_c3dc_json_summaries(folder_path: str, output_dir: str) -> None:
         json_files.extend(subfolder_files)
     # process each json file
     for json_file in json_files:
-        print(json_file)
-        with open(json_file, "r") as file:
-            data = json.load(file)
-        key_counts, key_sums = count_values_per_key(data)
+        print(f"processing: {json_file}")
+        key_counts, key_sums = count_values_per_key(json_file=json_file)
         #print(key_counts)
         #print(key_sums)
         output_file = os.path.join(output_dir, f"{os.path.basename(json_file).replace('.json', '_summary.txt')}")
