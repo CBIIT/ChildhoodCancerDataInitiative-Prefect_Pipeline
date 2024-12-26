@@ -129,13 +129,48 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
 
     return df_s3
 
+def upload_request(f_name: str, project_id: str, uuid, max_retries=3, delay=10):
+    """Funtion to upload file
+
+    Args:
+        f_name (str): Name of file to upload
+        project_id (str): Project ID in GDC to upload to
+        uuid (_type_): UUID of file in GDC
+        max_retries (int, optional): Max num retries for upload to attempt. Defaults to 3.
+        delay (int, optional): Seconds to wait between retries. Defaults to 10.
+
+    Returns:
+        list: UUID, response code and response text from upload attempt
+    """
+    runner_logger = get_run_logger()
+    retries = 0
+    program = project_id.split("-")[0]
+    project = "-".join(project_id.split("-")[1:])
+    while retries < max_retries:
+        try:
+            with open(f_name, "rb") as stream:
+                response = requests.put(
+                    f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
+                    data=stream,
+                    headers={"X-Auth-Token": token},
+                )
+            stream.close()
+            return [uuid, response.status_code, response.text]
+        except ConnectionResetError as e:
+            print(f"Connection reset by peer: {e}. Retrying...")
+            retries += 1
+            time.sleep(delay)
+
+    runner_logger.error(f"Max retries reached. Failed to upload {uuid}")
+    return [uuid, "NOT UPLOADED", str(e)]
+
 @flow(
     name="gdc_upload_uploader_api",
     log_prints=True,
     flow_run_name="gdc_upload_uploader_api_" + f"{get_time()}",
 )
 def uploader_api(df: pd.DataFrame, project_id: str, token: str):
-    """Upload files using submission API /files endpoint
+    """Handler function for uploading files using submission API /files endpoint
 
     Args:
         df (pd.DataFrame): dataframe with GDC UUID and s3_urls
@@ -145,9 +180,6 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
     try:
 
         runner_logger = get_run_logger()
-
-        program = project_id.split("-")[0]
-        project = "-".join(project_id.split("-")[1:])
 
         subresponses = []
 
@@ -169,45 +201,22 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                     f"File {f_name} not copied over or found from URL {row['s3_url']}"
                 )
             else:  # proceed to uploaded with API
-                try:
-                    with open(f_name, "rb") as stream:
-                        response = requests.put(
-                            f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
-                            data=stream,
-                            headers={"X-Auth-Token": token},
-                        )
-                    stream.close()
-                    subresponses.append([row["id"], response.status_code, response.text])
-                    time.sleep(20)
-                except ConnectionResetError as e:
-                    time.sleep(60)
-                    try:
-                        with open(f_name, "rb") as stream:
-                            response = requests.put(
-                                f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{row['id']}",
-                                data=stream,
-                                headers={"X-Auth-Token": token},
-                            )
-                        stream.close()
-                        subresponses.append([row["id"], response.status_code, response.text])
-                        time.sleep(20)
-                    except ConnectionResetError as e:
-                        runner_logger.error(f"Cannot upload file UUID {row['id']} due to error: {e}")
-                        subresponses.append([row["id"], "NOT UPLOADED", str(e)])
+                subresponses.append(upload_request(f_name, project_id, row['id']))
+                time.sleep(10)
 
-            # delete file
-            if os.path.exists(f_name):
-                os.remove(f_name)
-            else:
-                runner_logger.warning(f"The file {f_name} does not exist, cannot remove.")
+                # delete file
+                if os.path.exists(f_name):
+                    os.remove(f_name)
+                else:
+                    runner_logger.warning(f"The file {f_name} does not exist, cannot remove.")
 
-            # check delete
-            if os.path.exists(f_name):
-                runner_logger.warning(f"The file {f_name} still exists, error removing.")
-            else:
-                pass
+                # check delete
+                if os.path.exists(f_name):
+                    runner_logger.warning(f"The file {f_name} still exists, error removing.")
+                else:
+                    pass
 
-        return subresponses
+            return subresponses
     
     except Exception as e:
         # sanitize exception of any token information
