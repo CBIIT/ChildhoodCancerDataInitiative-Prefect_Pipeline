@@ -167,6 +167,14 @@ def upload_request(f_name: str, project_id: str, uuid: str, token: str, max_retr
             print(f"Connection reset by peer: {e}. Retrying...")
             retries += 1
             time.sleep(delay)
+        except ConnectionError as e:
+            print(f"Connection reset by peer: {e}. Retrying...")
+            retries += 1
+            time.sleep(delay)
+        except Exception as e:
+            print(f"Some other error: {e}. Retrying...")
+            retries += 1
+            time.sleep(delay)
 
     runner_logger.error(f"Max retries reached. Failed to upload {uuid}")
     return [uuid, "NOT UPLOADED", str(e)]
