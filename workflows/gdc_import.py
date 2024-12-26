@@ -397,7 +397,7 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
             # get GDC version of node entities, returns a dict with keys as submitter_id
             # gdc_entities = query_entities(check_nodes_ids, project_id, token)
             runner_logger.info(
-                f"Querying chunk {round(chunk/chunk_size)+1} of {round(len(check_nodes_ids)/chunk_size)+1} for node entity comparison"
+                f"Querying chunk {round(chunk/chunk_size)+1} of {len(range(0, len(check_nodes_ids), chunk_size))} for node entity comparison"
             )
             gdc_entities.update(
                 query_entities(
@@ -684,7 +684,7 @@ def runner(
         for node_set in range(0, len(new_nodes), chunk_size):
 
             runner_logger.info(
-                f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(new_nodes)/chunk_size)+1} of new nodes"
+                f"Submitting chunk {round(node_set/chunk_size)+1} of {len(range(0, len(new_nodes), chunk_size))} of new nodes"
             )
 
             error_df_temp, success_uuid_df_temp = submit(
@@ -729,7 +729,7 @@ def runner(
         for node_set in range(0, len(update_nodes), chunk_size):
 
             runner_logger.info(
-                f"Submitting chunk {round(node_set/chunk_size)+1} of {round(len(update_nodes)/chunk_size)+1} of updated nodes"
+                f"Submitting chunk {round(node_set/chunk_size)+1} of {len(range(0, len(update_nodes), chunk_size))} of updated nodes"
             )
 
             error_df_temp, success_uuid_df_temp = submit(
