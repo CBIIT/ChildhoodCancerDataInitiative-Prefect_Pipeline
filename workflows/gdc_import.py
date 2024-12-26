@@ -282,6 +282,7 @@ def entity_parser(node: dict):
         "created_datetime",
         "updated_datetime",
         "id",
+        "file_state"
     ]:
         if prop in node.keys():
             del node[prop]
