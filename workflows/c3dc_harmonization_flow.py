@@ -107,7 +107,7 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
             for log_file in os.listdir(current_dir) if log_file.endswith(".log")
         ]
         print(transformer_log)
-        file_ul(bucket=bucket, output_folder=upload_folder_name, sub_folder="", newfile= transformer_log[0])
+        file_ul(bucket=bucket, output_folder=upload_folder_name, sub_folder="", newfile= os.path.basename(transformer_log[0]))
     else:
         pass
 
