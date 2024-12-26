@@ -40,7 +40,7 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
     runner_logger = get_run_logger()
 
     # download the json data from
-    folder_dl(bucket=bucket, folder_path=json_folder_path)
+    folder_dl(bucket=bucket, remote_folder=json_folder_path)
     folder_name = os.path.basename(json_folder_path)
 
     # create a folder that holds the summary outputs
@@ -96,7 +96,7 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
     folder_ul(bucket=bucket, local_folder=transformed_tsv_folder, destination=upload_folder_name, sub_folder="")
 
     # file upload
-    file_ul(bucket=bucket, output_folder=upload_folder_name, sub_folder="" ,newfile= transformer_log[0], destination=upload_folder_name)
+    file_ul(bucket=bucket, output_folder=upload_folder_name, sub_folder="" ,newfile= transformer_log[0])
     
     # workflow completion
     runner_logger.info(f"Data summary and harmonization completed")
