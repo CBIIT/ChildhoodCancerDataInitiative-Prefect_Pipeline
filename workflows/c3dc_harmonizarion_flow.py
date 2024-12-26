@@ -6,7 +6,7 @@ import subprocess
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
-from src.utils import folder_dl, folder_ul, get_time
+from src.utils import folder_dl, folder_ul, file_ul,get_time
 from src.c3dc_json_summary import create_c3dc_json_summaries
 
 @task(name="extract_transformed_tsv", log_prints=True)
@@ -64,6 +64,18 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
         subprocess.run(["python", "transformer/transformer.py"])
     except Exception as e:
         runner_logger.error(f"Error in running transformer.py: {e}")
+
+    # copy the transformer log file to the current_dir
+    transformer_log = [
+        os.path.join("./CCDI-C3DC-Dataloader", log_file)
+        for log_file in os.listdir("./CCDI-C3DC-Dataloader") if log_file.endswith(".log")
+    ]
+    if len(transformer_log) > 0:
+        shutil.copy(transformer_log[0], current_dir)
+        runner_logger.info("Transformer log file copied to the current directory")
+    else:
+        runner_logger.warning("No transformer log file found")
+
     # change directory back to the original directory
     os.chdir(current_dir)
     # extract tsv files
@@ -82,5 +94,9 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
         bucket=bucket, local_folder=json_summary_folder, destination=upload_folder_name, sub_folder=""
     )
     folder_ul(bucket=bucket, local_folder=transformed_tsv_folder, destination=upload_folder_name, sub_folder="")
+
+    # file upload
+    file_ul(bucket=bucket, output_folder=upload_folder_name, sub_folder="" ,newfile= transformer_log[0], destination=upload_folder_name)
     
+    # workflow completion
     runner_logger.info(f"Data summary and harmonization completed")
