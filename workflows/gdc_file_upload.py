@@ -152,14 +152,16 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
         subresponses = []
 
         for index, row in df.iterrows():
-            f_bucket = row["s3_url"].split("/")[2]
-            f_path = "/".join(row["s3_url"].split("/")[3:])
+            try:
+                f_bucket = row["s3_url"].split("/")[2]
+                f_path = "/".join(row["s3_url"].split("/")[3:])
+                # trying to re-use file_dl() function
+                file_dl(f_bucket, f_path)
 
-            # trying to re-use file_dl() function
-            file_dl(f_bucket, f_path)
-
-            # extract file name
-            f_name = os.path.basename(f_path)
+                # extract file name
+                f_name = os.path.basename(f_path)
+            except: 
+                pass
 
             # check that file exists
             if not os.path.isfile(f_name):
