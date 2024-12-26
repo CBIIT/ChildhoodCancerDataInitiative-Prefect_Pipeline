@@ -179,7 +179,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                     stream.close()
                     subresponses.append([row["id"], response.status_code, response.text])
                     time.sleep(20)
-                except ConnectionError:
+                except ConnectionResetError:
                     time.sleep(60)
                     try:
                         with open(f_name, "rb") as stream:
@@ -191,7 +191,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                         stream.close()
                         subresponses.append([row["id"], response.status_code, response.text])
                         time.sleep(20)
-                    except ConnectionError as e:
+                    except ConnectionResetError as e:
                         runner_logger.error(f"Cannot upload file UUID {row['id']} due to error: {e}")
                         subresponses.append([row["id"], "NOT UPLOADED", str(e)])
 
