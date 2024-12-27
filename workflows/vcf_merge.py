@@ -104,7 +104,7 @@ def merging(df: pd.DataFrame):
         f_name = os.path.basename(row["s3_url"])
 
         if os.path.exists(f_name):
-            vcf_to_merge.append(vcf_to_merge)
+            vcf_to_merge.append(f_name)
         else:
             not_merged.append(f_name)
 
