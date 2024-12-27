@@ -51,8 +51,6 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
 
     # create summary for json file per study
     runner_logger.info(f"Creating json summaries for harmonized json files")
-    print(folder_name)
-    print(json_summary_folder)
     create_c3dc_json_summaries(folder_path=folder_name, output_dir=json_summary_folder)
 
     # run json to tsv transformation
@@ -94,7 +92,7 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
 
     # folder upload
     upload_folder_name = os.path.join(runner, "c3dc_harmonization_pipeline_" + get_time())
-    runner_logger.info(f"Uploading json summary folder {json_summary_folder} and transformed tsv folder {transformed_tsv_folder} to the designated bucket")
+    runner_logger.info(f"Uploading json summary folder {json_summary_folder} and transformed tsv folder {transformed_tsv_folder} to the designated bucket {bucket}")
     folder_ul(
         bucket=bucket, local_folder=json_summary_folder, destination=upload_folder_name, sub_folder=""
     )
@@ -106,7 +104,6 @@ def c3dc_data_summary_harmonization(bucket:str, json_folder_path: str, runner: s
             os.path.join(current_dir, log_file)
             for log_file in os.listdir(current_dir) if log_file.endswith(".log")
         ]
-        print(transformer_log)
         file_ul(bucket=bucket, output_folder=upload_folder_name, sub_folder="", newfile= os.path.basename(transformer_log[0]))
     else:
         pass
