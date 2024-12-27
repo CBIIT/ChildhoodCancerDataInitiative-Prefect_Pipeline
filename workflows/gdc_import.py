@@ -1,5 +1,28 @@
 """ Script to submit node metadata to the GDC """
 
+"""Function 'map'
+runner
+	get_ip
+	get_secret
+	loader
+		read_json
+	dbgap_compare
+		dbgap_retrieve
+    compare_diff
+        retrieve_current_nodes
+            make_request
+        query_entities
+            make_request
+            entity_parser
+            sanitize_return
+        json_compare
+    submit
+        make_request
+        response_recorder
+            error_parser
+        sanitize_return
+"""
+
 ##############
 #
 # Env. Setup
@@ -235,7 +258,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     n_query = 500
 
     for offset in range(0, 20000, n_query):
-        time.sleep(30)
+        time.sleep(20)
         # print to runner_logger that running query
         runner_logger.info(
             f" Checking for {node_type} nodes already present in {project_id}, offset is {offset}"
@@ -310,7 +333,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             "Grabbing comparison JSONs to check if already submitted nodes need updating"
         )
 
-        size = 1
+        size = 10
 
         for offset in range(0, len(uuids), size):  # query 10 at a time
             uuids_fmt = ",".join(uuids[offset : offset + size])
@@ -330,7 +353,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
 
                 gdc_node_metadata[entity_parse["submitter_id"]] = entity_parse
 
-            time.sleep(30)
+            time.sleep(10)
 
         return gdc_node_metadata
     
@@ -416,7 +439,7 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
         return False
 
 
-def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
+def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check_for_updates: str):
     """Determine if nodes in submission file are new entities or already exist in GDC"""
 
     runner_logger = get_run_logger()
@@ -439,12 +462,15 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str):
     ]
 
     # parse node entities in submission file that already exist in GDC
-    check_nodes = [
-        node
-        for node in nodes
-        if node["submitter_id"]
-        in list(set(submission_nodes_sub_ids) & set(gdc_nodes_sub_ids))
-    ]
+    if check_for_updates.lower() == 'yes':
+        check_nodes = [
+            node
+            for node in nodes
+            if node["submitter_id"]
+            in list(set(submission_nodes_sub_ids) & set(gdc_nodes_sub_ids))
+        ]
+    else:
+        check_nodes = []
 
     # assess if node entities in submission file that already exist in GDC
     # need to be updated in GDC (i.e. entities in file and GDC are different)
@@ -619,7 +645,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                     f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
                 )
                 responses.append([node["submitter_id"], res.status_code, str(res.text)])
-                time.sleep(30)
+                time.sleep(5)
         elif submission_type == "update":
             for node in nodes:
                 res = make_request("put",
@@ -632,7 +658,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                     f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}"
                 )
                 responses.append([node["submitter_id"], res.status_code, str(res.text)])
-                time.sleep(30)
+                time.sleep(5)
 
         # need to chunk responses into response recorder to not overwhelm stuff
         # start with 50 at a time?
@@ -697,6 +723,7 @@ def runner(
         project_id (str): GDC Project ID to submit to (e.g. CCDI-MCI, TARGET-AML)
         node_type (str): The GDC node type is being submitted
         sstr (str): For case node submission, the phs ID and version of study in dbGaP (e.g. phs002790.v7)
+        check_for_updates (str): 'yes' or 'no' to perform checks for nodes to UPDATE; if 'no', only submit NEW nodes
 
     Raises:
         ValueError: Value Error occurs when the pipeline fails to proceed.

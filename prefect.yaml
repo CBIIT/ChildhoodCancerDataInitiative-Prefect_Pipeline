@@ -869,6 +869,7 @@ deployments:
       secret_key_name: "gdc-token"
       project_id: "CCDI-MCI"
       sstr: "phs002790.v7"
+      check_for_updates: "yes OR no"
 
     # pull action to overwrite from file pull action
     pull:
