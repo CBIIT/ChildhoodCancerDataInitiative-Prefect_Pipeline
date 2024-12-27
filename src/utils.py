@@ -1382,3 +1382,17 @@ def ccdi_to_dcf_index(ccdi_manifest: str) -> tuple:
     del combined_df
 
     return output_filename, log_name
+
+def sanitize_return(err_string: str, remove_value_list: list):
+    """Sanitize a string of provided substrings to remove. 
+
+    Args:
+        err_string (str): String to remove any secret or sensitive substrings from
+        remove_value_list (list): List of substrings to remove
+
+    Returns:
+        str: Sanitized string
+    """
+    for remove_value in remove_value_list:
+        err_string = err_string.replace(remove_value, "")
+    return err_string
