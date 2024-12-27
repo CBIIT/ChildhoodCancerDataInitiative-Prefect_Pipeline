@@ -110,23 +110,23 @@ def merging(df: pd.DataFrame):
 
     if len(vcf_to_merge) > 1:
         runner_logger.info(f"Running merge of {len(vcf_to_merge)} VCF files....")
-        try:
-            vcf_dfs = [] #list to store VCF DFs
-            for vcf in vcf_to_merge:
-                #read in VCF
-                vcf_df = pyvcf.VcfFrame.from_file(vcf).df
+        #try:
+        vcf_dfs = [] #list to store VCF DFs
+        for vcf in vcf_to_merge:
+            #read in VCF
+            vcf_df = pyvcf.VcfFrame.from_file(vcf).df
 
-                #change column names to temp sample names >>> TODO: need actual sample names? where to find?
-                vcf_df = vcf_df.rename(columns={"tumor" : "tumor"+row["patient_id"], "normal" : "normal"+row["patient_id"]})
-                
-                #append to list of vcf_dfs
-                vcf_dfs.append(vcf_df)
+            #change column names to temp sample names >>> TODO: need actual sample names? where to find?
+            vcf_df = vcf_df.rename(columns={"tumor" : "tumor"+row["patient_id"], "normal" : "normal"+row["patient_id"]})
+            
+            #append to list of vcf_dfs
+            vcf_dfs.append(vcf_df)
 
-            merged_vcf = pyvcf.merge(vcf_dfs, how='outer')
-            runner_logger.info("Merge Complete!")
-        except:
-            runner_logger.error("Issue merging VCF files.")
-            merged_vcf = ""
+        merged_vcf = pyvcf.merge(vcf_dfs, how='outer')
+        runner_logger.info("Merge Complete!")
+        #except:
+            #runner_logger.error("Issue merging VCF files.")
+            #merged_vcf = ""
     else:
         runner_logger.error("No VCF files provided to merge. Exiting process.")
         sys.exit(1)
@@ -170,7 +170,7 @@ def runner(bucket: str,
 
     Args:
         bucket (str): Bucket name of where the manifest is located in and the response output goes to
-        file_path (str): File path of the CCDI file manifest in bucket
+        manifest_path (str): File path of the CCDI file manifest in bucket
         runner (str): Unique runner name
         chunk_size (str): Integer for the number of files that should be merged at a time
     """
