@@ -32,7 +32,7 @@ def read_input(file_path: str):
     f_name = os.path.basename(file_path)
 
     try:
-        file_metadata = pd.read_csv(f_name, sep="\t")
+        file_metadata = pd.read_csv(f_name, sep="\t") 
     except:
         runner_logger.error(f"Error reading and parsing file {f_name}.")
         sys.exit(1)
@@ -116,17 +116,17 @@ def merging(df: pd.DataFrame):
         vcf_dfs = [] #list to store VCF DFs
         for vcf in vcf_to_merge:
             #read in VCF
-            vcf_df = pyvcf.VcfFrame.from_file(vcf).df
+            vcf_df = pyvcf.VcfFrame.from_file(vcf)
 
             #change column names to temp sample names >>> TODO: need actual sample names? where to find?
-            vcf_df = vcf_df.rename(columns={"tumor" : "tumor"+"_"+dict_f_name_pid[vcf], "normal" : "normal"+"_"+dict_f_name_pid[vcf]})
+            vcf.df = vcf.df.rename(columns={"tumor" : "tumor"+"_"+dict_f_name_pid[vcf], "normal" : "normal"+"_"+dict_f_name_pid[vcf]})
 
-            print(vcf_df)
+            print(vcf.df)
             
             #append to list of vcf_dfs
-            vcf_dfs.append(vcf_df)
+            vcf_dfs.append(vcf)
 
-        merged_vcf = pyvcf.merge(vcf_dfs, how='outer')
+        merged_vcf = pyvcf.merge(vcf_dfs, how='outer').df
         runner_logger.info("Merge Complete!")
         #except:
             #runner_logger.error("Issue merging VCF files.")
