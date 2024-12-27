@@ -108,6 +108,8 @@ def merging(df: pd.DataFrame):
         else:
             not_merged.append(f_name)
 
+    dict_f_name_pid = df[['File Name', 'patient_id']].reset_index('File Name').to_dict()['patient_id']
+
     if len(vcf_to_merge) > 1:
         runner_logger.info(f"Running merge of {len(vcf_to_merge)} VCF files....")
         #try:
@@ -117,7 +119,7 @@ def merging(df: pd.DataFrame):
             vcf_df = pyvcf.VcfFrame.from_file(vcf).df
 
             #change column names to temp sample names >>> TODO: need actual sample names? where to find?
-            vcf_df = vcf_df.rename(columns={"tumor" : "tumor"+row["patient_id"], "normal" : "normal"+row["patient_id"]})
+            vcf_df = vcf_df.rename(columns={"tumor" : "tumor"+"_"+dict_f_name_pid[vcf], "normal" : "normal"+"_"+dict_f_name_pid[vcf]})
 
             print(vcf_df)
             
