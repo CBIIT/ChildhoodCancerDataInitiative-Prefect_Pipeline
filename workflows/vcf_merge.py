@@ -227,7 +227,7 @@ def runner(bucket: str,
 
     # dl folder to somewhere else
     folder_ul(
-        local_folder=f"VCF_merge_file_upload_{chunk_size}_{dt}",
+        local_folder=f"VCF_merge_{chunk_size}_{dt}",
         bucket=bucket,
         destination=runner + "/",
         sub_folder="",
