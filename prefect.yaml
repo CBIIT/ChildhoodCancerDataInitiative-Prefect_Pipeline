@@ -879,4 +879,35 @@ deployments:
     work_pool:
       name: ccdi-curation-8gb
       work_queue_name: null
-      job_variables: {}  
+      job_variables: {}
+  
+  - name: ccdi-cbio-vcf-merge
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/vcf_merge.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      manifest_path: ""
+      runner: ""
+      chunk_size: 20
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CBIO-53
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-16gb
+      work_queue_name: null
+      job_variables: {}
