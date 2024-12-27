@@ -108,7 +108,7 @@ def merging(df: pd.DataFrame):
         else:
             not_merged.append(f_name)
 
-    dict_f_name_pid = df[['File Name', 'patient_id']].reset_index('File Name').to_dict()['patient_id']
+    dict_f_name_pid = df[['File Name', 'patient_id']].set_index('File Name').to_dict()['patient_id']
 
     if len(vcf_to_merge) > 1:
         runner_logger.info(f"Running merge of {len(vcf_to_merge)} VCF files....")
