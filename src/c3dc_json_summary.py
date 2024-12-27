@@ -3,19 +3,6 @@ from collections import defaultdict
 import os
 from prefect import flow, task
 
-"""
-def process_item(key_counts, key_sums, item): 
-    if isinstance(item, list):
-        for sub_item in item:
-            process_item(key_counts=key_counts, key_sums=key_sums, item=sub_item)
-    elif isinstance(item, dict):
-        for key, value in item.items():
-            key_counts[key][json.dumps(value, sort_keys=True)] += 1
-            key_sums[key] += 1  # Increment count for the key
-            process_item(key_counts=key_counts, key_sums=key_sums, item=value)
-    return key_counts, key_sums    
-"""
-
 @flow(name="Count nodes and records per node", log_prints=True)
 def count_values_per_key(json_file: str) -> tuple:
     """For each item, for each key, count the instances of that value and record the total number for each value and total in the key.
@@ -44,10 +31,6 @@ def count_values_per_key(json_file: str) -> tuple:
     for record_type, records in data.items():
         for record in records:
             process_item(record)
-    # for record_type, records in data.items():
-    #    for record in records:
-    #        process_item(key_counts=key_counts, key_sums=key_sums, item=record)
-
     return key_counts, key_sums
 
 #@flow(name="Write summary of json file", log_prints=True)
@@ -79,8 +62,15 @@ def write_c3dc_json_summary(filepath: str, json_filepath: str, key_counts: dict,
 
 @flow(name="Create json summaries for harmonized json files", log_prints=True)
 def create_c3dc_json_summaries(folder_path: str, output_dir: str) -> None:
-    """Create a summary of each JSON file.
-    Walk through the folder path. The harmonized json file(s) are under subfolder of each study.
+    """Create a summary for each JSON file.
+    Walk through the folder path. The harmonized json file(s) are under the subfolder of each study.
+    The structure of input folder should be as follows:
+        - json_folder
+            - study_1
+                - harmonized_json_1.json
+                - harmonized_json_2.json
+            - study_2
+                - harmonized_json_1.json
 
     Args:
         folder_path (str): folder path which contains harmonized json file(s) under subfolder of each study
