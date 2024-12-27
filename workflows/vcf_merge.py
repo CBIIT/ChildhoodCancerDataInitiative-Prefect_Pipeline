@@ -119,12 +119,12 @@ def merging(df: pd.DataFrame):
             vcf_df = pyvcf.VcfFrame.from_file(vcf)
 
             #change column names to temp sample names >>> TODO: need actual sample names? where to find?
-            vcf.df = vcf.df.rename(columns={"tumor" : "tumor"+"_"+dict_f_name_pid[vcf], "normal" : "normal"+"_"+dict_f_name_pid[vcf]})
+            vcf_df.df = vcf_df.df.rename(columns={"tumor" : "tumor"+"_"+dict_f_name_pid[vcf], "normal" : "normal"+"_"+dict_f_name_pid[vcf]})
 
-            print(vcf.df)
+            print(vcf_df.df)
             
             #append to list of vcf_dfs
-            vcf_dfs.append(vcf)
+            vcf_dfs.append(vcf_df)
 
         merged_vcf = pyvcf.merge(vcf_dfs, how='outer').df
         runner_logger.info("Merge Complete!")
