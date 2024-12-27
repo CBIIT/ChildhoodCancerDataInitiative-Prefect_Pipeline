@@ -119,7 +119,7 @@ def merging(df: pd.DataFrame):
             #change column names to temp sample names >>> TODO: need actual sample names? where to find?
             vcf_df = vcf_df.rename(columns={"tumor" : "tumor"+row["patient_id"], "normal" : "normal"+row["patient_id"]})
 
-            runner_logger.info(vcf_df)
+            print(vcf_df)
             
             #append to list of vcf_dfs
             vcf_dfs.append(vcf_df)
