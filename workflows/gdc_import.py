@@ -334,17 +334,21 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         )
 
         size = 10
+        max_retries = 5
 
         for offset in range(0, len(uuids), size):  # query 10 at a time
             uuids_fmt = ",".join(uuids[offset : offset + size])
-            temp = make_request('get', api + uuids_fmt, token)
-            try:
-                entities = json.loads(temp.text)["entities"]
-            except:
-                runner_logger.error(
-                    f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt}"  # loads > dumps
-                )
-                sys.exit(1)
+            retries = 0
+            while retries < max_retries:
+                try:
+                    temp = make_request('get', api + uuids_fmt, token)
+                    entities = json.loads(temp.text)["entities"]
+                except:
+                    runner_logger.error(
+                        f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt}, trying again..."  # loads > dumps
+                    )
+                    retries += 1
+                    time.sleep(3)
 
             for entity in entities:
 
