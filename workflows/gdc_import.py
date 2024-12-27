@@ -712,6 +712,7 @@ def runner(
     runner: str,
     secret_key_name: str,
     sstr: str,
+    check_for_updates: str
 ):
     """CCDI data curation pipeline
 
@@ -754,7 +755,7 @@ def runner(
         nodes = dbgap_compare(sstr, nodes)
 
     # parse nodes into new and update nodes
-    new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token)
+    new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token, check_for_updates)
 
     # get time for file outputs
     dt = get_time()
