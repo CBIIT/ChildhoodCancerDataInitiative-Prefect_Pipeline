@@ -132,6 +132,61 @@ def dbgap_retrieve(phs_id_version: str):
 
     return subjects_dbgap
 
+def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5, delay=30):
+    """Wrapper for request function to handle timeouts and connection errors
+
+    Args:
+        req_type (str): Type of request (GET, PUT or POST)
+        url (str): API URL to make request to
+        token (str): GDC auth token string
+        data (dict, optional): JSON formatted data. Defaults to {} (no data).
+        max_retries (int, optional): _description_. Defaults to 3.
+        delay (int, optional): _description_. Defaults to 10.
+
+    Returns:
+        str: Request response
+    """
+    runner_logger = get_run_logger()
+    
+    retries = 0
+    if req_type.upper() == 'GET':
+        while retries < max_retries:
+            try:
+                if req_data == "":
+                    response = requests.get(url, headers={"X-Auth-Token": token})
+                    return response
+                else:
+                    response = requests.get(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                    return response
+            except Exception as e:
+                runner_logger.warning(f"Error with request: {e}. Retrying...")
+                retries += 1
+                time.sleep(delay)
+    elif req_type.upper() == 'POST':
+        while retries < max_retries:
+            try:
+                response = requests.post(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                return response
+            except Exception as e:
+                runner_logger.warning(f"Error with request: {e}. Retrying...")
+                retries += 1
+                time.sleep(delay)
+    elif req_type.upper() == 'PUT':
+        while retries < max_retries:
+            try:
+                response = requests.put(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
+                return response
+            except Exception as e:
+                runner_logger.warning(f"Error with request: {e}. Retrying...")
+                retries += 1
+                time.sleep(delay)
+    else:
+        runner_logger.error(f"{req_type} not one of ['GET', 'POST', 'PUT']")
+        sys.exit(1)
+
+
+    runner_logger.error(f"Max retries reached. {req_type.upper()} request {url} failed.")
+    return str(e)
 
 def dbgap_compare(phs_id_version: str, nodes: list):
     """Perform comparison of dbGaP released cases
@@ -284,58 +339,6 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         updated_error_message = sanitize_return(str(e), [token])
         runner_logger.error(updated_error_message)
         sys.exit(1)
-
-def make_request(req_type: str, url: str, token:str, req_data={}, max_retries=5, delay=30):
-    """Wrapper for request function to handle timeouts and connection errors
-
-    Args:
-        req_type (str): Type of request (GET, PUT or POST)
-        url (str): API URL to make request to
-        token (str): GDC auth token string
-        data (dict, optional): JSON formatted data. Defaults to {} (no data).
-        max_retries (int, optional): _description_. Defaults to 3.
-        delay (int, optional): _description_. Defaults to 10.
-
-    Returns:
-        str: Request response
-    """
-    runner_logger = get_run_logger()
-    
-    retries = 0
-    if req_type.upper() == 'GET':
-        while retries < max_retries:
-            try:
-                response = requests.get(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
-                return response
-            except Exception as e:
-                runner_logger.warning(f"Error with request: {e}. Retrying...")
-                retries += 1
-                time.sleep(delay)
-    elif req_type.upper() == 'POST':
-        while retries < max_retries:
-            try:
-                response = requests.post(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
-                return response
-            except Exception as e:
-                runner_logger.warning(f"Error with request: {e}. Retrying...")
-                retries += 1
-                time.sleep(delay)
-    elif req_type.upper() == 'PUT':
-        while retries < max_retries:
-            try:
-                response = requests.put(url, json=req_data, headers={"X-Auth-Token": token, "Content-Type": "application/json"})
-                return response
-            except Exception as e:
-                runner_logger.warning(f"Error with request: {e}. Retrying...")
-                retries += 1
-                time.sleep(delay)
-    else:
-        runner_logger.error(f"{req_type} not one of ['GET', 'POST', 'PUT']")
-        sys.exit(1)
-
-
-    runner_logger.error(f"Max retries reached. {req_type.upper()} request {url} failed.")
-    return str(e)
 
 def entity_parser(node: dict):
     """Parse out unnecessary GDC internal fields and handle null values"""
