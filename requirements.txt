@@ -72,7 +72,7 @@ mypy-boto3-s3==1.34.14
 mypy-boto3-secretsmanager==1.34.43
 nanoid==2.0.0
 neo4j==5.17.0
-numpy==2.2.0
+numpy==1.26.2
 oauthlib==3.2.2
 openpyxl==3.1.2
 orjson==3.9.10
