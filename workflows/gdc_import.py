@@ -156,7 +156,7 @@ def dbgap_retrieve(phs_id_version: str):
 
     return subjects_dbgap
 
-def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5, delay=30):
+def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5, delay=10):
     """Wrapper for request function to handle timeouts and connection errors
 
     Args:
@@ -259,7 +259,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     n_query = 500
 
     for offset in range(0, 100000, n_query):
-        time.sleep(20)
+        time.sleep(10)
         # print to runner_logger that running query
         runner_logger.info(
             f" Checking for {node_type} nodes already present in {project_id}, offset is {offset}"
