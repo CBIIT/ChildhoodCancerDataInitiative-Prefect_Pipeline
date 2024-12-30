@@ -480,7 +480,7 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check
     # assess if node entities in submission file that already exist in GDC
     # need to be updated in GDC (i.e. entities in file and GDC are different)
 
-    if check_nodes:
+    if len(check_nodes) > 0:
 
         update_nodes = []
 
