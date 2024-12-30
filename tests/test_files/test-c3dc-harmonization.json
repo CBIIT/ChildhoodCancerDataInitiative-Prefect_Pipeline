@@ -1,0 +1,36 @@
+{
+    "participants": [
+        {
+            "participant_id": "Test-ID-1",
+            "sex_at_birth": "Male",
+            "race": [
+                "White"
+            ],
+            "diagnosis.diagnosis_id": [
+                "0ca5ce16-cb07-47b8-8630-b8b8dfd55a99"
+            ],
+            "survival.survival_id": [
+                "582244d0-b886-4a2b-91c1-613eeab9772e"
+            ],
+            "treatment.treatment_id": [],
+            "treatment_response.treatment_response_id": [],
+            "study.study_id": "phs000111"
+        },
+        {
+            "participant_id": "test-ID-2",
+            "sex_at_birth": "Female",
+            "race": [
+                "Black or African American"
+            ],
+            "diagnosis.diagnosis_id": [
+                "cf5ab916-3bbc-4a7a-a9d1-03c165efe332"
+            ],
+            "survival.survival_id": [
+                "1c938171-1e68-46d7-b00c-7b593cc3470e"
+            ],
+            "treatment.treatment_id": [],
+            "treatment_response.treatment_response_id": [],
+            "study.study_id": "phs000111"
+        }
+    ]
+}
