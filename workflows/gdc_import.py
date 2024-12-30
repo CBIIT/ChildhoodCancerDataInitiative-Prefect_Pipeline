@@ -554,23 +554,19 @@ def error_parser(response: str):
         enum_dict = json.loads(response)
         new_dict = {}
         if "entities" in enum_dict.keys():
-            for key in enum_dict.keys():
-                if key != "entities":
-                    new_dict[key] = enum_dict[key]
-                else:
-                    new_dict["affected_field"] = enum_dict["entities"][0]["errors"][0][
-                        "keys"
-                    ][0]
-                    # parse error message to first 300 chars for simplcity
-                    if len(enum_dict["entities"][0]["errors"][0]["message"]) > 300:
-                        new_dict["error_msg"] = (
-                            enum_dict["entities"][0]["errors"][0]["message"][:300]
-                            + "..."
-                        )
-                    else:
-                        new_dict["error_msg"] = enum_dict["entities"][0]["errors"][0][
-                            "message"
-                        ]
+            new_dict["affected_field"] = enum_dict["entities"][0]["errors"][0][
+                "keys"
+            ][0]
+            # parse error message to first 300 chars for simplcity
+            if len(enum_dict["entities"][0]["errors"][0]["message"]) > 300:
+                new_dict["error_msg"] = (
+                    enum_dict["entities"][0]["errors"][0]["message"][:300]
+                    + "..."
+                )
+            else:
+                new_dict["error_msg"] = enum_dict["entities"][0]["errors"][0][
+                    "message"
+                ]
             return json.dumps(new_dict)
         else:
             return response
