@@ -95,7 +95,7 @@ def retrieve_s3_url(rows: pd.DataFrame):
             for record in json.loads(response.text)["records"]:
                 for url in record["urls"]:
                     if url != "":
-                        s3_url = ""
+                        s3_url = url
 
             if s3_url == "":
                 runner_logger.error(
