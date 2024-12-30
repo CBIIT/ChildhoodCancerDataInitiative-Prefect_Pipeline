@@ -257,7 +257,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     # number nodes to query
     n_query = 500
 
-    for offset in range(0, 20000, n_query):
+    for offset in range(0, 100000, n_query):
         time.sleep(20)
         # print to runner_logger that running query
         runner_logger.info(
