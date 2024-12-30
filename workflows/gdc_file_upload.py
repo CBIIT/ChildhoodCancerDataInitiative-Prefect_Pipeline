@@ -37,7 +37,9 @@ def read_input(file_path: str):
     f_name = os.path.basename(file_path)
 
     try:
-        file_metadata = pd.read_csv(f_name, sep="\t")[["id", "md5sum", "file_size", "file_name"]]
+        file_metadata = pd.read_csv(f_name, sep="\t")[
+            ["id", "md5sum", "file_size", "file_name"]
+        ]
     except:
         runner_logger.error(f"Error reading and parsing file {f_name}.")
         sys.exit(1)
@@ -89,9 +91,16 @@ def retrieve_s3_url(rows: pd.DataFrame):
 
         # parse response here
         try:
-            s3_url = json.loads(response.text)["records"][0]["urls"][
-                0
-            ]  # assuming only 1 URL location for a file OR just pulling the first instance
+            s3_url = ""
+            for record in json.loads(response.text)["records"]:
+                for url in record["urls"]:
+                    if url != "":
+                        s3_url = ""
+
+            if s3_url == "":
+                runner_logger.error(
+                    f" No URL found: {str(response.text)} for query {query_url}"
+                )
         except:
             runner_logger.error(
                 f" Response is malformed: {str(response.text)} for query {query_url}"
@@ -135,7 +144,9 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     log_prints=True,
     flow_run_name="gdc_upload_make_upload_request_" + f"{get_time()}",
 )
-def upload_request(f_name: str, project_id: str, uuid: str, token: str, max_retries=3, delay=10):
+def upload_request(
+    f_name: str, project_id: str, uuid: str, token: str, max_retries=3, delay=10
+):
     """Funtion to upload file
 
     Args:
@@ -173,10 +184,10 @@ def upload_request(f_name: str, project_id: str, uuid: str, token: str, max_retr
             time.sleep(delay)
         except Exception as e:
             print(f"Some other error: {e}. Retrying...")
-            
 
     runner_logger.error(f"Max retries reached. Failed to upload {uuid}")
     return [uuid, "NOT UPLOADED", str(e)]
+
 
 @flow(
     name="gdc_upload_uploader_api",
@@ -205,44 +216,51 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                 f_path = "/".join(row["s3_url"].split("/")[3:])
                 f_name = os.path.basename(f_path)
 
-                if f_name != row['file_name']:
-                    runner_logger.warning(f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}")
+                if f_name != row["file_name"]:
+                    runner_logger.warning(
+                        f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}"
+                    )
                 # trying to re-use file_dl() function
                 file_dl(f_bucket, f_path)
 
                 runner_logger.info(f"Downloaded file {f_name}")
-            except: 
+            except:
                 runner_logger.error(f"Cannot download file {row['file_name']}")
 
             # check that file exists
-            if not os.path.isfile(row['file_name']):
+            if not os.path.isfile(row["file_name"]):
                 runner_logger.error(
                     f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
                 )
             else:  # proceed to uploaded with API
-                subresponses.append(upload_request(f_name, project_id, row['id'], token))
+                subresponses.append(
+                    upload_request(f_name, project_id, row["id"], token)
+                )
                 time.sleep(10)
 
                 # delete file
                 if os.path.exists(f_name):
                     os.remove(f_name)
                 else:
-                    runner_logger.warning(f"The file {f_name} does not exist, cannot remove.")
+                    runner_logger.warning(
+                        f"The file {f_name} does not exist, cannot remove."
+                    )
 
                 # check delete
                 if os.path.exists(f_name):
-                    runner_logger.warning(f"The file {f_name} still exists, error removing.")
+                    runner_logger.warning(
+                        f"The file {f_name} still exists, error removing."
+                    )
                 else:
                     continue
 
         return subresponses
-    
+
     except Exception as e:
         # sanitize exception of any token information
         updated_error_message = sanitize_return(str(e), [token])
         runner_logger.error(updated_error_message)
         sys.exit(1)
-
 
 
 @flow(
