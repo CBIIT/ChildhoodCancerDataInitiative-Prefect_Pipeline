@@ -39,6 +39,7 @@ import pandas as pd
 from datetime import datetime
 import time
 import socket
+from typing import Literal
 
 import boto3
 from botocore.exceptions import ClientError
@@ -703,6 +704,7 @@ def get_secret(secret_key_name):
 
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
 
+DropDownChoices = Literal["yes", "no"]
 
 @flow(
     name="GDC Import",
@@ -717,7 +719,7 @@ def runner(
     runner: str,
     secret_key_name: str,
     sstr: str,
-    check_for_updates: str
+    check_for_updates: DropDownChoices
 ):
     """CCDI data curation pipeline
 
