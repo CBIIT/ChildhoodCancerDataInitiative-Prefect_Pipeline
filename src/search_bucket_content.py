@@ -30,7 +30,7 @@ def search_bucket_content(bucket_path: str, search_text_list: list[str]) -> dict
                 obj_key = obj["Key"]
                 for text in search_text_list:
                     if text in obj_key:
-                        return_dict[text].append(obj_key)
+                        return_dict[text].append("s3://" + bucket_name + "/" + obj_key)
                     else:
                         pass
         else:
