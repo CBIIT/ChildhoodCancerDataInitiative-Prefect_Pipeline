@@ -23,7 +23,7 @@ from src.utils import get_time, file_dl, folder_ul, sanitize_return
 
 
 def read_input(file_path: str):
-    """Read in TSV file and extract id (GDC uuid), md5sum and file_size columns
+    """Read in TSV file and extract file_name, id (GDC uuid), md5sum and file_size columns
 
     Args:
         file_path (str): path to input file that contains required cols
@@ -37,7 +37,7 @@ def read_input(file_path: str):
     f_name = os.path.basename(file_path)
 
     try:
-        file_metadata = pd.read_csv(f_name, sep="\t")[["id", "md5sum", "file_size"]]
+        file_metadata = pd.read_csv(f_name, sep="\t")[["id", "md5sum", "file_size", "file_name"]]
     except:
         runner_logger.error(f"Error reading and parsing file {f_name}.")
         sys.exit(1)
@@ -173,8 +173,7 @@ def upload_request(f_name: str, project_id: str, uuid: str, token: str, max_retr
             time.sleep(delay)
         except Exception as e:
             print(f"Some other error: {e}. Retrying...")
-            retries += 1
-            time.sleep(delay)
+            
 
     runner_logger.error(f"Max retries reached. Failed to upload {uuid}")
     return [uuid, "NOT UPLOADED", str(e)]
@@ -204,20 +203,21 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
             try:
                 f_bucket = row["s3_url"].split("/")[2]
                 f_path = "/".join(row["s3_url"].split("/")[3:])
+                f_name = os.path.basename(f_path)
+
+                if f_name != row['file_name']:
+                    runner_logger.warning(f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}")
                 # trying to re-use file_dl() function
                 file_dl(f_bucket, f_path)
 
-                # extract file name
-                f_name = os.path.basename(f_path)
-
                 runner_logger.info(f"Downloaded file {f_name}")
             except: 
-                runner_logger.error(f"Cannot download file {f_name}")
+                runner_logger.error(f"Cannot download file {row['file_name']}")
 
             # check that file exists
-            if not os.path.isfile(f_name):
+            if not os.path.isfile(row['file_name']):
                 runner_logger.error(
-                    f"File {f_name} not copied over or found from URL {row['s3_url']}"
+                    f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
                 )
             else:  # proceed to uploaded with API
                 subresponses.append(upload_request(f_name, project_id, row['id'], token))
