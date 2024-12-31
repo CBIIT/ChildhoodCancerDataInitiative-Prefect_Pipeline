@@ -252,13 +252,13 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     endpt = "https://api.gdc.cancer.gov/submission/graphql"
     null = ""  # None
 
-    # need to do run queries 1000 at a time to avoid time outs
+    # need to do run queries 500 at a time to avoid time outs
     # may need to increase max number to avoid missing data if more data added in future
 
     # number nodes to query
     n_query = 500
 
-    for offset in range(0, 100000, n_query):
+    for offset in range(0, 500000, n_query):
         time.sleep(10)
         # print to runner_logger that running query
         runner_logger.info(
