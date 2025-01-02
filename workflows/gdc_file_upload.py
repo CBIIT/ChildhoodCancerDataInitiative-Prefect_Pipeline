@@ -141,11 +141,6 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     return df_s3
 
 
-@flow(
-    name="gdc_upload_make_upload_request",
-    log_prints=True,
-    flow_run_name="gdc_upload_make_upload_request_" + f"{get_time()}",
-)
 
 def upload_chunk(url, chunk_data, chunk_number, token):
     """Helper function to upload a single chunk."""
@@ -175,6 +170,11 @@ def upload_chunk(url, chunk_data, chunk_number, token):
     runner_logger.error(f"Max retries reached. Failed to upload {os.path.basename(url)}")
     return [os.path.basename(url), "NOT UPLOADED", str(e)]
 
+@flow(
+    name="gdc_upload_make_upload_request",
+    log_prints=True,
+    flow_run_name="gdc_upload_make_upload_request_" + f"{get_time()}",
+)
 def upload_request_chunks(
     f_name: str, project_id: str, uuid: str, token: str):
     """Function to upload file
