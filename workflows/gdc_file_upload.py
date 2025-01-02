@@ -15,6 +15,7 @@ import time
 import pandas as pd
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
+import contextvars
 
 
 # prefect dependencies
@@ -184,8 +185,6 @@ def upload_request_chunks(
         project_id (str): Project ID in GDC to upload to
         uuid (str): UUID of file in GDC
         token (str): GDC auth token
-        max_retries (int, optional): Max num retries for upload to attempt. Defaults to 3.
-        delay (int, optional): Seconds to wait between retries. Defaults to 10.
 
     Returns:
         list: UUID, response code and response text from upload attempt
@@ -195,7 +194,7 @@ def upload_request_chunks(
     program = project_id.split("-")[0]
     project = "-".join(project_id.split("-")[1:])
 
-    chunk_size = 10 * 1024 * 1024 #1MB
+    chunk_size = 10 * 1024 * 1024 #10MB
     max_threads = 5
 
     file_size = os.path.getsize(f_name)
@@ -204,12 +203,13 @@ def upload_request_chunks(
 
     try:
         with open(f_name, "rb") as f:
+            context = contextvars.copy_context()
             with ThreadPoolExecutor(max_threads) as executor:
                 futures = []
 
                 for chunk_number in range(chunk_count):
                     chunk_data = f.read(chunk_size)
-                    futures.append(executor.submit(upload_chunk, url, chunk_data, chunk_number, token))
+                    futures.append(executor.submit(context.run, upload_chunk, url, chunk_data, chunk_number, token))
                 
                 for future in futures:
                     runner_logger.info(future.result())
