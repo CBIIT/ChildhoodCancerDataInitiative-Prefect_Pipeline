@@ -222,31 +222,6 @@ def upload_request_chunks(
 
         return [f_name, "NOT UPLOADED", str(e)]
 
-        
-    """while retries < max_retries:
-        try:
-            with open(f_name, "rb") as f:
-                response = requests.put(
-                    f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{uuid}",
-                    data=f,
-                    stream=True, 
-                    headers={"X-Auth-Token": token},
-                )
-            f.close()
-            return [uuid, response.status_code, response.text]
-        except ConnectionResetError as e:
-            print(f"Connection reset by peer: {e}. Retrying...")
-            retries += 1
-            time.sleep(delay)
-        except ConnectionError as e:
-            print(f"Connection reset by peer: {e}. Retrying...")
-            retries += 1
-            time.sleep(delay)
-        except Exception as e:
-            print(f"Some other error: {e}. Retrying...")"""
-
-    
-
 
 @flow(
     name="gdc_upload_uploader_api",
@@ -360,7 +335,7 @@ def runner(
     # extract file name before the workflow starts
     file_name = os.path.basename(file_path)
 
-    #token = get_secret(secret_key_name).strip()
+    token = get_secret(secret_key_name).strip()
 
     runner_logger.info(f">>> Reading input file {file_name} ....")
 
@@ -381,7 +356,7 @@ def runner(
             f"Uploading chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))} for files"
         )
         subresponses = uploader_api(
-            file_metadata_s3[chunk : chunk + chunk_size], project_id, secret_key_name
+            file_metadata_s3[chunk : chunk + chunk_size], project_id, token
         )
         responses += subresponses
 
