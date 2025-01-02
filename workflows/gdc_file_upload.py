@@ -149,7 +149,7 @@ def upload_chunk(url, chunk_data, chunk_number, token):
     runner_logger = get_run_logger()
 
     retries = 0
-    max_retries = 4
+    max_retries = 10
 
     #token = get_secret(secret).strip()
 
@@ -194,8 +194,8 @@ def upload_request_chunks(
     program = project_id.split("-")[0]
     project = "-".join(project_id.split("-")[1:])
 
-    chunk_size = 1 * 1024 * 1024 #1MB
-    max_threads = 2
+    chunk_size = 5 * 1024 * 1024 #1MB
+    max_threads = 5
 
     file_size = os.path.getsize(f_name)
     chunk_count = (file_size // chunk_size) + (1 if file_size % chunk_size > 0 else 0)
@@ -207,6 +207,7 @@ def upload_request_chunks(
                 futures = []
 
                 for chunk_number in range(chunk_count):
+                    runner_logger.info(f"{chunk_count} chunks for file {f_name} upload")
                     chunk_data = f.read(chunk_size)
                     context = contextvars.copy_context()
                     futures.append(executor.submit(context.run, upload_chunk, url, chunk_data, chunk_number, token))
