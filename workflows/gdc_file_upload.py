@@ -14,6 +14,8 @@ import time
 
 import pandas as pd
 from datetime import datetime
+from concurrent.futures import ThreadPoolExecutor
+
 
 # prefect dependencies
 import boto3
@@ -144,10 +146,38 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     log_prints=True,
     flow_run_name="gdc_upload_make_upload_request_" + f"{get_time()}",
 )
-def upload_request(
-    f_name: str, project_id: str, uuid: str, token: str, max_retries=3, delay=10
-):
-    """Funtion to upload file
+
+def upload_chunk(url, chunk_data, chunk_number, secret):
+    """Helper function to upload a single chunk."""
+
+    runner_logger = get_run_logger()
+
+    retries = 0
+    max_retries = 4
+
+    token = get_secret(secret).strip()
+
+    while retries < max_retries:
+        try:
+            files = {'file': (f'chunk_{chunk_number}', chunk_data)}
+            headers = headers={"X-Auth-Token": token}
+            response = requests.put(url, files=files, stream=True, headers=headers)
+            if response.status_code == 200:
+                print(f"Chunk {chunk_number} uploaded successfully!")
+                return [os.path.basename(url), response.status_code, response.text]
+            else:
+                print(f"Error uploading chunk {chunk_number}: {response.status_code}, retrying...")
+                retries += 1 
+        except Exception as e:
+            print(f"Error uploading chunk {chunk_number}: {e}")
+            retries += 1 
+
+    runner_logger.error(f"Max retries reached. Failed to upload {os.path.basename(url)}")
+    return [os.path.basename(url), "NOT UPLOADED", str(e)]
+
+def upload_request_chunks(
+    f_name: str, project_id: str, uuid: str, token: str):
+    """Function to upload file
 
     Args:
         f_name (str): Name of file to upload
@@ -161,16 +191,36 @@ def upload_request(
         list: UUID, response code and response text from upload attempt
     """
     runner_logger = get_run_logger()
-    retries = 0
+
     program = project_id.split("-")[0]
     project = "-".join(project_id.split("-")[1:])
-    while retries < max_retries:
+
+    chunk_size = 5 * 1024 * 1024 #5MB
+    max_threads = 5
+
+    file_size = os.path.getsize(f_name)
+    chunk_count = (file_size // chunk_size) + (1 if file_size % chunk_size > 0 else 0)
+    url = f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{uuid}"
+
+    with open(f_name, "rb") as f:
+        with ThreadPoolExecutor(max_threads) as executor:
+            futures = []
+
+            for chunk_number in range(chunk_count):
+                chunk_data = f.read(chunk_size)
+                futures.append(executor.submit(upload_chunk, url, chunk_data, chunk_number, token))
+            
+            for future in futures:
+                return future.result()
+
+        
+    """while retries < max_retries:
         try:
             with open(f_name, "rb") as f:
                 response = requests.put(
                     f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{uuid}",
                     data=f,
-                    stream=True,
+                    stream=True, 
                     headers={"X-Auth-Token": token},
                 )
             f.close()
@@ -184,10 +234,9 @@ def upload_request(
             retries += 1
             time.sleep(delay)
         except Exception as e:
-            print(f"Some other error: {e}. Retrying...")
+            print(f"Some other error: {e}. Retrying...")"""
 
-    runner_logger.error(f"Max retries reached. Failed to upload {uuid}")
-    return [uuid, "NOT UPLOADED", str(e)]
+    
 
 
 @flow(
@@ -235,7 +284,7 @@ def uploader_api(df: pd.DataFrame, project_id: str, token: str):
                 )
             else:  # proceed to uploaded with API
                 subresponses.append(
-                    upload_request(f_name, project_id, row["id"], token)
+                    upload_request_chunks(f_name, project_id, row["id"], token)
                 )
                 time.sleep(10)
 
@@ -302,7 +351,7 @@ def runner(
     # extract file name before the workflow starts
     file_name = os.path.basename(file_path)
 
-    token = get_secret(secret_key_name).strip()
+    #token = get_secret(secret_key_name).strip()
 
     runner_logger.info(f">>> Reading input file {file_name} ....")
 
@@ -323,7 +372,7 @@ def runner(
             f"Uploading chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))} for files"
         )
         subresponses = uploader_api(
-            file_metadata_s3[chunk : chunk + chunk_size], project_id, token
+            file_metadata_s3[chunk : chunk + chunk_size], project_id, secret_key_name
         )
         responses += subresponses
 
