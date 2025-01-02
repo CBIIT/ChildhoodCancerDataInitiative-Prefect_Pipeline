@@ -222,7 +222,7 @@ def upload_request_chunks(
         if set([res[1] for res in chunk_res]) == {200}:
             return [uuid, 200, "success"]
         else:
-            return [uuid, "NOT UPLOADED", str(e)]
+            return [uuid, "NOT UPLOADED", "A chunk failed upload"]
         
     except Exception as e:
         runner_logger.error(f"Exception for file upload {f_name} raised: {e}")
