@@ -147,7 +147,7 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     flow_run_name="gdc_upload_make_upload_request_" + f"{get_time()}",
 )
 
-def upload_chunk(url, chunk_data, chunk_number, secret):
+def upload_chunk(url, chunk_data, chunk_number, token):
     """Helper function to upload a single chunk."""
 
     runner_logger = get_run_logger()
@@ -155,12 +155,12 @@ def upload_chunk(url, chunk_data, chunk_number, secret):
     retries = 0
     max_retries = 4
 
-    token = get_secret(secret).strip()
+    #token = get_secret(secret).strip()
 
     while retries < max_retries:
         try:
             files = {'file': (f'chunk_{chunk_number}', chunk_data)}
-            headers = headers={"X-Auth-Token": token}
+            headers = {"X-Auth-Token": token}
             response = requests.put(url, files=files, stream=True, headers=headers)
             if response.status_code == 200:
                 runner_logger.info(f"Chunk {chunk_number} uploaded successfully!")
@@ -195,7 +195,7 @@ def upload_request_chunks(
     program = project_id.split("-")[0]
     project = "-".join(project_id.split("-")[1:])
 
-    chunk_size = 1 * 1024 * 1024 #5MB
+    chunk_size = 1 * 1024 * 1024 #1MB
     max_threads = 1
 
     file_size = os.path.getsize(f_name)
