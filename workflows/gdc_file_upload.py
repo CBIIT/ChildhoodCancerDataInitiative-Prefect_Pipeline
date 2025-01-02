@@ -166,6 +166,7 @@ def upload_chunk(url, chunk_data, chunk_number, token):
                 retries += 1 
         except Exception as e:
             runner_logger.error(f"Error uploading chunk {chunk_number}: {e}")
+            time.sleep(1)
             retries += 1 
 
     runner_logger.error(f"Max retries reached. Failed to upload {os.path.basename(url)}")
