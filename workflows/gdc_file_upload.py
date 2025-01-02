@@ -159,8 +159,8 @@ def upload_chunk(url, chunk_data, chunk_number, token):
             headers = {"X-Auth-Token": token}
             response = requests.put(url, files=files, stream=True, headers=headers)
             if response.status_code == 200:
-                runner_logger.info(f"Chunk {chunk_number} uploaded successfully!")
-                return [os.path.basename(url), response.status_code, response.text]
+                runner_logger.info(f"Chunk {chunk_number} for file uploaded successfully!")
+                return None
             else:
                 runner_logger.error(f"Error uploading chunk {chunk_number}: {response.status_code}, retrying...")
                 retries += 1 
@@ -203,12 +203,12 @@ def upload_request_chunks(
 
     try:
         with open(f_name, "rb") as f:
-            context = contextvars.copy_context()
             with ThreadPoolExecutor(max_threads) as executor:
                 futures = []
 
                 for chunk_number in range(chunk_count):
                     chunk_data = f.read(chunk_size)
+                    context = contextvars.copy_context()
                     futures.append(executor.submit(context.run, upload_chunk, url, chunk_data, chunk_number, token))
                 
                 for future in futures:
