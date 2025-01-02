@@ -163,13 +163,13 @@ def upload_chunk(url, chunk_data, chunk_number, secret):
             headers = headers={"X-Auth-Token": token}
             response = requests.put(url, files=files, stream=True, headers=headers)
             if response.status_code == 200:
-                print(f"Chunk {chunk_number} uploaded successfully!")
+                runner_logger.info(f"Chunk {chunk_number} uploaded successfully!")
                 return [os.path.basename(url), response.status_code, response.text]
             else:
-                print(f"Error uploading chunk {chunk_number}: {response.status_code}, retrying...")
+                runner_logger.error(f"Error uploading chunk {chunk_number}: {response.status_code}, retrying...")
                 retries += 1 
         except Exception as e:
-            print(f"Error uploading chunk {chunk_number}: {e}")
+            runner_logger.error(f"Error uploading chunk {chunk_number}: {e}")
             retries += 1 
 
     runner_logger.error(f"Max retries reached. Failed to upload {os.path.basename(url)}")
@@ -202,16 +202,25 @@ def upload_request_chunks(
     chunk_count = (file_size // chunk_size) + (1 if file_size % chunk_size > 0 else 0)
     url = f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{uuid}"
 
-    with open(f_name, "rb") as f:
-        with ThreadPoolExecutor(max_threads) as executor:
-            futures = []
+    try:
+        with open(f_name, "rb") as f:
+            with ThreadPoolExecutor(max_threads) as executor:
+                futures = []
 
-            for chunk_number in range(chunk_count):
-                chunk_data = f.read(chunk_size)
-                futures.append(executor.submit(upload_chunk, url, chunk_data, chunk_number, token))
-            
-            for future in futures:
-                return future.result()
+                for chunk_number in range(chunk_count):
+                    chunk_data = f.read(chunk_size)
+                    futures.append(executor.submit(upload_chunk, url, chunk_data, chunk_number, token))
+                
+                for future in futures:
+                    runner_logger.info(future.result())
+
+        f.close()
+        return [uuid, response.status_code, response.text]
+        
+    except Exception as e:
+        runner_logger.error(f"Exception for file upload {f_name} raised: {e}")
+
+        return [f_name, "NOT UPLOADED", str(e)]
 
         
     """while retries < max_retries:
