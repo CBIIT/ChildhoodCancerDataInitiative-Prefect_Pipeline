@@ -166,13 +166,14 @@ def upload_request(
     project = "-".join(project_id.split("-")[1:])
     while retries < max_retries:
         try:
-            with open(f_name, "rb") as stream:
+            with open(f_name, "rb") as f:
                 response = requests.put(
                     f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{uuid}",
-                    data=stream,
+                    data=f,
+                    stream=True,
                     headers={"X-Auth-Token": token},
                 )
-            stream.close()
+            f.close()
             return [uuid, response.status_code, response.text]
         except ConnectionResetError as e:
             print(f"Connection reset by peer: {e}. Retrying...")
