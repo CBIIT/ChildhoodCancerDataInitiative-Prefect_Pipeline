@@ -199,6 +199,7 @@ def upload_request_chunks(
 
     file_size = os.path.getsize(f_name)
     chunk_count = (file_size // chunk_size) + (1 if file_size % chunk_size > 0 else 0)
+    runner_logger.info(f"{chunk_count} chunks for file {f_name} upload")
     url = f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{uuid}"
 
     try:
@@ -207,13 +208,12 @@ def upload_request_chunks(
                 futures = []
 
                 for chunk_number in range(chunk_count):
-                    runner_logger.info(f"{chunk_count} chunks for file {f_name} upload")
                     chunk_data = f.read(chunk_size)
                     context = contextvars.copy_context()
                     futures.append(executor.submit(context.run, upload_chunk, url, chunk_data, chunk_number, token))
                 
                 for future in futures:
-                    runner_logger.info(future.result())
+                    runner_logger.info(future.result()) #TODO: geta all status codes and do a check 
 
         f.close()
         return [uuid, "200", "success"]
