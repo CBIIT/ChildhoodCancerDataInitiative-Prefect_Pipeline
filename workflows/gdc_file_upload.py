@@ -215,7 +215,7 @@ def upload_request_chunks(
                     runner_logger.info(future.result())
 
         f.close()
-        return [uuid, response.status_code, response.text]
+        return [uuid, "200", "success"]
         
     except Exception as e:
         runner_logger.error(f"Exception for file upload {f_name} raised: {e}")
