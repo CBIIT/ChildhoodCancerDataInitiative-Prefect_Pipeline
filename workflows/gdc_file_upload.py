@@ -160,7 +160,7 @@ def upload_chunk(url, chunk_data, chunk_number, token):
             response = requests.put(url, files=files, stream=True, headers=headers)
             if response.status_code == 200:
                 runner_logger.info(f"Chunk {chunk_number} for file uploaded successfully!")
-                return [os.path.basename(url), 200, str(e)]
+                return [os.path.basename(url), 200, "success"]
             else:
                 runner_logger.error(f"Error uploading chunk {chunk_number}: {response.status_code}, retrying...")
                 retries += 1 
@@ -215,7 +215,7 @@ def upload_request_chunks(
                     futures.append(executor.submit(context.run, upload_chunk, url, chunk_data, chunk_number, token))
                 
                 for future in futures:
-                    chunk_res.append(future.result()) #TODO: geta all status codes and do a check 
+                    chunk_res.append(future.result())  
 
         f.close()
 
