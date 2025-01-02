@@ -195,7 +195,7 @@ def upload_request_chunks(
     program = project_id.split("-")[0]
     project = "-".join(project_id.split("-")[1:])
 
-    chunk_size = 5 * 1024 * 1024 #5MB
+    chunk_size = 1 * 1024 * 1024 #5MB
     max_threads = 2
 
     file_size = os.path.getsize(f_name)
