@@ -149,7 +149,7 @@ def upload_chunk(url, chunk_data, chunk_number, token):
     runner_logger = get_run_logger()
 
     retries = 0
-    max_retries = 10
+    max_retries = 20
 
     #token = get_secret(secret).strip()
 
@@ -160,7 +160,7 @@ def upload_chunk(url, chunk_data, chunk_number, token):
             response = requests.put(url, files=files, stream=True, headers=headers)
             if response.status_code == 200:
                 runner_logger.info(f"Chunk {chunk_number} for file uploaded successfully!")
-                return None
+                return [os.path.basename(url), 200, str(e)]
             else:
                 runner_logger.error(f"Error uploading chunk {chunk_number}: {response.status_code}, retrying...")
                 retries += 1 
@@ -194,13 +194,15 @@ def upload_request_chunks(
     program = project_id.split("-")[0]
     project = "-".join(project_id.split("-")[1:])
 
-    chunk_size = 2 * 1024 * 1024 #5MB
-    max_threads = 2
+    chunk_size = 1 * 1024 * 1024 #1MB
+    max_threads = 5
 
     file_size = os.path.getsize(f_name)
     chunk_count = (file_size // chunk_size) + (1 if file_size % chunk_size > 0 else 0)
     runner_logger.info(f"{chunk_count} chunks for file {f_name} upload")
     url = f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}/files/{uuid}"
+
+    chunk_res = []
 
     try:
         with open(f_name, "rb") as f:
@@ -213,15 +215,19 @@ def upload_request_chunks(
                     futures.append(executor.submit(context.run, upload_chunk, url, chunk_data, chunk_number, token))
                 
                 for future in futures:
-                    runner_logger.info(future.result()) #TODO: geta all status codes and do a check 
+                    chunk_res.append(future.result()) #TODO: geta all status codes and do a check 
 
         f.close()
-        return [uuid, "200", "success"]
+
+        if set([res[1] for res in chunk_res]) == {200}:
+            return [uuid, 200, "success"]
+        else:
+            return [uuid, "NOT UPLOADED", str(e)]
         
     except Exception as e:
         runner_logger.error(f"Exception for file upload {f_name} raised: {e}")
 
-        return [f_name, "NOT UPLOADED", str(e)]
+        return [uuid, "NOT UPLOADED", str(e)]
 
 
 @flow(
