@@ -1382,3 +1382,27 @@ def ccdi_to_dcf_index(ccdi_manifest: str) -> tuple:
     del combined_df
 
     return output_filename, log_name
+
+@task(name="ccdi get secret from secrets manager")
+def get_secret(secret_name_path: str, secret_key_name: str):
+    """Retrieve a secret hash from AWS Secrets Manager
+
+    Args:
+        secret_name_path (str): Secrets name path, i.e. ccdi/storage/inventory/token
+        secret_key_name (str): Secret key name associated with hash/token
+
+    Returns:
+        str: Secret hash/token
+    """
+    region_name = "us-east-1"
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(service_name="secretsmanager", region_name=region_name)
+    try:
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name_path)
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
