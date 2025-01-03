@@ -192,12 +192,13 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
         else:  # proceed to uploaded with API
             runner_logger.info(f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']}....")
             try:
-                response = subprocess.Popen(["gdc-client", "upload", row['id'], "-t", token_file, "-c", str(chunk_size), "-n", str(n_process)], shell=False, capture_output=True)
-                if f"Upload finished for file {row['id']}" in response.stdout:
+                process = subprocess.Popen(["gdc-client", "upload", row['id'], "-t", token_file, "-c", str(chunk_size), "-n", str(n_process)], shell=False, text=True)
+                std_out, std_err = process.communicate()
+                if f"Upload finished for file {row['id']}" in std_out:
                     runner_logger.info(f"File {row['id']} successfully uploaded!")
                     subresponses.append([row['id'], row['file_name'], "uploaded"])
                 else:
-                    runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed: {response.stdout}")
+                    runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed: {std_out}")
                     subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
             except Exception as e:
                 runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed: {e}")
