@@ -278,7 +278,7 @@ def runner(
     file_dl(bucket, gdc_client_path)
 
     # change gdc-client to executable
-    subprocess.run(["chmod", "722", "gdc-client"], shell=False)
+    subprocess.run(["chmod", "755", "gdc-client"], shell=False)
 
     # extract file name before the workflow starts
     file_name = os.path.basename(manifest_path)
