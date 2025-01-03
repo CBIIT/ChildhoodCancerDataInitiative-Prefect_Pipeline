@@ -189,6 +189,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
             process = subprocess.Popen(["./gdc-client", "upload", row['id'], "-t", token_file, "-c", str(chunk_size), "-n", str(n_process)], shell=False, text=True)
             std_out, std_err = process.communicate()
             runner_logger.info(std_out)
+            runner_logger.info(std_err)
             """if f"Upload finished for file {row['id']}" in std_out:
                     runner_logger.info(f"File {row['id']} successfully uploaded!")
                     subresponses.append([row['id'], row['file_name'], "uploaded"])
