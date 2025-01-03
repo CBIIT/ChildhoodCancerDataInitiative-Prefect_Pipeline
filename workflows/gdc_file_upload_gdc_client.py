@@ -185,7 +185,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
             continue
         else:  # proceed to uploaded with API
             runner_logger.info(
-                f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']}...."
+                f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']} ...."
             )
             try:
                 process = subprocess.Popen(
@@ -206,7 +206,10 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                     stderr=subprocess.PIPE,
                 )
                 std_out, std_err = process.communicate()
-                subresponses.append([row["id"], row["file_name"], std_out, std_err])
+                if f"Upload finished for file {row['id']}" in std_out:
+                    subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
+                else:
+                    subresponses.append([row["id"], row["file_name"], std_out, std_err])
             except Exception as e:
                 runner_logger.error(
                     f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
@@ -294,7 +297,7 @@ def runner(
 
     runner_logger.info(f">>> Reading input file {file_name} ....")
 
-    file_metadata = read_input(file_name).tail(10).head(1)  ##TESTING, remove head(10)
+    file_metadata = read_input(file_name).tail(20).head(1)  ##TESTING, remove head(10)
 
     # then query against indexd for the bucket URL of the file
 
