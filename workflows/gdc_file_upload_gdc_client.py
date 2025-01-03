@@ -298,7 +298,7 @@ def runner(
 
     runner_logger.info(f">>> Reading input file {file_name} ....")
 
-    file_metadata = read_input(file_name).tail(20).head(1)  ##TESTING, remove head(10)
+    file_metadata = read_input(file_name)
 
     # then query against indexd for the bucket URL of the file
 
