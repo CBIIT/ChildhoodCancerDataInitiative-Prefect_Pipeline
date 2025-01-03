@@ -157,7 +157,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
     chunk_size = int(part_size * 1024 * 1024)
 
     for index, row in df.iterrows():
-        #TODO: code in retries?
+        # TODO: code in retries?
         try:
             f_bucket = row["s3_url"].split("/")[2]
             f_path = "/".join(row["s3_url"].split("/")[3:])
@@ -173,32 +173,46 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
             runner_logger.info(f"Downloaded file {f_name}")
         except:
             runner_logger.error(f"Cannot download file {row['file_name']}")
-            subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
-            continue #skip rest of attempt since no file
+            subresponses.append([row["id"], row["file_name"], "NOT uploaded"])
+            continue  # skip rest of attempt since no file
 
         # check that file exists
         if not os.path.isfile(row["file_name"]):
             runner_logger.error(
                 f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
             )
-            subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
-            continue 
+            subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
+            continue
         else:  # proceed to uploaded with API
-            runner_logger.info(f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']}....")
-            #try:
-            process = subprocess.Popen(["./gdc-client", "upload", row['id'], "-t", token_file, "-c", str(chunk_size), "-n", str(n_process)], shell=False, text=True, stdout=subprocess.PIPE)
-            std_out, std_err = process.communicate()
-            runner_logger.info(std_out)
-            runner_logger.info(std_err)
-            """if f"Upload finished for file {row['id']}" in std_out:
-                    runner_logger.info(f"File {row['id']} successfully uploaded!")
-                    subresponses.append([row['id'], row['file_name'], "uploaded"])
-                else:
-                    runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed: {std_out}")
-                    subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
+            runner_logger.info(
+                f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']}...."
+            )
+            try:
+                process = subprocess.Popen(
+                    [
+                        "./gdc-client",
+                        "upload",
+                        row["id"],
+                        "-t",
+                        token_file,
+                        "-c",
+                        str(chunk_size),
+                        "-n",
+                        str(n_process),
+                    ],
+                    shell=False,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                std_out, std_err = process.communicate()
+                subresponses.append([row["id"], row["file_name"], std_out, std_err])
             except Exception as e:
-                runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}")
-                subresponses.append([row['id'], row['file_name'], "NOT uploaded"])"""
+                runner_logger.error(
+                    f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
+                )
+                subresponses.append([row["id"], row["file_name"], "NOT uploaded", e])
+
             # delete file
             if os.path.exists(f_name):
                 os.remove(f_name)
@@ -214,9 +228,8 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                 )
             else:
                 pass
-    
-    return subresponses
 
+    return subresponses
 
 
 @flow(
@@ -228,11 +241,11 @@ def runner(
     bucket: str,
     project_id: str,
     manifest_path: str,
-    gdc_client_path: str, 
+    gdc_client_path: str,
     runner: str,
     secret_key_name: str,
     upload_part_size_mb: int,
-    n_processes: int
+    n_processes: int,
 ):
     """CCDI Pipeline to Upload files to GDC
 
@@ -281,7 +294,7 @@ def runner(
 
     runner_logger.info(f">>> Reading input file {file_name} ....")
 
-    file_metadata = read_input(file_name).tail(1) ##TESTING, remove head(10)
+    file_metadata = read_input(file_name).tail(1)  ##TESTING, remove head(10)
 
     # then query against indexd for the bucket URL of the file
 
@@ -296,11 +309,16 @@ def runner(
             f"Uploading chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))} for files"
         )
         subresponses = uploader_handler(
-            file_metadata_s3[chunk : chunk + chunk_size], "token.txt", upload_part_size_mb, n_processes
+            file_metadata_s3[chunk : chunk + chunk_size],
+            "token.txt",
+            upload_part_size_mb,
+            n_processes,
         )
         responses += subresponses
 
-    responses_df = pd.DataFrame(responses, columns=["id", "file_name", "status"])
+    responses_df = pd.DataFrame(
+        responses, columns=["id", "file_name", "std_out", "std_err"]
+    )
 
     # save response file
 
@@ -315,13 +333,9 @@ def runner(
         try:
             os.remove("token.txt")
         except:
-            runner_logger.error(
-            f"Cannot remove file token.txt."
-        )
+            runner_logger.error(f"Cannot remove file token.txt.")
     else:
-        runner_logger.warning(
-            f"The file token.txt does not exist, cannot remove."
-        )
+        runner_logger.warning(f"The file token.txt does not exist, cannot remove.")
 
     # folder upload
     folder_ul(
