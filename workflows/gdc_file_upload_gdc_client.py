@@ -143,17 +143,11 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     return df_s3
 
 
-
-####### TODO 
-
-# download gdc-client
-# flow to handle uploads
-# do test uploads from command line for recording any outputs/logs
-# x = subprocess.run(["/Users/bullenca/Work/gdc-client", "upload", "4cf36925-9bfb-4089-b304-4ce80ecb36c6", "-t", "/Users/bullenca/Documents/gdc-user-token.2024-12-17.txt"], shell=False, capture_output=True)
-# x.stdout, x.stderr
-
-
-
+@flow(
+    name="gdc_upload_file_upload",
+    log_prints=True,
+    flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
+)
 def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_process: int):
 
     runner_logger = get_run_logger()
@@ -201,7 +195,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                     runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed: {std_out}")
                     subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
             except Exception as e:
-                runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed: {e}")
+                runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}")
                 subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
             # delete file
             if os.path.exists(f_name):
@@ -285,7 +279,7 @@ def runner(
 
     runner_logger.info(f">>> Reading input file {file_name} ....")
 
-    file_metadata = read_input(file_name)
+    file_metadata = read_input(file_name).head(1) ##TESTING, remove head(10)
 
     # then query against indexd for the bucket URL of the file
 
