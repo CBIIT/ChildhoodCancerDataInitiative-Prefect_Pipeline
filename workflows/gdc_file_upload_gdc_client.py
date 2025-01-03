@@ -207,6 +207,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                 )
                 std_out, std_err = process.communicate()
                 if f"Upload finished for file {row['id']}" in std_out:
+                    runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                 else:
                     subresponses.append([row["id"], row["file_name"], std_out, std_err])
