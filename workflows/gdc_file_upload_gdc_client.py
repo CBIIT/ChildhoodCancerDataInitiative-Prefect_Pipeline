@@ -153,6 +153,75 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
 # x.stdout, x.stderr
 
 
+
+def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_process: int):
+
+    runner_logger = get_run_logger()
+
+    subresponses = []
+
+    chunk_size = int(part_size * 1024 * 1024)
+
+    for index, row in df.iterrows():
+        #TODO: code in retries?
+        try:
+            f_bucket = row["s3_url"].split("/")[2]
+            f_path = "/".join(row["s3_url"].split("/")[3:])
+            f_name = os.path.basename(f_path)
+
+            if f_name != row["file_name"]:
+                runner_logger.warning(
+                    f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}"
+                )
+            # trying to re-use file_dl() function
+            file_dl(f_bucket, f_path)
+
+            runner_logger.info(f"Downloaded file {f_name}")
+        except:
+            runner_logger.error(f"Cannot download file {row['file_name']}")
+            subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
+            continue #skip rest of attempt since no file
+
+        # check that file exists
+        if not os.path.isfile(row["file_name"]):
+            runner_logger.error(
+                f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
+            )
+            subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
+            continue 
+        else:  # proceed to uploaded with API
+            runner_logger.info(f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']}....")
+            try:
+                response = subprocess.run(["./gdc-client", "upload", row['id'], "-t", token_file, "-c", str(chunk_size), "-n", str(n_process)], shell=False, capture_output=True)
+                if f"Upload finished for file {row['id']}" in response.stdout:
+                    runner_logger.info(f"File {row['id']} successfully uploaded!")
+                    subresponses.append([row['id'], row['file_name'], "uploaded"])
+                else:
+                    runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed: {response.stdout}")
+                    subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
+            except Exception as e:
+                runner_logger.error(f"Upload of file {row['file_name']} (UUID: {row['id']}) failed: {e}")
+                subresponses.append([row['id'], row['file_name'], "NOT uploaded"])
+            # delete file
+            if os.path.exists(f_name):
+                os.remove(f_name)
+            else:
+                runner_logger.warning(
+                    f"The file {f_name} does not exist, cannot remove."
+                )
+
+            # check delete
+            if os.path.exists(f_name):
+                runner_logger.warning(
+                    f"The file {f_name} still exists, error removing."
+                )
+            else:
+                pass
+    
+    return subresponses
+
+
+
 @flow(
     name="GDC File Upload",
     log_prints=True,
@@ -162,8 +231,11 @@ def runner(
     bucket: str,
     project_id: str,
     manifest_path: str,
+    gdc_client_path: str, 
     runner: str,
     secret_key_name: str,
+    upload_part_size_mb: int,
+    n_processes: int
 ):
     """CCDI Pipeline to Upload files to GDC
 
@@ -171,8 +243,11 @@ def runner(
         bucket (str): Bucket name of where the manifest is located in and the response output goes to
         project_id (str): GDC Project ID to submit to (e.g. CCDI-MCI, TARGET-AML)
         manifest_path (str): File path of the CCDI file manifest in bucket
+        gdc_client_path (str): Path to GDC client to download to VM
         runner (str): Unique runner name
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
+        upload_part_size_mb (int): The upload part size in MB
+        n_processes (int): The number of client connections to upload the files
     """
 
     # runner_logger setup
@@ -188,10 +263,24 @@ def runner(
     # download the input manifest file
     file_dl(bucket, manifest_path)
 
+    # save a token file to give gdc-client
+    token = get_secret(secret_key_name).strip()
+
+    with open("token.txt", "w+") as w:
+        w.write(token)
+    w.close()
+
+    # secure token file
+    subprocess.run(["chmod", "600", "token.txt"], shell=False)
+
+    # download the gdc-client
+    file_dl(bucket, gdc_client_path)
+
+    # change gdc-client to executable
+    subprocess.run(["chmod", "722", "gdc-client"], shell=False)
+
     # extract file name before the workflow starts
     file_name = os.path.basename(manifest_path)
-
-    token = get_secret(secret_key_name).strip()
 
     runner_logger.info(f">>> Reading input file {file_name} ....")
 
@@ -209,12 +298,12 @@ def runner(
         runner_logger.info(
             f"Uploading chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))} for files"
         )
-        subresponses = uploader_api(
-            file_metadata_s3[chunk : chunk + chunk_size], project_id, token
+        subresponses = uploader_handler(
+            file_metadata_s3[chunk : chunk + chunk_size], "token.txt", upload_part_size_mb, n_processes
         )
         responses += subresponses
 
-    responses_df = pd.DataFrame(responses, columns=["id", "status_code", "response"])
+    responses_df = pd.DataFrame(responses, columns=["id", "file_name", "status"])
 
     # save response file
 
@@ -223,6 +312,19 @@ def runner(
         sep="\t",
         index=False,
     )
+
+    # delete token file
+    if os.path.exists("token.txt"):
+        try:
+            os.remove("token.txt")
+        except:
+            runner_logger.error(
+            f"Cannot remove file token.txt."
+        )
+    else:
+        runner_logger.warning(
+            f"The file token.txt does not exist, cannot remove."
+        )
 
     # folder upload
     folder_ul(
