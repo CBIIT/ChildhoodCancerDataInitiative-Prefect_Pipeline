@@ -21,6 +21,7 @@ import json
 import tempfile
 import traceback
 from botocore.exceptions import ClientError
+import random
 
 
 DataFrame = TypeVar("DataFrame")
@@ -875,7 +876,7 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     of all studies in a DB
     """
     # create a folder to keep all node entry counts per study
-    temp_folder_name = "db_node_entry_counts_all_studies"
+    temp_folder_name = f"db_node_entry_counts_all_studies_{random.choice(range(1000))}"
     os.mkdir(temp_folder_name)
     logger.info("Start pulling entry counts per node per study")
     for study in study_list:
