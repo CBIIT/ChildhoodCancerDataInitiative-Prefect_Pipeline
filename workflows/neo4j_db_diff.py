@@ -30,16 +30,16 @@ def diff_sandbox_dev_neo4j(bucket: str, runner: str) -> None:
 
     # retrieve counts for all nodes in all studies of both DBs
     counts_sandbox = counts_DB_all_nodes_all_studies_w_secrets(
-        uri_parameter=sandbox_ip,
-        username_parameter=sandbox_username,
-        password_parameter=sandbox_password,
+        uri=sandbox_ip,
+        username=sandbox_username,
+        password=sandbox_password,
     )
     counts_sandbox.rename(columns={"DB_count": "sandbox_DB_count"}, inplace=True)
     logger.info("Retrieved counts for sandbox DB")
     counts_dev = counts_DB_all_nodes_all_studies_w_secrets(
-        uri_parameter=dev_ip,
-        username_parameter=dev_username,
-        password_parameter=dev_password,
+        uri=dev_ip,
+        username=dev_username,
+        password=dev_password,
     )
     counts_dev.rename(columns={"DB_count": "dev_DB_count"}, inplace=True)
     logger.info("Retrieved counts for DEV DB")
