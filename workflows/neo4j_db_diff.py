@@ -5,11 +5,11 @@ import sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.utils import get_secret, get_date, get_time, file_ul
-from src.neo4j_data_tools import counts_DB_all_nodes_all_studies
+from src.neo4j_data_tools import counts_DB_all_nodes_all_studies_w_secrets
 
 @flow(name="Get diff between sandbox and dev neo4j instances", log_prints=True)
 def diff_sandbox_dev_neo4j(bucket: str, runner: str) -> None:
-    """_summary_
+    """Get counts of all nodes in all studies of sandbox and dev neo4j instances and save the difference to a file in the bucket
 
     Args:
         bucket (str): bucket name of where output goes to
@@ -29,10 +29,18 @@ def diff_sandbox_dev_neo4j(bucket: str, runner: str) -> None:
     dev_password = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="dev_password") 
 
     # retrieve counts for all nodes in all studies of both DBs
-    counts_sandbox = counts_DB_all_nodes_all_studies(uri_parameter=sandbox_ip, username_parameter=sandbox_username, password_parameter=sandbox_password)
+    counts_sandbox = counts_DB_all_nodes_all_studies_w_secrets(
+        uri_parameter=sandbox_ip,
+        username_parameter=sandbox_username,
+        password_parameter=sandbox_password,
+    )
     counts_sandbox.rename(columns={"DB_count": "sandbox_DB_count"}, inplace=True)
     logger.info("Retrieved counts for sandbox DB")
-    counts_dev = counts_DB_all_nodes_all_studies(uri_parameter=dev_ip, username_parameter=dev_username, password_parameter=dev_password)
+    counts_dev = counts_DB_all_nodes_all_studies_w_secrets(
+        uri_parameter=dev_ip,
+        username_parameter=dev_username,
+        password_parameter=dev_password,
+    )
     counts_dev.rename(columns={"DB_count": "dev_DB_count"}, inplace=True)
     logger.info("Retrieved counts for DEV DB")
 
