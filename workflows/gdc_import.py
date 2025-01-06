@@ -651,7 +651,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                     f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
                 )
                 responses.append([node["submitter_id"], res.status_code, str(res.text)])
-                time.sleep(5)
+                #time.sleep(5)
         elif submission_type == "update":
             for node in nodes:
                 res = make_request("put",
