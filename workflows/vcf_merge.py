@@ -44,6 +44,14 @@ def read_input(file_path: str):
     if "patient_id" not in file_metadata.columns:
         runner_logger.error(f"Error reading and parsing file {f_name}: no column named 'patient_id'.")
         sys.exit(1)
+    
+    if "sample_id" not in file_metadata.columns:
+        runner_logger.error(f"Error reading and parsing file {f_name}: no column named 'sample_id'.")
+        sys.exit(1)
+
+    if "File Name" not in file_metadata.columns:
+        runner_logger.error(f"Error reading and parsing file {f_name}: no column named 'sample_id'.")
+        sys.exit(1)
 
     if len(file_metadata) == 0:
         runner_logger.error(f"Error reading and parsing file {f_name}; empty file")
@@ -109,6 +117,7 @@ def merging(df: pd.DataFrame):
             not_merged.append(f_name)
 
     dict_f_name_pid = df[['File Name', 'patient_id']].set_index('File Name').to_dict()['patient_id']
+    dict_f_name_sid = df[['File Name', 'sample_id']].set_index('File Name').to_dict()['sample_id']
 
     if len(vcf_to_merge) > 1:
         runner_logger.info(f"Running merge of {len(vcf_to_merge)} VCF files....")
@@ -118,15 +127,14 @@ def merging(df: pd.DataFrame):
             #read in VCF
             vcf_df = pyvcf.VcfFrame.from_file(vcf)
 
-            #change column names to temp sample names >>> TODO: need actual sample names? where to find?
-            vcf_df.df = vcf_df.df.rename(columns={"tumor" : "tumor"+"_"+dict_f_name_pid[vcf], "normal" : "normal"+"_"+dict_f_name_pid[vcf]})
+            vcf_df.df = vcf_df.df.rename(columns={"tumor" : dict_f_name_sid[vcf], "normal" : "normal"+"_"+dict_f_name_pid[vcf]})
 
-            print(vcf_df.df)
+            #print(vcf_df.df)
             
             #append to list of vcf_dfs
             vcf_dfs.append(vcf_df)
 
-        merged_vcf = pyvcf.merge(vcf_dfs, how='outer').df
+        merged_vcf = pyvcf.merge(vcf_dfs, how='outer').filter_multialt().df
         runner_logger.info("Merge Complete!")
         #except:
             #runner_logger.error("Issue merging VCF files.")
