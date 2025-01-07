@@ -93,11 +93,11 @@ def download_handler(df: pd.DataFrame):
 
 
         
-@flow(
-    name="vcf_merge_merge_vcfs",
-    log_prints=True,
-    flow_run_name="vcf_merge_merge_vcfs_" + f"{get_time()}",
-) 
+    @flow(
+        name="vcf_merge_merge_vcfs",
+        log_prints=True,
+        flow_run_name="vcf_merge_merge_vcfs_" + f"{get_time()}",
+    ) 
 def merging(df: pd.DataFrame):
     """Function to call fuc libray to merge a set of VCFs
     """
@@ -147,6 +147,11 @@ def merging(df: pd.DataFrame):
 
     return vcf_to_merge, not_merged, merged_vcf
 
+@flow(
+        name="vcf_merge_merge_vcfs2",
+        log_prints=True,
+        flow_run_name="vcf_merge_merge_vcfs2_" + f"{get_time()}",
+    ) 
 def merging_merged(merged_vcfs: list):
     """Function to call fuc libray to merge a set of previously merged VCFs
     """
