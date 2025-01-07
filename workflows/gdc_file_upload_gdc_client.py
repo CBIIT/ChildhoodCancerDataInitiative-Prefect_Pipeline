@@ -210,6 +210,8 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                     runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                 else:
+                    runner_logger.info(std_out)
+                    runner_logger.info(std_err)
                     subresponses.append([row["id"], row["file_name"], std_out, std_err])
             except Exception as e:
                 runner_logger.error(
