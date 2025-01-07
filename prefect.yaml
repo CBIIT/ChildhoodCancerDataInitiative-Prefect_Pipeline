@@ -894,6 +894,7 @@ deployments:
       manifest_path: ""
       runner: ""
       chunk_size: 20
+      recursive: "yes"
 
     # pull action to overwrite from file pull action
     pull:
