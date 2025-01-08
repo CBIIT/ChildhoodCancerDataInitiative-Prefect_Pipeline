@@ -9,6 +9,7 @@ from src.utils import get_date, get_time, get_logger, ccdi_manifest_to_dict
 import openpyxl
 from openpyxl.styles import Font
 import numpy as np
+from urllib.parse import urlparse
 
 
 ExcelReader = TypeVar("ExcelReader")
@@ -1212,17 +1213,22 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
         print(i)
         i_df = sra_df[sra_df["check_sample_id"] == i]
         print(i_df.shape[0])
+        print(i_df[["sample_ID", "library_ID", "check_sample_id"]])
+
         # concatenate library_ID if more than one unqiue library_ID are found
         # at this point, library_ID has been changed if more than one library_id has been found
         # sharing the same sample_id, library_strategy, library_source, and library_seleciton
         if len(i_df["library_ID"].dropna().unique().tolist()) > 1:
+            print(f"more than one library_id associated with {i}")
             i_library_id = ";".join(i_df["library_ID"].dropna().unique().tolist())
             sra_df.loc[sra_df["check_sample_id"] == i, "library_ID"] = i_library_id
+            print(i_df[["sample_ID", "library_ID", "check_sample_id"]])
         else:
             # if only one library_id found, no change made to library_id
-            pass
+            pass        
 
-        # check for rows of sra_df["check_sample_id"] == i, if more than one active_location_url are found
+        """ I'm not sure we need this part, because even if we have differnt library_ID because of differnt active_location_URL, these library_ID would still share the same library strategy, selection, and source, and would fail SRA validatioin eventually
+        # first check for rows of sra_df["check_sample_id"] == i, if more than one active_location_url are found
         # at this point, subset of sra_df["check_sample_id"] == i should be sharing the same library_id
         if len(i_df["active_location_URL"].dropna().unique().tolist()) > 1:
             # the library_id for the subset of sra_df[sra_df["check_sample_id"] == i]
@@ -1237,7 +1243,32 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
                     & (sra_df["active_location_URL"] == j_loc),
                     "library_ID",
                 ] = i_library_id + "_" + str(loc_count)
+                # only keep the scheme and domain of the url
+                parsed_url = urlparse(j_loc)
+                sra_df.loc[
+                    (sra_df["check_sample_id"] == i)
+                    & (sra_df["active_location_URL"] == j_loc),
+                    "active_location_URL",
+                ] = (
+                    f"{parsed_url.scheme}://{parsed_url.netloc}"
+                )
                 loc_count += 1
+        else:
+            pass
+        """
+        # if there are more than 1 active_location_URL found, only keep the
+        if len(i_df["active_location_URL"].dropna().unique().tolist()) > 1:
+            # the library_id for the subset of sra_df[sra_df["check_sample_id"] == i]
+            # all library_id should be the same for the subset
+            # loop through each unique location
+            for j_loc in i_df["active_location_URL"].dropna().unique().tolist():
+                # only keep the scheme and domain of the url
+                parsed_url = urlparse(j_loc)
+                sra_df.loc[
+                    (sra_df["check_sample_id"] == i)
+                    & (sra_df["active_location_URL"] == j_loc),
+                    "active_location_URL",
+                ] = f"{parsed_url.scheme}://{parsed_url.netloc}"
         else:
             pass
 
