@@ -170,24 +170,24 @@ def merging_merged(merged_vcfs: list):
     if len(vcf_to_merge) > 1:
         runner_logger.info(f"Running merge of {len(vcf_to_merge)} previously merged VCF files....")
         
-        #try:
-        vcf_dfs = [] #list to store VCF DFs
-        for vcf in vcf_to_merge:
-            #read in VCF
-            vcf_df = pyvcf.VcfFrame.from_file(vcf)
+        try:
+            vcf_dfs = [] #list to store VCF DFs
+            for vcf in vcf_to_merge:
+                #read in VCF
+                vcf_df = pyvcf.VcfFrame.from_file(vcf)
 
-            runner_logger.info(vcf_df.df)
+                runner_logger.info(vcf_df.df)
 
-            vcf_dfs.append(vcf_df)
+                vcf_dfs.append(vcf_df)
         
-        merged_vcf = pyvcf.merge(vcf_dfs, how='outer').filter_multialt().df
-        runner_logger.info("Merge Complete!")
-        #except Exception as e:
-            #runner_logger.error(f"Exception occurred: {e}")
-            #merged_vcf = ""
+            merged_vcf = pyvcf.merge(vcf_dfs, how='outer').filter_multialt().df
+            runner_logger.info("Merge Complete!")
+        except Exception as e:
+            runner_logger.error(f"Exception occurred: {e}")
+            merged_vcf = pd.DataFrame(columns=["submitter_id", "status_code", "message"])
     else:
         runner_logger.error("No VCF files provided to merge.")
-        merged_vcf = ""
+        merged_vcf = pd.DataFrame(columns=["submitter_id", "status_code", "message"])
     
     return vcf_to_merge, not_merged, merged_vcf
         
