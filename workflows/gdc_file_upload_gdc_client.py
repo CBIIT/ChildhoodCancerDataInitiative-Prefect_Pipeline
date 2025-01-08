@@ -225,7 +225,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                         stderr=subprocess.PIPE,
                     )
                 std_out, std_err = process.communicate()
-                if f"Upload finished for file {row['id']}" in std_out:
+                if f"upload finished for file {row['id']}" in std_out:
                     runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                 else:
@@ -241,6 +241,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
             # delete file
             if os.path.exists(f_name):
                 os.remove(f_name)
+                runner_logger.info(f"The file {f_name} has been removed.")
             else:
                 runner_logger.warning(
                     f"The file {f_name} does not exist, cannot remove."
@@ -248,11 +249,9 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
 
             # check delete
             if os.path.exists(f_name):
-                runner_logger.warning(
+                runner_logger.error(
                     f"The file {f_name} still exists, error removing."
                 )
-            else:
-                pass
 
     return subresponses
 
