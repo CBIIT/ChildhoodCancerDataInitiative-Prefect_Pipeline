@@ -175,6 +175,9 @@ def merging_merged(merged_vcfs: list):
         for vcf in vcf_to_merge:
             #read in VCF
             vcf_df = pyvcf.VcfFrame.from_file(vcf)
+
+            runner_logger.info(vcf_df.df)
+
             vcf_dfs.append(vcf_df)
         
         merged_vcf = pyvcf.merge(vcf_dfs, how='outer').filter_multialt().df
