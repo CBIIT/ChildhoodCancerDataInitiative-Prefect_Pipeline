@@ -148,7 +148,7 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     log_prints=True,
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
 )
-def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_process: int):
+def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_process: int):
 
     runner_logger = get_run_logger()
 
@@ -188,26 +188,45 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']} ...."
             )
             try:
-                process = subprocess.Popen(
-                    [
-                        "./gdc-client",
-                        "upload",
-                        row["id"],
-                        "-t",
-                        token_file,
-                        "-c",
-                        str(chunk_size),
-                        "-n",
-                        str(n_process),
-                    ],
-                    shell=False,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
+                if row['file_size'] < 7516192768: #7GB file size cutoff:
+                    process = subprocess.Popen(
+                        [
+                            "./gdc-client",
+                            "upload",
+                            row["id"],
+                            "-t",
+                            token_file,
+                            "-c",
+                            str(chunk_size),
+                            "-n",
+                            str(max_n_process),
+                        ],
+                        shell=False,
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
+                else: # >= 7GB file size
+                    process = subprocess.Popen(
+                        [
+                            "./gdc-client",
+                            "upload",
+                            row["id"],
+                            "-t",
+                            token_file,
+                            "-c",
+                            str(chunk_size),
+                            "-n",
+                            str(4), #4 connections
+                        ],
+                        shell=False,
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
                 std_out, std_err = process.communicate()
                 if f"Upload finished for file {row['id']}" in std_out:
-                    runner_logger.info(f"upload finished for file {row['id']}")
+                    runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                 else:
                     runner_logger.info(std_out)
@@ -251,7 +270,7 @@ def runner(
     runner: str,
     secret_key_name: str,
     upload_part_size_mb: int,
-    n_processes: int,
+    max_n_processes: int,
 ):
     """CCDI Pipeline to Upload files to GDC
 
@@ -263,7 +282,7 @@ def runner(
         runner (str): Unique runner name
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
         upload_part_size_mb (int): The upload part size in MB
-        n_processes (int): The number of client connections to upload the files
+        max_n_processes (int): The max number of client connections to upload the files smaller than 7 GB
     """
 
     # runner_logger setup
@@ -318,7 +337,7 @@ def runner(
             file_metadata_s3[chunk : chunk + chunk_size],
             "token.txt",
             upload_part_size_mb,
-            n_processes,
+            max_n_processes,
         )
         responses += subresponses
 
