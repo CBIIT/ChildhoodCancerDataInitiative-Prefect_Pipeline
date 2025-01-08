@@ -1227,35 +1227,6 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
             # if only one library_id found, no change made to library_id
             pass        
 
-        """ I'm not sure we need this part, because even if we have differnt library_ID because of differnt active_location_URL, these library_ID would still share the same library strategy, selection, and source, and would fail SRA validatioin eventually
-        # first check for rows of sra_df["check_sample_id"] == i, if more than one active_location_url are found
-        # at this point, subset of sra_df["check_sample_id"] == i should be sharing the same library_id
-        if len(i_df["active_location_URL"].dropna().unique().tolist()) > 1:
-            # the library_id for the subset of sra_df[sra_df["check_sample_id"] == i]
-            # all library_id should be the same for the subset
-            i_library_id = sra_df[sra_df["check_sample_id"] == i]["library_ID"].tolist()[0]
-            # loop through each unique location
-            loc_count = 1
-            for j_loc in i_df["active_location_URL"].dropna().unique().tolist():
-                # rename the library_id to be <original_library_id>_<number>
-                sra_df.loc[
-                    (sra_df["check_sample_id"] == i)
-                    & (sra_df["active_location_URL"] == j_loc),
-                    "library_ID",
-                ] = i_library_id + "_" + str(loc_count)
-                # only keep the scheme and domain of the url
-                parsed_url = urlparse(j_loc)
-                sra_df.loc[
-                    (sra_df["check_sample_id"] == i)
-                    & (sra_df["active_location_URL"] == j_loc),
-                    "active_location_URL",
-                ] = (
-                    f"{parsed_url.scheme}://{parsed_url.netloc}"
-                )
-                loc_count += 1
-        else:
-            pass
-        """
         # if there are more than 1 active_location_URL found, only keep the
         if len(i_df["active_location_URL"].dropna().unique().tolist()) > 1:
             # the library_id for the subset of sra_df[sra_df["check_sample_id"] == i]
