@@ -1209,7 +1209,9 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
     sra_df = sra_df.sort_values(by=["filetype"], ascending=False).reset_index(drop=True)
     unique_concate = sra_df["check_sample_id"].unique().tolist()
     for i in unique_concate:
+        print(i)
         i_df = sra_df[sra_df["check_sample_id"] == i]
+        print(i_df.shape[0])
         # concatenate library_ID if more than one unqiue library_ID are found
         # at this point, library_ID has been changed if more than one library_id has been found
         # sharing the same sample_id, library_strategy, library_source, and library_seleciton
@@ -1525,6 +1527,7 @@ def CCDI_to_SRA(
 
     # concatenate library_IDs if multiple librarys that are associated with the
     # the same sample_ID and sharing SAME library source, selection, and strategy
+    logger.info("concatenate library_IDs if they are associated with the same sample_ID and sharing the same library source, selection, and strategy")
     sra_df = concatenate_library_id(sra_df=sra_df)
 
     
