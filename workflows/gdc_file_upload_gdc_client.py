@@ -188,7 +188,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']} ...."
             )
             try:
-                if row['file_size'] < 7516192768: #7GB file size cutoff:
+                if row['file_size'] < 21474836480: #20GB file size cutoff:
                     process = subprocess.Popen(
                         [
                             "./gdc-client",
@@ -206,7 +206,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                     )
-                else: # >= 7GB file size
+                else: # >= 20GB file size
                     process = subprocess.Popen(
                         [
                             "./gdc-client",
