@@ -93,7 +93,7 @@ def download_handler(df: pd.DataFrame):
 
 
         
-    @flow(
+@flow(
         name="vcf_merge_merge_vcfs",
         log_prints=True,
         flow_run_name="vcf_merge_merge_vcfs_" + f"{get_time()}",
@@ -170,18 +170,18 @@ def merging_merged(merged_vcfs: list):
     if len(vcf_to_merge) > 1:
         runner_logger.info(f"Running merge of {len(vcf_to_merge)} previously merged VCF files....")
         
-        try:
-            vcf_dfs = [] #list to store VCF DFs
-            for vcf in vcf_to_merge:
-                #read in VCF
-                vcf_df = pyvcf.VcfFrame.from_file(vcf)
-                vcf_dfs.append(vcf_df)
-            
-            merged_vcf = pyvcf.merge(vcf_dfs, how='outer').filter_multialt().df
-            runner_logger.info("Merge Complete!")
-        except Exception as e:
-            runner_logger.error(f"Exception occurred: {e}")
-            merged_vcf = ""
+        #try:
+        vcf_dfs = [] #list to store VCF DFs
+        for vcf in vcf_to_merge:
+            #read in VCF
+            vcf_df = pyvcf.VcfFrame.from_file(vcf)
+            vcf_dfs.append(vcf_df)
+        
+        merged_vcf = pyvcf.merge(vcf_dfs, how='outer').filter_multialt().df
+        runner_logger.info("Merge Complete!")
+        #except Exception as e:
+            #runner_logger.error(f"Exception occurred: {e}")
+            #merged_vcf = ""
     else:
         runner_logger.error("No VCF files provided to merge.")
         merged_vcf = ""
