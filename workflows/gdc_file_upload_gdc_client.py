@@ -165,10 +165,11 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
 
             if f_name != row["file_name"]:
                 runner_logger.warning(
-                    f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}"
+                    f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
                 )
+            else:
             # trying to re-use file_dl() function
-            file_dl(f_bucket, f_path)
+                file_dl(f_bucket, f_path)
 
             runner_logger.info(f"Downloaded file {f_name}")
         except:
