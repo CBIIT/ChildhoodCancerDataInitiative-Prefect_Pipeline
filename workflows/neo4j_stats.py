@@ -198,6 +198,8 @@ def pull_neo4j_stats(
 
     build_df = build_df.drop_duplicates()
 
+    print(build_df)
+
     # Pivot the DataFrame
     df_wide = build_df.pivot(index="study_id", columns="column_name", values="value")
 
