@@ -151,7 +151,7 @@ def merging(df: pd.DataFrame):
             # append to list of vcf_dfs
             vcf_dfs.append(vcf_df)
 
-        temp_df = pyvcf.merge(vcf_dfs, how="outer").filter_multialt().df
+        temp_df = pyvcf.merge(vcf_dfs, how="outer").df
         merged_vcf = temp_df.rename(columns={"CHROM": "#CHROM"})
         runner_logger.info("Merge Complete!")
         # except:
@@ -211,7 +211,7 @@ def merging_merged(merged_vcfs: list):
                 vcf_dfs.append(vcf_df)
 
             # merged_vcf = pyvcf.merge(vcf_dfs, how='outer').filter_multialt().df
-            temp_df = pyvcf.merge(vcf_dfs, how="outer").filter_multialt().df
+            temp_df = pyvcf.merge(vcf_dfs, how="outer").df
             merged_vcf = temp_df.rename(columns={"CHROM": "#CHROM"})
 
             runner_logger.info("Merge Complete!")
