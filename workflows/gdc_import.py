@@ -334,7 +334,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             "Grabbing comparison JSONs to check if already submitted nodes need updating"
         )
 
-        size = 10
+        size = 5
         max_retries = 5
 
         for offset in range(0, len(uuids), size):  # query 10 at a time
