@@ -172,6 +172,8 @@ def pull_neo4j_stats(
 
     # Concatenate the queries into a data frame
 
+    pd.set_option('display.max_rows',None)
+    pd.set_option('display.max_columns',None)
 
     print(pi_df)
     print(institution_df)
@@ -188,6 +190,9 @@ def pull_neo4j_stats(
     print(study_pathology_df)
     print(study_radiology_df)
     print(study_file_count_df)
+
+    pd.set_option('display.max_rows')
+    pd.set_option('display.max_columns')
 
     
     build_df = pd.DataFrame(columns=["study_id", "column_name", "value"])
