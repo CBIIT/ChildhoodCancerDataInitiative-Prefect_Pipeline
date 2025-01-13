@@ -318,6 +318,10 @@ def runner(
     # save a token file to give gdc-client
     token = get_secret(secret_key_name).strip()
 
+    query1 = {'query': '{\n\tsample(project_id: "CCDI-MCI", first: 1, offset:0){\n\t\tsubmitter_id\n\t\tid\n\t}\n}', 'variables': ''}
+
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/v0/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}))
+
     with open("token.txt", "w+") as w:
         w.write(token)
     w.close()
