@@ -25,6 +25,18 @@ from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
 from src.utils import get_time, file_dl, folder_ul, sanitize_return
 
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.settimeout(0)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.254.254.254', 1))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = '127.0.0.1'
+    finally:
+        s.close()
+    return ip
 
 def read_input(file_path: str):
     """Read in TSV file and extract file_name, id (GDC uuid), md5sum and file_size columns
@@ -292,6 +304,8 @@ def runner(
     runner_logger.info(">>> Running GDC_FILE_UPLOAD.py ....")
 
     dt = get_time()
+
+    runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
 
     os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
 
