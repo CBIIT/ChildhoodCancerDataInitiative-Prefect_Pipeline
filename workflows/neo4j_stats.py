@@ -172,6 +172,24 @@ def pull_neo4j_stats(
 
     # Concatenate the queries into a data frame
 
+
+    print(pi_df)
+    print(institution_df)
+    print(bucket_df)
+    print(study_size_df)
+    print(node_count_df)
+    print(file_size_df)
+    print(library_strategy_df)
+    print(library_strategy_count_df)
+    print(library_strategy_size_df)
+    print(study_clinical_df)
+    print(study_methylation_array_df)
+    print(study_cytogenomic_df)
+    print(study_pathology_df)
+    print(study_radiology_df)
+    print(study_file_count_df)
+
+    
     build_df = pd.DataFrame(columns=["study_id", "column_name", "value"])
 
     build_df = pd.concat(
