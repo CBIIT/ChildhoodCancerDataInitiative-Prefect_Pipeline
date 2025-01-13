@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import subprocess
+import socket
 
 import pandas as pd
 from datetime import datetime
