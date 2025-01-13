@@ -324,6 +324,8 @@ def runner(
 
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb", headers={"X-Auth-Token": token}).text)
 
+    runner_logger.info(requests.get("https://api.gdc.cancer.gov/cases").text)
+
     with open("token.txt", "w+") as w:
         w.write(token)
     w.close()
