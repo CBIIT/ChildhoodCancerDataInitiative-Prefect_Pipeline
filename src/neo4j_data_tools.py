@@ -122,7 +122,7 @@ RETURN
     stats_get_institution_query: str = (
         """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..2]-(n:study_personnel {{personnel_type: "PI"}})
-WITH labels(n) AS NodeType, COLLECT(n.institution) AS Value
+WITH labels(n) AS NodeType, n.institution AS Value
 RETURN
     NodeType,
     Value
