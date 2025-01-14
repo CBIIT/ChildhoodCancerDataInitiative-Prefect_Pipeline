@@ -1227,7 +1227,7 @@ def concatenate_library_id(sra_df: DataFrame) -> DataFrame:
             # if only one library_id found, no change made to library_id
             pass        
 
-        # if there are more than 1 active_location_URL found, only keep the
+        # if there are more than 1 active_location_URL found, only keep the scheme and domain of the url
         if len(i_df["active_location_URL"].dropna().unique().tolist()) > 1:
             # the library_id for the subset of sra_df[sra_df["check_sample_id"] == i]
             # all library_id should be the same for the subset
