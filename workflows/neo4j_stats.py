@@ -198,7 +198,7 @@ def pull_neo4j_stats(
     build_df = build_df.drop_duplicates()
 
     # Count duplicates based on 'study_id' and 'column_name'
-    duplicate_counts = df.groupby(["study_id", "column_name"]).size()
+    duplicate_counts = build_df.groupby(["study_id", "column_name"]).size()
     
     # Filter for cases where there are more than one entry
     duplicates = duplicate_counts[duplicate_counts > 1]
