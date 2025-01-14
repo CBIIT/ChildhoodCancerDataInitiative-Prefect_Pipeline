@@ -113,7 +113,7 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
-    for package in ["libz-dev", "liblzma-dev", "bzip2"]:
+    for package in ["libz-dev", "liblzma-dev", "libbz2-1.0"]:
         process = subprocess.Popen(["apt", "install", package], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
         std_out, std_err = process.communicate()
         runner_logger.info(f"apt intstall {package} results: OUT: {std_out}, ERR: {std_err}")
