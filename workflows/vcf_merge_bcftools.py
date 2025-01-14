@@ -129,17 +129,17 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info("Checking for ./bin/bcftools...")
 
-    process = subprocess.Popen(["ls", "."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(["ll", "."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
-    runner_logger.info(f"ls ./bin/ results: OUT: {std_out}, ERR: {std_err}")
+    runner_logger.info(f"ll ./bin/ results: OUT: {std_out}, ERR: {std_err}")
 
     os.chdir("..") 
     
     runner_logger.info("Testing for ./bin/bcftools...")
 
-    process = subprocess.Popen(["./bin/bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    #process = subprocess.Popen(["./bin/bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
