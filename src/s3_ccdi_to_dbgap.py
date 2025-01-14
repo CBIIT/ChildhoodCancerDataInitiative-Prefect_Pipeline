@@ -107,10 +107,10 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
                 upper_participant_id = participant_sample_mapping_df[
                     participant_sample_mapping_df["sample_id"] == upper_sample_id
                 ]["participant.participant_id"].values[0]
-                append_df = append_df.append(
-                    {"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id},
-                    ignore_index=True,
+                record_to_append = pd.DataFrame.from_records(
+                    [{"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id}]
                 )
+                append_df = pd.concat([append_df, record_to_append], ignore_index=True)
         else:
             pass
 
@@ -130,10 +130,10 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
                 upper_participant_id = participant_sample_mapping_df[
                     participant_sample_mapping_df["sample_id"] == upper_sample_id
                 ]["participant.participant_id"].values[0]
-                append_df = append_df.append(
-                    {"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id},
-                    ignore_index=True,
+                record_to_append = pd.DataFrame.from_records(
+                    [{"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id}]
                 )
+                append_df = pd.concat([append_df, record_to_append], ignore_index=True)
         else:
             pass
 
