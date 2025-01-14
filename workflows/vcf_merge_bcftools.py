@@ -113,19 +113,10 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["apt", "install", "libz-dev"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    std_out, std_err = process.communicate()
-
-    process = subprocess.Popen(["apt", "install", "liblzma-dev"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    std_out, std_err = process.communicate()
-
-    process = subprocess.Popen(["apt", "install", "libbz2-dev"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    std_out, std_err = process.communicate()
-
-    #runner_logger.info(f"apt install zlib results: OUT: {std_out}, ERR: {std_err}")
+    for package in ["libz-dev", "liblzma-dev", "libbz2-dev"]:
+        process = subprocess.Popen(["apt", "install", package], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+        std_out, std_err = process.communicate()
+        runner_logger.info(f"apt intstall {package} results: OUT: {std_out}, ERR: {std_err}")
 
     process = subprocess.Popen(["./configure", "--prefix=."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
