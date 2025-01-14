@@ -105,7 +105,7 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
 
-    os.chdir(f_name.strip(".tar.bz2"))
+    os.chdir(f_name.replace(".tar.bz2", ""))
 
     process = subprocess.Popen(["./configure", "--prefix=."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
