@@ -4,7 +4,6 @@ import requests
 import subprocess
 
 import pandas as pd
-from fuc import pyvcf
 from datetime import datetime
 from typing import Literal
 
