@@ -10,7 +10,7 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
-from src.utils import get_time, file_dl, folder_ul, sanitize_return
+from src.utils import get_time, file_dl, folder_ul
 
 
 def get_ip():
