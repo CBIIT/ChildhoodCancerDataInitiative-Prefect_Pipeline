@@ -326,6 +326,30 @@ def runner(
 
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/cases").text)
 
+
+    runner_logger.info("Trying curl verbose")
+
+    process = subprocess.Popen(["sudo", "apt", "get", "curl"], shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,)
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(std_out)
+    runner_logger.info(std_err)
+
+    process = subprocess.Popen(["curl", "-v", "https://api.gdc.cancer.gov/submission"], shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(std_out)
+    runner_logger.info(std_err)
+
+
     with open("token.txt", "w+") as w:
         w.write(token)
     w.close()
