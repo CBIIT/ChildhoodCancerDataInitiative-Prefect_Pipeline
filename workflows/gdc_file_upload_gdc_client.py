@@ -13,6 +13,7 @@ import sys
 import time
 import subprocess
 import socket
+import logging
 
 import pandas as pd
 from datetime import datetime
@@ -318,6 +319,8 @@ def runner(
     # save a token file to give gdc-client
     token = get_secret(secret_key_name).strip()
 
+    logging.getLogger("requests").setLevel(logging.DEBUG)
+
     query1 = {'query': '{\n\tsample(project_id: "CCDI-MCI", first: 1, offset:0){\n\t\tsubmitter_id\n\t\tid\n\t}\n}', 'variables': ''}
 
     runner_logger.info(requests.post("https://api.gdc.cancer.gov/v0/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
@@ -325,36 +328,6 @@ def runner(
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb", headers={"X-Auth-Token": token}).text)
 
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/cases").text)
-
-
-    runner_logger.info("Trying curl verbose")
-
-    process = subprocess.Popen(["apt", "update"], shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,)
-
-    std_out, std_err = process.communicate()
-    
-    process = subprocess.Popen(["apt", "install", "curl"], shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,)
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(std_out)
-    runner_logger.info(std_err)
-
-    process = subprocess.Popen(["curl", "-v", "https://api.gdc.cancer.gov/submission"], shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,)
-    
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(std_out)
-    runner_logger.info(std_err)
 
 
     with open("token.txt", "w+") as w:
