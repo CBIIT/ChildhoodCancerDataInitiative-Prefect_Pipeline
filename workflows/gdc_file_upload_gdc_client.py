@@ -329,6 +329,13 @@ def runner(
 
     runner_logger.info("Trying curl verbose")
 
+    process = subprocess.Popen(["apt", "update"], shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,)
+
+    std_out, std_err = process.communicate()
+    
     process = subprocess.Popen(["apt", "install", "curl"], shell=False,
         text=True,
         stdout=subprocess.PIPE,
