@@ -55,7 +55,7 @@ def create_meta_json(study_id: str) -> Dict:
     return return_dict
 
 
-@task
+@flow
 def extract_ssm(manifest_file: ExcelFile, logger) -> DataFrame:
     """Extract subject sample df and only keeps samples with
     participant/subject value
