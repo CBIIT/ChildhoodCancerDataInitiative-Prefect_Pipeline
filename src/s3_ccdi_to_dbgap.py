@@ -56,11 +56,12 @@ def create_meta_json(study_id: str) -> Dict:
 
 
 @flow
-def extract_ssm(manifest_file: ExcelFile, logger) -> DataFrame:
+def extract_ssm(manifest_path: str, logger) -> DataFrame:
     """Extract subject sample df and only keeps samples with
     participant/subject value
     """
-    workbook_dict = ccdi_manifest_to_dict(manifest_file)
+    manifest_f = pd.ExcelFile(manifest_path)
+    workbook_dict = ccdi_manifest_to_dict(manifest_f)
     sample_sheet_df = workbook_dict["sample"]
     logger.info(f"Number of samples in sample sheet: {sample_sheet_df.shape[0]}")
     participant_samples = sample_sheet_df[
@@ -529,7 +530,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     # dbgap submission is sample centered. Extract SSM information for first
     # subject_sample SSM df
     subject_sample = extract_ssm(
-        manifest_file=manifest_f, logger=logger
+        manifest_path=manifest, logger=logger
     )
 
     # subject_consent df
