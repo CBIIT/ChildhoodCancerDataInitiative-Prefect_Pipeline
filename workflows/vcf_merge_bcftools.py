@@ -107,7 +107,7 @@ def bcftools_install(bucket: str, file_path: str):
 
     os.chdir(f_name.replace(".tar.bz2", ""))
 
-    process = subprocess.Popen(["./configure", "--prefix=."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    """process = subprocess.Popen(["./configure", "--prefix=."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
@@ -125,15 +125,29 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info(f"Make install results: OUT: {std_out}, ERR: {std_err}")
 
-    os.chdir("..")
+    os.chdir("..")"""
 
     runner_logger.info("Checking for ./bin/bcftools...")
 
-    process = subprocess.Popen(["ls", "./bin"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(["ls", "."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"ls ./bin/ results: OUT: {std_out}, ERR: {std_err}")
+
+    os.chdir("..") 
+    
+    runner_logger.info("Testing for ./bin/bcftools...")
+
+    process = subprocess.Popen(["./bin/bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"/bin/bcftools results: OUT: {std_out}, ERR: {std_err}")
+
+
+
+
 
 
 @flow(
