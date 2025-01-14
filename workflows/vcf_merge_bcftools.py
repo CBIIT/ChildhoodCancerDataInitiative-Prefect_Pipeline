@@ -117,7 +117,11 @@ def bcftools_install(bucket: str, file_path: str):
     
     std_out, std_err = process.communicate()
 
-    runner_logger.info(f"apt install zlib results: OUT: {std_out}, ERR: {std_err}")
+    process = subprocess.Popen(["apt", "install", "liblzma-dev"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    #runner_logger.info(f"apt install zlib results: OUT: {std_out}, ERR: {std_err}")
 
     process = subprocess.Popen(["./configure", "--prefix=."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
