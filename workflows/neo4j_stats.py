@@ -170,46 +170,7 @@ def pull_neo4j_stats(
         "count",
     )
 
-    # Concatenate the queries into a data frame
-
-    pd.set_option('display.max_rows',None)
-    pd.set_option('display.max_columns',None)
-
-    print('pi_df')
-    print(pi_df)
-    print('institution_df')
-    print(institution_df)
-    print('bucket_df')
-    print(bucket_df)
-    print('study_size_df')
-    print(study_size_df)
-    print('node_count_df')
-    print(node_count_df)
-    print('file_size_df')
-    print(file_size_df)
-    print('library_strategy_df')
-    print(library_strategy_df)
-    print('library_strategy_count_df')
-    print(library_strategy_count_df)
-    print('library_strategy_size_df')
-    print(library_strategy_size_df)
-    print('study_clinical_df')
-    print(study_clinical_df)
-    print('study_methylation_array_df')
-    print(study_methylation_array_df)
-    print('study_cytogenomic_df')
-    print(study_cytogenomic_df)
-    print('study_pathology_df')
-    print(study_pathology_df)
-    print('study_radiology_df')
-    print(study_radiology_df)
-    print('study_file_count_df')
-    print(study_file_count_df)
-
-    pd.set_option('display.max_rows')
-    pd.set_option('display.max_columns')
-
-    
+    # Concatenate the queries into a data frame   
     build_df = pd.DataFrame(columns=["study_id", "column_name", "value"])
 
     build_df = pd.concat(
@@ -236,7 +197,18 @@ def pull_neo4j_stats(
 
     build_df = build_df.drop_duplicates()
 
-    print(build_df)
+    # Count duplicates based on 'study_id' and 'column_name'
+    duplicate_counts = df.groupby(["study_id", "column_name"]).size()
+    
+    # Filter for cases where there are more than one entry
+    duplicates = duplicate_counts[duplicate_counts > 1]
+    
+    # Print results
+    if not duplicates.empty:
+        print("Duplicate entries found:")
+        print(duplicates)
+    else:
+        print("No duplicate entries found.")
 
     # Pivot the DataFrame
     df_wide = build_df.pivot(index="study_id", columns="column_name", values="value")
