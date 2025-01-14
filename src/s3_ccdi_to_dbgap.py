@@ -99,12 +99,14 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
             for _, row in pdx_sample_mapping_df.iterrows():
                 pdx_id = row["pdx.pdx_id"]
                 sample_id = row["sample_id"]
+                # it should only have one match
                 upper_sample_id = sample_pdx_mapping_df[
                     sample_pdx_mapping_df["pdx_id"] == pdx_id
-                ]["sample.sample_id"].values
+                ]["sample.sample_id"].values[0]
+                # should only have one match
                 upper_participant_id = participant_sample_mapping_df[
                     participant_sample_mapping_df["sample_id"] == upper_sample_id
-                ]["participant.participant_id"].values
+                ]["participant.participant_id"].values[0]
                 append_df = append_df.append(
                     {"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id},
                     ignore_index=True,
@@ -120,12 +122,14 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
             for _, row in cell_line_sample_mapping_df.iterrows():
                 cell_line_id = row["cell_line.cell_line_id"]
                 sample_id = row["sample_id"]
+                # it should only have one match
                 upper_sample_id = sample_cell_line_mapping_df[
                     cell_line_sample_mapping_df["cell_line_id"] == cell_line_id
-                ]["sample.sample_id"].values
+                ]["sample.sample_id"].values[0]
+                # should only have one match
                 upper_participant_id = participant_sample_mapping_df[
                     participant_sample_mapping_df["sample_id"] == upper_sample_id
-                ]["participant.participant_id"].values
+                ]["participant.participant_id"].values[0]
                 append_df = append_df.append(
                     {"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id},
                     ignore_index=True,
