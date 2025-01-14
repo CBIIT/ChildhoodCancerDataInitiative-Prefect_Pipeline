@@ -205,10 +205,10 @@ def pull_neo4j_stats(
     
     # Print results
     if not duplicates.empty:
-        print("Duplicate entries found:")
-        print(duplicates)
+        logger.error("Duplicate entries found:")
+        logger.error(duplicates)
     else:
-        print("No duplicate entries found.")
+        logger.info("No duplicate entries found.")
 
     # Pivot the DataFrame
     df_wide = build_df.pivot(index="study_id", columns="column_name", values="value")
