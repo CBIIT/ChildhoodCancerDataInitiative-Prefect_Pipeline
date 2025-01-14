@@ -329,7 +329,7 @@ def runner(
 
     runner_logger.info("Trying curl verbose")
 
-    process = subprocess.Popen(["sudo", "apt", "get", "curl"], shell=False,
+    process = subprocess.Popen(["apt", "get", "curl"], shell=False,
         text=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,)
