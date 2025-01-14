@@ -119,7 +119,7 @@ def bcftools_install(bucket: str, file_path: str):
         runner_logger.info(f"apt intstall {package} results: OUT: {std_out}, ERR: {std_err}")
 
     
-    subprocess.call(["apt", "install", "libbz2-dev"], shell=False)
+    runner_logger.info(subprocess.call(["apt", "install", "libbz2-dev"], shell=False))
 
     process = subprocess.Popen(["./configure", "--prefix=."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
