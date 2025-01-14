@@ -323,11 +323,11 @@ def runner(
 
     query1 = {'query': '{\n\tsample(project_id: "CCDI-MCI", first: 1, offset:0){\n\t\tsubmitter_id\n\t\tid\n\t}\n}', 'variables': ''}
 
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/v0/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/v0/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}))
 
-    runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb", headers={"X-Auth-Token": token}).text)
+    runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb", headers={"X-Auth-Token": token}))
 
-    runner_logger.info(requests.get("https://api.gdc.cancer.gov/cases").text)
+    runner_logger.info(requests.get("https://api.gdc.cancer.gov/cases"))
 
 
     with open("token.txt", "w+") as w:
