@@ -113,7 +113,7 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["apt", "install", "zlib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(["apt", "install", "libz-dev"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
