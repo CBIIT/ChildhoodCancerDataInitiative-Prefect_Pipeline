@@ -200,7 +200,7 @@ def download_handler(df: pd.DataFrame):
             runner_logger.info(f"bcftools reheader results: OUT: {std_out}, ERR: {std_err}")
 
             #testing to confirm reheader
-            process = subprocess.Popen(["./bcftools", "view", f_name, "|", "grep", "CHROM"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            process = subprocess.Popen(["./bcftools", "view", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
             std_out, std_err = process.communicate()
 
@@ -304,7 +304,8 @@ def runner(
 
     runner_logger.info(bcftools_install(bucket, bcftools_path))
 
-    for chunk in range(0, len(file_metadata), chunk_size):
+    #for chunk in range(0, len(file_metadata), chunk_size):
+    for chunk in range(0, 10, chunk_size):
         runner_logger.info(
             f"Working on chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}..."
         )
