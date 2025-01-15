@@ -304,11 +304,11 @@ def download_handler(df: pd.DataFrame):
 
             # testing index creation
 
-            process = subprocess.Popen(["./bgzip", "-d", f_name,], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            #process = subprocess.Popen(["./bgzip", "-d", f_name,], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
-            std_out, std_err = process.communicate()
+            #std_out, std_err = process.communicate()
 
-            runner_logger.info(f"unzip results: OUT: {std_out}, ERR: {std_err}")
+            #runner_logger.info(f"unzip results: OUT: {std_out}, ERR: {std_err}")
 
             #process = subprocess.Popen(["./bgzip",  f_name.replace(".gz", "")], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
@@ -316,7 +316,7 @@ def download_handler(df: pd.DataFrame):
 
             #runner_logger.info(f"re-compress results: OUT: {std_out}, ERR: {std_err}")
 
-            process = subprocess.Popen(["./bcftools", "sort", "-o", f_name, "-O", "z", f_name.replace(".gz", "")], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            process = subprocess.Popen(["./bcftools", "sort", "-o", f_name, "-O", "z", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
             std_out, std_err = process.communicate()
 
