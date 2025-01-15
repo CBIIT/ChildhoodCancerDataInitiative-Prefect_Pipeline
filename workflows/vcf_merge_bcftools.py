@@ -76,8 +76,8 @@ def read_input(file_path: str):
 
     return file_metadata
 
-def bcftools_install(bucket: str, file_path: str):
-    """Install bcftools on Prefect VM
+def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for dependency installs
+    """Install bcftools and dependencies on Prefect VM
 
     Args:
         bucket (str): bucket name
@@ -147,10 +147,8 @@ def bcftools_install(bucket: str, file_path: str):
     
     std_out, std_err = process.communicate()
 
-    runner_logger.info(f"ll ./bin/ results: OUT: {std_out}, ERR: {std_err}")
+    runner_logger.info(f"ls -l bin/ results: OUT: {std_out}, ERR: {std_err}")
 
-    #os.chdir("..") 
-    
     runner_logger.info("Testing for bin/bcftools...")
 
     process = subprocess.Popen(["./bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
@@ -159,7 +157,7 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info(f"/bin/bcftools results: OUT: {std_out}, ERR: {std_err}")
 
-
+    return "successfully installed bcftools"
 
 
 
@@ -190,7 +188,23 @@ def download_handler(df: pd.DataFrame):
                 f"File {f_name} not copied over or found from URL {row['s3_url']}"
             )
         else:
-            pass
+            temp_sample = [row['patient_id']+"_normal", row['sample_id']]
+            with open("sample.txt", "w+") as w:
+                w.write("\n".join(temp_sample))
+            w.close()
+
+            process = subprocess.Popen(["./bcftools", "reheader", "-s", "sample.txt", "-o", f_name, f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+            std_out, std_err = process.communicate()
+
+            runner_logger.info(f"bcftools reheader results: OUT: {std_out}, ERR: {std_err}")
+
+            #testing to confirm reheader
+            process = subprocess.Popen(["./bcftools", "view", f_name, "|", "grep", "CHROM"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+            std_out, std_err = process.communicate()
+
+            runner_logger.info(f"bcftools reheader results in file: OUT: {std_out}, ERR: {std_err}")
 
     return None
 
@@ -214,6 +228,20 @@ def delete_handler(df: pd.DataFrame):
             runner_logger.warning(f"The file {f_name} does not exist, cannot remove.")
 
     return None
+
+@flow(
+    name="vcf_merge_merge_vcfs",
+    log_prints=True,
+    flow_run_name="vcf_merge_merge_vcfs_" + f"{get_time()}",
+)
+def merging(df: pd.DataFrame):
+    runner_logger = get_run_logger()
+
+    vcf_to_merge = []
+    not_merged = []
+
+
+
 
 
 DropDownChoices = Literal["yes", "no"]
@@ -274,9 +302,9 @@ def runner(
 
     runner_logger.info(">>> Installing bcftools ....")
 
-    bcftools_install(bucket, bcftools_path)
+    runner.info(bcftools_install(bucket, bcftools_path))
 
-    """for chunk in range(0, len(file_metadata), chunk_size):
+    for chunk in range(0, len(file_metadata), chunk_size):
         runner_logger.info(
             f"Working on chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}..."
         )
@@ -286,7 +314,7 @@ def runner(
         download_handler(file_metadata[chunk : chunk + chunk_size])
 
         # merge VCFs
-        runner_logger.info(f"Merging VCFs in chunk {round(chunk/chunk_size)+1}...")
+        """runner_logger.info(f"Merging VCFs in chunk {round(chunk/chunk_size)+1}...")
         vcf_to_merge, not_merged, merged_vcf = merging(
             file_metadata[chunk : chunk + chunk_size]
         )
