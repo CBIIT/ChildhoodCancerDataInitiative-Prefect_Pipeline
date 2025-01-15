@@ -316,6 +316,12 @@ def download_handler(df: pd.DataFrame):
 
             runner_logger.info(f"re-compress results: OUT: {std_out}, ERR: {std_err}")
 
+            process = subprocess.Popen(["./bcftools", "sort", "-o", f_name, "-O", "z", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+            std_out, std_err = process.communicate()
+
+            runner_logger.info(f"sort results: OUT: {std_out}, ERR: {std_err}")
+
             process = subprocess.Popen(["./bcftools", "index", "-t", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
             std_out, std_err = process.communicate()
