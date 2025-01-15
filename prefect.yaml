@@ -921,6 +921,7 @@ deployments:
       bucket: "ccdi-validation"
       manifest_path: ""
       bcftools_path: ""
+      htslib_path: ""
       runner: ""
       chunk_size: 20
       recursive: "yes"

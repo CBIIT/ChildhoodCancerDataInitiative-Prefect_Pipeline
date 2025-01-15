@@ -167,8 +167,90 @@ def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for depe
 
     return "successfully installed bcftools"
 
+def htslib_install(bucket: str, file_path: str): #TODO: add in checks for dependency installs
+    """Install bcftools and dependencies on Prefect VM
 
+    Args:
+        bucket (str): bucket name
+        file_path (str): path to file
+    """
 
+    runner_logger = get_run_logger()
+
+    file_dl(bucket, file_path)
+
+    f_name = os.path.basename(file_path)
+
+    # check that file exists
+    if not os.path.isfile(f_name):
+        runner_logger.error(
+            f"File {f_name} not copied over or found from URL {file_path}"
+        )
+        return "bcftools package not downloaded"
+    else:
+        pass
+    
+    process = subprocess.Popen(["tar", "-xf", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
+
+    os.chdir(f_name.replace(".tar.bz2", ""))
+
+    """process = subprocess.Popen(["apt", "update"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
+
+    for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "libcurl4-gnutls-dev"]:
+        process = subprocess.Popen(["apt-get", "-y", "install", package], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+        std_out, std_err = process.communicate()
+        runner_logger.info(f"apt install {package} results: OUT: {std_out}, ERR: {std_err}")"""
+
+    
+    #runner_logger.info(subprocess.call(["apt", "install", "libbz2-dev"], shell=False))
+
+    process = subprocess.Popen(["./configure", "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"Configure results: OUT: {std_out}, ERR: {std_err}")
+
+    process = subprocess.Popen(["make"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"Make results: OUT: {std_out}, ERR: {std_err}")
+
+    process = subprocess.Popen(["make", "install"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"Make install results: OUT: {std_out}, ERR: {std_err}")
+
+    os.chdir("../bin")
+
+    ###TESTING
+
+    runner_logger.info("Checking for ./bin/bcftools...")
+
+    process = subprocess.Popen(["ls", "-l"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"ls -l bin/ results: OUT: {std_out}, ERR: {std_err}")
+
+    #runner_logger.info("Testing for bin/bcftools...")
+
+    #process = subprocess.Popen(["./bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    #std_out, std_err = process.communicate()
+
+    #runner_logger.info(f"/bin/bcftools results: OUT: {std_out}, ERR: {std_err}")
+
+    return "successfully installed htslib"
 
 @flow(
     name="vcf_merge_download_vcfs",
@@ -298,6 +380,7 @@ def runner(
     bucket: str,
     manifest_path: str,
     bcftools_path: str,
+    htslib_path: str,
     runner: str,
     chunk_size: int,
     recursive: DropDownChoices,
@@ -308,6 +391,7 @@ def runner(
         bucket (str): Bucket name of where the manifest is located in and the response output goes to
         manifest_path (str): File path of the CCDI file manifest in bucket
         bcftools_path (str): File path of location of bcftools binary package
+        htslib_path (str): File path of location of htslib binary package
         runner (str): Unique runner name
         chunk_size (str): Integer for the number of files that should be merged at a time
         recursive (str): Whether to perform recursive merging of provided list of VCFs into one VCF
@@ -337,6 +421,8 @@ def runner(
     runner_logger.info(">>> Installing bcftools ....")
 
     runner_logger.info(bcftools_install(bucket, bcftools_path))
+
+    runner_logger.info(htslib_install(bucket, htslib_path))
 
     #for chunk in range(0, len(file_metadata), chunk_size):
     for chunk in range(0, 10, chunk_size):
