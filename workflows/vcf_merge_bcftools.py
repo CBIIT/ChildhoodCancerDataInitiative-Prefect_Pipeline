@@ -168,8 +168,13 @@ def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for depe
 
     return "successfully installed bcftools"
 
+@flow(
+    name="vcf_merge_install_htslib",
+    log_prints=True,
+    flow_run_name="vcf_merge_install_htslib_" + f"{get_time()}",
+)
 def htslib_install(bucket: str, file_path: str): #TODO: add in checks for dependency installs
-    """Install bcftools and dependencies on Prefect VM
+    """Install htslib and dependencies on Prefect VM
 
     Args:
         bucket (str): bucket name
@@ -187,7 +192,7 @@ def htslib_install(bucket: str, file_path: str): #TODO: add in checks for depend
         runner_logger.error(
             f"File {f_name} not copied over or found from URL {file_path}"
         )
-        return "bcftools package not downloaded"
+        return "htslib package not downloaded"
     else:
         pass
     
@@ -305,7 +310,7 @@ def download_handler(df: pd.DataFrame):
 
             runner_logger.info(f"gunzip results: OUT: {std_out}, ERR: {std_err}")
 
-            process = subprocess.Popen(["./bcftools", "sort", f_name.replace(".gz", ""), "-Oz", "-o", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            process = subprocess.Popen(["./bgzip",  f_name.replace(".gz", "")], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
             std_out, std_err = process.communicate()
 
@@ -422,6 +427,8 @@ def runner(
     runner_logger.info(">>> Installing bcftools ....")
 
     runner_logger.info(bcftools_install(bucket, bcftools_path))
+
+    runner_logger.info(">>> Installing htslib ....")
 
     runner_logger.info(htslib_install(bucket, htslib_path))
 
