@@ -113,7 +113,7 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
-    for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "curl"]:
+    for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "libcurl-dev"]:
         process = subprocess.Popen(["apt-get", "-y", "install", package], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
         std_out, std_err = process.communicate()
         runner_logger.info(f"apt install {package} results: OUT: {std_out}, ERR: {std_err}")
@@ -228,7 +228,7 @@ DropDownChoices = Literal["yes", "no"]
 # delete files in the chunk
 
 @flow(
-    name="VCF Merge",
+    name="VCF Merge bcftools",
     log_prints=True,
     flow_run_name="{runner}_" + f"{get_time()}",
 )
