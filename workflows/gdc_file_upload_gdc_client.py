@@ -313,6 +313,24 @@ def runner(
 
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
 
+    process = subprocess.Popen(["apt", "update"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
+
+    process = subprocess.Popen(["apt-get", "-y", "install", "libcurl-dev"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"apt install curl results: OUT: {std_out}, ERR: {std_err}")
+
+    process = subprocess.Popen(["curl", "-v", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+    std_out, std_err = process.communicate()
+    
+    runner_logger.info(f"curl -v https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
+
     # download the input manifest file
     file_dl(bucket, manifest_path)
 
