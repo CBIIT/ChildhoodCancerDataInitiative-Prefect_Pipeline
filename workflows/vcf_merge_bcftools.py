@@ -302,7 +302,7 @@ def runner(
 
     runner_logger.info(">>> Installing bcftools ....")
 
-    runner.info(bcftools_install(bucket, bcftools_path))
+    runner_logger.info(bcftools_install(bucket, bcftools_path))
 
     for chunk in range(0, len(file_metadata), chunk_size):
         runner_logger.info(
