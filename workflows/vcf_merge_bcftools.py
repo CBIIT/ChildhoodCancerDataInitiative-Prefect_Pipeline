@@ -121,7 +121,7 @@ def bcftools_install(bucket: str, file_path: str):
     
     #runner_logger.info(subprocess.call(["apt", "install", "libbz2-dev"], shell=False))
 
-    process = subprocess.Popen(["./configure", "--prefix=."], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(["./configure", "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
