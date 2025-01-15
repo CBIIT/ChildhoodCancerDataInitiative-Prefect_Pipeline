@@ -913,7 +913,7 @@ deployments:
     version: null
     tags: ["TEST"]
     description: null
-    entrypoint: workflows/vcf_merge_bcftools.py:runner
+    entrypoint: workflows/vcf_merge.py:runner
     schedule: null
 
     # flow-specific parameters
@@ -930,7 +930,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CBIO-53_bcftools
+          branch: CBIO-53
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
