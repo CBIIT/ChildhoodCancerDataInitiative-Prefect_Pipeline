@@ -143,7 +143,6 @@ def bcftools_install(bucket: str, file_path: str):
 
     runner_logger.info("Checking for ./bin/bcftools...")
 
-    #removing bin to just see in VM
     process = subprocess.Popen(["ls", "-l", "bin"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
@@ -152,9 +151,9 @@ def bcftools_install(bucket: str, file_path: str):
 
     os.chdir("..") 
     
-    runner_logger.info("Testing for ./bin/bcftools...")
+    runner_logger.info("Testing for bin/bcftools...")
 
-    process = subprocess.Popen(["./bin/bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(["bin/bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
