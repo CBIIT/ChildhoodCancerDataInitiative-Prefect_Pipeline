@@ -319,7 +319,7 @@ def runner(
 
     runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["apt-get", "-y", "install", "libcurl-dev"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(["apt-get", "-y", "install", "libcurl4-gnutls-dev"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
