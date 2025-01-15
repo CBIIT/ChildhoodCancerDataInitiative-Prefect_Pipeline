@@ -76,6 +76,12 @@ def read_input(file_path: str):
 
     return file_metadata
 
+
+@flow(
+    name="vcf_merge_install_bcftools",
+    log_prints=True,
+    flow_run_name="vcf_merge_install_bcftools_" + f"{get_time()}",
+)
 def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for dependency installs
     """Install bcftools and dependencies on Prefect VM
 
@@ -216,7 +222,7 @@ def download_handler(df: pd.DataFrame):
 
             runner_logger.info(f"gunzip results: OUT: {std_out}, ERR: {std_err}")
 
-            process = subprocess.Popen(["bcftools", "sort", f_name.replace(".gz", ""), "-Oz", "-o", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            process = subprocess.Popen(["./bcftools", "sort", f_name.replace(".gz", ""), "-Oz", "-o", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
             std_out, std_err = process.communicate()
 
@@ -226,7 +232,7 @@ def download_handler(df: pd.DataFrame):
     
             std_out, std_err = process.communicate()
 
-            runner_logger.info(f"bcftools index results: OUT: {std_out}, ERR: {std_err}")
+            runner_logger.info(f"./bcftools index results: OUT: {std_out}, ERR: {std_err}")
 
             process = subprocess.Popen(["ls", "-l",], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
