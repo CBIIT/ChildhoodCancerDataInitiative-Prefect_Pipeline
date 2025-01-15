@@ -145,7 +145,8 @@ def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for depe
 
     runner_logger.info(f"Make install results: OUT: {std_out}, ERR: {std_err}")
 
-    os.chdir("../bin")
+    #os.chdir("../bin")
+    os.chdir("..")
 
     ###TESTING
 
