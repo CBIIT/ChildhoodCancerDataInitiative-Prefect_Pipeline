@@ -141,21 +141,23 @@ def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for depe
 
     os.chdir("../bin")
 
-    runner_logger.info("Checking for ./bin/bcftools...")
+    ###TESTING
 
-    process = subprocess.Popen(["ls", "-l"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    #runner_logger.info("Checking for ./bin/bcftools...")
+
+    #process = subprocess.Popen(["ls", "-l"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
-    std_out, std_err = process.communicate()
+    #std_out, std_err = process.communicate()
 
-    runner_logger.info(f"ls -l bin/ results: OUT: {std_out}, ERR: {std_err}")
+    #runner_logger.info(f"ls -l bin/ results: OUT: {std_out}, ERR: {std_err}")
 
-    runner_logger.info("Testing for bin/bcftools...")
+    #runner_logger.info("Testing for bin/bcftools...")
 
-    process = subprocess.Popen(["./bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    #process = subprocess.Popen(["./bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
-    std_out, std_err = process.communicate()
+    #std_out, std_err = process.communicate()
 
-    runner_logger.info(f"/bin/bcftools results: OUT: {std_out}, ERR: {std_err}")
+    #runner_logger.info(f"/bin/bcftools results: OUT: {std_out}, ERR: {std_err}")
 
     return "successfully installed bcftools"
 
@@ -200,11 +202,24 @@ def download_handler(df: pd.DataFrame):
             runner_logger.info(f"bcftools reheader results: OUT: {std_out}, ERR: {std_err}")
 
             #testing to confirm reheader
-            process = subprocess.Popen(["./bcftools", "view", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            #process = subprocess.Popen(["./bcftools", "view", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+            #std_out, std_err = process.communicate()
+
+            #runner_logger.info(f"bcftools reheader results in file: OUT: {std_out}, ERR: {std_err}")
+
+            # testing index creation
+            process = subprocess.Popen(["./bcftools", "index", "-t", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
             std_out, std_err = process.communicate()
 
-            runner_logger.info(f"bcftools reheader results in file: OUT: {std_out}, ERR: {std_err}")
+            runner_logger.info(f"bcftools index results: OUT: {std_out}, ERR: {std_err}")
+
+            process = subprocess.Popen(["ls", "-l",], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    
+            std_out, std_err = process.communicate()
+
+            runner_logger.info(f"bcftools reheader results in dir: OUT: {std_out}, ERR: {std_err}")
 
     return None
 
