@@ -238,6 +238,8 @@ def htslib_install(bucket: str, file_path: str): #TODO: add in checks for depend
 
     os.chdir("../bin")
 
+    os.mkdir("tmp")
+
     ###TESTING
 
     runner_logger.info("Checking for ./bin/bcftools...")
@@ -316,7 +318,7 @@ def download_handler(df: pd.DataFrame):
 
             #runner_logger.info(f"re-compress results: OUT: {std_out}, ERR: {std_err}")
 
-            process = subprocess.Popen(["./bcftools", "sort", "-o", f_name, "-O", "z", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            process = subprocess.Popen(["./bcftools", "sort", "-o", f_name, "-O", "z", f_name, "-T", "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools/bin/tmp"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
             std_out, std_err = process.communicate()
 
