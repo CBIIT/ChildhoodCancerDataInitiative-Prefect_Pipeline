@@ -342,6 +342,19 @@ def delete_handler(df: pd.DataFrame):
     flow_run_name="vcf_merge_merge_vcfs_" + f"{get_time()}",
 )
 def merging(df: pd.DataFrame, chunk: int, directory_save: str):
+    """Driver function for checking for file paths and merging files
+
+    Args:
+        df (pd.DataFrame): dataframe of entries to merge
+        chunk (int): chunk number for processing and recording
+        directory_save (str): directory to copy files to for download
+
+    Returns:
+        list: file names merged in chunk
+        list: file names not merged in chunk due to not being found 
+    """
+
+
     runner_logger = get_run_logger()
 
     vcf_to_merge = []
@@ -435,6 +448,10 @@ def runner(
     dt = get_time()
     
     runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
+
+    runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
+
+    runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb").text)
 
     runner_logger.info(">>> Running VCF_MERGE.py ....")
 
