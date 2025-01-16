@@ -228,7 +228,14 @@ def htslib_install(bucket: str, file_path: str): #TODO: add in checks for depend
     flow_run_name="vcf_merge_download_vcfs_" + f"{get_time()}",
 )
 def download_handler(df: pd.DataFrame):
-    """Function to handle downloading VCF files"""
+    """Function to handle downloading VCF files and generating index files
+
+    Args:
+        df (pd.DataFrame): dataframe of entries to file base names to remove
+
+    Returns:
+        None
+    """
 
     runner_logger = get_run_logger()
 
@@ -261,45 +268,11 @@ def download_handler(df: pd.DataFrame):
 
             os.remove("sample.txt")
 
-            #testing to confirm reheader
-            #process = subprocess.Popen(["./bcftools", "view", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-            #std_out, std_err = process.communicate()
-
-            #runner_logger.info(f"bcftools reheader results in file: OUT: {std_out}, ERR: {std_err}")
-
-            # testing index creation
-
-            #process = subprocess.Popen(["./bgzip", "-d", f_name,], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-            #std_out, std_err = process.communicate()
-
-            #runner_logger.info(f"unzip results: OUT: {std_out}, ERR: {std_err}")
-
-            #process = subprocess.Popen(["./bgzip",  f_name.replace(".gz", "")], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-            #std_out, std_err = process.communicate()
-
-            #runner_logger.info(f"re-compress results: OUT: {std_out}, ERR: {std_err}")
-
-            #process = subprocess.Popen(["./bcftools", "sort", "-o", f_name, "-O", "z", f_name, "-T", "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools/bin/tmp"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-            #std_out, std_err = process.communicate()
-
-            #runner_logger.info(f"sort results: OUT: {std_out}, ERR: {std_err}")
-
             process = subprocess.Popen(["./bcftools", "index", "-t", f_name.replace("vcf.gz", "reheader.vcf.gz")], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
             std_out, std_err = process.communicate()
 
             runner_logger.info(f"./bcftools index results: OUT: {std_out}, ERR: {std_err}")
-
-            ##TESTING
-            #process = subprocess.Popen(["ls", "-l",], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-            #std_out, std_err = process.communicate()
-
-            #runner_logger.info(f"bcftools reheader results in dir: OUT: {std_out}, ERR: {std_err}")
 
     return None
 
@@ -310,6 +283,14 @@ def download_handler(df: pd.DataFrame):
     flow_run_name="vcf_merge_remove_temp_vcfs_" + f"{get_time()}",
 )
 def delete_handler(df: pd.DataFrame):
+    """Delete intermediate files used in merged VCF generation
+
+    Args:
+        df (pd.DataFrame): dataframe of entries to file base names to remove
+
+    Returns:
+        None
+    """
 
     runner_logger = get_run_logger()
 
@@ -448,10 +429,6 @@ def runner(
     dt = get_time()
     
     runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
-
-    runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
-
-    runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb").text)
 
     runner_logger.info(">>> Running VCF_MERGE.py ....")
 
