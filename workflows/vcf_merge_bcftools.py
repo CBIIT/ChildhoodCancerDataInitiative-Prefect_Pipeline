@@ -525,6 +525,91 @@ def merging(df: pd.DataFrame, chunk: int, directory_save: str):
 
     return vcf_to_merge, not_merged
 
+@flow(
+    name="vcf_merge_MEGA_merge",
+    log_prints=True,
+    flow_run_name="vcf_merge_MEGA_merge_" + f"{get_time()}",
+)
+def merging_merged(dir_path: str):
+    """Function to merge together already merged VCFs at a particular path
+
+    Args:
+        dir_path (str): Directory path containing the merged VCFs; relative to bcftools /bin path or absolute path
+
+    Returns:
+        str: status of merging
+    """
+    runner_logger = get_run_logger()
+
+    if not os.path.isdir(dir_path):
+        return f"Incorrect dir path provided: {dir_path}"
+
+    vcfs = [dir_path.strip("/")+"/"+i for i in os.listdir(dir_path) if 'merged' in i and 'vcf.gz' in i]
+
+    if len(vcfs) <= 1:
+        return f"There are not enough VCFs for merging, n = {len(vcfs)}"
+    
+    #save list of files to merge together
+    with open(dir_path.strip("/")+"/"+f"mega_VCF_files_{len(vcfs)}.txt", "w+") as w:
+        w.write("\n".join(vcfs))
+    w.close()
+        
+    
+    #create index files for merged VCFs
+    runner_logger.info(
+            "Creating index files for merged VCFs"
+        )
+    
+    for vcf in vcfs:
+        process = subprocess.Popen(
+                [
+                    "./bcftools",
+                    "index",
+                    "-t",
+                    vcf,
+                ],
+                shell=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
+        std_out, std_err = process.communicate()
+
+        runner_logger.info(
+            f"./bcftools index results for file {vcf}: OUT: {std_out}, ERR: {std_err}"
+        )
+    
+    runner_logger.info(
+            "Finished creating index files for merged VCFs"
+        )
+
+    runner_logger.info(
+            "Attempting to merge merged VCFs into mega VCF"
+        )
+
+    process = subprocess.Popen(
+            [
+                "./bcftools",
+                "merge",
+                "-l",
+                dir_path.strip("/")+"/"+f"mega_VCF_files_{len(vcfs)}.txt",
+                "-o",
+                dir_path.strip("/")+"/"+f"mega_VCF_files_{len(vcfs)}.vcf.gz"
+            ],
+            shell=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(
+        f"./bcftools merge results for mega VCF file: OUT: {std_out}, ERR: {std_err}"
+    )
+
+    return "VCF mega merging attempt complete"
 
 DropDownChoices = Literal["yes", "no"]
 
@@ -616,41 +701,11 @@ def runner(
         )
         delete_handler(file_metadata[chunk : chunk + chunk_size])
 
-    """if recursive == "yes":
-        runner_logger.info("Merging the first pass merged VCFs together...")
-
-        if len(first_pass_vcfs) > chunk_size:
-
-            pass
-            
-        else:
-            vcf_to_merge_p2, not_merged_p2, merged_vcf_p2 = merging_merged(first_pass_vcfs)
-
-        # save merged file and log files
-        runner_logger.info(f"Saving doubly merged VCF and info")
-        with open(
-            f"VCF_merge_{chunk_size}_{dt}/vcfs_chunks_merged_together.txt", "w+"
-        ) as w:
-            w.write("\n".join(vcf_to_merge_p2))
-        w.close()
-
-        if len(not_merged) > 0:
-            with open(
-                f"VCF_merge_{chunk_size}_{dt}/vcfs_chunks_NOT_merged_together.txt", "w+"
-            ) as w:
-                w.write("\n".join(not_merged_p2))
-            w.close()
-
-        merged_vcf_p2.to_csv(
-            f"VCF_merge_{chunk_size}_{dt}/complete_merged_file_all_chunks.vcf",
-            sep="\t",
-            index=False,
-        )
-
-    else:
-        runner_logger.info(
-            "Chunks of VCFs merged finished, but chunks not merged together."
-        )"""
+    if recursive == "yes":
+        try:
+            runner_logger.info(merging_merged(f"VCF_merge_{chunk_size}_{dt}"))
+        except Exception as e:
+            runner_logger.error(f"Could not merge merged VCFs: {e}")
 
     if len(not_merged_total) > 0:
         with open(f"VCF_merge_{chunk_size}_{dt}/vcf_not_merged_{chunk}.txt", "w+") as w:
@@ -667,7 +722,7 @@ def runner(
 
     std_out, std_err = process.communicate()
 
-    runner_logger.info(f"check results: OUT: {std_out}, ERR: {std_err}")
+    runner_logger.info(f"check results before download: OUT: {std_out}, ERR: {std_err}")
 
     # dl folder to somewhere else
     folder_ul(
