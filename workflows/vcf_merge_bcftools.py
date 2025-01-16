@@ -512,13 +512,6 @@ def runner(
 
         runner_logger.info(f"merged: {vcf_to_merge}")
 
-    process = subprocess.Popen(["ls", "-l", f"../VCF_merge_{chunk_size}_{dt}"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"check results: OUT: {std_out}, ERR: {std_err}")
-
-
         # save merged file and log files
         """runner_logger.info(
             f"Saving merged VCFs and info for chunk {round(chunk/chunk_size)+1}"
@@ -582,6 +575,12 @@ def runner(
         runner_logger.info(
             "Chunks of VCFs merged finished, but chunks not merged together."
         )"""
+
+    process = subprocess.Popen(["ls", "-l", f"../VCF_merge_{chunk_size}_{dt}"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"check results: OUT: {std_out}, ERR: {std_err}")
 
     # dl folder to somewhere else
     folder_ul(
