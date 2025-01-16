@@ -368,7 +368,7 @@ def delete_handler(df: pd.DataFrame):
     log_prints=True,
     flow_run_name="vcf_merge_merge_vcfs_" + f"{get_time()}",
 )
-def merging(df: pd.DataFrame, chunk: int):
+def merging(df: pd.DataFrame, chunk: int, directory_save: str):
     runner_logger = get_run_logger()
 
     vcf_to_merge = []
@@ -397,6 +397,15 @@ def merging(df: pd.DataFrame, chunk: int):
         std_out, std_err = process.communicate()
 
         runner_logger.info(f"bcftools merge chunk {chunk} results: OUT: {std_out}, ERR: {std_err}")
+
+        process = subprocess.Popen(["mv", f"vcfs_merged_in_{chunk}.vcf.gz", f"../{directory_save}/"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+        std_out, std_err = process.communicate()
+
+        process = subprocess.Popen(["mv", f"vcfs_merged_in_{chunk}.txt", f"../{directory_save}/"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+        
+        std_out, std_err = process.communicate()
+
 
     else:
         runner_logger.error("No VCF files provided to merge.")
@@ -496,18 +505,19 @@ def runner(
         # merge VCFs
         runner_logger.info(f"Merging VCFs in chunk {round(chunk/chunk_size)+1}...")
         vcf_to_merge, not_merged = merging(
-            file_metadata[chunk : chunk + chunk_size], round(chunk/chunk_size)+1
+            file_metadata[chunk : chunk + chunk_size], round(chunk/chunk_size)+1, f"VCF_merge_{chunk_size}_{dt}"
         )
 
         runner_logger.info(f"NOT merged: {not_merged}")
 
         runner_logger.info(f"merged: {vcf_to_merge}")
 
-        process = subprocess.Popen(["ls", "-l"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(["ls", "-l", f"../VCF_merge_{chunk_size}_{dt}"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
-        std_out, std_err = process.communicate()
+    std_out, std_err = process.communicate()
 
-        runner_logger.info(f"merge results: OUT: {std_out}, ERR: {std_err}")
+    runner_logger.info(f"check results: OUT: {std_out}, ERR: {std_err}")
+
 
         # save merged file and log files
         """runner_logger.info(
