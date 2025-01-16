@@ -332,7 +332,7 @@ def delete_handler(df: pd.DataFrame):
         if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi"):
             os.remove(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi")
         else:
-            runner_logger.warning(f"The file {f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi"} does not exist, cannot remove.")
+            runner_logger.warning(f"The file {f_name.replace('vcf.gz', 'reheader.vcf.gz')+'.tbi'} does not exist, cannot remove.")
 
     return None
 
