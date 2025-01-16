@@ -83,12 +83,15 @@ def read_input(file_path: str):
     log_prints=True,
     flow_run_name="vcf_merge_install_bcftools_" + f"{get_time()}",
 )
-def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for dependency installs
+def bcftools_install(bucket: str, file_path: str):
     """Install bcftools and dependencies on Prefect VM
 
     Args:
         bucket (str): bucket name
         file_path (str): path to file
+    
+    Returns:
+        str: Test message confirming installation
     """
 
     runner_logger = get_run_logger()
@@ -125,9 +128,6 @@ def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for depe
         std_out, std_err = process.communicate()
         runner_logger.info(f"apt install {package} results: OUT: {std_out}, ERR: {std_err}")
 
-    
-    #runner_logger.info(subprocess.call(["apt", "install", "libbz2-dev"], shell=False))
-
     process = subprocess.Popen(["./configure", "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
@@ -146,28 +146,13 @@ def bcftools_install(bucket: str, file_path: str): #TODO: add in checks for depe
 
     runner_logger.info(f"Make install results: OUT: {std_out}, ERR: {std_err}")
 
-    #os.chdir("../bin")
     os.chdir("..")
 
-    ###TESTING
+    if 'bcftools' in os.listdir("bin/"): #heuristic for confirming install
+        return "successfully installed bcftools"
+    else:
+        return "bcftools package not installed correctly"
 
-    #runner_logger.info("Checking for ./bin/bcftools...")
-
-    #process = subprocess.Popen(["ls", "-l"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    #std_out, std_err = process.communicate()
-
-    #runner_logger.info(f"ls -l bin/ results: OUT: {std_out}, ERR: {std_err}")
-
-    #runner_logger.info("Testing for bin/bcftools...")
-
-    #process = subprocess.Popen(["./bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    #std_out, std_err = process.communicate()
-
-    #runner_logger.info(f"/bin/bcftools results: OUT: {std_out}, ERR: {std_err}")
-
-    return "successfully installed bcftools"
 
 @flow(
     name="vcf_merge_install_htslib",
@@ -180,6 +165,9 @@ def htslib_install(bucket: str, file_path: str): #TODO: add in checks for depend
     Args:
         bucket (str): bucket name
         file_path (str): path to file
+
+    Returns:
+        str: Test message confirming installation
     """
 
     runner_logger = get_run_logger()
@@ -204,21 +192,7 @@ def htslib_install(bucket: str, file_path: str): #TODO: add in checks for depend
     runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
 
     os.chdir(f_name.replace(".tar.bz2", ""))
-
-    """process = subprocess.Popen(["apt", "update"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
-
-    for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "libcurl4-gnutls-dev"]:
-        process = subprocess.Popen(["apt-get", "-y", "install", package], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-        std_out, std_err = process.communicate()
-        runner_logger.info(f"apt install {package} results: OUT: {std_out}, ERR: {std_err}")"""
-
-    
-    #runner_logger.info(subprocess.call(["apt", "install", "libbz2-dev"], shell=False))
-
     process = subprocess.Popen(["./configure", "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
@@ -239,27 +213,14 @@ def htslib_install(bucket: str, file_path: str): #TODO: add in checks for depend
 
     os.chdir("../bin")
 
-    os.mkdir("tmp")
-
-    ###TESTING
-
-    runner_logger.info("Checking for ./bin/bcftools...")
-
-    process = subprocess.Popen(["ls", "-l"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    std_out, std_err = process.communicate()
-
     runner_logger.info(f"ls -l bin/ results: OUT: {std_out}, ERR: {std_err}")
 
-    #runner_logger.info("Testing for bin/bcftools...")
+    if 'bgzip' in os.listdir("."): #heuristic for confirming install
 
-    #process = subprocess.Popen(["./bcftools", "merge"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    #std_out, std_err = process.communicate()
-
-    #runner_logger.info(f"/bin/bcftools results: OUT: {std_out}, ERR: {std_err}")
-
-    return "successfully installed htslib"
+        return "successfully installed htslib"
+    else:
+        
+        return "htslib package not installed correctly"
 
 @flow(
     name="vcf_merge_download_vcfs",
@@ -355,11 +316,23 @@ def delete_handler(df: pd.DataFrame):
     for index, row in df.iterrows():
         f_name = os.path.basename(row["s3_url"])
 
-        # delete file
+        # delete original file
         if os.path.exists(f_name):
             os.remove(f_name)
         else:
             runner_logger.warning(f"The file {f_name} does not exist, cannot remove.")
+
+        # delete reheader file
+        if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")):
+            os.remove(f_name.replace("vcf.gz", "reheader.vcf.gz"))
+        else:
+            runner_logger.warning(f"The file {f_name.replace("vcf.gz", "reheader.vcf.gz")} does not exist, cannot remove.")
+
+        # delete index file
+        if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi"):
+            os.remove(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi")
+        else:
+            runner_logger.warning(f"The file {f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi"} does not exist, cannot remove.")
 
     return None
 
@@ -381,7 +354,10 @@ def merging(df: pd.DataFrame, chunk: int, directory_save: str):
         f_name = os.path.basename(row["s3_url"])
 
         if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")):
-            vcf_to_merge.append(f_name.replace("vcf.gz", "reheader.vcf.gz"))
+            if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi"):
+                vcf_to_merge.append(f_name.replace("vcf.gz", "reheader.vcf.gz"))
+            else:
+                not_merged.append(f_name.replace("vcf.gz", "reheader.vcf.gz"))
         else:
             not_merged.append(f_name.replace("vcf.gz", "reheader.vcf.gz"))
 
@@ -482,7 +458,7 @@ def runner(
 
     os.mkdir(f"VCF_merge_{chunk_size}_{dt}")
 
-    first_pass_vcfs = []  # record first pass merged VCFs
+    not_merged_total = []  # record first pass merged VCFs
 
     runner_logger.info(">>> Installing bcftools ....")
 
@@ -508,31 +484,11 @@ def runner(
             file_metadata[chunk : chunk + chunk_size], round(chunk/chunk_size)+1, f"VCF_merge_{chunk_size}_{dt}"
         )
 
+        not_merged_total += not_merged
+
         runner_logger.info(f"NOT merged: {not_merged}")
 
         runner_logger.info(f"merged: {vcf_to_merge}")
-
-        # save merged file and log files
-        """runner_logger.info(
-            f"Saving merged VCFs and info for chunk {round(chunk/chunk_size)+1}"
-        )
-        with open(f"VCF_merge_{chunk_size}_{dt}/vcfs_merged_in_{chunk}.txt", "w+") as w:
-            w.write("\n".join(vcf_to_merge))
-        w.close()
-
-        if len(not_merged) > 0:
-            with open(
-                f"VCF_merge_{chunk_size}_{dt}/vcf_not_merged_{chunk}.txt", "w+"
-            ) as w:
-                w.write("\n".join(not_merged))
-            w.close()
-
-        merged_vcf.to_csv(
-            f"VCF_merge_{chunk_size}_{dt}/merged_file_{chunk}.vcf",
-            sep="\t",
-            index=False,
-        )
-        first_pass_vcfs.append(f"VCF_merge_{chunk_size}_{dt}/merged_file_{chunk}.vcf")
 
         # delete VCFs
         runner_logger.info(
@@ -540,7 +496,7 @@ def runner(
         )
         delete_handler(file_metadata[chunk : chunk + chunk_size])
 
-    if recursive == "yes":
+    """if recursive == "yes":
         runner_logger.info("Merging the first pass merged VCFs together...")
 
         if len(first_pass_vcfs) > chunk_size:
@@ -575,6 +531,13 @@ def runner(
         runner_logger.info(
             "Chunks of VCFs merged finished, but chunks not merged together."
         )"""
+
+    if len(not_merged_total) > 0:
+        with open(
+            f"VCF_merge_{chunk_size}_{dt}/vcf_not_merged_{chunk}.txt", "w+"
+        ) as w:
+            w.write("\n".join(not_merged))
+        w.close()
 
     process = subprocess.Popen(["ls", "-l", f"../VCF_merge_{chunk_size}_{dt}"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
