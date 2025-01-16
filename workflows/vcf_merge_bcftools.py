@@ -19,13 +19,14 @@ def get_ip():
     s.settimeout(0)
     try:
         # doesn't even have to be reachable
-        s.connect(('10.254.254.254', 1))
+        s.connect(("10.254.254.254", 1))
         ip = s.getsockname()[0]
     except Exception:
-        ip = '127.0.0.1'
+        ip = "127.0.0.1"
     finally:
         s.close()
     return ip
+
 
 def read_input(file_path: str):
     """Read in file with s3 URLs of VCFs to merge and participant IDs
@@ -89,7 +90,7 @@ def bcftools_install(bucket: str, file_path: str):
     Args:
         bucket (str): bucket name
         file_path (str): path to file
-    
+
     Returns:
         str: Test message confirming installation
     """
@@ -108,47 +109,88 @@ def bcftools_install(bucket: str, file_path: str):
         return "bcftools package not downloaded"
     else:
         pass
-    
-    process = subprocess.Popen(["tar", "-xf", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+
+    process = subprocess.Popen(
+        ["tar", "-xf", f_name],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
 
     os.chdir(f_name.replace(".tar.bz2", ""))
 
-    process = subprocess.Popen(["apt", "update"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+    process = subprocess.Popen(
+        ["apt", "update"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
     for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "libcurl4-gnutls-dev"]:
-        process = subprocess.Popen(["apt-get", "-y", "install", package], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+        process = subprocess.Popen(
+            ["apt-get", "-y", "install", package],
+            shell=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         std_out, std_err = process.communicate()
-        runner_logger.info(f"apt install {package} results: OUT: {std_out}, ERR: {std_err}")
+        runner_logger.info(
+            f"apt install {package} results: OUT: {std_out}, ERR: {std_err}"
+        )
 
-    process = subprocess.Popen(["./configure", "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+    process = subprocess.Popen(
+        [
+            "./configure",
+            "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools",
+        ],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"Configure results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["make"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+    process = subprocess.Popen(
+        ["make"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"Make results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["make", "install"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+    process = subprocess.Popen(
+        ["make", "install"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"Make install results: OUT: {std_out}, ERR: {std_err}")
 
     os.chdir("..")
 
-    if 'bcftools' in os.listdir("bin/"): #heuristic for confirming install
+    if "bcftools" in os.listdir("bin/"):  # heuristic for confirming install
         return "successfully installed bcftools"
     else:
         return "bcftools package not installed correctly"
@@ -159,7 +201,9 @@ def bcftools_install(bucket: str, file_path: str):
     log_prints=True,
     flow_run_name="vcf_merge_install_htslib_" + f"{get_time()}",
 )
-def htslib_install(bucket: str, file_path: str): #TODO: add in checks for dependency installs
+def htslib_install(
+    bucket: str, file_path: str
+):  # TODO: add in checks for dependency installs
     """Install htslib and dependencies on Prefect VM
 
     Args:
@@ -184,29 +228,56 @@ def htslib_install(bucket: str, file_path: str): #TODO: add in checks for depend
         return "htslib package not downloaded"
     else:
         pass
-    
-    process = subprocess.Popen(["tar", "-xf", f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+
+    process = subprocess.Popen(
+        ["tar", "-xf", f_name],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
 
     os.chdir(f_name.replace(".tar.bz2", ""))
-    
-    process = subprocess.Popen(["./configure", "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+
+    process = subprocess.Popen(
+        [
+            "./configure",
+            "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-53_bcftools",
+        ],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"Configure results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["make"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+    process = subprocess.Popen(
+        ["make"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"Make results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["make", "install"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+    process = subprocess.Popen(
+        ["make", "install"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
     std_out, std_err = process.communicate()
 
     runner_logger.info(f"Make install results: OUT: {std_out}, ERR: {std_err}")
@@ -215,12 +286,13 @@ def htslib_install(bucket: str, file_path: str): #TODO: add in checks for depend
 
     runner_logger.info(f"ls -l bin/ results: OUT: {std_out}, ERR: {std_err}")
 
-    if 'bgzip' in os.listdir("."): #heuristic for confirming install
+    if "bgzip" in os.listdir("."):  # heuristic for confirming install
 
         return "successfully installed htslib"
     else:
-        
+
         return "htslib package not installed correctly"
+
 
 @flow(
     name="vcf_merge_download_vcfs",
@@ -255,24 +327,53 @@ def download_handler(df: pd.DataFrame):
                 f"File {f_name} not copied over or found from URL {row['s3_url']}"
             )
         else:
-            temp_sample = [row['patient_id']+"_normal", row['sample_id']]
+            temp_sample = [row["patient_id"] + "_normal", row["sample_id"]]
             with open("sample.txt", "w+") as w:
                 w.write("\n".join(temp_sample))
             w.close()
 
-            process = subprocess.Popen(["./bcftools", "reheader", "-s", "sample.txt", "-o", f_name.replace("vcf.gz", "reheader.vcf.gz"), f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+            process = subprocess.Popen(
+                [
+                    "./bcftools",
+                    "reheader",
+                    "-s",
+                    "sample.txt",
+                    "-o",
+                    f_name.replace("vcf.gz", "reheader.vcf.gz"),
+                    f_name,
+                ],
+                shell=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
             std_out, std_err = process.communicate()
 
-            runner_logger.info(f"bcftools reheader results: OUT: {std_out}, ERR: {std_err}")
+            runner_logger.info(
+                f"bcftools reheader results: OUT: {std_out}, ERR: {std_err}"
+            )
 
             os.remove("sample.txt")
 
-            process = subprocess.Popen(["./bcftools", "index", "-t", f_name.replace("vcf.gz", "reheader.vcf.gz")], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
+            process = subprocess.Popen(
+                [
+                    "./bcftools",
+                    "index",
+                    "-t",
+                    f_name.replace("vcf.gz", "reheader.vcf.gz"),
+                ],
+                shell=False,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+
             std_out, std_err = process.communicate()
 
-            runner_logger.info(f"./bcftools index results: OUT: {std_out}, ERR: {std_err}")
+            runner_logger.info(
+                f"./bcftools index results: OUT: {std_out}, ERR: {std_err}"
+            )
 
     return None
 
@@ -307,15 +408,20 @@ def delete_handler(df: pd.DataFrame):
         if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")):
             os.remove(f_name.replace("vcf.gz", "reheader.vcf.gz"))
         else:
-            runner_logger.warning(f"The file {f_name.replace('vcf.gz', 'reheader.vcf.gz')} does not exist, cannot remove.")
+            runner_logger.warning(
+                f"The file {f_name.replace('vcf.gz', 'reheader.vcf.gz')} does not exist, cannot remove."
+            )
 
         # delete index file
-        if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi"):
-            os.remove(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi")
+        if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz") + ".tbi"):
+            os.remove(f_name.replace("vcf.gz", "reheader.vcf.gz") + ".tbi")
         else:
-            runner_logger.warning(f"The file {f_name.replace('vcf.gz', 'reheader.vcf.gz')+'.tbi'} does not exist, cannot remove.")
+            runner_logger.warning(
+                f"The file {f_name.replace('vcf.gz', 'reheader.vcf.gz')+'.tbi'} does not exist, cannot remove."
+            )
 
     return None
+
 
 @flow(
     name="vcf_merge_merge_vcfs",
@@ -332,15 +438,13 @@ def merging(df: pd.DataFrame, chunk: int, directory_save: str):
 
     Returns:
         list: file names merged in chunk
-        list: file names not merged in chunk due to not being found 
+        list: file names not merged in chunk due to not being found
     """
-
 
     runner_logger = get_run_logger()
 
     vcf_to_merge = []
     not_merged = []
-
 
     # need to log which VCFs produced which merged VCF for accounting purposes
     for index, row in df.iterrows():
@@ -348,7 +452,7 @@ def merging(df: pd.DataFrame, chunk: int, directory_save: str):
         f_name = os.path.basename(row["s3_url"])
 
         if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")):
-            if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi"):
+            if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz") + ".tbi"):
                 vcf_to_merge.append(f_name.replace("vcf.gz", "reheader.vcf.gz"))
             else:
                 not_merged.append(f_name.replace("vcf.gz", "reheader.vcf.gz"))
@@ -362,41 +466,68 @@ def merging(df: pd.DataFrame, chunk: int, directory_save: str):
             w.write("\n".join(vcf_to_merge))
         w.close()
 
-        process = subprocess.Popen(["./bcftools", "merge", "-l", f"vcfs_merged_in_{chunk}.txt", "-o", f"vcfs_merged_in_{chunk}.vcf.gz"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+        process = subprocess.Popen(
+            [
+                "./bcftools",
+                "merge",
+                "-l",
+                f"vcfs_merged_in_{chunk}.txt",
+                "-o",
+                f"vcfs_merged_in_{chunk}.vcf.gz",
+            ],
+            shell=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
         std_out, std_err = process.communicate()
 
-        runner_logger.info(f"bcftools merge chunk {chunk} results: OUT: {std_out}, ERR: {std_err}")
+        runner_logger.info(
+            f"bcftools merge chunk {chunk} results: OUT: {std_out}, ERR: {std_err}"
+        )
 
-        process = subprocess.Popen(["mv", f"vcfs_merged_in_{chunk}.vcf.gz", f"../{directory_save}/"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+        process = subprocess.Popen(
+            ["mv", f"vcfs_merged_in_{chunk}.vcf.gz", f"../{directory_save}/"],
+            shell=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
         std_out, std_err = process.communicate()
 
-        process = subprocess.Popen(["mv", f"vcfs_merged_in_{chunk}.txt", f"../{directory_save}/"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-        
-        std_out, std_err = process.communicate()
+        process = subprocess.Popen(
+            ["mv", f"vcfs_merged_in_{chunk}.txt", f"../{directory_save}/"],
+            shell=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
+        std_out, std_err = process.communicate()
 
     else:
         runner_logger.error("No VCF files provided to merge.")
         merged_vcf = pd.DataFrame(
-        columns=[
-            "CHROM",
-            "POS",
-            "ID",
-            "REF",
-            "ALT",
-            "QUAL",
-            "FILTER",
-            "INFO",
-            "FORMAT",
-        ]).to_csv(f"vcfs_merged_in_{chunk}.vcf", sep="\t", index=False)
-            
-    return vcf_to_merge, not_merged 
-            
-    
+            columns=[
+                "CHROM",
+                "POS",
+                "ID",
+                "REF",
+                "ALT",
+                "QUAL",
+                "FILTER",
+                "INFO",
+                "FORMAT",
+            ]
+        ).to_csv(f"vcfs_merged_in_{chunk}.vcf", sep="\t", index=False)
+
+    return vcf_to_merge, not_merged
+
 
 DropDownChoices = Literal["yes", "no"]
+
 
 @flow(
     name="VCF Merge bcftools",
@@ -427,7 +558,7 @@ def runner(
     runner_logger = get_run_logger()
 
     dt = get_time()
-    
+
     runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
 
     runner_logger.info(">>> Running VCF_MERGE.py ....")
@@ -455,7 +586,7 @@ def runner(
 
     runner_logger.info(htslib_install(bucket, htslib_path))
 
-    #for chunk in range(0, len(file_metadata), chunk_size):
+    # for chunk in range(0, len(file_metadata), chunk_size):
     for chunk in range(0, 20, chunk_size):
         runner_logger.info(
             f"Working on chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}..."
@@ -468,7 +599,9 @@ def runner(
         # merge VCFs
         runner_logger.info(f"Merging VCFs in chunk {round(chunk/chunk_size)+1}...")
         vcf_to_merge, not_merged = merging(
-            file_metadata[chunk : chunk + chunk_size], round(chunk/chunk_size)+1, f"VCF_merge_{chunk_size}_{dt}"
+            file_metadata[chunk : chunk + chunk_size],
+            round(chunk / chunk_size) + 1,
+            f"VCF_merge_{chunk_size}_{dt}",
         )
 
         not_merged_total += not_merged
@@ -520,13 +653,17 @@ def runner(
         )"""
 
     if len(not_merged_total) > 0:
-        with open(
-            f"VCF_merge_{chunk_size}_{dt}/vcf_not_merged_{chunk}.txt", "w+"
-        ) as w:
+        with open(f"VCF_merge_{chunk_size}_{dt}/vcf_not_merged_{chunk}.txt", "w+") as w:
             w.write("\n".join(not_merged))
         w.close()
 
-    process = subprocess.Popen(["ls", "-l", f"../VCF_merge_{chunk_size}_{dt}"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(
+        ["ls", "-l", f"../VCF_merge_{chunk_size}_{dt}"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
     std_out, std_err = process.communicate()
 
