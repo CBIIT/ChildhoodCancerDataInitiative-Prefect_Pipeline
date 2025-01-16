@@ -2,6 +2,7 @@ import os
 import sys
 import requests
 import subprocess
+import socket
 
 import pandas as pd
 from datetime import datetime
@@ -291,7 +292,7 @@ def download_handler(df: pd.DataFrame):
                 w.write("\n".join(temp_sample))
             w.close()
 
-            process = subprocess.Popen(["./bcftools", "reheader", "-s", "sample.txt", "-o", f_name.replace(".vcf.gz", "reheader.vcf.gz"), f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            process = subprocess.Popen(["./bcftools", "reheader", "-s", "sample.txt", "-o", f_name.replace("vcf.gz", "reheader.vcf.gz"), f_name], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
             std_out, std_err = process.communicate()
 
@@ -332,11 +333,12 @@ def download_handler(df: pd.DataFrame):
 
             runner_logger.info(f"./bcftools index results: OUT: {std_out}, ERR: {std_err}")
 
-            process = subprocess.Popen(["ls", "-l",], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            ##TESTING
+            #process = subprocess.Popen(["ls", "-l",], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
-            std_out, std_err = process.communicate()
+            #std_out, std_err = process.communicate()
 
-            runner_logger.info(f"bcftools reheader results in dir: OUT: {std_out}, ERR: {std_err}")
+            #runner_logger.info(f"bcftools reheader results in dir: OUT: {std_out}, ERR: {std_err}")
 
     return None
 
@@ -366,24 +368,61 @@ def delete_handler(df: pd.DataFrame):
     log_prints=True,
     flow_run_name="vcf_merge_merge_vcfs_" + f"{get_time()}",
 )
-def merging(df: pd.DataFrame):
+def merging(df: pd.DataFrame, chunk: int):
     runner_logger = get_run_logger()
 
     vcf_to_merge = []
     not_merged = []
 
 
+    # need to log which VCFs produced which merged VCF for accounting purposes
+    for index, row in df.iterrows():
 
+        f_name = os.path.basename(row["s3_url"])
+
+        if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")):
+            vcf_to_merge.append(f_name.replace("vcf.gz", "reheader.vcf.gz"))
+        else:
+            not_merged.append(f_name.replace("vcf.gz", "reheader.vcf.gz"))
+
+    if len(vcf_to_merge) > 1:
+        runner_logger.info(f"Running merge of {len(vcf_to_merge)} VCF files....")
+
+        with open(f"vcfs_merged_in_{chunk}.txt", "w+") as w:
+            w.write("\n".join(vcf_to_merge))
+        w.close()
+
+        process = subprocess.Popen(["./bcftools", "merge", "-l", f"vcfs_merged_in_{chunk}.txt", "-o", f"vcfs_merged_in_{chunk}.vcf.gz"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+        std_out, std_err = process.communicate()
+
+        runner_logger.info(f"bcftools merge chunk {chunk} results: OUT: {std_out}, ERR: {std_err}")
+
+    else:
+        runner_logger.error("No VCF files provided to merge.")
+        merged_vcf = pd.DataFrame(
+        columns=[
+            "CHROM",
+            "POS",
+            "ID",
+            "REF",
+            "ALT",
+            "QUAL",
+            "FILTER",
+            "INFO",
+            "FORMAT",
+        ]).to_csv(f"vcfs_merged_in_{chunk}.vcf", sep="\t", index=False)
+            
+    return vcf_to_merge, not_merged 
+            
+    
 
 
 DropDownChoices = Literal["yes", "no"]
 
 #main 
 
-# copyover bcftools
-# install bcftools
-# copy over files in chunk
-# create index files in chunk
+
 # merge files in chunk
 # delete files in the chunk
 
@@ -417,6 +456,8 @@ def runner(
 
     dt = get_time()
     
+    runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
+
     runner_logger.info(">>> Running VCF_MERGE.py ....")
 
     # download manifest file
@@ -453,13 +494,13 @@ def runner(
         download_handler(file_metadata[chunk : chunk + chunk_size])
 
         # merge VCFs
-        """runner_logger.info(f"Merging VCFs in chunk {round(chunk/chunk_size)+1}...")
+        runner_logger.info(f"Merging VCFs in chunk {round(chunk/chunk_size)+1}...")
         vcf_to_merge, not_merged, merged_vcf = merging(
-            file_metadata[chunk : chunk + chunk_size]
+            file_metadata[chunk : chunk + chunk_size], round(chunk/chunk_size)+1
         )
 
         # save merged file and log files
-        runner_logger.info(
+        """runner_logger.info(
             f"Saving merged VCFs and info for chunk {round(chunk/chunk_size)+1}"
         )
         with open(f"VCF_merge_{chunk_size}_{dt}/vcfs_merged_in_{chunk}.txt", "w+") as w:
