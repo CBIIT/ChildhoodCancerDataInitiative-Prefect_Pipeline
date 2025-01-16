@@ -326,7 +326,7 @@ def delete_handler(df: pd.DataFrame):
         if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")):
             os.remove(f_name.replace("vcf.gz", "reheader.vcf.gz"))
         else:
-            runner_logger.warning(f"The file {f_name.replace("vcf.gz", "reheader.vcf.gz")} does not exist, cannot remove.")
+            runner_logger.warning(f"The file {f_name.replace('vcf.gz', 'reheader.vcf.gz')} does not exist, cannot remove.")
 
         # delete index file
         if os.path.exists(f_name.replace("vcf.gz", "reheader.vcf.gz")+".tbi"):
@@ -402,14 +402,7 @@ def merging(df: pd.DataFrame, chunk: int, directory_save: str):
             
     
 
-
 DropDownChoices = Literal["yes", "no"]
-
-#main 
-
-
-# merge files in chunk
-# delete files in the chunk
 
 @flow(
     name="VCF Merge bcftools",
