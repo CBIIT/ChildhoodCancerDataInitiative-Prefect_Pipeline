@@ -327,7 +327,7 @@ def download_handler(df: pd.DataFrame):
 
             #runner_logger.info(f"sort results: OUT: {std_out}, ERR: {std_err}")
 
-            process = subprocess.Popen(["./bcftools", "index", "-t", f_name.replace(".vcf.gz", "reheader.vcf.gz")], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+            process = subprocess.Popen(["./bcftools", "index", "-t", f_name.replace("vcf.gz", "reheader.vcf.gz")], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
             std_out, std_err = process.communicate()
 
@@ -495,7 +495,7 @@ def runner(
 
         # merge VCFs
         runner_logger.info(f"Merging VCFs in chunk {round(chunk/chunk_size)+1}...")
-        vcf_to_merge, not_merged, merged_vcf = merging(
+        vcf_to_merge, not_merged = merging(
             file_metadata[chunk : chunk + chunk_size], round(chunk/chunk_size)+1
         )
 
