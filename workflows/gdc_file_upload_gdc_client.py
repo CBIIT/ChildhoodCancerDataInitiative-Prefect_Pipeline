@@ -326,11 +326,16 @@ def runner(
 
     runner_logger.info(f"apt install curl results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["curl", "-v", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    try:
 
-    std_out, std_err = process.communicate()
+        process = subprocess.Popen(["curl", "-v", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+        std_out, std_err = process.communicate()
     
-    runner_logger.info(f"curl -v https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
+        runner_logger.info(f"curl -v https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
+
+    except:
+        runner_logger.warning("curl didn't work")
 
     process = subprocess.Popen(["ls", "-l", "/usr/lib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
