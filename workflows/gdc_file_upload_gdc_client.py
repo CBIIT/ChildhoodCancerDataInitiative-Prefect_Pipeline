@@ -332,6 +332,24 @@ def runner(
     
     runner_logger.info(f"curl -v https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
 
+    process = subprocess.Popen(["ls", "-l", "/usr/lib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+    std_out, std_err = process.communicate()
+    
+    runner_logger.info(f"ls -l /usr/lib results: OUT: {std_out}, ERR: {std_err}")
+
+    process = subprocess.Popen(["ls", "-l", "/lib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+    std_out, std_err = process.communicate()
+    
+    runner_logger.info(f"ls -l /lib results: OUT: {std_out}, ERR: {std_err}")
+
+    process = subprocess.Popen(["ls", "-l", "/usr/bin"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+    std_out, std_err = process.communicate()
+    
+    runner_logger.info(f"ls -l /usr/bin results: OUT: {std_out}, ERR: {std_err}")
+    
     #std_out, std_err = process.communicate()
 
     #runner_logger.info(f"whereis curl: OUT: {std_out}, ERR: {std_err}")
