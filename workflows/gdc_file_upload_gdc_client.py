@@ -345,33 +345,33 @@ def runner(
 
     query2 = query2 = {'query': '{\n\tcase(project_id: "CCDI-MCI", first: 1, offset:0){\n\t\tsubmitter_id\n\t\tid\n\t}\n}', 'variables': ''}
 
-    runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/v0/submission/graphql with payload query {query1}")
+    runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/graphql with payload query {query1}")
 
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/v0/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
 
-    runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/v0/submission/graphql with payload query {query2}")
+    runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/graphql with payload query {query2}")
     
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/v0/submission/graphql", json=query2, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query2, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
 
     sample1 = {'cases': [{'submitter_id': 'PBCNNH'}], 'type': 'sample', 'preservation_method': 'Not Reported', 'specimen_type': 'Solid Tissue', 'submitter_id': '0DWRMA', 'tissue_type': 'Tumor', 'tumor_descriptor': 'Not Reported'}
 
     sample2 = {'cases': [{'submitter_id': 'PBCPMH'}], 'type': 'sample', 'preservation_method': 'Not Reported', 'specimen_type': 'Solid Tissue', 'submitter_id': '0DWRMC', 'tissue_type': 'Tumor', 'tumor_descriptor': 'Not Reported'}
 
-    runner_logger.info(f"Trying PUT to https://api.gdc.cancer.gov/v0/submission/CCDI/MCI with payload {sample1}")
+    runner_logger.info(f"Trying PUT to https://api.gdc.cancer.gov/submission/CCDI/MCI with payload {sample1}")
     
-    response1 = requests.put("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI", json=sample1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text
+    response1 = requests.put("https://api.gdc.cancer.gov/submission/CCDI/MCI", json=sample1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text
 
     runner_logger.info(response1)
 
-    runner_logger.info(f"Trying PUT to https://api.gdc.cancer.gov/v0/submission/CCDI/MCI with payload {sample2}")
+    runner_logger.info(f"Trying PUT to https://api.gdc.cancer.gov/submission/CCDI/MCI with payload {sample2}")
     
-    response2 = requests.put("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI", json=sample2, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text
+    response2 = requests.put("https://api.gdc.cancer.gov/submission/CCDI/MCI", json=sample2, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text
 
     runner_logger.info(response2)
 
-    runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
+    runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
 
-    runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb").text)
+    runner_logger.info(requests.get("https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb").text)
 
     runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/cases?size=1")
     
