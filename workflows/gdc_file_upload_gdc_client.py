@@ -326,11 +326,11 @@ def runner(
 
     runner_logger.info(f"apt install curl results: OUT: {std_out}, ERR: {std_err}")
 
-    #process = subprocess.Popen(["wget", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    process = subprocess.Popen(["curl", "-v", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
-    #std_out, std_err = process.communicate()
+    std_out, std_err = process.communicate()
     
-    #runner_logger.info(f"wget https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
+    runner_logger.info(f"curl -v https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
 
     #std_out, std_err = process.communicate()
 
