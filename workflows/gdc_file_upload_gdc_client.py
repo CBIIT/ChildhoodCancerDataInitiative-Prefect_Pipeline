@@ -12,8 +12,8 @@ import os
 import sys
 import time
 import subprocess
-import socket
-import logging
+#import socket
+#import logging
 
 import pandas as pd
 from datetime import datetime
@@ -307,7 +307,7 @@ def runner(
 
     dt = get_time()
 
-    runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
+    #runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
 
     os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
 
@@ -337,7 +337,7 @@ def runner(
     # save a token file to give gdc-client
     token = get_secret(secret_key_name).strip()
 
-    logging.getLogger("requests").setLevel(logging.DEBUG)
+    #logging.getLogger("requests").setLevel(logging.DEBUG)
 
     runner_logger.info("TESTING API QUERIES")
 
