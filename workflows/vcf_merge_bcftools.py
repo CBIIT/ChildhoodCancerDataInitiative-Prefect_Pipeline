@@ -703,15 +703,27 @@ def runner(
 
     if recursive == "yes":
         try:
-            runner_logger.info(merging_merged(f"VCF_merge_{chunk_size}_{dt}"))
+            runner_logger.info(merging_merged(f"../VCF_merge_{chunk_size}_{dt}"))
         except Exception as e:
             runner_logger.error(f"Could not merge merged VCFs: {e}")
 
     if len(not_merged_total) > 0:
-        with open(f"VCF_merge_{chunk_size}_{dt}/vcf_not_merged_{chunk}.txt", "w+") as w:
+        with open(f"../VCF_merge_{chunk_size}_{dt}/vcf_not_merged_{chunk}.txt", "w+") as w:
             w.write("\n".join(not_merged))
         w.close()
 
+    process = subprocess.Popen(
+        ["ls", "-l"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"check results in bin: OUT: {std_out}, ERR: {std_err}")
+    
     process = subprocess.Popen(
         ["ls", "-l", f"../VCF_merge_{chunk_size}_{dt}"],
         shell=False,
