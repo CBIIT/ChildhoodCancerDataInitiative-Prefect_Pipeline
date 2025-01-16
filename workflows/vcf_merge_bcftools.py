@@ -499,6 +499,16 @@ def runner(
             file_metadata[chunk : chunk + chunk_size], round(chunk/chunk_size)+1
         )
 
+        runner_logger.info(f"NOT merged: {not_merged}")
+
+        runner_logger.info(f"merged: {vcf_to_merge}")
+
+        process = subprocess.Popen(["ls", "-l"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+        std_out, std_err = process.communicate()
+
+        runner_logger.info(f"merge results: OUT: {std_out}, ERR: {std_err}")
+
         # save merged file and log files
         """runner_logger.info(
             f"Saving merged VCFs and info for chunk {round(chunk/chunk_size)+1}"
