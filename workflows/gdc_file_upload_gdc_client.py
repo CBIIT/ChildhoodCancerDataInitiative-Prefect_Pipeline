@@ -13,7 +13,7 @@ import sys
 import time
 import subprocess
 #import socket
-#import logging
+import logging
 
 import pandas as pd
 from datetime import datetime
@@ -308,6 +308,7 @@ def runner(
     dt = get_time()
 
     #runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
+    logging.getLogger("requests").setLevel(logging.DEBUG)
 
     os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
 
@@ -325,11 +326,11 @@ def runner(
 
     runner_logger.info(f"apt install curl results: OUT: {std_out}, ERR: {std_err}")
 
-    process = subprocess.Popen(["wget", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    #process = subprocess.Popen(["wget", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
-    std_out, std_err = process.communicate()
+    #std_out, std_err = process.communicate()
     
-    runner_logger.info(f"wget https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
+    #runner_logger.info(f"wget https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
 
     #std_out, std_err = process.communicate()
 
@@ -352,6 +353,14 @@ def runner(
     runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/graphql with payload query {query1}")
 
     runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
+
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).url)
+
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).response)
+
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).url)
+
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).content)
 
     runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/graphql with payload query {query2}")
     
