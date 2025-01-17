@@ -36,7 +36,6 @@ import os
 import logging
 from deepdiff import DeepDiff
 import pandas as pd
-from datetime import datetime
 import time
 import socket
 from typing import Literal
@@ -53,19 +52,6 @@ from src.utils import get_time, file_dl, folder_ul, sanitize_return
 #
 ##############
 
-
-def get_ip():
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    s.settimeout(0)
-    try:
-        # doesn't even have to be reachable
-        s.connect(('10.254.254.254', 1))
-        ip = s.getsockname()[0]
-    except Exception:
-        ip = '127.0.0.1'
-    finally:
-        s.close()
-    return ip
 
 def read_json(dir_path: str):
     """Reads in submission JSON file and returns a list of dicts, checks node types."""
@@ -156,7 +142,7 @@ def dbgap_retrieve(phs_id_version: str):
 
     return subjects_dbgap
 
-def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5, delay=10):
+def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5, delay=2):
     """Wrapper for request function to handle timeouts and connection errors
 
     Args:
@@ -334,7 +320,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             "Grabbing comparison JSONs to check if already submitted nodes need updating"
         )
 
-        size = 5
+        size = 20
         max_retries = 5
 
         for offset in range(0, len(uuids), size):  # query 10 at a time
@@ -346,7 +332,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
                     entities = json.loads(temp.text)["entities"]
                 except:
                     runner_logger.error(
-                        f" Entities request output malformed: {str(temp.text)} , for request {api+uuids_fmt} , trying again..."  # loads > dumps
+                        f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt} , trying again..."  # loads > dumps
                     )
                     retries += 1
                     time.sleep(3)
@@ -358,7 +344,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
 
                 gdc_node_metadata[entity_parse["submitter_id"]] = entity_parse
 
-            time.sleep(10)
+            time.sleep(2)
 
         return gdc_node_metadata
     
@@ -740,8 +726,6 @@ def runner(
     runner_logger = get_run_logger()
 
     runner_logger.info(">>> Running GDC_IMPORT.py ....")
-
-    runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
 
     # download the file
     file_dl(bucket, file_path)
