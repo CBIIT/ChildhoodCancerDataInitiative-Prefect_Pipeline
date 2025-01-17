@@ -385,7 +385,7 @@ def runner(
 
     runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).is_permanent_redirect)
 
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).is_reason)
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).reason)
 
     runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/graphql with payload query {query2}")
     
