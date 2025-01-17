@@ -53,14 +53,41 @@ def send_gdc_submission():
         print(f"An error occurred: {e}")
         return None
     
+def send_gdc_submission_entity_get(token: str):
+
+    
+    # Sample headers - adjust as needed
+    headers={"X-Auth-Token": token, "Content-Type": "application/json"}
+    
+    try:
+        response = requests.get(
+            "https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb",
+            headers=headers,
+
+        )
+        
+        # Print status code and response
+        print(f"Status Code: {response.status_code}")
+        print(f"Response: {response.json()}")
+        
+        return response
+        
+    except requests.exceptions.RequestException as e:
+        print(f"An error occurred: {e}")
+        return None
+    
 def send_gdc_submission_post(token: str):
     url = "https://api.gdc.cancer.gov/submission"
     
     # Sample headers - adjust as needed
     headers={"X-Auth-Token": token, "Content-Type": "application/json"}
-    
+
+    runner_logger = get_run_logger()
+
     # Sample data payload - replace with your actual data
     payload = {'query': '{\n\tsample(project_id: "CCDI-MCI", first: 1, offset:0){\n\t\tsubmitter_id\n\t\tid\n\t}\n}', 'variables': ''}
+
+    runner_logger.info(f"payload is: {payload}")
     
     try:
         response = requests.post(
@@ -102,3 +129,8 @@ def runner(
     runner_logger.info("Testing sample payload POST to /submission/graphql")
 
     runner_logger.info(send_gdc_submission_post(token))
+
+    runner_logger.info("Testing sample GET to https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
+
+    runner_logger.info(send_gdc_submission_entity_get(token))
+
