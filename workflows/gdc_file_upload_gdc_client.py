@@ -10,15 +10,15 @@ import json
 import requests
 import os
 import sys
-import time
+#import time
 import subprocess
 #import socket
-import logging
+#import logging
 
 import pandas as pd
-from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
-import contextvars
+#from datetime import datetime
+#from concurrent.futures import ThreadPoolExecutor
+#import contextvars
 
 
 # prefect dependencies
@@ -308,7 +308,7 @@ def runner(
     dt = get_time()
 
     #runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
-    logging.getLogger("requests").setLevel(logging.DEBUG)
+    #logging.getLogger("requests").setLevel(logging.DEBUG)
 
     os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
 
