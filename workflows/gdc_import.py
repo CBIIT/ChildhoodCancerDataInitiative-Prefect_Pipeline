@@ -245,7 +245,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     n_query = 500
 
     for offset in range(0, 500000, n_query):
-        time.sleep(10)
+        time.sleep(2)
         # print to runner_logger that running query
         runner_logger.info(
             f" Checking for {node_type} nodes already present in {project_id}, offset is {offset}"
@@ -335,7 +335,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
                         f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt} , trying again..."  # loads > dumps
                     )
                     retries += 1
-                    time.sleep(3)
+                    time.sleep(2)
 
             for entity in entities:
 
@@ -637,7 +637,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                     f" POST request for node submitter_id {node['submitter_id']}: {str(res.text)}"
                 )
                 responses.append([node["submitter_id"], res.status_code, str(res.text)])
-                #time.sleep(5)
+                time.sleep(2)
         elif submission_type == "update":
             for node in nodes:
                 res = make_request("put",
@@ -650,7 +650,7 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
                     f" PUT request for node submitter_id {node['submitter_id']}: {str(res.text)}"
                 )
                 responses.append([node["submitter_id"], res.status_code, str(res.text)])
-                time.sleep(5)
+                time.sleep(2)
 
         # need to chunk responses into response recorder to not overwhelm stuff
         # start with 50 at a time?
