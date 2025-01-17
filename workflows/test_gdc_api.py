@@ -7,9 +7,6 @@ from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
 from src.utils import get_time, file_dl, folder_ul
 
-import requests
-import json
-
 def get_secret(secret_key_name):
     secret_name = "ccdi/nonprod/inventory/gdc-token"
     region_name = "us-east-1"
@@ -90,6 +87,7 @@ def send_gdc_submission_post(token: str):
 def runner(
     runner: str,
     secret_key_name: str,
+    bucket: str
 ):
     runner_logger = get_run_logger()
 
