@@ -909,7 +909,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-    - name: gdc-api-test
+  - name: gdc-api-test
     version: null
     tags: ["TEST"]
     description: null
