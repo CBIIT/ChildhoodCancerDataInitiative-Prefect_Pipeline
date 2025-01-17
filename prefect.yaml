@@ -920,6 +920,7 @@ deployments:
     parameters:
       runner: ""
       secret_key_name: ""
+      bucket: "ccdi-validation"
 
     # pull action to overwrite from file pull action
     pull:
