@@ -318,13 +318,13 @@ def runner(
     
     std_out, std_err = process.communicate()
 
-    runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
+    #runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
     process = subprocess.Popen(["apt-get", "-y", "install", "curl"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
     
     std_out, std_err = process.communicate()
 
-    runner_logger.info(f"apt install curl results: OUT: {std_out}, ERR: {std_err}")
+    #runner_logger.info(f"apt install curl results: OUT: {std_out}, ERR: {std_err}")
 
     try:
 
@@ -407,9 +407,9 @@ def runner(
 
     runner_logger.info(response2)
 
-    runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
+    runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
 
-    runner_logger.info(requests.get("https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb").text)
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb").text)
 
     runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/cases?size=1")
     
