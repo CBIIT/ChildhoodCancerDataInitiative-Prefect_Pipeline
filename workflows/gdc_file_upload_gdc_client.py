@@ -337,7 +337,7 @@ def runner(
     except:
         runner_logger.warning("curl didn't work")
 
-    process = subprocess.Popen(["ls", "-l", "/usr/lib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    """process = subprocess.Popen(["ls", "-l", "/usr/lib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
     std_out, std_err = process.communicate()
     
@@ -352,7 +352,7 @@ def runner(
     process = subprocess.Popen(["ls", "-l", "/usr/bin"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
     std_out, std_err = process.communicate()
-    
+    """
     runner_logger.info(f"ls -l /usr/bin results: OUT: {std_out}, ERR: {std_err}")
     
     #std_out, std_err = process.communicate()
