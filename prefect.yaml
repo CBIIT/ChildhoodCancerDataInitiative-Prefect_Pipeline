@@ -918,7 +918,8 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      runner: ""
+      secret_key_name: ""
 
     # pull action to overwrite from file pull action
     pull:
