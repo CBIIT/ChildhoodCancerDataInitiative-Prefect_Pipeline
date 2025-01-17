@@ -328,11 +328,11 @@ def runner(
 
     try:
 
-        process = subprocess.Popen(["curl", "-v", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+        process = subprocess.Popen(["curl", "-H", "POST", "-v", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
         std_out, std_err = process.communicate()
     
-        runner_logger.info(f"curl -v https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
+        runner_logger.info(f"curl -H POST -v https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
 
     except:
         runner_logger.warning("curl didn't work")
@@ -352,8 +352,8 @@ def runner(
     process = subprocess.Popen(["ls", "-l", "/usr/bin"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
     std_out, std_err = process.communicate()
-    """
-    runner_logger.info(f"ls -l /usr/bin results: OUT: {std_out}, ERR: {std_err}")
+    
+    runner_logger.info(f"ls -l /usr/bin results: OUT: {std_out}, ERR: {std_err}")"""
     
     #std_out, std_err = process.communicate()
 
@@ -409,7 +409,7 @@ def runner(
 
     runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
 
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb").text)
+    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb", headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
 
     runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/cases?size=1")
     
