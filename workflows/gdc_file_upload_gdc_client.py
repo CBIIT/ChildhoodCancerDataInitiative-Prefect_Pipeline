@@ -337,6 +337,28 @@ def runner(
     except:
         runner_logger.warning("curl didn't work")
 
+    try:
+
+        process = subprocess.Popen(["curl", "ifconfig.me"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+        std_out, std_err = process.communicate()
+    
+        runner_logger.info(f"curl ifconfig.me results: OUT: {std_out}, ERR: {std_err}")
+
+    except:
+        runner_logger.warning("curl ifconfig.me  didn't work")
+
+    try:
+
+        process = subprocess.Popen(["curl", "ipinfo.io/ip"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+
+        std_out, std_err = process.communicate()
+    
+        runner_logger.info(f"curl ipinfo.io/ip results: OUT: {std_out}, ERR: {std_err}")
+
+    except:
+        runner_logger.warning("curl ifconfig.me  didn't work")
+
     """process = subprocess.Popen(["ls", "-l", "/usr/lib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
 
     std_out, std_err = process.communicate()
