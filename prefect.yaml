@@ -913,7 +913,7 @@ deployments:
     version: null
     tags: ["TEST"]
     description: null
-    entrypoint: src/test_gdc_api.py:search_buckets_content
+    entrypoint: src/test_gdc_api.py:runner
     schedule: null
 
     # flow-specific parameters
