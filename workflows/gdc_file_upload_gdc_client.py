@@ -176,8 +176,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
             else:
             # trying to re-use file_dl() function
                 file_dl(f_bucket, f_path)
-
-            runner_logger.info(f"Downloaded file {f_name}")
+                runner_logger.info(f"Downloaded file {f_name}")
         except:
             runner_logger.error(f"Cannot download file {row['file_name']}")
             subresponses.append([row["id"], row["file_name"], "NOT uploaded"])
@@ -331,18 +330,24 @@ def runner(
 
     # then query against indexd for the bucket URL of the file
 
-    file_metadata_s3 = retrieve_s3_url_handler(file_metadata)
+    #file_metadata_s3 = retrieve_s3_url_handler(file_metadata)
 
     responses = []
 
     chunk_size = 200
 
-    for chunk in range(0, len(file_metadata_s3), chunk_size):
+    for chunk in range(0, len(file_metadata), chunk_size):
         runner_logger.info(
-            f"Uploading chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))} for files"
+        )
+
+        file_metadata_s3 = retrieve_s3_url(file_metadata[chunk:chunk+chunk_size])
+
+        runner_logger.info(
+            f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))}"
         )
         subresponses = uploader_handler(
-            file_metadata_s3[chunk : chunk + chunk_size],
+            #file_metadata_s3[chunk : chunk + chunk_size],
+            file_metadata_s3
             "token.txt",
             upload_part_size_mb,
             max_n_processes,
