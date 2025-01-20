@@ -10,16 +10,8 @@ import json
 import requests
 import os
 import sys
-#import time
 import subprocess
-#import socket
-#import logging
-
 import pandas as pd
-#from datetime import datetime
-#from concurrent.futures import ThreadPoolExecutor
-#import contextvars
-
 
 # prefect dependencies
 import boto3
@@ -307,136 +299,15 @@ def runner(
 
     dt = get_time()
 
-    #runner_logger.info(f">>> IP ADDRESS IS: {get_ip()}")
-    #logging.getLogger("requests").setLevel(logging.DEBUG)
-
     os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
 
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
-
-    process = subprocess.Popen(["apt", "update"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    std_out, std_err = process.communicate()
-
-    #runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
-
-    process = subprocess.Popen(["apt-get", "-y", "install", "curl"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-    
-    std_out, std_err = process.communicate()
-
-    #runner_logger.info(f"apt install curl results: OUT: {std_out}, ERR: {std_err}")
-
-    try:
-
-        process = subprocess.Popen(["curl", "-H", "POST", "-v", "https://api.gdc.cancer.gov/submission"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-        std_out, std_err = process.communicate()
-    
-        runner_logger.info(f"curl -H POST -v https://api.gdc.cancer.gov/submission results: OUT: {std_out}, ERR: {std_err}")
-
-    except:
-        runner_logger.warning("curl didn't work")
-
-    try:
-
-        process = subprocess.Popen(["curl", "ifconfig.me"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-        std_out, std_err = process.communicate()
-    
-        runner_logger.info(f"curl ifconfig.me results: OUT: {std_out}, ERR: {std_err}")
-
-    except:
-        runner_logger.warning("curl ifconfig.me  didn't work")
-
-    try:
-
-        process = subprocess.Popen(["curl", "ipinfo.io/ip"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-        std_out, std_err = process.communicate()
-    
-        runner_logger.info(f"curl ipinfo.io/ip results: OUT: {std_out}, ERR: {std_err}")
-
-    except:
-        runner_logger.warning("curl ifconfig.me  didn't work")
-
-    """process = subprocess.Popen(["ls", "-l", "/usr/lib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-    std_out, std_err = process.communicate()
-    
-    runner_logger.info(f"ls -l /usr/lib results: OUT: {std_out}, ERR: {std_err}")
-
-    process = subprocess.Popen(["ls", "-l", "/lib"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-    std_out, std_err = process.communicate()
-    
-    runner_logger.info(f"ls -l /lib results: OUT: {std_out}, ERR: {std_err}")
-
-    process = subprocess.Popen(["ls", "-l", "/usr/bin"], shell=False, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
-
-    std_out, std_err = process.communicate()
-    
-    runner_logger.info(f"ls -l /usr/bin results: OUT: {std_out}, ERR: {std_err}")"""
-    
-    #std_out, std_err = process.communicate()
-
-    #runner_logger.info(f"whereis curl: OUT: {std_out}, ERR: {std_err}")
 
     # download the input manifest file
     file_dl(bucket, manifest_path)
 
     # save a token file to give gdc-client
     token = get_secret(secret_key_name).strip()
-
-    #logging.getLogger("requests").setLevel(logging.DEBUG)
-
-    runner_logger.info("TESTING API QUERIES")
-
-    query1 = {'query': '{\n\tsample(project_id: "CCDI-MCI", first: 1, offset:0){\n\t\tsubmitter_id\n\t\tid\n\t}\n}', 'variables': ''}
-
-    query2 = query2 = {'query': '{\n\tcase(project_id: "CCDI-MCI", first: 1, offset:0){\n\t\tsubmitter_id\n\t\tid\n\t}\n}', 'variables': ''}
-
-    runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/graphql with payload query {query1}")
-
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
-
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).url)
-
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).content)
-
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).is_redirect)
-
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).is_permanent_redirect)
-
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).reason)
-
-    runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/graphql with payload query {query2}")
-    
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/graphql", json=query2, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
-
-    sample1 = {'cases': [{'submitter_id': 'PBCNNH'}], 'type': 'sample', 'preservation_method': 'Not Reported', 'specimen_type': 'Solid Tissue', 'submitter_id': '0DWRMA', 'tissue_type': 'Tumor', 'tumor_descriptor': 'Not Reported'}
-
-    sample2 = {'cases': [{'submitter_id': 'PBCPMH'}], 'type': 'sample', 'preservation_method': 'Not Reported', 'specimen_type': 'Solid Tissue', 'submitter_id': '0DWRMC', 'tissue_type': 'Tumor', 'tumor_descriptor': 'Not Reported'}
-
-    runner_logger.info(f"Trying PUT to https://api.gdc.cancer.gov/submission/CCDI/MCI with payload {sample1}")
-    
-    response1 = requests.put("https://api.gdc.cancer.gov/submission/CCDI/MCI", json=sample1, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text
-
-    runner_logger.info(response1)
-
-    runner_logger.info(f"Trying PUT to https://api.gdc.cancer.gov/submission/CCDI/MCI with payload {sample2}")
-    
-    response2 = requests.put("https://api.gdc.cancer.gov/submission/CCDI/MCI", json=sample2, headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text
-
-    runner_logger.info(response2)
-
-    runner_logger.info(f"Trying POST to https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb")
-
-    runner_logger.info(requests.post("https://api.gdc.cancer.gov/submission/CCDI/MCI/entities/005ebef7-c384-433a-bea9-91afdb332ecb", headers={"X-Auth-Token": token, "Content-Type": "application/json"}).text)
-
-    runner_logger.info(f"Trying GET to https://api.gdc.cancer.gov/cases?size=1")
-    
-    runner_logger.info(requests.get("https://api.gdc.cancer.gov/cases?size=1").text)
-
 
     with open("token.txt", "w+") as w:
         w.write(token)
