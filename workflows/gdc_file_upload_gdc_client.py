@@ -338,6 +338,7 @@ def runner(
 
     for chunk in range(0, len(file_metadata), chunk_size):
         runner_logger.info(
+            f"Grabbing s3 URL metadata for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata_s3), chunk_size))}"
         )
 
         file_metadata_s3 = retrieve_s3_url(file_metadata[chunk:chunk+chunk_size])
