@@ -348,7 +348,7 @@ def runner(
         )
         subresponses = uploader_handler(
             #file_metadata_s3[chunk : chunk + chunk_size],
-            file_metadata_s3
+            file_metadata_s3,
             "token.txt",
             upload_part_size_mb,
             max_n_processes,
