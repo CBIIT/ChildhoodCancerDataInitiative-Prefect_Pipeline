@@ -332,15 +332,15 @@ def runner(
     # samtools setup
     runner_logger.info(">>> Installing samtools ....")
 
-    runner_logger.info(samtools_setup(bucket, samtools_path))
+    #runner_logger.info(samtools_setup(bucket, samtools_path))
 
     #vep install 
-    runner_logger.info(vep_setup())
+    #runner_logger.info(vep_setup())
 
     # vcf2maf setup
     runner_logger.info(">>> Installing vcf2maf ....")
 
-    runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
+    #runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
 
     # test vcf2maf
 
