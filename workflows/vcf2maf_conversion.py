@@ -257,19 +257,27 @@ def vep_setup():
 
     runner_logger.info(os.environ["DYLD_LIBRARY_PATH"])
 
-    for package in ["DBI", "Archive::Zip", "Archive::Extract", "DBD::mysql"]:
+    for package in [
+        "DBI",
+        "Archive::Zip",
+        "Archive::Extract",
+        "DBD::mysql",
+        "Module::Build",
+    ]:
         process = subprocess.Popen(
-        ["cpan", package],
-        shell=False,
-        text=True,
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+            ["cpan", package],
+            shell=False,
+            text=True,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
 
         std_out, std_err = process.communicate("y\n")
 
-        runner_logger.info(f"Perl install results for {package}: OUT: {std_out}, ERR: {std_err}")
+        runner_logger.info(
+            f"Perl install results for {package}: OUT: {std_out}, ERR: {std_err}"
+        )
 
     process = subprocess.Popen(
         ["perl", "INSTALL.pl"],
