@@ -219,6 +219,34 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 
     return "VCF2MAF install complete"
 
+@flow(
+    name="vcf2maf_vep_setup",
+    log_prints=True,
+    flow_run_name="vcf2maf_vcf2maf_setup_" + f"{get_time()}",
+)
+def vep_setup():
+    """Download and install VEP"""
+
+    runner_logger = get_run_logger()
+
+    os.chdir("/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin")
+
+    process = subprocess.Popen(
+        ["git", "clone https://github.com/Ensembl/ensembl-vep.git"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f" results: OUT: {std_out}, ERR: {std_err}")
+
+    runner_logger.info(os.listdir("."))
+
+    return "VEP installed?"
+
 
 # htslib >> just add path DYLD_LIBRARY_PATH=/Users/bullenca/Work/Repos/ensembl-vep/htslib etv
 # perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin
@@ -257,6 +285,9 @@ def runner(
 
     runner_logger.info(samtools_setup(bucket, samtools_path))
 
+    #vep install 
+    runner_logger.info(vep_setup())
+
     # vcf2maf setup
     runner_logger.info(">>> Installing vcf2maf ....")
 
@@ -264,7 +295,7 @@ def runner(
 
     # test vcf2maf
 
-    process = subprocess.Popen(
+    """process = subprocess.Popen(
         [
             "perl",
             "vcf2maf.pl",
@@ -287,4 +318,4 @@ def runner(
 
     runner_logger.info(
         f"perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin results: OUT: {std_out}, ERR: {std_err}"
-    )
+    )"""
