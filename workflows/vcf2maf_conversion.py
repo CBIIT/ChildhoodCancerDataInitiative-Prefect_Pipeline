@@ -258,17 +258,7 @@ def vep_setup():
 
     runner_logger.info(f"shell results: OUT: {std_out}, ERR: {std_err}")
 
-    """process = subprocess.Popen(
-        ["export", "DYLD_LIBRARY_PATH=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/ensembl-vep/htslib"],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"add htslib path results: OUT: {std_out}, ERR: {std_err}")
+    os.environ['DYLD_LIBRARY_PATH'] = "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/ensembl-vep/htslib" 
     
     process = subprocess.Popen(
         ["echo", "$DYLD_LIBRARY_PATH"],
@@ -280,7 +270,7 @@ def vep_setup():
 
     std_out, std_err = process.communicate()
 
-    runner_logger.info(f"$DYLD_LIBRARY_PATH results: OUT: {std_out}, ERR: {std_err}")"""
+    runner_logger.info(f"$DYLD_LIBRARY_PATH results: OUT: {std_out}, ERR: {std_err}")
 
     return "VEP installed?"
 
@@ -311,18 +301,6 @@ def runner(
 
     os.mkdir(f"vcf2maf_output_{dt}")
 
-    process = subprocess.Popen(
-        ["ls", "-la", "/bin"],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"shell results: OUT: {std_out}, ERR: {std_err}")
-
     # do env setup
     env_setup()
 
@@ -334,8 +312,10 @@ def runner(
 
     #runner_logger.info(samtools_setup(bucket, samtools_path))
 
-    #vep install 
-    #runner_logger.info(vep_setup())
+    #vep install
+    runner_logger.info(">>> Installing vep ....")
+
+    runner_logger.info(vep_setup())
 
     # vcf2maf setup
     runner_logger.info(">>> Installing vcf2maf ....")
