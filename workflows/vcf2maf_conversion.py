@@ -49,6 +49,7 @@ def env_setup():
         "curl",
         "libncurses-dev",
         "perl-doc",
+        "unzip",
     ]:
         process = subprocess.Popen(
             ["apt-get", "-y", "install", package],
@@ -256,7 +257,7 @@ def vep_setup():
 
     runner_logger.info(os.environ["DYLD_LIBRARY_PATH"])
 
-    for package in ["DBI", "Archive::Zip", "DBD::mysql"]:
+    for package in ["DBI", "Archive::Zip", "Archive::Extract", "DBD::mysql"]:
         process = subprocess.Popen(
         ["cpan", package],
         shell=False,
