@@ -312,7 +312,7 @@ def runner(
     os.mkdir(f"vcf2maf_output_{dt}")
 
     process = subprocess.Popen(
-        ["ls", "-la", "/home"],
+        ["ls", "-la", "/bin"],
         shell=False,
         text=True,
         stdout=subprocess.PIPE,
