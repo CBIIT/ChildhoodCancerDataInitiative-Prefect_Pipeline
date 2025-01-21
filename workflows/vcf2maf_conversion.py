@@ -229,7 +229,7 @@ def vep_setup():
 
     runner_logger = get_run_logger()
 
-    os.chdir("/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin")
+    os.chdir("/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/")
 
     process = subprocess.Popen(
         ["git", "clone", "https://github.com/Ensembl/ensembl-vep.git"],
@@ -243,7 +243,32 @@ def vep_setup():
 
     runner_logger.info(f" results: OUT: {std_out}, ERR: {std_err}")
 
-    runner_logger.info(os.listdir("."))
+    os.chdir("ensembl-vep")
+
+    # add htslib path
+    process = subprocess.Popen(
+        ["export", "DYLD_LIBRARY_PATH=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/ensembl-vep/htslib"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"add htslib path results: OUT: {std_out}, ERR: {std_err}")
+    
+    process = subprocess.Popen(
+        ["echo", "$DYLD_LIBRARY_PATH"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"$DYLD_LIBRARY_PATH results: OUT: {std_out}, ERR: {std_err}")
 
     return "VEP installed?"
 
