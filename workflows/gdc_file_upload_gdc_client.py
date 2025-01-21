@@ -180,7 +180,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
             continue
         else:  # proceed to uploaded with API
             runner_logger.info(
-                f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']} ...."
+                f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']/(1024**3)} GB ...."
             )
             try:
                 if row['file_size'] < 5368709120: #5GB file size cutoff:
