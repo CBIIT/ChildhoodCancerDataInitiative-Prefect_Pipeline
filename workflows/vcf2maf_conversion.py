@@ -247,7 +247,7 @@ def vep_setup():
 
     # add htslib path
     process = subprocess.Popen(
-        ["echo", "$0"],
+        ["echo", "$SHELL"],
         shell=False,
         text=True,
         stdout=subprocess.PIPE,
