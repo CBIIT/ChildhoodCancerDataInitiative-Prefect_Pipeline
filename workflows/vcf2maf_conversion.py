@@ -242,20 +242,20 @@ def runner(
     #do env setup
     env_setup()
 
-    ##download vcf file to convert package locally
+    #download vcf file to convert package locally
     #file_dl(bucket, vcf_file_path)
 
     #samtools setup
     runner_logger.info(">>> Installing samtools ....")
 
-    ##runner_logger.info(samtools_setup(bucket, samtools_path))
+    runner_logger.info(samtools_setup(bucket, samtools_path))
     
     #vcf2maf setup
+    runner_logger.info(">>> Installing vcf2maf ....")
+
     runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
     
-    #do vcf2maf setup
 
-    #check if perl installed
 
     
 
