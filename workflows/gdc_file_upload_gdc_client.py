@@ -149,6 +149,8 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
 
     chunk_size = int(part_size * 1024 * 1024)
 
+    big_chunk = int(20 * 1024 * 1024)
+
     for index, row in df.iterrows():
         # TODO: code in retries?
         try:
@@ -181,7 +183,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {row['file_size']} ...."
             )
             try:
-                if row['file_size'] < 21474836480: #20GB file size cutoff:
+                if row['file_size'] < 5368709120: #5GB file size cutoff:
                     process = subprocess.Popen(
                         [
                             "./gdc-client",
@@ -199,7 +201,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                     )
-                else: # >= 20GB file size
+                else: # >= 5GB file size
                     process = subprocess.Popen(
                         [
                             "./gdc-client",
@@ -208,7 +210,8 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                             "-t",
                             token_file,
                             "-c",
-                            str(chunk_size),
+                            #str(chunk_size),
+                            str(big_chunk),
                             "-n",
                             str(4), #4 connections
                         ],
