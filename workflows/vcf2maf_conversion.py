@@ -265,7 +265,7 @@ def vep_setup():
         stderr=subprocess.PIPE,
     )
 
-    std_out, std_err = process.communicate(bytes("y\n", "utf-8"))
+    std_out, std_err = process.communicate("y\n")
 
     return f"vep install results: OUT: {std_out}, ERR: {std_err}"
 
