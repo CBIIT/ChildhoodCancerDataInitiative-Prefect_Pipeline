@@ -203,10 +203,7 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
     # perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin
 #PERL?
 # VEP
-# actuial VCF2MAF package
-## file_dl
-## unzip
-## a
+
 
 @flow(
     name="GDC File Upload",
