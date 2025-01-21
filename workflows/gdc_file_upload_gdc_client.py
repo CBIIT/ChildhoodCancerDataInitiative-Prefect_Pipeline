@@ -292,6 +292,18 @@ def runner(
 
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
 
+    process = subprocess.Popen(
+        ["df", ","],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"df . results: OUT: {std_out}, ERR: {std_err}")
+
     # download the input manifest file
     file_dl(bucket, manifest_path)
 
