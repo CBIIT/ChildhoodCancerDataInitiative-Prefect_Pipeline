@@ -191,7 +191,9 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 
     runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
 
-    dir = [i for i in os.listdir(".") if i.startswith("mskcc-vcf2maf-*") and os.path.isdir(i)][0]
+    #dir = [i for i in os.listdir(".") if i.startswith("mskcc-vcf2maf-*") and os.path.isdir(i)][0]
+
+    runner_logger.info(os.listdir("."))
 
     os.chdir(dir)
 
@@ -238,7 +240,7 @@ def runner(
     os.mkdir(f"vcf2maf_output_{dt}")
 
     #do env setup
-    env_setup()
+    ##env_setup()
 
     ##download vcf file to convert package locally
     #file_dl(bucket, vcf_file_path)
@@ -246,7 +248,7 @@ def runner(
     #samtools setup
     runner_logger.info(">>> Installing samtools ....")
 
-    runner_logger.info(samtools_setup(bucket, samtools_path))
+    ##runner_logger.info(samtools_setup(bucket, samtools_path))
     
     #vcf2maf setup
     runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
