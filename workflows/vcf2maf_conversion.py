@@ -41,7 +41,7 @@ def env_setup():
 
     runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
-    for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "curl", "libncurses-dev"]:
+    for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "curl", "libncurses-dev", "perl-doc"]:
             process = subprocess.Popen(
                 ["apt-get", "-y", "install", package],
                 shell=False,
