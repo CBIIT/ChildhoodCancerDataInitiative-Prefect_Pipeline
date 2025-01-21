@@ -240,7 +240,7 @@ def runner(
     os.mkdir(f"vcf2maf_output_{dt}")
 
     #do env setup
-    ##env_setup()
+    env_setup()
 
     ##download vcf file to convert package locally
     #file_dl(bucket, vcf_file_path)
