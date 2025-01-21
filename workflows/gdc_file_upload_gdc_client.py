@@ -339,7 +339,7 @@ def runner(
 
     responses = []
 
-    chunk_size = 200
+    chunk_size = 20
 
     for chunk in range(0, len(file_metadata), chunk_size):
         runner_logger.info(
