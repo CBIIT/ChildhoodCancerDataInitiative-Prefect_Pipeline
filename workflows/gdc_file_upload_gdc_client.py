@@ -293,7 +293,7 @@ def runner(
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
 
     process = subprocess.Popen(
-        ["df", ","],
+        ["df", "."],
         shell=False,
         text=True,
         stdout=subprocess.PIPE,
