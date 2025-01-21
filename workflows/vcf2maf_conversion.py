@@ -191,7 +191,7 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 
     runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
 
-    #dir = [i for i in os.listdir(".") if i.startswith("mskcc-vcf2maf-*") and os.path.isdir(i)][0]
+    dir = [i for i in os.listdir(".") if i.startswith("mskcc-vcf2maf-") and os.path.isdir(i)][0]
 
     runner_logger.info(os.listdir("."))
 
