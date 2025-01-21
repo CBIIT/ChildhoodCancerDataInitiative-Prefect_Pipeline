@@ -263,6 +263,7 @@ def vep_setup():
         "Archive::Extract",
         "DBD::mysql",
         "Module::Build",
+        "List::MoreUtils",
     ]:
         process = subprocess.Popen(
             ["cpan", package],
