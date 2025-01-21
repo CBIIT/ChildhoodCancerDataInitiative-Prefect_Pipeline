@@ -135,12 +135,6 @@ def samtools_setup(bucket: str, samtools_path: str):
 
 
 # htslib >> just add path DYLD_LIBRARY_PATH=/Users/bullenca/Work/Repos/ensembl-vep/htslib etv
-# samtools? 
-    # copy and tar -xvjf samtools-1.21.tar.bz2 
-    # cd samtools
-    # ./configure
-    # make
-    # make install
     # perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin
 #PERL?
 # VEP
@@ -176,12 +170,16 @@ def runner(
     #file_dl(bucket, vcf_file_path)
 
     #samtools setup
-    samtools_setup(bucket, samtools_path)
+    runner_logger.info(">>> Installing samtools ....")
+
+    runner_logger.info(samtools_setup(bucket, samtools_path))
     
     #download vcf2maf package locally
     file_dl(bucket, vcf2maf_package_path)
     
     #do vcf2maf setup
+
+    #check if perl installed
 
     
 
