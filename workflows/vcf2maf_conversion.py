@@ -260,12 +260,14 @@ def vep_setup():
 
     for package in [
         "DBI",
+        "Log::Log4perl",
         "Archive::Zip",
         "Archive::Extract",
         "DBD::mysql",
         "Module::Build",
         "List::MoreUtils",
         "LWP::Simple",
+        "Bio"
     ]:
         process = subprocess.Popen(
             ["cpan", package],
@@ -291,7 +293,7 @@ def vep_setup():
         stderr=subprocess.PIPE,
     )
 
-    std_out, std_err = process.communicate("y\n")
+    std_out, std_err = process.communicate("y\ny\nBuild installdeps\n")
 
     return f"vep install results: OUT: {std_out}, ERR: {std_err}"
 
