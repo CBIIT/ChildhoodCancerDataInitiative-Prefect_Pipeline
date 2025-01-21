@@ -206,7 +206,7 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 
 
 @flow(
-    name="GDC File Upload",
+    name="VCF2MAF Conversion",
     log_prints=True,
     flow_run_name="{runner}_" + f"{get_time()}",
 )
@@ -237,7 +237,7 @@ def runner(
     runner_logger.info(samtools_setup(bucket, samtools_path))
     
     #vcf2maf setup
-    vcf2maf_setup(bucket, vcf2maf_package_path)
+    runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
     
     #do vcf2maf setup
 

@@ -920,9 +920,9 @@ deployments:
     parameters:
       bucket: "ccdi-validation"
       runner: ""
-      vcf_file_path: "",
-      vcf2maf_package_path: "",
-      samtools_path: "",
+      vcf_file_path: ""
+      vcf2maf_package_path: ""
+      samtools_path: ""
 
     # pull action to overwrite from file pull action
     pull:
