@@ -311,6 +311,18 @@ def runner(
 
     os.mkdir(f"vcf2maf_output_{dt}")
 
+    process = subprocess.Popen(
+        ["ls", "-la"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"shell results: OUT: {std_out}, ERR: {std_err}")
+
     # do env setup
     env_setup()
 
