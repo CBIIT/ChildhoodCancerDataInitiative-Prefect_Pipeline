@@ -19,6 +19,7 @@ from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
 from src.utils import get_time, file_dl, folder_ul
 
+
 @flow(
     name="vcf2maf_env_setup",
     log_prints=True,
@@ -219,6 +220,7 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 
     return "VCF2MAF install complete"
 
+
 @flow(
     name="vcf2maf_vep_setup",
     log_prints=True,
@@ -229,7 +231,9 @@ def vep_setup():
 
     runner_logger = get_run_logger()
 
-    os.chdir("/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/")
+    os.chdir(
+        "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/"
+    )
 
     process = subprocess.Popen(
         ["git", "clone", "https://github.com/Ensembl/ensembl-vep.git"],
@@ -246,17 +250,24 @@ def vep_setup():
     os.chdir("ensembl-vep")
 
     # add htslib path
-    os.environ['DYLD_LIBRARY_PATH'] = "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/ensembl-vep/htslib" 
-    
-    runner_logger.info(os.environ)
+    os.environ["DYLD_LIBRARY_PATH"] = (
+        "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/ensembl-vep/htslib"
+    )
 
-    return "VEP installed?"
+    runner_logger.info(os.environ["DYLD_LIBRARY_PATH"])
 
+    process = subprocess.Popen(
+        ["perl", "INSTALL.pl"],
+        shell=False,
+        text=True,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
-# htslib >> just add path DYLD_LIBRARY_PATH=/Users/bullenca/Work/Repos/ensembl-vep/htslib etv
-# perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin
-# PERL?
-# VEP
+    std_out, std_err = process.communicate(bytes("y\n", "utf-8"))
+
+    return f"vep install results: OUT: {std_out}, ERR: {std_err}"
 
 
 @flow(
@@ -288,9 +299,9 @@ def runner(
     # samtools setup
     runner_logger.info(">>> Installing samtools ....")
 
-    #runner_logger.info(samtools_setup(bucket, samtools_path))
+    # runner_logger.info(samtools_setup(bucket, samtools_path))
 
-    #vep install
+    # vep install
     runner_logger.info(">>> Installing vep ....")
 
     runner_logger.info(vep_setup())
@@ -298,7 +309,7 @@ def runner(
     # vcf2maf setup
     runner_logger.info(">>> Installing vcf2maf ....")
 
-    #runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
+    # runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
 
     # test vcf2maf
 
