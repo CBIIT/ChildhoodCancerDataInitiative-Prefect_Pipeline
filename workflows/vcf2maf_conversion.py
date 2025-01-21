@@ -29,6 +29,18 @@ def env_setup():
 
     runner_logger = get_run_logger()
 
+    process = subprocess.Popen(
+        ["apt", "update"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
+
     for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "curl"]:
             process = subprocess.Popen(
                 ["apt-get", "-y", "install", package],
