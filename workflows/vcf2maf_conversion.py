@@ -41,18 +41,26 @@ def env_setup():
 
     runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
 
-    for package in ["libz-dev", "liblzma-dev", "libbz2-dev", "curl", "libncurses-dev", "perl-doc"]:
-            process = subprocess.Popen(
-                ["apt-get", "-y", "install", package],
-                shell=False,
-                text=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            std_out, std_err = process.communicate()
-            runner_logger.info(
-                f"apt install {package} results: OUT: {std_out}, ERR: {std_err}"
-            )
+    for package in [
+        "libz-dev",
+        "liblzma-dev",
+        "libbz2-dev",
+        "curl",
+        "libncurses-dev",
+        "perl-doc",
+    ]:
+        process = subprocess.Popen(
+            ["apt-get", "-y", "install", package],
+            shell=False,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        std_out, std_err = process.communicate()
+        runner_logger.info(
+            f"apt install {package} results: OUT: {std_out}, ERR: {std_err}"
+        )
+
 
 @flow(
     name="vcf2maf_samtools_setup",
@@ -63,8 +71,8 @@ def samtools_setup(bucket: str, samtools_path: str):
     """Download and install samtools to VM"""
 
     runner_logger = get_run_logger()
-    
-    #download samtools package
+
+    # download samtools package
     file_dl(bucket, samtools_path)
 
     f_name = os.path.basename(samtools_path)
@@ -78,7 +86,7 @@ def samtools_setup(bucket: str, samtools_path: str):
     else:
         pass
 
-    #untar 
+    # untar
     process = subprocess.Popen(
         ["tar", "-xvjf", f_name],
         shell=False,
@@ -88,11 +96,9 @@ def samtools_setup(bucket: str, samtools_path: str):
     )
     std_out, std_err = process.communicate()
 
-    runner_logger.info(
-        f"tar -xvjf {f_name} results: OUT: {std_out}, ERR: {std_err}"
-    )
+    runner_logger.info(f"tar -xvjf {f_name} results: OUT: {std_out}, ERR: {std_err}")
 
-    #config
+    # config
     os.chdir(f_name.replace(".tar.bz2", ""))
 
     process = subprocess.Popen(
@@ -104,9 +110,7 @@ def samtools_setup(bucket: str, samtools_path: str):
     )
     std_out, std_err = process.communicate()
 
-    runner_logger.info(
-        f"tar -xvjf {f_name} results: OUT: {std_out}, ERR: {std_err}"
-    )
+    runner_logger.info(f"tar -xvjf {f_name} results: OUT: {std_out}, ERR: {std_err}")
 
     process = subprocess.Popen(
         [
@@ -163,9 +167,9 @@ def samtools_setup(bucket: str, samtools_path: str):
 def vcf2maf_setup(bucket: str, vcf2maf_path: str):
     """Download and install vcf2maf"""
 
-    runner_logger  = get_run_logger()
+    runner_logger = get_run_logger()
 
-    #download samtools package
+    # download samtools package
     file_dl(bucket, vcf2maf_path)
 
     f_name = os.path.basename(vcf2maf_path)
@@ -191,7 +195,11 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 
     runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
 
-    dir = [i for i in os.listdir(".") if i.startswith("mskcc-vcf2maf-") and os.path.isdir(i)][0]
+    dir = [
+        i
+        for i in os.listdir(".")
+        if i.startswith("mskcc-vcf2maf-") and os.path.isdir(i)
+    ][0]
 
     runner_logger.info(os.listdir("."))
 
@@ -212,10 +220,9 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
     return "VCF2MAF install complete"
 
 
-
 # htslib >> just add path DYLD_LIBRARY_PATH=/Users/bullenca/Work/Repos/ensembl-vep/htslib etv
-    # perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin
-#PERL?
+# perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin
+# PERL?
 # VEP
 
 
@@ -239,24 +246,45 @@ def runner(
 
     os.mkdir(f"vcf2maf_output_{dt}")
 
-    #do env setup
+    # do env setup
     env_setup()
 
-    #download vcf file to convert package locally
-    #file_dl(bucket, vcf_file_path)
+    # download vcf file to convert package locally
+    # file_dl(bucket, vcf_file_path)
 
-    #samtools setup
+    # samtools setup
     runner_logger.info(">>> Installing samtools ....")
 
     runner_logger.info(samtools_setup(bucket, samtools_path))
-    
-    #vcf2maf setup
+
+    # vcf2maf setup
     runner_logger.info(">>> Installing vcf2maf ....")
 
     runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
-    
 
+    # test vcf2maf
 
-    
+    process = subprocess.Popen(
+        [
+            "perl",
+            "vcf2maf.pl",
+            "--input-vcf",
+            "tests/test.vcf",
+            "--output-maf",
+            "tests/test.vep.maf",
+            "--samtools-exec",
+            "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin",
+            "--tabix-exec",
+            "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin",
+        ],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
 
+    std_out, std_err = process.communicate()
 
+    runner_logger.info(
+        f"perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin results: OUT: {std_out}, ERR: {std_err}"
+    )
