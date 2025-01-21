@@ -232,7 +232,7 @@ def vep_setup():
     os.chdir("/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin")
 
     process = subprocess.Popen(
-        ["git", "clone https://github.com/Ensembl/ensembl-vep.git"],
+        ["git", "clone", "https://github.com/Ensembl/ensembl-vep.git"],
         shell=False,
         text=True,
         stdout=subprocess.PIPE,
