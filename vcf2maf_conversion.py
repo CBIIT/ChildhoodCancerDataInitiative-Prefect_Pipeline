@@ -212,10 +212,10 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 )
 def runner(
     bucket: str,
+    runner: str,
     vcf_file_path: str,
     vcf2maf_package_path: str,
     samtools_path: str,
-    runner: str,
 ):
     runner_logger = get_run_logger()
 
