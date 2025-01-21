@@ -57,6 +57,15 @@ def samtools_setup(bucket: str, samtools_path: str):
 
     f_name = os.path.basename(samtools_path)
 
+    # check that file exists
+    if not os.path.isfile(f_name):
+        runner_logger.error(
+            f"File {f_name} not copied over or found from URL {samtools_path}"
+        )
+        return "samtools package not downloaded"
+    else:
+        pass
+
     #untar 
     process = subprocess.Popen(
         ["tar", "-xvjf", f_name],
@@ -134,6 +143,62 @@ def samtools_setup(bucket: str, samtools_path: str):
         return "samtools package not installed correctly"
 
 
+@flow(
+    name="vcf2maf_vc2maf_setup",
+    log_prints=True,
+    flow_run_name="vcf2maf_vcf2maf_setup_" + f"{get_time()}",
+)
+def vcf2maf_setup(bucket: str, vcf2maf_path: str):
+    """Download and install vcf2maf"""
+
+    runner_logger  = get_run_logger()
+
+    #download samtools package
+    file_dl(bucket, vcf2maf_path)
+
+    f_name = os.path.basename(vcf2maf_path)
+
+    # check that file exists
+    if not os.path.isfile(f_name):
+        runner_logger.error(
+            f"File {f_name} not copied over or found from URL {vcf2maf_path}"
+        )
+        return "vcf2maf package not downloaded"
+    else:
+        pass
+
+    process = subprocess.Popen(
+        ["tar", "-zxf", f_name],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
+
+    dir = [i for i in os.listdir(".") if i.startswith("mskcc-vcf2maf-*") and os.path.isdir(i)][0]
+
+    os.chdir(dir)
+
+    process = subprocess.Popen(
+        ["perl", "vcf2maf.pl", "--man"],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"perl vcf2maf.pl --man results: OUT: {std_out}, ERR: {std_err}")
+
+    return "VCF2MAF install complete"
+
+
+
 # htslib >> just add path DYLD_LIBRARY_PATH=/Users/bullenca/Work/Repos/ensembl-vep/htslib etv
     # perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin
 #PERL?
@@ -174,8 +239,8 @@ def runner(
 
     runner_logger.info(samtools_setup(bucket, samtools_path))
     
-    #download vcf2maf package locally
-    file_dl(bucket, vcf2maf_package_path)
+    #vcf2maf setup
+    vcf2maf_setup(bucket, vcf2maf_package_path)
     
     #do vcf2maf setup
 
