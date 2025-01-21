@@ -50,6 +50,7 @@ def env_setup():
         "libncurses-dev",
         "perl-doc",
         "unzip",
+        "libdbi-perl",
     ]:
         process = subprocess.Popen(
             ["apt-get", "-y", "install", package],
@@ -264,6 +265,7 @@ def vep_setup():
         "DBD::mysql",
         "Module::Build",
         "List::MoreUtils",
+        "LWP::Simple",
     ]:
         process = subprocess.Popen(
             ["cpan", package],
