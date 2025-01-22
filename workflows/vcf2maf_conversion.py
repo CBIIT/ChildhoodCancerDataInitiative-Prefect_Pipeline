@@ -267,7 +267,7 @@ def vep_setup():
         "Module::Build",
         "List::MoreUtils",
         "LWP::Simple",
-        #"Bio"
+        "Bio"
     ]:
         process = subprocess.Popen(
             ["cpan", package],
@@ -293,7 +293,7 @@ def vep_setup():
         stderr=subprocess.PIPE,
     )
 
-    std_out, std_err = process.communicate("y\ny\nBuild installdeps\n")
+    std_out, std_err = process.communicate("y\n")
 
     return f"vep install results: OUT: {std_out}, ERR: {std_err}"
 
