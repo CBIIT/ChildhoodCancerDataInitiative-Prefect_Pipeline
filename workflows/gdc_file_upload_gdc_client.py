@@ -216,7 +216,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                             #str(chunk_size),
                             str(big_chunk),
                             "-n",
-                            str(8), #8 connections
+                            str(12), #8 connections
                         ],
                         shell=False,
                         text=True,
