@@ -224,9 +224,9 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 
 
 @flow(
-    name="vcf2maf_vep_setup",
+    name="vcf2maf_VEP_setup",
     log_prints=True,
-    flow_run_name="vcf2maf_vcf2maf_setup_" + f"{get_time()}",
+    flow_run_name="vcf2maf_VEP_setup_" + f"{get_time()}",
 )
 def vep_setup():
     """Download and install VEP"""
