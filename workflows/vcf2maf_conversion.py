@@ -267,7 +267,7 @@ def vep_setup():
         "Module::Build",
         "List::MoreUtils",
         "LWP::Simple",
-        "Bio"
+        "Bio::Root::Version"
     ]:
         process = subprocess.Popen(
             ["cpan", package],
