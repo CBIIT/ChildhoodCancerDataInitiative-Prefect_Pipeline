@@ -260,7 +260,6 @@ def vep_setup():
 
     for package in [
         "DBI",
-        "Log::Log4perl",
         "Archive::Zip",
         "Archive::Extract",
         "DBD::mysql",
