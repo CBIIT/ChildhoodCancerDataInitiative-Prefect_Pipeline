@@ -42,7 +42,7 @@ def dl_conda_setup():
 
     return None
 
-    @flow(
+@flow(
     name="vcf2maf_env_setup",
     log_prints=True,
     flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
