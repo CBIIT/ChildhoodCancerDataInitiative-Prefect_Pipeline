@@ -897,7 +897,7 @@ deployments:
       runner: ""
       secret_key_name: "gdc-token"
       upload_part_size_mb: 1
-      max_n_processes: 4
+      n_processes: 4
 
 
     # pull action to overwrite from file pull action

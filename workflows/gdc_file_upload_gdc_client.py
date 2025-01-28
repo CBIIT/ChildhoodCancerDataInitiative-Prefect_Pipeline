@@ -144,7 +144,7 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     log_prints=True,
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
 )
-def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_process: int):
+def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_process: int):
 
     runner_logger = get_run_logger()
 
@@ -197,7 +197,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                             "-c",
                             str(chunk_size),
                             "-n",
-                            str(max_n_process),
+                            str(n_process),
                         ],
                         shell=False,
                         text=True,
@@ -216,7 +216,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_pr
                             #str(chunk_size),
                             str(big_chunk),
                             "-n",
-                            str(12), #8 connections
+                            str(n_process), #8 connections
                         ],
                         shell=False,
                         text=True,
@@ -268,7 +268,7 @@ def runner(
     runner: str,
     secret_key_name: str,
     upload_part_size_mb: int,
-    max_n_processes: int,
+    n_processes: int,
 ):
     """CCDI Pipeline to Upload files to GDC
 
@@ -280,7 +280,7 @@ def runner(
         runner (str): Unique runner name
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
         upload_part_size_mb (int): The upload part size in MB
-        max_n_processes (int): The max number of client connections to upload the files smaller than 7 GB
+        n_processes (int): The number of client connections for multipart files uploads
     """
 
     # runner_logger setup
@@ -356,7 +356,7 @@ def runner(
             file_metadata_s3,
             "token.txt",
             upload_part_size_mb,
-            max_n_processes,
+            n_processes,
         )
         responses += subresponses
 
