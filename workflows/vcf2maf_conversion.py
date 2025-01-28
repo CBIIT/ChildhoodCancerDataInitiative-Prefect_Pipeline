@@ -26,7 +26,7 @@ from src.utils import get_time, file_dl, folder_ul
     log_prints=True,
     flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
 )
-def env_setup(bucket, miniconda_path):
+def env_setup():
     """Set up utils on VM"""
 
     runner_logger = get_run_logger()
