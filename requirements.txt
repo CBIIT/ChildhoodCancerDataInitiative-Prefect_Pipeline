@@ -80,7 +80,7 @@ prefect==2.14.19
 prefect-aws==0.4.11
 prefect-docker==0.4.5
 prefect-github==0.2.2
-prefect-shell==0.2.4
+prefect-shell==0.2.6
 pyasn1==0.5.1
 pyasn1-modules==0.3.0
 pycparser==2.21
