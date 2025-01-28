@@ -57,7 +57,11 @@ def env_setup():
         "conda init --all",
         "conda -V",
         "conda create -n vcf2maf_38 python=3.8 --yes",
-        "conda activate vcf2maf_38"
+        "conda activate vcf2maf_38",
+        "conda install -y  -c bioconda vcf2maf", 
+        "conda install -y  -c bioconda ensembl-vep",
+        "conda install -y  -c bioconda samtools",
+        "vcf2maf.pl  --help"
     ]).run())
 
 
