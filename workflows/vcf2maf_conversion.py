@@ -31,17 +31,10 @@ def env_setup():
 
     runner_logger = get_run_logger()
 
-    with ShellOperation(commands=[
+    runner_logger.info(ShellOperation(commands=[
         "apt update",
         #"apt-get -y install curl conda"
-    ]) as env_s:
-        env_s.trigger()
-
-        env_s.wait_for_completion()
-
-        output = env_s.fetch_result()
-
-    runner_logger.info(output)
+    ]).run())
 
 
 @flow(
