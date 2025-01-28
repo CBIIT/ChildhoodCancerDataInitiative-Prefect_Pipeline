@@ -61,6 +61,12 @@ def env_setup():
         "conda install -y  -c bioconda vcf2maf", 
         "conda install -y  -c bioconda ensembl-vep",
         "conda install -y  -c bioconda samtools",
+    ]).run())
+
+    runner_logger.info(ShellOperation(commands=[
+        "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
+        "conda init --all",
+        "conda activate vcf2maf_38",
         "vcf2maf.pl  --help"
     ]).run())
 
