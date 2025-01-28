@@ -22,11 +22,11 @@ from src.utils import get_time, file_dl, folder_ul
 
 
 @flow(
-    name="vcf2maf_env_setup",
+    name="vcf2maf_dl_conda_setup",
     log_prints=True,
     flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
 )
-def env_setup():
+def dl_conda_setup():
     """Set up utils on VM"""
 
     runner_logger = get_run_logger()
@@ -38,10 +38,27 @@ def env_setup():
         "wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh -O /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh", 
         "bash /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh -b -u -p /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3", 
         "rm /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh",
+    ]).run())
+
+    return None
+
+    @flow(
+    name="vcf2maf_env_setup",
+    log_prints=True,
+    flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
+)
+def env_setup():
+    """Set up utils on VM"""
+
+    runner_logger = get_run_logger()
+
+    runner_logger.info(ShellOperation(commands=[
         "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
         "conda init --all",
         "conda -V"
     ]).run())
+
+    return None
 
     #file_dl(bucket, miniconda_path)
 
@@ -302,6 +319,7 @@ def runner(
 
     # do env setup
     runner_logger.info(">>> Testing env setup ....")
+    dl_conda_setup()
     env_setup()
 
     # download vcf file to convert package locally
