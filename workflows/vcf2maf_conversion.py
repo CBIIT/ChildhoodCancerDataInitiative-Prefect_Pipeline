@@ -12,6 +12,7 @@ import os
 import sys
 import subprocess
 import pandas as pd
+from prefect_shell import ShellOperation
 
 # prefect dependencies
 import boto3
@@ -30,39 +31,17 @@ def env_setup():
 
     runner_logger = get_run_logger()
 
-    process = subprocess.Popen(
-        ["apt", "update"],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
+    with ShellOperation(commands=[
+        "apt update",
+        "apt-get -y install curl conda"
+    ]) as env_s:
+        env_s.trigger()
 
-    std_out, std_err = process.communicate()
+        env_s.wait_for_completion()
 
-    runner_logger.info(f"apt update results: OUT: {std_out}, ERR: {std_err}")
+        output = env_s.fetch_result()
 
-    for package in [
-        "libz-dev",
-        "liblzma-dev",
-        "libbz2-dev",
-        "curl",
-        "libncurses-dev",
-        "perl-doc",
-        "unzip",
-        "libdbi-perl",
-    ]:
-        process = subprocess.Popen(
-            ["apt-get", "-y", "install", package],
-            shell=False,
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
-        std_out, std_err = process.communicate()
-        runner_logger.info(
-            f"apt install {package} results: OUT: {std_out}, ERR: {std_err}"
-        )
+    runner_logger.info(output)
 
 
 @flow(
@@ -318,23 +297,24 @@ def runner(
     os.mkdir(f"vcf2maf_output_{dt}")
 
     # do env setup
+    runner_logger.info(">>> Testing env setup ....")
     env_setup()
 
     # download vcf file to convert package locally
     # file_dl(bucket, vcf_file_path)
 
     # samtools setup
-    runner_logger.info(">>> Installing samtools ....")
+    #runner_logger.info(">>> Installing samtools ....")
 
     # runner_logger.info(samtools_setup(bucket, samtools_path))
 
     # vep install
-    runner_logger.info(">>> Installing vep ....")
+    #runner_logger.info(">>> Installing vep ....")
 
-    runner_logger.info(vep_setup())
+    #runner_logger.info(vep_setup())
 
     # vcf2maf setup
-    runner_logger.info(">>> Installing vcf2maf ....")
+    #runner_logger.info(">>> Installing vcf2maf ....")
 
     # runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
 
