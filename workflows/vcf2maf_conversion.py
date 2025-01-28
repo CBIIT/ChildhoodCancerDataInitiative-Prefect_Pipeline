@@ -56,7 +56,7 @@ def env_setup():
         "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
         "conda init --all",
         "conda -V",
-        "conda create -n vcf2maf_38 python=3.8 --yes",
+        "conda create -n vcf2maf_38 python=3.7 --yes",
         "conda activate vcf2maf_38",
         "conda install -y  -c bioconda vcf2maf", 
         "conda install -y  -c bioconda ensembl-vep",
