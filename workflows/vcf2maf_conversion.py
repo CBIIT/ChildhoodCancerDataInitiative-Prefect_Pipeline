@@ -26,7 +26,7 @@ from src.utils import get_time, file_dl, folder_ul
     log_prints=True,
     flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
 )
-def env_setup():
+def env_setup(bucket, miniconda_path):
     """Set up utils on VM"""
 
     runner_logger = get_run_logger()
@@ -34,11 +34,15 @@ def env_setup():
     runner_logger.info(ShellOperation(commands=[
         "apt update",
         "apt-get -y install curl wget",
-        "mkdir -p ~/miniconda3",
-        "wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh", 
+        "mkdir /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3",
+        "wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-aarch64.sh -O /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh", 
         "bash /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh -b -u -p /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3", 
         "rm /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh",
     ]).run())
+
+    #file_dl(bucket, miniconda_path)
+
+
 
 
 @flow(
