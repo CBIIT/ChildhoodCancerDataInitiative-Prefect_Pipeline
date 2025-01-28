@@ -33,7 +33,7 @@ def env_setup():
 
     with ShellOperation(commands=[
         "apt update",
-        "apt-get -y install curl conda"
+        #"apt-get -y install curl conda"
     ]) as env_s:
         env_s.trigger()
 
