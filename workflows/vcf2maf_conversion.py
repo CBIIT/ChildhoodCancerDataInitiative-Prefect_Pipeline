@@ -54,8 +54,22 @@ def env_setup():
 
     runner_logger.info(ShellOperation(commands=[
         "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
+    ]).run())
+
+    runner_logger.info(ShellOperation(commands=[
         "conda init --all",
+    ]).run())
+
+    runner_logger.info(ShellOperation(commands=[
         "conda -V"
+    ]).run())
+
+    runner_logger.info(ShellOperation(commands=[
+        "conda create -n vcf2maf_38 python=3.8"
+    ]).run())
+
+    runner_logger.info(ShellOperation(commands=[
+        "conda activate vcf2maf_38"
     ]).run())
 
     return None
