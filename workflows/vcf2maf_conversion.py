@@ -33,7 +33,7 @@ def env_setup():
 
     runner_logger.info(ShellOperation(commands=[
         "apt update",
-        #"apt-get -y install curl conda"
+        "apt-get -y install curl conda"
     ]).run())
 
 
