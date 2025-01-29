@@ -134,8 +134,6 @@ def bwa_setup(bucket, bwa_tarball):
         "conda init --all",
         "conda activate vcf2maf_38",
         "samtools faidx hs38DH.fa",
-        "ls -lh", 
-        "cat hs38DH.fa.fai"
     ]).run())
 
 
@@ -328,6 +326,10 @@ def runner(
     except Exception as e:
         runner_logger.info(f"Error in vep_setup: {e}")"""
     bwa_setup(bucket, bwa_tarball_path)
+    runner_logger.info(ShellOperation(commands=[
+        "ls -lh", 
+        "cat hs38DH.fa.fai"
+    ]).run())
 
     # download vcf file to convert package locally
     # file_dl(bucket, vcf_file_path)
