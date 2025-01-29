@@ -103,7 +103,7 @@ def vep_setup():
         "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
         "conda init --all",
         "conda activate vcf2maf_38",
-        "vep_install -a cf -s homo_sapiens -y GRCh38 -c  $VEP_PATH --CONVERT"
+        "vep_install -a cf -s homo_sapiens -y GRCh38 -c  $VEP_PATH --CONVERT --no_update"
     ]).run())
 
     return None
