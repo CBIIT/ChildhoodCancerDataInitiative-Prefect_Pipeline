@@ -63,8 +63,8 @@ def env_setup():
         "conda install -y  -c bioconda samtools",
     ]).run())
 
-
     return None
+
 @flow(
     name="vcf2maf_env_check",
     log_prints=True,
@@ -85,6 +85,26 @@ def env_check():
 
     return None
 
+@flow(
+    name="vcf2maf_vep_setup",
+    log_prints=True,
+    flow_run_name="vcf2maf_vep_setup_" + f"{get_time()}",
+)
+def vep_setup():
+    """Setup VEP env params and indexes"""
+
+    runner_logger = get_run_logger()
+
+    runner_logger.info(ShellOperation(commands=[
+        "export VEP_PATH=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep",
+        "export VEP_DATA=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep_data",
+        "mkdir $VEP_PATH $VEP_DATA",
+        "ls -l"
+    ]).run())
+
+    return None
+
+##### BWA install here 
 
 @flow(
     name="vcf2maf_samtools_setup",
