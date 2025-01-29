@@ -128,8 +128,11 @@ def bwa_setup(bucket, bwa_tarball):
     f_name = os.path.basename(bwa_tarball)
 
     runner_logger.info(ShellOperation(commands=[
-        f"gzip -dc {f_name} | tar xf -",
+        f"tar -xvjf {f_name}",
         "bwa-0.7.17/bwakit/run-gen-ref hs38DH",
+        "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
+        "conda init --all",
+        "conda activate vcf2maf_38",
         "samtools faidx hs38DH.fa",
         "ls -l"
     ]).run())
