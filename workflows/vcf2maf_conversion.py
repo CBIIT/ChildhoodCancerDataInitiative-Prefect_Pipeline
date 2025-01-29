@@ -60,7 +60,7 @@ def env_setup():
         "conda activate vcf2maf_38",
         "conda install -y  -c bioconda vcf2maf", 
         "conda install -y  -c bioconda ensembl-vep",
-        #"conda install -y  -c bioconda samtools",
+        "conda install -y  -c bioconda samtools",
     ]).run())
 
 
