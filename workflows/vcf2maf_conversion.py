@@ -105,6 +105,8 @@ def vep_setup():
         "conda init --all",
         "conda activate vcf2maf_38",
         "cd $VEP_PATH",
+        "pwd", 
+        "echo $VEP_PATH",
         "curl -O ftp://ftp.ensembl.org/pub/release-112/variation/indexed_vep_cache/homo_sapiens_vep_112_GRCh38.tar.gz",
         "tar -zxvf homo_sapiens_vep_112_GRCh38.tar.gz",
         "vep_install -a cf -s homo_sapiens -y GRCh38 -c $VEP_PATH --CONVERT --no_update"
