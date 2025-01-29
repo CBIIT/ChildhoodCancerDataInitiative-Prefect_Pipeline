@@ -63,6 +63,18 @@ def env_setup():
         #"conda install -y  -c bioconda samtools",
     ]).run())
 
+
+    return None
+@flow(
+    name="vcf2maf_env_check",
+    log_prints=True,
+    flow_run_name="vcf2maf_env_check_" + f"{get_time()}",
+)
+def env_check():
+    """Check that conda packages installed correctly"""
+
+    runner_logger = get_run_logger()
+
     runner_logger.info(ShellOperation(commands=[
         "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
         "conda init --all",
@@ -72,12 +84,7 @@ def env_setup():
         "vep --help"
     ]).run())
 
-
     return None
-
-    #file_dl(bucket, miniconda_path)
-
-
 
 
 @flow(
@@ -336,6 +343,7 @@ def runner(
     runner_logger.info(">>> Testing env setup ....")
     dl_conda_setup()
     env_setup()
+    env_check()
 
     # download vcf file to convert package locally
     # file_dl(bucket, vcf_file_path)
