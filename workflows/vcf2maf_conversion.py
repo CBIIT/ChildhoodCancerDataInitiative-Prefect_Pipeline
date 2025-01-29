@@ -96,8 +96,8 @@ def vep_setup():
     runner_logger = get_run_logger()
 
     runner_logger.info(ShellOperation(commands=[
-        "export VEP_PATH=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep",
-        "export VEP_DATA=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep_data",
+        "export VEP_PATH= /usr/local/data/vep",
+        "export VEP_DATA= /usr/local/data/vep_data",
         "export DYLD_LIBRARY_PATH=",
         "mkdir $VEP_PATH $VEP_DATA",
         "cd $VEP_PATH",
@@ -321,15 +321,8 @@ def runner(
     dl_conda_setup()
     env_setup()
     env_check()
-    """try:
-        vep_setup()
-    except Exception as e:
-        runner_logger.info(f"Error in vep_setup: {e}")"""
-    bwa_setup(bucket, bwa_tarball_path)
-    runner_logger.info(ShellOperation(commands=[
-        "ls -lh", 
-        "cat hs38DH.fa.fai"
-    ]).run())
+    vep_setup()
+    #bwa_setup(bucket, bwa_tarball_path)
 
     # download vcf file to convert package locally
     # file_dl(bucket, vcf_file_path)
