@@ -100,6 +100,9 @@ def vep_setup():
         "export VEP_DATA=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep_data",
         "mkdir $VEP_PATH $VEP_DATA",
         "cd $VEP_PATH",
+        "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
+        "conda init --all",
+        "conda activate vcf2maf_38",
         "vep_install -a cf -s homo_sapiens -y GRCh38 -c  $VEP_PATH --CONVERT"
     ]).run())
 
@@ -298,7 +301,6 @@ def runner(
     vcf2maf_package_path: str,
     bwa_tarball_path: str,
 ):
-    """"""
 
     runner_logger = get_run_logger()
 
