@@ -99,7 +99,7 @@ def vep_setup():
         "export VEP_PATH=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep",
         "export VEP_DATA=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep_data",
         "mkdir $VEP_PATH $VEP_DATA",
-        "ls -la"
+        "echo $VEP_PATH $VEP_DATA"
     ]).run())
 
     return None
