@@ -99,12 +99,34 @@ def vep_setup():
         "export VEP_PATH=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep",
         "export VEP_DATA=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/vep_data",
         "mkdir $VEP_PATH $VEP_DATA",
-        "echo $VEP_PATH $VEP_DATA"
+        "cd $VEP_PATH",
+        "vep_install -a cf -s homo_sapiens -y GRCh38 -c  $VEP_PATH --CONVERT"
     ]).run())
 
     return None
 
 ##### BWA install here 
+@flow(
+    name="vcf2maf_bwa_setup",
+    log_prints=True,
+    flow_run_name="vcf2maf_bwa_setup_" + f"{get_time()}",
+)
+def bwa_setup(bucket, bwa_tarball):
+    """Setup reference genome files needed by VEP"""
+    
+    runner_logger = get_run_logger()
+
+    file_dl(bucket, bwa_tarball)
+
+    f_name = os.path.basename(bwa_tarball)
+
+    runner_logger.info(ShellOperation(commands=[
+        f"gzip -dc {f_name} | tar xf -",
+        "bwa-0.7.17/bwakit/run-gen-ref hs38DH",
+        "samtools faidx hs38DH.fa",
+        "ls -l"
+    ]).run())
+
 
 @flow(
     name="vcf2maf_samtools_setup",
@@ -274,8 +296,10 @@ def runner(
     runner: str,
     vcf_file_path: str,
     vcf2maf_package_path: str,
-    samtools_path: str,
+    bwa_tarball_path: str,
 ):
+    """"""
+
     runner_logger = get_run_logger()
 
     runner_logger.info(">>> Running vcf2maf_conversion.py ....")
