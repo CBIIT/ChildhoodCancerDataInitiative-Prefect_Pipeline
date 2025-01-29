@@ -67,9 +67,9 @@ def env_setup():
         "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
         "conda init --all",
         "conda activate vcf2maf_38",
-        #"samtools --version",
-        #"whereis samtools"
-        #"vep --help"
+        "samtools --version",
+        "whereis samtools"
+        "vep --help"
     ]).run())
 
 
