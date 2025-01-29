@@ -134,7 +134,8 @@ def bwa_setup(bucket, bwa_tarball):
         "conda init --all",
         "conda activate vcf2maf_38",
         "samtools faidx hs38DH.fa",
-        "ls -l"
+        "ls -lh", 
+        "cat hs38DH.fa.fai"
     ]).run())
 
 
