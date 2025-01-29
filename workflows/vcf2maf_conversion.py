@@ -80,7 +80,6 @@ def env_check():
         "conda init --all",
         "conda activate vcf2maf_38",
         "samtools --version",
-        "whereis samtools"
         "vep --help"
     ]).run())
 
