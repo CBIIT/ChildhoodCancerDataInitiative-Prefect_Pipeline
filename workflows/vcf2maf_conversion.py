@@ -363,6 +363,7 @@ def runner(
     dl_conda_setup()
     env_setup()
     env_check()
+    vep_setup()
 
     # download vcf file to convert package locally
     # file_dl(bucket, vcf_file_path)
