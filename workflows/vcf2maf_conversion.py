@@ -352,11 +352,21 @@ def runner(
         
         pd.DataFrame(conversion_recording, columns=['patient_id', 'tumor_sample_id', 'converted?']).to_csv(f"{output_dir}/conversion_summary.tsv", sep="\t", index=False)
 
+        # dl folder to somewhere else
+        folder_ul(
+            local_folder=output_dir,
+            bucket=bucket,
+            destination=runner + "/",
+            sub_folder="",
+        )
+
+        shutil.rmtree(output_dir)
+
     elif process_type == "env_tear_down":
         runner_logger.info(ShellOperation(commands=[
             #f"rm -rf {install_path}", 
             #f"rm -rf {working_path}", 
-            "ls -l  /usr/local/data/",
+            #"rm -rf OUTPUTs"
         ]).run())
 
     # test vcf2maf
