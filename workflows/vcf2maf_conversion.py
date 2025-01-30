@@ -251,11 +251,11 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
             "conda activate vcf2maf_38",
             f"bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
             f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
-            f"vcf2maf.pl --input-vcf {f_name.replace("vcf.gz", "reheader.vcf.gz")} --output-maf {f_name.replace("vcf.gz", "reheader.vcf.gz")}.vep.maf --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row["tumor_sample_id"]}  --normal-id {row["normal_sample_id"]}",
+            f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf.gz')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row["tumor_sample_id"]}  --normal-id {row["normal_sample_id"]}",
             "ls -l"
         ]).run())
 
-        if f"{f_name.replace("vcf.gz", "reheader.vcf.gz")}.vep.maf" in os.listdir("."):
+        if f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf" in os.listdir("."):
             os.rename(f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf", output_dir+"/"+f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf")
             os.chdir("..")
             shutil.rmtree(row['patient_id'])
