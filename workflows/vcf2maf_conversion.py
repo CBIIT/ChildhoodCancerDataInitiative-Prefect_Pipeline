@@ -318,7 +318,12 @@ def runner(
 
         # check that VEP indexes installed
         runner_logger.info(ShellOperation(commands=[
-            "ls -lh /usr/local/data/vep/homo_sapiens/112_GRCh38/",
+            f"ls -lh {install_path}/vep/homo_sapiens/112_GRCh38/",
+        ]).run())
+
+        #check that BWA installed
+        runner_logger.info(ShellOperation(commands=[
+            f"ls -lh {install_path}",
         ]).run())
 
     elif process_type == "convert":
@@ -351,8 +356,7 @@ def runner(
         runner_logger.info(ShellOperation(commands=[
             #f"rm -rf {install_path}", 
             #f"rm -rf {working_path}", 
-            "rm -rf  /usr/local/data/vep/",
-            "rm -rf  /usr/local/data/vep_data",
+            "ls -l  /usr/local/data/",
         ]).run())
 
     # test vcf2maf
