@@ -27,18 +27,18 @@ from src.utils import get_time, file_dl, folder_ul
     log_prints=True,
     flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
 )
-def dl_conda_setup():
-    """Set up utils on VM"""
+def dl_conda_setup(install_path: str):
+    """Set up conda on VM at install path"""
 
     runner_logger = get_run_logger()
 
     runner_logger.info(ShellOperation(commands=[
         "apt update",
         "apt-get -y install curl wget",
-        "mkdir /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3",
-        "wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh", 
-        "bash /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh -b -u -p /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3", 
-        "rm /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/miniconda.sh",
+        f"mkdir {install_path}/miniconda3",
+        f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O {install_path}/miniconda3/miniconda.sh", 
+        f"bash {install_path}/miniconda3/miniconda.sh -b -u -p {install_path}/miniconda3", 
+        f"rm {install_path}/miniconda3",
     ]).run())
 
     return None
@@ -48,13 +48,13 @@ def dl_conda_setup():
     log_prints=True,
     flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
 )
-def env_setup():
-    """Set up utils on VM"""
+def env_setup(install_path: str):
+    """Set up conda env on VM"""
 
     runner_logger = get_run_logger()
 
     runner_logger.info(ShellOperation(commands=[
-        "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
+        f"source {install_path}/miniconda3/bin/activate",
         "conda init --all",
         "conda -V",
         "conda create -n vcf2maf_38 python=3.7 --yes",
@@ -71,13 +71,13 @@ def env_setup():
     log_prints=True,
     flow_run_name="vcf2maf_env_check_" + f"{get_time()}",
 )
-def env_check():
+def env_check(install_path: str):
     """Check that conda packages installed correctly"""
 
     runner_logger = get_run_logger()
 
     runner_logger.info(ShellOperation(commands=[
-        "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
+        f"source {install_path}/miniconda3/bin/activate",
         "conda init --all",
         "conda activate vcf2maf_38",
         "samtools --version",
@@ -91,16 +91,16 @@ def env_check():
     log_prints=True,
     flow_run_name="vcf2maf_vep_setup_" + f"{get_time()}",
 )
-def vep_setup(vep_path: str):
+def vep_setup(install_path: str):
     """Setup VEP env params and indexes"""
 
     runner_logger = get_run_logger()
 
     runner_logger.info(ShellOperation(commands=[
-        "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
+        f"source {install_path}/miniconda3/bin/activate",
         "conda init --all",
         "conda activate vcf2maf_38",
-        f"export VEP_PATH={vep_path}",
+        f"export VEP_PATH={install_path}/vep",
         #"export DYLD_LIBRARY_PATH=",
         "mkdir $VEP_PATH",
         "cd $VEP_PATH",
@@ -119,10 +119,12 @@ def vep_setup(vep_path: str):
     log_prints=True,
     flow_run_name="vcf2maf_bwa_setup_" + f"{get_time()}",
 )
-def bwa_setup(bucket, bwa_tarball):
+def bwa_setup(bucket, bwa_tarball, install_path):
     """Setup reference genome files needed by VEP"""
     
     runner_logger = get_run_logger()
+
+    os.chdir(install_path)
 
     file_dl(bucket, bwa_tarball)
 
@@ -131,7 +133,7 @@ def bwa_setup(bucket, bwa_tarball):
     runner_logger.info(ShellOperation(commands=[
         f"tar -xvjf {f_name}",
         "bwa-0.7.17/bwakit/run-gen-ref hs38DH",
-        "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
+        f"source {install_path}/miniconda3/bin/activate",
         "conda init --all",
         "conda activate vcf2maf_38",
         "samtools faidx hs38DH.fa",
@@ -200,25 +202,31 @@ def runner(
 
     os.mkdir(f"vcf2maf_output_{dt}")
 
-    vep_path = "/usr/local/data/vep"
-
     if process_type == "env_setup":
+
+        install_path = "/usr/local/data/vcf2maf"
+
         # do env setup
         runner_logger.info(">>> Testing env setup ....")
-        dl_conda_setup()
-        env_setup()
-        env_check()
-        vep_setup(vep_path)
-        bwa_setup(bucket, bwa_tarball_path)
+        dl_conda_setup(install_path)
+        env_setup(install_path)
+        env_check(install_path)
+        vep_setup(install_path)
+        bwa_setup(bucket, bwa_tarball_path, install_path)
 
         # check that VEP indexes installed
         runner_logger.info(ShellOperation(commands=[
             "ls -lh /usr/local/data/vep/homo_sapiens/112_GRCh38/",
-            "ls -lh /usr/local/data/vep/homo_sapiens/105_GRCh38/"
         ]).run())
 
     elif process_type == "convert":
-        pass
+
+        working_path = "/usr/local/data/output"
+
+        ShellOperation(commands=[
+            f"mkdir {working_path}",
+            f"cd {working_path}"
+        ]).run()
         # download vcf manifest
 
         #download barcode manifest
