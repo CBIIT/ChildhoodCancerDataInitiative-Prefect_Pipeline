@@ -321,10 +321,14 @@ def runner(
 
     # do env setup
     runner_logger.info(">>> Testing env setup ....")
-    dl_conda_setup()
-    env_setup()
-    env_check()
-    vep_setup()
+    #dl_conda_setup()
+    #env_setup()
+    #env_check()
+    #vep_setup()
+    runner_logger.info(ShellOperation(commands=[
+        "ls -lh /usr/local/data"
+    ]).run())
+
     #bwa_setup(bucket, bwa_tarball_path)
 
     # download vcf file to convert package locally
