@@ -920,8 +920,9 @@ deployments:
     parameters:
       bucket: "ccdi-validation"
       runner: ""
-      vcf_file_path: ""
-      vcf2maf_package_path: ""
+      process_type: ""
+      vcf_manifest_path: ""
+      barcode_manifest_path: ""
       bwa_tarball_path: ""
 
     # pull action to overwrite from file pull action

@@ -13,6 +13,7 @@ import sys
 import subprocess
 import pandas as pd
 from prefect_shell import ShellOperation
+from typing import Literal
 
 # prefect dependencies
 import boto3
@@ -295,6 +296,7 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 
     return "VCF2MAF install complete"
 
+DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 
 @flow(
     name="VCF2MAF Conversion",
@@ -304,10 +306,24 @@ def vcf2maf_setup(bucket: str, vcf2maf_path: str):
 def runner(
     bucket: str,
     runner: str,
-    vcf_file_path: str,
-    vcf2maf_package_path: str,
+    process_type: DropDownChoices,
+    vcf_manifest_path: str,
+    barcode_manifest_path: str,
     bwa_tarball_path: str,
 ):
+    """VCF2MAF Conversion
+
+    Args:
+        bucket (str): Bucket name of where the manifest etc. is located in and the output goes to
+        runner (str): Unique runner name
+        process_type (str): Whether to setup env, perform vcf22maf conversion or tear down env
+        vcf_manifest_path (str): Path to manifest with s3 URLs of VCF files to convert
+        barcode_manifest_path (str): Path to manifest with tumor/normal sample barcodes
+        bwa_tarball_path (str): Path to bwakit tarball for ref seq installation
+
+    Raises:
+        ValueError: Value Error occurs when the pipeline fails to proceed.
+    """
 
     runner_logger = get_run_logger()
 
