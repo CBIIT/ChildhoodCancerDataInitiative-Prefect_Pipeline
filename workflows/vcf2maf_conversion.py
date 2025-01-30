@@ -36,7 +36,7 @@ def dl_conda_setup(install_path: str):
     runner_logger.info(ShellOperation(commands=[
         "apt update",
         "apt-get -y install curl wget",
-        f"mkdir {install_path}/miniconda3",
+        f"mkdir -p {install_path}/miniconda3",
         f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O {install_path}/miniconda3/miniconda.sh", 
         f"bash {install_path}/miniconda3/miniconda.sh -b -u -p {install_path}/miniconda3", 
         f"rm {install_path}/miniconda3",
@@ -309,7 +309,7 @@ def runner(
     if process_type == "env_setup":
 
         # do env setup
-        runner_logger.info(">>> Testing env setup ....")
+        runner_logger.info(">>> Conda and env setup ....")
         dl_conda_setup(install_path)
         env_setup(install_path)
         env_check(install_path)
