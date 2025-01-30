@@ -921,8 +921,7 @@ deployments:
       bucket: "ccdi-validation"
       runner: ""
       process_type: ""
-      vcf_manifest_path: ""
-      barcode_manifest_path: ""
+      manifest_path: ""
       bwa_tarball_path: ""
 
     # pull action to overwrite from file pull action

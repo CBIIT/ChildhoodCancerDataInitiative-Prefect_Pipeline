@@ -132,7 +132,7 @@ def bwa_setup(bucket, bwa_tarball, install_path):
 
     runner_logger.info(ShellOperation(commands=[
         f"tar -xvjf {f_name}",
-        "bwa-0.7.17/bwakit/run-gen-ref hs38DH",
+        f"{f_name.replace(".tar.bz2", "")}/bwakit/run-gen-ref hs38DH",
         f"source {install_path}/miniconda3/bin/activate",
         "conda init --all",
         "conda activate vcf2maf_38",
@@ -165,6 +165,116 @@ def conversion():
         f"perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin results: OUT: {std_out}, ERR: {std_err}"
     )"""
 
+
+def read_input(file_path: str):
+    """Read in file with s3 URLs of VCFs to merge and participant IDs
+
+    Args:
+        file_path (str): path to input file that contains required cols
+
+    Returns:
+        pd.DataFrame: DataFrame with extracted necessary metadata
+    """
+
+    runner_logger = get_run_logger()
+
+    f_name = os.path.basename(file_path)
+
+    try:
+        file_metadata = pd.read_csv(f_name, sep="\t")
+    except:
+        runner_logger.error(f"Error reading and parsing file {f_name}.")
+        sys.exit(1)
+
+    if "s3_url" not in file_metadata.columns:
+        runner_logger.error(
+            f"Error reading and parsing file {f_name}: no column named 's3_url'."
+        )
+        sys.exit(1)
+
+    if "patient_id" not in file_metadata.columns:
+        runner_logger.error(
+            f"Error reading and parsing file {f_name}: no column named 'patient_id'."
+        )
+        sys.exit(1)
+
+    if "tumor_sample_id" not in file_metadata.columns:
+        runner_logger.error(
+            f"Error reading and parsing file {f_name}: no column named 'tumor_sample_id'."
+        )
+        sys.exit(1)
+
+    if "normal_sample_id" not in file_metadata.columns:
+        runner_logger.error(
+            f"Error reading and parsing file {f_name}: no column named 'normal_sample_id'."
+        )
+        sys.exit(1)
+
+    if "File Name" not in file_metadata.columns:
+        runner_logger.error(
+            f"Error reading and parsing file {f_name}: no column named 'File Name'."
+        )
+        sys.exit(1)
+
+    if len(file_metadata) == 0:
+        runner_logger.error(f"Error reading and parsing file {f_name}; empty file")
+        sys.exit(1)
+
+    return file_metadata
+
+
+@flow(
+    name="vcf2maf_convert_vcf",
+    log_prints=True,
+    flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
+)
+def conversion_handler(row: pd.Series, install_path: str):
+    """Function to handle downloading VCF files and generating index files
+
+    Args:
+        df (pd.DataFrame): dataframe of entries to file base names to rename
+
+    Returns:
+        None
+    """
+
+    runner_logger = get_run_logger()
+
+    #for index, row in df.iterrows():
+    f_bucket = row["s3_url"].split("/")[2]
+    f_path = "/".join(row["s3_url"].split("/")[3:])
+
+    # trying to re-use file_dl() function
+    file_dl(f_bucket, f_path)
+
+    # extract file name
+    f_name = os.path.basename(f_path)
+
+    # check that file exists
+    if not os.path.isfile(f_name):
+        runner_logger.error(
+            f"File {f_name} not copied over or found from URL {row['s3_url']}"
+        )
+    else:
+        temp_sample = [row["normal_sample_id"], row["tumor_sample_id"]]
+        with open("sample.txt", "w+") as w:
+            w.write("\n".join(temp_sample))
+        w.close()
+
+        runner_logger.info(ShellOperation(commands=[
+            f"source {install_path}/miniconda3/bin/activate",
+            "conda init --all",
+            "conda activate vcf2maf_38",
+            f"bcftools reheader -s sample.txt -o {f_name.replace("vcf.gz", "reheader.vcf.gz")} {f_name}",
+            f"bgzip -d {f_name.replace("vcf.gz", "reheader.vcf.gz")}",
+            f"vcf2maf.pl --input-vcf {f_name} --output-maf {f_name}.vep.maf --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row["tumor_sample_id"]}  --normal-id {row["normal_sample_id"]}"
+        ]).run())
+
+        os.remove("sample.txt")
+
+    return None
+
+
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 
 @flow(
@@ -176,8 +286,7 @@ def runner(
     bucket: str,
     runner: str,
     process_type: DropDownChoices,
-    vcf_manifest_path: str,
-    barcode_manifest_path: str,
+    manifest_path: str,
     bwa_tarball_path: str,
 ):
     """VCF2MAF Conversion
@@ -186,8 +295,7 @@ def runner(
         bucket (str): Bucket name of where the manifest etc. is located in and the output goes to
         runner (str): Unique runner name
         process_type (str): Whether to setup env, perform vcf22maf conversion or tear down env
-        vcf_manifest_path (str): Path to manifest with s3 URLs of VCF files to convert
-        barcode_manifest_path (str): Path to manifest with tumor/normal sample barcodes
+        manifest_path (str): Path to tab-delimited manifest with s3 URLs of VCF files to convert and tumor/normal sample barcodes
         bwa_tarball_path (str): Path to bwakit tarball for ref seq installation
 
     Raises:
@@ -200,11 +308,13 @@ def runner(
 
     dt = get_time()
 
-    os.mkdir(f"vcf2maf_output_{dt}")
+    output_dir = f"/usr/local/data/vcf2maf_output_{dt}"
+
+    os.mkdir(output_dir)
+
+    install_path = "/usr/local/data/vcf2maf"
 
     if process_type == "env_setup":
-
-        install_path = "/usr/local/data/vcf2maf"
 
         # do env setup
         runner_logger.info(">>> Testing env setup ....")
@@ -223,13 +333,22 @@ def runner(
 
         working_path = "/usr/local/data/output"
 
-        ShellOperation(commands=[
-            f"mkdir {working_path}",
-            f"cd {working_path}"
-        ]).run()
-        # download vcf manifest
+        if os.path.exists(working_path):
+            os.chdir(working_path)
+        else:
+            ShellOperation(commands=[
+                f"mkdir {working_path}",
+                f"cd {working_path}"
+            ]).run()
 
-        #download barcode manifest
+        # download manifest
+        file_dl(bucket, manifest_path)
+
+        mani = os.path.basename(manifest_path)
+
+        df = read_input(mani)
+
+
 
     elif process_type == "env_tear_down":
         pass
