@@ -326,7 +326,7 @@ def runner(
     #env_check()
     #vep_setup()
     runner_logger.info(ShellOperation(commands=[
-        "ls -lh /usr/local/data"
+        "ls -lh /usr/local/data/vep"
     ]).run())
 
     #bwa_setup(bucket, bwa_tarball_path)
