@@ -91,25 +91,24 @@ def env_check():
     log_prints=True,
     flow_run_name="vcf2maf_vep_setup_" + f"{get_time()}",
 )
-def vep_setup():
+def vep_setup(vep_path: str):
     """Setup VEP env params and indexes"""
 
     runner_logger = get_run_logger()
 
     runner_logger.info(ShellOperation(commands=[
-        "export VEP_PATH=/usr/local/data/vep",
-        "export VEP_DATA=/usr/local/data/vep_data",
-        #"export DYLD_LIBRARY_PATH=",
-        "mkdir $VEP_PATH $VEP_DATA",
         "source /opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/miniconda3/bin/activate",
         "conda init --all",
         "conda activate vcf2maf_38",
+        f"export VEP_PATH={vep_path}",
+        #"export DYLD_LIBRARY_PATH=",
+        "mkdir $VEP_PATH",
         "cd $VEP_PATH",
         "curl -O ftp://ftp.ensembl.org/pub/release-112/variation/indexed_vep_cache/homo_sapiens_vep_112_GRCh38.tar.gz",
         "ls -lh",
         "tar -zxvf homo_sapiens_vep_112_GRCh38.tar.gz",
-        "vep_install -a cf -s homo_sapiens -y GRCh38 -c $VEP_PATH --CONVERT --no_update", 
-        "ls -lh",
+        #"vep_install -a cf -s homo_sapiens -y GRCh38 -c $VEP_PATH --CONVERT --no_update", 
+        #"ls -lh",
     ]).run())
 
     return None
@@ -333,36 +332,31 @@ def runner(
 
     os.mkdir(f"vcf2maf_output_{dt}")
 
-    # do env setup
-    runner_logger.info(">>> Testing env setup ....")
-    #dl_conda_setup()
-    #env_setup()
-    #env_check()
-    #vep_setup()
-    runner_logger.info(ShellOperation(commands=[
-        "ls -lh /usr/local/data/vep/homo_sapiens/112_GRCh38/",
-        "ls -lh /usr/local/data/vep/homo_sapiens/105_GRCh38/"
-    ]).run())
+    vep_path = "/usr/local/data/vep"
 
-    #bwa_setup(bucket, bwa_tarball_path)
+    if process_type == "env_setup":
+        # do env setup
+        runner_logger.info(">>> Testing env setup ....")
+        dl_conda_setup()
+        env_setup()
+        env_check()
+        vep_setup(vep_path)
+        bwa_setup(bucket, bwa_tarball_path)
 
-    # download vcf file to convert package locally
-    # file_dl(bucket, vcf_file_path)
+        # check that VEP indexes installed
+        runner_logger.info(ShellOperation(commands=[
+            "ls -lh /usr/local/data/vep/homo_sapiens/112_GRCh38/",
+            "ls -lh /usr/local/data/vep/homo_sapiens/105_GRCh38/"
+        ]).run())
 
-    # samtools setup
-    #runner_logger.info(">>> Installing samtools ....")
+    elif process_type == "convert":
+        pass
+        # download vcf manifest
 
-    # runner_logger.info(samtools_setup(bucket, samtools_path))
+        #download barcode manifest
 
-    # vep install
-    #runner_logger.info(">>> Installing vep ....")
-
-    #runner_logger.info(vep_setup())
-
-    # vcf2maf setup
-    #runner_logger.info(">>> Installing vcf2maf ....")
-
-    # runner_logger.info(vcf2maf_setup(bucket, vcf2maf_package_path))
+    elif process_type == "env_tear_down":
+        pass
 
     # test vcf2maf
 
