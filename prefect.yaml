@@ -920,7 +920,7 @@ deployments:
     parameters:
       bucket: "ccdi-validation"
       runner: ""
-      process_type: ""
+      process_type: "convert"
       manifest_path: ""
       bwa_tarball_path: ""
 
