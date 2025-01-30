@@ -133,7 +133,7 @@ def bwa_setup(bucket, bwa_tarball, install_path):
 
     runner_logger.info(ShellOperation(commands=[
         f"tar -xvjf {f_name}",
-        f"{f_name.replace(".tar.bz2", "")}/bwakit/run-gen-ref hs38DH",
+        f"{f_name.replace('.tar.bz2', '')}/bwakit/run-gen-ref hs38DH",
         f"source {install_path}/miniconda3/bin/activate",
         "conda init --all",
         "conda activate vcf2maf_38",
