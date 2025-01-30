@@ -104,8 +104,6 @@ def vep_setup():
         "conda init --all",
         "conda activate vcf2maf_38",
         "cd $VEP_PATH",
-        "pwd", 
-        "echo $VEP_PATH",
         "curl -O ftp://ftp.ensembl.org/pub/release-112/variation/indexed_vep_cache/homo_sapiens_vep_112_GRCh38.tar.gz",
         "ls -lh",
         "tar -zxvf homo_sapiens_vep_112_GRCh38.tar.gz",
@@ -326,7 +324,7 @@ def runner(
     #env_check()
     #vep_setup()
     runner_logger.info(ShellOperation(commands=[
-        "ls -lh /usr/local/data/vep_data"
+        "ls -lh /usr/local/data/vep/homo_sapiens/"
     ]).run())
 
     #bwa_setup(bucket, bwa_tarball_path)
