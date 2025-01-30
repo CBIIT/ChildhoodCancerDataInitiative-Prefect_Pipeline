@@ -324,7 +324,8 @@ def runner(
     #env_check()
     #vep_setup()
     runner_logger.info(ShellOperation(commands=[
-        "ls -lh /usr/local/data/vep/homo_sapiens/"
+        "ls -lh /usr/local/data/vep/homo_sapiens/112_GRCh38/",
+        "ls -lh /usr/local/data/vep/homo_sapiens/105_GRCh38/"
     ]).run())
 
     #bwa_setup(bucket, bwa_tarball_path)
