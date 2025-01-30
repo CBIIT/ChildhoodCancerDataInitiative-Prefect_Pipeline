@@ -344,9 +344,16 @@ def runner(
 
         for index, row in df.iterrows():
             conversion_recording.append(conversion_handler(row, install_path, output_dir))
+        
+        pd.DataFrame(conversion_recording, columns=['patient_id', 'tumor_sample_id', 'converted?']).to_csv(f"{output_dir}/conversion_summary.tsv", sep="\t", index=False)
 
     elif process_type == "env_tear_down":
-        pass
+        runner_logger.info(ShellOperation(commands=[
+            #f"rm -rf {install_path}", 
+            #f"rm -rf {working_path}", 
+            "rm -rf  /usr/local/data/vep/",
+            "rm -rf  /usr/local/data/vep_data",
+        ]).run())
 
     # test vcf2maf
 
