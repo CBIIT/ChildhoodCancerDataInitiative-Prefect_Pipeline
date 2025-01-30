@@ -12,6 +12,7 @@ import os
 import sys
 import subprocess
 import pandas as pd
+import shutil
 from prefect_shell import ShellOperation
 from typing import Literal
 
@@ -139,32 +140,6 @@ def bwa_setup(bucket, bwa_tarball, install_path):
         "samtools faidx hs38DH.fa",
     ]).run())
 
-def conversion():
-        """process = subprocess.Popen(
-        [
-            "perl",
-            "vcf2maf.pl",
-            "--input-vcf",
-            "tests/test.vcf",
-            "--output-maf",
-            "tests/test.vep.maf",
-            "--samtools-exec",
-            "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin",
-            "--tabix-exec",
-            "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin",
-        ],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(
-        f"perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin results: OUT: {std_out}, ERR: {std_err}"
-    )"""
-
 
 def read_input(file_path: str):
     """Read in file with s3 URLs of VCFs to merge and participant IDs
@@ -228,11 +203,13 @@ def read_input(file_path: str):
     log_prints=True,
     flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
 )
-def conversion_handler(row: pd.Series, install_path: str):
+def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
     """Function to handle downloading VCF files and generating index files
 
     Args:
-        df (pd.DataFrame): dataframe of entries to file base names to rename
+        row (pd.Series): pandas Series of a row entry from manifest
+        install_path (str): path to where conda libs are installed, env to activate
+        output_dir (str): path to move maf files to
 
     Returns:
         None
@@ -243,6 +220,12 @@ def conversion_handler(row: pd.Series, install_path: str):
     #for index, row in df.iterrows():
     f_bucket = row["s3_url"].split("/")[2]
     f_path = "/".join(row["s3_url"].split("/")[3:])
+
+    #make dir for this VCF file conversion 
+    ShellOperation(commands=[
+        f"mkdir {row['patient_id']}",
+        f"cd {row['patient_id']}"
+    ]).run()
 
     # trying to re-use file_dl() function
     file_dl(f_bucket, f_path)
@@ -256,6 +239,7 @@ def conversion_handler(row: pd.Series, install_path: str):
             f"File {f_name} not copied over or found from URL {row['s3_url']}"
         )
     else:
+        # setup sample barcode renaming 
         temp_sample = [row["normal_sample_id"], row["tumor_sample_id"]]
         with open("sample.txt", "w+") as w:
             w.write("\n".join(temp_sample))
@@ -267,12 +251,20 @@ def conversion_handler(row: pd.Series, install_path: str):
             "conda activate vcf2maf_38",
             f"bcftools reheader -s sample.txt -o {f_name.replace("vcf.gz", "reheader.vcf.gz")} {f_name}",
             f"bgzip -d {f_name.replace("vcf.gz", "reheader.vcf.gz")}",
-            f"vcf2maf.pl --input-vcf {f_name} --output-maf {f_name}.vep.maf --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row["tumor_sample_id"]}  --normal-id {row["normal_sample_id"]}"
+            f"vcf2maf.pl --input-vcf {f_name.replace("vcf.gz", "reheader.vcf.gz")} --output-maf {f_name.replace("vcf.gz", "reheader.vcf.gz")}.vep.maf --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row["tumor_sample_id"]}  --normal-id {row["normal_sample_id"]}",
+            "ls -l"
         ]).run())
 
-        os.remove("sample.txt")
-
-    return None
+        if f"{f_name.replace("vcf.gz", "reheader.vcf.gz")}.vep.maf" in os.listdir("."):
+            os.rename(f"{f_name.replace("vcf.gz", "reheader.vcf.gz")}.vep.maf", output_dir+"/"+f"{f_name.replace("vcf.gz", "reheader.vcf.gz")}.vep.maf")
+            os.chdir("..")
+            shutil.rmtree(row['patient_id'])
+            return [row['patient_id'], row["tumor_sample_id"], True]
+        else:
+            runner_logger.info(f"Something went wrong, MAF file from {f_name} not produced")
+            os.chdir("..")
+            shutil.rmtree(row['patient_id'])
+            return [row['patient_id'], row["tumor_sample_id"], False]
 
 
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
@@ -331,6 +323,8 @@ def runner(
 
     elif process_type == "convert":
 
+        conversion_recording = []
+
         working_path = "/usr/local/data/output"
 
         if os.path.exists(working_path):
@@ -348,7 +342,8 @@ def runner(
 
         df = read_input(mani)
 
-
+        for index, row in df.iterrows():
+            conversion_recording.append(conversion_handler(row, install_path, output_dir))
 
     elif process_type == "env_tear_down":
         pass
