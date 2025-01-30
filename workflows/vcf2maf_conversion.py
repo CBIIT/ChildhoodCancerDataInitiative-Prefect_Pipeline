@@ -137,61 +137,19 @@ def bwa_setup(bucket, bwa_tarball):
         "samtools faidx hs38DH.fa",
     ]).run())
 
-
-@flow(
-    name="vcf2maf_samtools_setup",
-    log_prints=True,
-    flow_run_name="vcf2maf_samtools_setup_" + f"{get_time()}",
-)
-def samtools_setup(bucket: str, samtools_path: str):
-    """Download and install samtools to VM"""
-
-    runner_logger = get_run_logger()
-
-    # download samtools package
-    file_dl(bucket, samtools_path)
-
-    f_name = os.path.basename(samtools_path)
-
-    # check that file exists
-    if not os.path.isfile(f_name):
-        runner_logger.error(
-            f"File {f_name} not copied over or found from URL {samtools_path}"
-        )
-        return "samtools package not downloaded"
-    else:
-        pass
-
-    # untar
-    process = subprocess.Popen(
-        ["tar", "-xvjf", f_name],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"tar -xvjf {f_name} results: OUT: {std_out}, ERR: {std_err}")
-
-    # config
-    os.chdir(f_name.replace(".tar.bz2", ""))
-
-    process = subprocess.Popen(
-        ["./configure"],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"tar -xvjf {f_name} results: OUT: {std_out}, ERR: {std_err}")
-
-    process = subprocess.Popen(
+def conversion():
+        """process = subprocess.Popen(
         [
-            "./configure",
-            "--prefix=/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF",
+            "perl",
+            "vcf2maf.pl",
+            "--input-vcf",
+            "tests/test.vcf",
+            "--output-maf",
+            "tests/test.vep.maf",
+            "--samtools-exec",
+            "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin",
+            "--tabix-exec",
+            "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin",
         ],
         shell=False,
         text=True,
@@ -201,99 +159,9 @@ def samtools_setup(bucket: str, samtools_path: str):
 
     std_out, std_err = process.communicate()
 
-    runner_logger.info(f"Configure results: OUT: {std_out}, ERR: {std_err}")
-
-    process = subprocess.Popen(
-        ["make"],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"Make results: OUT: {std_out}, ERR: {std_err}")
-
-    process = subprocess.Popen(
-        ["make", "install"],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"Make install results: OUT: {std_out}, ERR: {std_err}")
-
-    os.chdir("..")
-
-    if "samtools" in os.listdir("bin/"):  # heuristic for confirming install
-        return "successfully installed samtools"
-    else:
-        return "samtools package not installed correctly"
-
-
-@flow(
-    name="vcf2maf_vc2maf_setup",
-    log_prints=True,
-    flow_run_name="vcf2maf_vcf2maf_setup_" + f"{get_time()}",
-)
-def vcf2maf_setup(bucket: str, vcf2maf_path: str):
-    """Download and install vcf2maf"""
-
-    runner_logger = get_run_logger()
-
-    # download samtools package
-    file_dl(bucket, vcf2maf_path)
-
-    f_name = os.path.basename(vcf2maf_path)
-
-    # check that file exists
-    if not os.path.isfile(f_name):
-        runner_logger.error(
-            f"File {f_name} not copied over or found from URL {vcf2maf_path}"
-        )
-        return "vcf2maf package not downloaded"
-    else:
-        pass
-
-    process = subprocess.Popen(
-        ["tar", "-zxf", f_name],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"Untar results: OUT: {std_out}, ERR: {std_err}")
-
-    dir = [
-        i
-        for i in os.listdir(".")
-        if i.startswith("mskcc-vcf2maf-") and os.path.isdir(i)
-    ][0]
-
-    runner_logger.info(os.listdir("."))
-
-    os.chdir(dir)
-
-    process = subprocess.Popen(
-        ["perl", "vcf2maf.pl", "--man"],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"perl vcf2maf.pl --man results: OUT: {std_out}, ERR: {std_err}")
-
-    return "VCF2MAF install complete"
+    runner_logger.info(
+        f"perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin results: OUT: {std_out}, ERR: {std_err}"
+    )"""
 
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 
@@ -360,27 +228,4 @@ def runner(
 
     # test vcf2maf
 
-    """process = subprocess.Popen(
-        [
-            "perl",
-            "vcf2maf.pl",
-            "--input-vcf",
-            "tests/test.vcf",
-            "--output-maf",
-            "tests/test.vep.maf",
-            "--samtools-exec",
-            "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin",
-            "--tabix-exec",
-            "/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CBIO-61_VCF2MAF/bin",
-        ],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
 
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(
-        f"perl vcf2maf.pl --input-vcf tests/test.vcf --output-maf tests/test.vep.maf --samtools-exec ~/bin --tabix-exec ~/bin results: OUT: {std_out}, ERR: {std_err}"
-    )"""
