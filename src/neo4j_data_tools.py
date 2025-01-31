@@ -21,6 +21,7 @@ import json
 import tempfile
 import traceback
 from botocore.exceptions import ClientError
+import random
 
 
 DataFrame = TypeVar("DataFrame")
@@ -875,7 +876,7 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     of all studies in a DB
     """
     # create a folder to keep all node entry counts per study
-    temp_folder_name = "db_node_entry_counts_all_studies"
+    temp_folder_name = f"db_node_entry_counts_all_studies_{random.choice(range(1000))}"
     os.mkdir(temp_folder_name)
     logger.info("Start pulling entry counts per node per study")
     for study in study_list:
@@ -919,6 +920,30 @@ def counts_DB_all_nodes_all_studies(
         password_parameter=password_parameter,
         logger=logger,
     )
+
+    # driver instance
+    logger.info("Creating GraphDatabase driver using uri, username, and password")
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+
+    # fetch all unique studies
+    study_list = pull_uniq_studies(driver=driver)
+    logger.info(f"Unique study list in DB: {*study_list,}")
+
+    # Loop through each study and fetch counts of all nodes per study
+    studies_dataframe = pull_studies_loop(
+        driver=driver, study_list=study_list, logger=logger
+    )
+
+    driver.close()
+
+    return studies_dataframe
+
+
+@flow
+def counts_DB_all_nodes_all_studies_w_secrets(
+    uri: str, username: str, password: str
+) -> Dict:
+    logger = get_run_logger()
 
     # driver instance
     logger.info("Creating GraphDatabase driver using uri, username, and password")
