@@ -273,21 +273,19 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
             "conda activate vcf2maf_38",
             f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
             f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
-            f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf.gz')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
+            f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
             "ls -l"
         ]).run())
 
-        if f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf" in os.listdir("."):
+        if f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}" in os.listdir("."):
             # rename and move file to output directory 
             # rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
-            os.rename(f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf", output_dir+"/"+f"{f_name.replace('.gz', '')}.vep.maf")
+            os.rename(f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}", output_dir+"/"+f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}")
             os.chdir("..")
-            shutil.rmtree(row['patient_id']) #remove temp folder with intermediate files
             return [row['patient_id'], row["tumor_sample_id"], True]
         else:
             runner_logger.info(f"Something went wrong, MAF file from {f_name} not produced")
             os.chdir("..")
-            shutil.rmtree(row['patient_id'])
             return [row['patient_id'], row["tumor_sample_id"], False]
 
 
@@ -335,11 +333,11 @@ def runner(
 
         # do env setup
         runner_logger.info(">>> Conda and env setup ....")
-        """dl_conda_setup(install_path)
+        dl_conda_setup(install_path)
         env_setup(install_path)
         env_check(install_path)
         vep_setup(install_path)
-        bwa_setup(bucket, bwa_tarball_path, install_path)"""
+        bwa_setup(bucket, bwa_tarball_path, install_path)
         bcftools_setup(install_path)
 
         # check that VEP indexes installed
