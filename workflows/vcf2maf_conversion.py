@@ -249,6 +249,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
             f"source {install_path}/miniconda3/bin/activate",
             "conda init --all",
             "conda activate vcf2maf_38",
+            "conda install -y -c bioconda bcftools",
             f"bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
             f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
             f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf.gz')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
@@ -336,16 +337,17 @@ def runner(
 
         working_path = "/usr/local/data/output"
 
-        runner_logger.info(ShellOperation(commands=[
+        ## TESTING
+        """runner_logger.info(ShellOperation(commands=[
             f"source {install_path}/miniconda3/bin/activate",
             "conda init --all",
             "conda activate vcf2maf_38",
             "whereis bcftools",
             "whereis samtools", 
             "whereis vep"
-        ]).run())
+        ]).run())"""
 
-        """if os.path.exists(working_path):
+        if os.path.exists(working_path):
             os.chdir(working_path)
         else:
             ShellOperation(commands=[
@@ -376,7 +378,7 @@ def runner(
             sub_folder="",
         )
 
-        shutil.rmtree(output_dir)"""
+        shutil.rmtree(output_dir)
 
     elif process_type == "env_tear_down":
 
