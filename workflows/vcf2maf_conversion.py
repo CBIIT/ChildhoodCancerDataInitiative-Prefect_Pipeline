@@ -212,7 +212,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
         output_dir (str): path to move maf files to
 
     Returns:
-        None
+        patient_id, tumor_sample_id and True/False depending on success of vcf annotation and maf conversion
     """
 
     runner_logger = get_run_logger()
@@ -227,7 +227,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
         f"cd {row['patient_id']}"
     ]).run()
 
-    # trying to re-use file_dl() function
+    # download VCF file
     file_dl(f_bucket, f_path)
 
     # extract file name
@@ -256,7 +256,9 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
         ]).run())
 
         if f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf" in os.listdir("."):
-            os.rename(f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf", output_dir+"/"+f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf")
+            # rename and move file to output directory 
+            # rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
+            os.rename(f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf", output_dir+"/"+f"{f_name.replace('.gz', '')}.vep.maf")
             os.chdir("..")
             shutil.rmtree(row['patient_id'])
             return [row['patient_id'], row["tumor_sample_id"], True]
