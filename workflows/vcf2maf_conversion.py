@@ -33,16 +33,21 @@ def dl_conda_setup(install_path: str):
 
     runner_logger = get_run_logger()
 
-    runner_logger.info(ShellOperation(commands=[
-        "apt update",
-        "apt-get -y install curl wget",
-        f"mkdir -p {install_path}/miniconda3",
-        f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O {install_path}/miniconda3/miniconda.sh", 
-        f"bash {install_path}/miniconda3/miniconda.sh -b -u -p {install_path}/miniconda3", 
-        f"rm {install_path}/miniconda3/miniconda.sh",
-    ]).run())
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                "apt update",
+                "apt-get -y install curl wget",
+                f"mkdir -p {install_path}/miniconda3",
+                f"wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O {install_path}/miniconda3/miniconda.sh",
+                f"bash {install_path}/miniconda3/miniconda.sh -b -u -p {install_path}/miniconda3",
+                f"rm {install_path}/miniconda3/miniconda.sh",
+            ]
+        ).run()
+    )
 
     return None
+
 
 @flow(
     name="vcf2maf_env_setup",
@@ -54,18 +59,23 @@ def env_setup(install_path: str):
 
     runner_logger = get_run_logger()
 
-    runner_logger.info(ShellOperation(commands=[
-        f"source {install_path}/miniconda3/bin/activate",
-        "conda init --all",
-        "conda -V",
-        "conda create -n vcf2maf_38 python=3.7 --yes",
-        "conda activate vcf2maf_38",
-        "conda install -y  -c bioconda vcf2maf", 
-        "conda install -y  -c bioconda ensembl-vep",
-        "conda install -y  -c bioconda samtools",
-    ]).run())
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                f"source {install_path}/miniconda3/bin/activate",
+                "conda init --all",
+                "conda -V",
+                "conda create -n vcf2maf_38 python=3.7 --yes",
+                "conda activate vcf2maf_38",
+                "conda install -y  -c bioconda vcf2maf",
+                "conda install -y  -c bioconda ensembl-vep",
+                "conda install -y  -c bioconda samtools",
+            ]
+        ).run()
+    )
 
     return None
+
 
 @flow(
     name="vcf2maf_env_check",
@@ -77,15 +87,20 @@ def env_check(install_path: str):
 
     runner_logger = get_run_logger()
 
-    runner_logger.info(ShellOperation(commands=[
-        f"source {install_path}/miniconda3/bin/activate",
-        "conda init --all",
-        "conda activate vcf2maf_38",
-        "samtools --version",
-        "vep --help"
-    ]).run())
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                f"source {install_path}/miniconda3/bin/activate",
+                "conda init --all",
+                "conda activate vcf2maf_38",
+                "samtools --version",
+                "vep --help",
+            ]
+        ).run()
+    )
 
     return None
+
 
 @flow(
     name="vcf2maf_vep_setup",
@@ -97,24 +112,29 @@ def vep_setup(install_path: str):
 
     runner_logger = get_run_logger()
 
-    runner_logger.info(ShellOperation(commands=[
-        f"source {install_path}/miniconda3/bin/activate",
-        "conda init --all",
-        "conda activate vcf2maf_38",
-        f"export VEP_PATH={install_path}/vep",
-        #"export DYLD_LIBRARY_PATH=",
-        "mkdir $VEP_PATH",
-        "cd $VEP_PATH",
-        "curl -O ftp://ftp.ensembl.org/pub/release-112/variation/indexed_vep_cache/homo_sapiens_vep_112_GRCh38.tar.gz",
-        "ls -lh",
-        "tar -zxvf homo_sapiens_vep_112_GRCh38.tar.gz",
-        #"vep_install -a cf -s homo_sapiens -y GRCh38 -c $VEP_PATH --CONVERT --no_update", 
-        #"ls -lh",
-    ]).run())
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                f"source {install_path}/miniconda3/bin/activate",
+                "conda init --all",
+                "conda activate vcf2maf_38",
+                f"export VEP_PATH={install_path}/vep",
+                # "export DYLD_LIBRARY_PATH=",
+                "mkdir $VEP_PATH",
+                "cd $VEP_PATH",
+                "curl -O ftp://ftp.ensembl.org/pub/release-112/variation/indexed_vep_cache/homo_sapiens_vep_112_GRCh38.tar.gz",
+                "ls -lh",
+                "tar -zxvf homo_sapiens_vep_112_GRCh38.tar.gz",
+                # "vep_install -a cf -s homo_sapiens -y GRCh38 -c $VEP_PATH --CONVERT --no_update",
+                # "ls -lh",
+            ]
+        ).run()
+    )
 
     return None
 
-##### BWA install here 
+
+##### BWA install here
 @flow(
     name="vcf2maf_bwa_setup",
     log_prints=True,
@@ -122,7 +142,7 @@ def vep_setup(install_path: str):
 )
 def bwa_setup(bucket, bwa_tarball, install_path):
     """Setup reference genome files needed by VEP"""
-    
+
     runner_logger = get_run_logger()
 
     os.chdir(install_path)
@@ -131,16 +151,22 @@ def bwa_setup(bucket, bwa_tarball, install_path):
 
     f_name = os.path.basename(bwa_tarball)
 
-    runner_logger.info(ShellOperation(commands=[
-        f"tar -xvjf {f_name}",
-        f"{f_name.replace('.tar.bz2', '')}/bwakit/run-gen-ref hs38DH",
-        f"source {install_path}/miniconda3/bin/activate",
-        "conda init --all",
-        "conda activate vcf2maf_38",
-        "samtools faidx hs38DH.fa",
-    ]).run())
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                f"tar -xvjf {f_name}",
+                f"{f_name.replace('.tar.bz2', '')}/bwakit/run-gen-ref hs38DH",
+                f"source {install_path}/miniconda3/bin/activate",
+                "conda init --all",
+                "conda activate vcf2maf_38",
+                "samtools faidx hs38DH.fa",
+            ]
+        ).run()
+    )
 
-    ##### BWA install here 
+    ##### BWA install here
+
+
 @flow(
     name="vcf2maf_bcftools_setup",
     log_prints=True,
@@ -148,19 +174,23 @@ def bwa_setup(bucket, bwa_tarball, install_path):
 )
 def bcftools_setup(install_path):
     """Setup reference genome files needed by VEP"""
-    
+
     runner_logger = get_run_logger()
 
     os.chdir(install_path)
 
-    runner_logger.info(ShellOperation(commands=[
-        "apt update",
-        "apt-get -y install libz-dev liblzma-dev libbz2-dev libcurl4-gnutls-dev",
-        "git clone --recurse-submodules https://github.com/samtools/htslib.git",
-        "git clone https://github.com/samtools/bcftools.git",
-        "cd bcftools",
-        "make",
-    ]).run())
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                "apt update",
+                "apt-get -y install libz-dev liblzma-dev libbz2-dev libcurl4-gnutls-dev",
+                "git clone --recurse-submodules https://github.com/samtools/htslib.git",
+                "git clone https://github.com/samtools/bcftools.git",
+                "cd bcftools",
+                "make",
+            ]
+        ).run()
+    )
 
 
 def read_input(file_path: str):
@@ -239,15 +269,14 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
 
     runner_logger = get_run_logger()
 
-    #for index, row in df.iterrows():
+    # for index, row in df.iterrows():
     f_bucket = row["s3_url"].split("/")[2]
     f_path = "/".join(row["s3_url"].split("/")[3:])
 
-    #make dir for this VCF file conversion 
-    ShellOperation(commands=[
-        f"mkdir {row['patient_id']}",
-        f"cd {row['patient_id']}"
-    ]).run()
+    # make dir for this VCF file conversion
+    ShellOperation(
+        commands=[f"mkdir {row['patient_id']}", f"cd {row['patient_id']}"]
+    ).run()
 
     # download VCF file
     file_dl(f_bucket, f_path)
@@ -261,35 +290,47 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
             f"File {f_name} not copied over or found from URL {row['s3_url']}"
         )
     else:
-        # setup sample barcode renaming 
+        # setup sample barcode renaming
         temp_sample = [row["normal_sample_id"], row["tumor_sample_id"]]
         with open("sample.txt", "w+") as w:
             w.write("\n".join(temp_sample))
         w.close()
 
-        runner_logger.info(ShellOperation(commands=[
-            f"source {install_path}/miniconda3/bin/activate",
-            "conda init --all",
-            "conda activate vcf2maf_38",
-            f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
-            f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
-            f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
-            "ls -l"
-        ]).run())
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    f"source {install_path}/miniconda3/bin/activate",
+                    "conda init --all",
+                    "conda activate vcf2maf_38",
+                    f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
+                    f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
+                    f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
+                    "ls -l",
+                ]
+            ).run()
+        )
 
         if f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}" in os.listdir("."):
-            # rename and move file to output directory 
+            # rename and move file to output directory
             # rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
-            os.rename(f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}", output_dir+"/"+f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}")
+            os.rename(
+                f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
+                output_dir
+                + "/"
+                + f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
+            )
             os.chdir("..")
-            return [row['patient_id'], row["tumor_sample_id"], True]
+            return [row["patient_id"], row["tumor_sample_id"], True]
         else:
-            runner_logger.info(f"Something went wrong, MAF file from {f_name} not produced")
+            runner_logger.info(
+                f"Something went wrong, MAF file from {f_name} not produced"
+            )
             os.chdir("..")
-            return [row['patient_id'], row["tumor_sample_id"], False]
+            return [row["patient_id"], row["tumor_sample_id"], False]
 
 
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
+
 
 @flow(
     name="VCF2MAF Conversion",
@@ -341,19 +382,31 @@ def runner(
         bcftools_setup(install_path)
 
         # check that VEP indexes installed
-        runner_logger.info(ShellOperation(commands=[
-            f"ls -lh {install_path}/vep/homo_sapiens/112_GRCh38/",
-        ]).run())
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    f"ls -lh {install_path}/vep/homo_sapiens/112_GRCh38/",
+                ]
+            ).run()
+        )
 
-        #check that BWA installed
-        runner_logger.info(ShellOperation(commands=[
-            f"ls -lh {install_path}",
-        ]).run())
+        # check that BWA installed
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    f"ls -lh {install_path}",
+                ]
+            ).run()
+        )
 
-        #check that bcftools installed
-        runner_logger.info(ShellOperation(commands=[
-            f"ls -lh {install_path}/bcftools",
-        ]).run())
+        # check that bcftools installed
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    f"ls -lh {install_path}/bcftools",
+                ]
+            ).run()
+        )
 
     elif process_type == "convert":
 
@@ -376,10 +429,9 @@ def runner(
         if os.path.exists(working_path):
             os.chdir(working_path)
         else:
-            ShellOperation(commands=[
-                f"mkdir {working_path}",
-                f"cd {working_path}"
-            ]).run()
+            ShellOperation(
+                commands=[f"mkdir {working_path}", f"cd {working_path}"]
+            ).run()
 
         # download manifest
         file_dl(bucket, manifest_path)
@@ -392,9 +444,14 @@ def runner(
         df_test = df[:2]
 
         for index, row in df_test.iterrows():
-            conversion_recording.append(conversion_handler(row, install_path, output_dir))
-        
-        pd.DataFrame(conversion_recording, columns=['patient_id', 'tumor_sample_id', 'converted?']).to_csv(f"{output_dir}/conversion_summary.tsv", sep="\t", index=False)
+            conversion_recording.append(
+                conversion_handler(row, install_path, output_dir)
+            )
+
+        pd.DataFrame(
+            conversion_recording,
+            columns=["patient_id", "tumor_sample_id", "converted?"],
+        ).to_csv(f"{output_dir}/conversion_summary.tsv", sep="\t", index=False)
 
         # dl folder to somewhere else
         folder_ul(
@@ -407,13 +464,15 @@ def runner(
     elif process_type == "env_tear_down":
 
         runner_logger.info(">>> Tearing env setup ....")
-        
-        runner_logger.info(ShellOperation(commands=[
-            #f"rm -rf {install_path}", 
-            #f"rm -rf {working_path}", 
-            #"rm -rf OUTPUTs"
-        ]).run())
+
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    # f"rm -rf {install_path}",
+                    # f"rm -rf {working_path}",
+                    # "rm -rf OUTPUTs"
+                ]
+            ).run()
+        )
 
     # test vcf2maf
-
-
