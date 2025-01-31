@@ -333,11 +333,11 @@ def runner(
 
         # do env setup
         runner_logger.info(">>> Conda and env setup ....")
-        dl_conda_setup(install_path)
+        """dl_conda_setup(install_path)
         env_setup(install_path)
         env_check(install_path)
         vep_setup(install_path)
-        bwa_setup(bucket, bwa_tarball_path, install_path)
+        bwa_setup(bucket, bwa_tarball_path, install_path)"""
         bcftools_setup(install_path)
 
         # check that VEP indexes installed
