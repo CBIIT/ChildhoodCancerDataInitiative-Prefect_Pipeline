@@ -417,14 +417,14 @@ def runner(
         working_path = "/usr/local/data/output"
 
         ## TESTING
-        """runner_logger.info(ShellOperation(commands=[
+        runner_logger.info(ShellOperation(commands=[
             f"source {install_path}/miniconda3/bin/activate",
             "conda init --all",
             "conda activate vcf2maf_38",
             "whereis bcftools",
             "whereis samtools", 
             "whereis vep"
-        ]).run())"""
+        ]).run())
 
         if os.path.exists(working_path):
             os.chdir(working_path)
@@ -444,9 +444,13 @@ def runner(
         df_test = df[:2]
 
         for index, row in df_test.iterrows():
-            conversion_recording.append(
-                conversion_handler(row, install_path, output_dir)
-            )
+            try:
+                conversion_recording.append(
+                    conversion_handler(row, install_path, output_dir)
+                )
+            except Exception as e:
+                runner_logger.error(f"Error with {r['patient_id']}'s VCF file {row['File Name']}, f{e}")
+                conversion_recording.append([row["patient_id"], row["tumor_sample_id"], False])
 
         pd.DataFrame(
             conversion_recording,
