@@ -352,7 +352,6 @@ def runner(
         process_type (str): Whether to setup env, perform vcf22maf conversion or tear down env
         manifest_path (str): Path to tab-delimited manifest with s3 URLs of VCF files to convert and tumor/normal sample barcodes
         bwa_tarball_path (str): Path to bwakit tarball for ref seq installation
-        bcftools_setup (str): Path to bcftools tarball
 
     Raises:
         ValueError: Value Error occurs when the pipeline fails to proceed.
@@ -414,7 +413,7 @@ def runner(
 
         conversion_recording = []
 
-        working_path = "/usr/local/data/output"
+        working_path = f"/usr/local/data/vcf2maf_output_{dt}"
 
         ## TESTING
         """runner_logger.info(ShellOperation(commands=[
@@ -426,9 +425,7 @@ def runner(
             "whereis vep"
         ]).run())"""
 
-        if os.path.exists(working_path):
-            os.chdir(working_path)
-        else:
+        if not os.path.exists(working_path):
             ShellOperation(
                 commands=[f"mkdir {working_path}", f"cd {working_path}"]
             ).run()
@@ -445,6 +442,7 @@ def runner(
 
         for index, row in df_test.iterrows():
             try:
+                os.chdir(working_path)
                 conversion_recording.append(
                     conversion_handler(row, install_path, output_dir)
                 )
