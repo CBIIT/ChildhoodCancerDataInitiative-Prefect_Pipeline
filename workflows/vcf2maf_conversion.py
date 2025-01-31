@@ -122,9 +122,9 @@ def vep_setup(install_path: str):
                 # "export DYLD_LIBRARY_PATH=",
                 "mkdir $VEP_PATH",
                 "cd $VEP_PATH",
-                "curl -O ftp://ftp.ensembl.org/pub/release-112/variation/indexed_vep_cache/homo_sapiens_vep_112_GRCh38.tar.gz",
+                "curl -O ftp://ftp.ensembl.org/pub/release-105/variation/indexed_vep_cache/homo_sapiens_vep_105_GRCh38.tar.gz",
                 "ls -lh",
-                "tar -zxvf homo_sapiens_vep_112_GRCh38.tar.gz",
+                "tar -zxvf homo_sapiens_vep_105_GRCh38.tar.gz",
                 # "vep_install -a cf -s homo_sapiens -y GRCh38 -c $VEP_PATH --CONVERT --no_update",
                 # "ls -lh",
             ]
@@ -374,18 +374,18 @@ def runner(
 
         # do env setup
         runner_logger.info(">>> Conda and env setup ....")
-        dl_conda_setup(install_path)
-        env_setup(install_path)
-        env_check(install_path)
+        #dl_conda_setup(install_path)
+        #env_setup(install_path)
+        #env_check(install_path)
         vep_setup(install_path)
-        bwa_setup(bucket, bwa_tarball_path, install_path)
-        bcftools_setup(install_path)
+        #bwa_setup(bucket, bwa_tarball_path, install_path)
+        #bcftools_setup(install_path)
 
         # check that VEP indexes installed
         runner_logger.info(
             ShellOperation(
                 commands=[
-                    f"ls -lh {install_path}/vep/homo_sapiens/112_GRCh38/",
+                    f"ls -lh {install_path}/vep/homo_sapiens/105_GRCh38/",
                 ]
             ).run()
         )
