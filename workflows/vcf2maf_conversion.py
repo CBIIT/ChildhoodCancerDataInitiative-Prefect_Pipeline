@@ -336,7 +336,16 @@ def runner(
 
         working_path = "/usr/local/data/output"
 
-        if os.path.exists(working_path):
+        runner_logger.info(ShellOperation(commands=[
+            f"source {install_path}/miniconda3/bin/activate",
+            "conda init --all",
+            "conda activate vcf2maf_38",
+            "whereis bcftools",
+            "whereis samtools", 
+            "whereis vep"
+        ]).run())
+
+        """if os.path.exists(working_path):
             os.chdir(working_path)
         else:
             ShellOperation(commands=[
@@ -367,11 +376,11 @@ def runner(
             sub_folder="",
         )
 
-        shutil.rmtree(output_dir)
+        shutil.rmtree(output_dir)"""
 
     elif process_type == "env_tear_down":
 
-        runner_logger.info(">>> Tearing down env setup ....")
+        runner_logger.info(">>> Tearing env setup ....")
         
         runner_logger.info(ShellOperation(commands=[
             #f"rm -rf {install_path}", 
