@@ -304,7 +304,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
                     "conda activate vcf2maf_38",
                     f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
                     f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
-                    f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa -vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin/ --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
+                    f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa -vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
                     "ls -l",
                 ]
             ).run()
