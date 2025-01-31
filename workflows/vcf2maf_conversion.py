@@ -140,6 +140,26 @@ def bwa_setup(bucket, bwa_tarball, install_path):
         "samtools faidx hs38DH.fa",
     ]).run())
 
+    ##### BWA install here 
+@flow(
+    name="vcf2maf_bcftools_setup",
+    log_prints=True,
+    flow_run_name="vcf2maf_bcftools_setup_" + f"{get_time()}",
+)
+def bcftools_setup(install_path):
+    """Setup reference genome files needed by VEP"""
+    
+    runner_logger = get_run_logger()
+
+    os.chdir(install_path)
+
+    runner_logger.info(ShellOperation(commands=[
+        "git clone --recurse-submodules https://github.com/samtools/htslib.git",
+        "git clone https://github.com/samtools/bcftools.git",
+        "cd bcftools",
+        "make",
+    ]).run())
+
 
 def read_input(file_path: str):
     """Read in file with s3 URLs of VCFs to merge and participant IDs
@@ -249,9 +269,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
             f"source {install_path}/miniconda3/bin/activate",
             "conda init --all",
             "conda activate vcf2maf_38",
-            #"conda install -y -c bioconda bcftools",
-            'conda install -y bcftools "conda-forge::blas=*=openblas"',
-            f"bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
+            f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
             f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
             f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf.gz')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf --ref-fasta {install_path}/ -vep-path {install_path}/miniconda3/bin/ --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
             "ls -l"
@@ -262,7 +280,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
             # rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
             os.rename(f"{f_name.replace('vcf.gz', 'reheader.vcf.gz')}.vep.maf", output_dir+"/"+f"{f_name.replace('.gz', '')}.vep.maf")
             os.chdir("..")
-            shutil.rmtree(row['patient_id'])
+            shutil.rmtree(row['patient_id']) #remove temp folder with intermediate files
             return [row['patient_id'], row["tumor_sample_id"], True]
         else:
             runner_logger.info(f"Something went wrong, MAF file from {f_name} not produced")
@@ -293,6 +311,7 @@ def runner(
         process_type (str): Whether to setup env, perform vcf22maf conversion or tear down env
         manifest_path (str): Path to tab-delimited manifest with s3 URLs of VCF files to convert and tumor/normal sample barcodes
         bwa_tarball_path (str): Path to bwakit tarball for ref seq installation
+        bcftools_setup (str): Path to bcftools tarball
 
     Raises:
         ValueError: Value Error occurs when the pipeline fails to proceed.
@@ -319,6 +338,7 @@ def runner(
         env_check(install_path)
         vep_setup(install_path)
         bwa_setup(bucket, bwa_tarball_path, install_path)
+        bcftools_setup(install_path)
 
         # check that VEP indexes installed
         runner_logger.info(ShellOperation(commands=[
@@ -328,6 +348,11 @@ def runner(
         #check that BWA installed
         runner_logger.info(ShellOperation(commands=[
             f"ls -lh {install_path}",
+        ]).run())
+
+        #check that bcftools installed
+        runner_logger.info(ShellOperation(commands=[
+            f"ls -lh {install_path}/bcftools",
         ]).run())
 
     elif process_type == "convert":
@@ -378,8 +403,6 @@ def runner(
             destination=runner + "/",
             sub_folder="",
         )
-
-        shutil.rmtree(output_dir)
 
     elif process_type == "env_tear_down":
 
