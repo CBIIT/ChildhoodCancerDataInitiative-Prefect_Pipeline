@@ -330,6 +330,8 @@ def runner(
 
     elif process_type == "convert":
 
+        runner_logger.info(">>> Performing VCF annotation and conversion to MAF ....")
+
         conversion_recording = []
 
         working_path = "/usr/local/data/output"
@@ -368,6 +370,9 @@ def runner(
         shutil.rmtree(output_dir)
 
     elif process_type == "env_tear_down":
+
+        runner_logger.info(">>> Tearing down env setup ....")
+        
         runner_logger.info(ShellOperation(commands=[
             #f"rm -rf {install_path}", 
             #f"rm -rf {working_path}", 
