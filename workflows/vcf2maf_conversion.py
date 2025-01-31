@@ -349,7 +349,10 @@ def runner(
 
         df = read_input(mani)
 
-        for index, row in df.iterrows():
+        ## TESTING
+        df_test = df[:2]
+
+        for index, row in df_test.iterrows():
             conversion_recording.append(conversion_handler(row, install_path, output_dir))
         
         pd.DataFrame(conversion_recording, columns=['patient_id', 'tumor_sample_id', 'converted?']).to_csv(f"{output_dir}/conversion_summary.tsv", sep="\t", index=False)
