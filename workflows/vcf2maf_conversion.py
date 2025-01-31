@@ -465,7 +465,7 @@ def runner(
 
     elif process_type == "env_tear_down":
 
-        runner_logger.info(">>> Tearing env setup ....")
+        runner_logger.info(">>> Tear down env setup ....")
 
         runner_logger.info(
             ShellOperation(
