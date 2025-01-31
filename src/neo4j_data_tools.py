@@ -5,6 +5,7 @@ from src.utils import (
     get_time,
     dl_ccdi_template,
     CheckCCDI,
+    get_secret
 )
 from dataclasses import dataclass
 from prefect import flow, task, get_run_logger
@@ -382,6 +383,26 @@ def cypher_query_parameters(
         uri_reponse["Parameter"]["Value"],
         username_response["Parameter"]["Value"],
         password_response["Parameter"]["Value"],
+    )
+
+
+@task
+def cypher_query_secrets(
+    secret_name: str, 
+    ip_key: str, username_key: str, password_key: str
+) -> tuple:
+    """Return the value of 3 parameters, which are used to access neo4j DB"""
+    ip_reponse = get_secret(secret_name_path=secret_name, secret_key_name=ip_key)
+    username_response = get_secret(
+        secret_name_path=secret_name, secret_key_name=username_key
+    )
+    password_response = get_secret(
+        secret_name_path=secret_name, secret_key_name=password_key
+    )
+    return (
+        ip_reponse,
+        username_response,
+        password_response,
     )
 
 
@@ -908,17 +929,20 @@ def pull_studies_loop(driver, study_list: list, logger) -> DataFrame:
 
 @flow
 def counts_DB_all_nodes_all_studies(
-    uri_parameter: str, username_parameter: str, password_parameter: str
+    secret_name: str,
+    ip_key: str,
+    username_key: str,
+    password_key: str,
 ) -> Dict:
     logger = get_run_logger()
 
     logger.info("Getting uri, username and password parameter from AWS")
     # get uri, username, and password value
-    uri, username, password = cypher_query_parameters(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-        logger=logger,
+    uri, username, password = cypher_query_secrets(
+        secret_name=secret_name,
+        ip_key=ip_key,
+        username_key=username_key,
+        password_key=password_key,
     )
 
     # driver instance
@@ -965,9 +989,10 @@ def counts_DB_all_nodes_all_studies_w_secrets(
 
 @flow(log_prints=True)
 def validate_DB_with_input_tsvs(
-    uri_parameter: str,
-    username_parameter: str,
-    password_parameter: str,
+    secret_name: str,
+    ip_key: str,
+    username_key: str,
+    password_key: str,
     tsv_folder: str,
     studies_dataframe: DataFrame,
 ) -> DataFrame:
@@ -975,11 +1000,11 @@ def validate_DB_with_input_tsvs(
 
     logger.info("Getting uri, username and password parameter from AWS")
     # get uri, username, and password value
-    uri, username, password = cypher_query_parameters(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-        logger=logger,
+    uri, username, password = cypher_query_secrets(
+        secret_name=secret_name,
+        ip_key=ip_key,
+        username_key=username_key,
+        password_key=password_key,
     )
 
     # driver instance
@@ -1079,9 +1104,10 @@ def neo4j_validation_md(
 @flow
 def query_db_to_csv(
     output_dir: str,
-    uri_parameter: str,
-    username_parameter: str,
-    password_parameter: str,
+    secret_name: str,
+    ip_key: str,
+    username_key: str,
+    password_key: str
 ) -> str:
     """It export one csv file for each unique node.
     Each csv file (per node) contains all the info of the node across all studies
@@ -1096,11 +1122,11 @@ def query_db_to_csv(
 
     logger.info("Getting uri, username and password parameter from AWS")
     # get uri, username, and password value
-    uri, username, password = cypher_query_parameters(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-        logger=logger,
+    uri, username, password = cypher_query_secrets(
+        secret_name=secret_name,
+        ip_key=ip_key,
+        username_key=username_key,
+        password_key=password_key
     )
 
     # driver instance
@@ -1424,9 +1450,10 @@ def report_unique_values_properties(
     bucket: str,
     file_path: str,
     runner: str,
-    uri_parameter: str = "uri",
-    username_parameter: str = "username",
-    password_parameter: str = "password",
+    secret_name: str,
+    ip_key: str,
+    username_key: str,
+    password_key: str,
 ) -> None:
     """Read a file containing property names and report  unique values
 
@@ -1434,6 +1461,10 @@ def report_unique_values_properties(
         bucket (str): bucket name
         file_path (str): file path in the bucket containing two columns(node and property)
         runner (str): unique runner name
+        secret_name (str): secret name in AWS
+        ip_key (str): key name for ip
+        username_key (str): key name for username
+        password_key (str): key name for password
     """
     logger = get_run_logger()
     # downlaod file
@@ -1447,11 +1478,11 @@ def report_unique_values_properties(
 
     logger.info("Getting uri, username and password parameter from AWS")
     # get uri, username, and password value
-    uri, username, password = cypher_query_parameters(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-        logger=logger,
+    uri, username, password = cypher_query_secrets(
+        secret_name=secret_name,
+        ip_key=ip_key,
+        username_key=username_key,
+        password_key=password_key,
     )
 
     # driver instance

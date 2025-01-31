@@ -16,19 +16,21 @@ from src.utils import get_time, folder_ul
 def pull_neo4j_data(
     bucket: str,
     runner: str,
-    uri_parameter: str = "uri",
-    username_parameter: str = "username",
-    password_parameter: str = "password",
-):
+    secret_name: str,
+    ip_key: str,
+    username_key: str,
+    password_key: str
+) -> None: 
     """Pipeline that pulls all ingested studies from a Neo4j database
 
     Args:
         bucket (str): Bucket name of where output goes to
         runner (str): Unique runner name
-        uri_parameter (str, optional): uri parameter. Defaults to "uri".
-        username_parameter (str, optional): username parameter. Defaults to "username".
-        password_parameter (str, optional): password parameter. Defaults to "password".
-    """    
+        secret_name (str): sceret name in the secret manager
+        ip_key (str): key name for DB ip
+        username_key (str): key name for DB username
+        password_key (str): key name for DB password
+    """
     logger = get_run_logger()
 
     # create a unqiue folder name for final outputs
@@ -39,9 +41,10 @@ def pull_neo4j_data(
     logger.info("Starting pulling data from neo4j DB")
     db_data_folder = query_db_to_csv(
         output_dir="./pulled_db_csv",
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
+        secret_name=secret_name,
+        ip_key=ip_key,
+        username_key=username_key,
+        password_key=password_key,
     )
 
     # upload db pulled data csv files to the bucket

@@ -22,30 +22,30 @@ from src.neo4j_data_tools import (
 def validate_neo4j_data(
     bucket: str,
     runner: str,
-    tsv_folder: str = "",
-    uri_parameter: str = "uri",
-    username_parameter: str = "username",
-    password_parameter: str = "password",
-) -> None:
+    secret_name: str,
+    ip_key: str,
+    username_key: str,
+    password_key: str,
+    tsv_folder: str = ""
+) -> None: 
     """Pipeline to validate submission tsv files agianst Neo4j database or generate a summary table of Neo4j database
 
     Args:
         bucket (str): Bucket name where output goes to
         runner (str): Unique runner name
+        secret_name (str): secret name in the secret manager
+        ip_key (str): key name for DB ip
+        username_key (str): key name for DB username
+        password_key (str): key name for DB password
         tsv_folder (str, optional): Folder path in the provided bucket. Defaults to "".
-        uri_parameter (str, optional): uri parameter. Defaults to "uri".
-        username_parameter (str, optional): username parameter. Defaults to "username".
-        password_parameter (str, optional): password parameter. Defaults to "password".
-    """    
+    """
     logger = get_run_logger()
 
     # query counts per node per study
     # it returns a pandas dataframe
     logger.info("Fetching entry counts per node per study")
     db_node_count_all_studies = counts_DB_all_nodes_all_studies(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
+        secret_name=secret_name, ip_key=ip_key, username_key=username_key, password_key=password_key
     )
 
     # download folder from bucket
@@ -59,9 +59,10 @@ def validate_neo4j_data(
         # validate db info with files in tsv folder
         logger.info("Reading tsv files and validating records between tsv files and DB")
         validate_df = validate_DB_with_input_tsvs(
-            uri_parameter=uri_parameter,
-            username_parameter=username_parameter,
-            password_parameter=password_parameter,
+            secret_name=secret_name,
+            ip_key=ip_key,
+            username_key=username_key,
+            password_key=password_key,
             tsv_folder=tsv_folder,
             studies_dataframe=db_node_count_all_studies,
         )

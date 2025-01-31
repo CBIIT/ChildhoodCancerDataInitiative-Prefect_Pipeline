@@ -7,6 +7,7 @@ from src.neo4j_data_tools import (
     stats_pull_graph_data_study,
     stats_pull_graph_data_nodes,
     cypher_query_parameters,
+    cypher_query_secrets
 )
 
 
@@ -18,9 +19,10 @@ from src.neo4j_data_tools import (
 def pull_neo4j_stats(
     bucket: str,
     runner: str,
-    uri_parameter: str = "uri",
-    username_parameter: str = "username",
-    password_parameter: str = "password",
+    secret_name: str,
+    ip_key: str,
+    username_key: str,
+    password_key: str,
     additional_info_file: str = "",
 ):
     """Pipeline that pulls specific stats from ingested studies from a Neo4j database
@@ -28,9 +30,10 @@ def pull_neo4j_stats(
     Args:
         bucket (str): Bucket name of where output goes to
         runner (str): Unique runner name
-        uri_parameter (str, optional): uri parameter. Defaults to "uri".
-        username_parameter (str, optional): username parameter. Defaults to "username".
-        password_parameter (str, optional): password parameter. Defaults to "password".
+        secret_name (str): Name of the secret in AWS Secrets Manager
+        ip_key (str): key name for ip address in the secret
+        username_key (str): key name for username in the secret
+        password_key (str): key name for password in the secret
         additional_info_file (str, optional): An extra information tsv file with one line per study in a study_id column.
     """
 
@@ -42,11 +45,11 @@ def pull_neo4j_stats(
 
     logger.info("Getting uri, username and password parameter from AWS")
     # get uri, username, and password value
-    uri, username, password = cypher_query_parameters(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-        logger=logger,
+    uri, username, password = cypher_query_secrets(
+        secret_name=secret_name,
+        ip_key=ip_key,
+        username_key=username_key,
+        password_key=password_key,
     )
 
     # Run the queries
@@ -170,7 +173,7 @@ def pull_neo4j_stats(
         "count",
     )
 
-    # Concatenate the queries into a data frame   
+    # Concatenate the queries into a data frame
     build_df = pd.DataFrame(columns=["study_id", "column_name", "value"])
 
     build_df = pd.concat(
@@ -199,10 +202,10 @@ def pull_neo4j_stats(
 
     # Count duplicates based on 'study_id' and 'column_name'
     duplicate_counts = build_df.groupby(["study_id", "column_name"]).size()
-    
+
     # Filter for cases where there are more than one entry
     duplicates = duplicate_counts[duplicate_counts > 1]
-    
+
     # Print results
     if not duplicates.empty:
         logger.error("Duplicate entries found:")
@@ -260,7 +263,6 @@ def pull_neo4j_stats(
             logger.warning(f"The file supplied {additional_info_file}, does not contain a `study_id` column.")
         else:
             df_wide = pd.merge(extra_df, df_wide, on= "study_id", how="left")
-
 
     # write out
     df_wide.to_csv(output_file, sep="\t", index=False)

@@ -908,3 +908,165 @@ deployments:
       name: ccdi-curation-8gb
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-pull-neo4j-data
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      secret_name: "ccdi/nonprod/inventory/neo4j-db-creds"
+      ip_key: "sandbox_ip"
+      username_key: "sandbox_username"
+      password_key: "sandbox_password"
+    
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1530_use_aws_secret
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: TEST-validate-neo4j-data-CCDI
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/validate_neo4j_data.py:validate_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      secret_name: "ccdi/nonprod/inventory/neo4j-db-creds"
+      ip_key: "sandbox_ip"
+      username_key: "sandbox_username"
+      password_key: "sandbox_password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1530_use_aws_secret
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-32gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: TEST-validate-neo4j-data-C3DC
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/validate_neo4j_data.py:validate_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "c3dc-curation"
+      secret_name: "neo4j-dev-creds"
+      ip_key: "dev_ip"
+      username_key: "dev_username"
+      password_key: "dev_password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1530_use_aws_secret
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-c3dc-16gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: TEST-pull-neo4j-data
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      secret_name: "ccdi/nonprod/inventory/neo4j-db-creds"
+      ip_key: "sandbox_ip"
+      username_key: "sandbox_username"
+      password_key: "sandbox_password"
+    
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1530_use_aws_secret
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: TEST-DB-props-uniq-report
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: src/neo4j_data_tools.py:report_unique_values_properties
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      secret_name: "ccdi/nonprod/inventory/neo4j-db-creds"
+      ip_key: "sandbox_ip"
+      username_key: "sandbox_username"
+      password_key: "sandbox_password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1530_use_aws_secret
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}  
