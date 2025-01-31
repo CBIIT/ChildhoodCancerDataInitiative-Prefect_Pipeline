@@ -154,6 +154,8 @@ def bcftools_setup(install_path):
     os.chdir(install_path)
 
     runner_logger.info(ShellOperation(commands=[
+        "apt update",
+        "apt-get -y install libz-dev liblzma-dev libbz2-dev libcurl4-gnutls-dev",
         "git clone --recurse-submodules https://github.com/samtools/htslib.git",
         "git clone https://github.com/samtools/bcftools.git",
         "cd bcftools",
