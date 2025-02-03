@@ -291,7 +291,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str, worki
 
     # make dir for this VCF file conversion
     ShellOperation(commands=[
-        f"mkdir {row['patient_id']}", 
+        f"mkdir {row['patient_id']}",] 
         #f"cd {row['patient_id']}",
         #"pwd"]
     ).run()
