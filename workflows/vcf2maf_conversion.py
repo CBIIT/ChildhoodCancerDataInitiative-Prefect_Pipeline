@@ -546,11 +546,7 @@ def runner(
                     ## TESTING
                     f"echo {install_path}",
                     f"ls -lh {install_path}",
-                    "cd /usr/local/data/",
-                    f"rm IGM*",
-                    "rm sample.txt",
-                    "rm -r PARGFV/",
-                    "rm -r output/",
+                    "ls -l /usr/local/data/",
                 ]
             ).run()
         )
