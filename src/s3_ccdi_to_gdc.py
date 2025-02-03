@@ -5,7 +5,7 @@ import warnings
 import json
 import re
 from prefect import flow, task, get_run_logger
-from utils import get_time
+from src.utils import get_time
 
 
 #################
