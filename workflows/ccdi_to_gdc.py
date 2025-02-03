@@ -7,7 +7,7 @@ from src.utils import file_dl, get_time, folder_ul
 @flow(name="CCDI to GDC", flow_run_name="{runner}_" + f"{get_time()}")
 def ccdi_to_gdc_run(bucket: str, 
                     runner: str,
-                    ccdi_file_path: str,
+                    file_path: str,
                     CCDI_GDC_translation_file : str, 
                     platform_preservation_file : str,
                     )-> None:
@@ -16,7 +16,7 @@ def ccdi_to_gdc_run(bucket: str,
     Args:
         bucket (str): bucket name of where output goes to
         runner (str): unique runner name
-        ccdi_file_path (str): The CCDI Metadata manifest file. (XLSX)
+        file_path (str): The CCDI Metadata manifest file. (XLSX)
         CCDI_GDC_translation_file (str): The CCDI to GDC translation, containing all mappings for each value for each node. (TSV)
         platform_preservation_file (str): The input file that contains sample_id, platform and preservation_method for that sample. (TSV)
 
@@ -26,8 +26,8 @@ def ccdi_to_gdc_run(bucket: str,
     logger = get_run_logger()
 
     # download manifest
-    file_dl(filename=ccdi_file_path, bucket=bucket)
-    ccdi_file = os.path.basename(ccdi_file_path)
+    file_dl(filename=file_path, bucket=bucket)
+    ccdi_file = os.path.basename(file_path)
 
     # download translation file
     file_dl(filename=CCDI_GDC_translation_file, bucket=bucket)
