@@ -10,17 +10,6 @@ from utils import get_time
 
 #################
 #
-# Inputs (removed later)
-#
-################
-
-file_path = "CCDI_MetaMerge_v2.0.0_2024-11-01_CatchERR20241101_CatchERR20241104.xlsx"
-CCDI_GDC_translation_file = "CCDI-GDC_translation_file.tsv"
-platform_preservation_file = "rawdata_json_output_data_goodish_working_unique.tsv"
-
-
-#################
-#
 # Functions
 #
 ################
