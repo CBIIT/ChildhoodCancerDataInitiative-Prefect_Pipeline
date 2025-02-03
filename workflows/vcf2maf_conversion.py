@@ -1,4 +1,8 @@
-""" Script to convert VCF files to MAF files and perform annotations with VEP """
+""" Script to convert VCF files to MAF files and perform annotations with VEP 
+
+Use conda package manager and bioconda install channel to install vcf2maf and
+its dependency VEP (variant effect predictor) that performs VCF annotations
+"""
 
 ##############
 #
@@ -98,7 +102,15 @@ def env_setup(install_path: str):
     flow_run_name="vcf2maf_env_check_" + f"{get_time()}",
 )
 def env_check(install_path: str):
-    """Check that conda packages installed correctly"""
+    """Check that conda packages installed correctly
+
+    Args:
+        install_path (str): path on VM to start conda
+
+    Returns:
+        None
+
+    """
 
     runner_logger = get_run_logger()
 
@@ -123,7 +135,15 @@ def env_check(install_path: str):
     flow_run_name="vcf2maf_vep_setup_" + f"{get_time()}",
 )
 def vep_setup(install_path: str):
-    """Setup VEP env params and indexes"""
+    """Setup VEP env params and indexes
+
+    Args:
+        install_path (str): path on VM to start conda and install VEP cache indexes
+
+    Returns:
+        None
+
+    """
 
     runner_logger = get_run_logger()
 
@@ -156,16 +176,30 @@ def vep_setup(install_path: str):
     flow_run_name="vcf2maf_bwa_setup_" + f"{get_time()}",
 )
 def bwa_setup(bucket, bwa_tarball, install_path):
-    """Setup reference genome files needed by VEP"""
+    """Setup reference genome files needed by VEP
+
+    Args:
+        bucket (str): s3 bucket that bwa tarball is stored at
+        bwa_tarball (str): path to bwa tarball used for installation
+        install_path (str): path on VM to start conda
+
+    Returns:
+        None
+
+    """
 
     runner_logger = get_run_logger()
 
+    # go to installation path
     os.chdir(install_path)
 
+    # download bwa tarball
     file_dl(bucket, bwa_tarball)
 
+    # extract file name from path
     f_name = os.path.basename(bwa_tarball)
 
+    # run installation commands
     runner_logger.info(
         ShellOperation(
             commands=[
@@ -188,7 +222,15 @@ def bwa_setup(bucket, bwa_tarball, install_path):
     flow_run_name="vcf2maf_bcftools_setup_" + f"{get_time()}",
 )
 def bcftools_setup(install_path):
-    """Setup reference genome files needed by VEP"""
+    """Setup bcftools needed to perform reheader of VCF files
+
+    Args:
+        install_path (str): path on VM to install bcftools
+
+    Returns:
+        None
+
+    """
 
     runner_logger = get_run_logger()
 
@@ -206,6 +248,8 @@ def bcftools_setup(install_path):
             ]
         ).run()
     )
+
+    return None
 
 
 def read_input(file_path: str):
@@ -319,6 +363,10 @@ def conversion_handler(
             w.write("\n".join(temp_sample))
         w.close()
 
+        # run commands to activate conda
+        # run bcftools reheader for tumor/normal samples
+        # unzip file
+        # and then run vcf2maf w/ vep annotation
         runner_logger.info(
             ShellOperation(
                 commands=[
@@ -335,7 +383,7 @@ def conversion_handler(
 
         if f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}" in os.listdir("."):
             # rename and move file to output directory
-            # rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
+            # also rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
             os.rename(
                 f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
                 output_dir
@@ -485,9 +533,10 @@ def runner(
         ## TESTING
         df_test = df[:500]
 
-        for index, row in df_test.iterrows(): ##TESTING
-        #for index, row in df.iterrows():
+        for index, row in df_test.iterrows():  ##TESTING
+            # for index, row in df.iterrows():
             try:
+                runner_logger.info()
                 os.chdir(working_path)
                 conversion_recording.append(
                     conversion_handler(row, install_path, output_dir, working_path)
