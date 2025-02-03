@@ -292,7 +292,8 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str, worki
     # make dir for this VCF file conversion
     ShellOperation(commands=[
         f"mkdir {row['patient_id']}", 
-        f"cd {row['patient_id']}"]
+        f"cd {row['patient_id']}",
+        "pwd"]
     ).run()
 
     # download VCF file
@@ -460,7 +461,9 @@ def runner(
         if not os.path.exists(working_path):
             ShellOperation(commands=[
                 f"mkdir {working_path}", 
-                f"cd {working_path}"]
+                f"cd {working_path}",
+                "pwd", 
+                "ls -l"]
             ).run()
 
         # download manifest
@@ -511,6 +514,20 @@ def runner(
             ShellOperation(
                 commands=[
                     f"rm -r {output_dir}",
+                ]
+            ).run()
+        )
+
+        ##TESTING
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    f"echo {install_path}",
+                    f"ls -lh {install_path}",
+                    f"echo {working_path}",
+                    f"ls -lh {working_path}",
+                    f"echo {output_dir}",
+                    f"ls -lh {output_dir}", 
                 ]
             ).run()
         )
