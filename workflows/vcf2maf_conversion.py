@@ -292,9 +292,12 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str, worki
     # make dir for this VCF file conversion
     ShellOperation(commands=[
         f"mkdir {row['patient_id']}", 
-        f"cd {row['patient_id']}",
-        "pwd"]
+        #f"cd {row['patient_id']}",
+        #"pwd"]
     ).run()
+
+    # cd into directory 
+    os.chdir(f"{row['patient_id']}")
 
     # download VCF file
     file_dl(f_bucket, f_path)
