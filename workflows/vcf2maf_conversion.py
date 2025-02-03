@@ -29,7 +29,14 @@ from src.utils import get_time, file_dl, folder_ul
     flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
 )
 def dl_conda_setup(install_path: str):
-    """Set up conda on VM at install path"""
+    """Set up conda on VM at install path
+    
+    Args:
+        install_path (str): path on VM to install conda setup files
+
+    Returns:
+        None
+    """
 
     runner_logger = get_run_logger()
 
@@ -55,7 +62,15 @@ def dl_conda_setup(install_path: str):
     flow_run_name="vcf2maf_env_setup_" + f"{get_time()}",
 )
 def env_setup(install_path: str):
-    """Set up conda env on VM"""
+    """Set up conda env on VM
+    
+    Args:
+        install_path (str): path on VM to start conda and install vcf2maf
+
+    Returns:
+        None
+    
+    """
 
     runner_logger = get_run_logger()
 
@@ -255,13 +270,14 @@ def read_input(file_path: str):
     log_prints=True,
     flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
 )
-def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
+def conversion_handler(row: pd.Series, install_path: str, output_dir: str, working_path: str):
     """Function to handle downloading VCF files and generating index files
 
     Args:
         row (pd.Series): pandas Series of a row entry from manifest
         install_path (str): path to where conda libs are installed, env to activate
         output_dir (str): path to move maf files to
+        working_path (str): path where work done and temp files stored
 
     Returns:
         patient_id, tumor_sample_id and True/False depending on success of vcf annotation and maf conversion
@@ -274,8 +290,9 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
     f_path = "/".join(row["s3_url"].split("/")[3:])
 
     # make dir for this VCF file conversion
-    ShellOperation(
-        commands=[f"mkdir {row['patient_id']}", f"cd {row['patient_id']}"]
+    ShellOperation(commands=[
+        f"mkdir {row['patient_id']}", 
+        f"cd {row['patient_id']}"]
     ).run()
 
     # download VCF file
@@ -319,13 +336,33 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str):
                 + "/"
                 + f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
             )
-            os.chdir("..")
+            
+            # if *vep.vcf_warnings.txt produced, copy over also for log info
+            if f"{f_name.replace('vcf.gz', 'reheader.vep.vcf_warnings.txt')}" in os.listdir("."):
+                os.rename(
+                f"{f_name.replace('vcf.gz', 'reheader.vep.vcf_warnings.txt')}",
+                output_dir
+                + "/"
+                + f"{f_name.replace('vcf.gz', 'reheader.vep.vcf_warnings.txt')}",
+            )
+
+            #remove temp dir and intermediate files
+            ShellOperation(commands=[
+                f"cd {working_path}", 
+                f"rm -r {row['patient_id']}"]
+            ).run()
             return [row["patient_id"], row["tumor_sample_id"], True]
         else:
-            runner_logger.info(
+            runner_logger.error(
                 f"Something went wrong, MAF file from {f_name} not produced"
             )
-            os.chdir("..")
+
+            #remove temp dir and intermediate files
+            ShellOperation(commands=[
+                f"cd {working_path}", 
+                f"rm -r {row['patient_id']}"]
+            ).run()
+
             return [row["patient_id"], row["tumor_sample_id"], False]
 
 
@@ -363,22 +400,20 @@ def runner(
 
     dt = get_time()
 
-    output_dir = f"/usr/local/data/vcf2maf_output_{dt}"
-
-    os.mkdir(output_dir)
-
+    # only update before installation, 
+    # conversion process depends on this path for locating installed software
     install_path = "/usr/local/data/vcf2maf"
 
     if process_type == "env_setup":
 
         # do env setup
         runner_logger.info(">>> Conda and env setup ....")
-        #dl_conda_setup(install_path)
-        #env_setup(install_path)
-        #env_check(install_path)
+        dl_conda_setup(install_path)
+        env_setup(install_path)
+        env_check(install_path)
         vep_setup(install_path)
-        #bwa_setup(bucket, bwa_tarball_path, install_path)
-        #bcftools_setup(install_path)
+        bwa_setup(bucket, bwa_tarball_path, install_path)
+        bcftools_setup(install_path)
 
         # check that VEP indexes installed
         runner_logger.info(
@@ -407,27 +442,25 @@ def runner(
             ).run()
         )
 
-    elif process_type == "convert":
+    elif process_type == "convert": #annotate and convert a list of VCF files from manifest file to MAF 
+
+        output_dir = f"/usr/local/data/vcf2maf_output_{dt}"
+
+        if not os.path.exists(output_dir):
+            ShellOperation(commands=[
+                f"mkdir {output_dir}"],
+            ).run()
 
         runner_logger.info(">>> Performing VCF annotation and conversion to MAF ....")
 
         conversion_recording = []
 
-        working_path = f"/usr/local/data/vcf2maf_output_{dt}"
-
-        ## TESTING
-        """runner_logger.info(ShellOperation(commands=[
-            f"source {install_path}/miniconda3/bin/activate",
-            "conda init --all",
-            "conda activate vcf2maf_38",
-            "whereis bcftools",
-            "whereis samtools", 
-            "whereis vep"
-        ]).run())"""
+        working_path = f"/usr/local/data/vcf2maf_working_{dt}"
 
         if not os.path.exists(working_path):
-            ShellOperation(
-                commands=[f"mkdir {working_path}", f"cd {working_path}"]
+            ShellOperation(commands=[
+                f"mkdir {working_path}", 
+                f"cd {working_path}"]
             ).run()
 
         # download manifest
@@ -441,13 +474,14 @@ def runner(
         df_test = df[:2]
 
         for index, row in df_test.iterrows():
+        #for index, row in df.iterrows():
             try:
                 os.chdir(working_path)
                 conversion_recording.append(
-                    conversion_handler(row, install_path, output_dir)
+                    conversion_handler(row, install_path, output_dir, working_path)
                 )
             except Exception as e:
-                runner_logger.error(f"Error with {r['patient_id']}'s VCF file {row['File Name']}, f{e}")
+                runner_logger.error(f"Error with {row['patient_id']}'s VCF file {row['File Name']}, f{e}")
                 conversion_recording.append([row["patient_id"], row["tumor_sample_id"], False])
 
         pd.DataFrame(
@@ -463,16 +497,41 @@ def runner(
             sub_folder="",
         )
 
+        # remove working path of intermediate files to free up space
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    f"rm -r {working_path}",
+                ]
+            ).run()
+        )
+
+        # remove output path to free up space after download to cloud storage
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    f"rm -r {output_dir}",
+                ]
+            ).run()
+        )
+
     elif process_type == "env_tear_down":
 
         runner_logger.info(">>> Tear down env setup ....")
 
-        runner_logger.info(
+        runner_logger.info( #TODO 
             ShellOperation(
                 commands=[
                     # f"rm -rf {install_path}",
                     # f"rm -rf {working_path}",
                     # "rm -rf OUTPUTs"
+                    ## TESTING
+                    f"echo {install_path}",
+                    f"ls -lh {install_path}",
+                    f"echo {working_path}",
+                    f"ls -lh {working_path}",
+                    f"echo {output_dir}",
+                    f"ls -lh {output_dir}",                  
                 ]
             ).run()
         )
