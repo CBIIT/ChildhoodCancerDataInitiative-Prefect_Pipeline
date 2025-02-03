@@ -464,7 +464,7 @@ def runner(
 
         if not os.path.exists(working_path):
             ShellOperation(commands=[
-                f"mkdir {working_path}", 
+                f"mkdir {working_path}"], 
             ).run()
 
         os.chdir(working_path)
@@ -517,17 +517,6 @@ def runner(
             ShellOperation(
                 commands=[
                     f"rm -r {output_dir}",
-                ]
-            ).run()
-        )
-
-        ##TESTING
-        runner_logger.info(
-            ShellOperation(
-                commands=[
-                    #f"echo {install_path}",
-                    #f"ls -lh {install_path}",
-                    f"ls -l /usr/local/data/"
                 ]
             ).run()
         )
