@@ -324,6 +324,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str, worki
                     f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
                     f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
                     "ls -l",
+                    "pwd"
                 ]
             ).run()
         )
@@ -524,10 +525,7 @@ def runner(
                 commands=[
                     f"echo {install_path}",
                     f"ls -lh {install_path}",
-                    f"echo {working_path}",
-                    f"ls -lh {working_path}",
-                    f"echo {output_dir}",
-                    f"ls -lh {output_dir}", 
+                    f"ls -l /usr/local/data/"
                 ]
             ).run()
         )
