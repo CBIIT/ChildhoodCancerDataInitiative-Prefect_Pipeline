@@ -296,7 +296,7 @@ def conversion_handler(row: pd.Series, install_path: str, output_dir: str, worki
         #"pwd"]
     ).run()
 
-    # cd into directory 
+    # cd into temp directory for VCF
     os.chdir(f"{row['patient_id']}")
 
     # download VCF file
@@ -478,7 +478,7 @@ def runner(
         df = read_input(mani)
 
         ## TESTING
-        df_test = df[:2]
+        df_test = df[:1]
 
         for index, row in df_test.iterrows():
         #for index, row in df.iterrows():
