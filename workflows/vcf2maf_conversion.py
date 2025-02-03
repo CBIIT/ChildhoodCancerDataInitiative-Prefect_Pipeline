@@ -483,10 +483,10 @@ def runner(
         df = read_input(mani)
 
         ## TESTING
-        df_test = df[:2]
+        df_test = df[:500]
 
-        for index, row in df_test.iterrows():
-            # for index, row in df.iterrows():
+        for index, row in df_test.iterrows(): ##TESTING
+        #for index, row in df.iterrows():
             try:
                 os.chdir(working_path)
                 conversion_recording.append(
