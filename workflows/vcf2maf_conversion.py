@@ -465,10 +465,9 @@ def runner(
         if not os.path.exists(working_path):
             ShellOperation(commands=[
                 f"mkdir {working_path}", 
-                f"cd {working_path}",
-                "pwd", 
-                "ls -l"]
             ).run()
+
+        os.chdir(working_path)
 
         # download manifest
         file_dl(bucket, manifest_path)
@@ -546,6 +545,18 @@ def runner(
                     ## TESTING
                     f"echo {install_path}",
                     f"ls -lh {install_path}",
+                    "rm -r /usr/local/data/vcf2maf_output_*",
+                ]
+            ).run()
+        )
+
+        runner_logger.info( #TODO 
+            ShellOperation(
+                commands=[
+                    # f"rm -rf {install_path}",
+                    # f"rm -rf {working_path}",
+                    # "rm -rf OUTPUTs"
+                    ## TESTING
                     "ls -l /usr/local/data/",
                 ]
             ).run()
