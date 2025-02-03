@@ -478,7 +478,7 @@ def runner(
         df = read_input(mani)
 
         ## TESTING
-        df_test = df[:1]
+        df_test = df[:2]
 
         for index, row in df_test.iterrows():
         #for index, row in df.iterrows():
@@ -526,8 +526,8 @@ def runner(
         runner_logger.info(
             ShellOperation(
                 commands=[
-                    f"echo {install_path}",
-                    f"ls -lh {install_path}",
+                    #f"echo {install_path}",
+                    #f"ls -lh {install_path}",
                     f"ls -l /usr/local/data/"
                 ]
             ).run()
