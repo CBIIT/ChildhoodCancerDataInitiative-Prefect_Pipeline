@@ -919,7 +919,7 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
-      runner: ""
+      runner_path: ""
       process_type: "convert"
       manifest_path: ""
       bwa_tarball_path: ""
