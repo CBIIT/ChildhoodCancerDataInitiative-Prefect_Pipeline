@@ -257,8 +257,16 @@ def bcftools_setup(install_path):
         ).run()
     )
 
+
+def cancelled_running():
+    runner_logger = get_run_logger()
+    runner_logger.info("THE RUN WAS CANCELLED")
+    return None
+
+
 def cancellation_hook(flow, flow_run, state):
-    logging.Logger(f"THE RUN WAS CANCELLED")
+    cancelled_running()
+    return None
 
 
 def crashed_hook(flow, flow_run, state):
