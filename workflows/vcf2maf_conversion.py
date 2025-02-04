@@ -440,8 +440,6 @@ def converter(
     name="vcf2maf_convert_handler",
     log_prints=True,
     flow_run_name="vcf2maf_convert_handler_" + f"{get_time()}",
-    on_cancellation=[cancellation_hook],
-    on_crashed=[crashed_hook],
 )
 def conversion_handler(
     dt: str, bucket: str, runner_path: str, manifest_path: str, install_path: str
@@ -549,6 +547,8 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
     name="VCF2MAF Conversion",
     log_prints=True,
     flow_run_name="{runner_path}_" + f"{get_time()}",
+    on_cancellation=[cancellation_hook],
+    on_crashed=[crashed_hook],
 )
 def runner(
     bucket: str,
