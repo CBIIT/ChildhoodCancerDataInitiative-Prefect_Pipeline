@@ -25,9 +25,14 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
-from prefect.states import Cancelled
-from prefect.context import get_run_context
 from src.utils import get_time, file_dl, folder_ul
+
+# prefect cancel handling
+from prefect.states import Cancelled
+from prefect.events import emit_event
+from prefect.context import get_run_context
+from prefect.events import EventTrigger
+from prefect.automations import create_automation
 
 
 @flow(
@@ -431,7 +436,7 @@ def converter(
     name="vcf2maf_convert_handler",
     log_prints=True,
     flow_run_name="vcf2maf_convert_handler_" + f"{get_time()}",
-    state_handlers=[on_canceled_state]
+    #state_handlers=[on_canceled_state]
 )
 def conversion_handler(
     dt: str, bucket: str, runner_path: str, manifest_path: str, install_path: str
@@ -567,6 +572,21 @@ def on_canceled_state(state, old_state, output_dir, working_path, bucket, runner
             ).run()
         )
     return state
+
+@conversion_handler.on_canceled_state
+def emit_cancellation_event():
+    emit_event(event="flow-cancelled", resource={"prefect.resource.id": "conversion_handler"})
+
+trigger = EventTrigger(
+    event_names=["flow-cancelled"],
+    resource_id="conversion_handler"
+)
+create_automation(
+    name="Handle Flow Cancellation",
+    trigger=trigger,
+    actions=[on_canceled_state]
+)
+
 
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 
