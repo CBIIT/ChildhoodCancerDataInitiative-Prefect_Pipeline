@@ -25,8 +25,6 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
-from prefect.engine.state import Cancelled
-from prefect.context import get_run_context
 from src.utils import get_time, file_dl, folder_ul
 
 
@@ -431,7 +429,7 @@ def converter(
     name="vcf2maf_convert_handler",
     log_prints=True,
     flow_run_name="vcf2maf_convert_handler_" + f"{get_time()}",
-    state_handlers=[on_canceled_state]
+    #state_handlers=[on_canceled_state]
 )
 def conversion_handler(
     dt: str, bucket: str, runner_path: str, manifest_path: str, install_path: str
@@ -479,7 +477,7 @@ def conversion_handler(
     df = read_input(mani)
 
     ## TESTING
-    df_test = df[:3].reset_index()
+    df_test = df[33:34].reset_index()
 
     for index, row in df_test.iterrows():  ##TESTING
         # for index, row in df.iterrows():
@@ -531,42 +529,6 @@ def conversion_handler(
 
     return None
 
-
-# State handler for cancellation
-def on_canceled_state(state, old_state, output_dir, working_path, bucket, runner):
-    runner_logger = get_run_logger()
-    # Check if the state is 'Cancelled'
-    if isinstance(state, Cancelled):
-        # Trigger some action when the flow is canceled
-        print(f"Flow has been cancelled! Run ID: {get_run_context().flow_run_id}")
-        
-        # dl folder to somewhere else
-        folder_ul(
-            local_folder=output_dir,
-            bucket=bucket,
-            destination=runner + "/",
-            sub_folder="",
-        )
-
-
-        # remove working path of intermediate files to free up space
-        runner_logger.info(
-            ShellOperation(
-                commands=[
-                    f"rm -r {working_path}",
-                ]
-            ).run()
-        )
-
-        # remove output path to free up space after download to cloud storage
-        runner_logger.info(
-            ShellOperation(
-                commands=[
-                    f"rm -r {output_dir}",
-                ]
-            ).run()
-        )
-    return state
 
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 
