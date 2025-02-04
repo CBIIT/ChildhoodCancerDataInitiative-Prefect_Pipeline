@@ -25,7 +25,7 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
-from prefect import states
+from prefect.states import Cancelled
 from prefect.context import get_run_context
 from src.utils import get_time, file_dl, folder_ul
 
