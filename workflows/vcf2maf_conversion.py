@@ -531,7 +531,7 @@ def runner(
         df = read_input(mani)
 
         ## TESTING
-        df_test = df[:500]
+        df_test = df[33:500]
 
         for index, row in df_test.iterrows():  ##TESTING
             # for index, row in df.iterrows():
