@@ -260,6 +260,10 @@ def cancellation_hook(flow, flow_run, state):
     runner_logger = get_run_logger()
     runner_logger.info(f"THE RUN WAS CANCELLED")
 
+def crashed_hook(flow, flow_run, state):
+    runner_logger = get_run_logger()
+    runner_logger.info(f"THE RUN CRASHED")
+
 def read_input(file_path: str):
     """Read in file with s3 URLs of VCFs to merge and participant IDs
 
@@ -437,6 +441,7 @@ def converter(
     log_prints=True,
     flow_run_name="vcf2maf_convert_handler_" + f"{get_time()}",
     on_cancellation=[cancellation_hook],
+    on_crashed=[crashed_hook],
 )
 def conversion_handler(
     dt: str, bucket: str, runner_path: str, manifest_path: str, install_path: str
