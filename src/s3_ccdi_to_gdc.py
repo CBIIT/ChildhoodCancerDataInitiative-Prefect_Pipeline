@@ -142,15 +142,7 @@ def read_xlsx(file_path: str, sheet: str):
     return df
 
 
-# Create a dictionary for faster lookup
-def create_translation_dict(df, property: str):
-    df = df[df["GDC_property"] == property]
-    dict = pd.Series(
-        df["GDC"].values,
-        index=df["CCDI"],
-    ).to_dict()
 
-    return dict
 
 
 # Function to extract the desired string for read_group
@@ -212,6 +204,19 @@ def ccdi_to_gdc(file_path : str,
         CCDI_GDC_translation_file : str, 
         platform_preservation_file : str):
     
+
+
+    # Create a dictionary for faster lookup
+    def create_translation_dict(df, property: str):
+        df = df[df["GDC_property"] == property]
+        dict = pd.Series(
+            df["GDC"].values,
+            index=df["CCDI"],
+        ).to_dict()
+
+        return dict
+
+
 
     ################
     #
