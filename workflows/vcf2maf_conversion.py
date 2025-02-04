@@ -540,7 +540,7 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 )
 def runner(
     bucket: str,
-    runner: str,
+    runner_path: str,
     process_type: DropDownChoices,
     manifest_path: str,
     bwa_tarball_path: str,
@@ -549,7 +549,7 @@ def runner(
 
     Args:
         bucket (str): Bucket name of where the manifest etc. is located in and the output goes to
-        runner (str): Unique runner name
+        runner_path (str): Unique runner name
         process_type (str): Whether to setup env, perform vcf22maf conversion or tear down env
         manifest_path (str): Path to tab-delimited manifest with s3 URLs of VCF files to convert and tumor/normal sample barcodes
         bwa_tarball_path (str): Path to bwakit tarball for ref seq installation
@@ -610,7 +610,7 @@ def runner(
         process_type == "convert"
     ):  # annotate and convert a list of VCF files from manifest file to MAF
 
-        conversion_handler(dt, bucket, runner, manifest_path, install_path)
+        conversion_handler(dt, bucket, runner_path, manifest_path, install_path)
 
     elif process_type == "env_tear_down":
 
