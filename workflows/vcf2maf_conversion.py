@@ -29,6 +29,7 @@ from src.utils import get_time, file_dl, folder_ul
 
 # cancellation handling
 from prefect.states import State
+import logging
 
 
 
@@ -257,7 +258,7 @@ def bcftools_setup(install_path):
     )
 
 def cancellation_hook(flow, flow_run, state):
-    print(f"THE RUN WAS CANCELLED")
+    logging.Logger(f"THE RUN WAS CANCELLED")
 
 
 def crashed_hook(flow, flow_run, state):
