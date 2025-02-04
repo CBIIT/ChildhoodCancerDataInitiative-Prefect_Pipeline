@@ -316,7 +316,7 @@ def read_input(file_path: str):
     log_prints=True,
     flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
 )
-def conversion_handler(
+def converter(
     row: pd.Series, install_path: str, output_dir: str, working_path: str
 ):
     """Function to handle downloading VCF files and generating index files
@@ -385,7 +385,7 @@ def conversion_handler(
 
         if f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}" in os.listdir("."):
             # rename and move file to output directory
-            # rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
+            # and rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
             os.rename(
                 f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
                 output_dir
@@ -423,6 +423,110 @@ def conversion_handler(
             ShellOperation(commands=[f"rm -r {row['patient_id']}"]).run()
 
             return [row["patient_id"], row["tumor_sample_id"], False]
+
+
+@flow(
+    name="vcf2maf_convert_vcf",
+    log_prints=True,
+    flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
+    #state_handlers=[on_canceled_state]
+)
+def conversion_handler(
+    dt: str, bucket: str, manifest_path: str, install_path: str
+):
+    """_summary_
+
+    Args:
+        dt (str): date time of workflow run
+        bucket (str): bucket to download and upload files from/to
+        manifest_path (str): path of manifest in bucket
+        install_path (str): install path to activate env
+
+    Returns: 
+        None
+    """
+
+    runner_logger = get_run_logger()
+
+    output_dir = f"/usr/local/data/vcf2maf_output_{dt}"
+
+    if not os.path.exists(output_dir):
+        ShellOperation(
+            commands=[f"mkdir {output_dir}"],
+        ).run()
+
+    runner_logger.info(">>> Performing VCF annotation and conversion to MAF ....")
+
+    conversion_recording = []
+
+    working_path = f"/usr/local/data/vcf2maf_working_{dt}"
+
+    if not os.path.exists(working_path):
+        ShellOperation(
+            commands=[f"mkdir {working_path}"],
+        ).run()
+
+    os.chdir(working_path)
+
+    # download manifest
+    file_dl(bucket, manifest_path)
+
+    mani = os.path.basename(manifest_path)
+
+    df = read_input(mani)
+
+    ## TESTING
+    df_test = df[33:500].reset_index()
+
+    for index, row in df_test.iterrows():  ##TESTING
+        # for index, row in df.iterrows():
+        runner_logger.info(f"Attempting annotation and conversion of file {index+1} of {len(df_test)}")
+        try:
+            os.chdir(working_path)
+            conversion_recording.append(
+                converter(row, install_path, output_dir, working_path)
+            )
+            runner_logger.info(f"Annotation and conversion of {row['patient_id']}'s VCF file {row['File Name']} complete")
+        except Exception as e:
+            runner_logger.error(
+                f"Error with {row['patient_id']}'s VCF file {row['File Name']}, f{e}"
+            )
+            conversion_recording.append(
+                [row["patient_id"], row["tumor_sample_id"], False]
+            )
+
+    pd.DataFrame(
+        conversion_recording,
+        columns=["patient_id", "tumor_sample_id", "converted?"],
+    ).to_csv(f"{output_dir}/conversion_summary.tsv", sep="\t", index=False)
+
+    # dl folder to somewhere else
+    folder_ul(
+        local_folder=output_dir,
+        bucket=bucket,
+        destination=runner + "/",
+        sub_folder="",
+    )
+
+    # remove working path of intermediate files to free up space
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                f"rm -r {working_path}",
+            ]
+        ).run()
+    )
+
+    # remove output path to free up space after download to cloud storage
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                f"rm -r {output_dir}",
+            ]
+        ).run()
+    )
+
+    return None
 
 
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
@@ -505,81 +609,7 @@ def runner(
         process_type == "convert"
     ):  # annotate and convert a list of VCF files from manifest file to MAF
 
-        output_dir = f"/usr/local/data/vcf2maf_output_{dt}"
-
-        if not os.path.exists(output_dir):
-            ShellOperation(
-                commands=[f"mkdir {output_dir}"],
-            ).run()
-
-        runner_logger.info(">>> Performing VCF annotation and conversion to MAF ....")
-
-        conversion_recording = []
-
-        working_path = f"/usr/local/data/vcf2maf_working_{dt}"
-
-        if not os.path.exists(working_path):
-            ShellOperation(
-                commands=[f"mkdir {working_path}"],
-            ).run()
-
-        os.chdir(working_path)
-
-        # download manifest
-        file_dl(bucket, manifest_path)
-
-        mani = os.path.basename(manifest_path)
-
-        df = read_input(mani)
-
-        ## TESTING
-        df_test = df[:500]
-
-        for index, row in df_test.iterrows(): ##TESTING
-        #for index, row in df.iterrows():
-            try:
-                os.chdir(working_path)
-                conversion_recording.append(
-                    conversion_handler(row, install_path, output_dir, working_path)
-                )
-            except Exception as e:
-                runner_logger.error(
-                    f"Error with {row['patient_id']}'s VCF file {row['File Name']}, f{e}"
-                )
-                conversion_recording.append(
-                    [row["patient_id"], row["tumor_sample_id"], False]
-                )
-
-        pd.DataFrame(
-            conversion_recording,
-            columns=["patient_id", "tumor_sample_id", "converted?"],
-        ).to_csv(f"{output_dir}/conversion_summary.tsv", sep="\t", index=False)
-
-        # dl folder to somewhere else
-        folder_ul(
-            local_folder=output_dir,
-            bucket=bucket,
-            destination=runner + "/",
-            sub_folder="",
-        )
-
-        # remove working path of intermediate files to free up space
-        runner_logger.info(
-            ShellOperation(
-                commands=[
-                    f"rm -r {working_path}",
-                ]
-            ).run()
-        )
-
-        # remove output path to free up space after download to cloud storage
-        runner_logger.info(
-            ShellOperation(
-                commands=[
-                    f"rm -r {output_dir}",
-                ]
-            ).run()
-        )
+        conversion_handler(dt, bucket, manifest_path, install_path)
 
     elif process_type == "env_tear_down":
 
