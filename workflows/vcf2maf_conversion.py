@@ -27,6 +27,10 @@ from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
 from src.utils import get_time, file_dl, folder_ul
 
+# cancellation handling
+from prefect.states import State
+
+
 
 @flow(
     name="vcf2maf_dl_conda_setup",
@@ -252,6 +256,9 @@ def bcftools_setup(install_path):
         ).run()
     )
 
+def cancellation_hook(flow, flow_run, state):
+    runner_logger = get_run_logger()
+    runner_logger.info(f"THE RUN WAS CANCELLED")
 
 def read_input(file_path: str):
     """Read in file with s3 URLs of VCFs to merge and participant IDs
@@ -429,7 +436,7 @@ def converter(
     name="vcf2maf_convert_handler",
     log_prints=True,
     flow_run_name="vcf2maf_convert_handler_" + f"{get_time()}",
-    #state_handlers=[on_canceled_state]
+    on_cancellation=[cancellation_hook],
 )
 def conversion_handler(
     dt: str, bucket: str, runner_path: str, manifest_path: str, install_path: str
