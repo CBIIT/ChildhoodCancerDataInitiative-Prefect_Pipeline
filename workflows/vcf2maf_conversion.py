@@ -60,7 +60,6 @@ def dl_conda_setup(install_path: str):
 
     return None
 
-
 @flow(
     name="vcf2maf_env_setup",
     log_prints=True,
@@ -252,6 +251,22 @@ def bcftools_setup(install_path):
         ).run()
     )
 
+def cancellation_hook(flow, flow_run, state):
+    if gl_process_type == 'convert':
+        # download the MAFs that have been produced so far
+
+        folder_ul(
+            local_folder=gl_output,
+            bucket=gl_bucket,
+            destination=gl_runner + "/",
+            sub_folder="",
+        )
+
+
+        return None
+    else:
+        return None
+
 
 def read_input(file_path: str):
     """Read in file with s3 URLs of VCFs to merge and participant IDs
@@ -377,7 +392,7 @@ def converter(
                     "conda activate vcf2maf_38",
                     f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
                     f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
-                    f"timeout 300 vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
+                    f"timeout 1200 vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
                     "ls -l",  # confirm all files produced
                 ]
             ).run()
@@ -468,6 +483,15 @@ def conversion_handler(
 
     os.chdir(working_path)
 
+        # global vars if workflow gets interrupted/cancelled
+    global gl_bucket
+    global gl_runner
+    global gl_output
+
+    gl_bucket = bucket
+    gl_runner = runner_path
+    gl_output = output_dir
+
     # download manifest
     file_dl(bucket, manifest_path)
 
@@ -538,6 +562,8 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
     name="VCF2MAF Conversion",
     log_prints=True,
     flow_run_name="{runner_path}_" + f"{get_time()}",
+    on_cancellation=[cancellation_hook],
+    on_crashed=[cancellation_hook],
 )
 def runner(
     bucket: str,
@@ -562,6 +588,10 @@ def runner(
     runner_logger = get_run_logger()
 
     runner_logger.info(">>> Running vcf2maf_conversion.py ....")
+    
+    global gl_process_type
+
+    gl_process_type = process_type
 
     dt = get_time()
 
