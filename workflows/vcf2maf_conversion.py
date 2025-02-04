@@ -536,7 +536,7 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 @flow(
     name="VCF2MAF Conversion",
     log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",
+    flow_run_name="{runner_path}_" + f"{get_time()}",
 )
 def runner(
     bucket: str,
