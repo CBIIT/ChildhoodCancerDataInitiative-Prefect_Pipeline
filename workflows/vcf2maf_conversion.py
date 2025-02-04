@@ -426,9 +426,9 @@ def converter(
 
 
 @flow(
-    name="vcf2maf_convert_vcf",
+    name="vcf2maf_convert_handler",
     log_prints=True,
-    flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
+    flow_run_name="vcf2maf_convert_handler_" + f"{get_time()}",
     #state_handlers=[on_canceled_state]
 )
 def conversion_handler(
