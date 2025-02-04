@@ -432,13 +432,14 @@ def converter(
     #state_handlers=[on_canceled_state]
 )
 def conversion_handler(
-    dt: str, bucket: str, manifest_path: str, install_path: str
+    dt: str, bucket: str, runner_path: str, manifest_path: str, install_path: str
 ):
     """_summary_
 
     Args:
         dt (str): date time of workflow run
         bucket (str): bucket to download and upload files from/to
+        runner_path (str): path of upload/downloads
         manifest_path (str): path of manifest in bucket
         install_path (str): install path to activate env
 
@@ -504,7 +505,7 @@ def conversion_handler(
     folder_ul(
         local_folder=output_dir,
         bucket=bucket,
-        destination=runner + "/",
+        destination=runner_path + "/",
         sub_folder="",
     )
 
@@ -539,7 +540,7 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 )
 def runner(
     bucket: str,
-    runner: str,
+    runner_path: str,
     process_type: DropDownChoices,
     manifest_path: str,
     bwa_tarball_path: str,
@@ -609,7 +610,7 @@ def runner(
         process_type == "convert"
     ):  # annotate and convert a list of VCF files from manifest file to MAF
 
-        conversion_handler(dt, bucket, manifest_path, install_path)
+        conversion_handler(dt, bucket, runner_path, manifest_path, install_path)
 
     elif process_type == "env_tear_down":
 
