@@ -540,7 +540,7 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
 )
 def runner(
     bucket: str,
-    runner_path: str,
+    runner: str,
     process_type: DropDownChoices,
     manifest_path: str,
     bwa_tarball_path: str,
@@ -610,7 +610,7 @@ def runner(
         process_type == "convert"
     ):  # annotate and convert a list of VCF files from manifest file to MAF
 
-        conversion_handler(dt, bucket, runner_path, manifest_path, install_path)
+        conversion_handler(dt, bucket, runner, manifest_path, install_path)
 
     elif process_type == "env_tear_down":
 
