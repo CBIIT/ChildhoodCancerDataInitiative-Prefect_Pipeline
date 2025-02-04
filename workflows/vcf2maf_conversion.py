@@ -27,11 +27,6 @@ from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
 from src.utils import get_time, file_dl, folder_ul
 
-# cancellation handling
-from prefect.states import State
-import logging
-
-
 
 @flow(
     name="vcf2maf_dl_conda_setup",
@@ -258,21 +253,6 @@ def bcftools_setup(install_path):
     )
 
 
-def cancelled_running():
-    runner_logger = get_run_logger()
-    runner_logger.info("THE RUN WAS CANCELLED")
-    return None
-
-
-def cancellation_hook(flow, flow_run, state):
-    cancelled_running()
-    return None
-
-
-def crashed_hook(flow, flow_run, state):
-    runner_logger = get_run_logger()
-    runner_logger.info(f"THE RUN CRASHED")
-
 def read_input(file_path: str):
     """Read in file with s3 URLs of VCFs to merge and participant IDs
 
@@ -397,7 +377,7 @@ def converter(
                     "conda activate vcf2maf_38",
                     f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
                     f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
-                    f"timeout 1200 vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
+                    f"timeout 20 vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}",
                     "ls -l",  # confirm all files produced
                 ]
             ).run()
@@ -556,8 +536,6 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
     name="VCF2MAF Conversion",
     log_prints=True,
     flow_run_name="{runner_path}_" + f"{get_time()}",
-    on_cancellation=[cancellation_hook],
-    on_crashed=[crashed_hook],
 )
 def runner(
     bucket: str,
