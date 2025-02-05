@@ -267,6 +267,8 @@ def cancellation_hook(flow, flow_run, state):
         w.close()
 
         os.chdir("..")
+
+        from src.utils import folder_ul
     
         folder_ul(
             local_folder="/usr/local/data/test_upload",
