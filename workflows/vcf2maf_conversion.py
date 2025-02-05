@@ -273,8 +273,8 @@ def cancellation_hook(flow, flow_run, state):
     
         folder_ul(
             local_folder="/usr/local/data/test_upload",
-            bucket=runtime.flow_run.parameters.get('bucket'),
-            destination=runtime.flow_run.parameters.get('runner_path') + "/",
+            bucket=str(runtime.flow_run.parameters.get('bucket')),
+            destination=str(runtime.flow_run.parameters.get('runner_path')) + "/",
             sub_folder="",
         )
 
