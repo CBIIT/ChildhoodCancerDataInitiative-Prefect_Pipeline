@@ -340,7 +340,7 @@ def read_input(file_path: str):
     return file_metadata
 
 
-@flow(
+@task(
     name="vcf2maf_convert_vcf",
     log_prints=True,
     flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
