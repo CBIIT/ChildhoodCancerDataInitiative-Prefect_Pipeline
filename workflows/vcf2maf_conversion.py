@@ -257,11 +257,7 @@ def cancellation_hook(flow, flow_run, state):
 
         os.chdir("/usr/local/data/")
 
-        ShellOperation(
-            commands=[
-                f"mkdir test_upload",
-            ]
-        ).run()
+        os.mkdir("test_upload")
 
         os.chdir("/usr/local/data/test_upload")
 
