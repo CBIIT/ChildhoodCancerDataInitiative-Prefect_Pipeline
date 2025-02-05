@@ -302,10 +302,6 @@ def ccdi_to_gdc(
         # platform and preservation
         platform_preservation_conv = pd.read_csv(platform_preservation_file, sep="\t")
 
-
-    print(CCDI_GDC_conv)
-    print(platform_preservation_conv)
-    
     #####################
     #####################
     ##
