@@ -343,7 +343,6 @@ def read_input(file_path: str):
     name="vcf2maf_convert_vcf",
     log_prints=True,
     flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
-    timeout_seconds=100
 )
 def converter(
     row: pd.Series, install_path: str, output_dir: str, working_path: str
