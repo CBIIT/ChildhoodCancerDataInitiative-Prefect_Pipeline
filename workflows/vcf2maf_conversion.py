@@ -343,7 +343,7 @@ def read_input(file_path: str):
 @task(
     name="vcf2maf_convert_vcf",
     log_prints=True,
-    flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
+    task_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
     timeout_seconds=100
 )
 def converter(
