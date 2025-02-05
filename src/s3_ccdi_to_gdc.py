@@ -4,7 +4,7 @@ import os
 import warnings
 import json
 import re
-from prefect import flow, task, get_run_logger
+from prefect import flow, get_run_logger
 from src.utils import get_time
 
 
@@ -13,6 +13,7 @@ from src.utils import get_time
 # Functions
 #
 ################
+
 
 # function to process the data frame for use in the json file
 def preprocess_dataframe(df: pd.DataFrame) -> pd.DataFrame:
@@ -142,7 +143,15 @@ def read_xlsx(file_path: str, sheet: str):
     return df
 
 
+# Create a dictionary for faster lookup
+def create_translation_dict(df, property: str):
+    df = df[df["GDC_property"] == property]
+    dict = pd.Series(
+        df["GDC"].values,
+        index=df["CCDI"],
+    ).to_dict()
 
+    return dict
 
 
 # Function to extract the desired string for read_group
@@ -193,30 +202,14 @@ def reconcile_experiment_names(df):
     return df
 
 
-
-
 @flow(
     name="CCDI_to_GDC",
     log_prints=True,
     flow_run_name="CCDI_to_GDC_" + f"{get_time()}",
 )
-def ccdi_to_gdc(file_path : str, 
-        CCDI_GDC_translation_file : str, 
-        platform_preservation_file : str):
-    
-
-
-    # Create a dictionary for faster lookup
-    def create_translation_dict(df, property: str):
-        df = df[df["GDC_property"] == property]
-        dict = pd.Series(
-            df["GDC"].values,
-            index=df["CCDI"],
-        ).to_dict()
-
-        return dict
-
-
+def ccdi_to_gdc(
+    file_path: str, CCDI_GDC_translation_file: str, platform_preservation_file: str
+):
 
     ################
     #
@@ -233,8 +226,8 @@ def ccdi_to_gdc(file_path : str,
 
     # Determine file ext and abs path
 
-    #file_name = os.path.splitext(os.path.split(os.path.relpath(file_path))[1])[0]
-    #file_ext = os.path.splitext(file_path)[1]
+    # file_name = os.path.splitext(os.path.split(os.path.relpath(file_path))[1])[0]
+    # file_ext = os.path.splitext(file_path)[1]
     file_dir_path = os.path.split(os.path.relpath(file_path))[0]
 
     if file_dir_path == "":
@@ -291,7 +284,6 @@ def ccdi_to_gdc(file_path : str,
     # determine nodes again
     dict_nodes = set(list(meta_dfs.keys()))
 
-
     ##############
     #
     # Read in Conv files
@@ -311,6 +303,9 @@ def ccdi_to_gdc(file_path : str,
         platform_preservation_conv = pd.read_csv(platform_preservation_file, sep="\t")
 
 
+    print(CCDI_GDC_conv)
+    print(platform_preservation_conv)
+    
     #####################
     #####################
     ##
@@ -336,7 +331,6 @@ def ccdi_to_gdc(file_path : str,
     #     "": pd.Series(dtype='str'),
     #     "": pd.Series(dtype='str'),
     # })
-
 
     ###################################
     # aligned_reads_index
@@ -375,7 +369,6 @@ def ccdi_to_gdc(file_path : str,
 
     df_aligned_reads_index = df_aligned_reads_index.drop_duplicates()
 
-
     ###################################
     # aliquot
     ###################################
@@ -397,7 +390,6 @@ def ccdi_to_gdc(file_path : str,
     df_aliquot["type"] = "aliquot"
 
     df_aliquot = df_aliquot.drop_duplicates()
-
 
     ###################################
     # case
@@ -451,7 +443,6 @@ def ccdi_to_gdc(file_path : str,
                     diagnosis = diagnosis.split(" : ")[1]
                     df_case["disease_type"][index] = diagnosis
 
-
     if CCDI_GDC_translation_dict_primary_site:
         df_case["primary_site"] = (
             df_case["primary_site"]
@@ -467,7 +458,6 @@ def ccdi_to_gdc(file_path : str,
         )
 
     df_case = df_case.drop_duplicates()
-
 
     ###################################
     # demographic
@@ -515,11 +505,15 @@ def ccdi_to_gdc(file_path : str,
     )
 
     # Replace double or more `;;` with a single `;`
-    df_demographic["race"] = df_demographic["race"].str.replace(r";{2,}", ";", regex=True)
+    df_demographic["race"] = df_demographic["race"].str.replace(
+        r";{2,}", ";", regex=True
+    )
     # Remove leading or trailing `;`
     df_demographic["race"] = df_demographic["race"].astype(str).str.split(";").str[0]
     # fix empty values
-    df_demographic["race"] = df_demographic["race"].replace("", "unknown").fillna("unknown")
+    df_demographic["race"] = (
+        df_demographic["race"].replace("", "unknown").fillna("unknown")
+    )
 
     # fix vital_status
     data = meta_dfs["survival"]
@@ -542,7 +536,6 @@ def ccdi_to_gdc(file_path : str,
             df_demographic["vital_status"][index] = "Not Reported"
 
     df_demographic = df_demographic.drop_duplicates()
-
 
     ###################################
     # diagnosis
@@ -593,7 +586,9 @@ def ccdi_to_gdc(file_path : str,
     CCDI_GDC_translation_dict_diagnosis = create_translation_dict(
         CCDI_GDC_conv, "primary_diagnosis"
     )
-    CCDI_GDC_translation_dict_morpho = create_translation_dict(CCDI_GDC_conv, "morphology")
+    CCDI_GDC_translation_dict_morpho = create_translation_dict(
+        CCDI_GDC_conv, "morphology"
+    )
     CCDI_GDC_translation_dict_tissue = create_translation_dict(
         CCDI_GDC_conv, "tissue_or_organ_of_origin"
     )
@@ -622,7 +617,6 @@ def ccdi_to_gdc(file_path : str,
         )
 
     df_diagnosis = df_diagnosis.drop_duplicates()
-
 
     ###################################
     # raw_methylation_array
@@ -704,7 +698,6 @@ def ccdi_to_gdc(file_path : str,
 
     df_raw_methylation_array = df_raw_methylation_array.drop_duplicates()
 
-
     ###################################
     # read_group
     ###################################
@@ -734,7 +727,6 @@ def ccdi_to_gdc(file_path : str,
     data = data[data["file_type"].isin(["fastq", "bam"])]
     data["read_group_fix"] = data["library_id"] + "_rg"
 
-
     df_read_group["aliquots.submitter_id"] = data["sample.sample_id"] + "_aliquot"
     df_read_group["experiment_name"] = data["design_description"]
     df_read_group["library_name"] = data["library_id"]
@@ -758,7 +750,9 @@ def ccdi_to_gdc(file_path : str,
     # fix is_paired_end
     df_read_group["is_paired_end"] = data["library_layout"]
     df_read_group["is_paired_end"] = df_read_group["is_paired_end"].apply(
-        lambda x: "True" if "Paired end" in x else "False" if "Single end" in x else "ERROR"
+        lambda x: (
+            "True" if "Paired end" in x else "False" if "Single end" in x else "ERROR"
+        )
     )
 
     # fix library_strategy
@@ -769,7 +763,6 @@ def ccdi_to_gdc(file_path : str,
     df_read_group = reconcile_experiment_names(df_read_group)
 
     df_read_group = df_read_group.drop_duplicates()
-
 
     ###################################
     # sample
@@ -796,7 +789,6 @@ def ccdi_to_gdc(file_path : str,
     df_sample["tumor_descriptor"] = data["tumor_classification"]
     df_sample["project_id"] = "CCDI-MCI"
     df_sample["type"] = "sample"
-
 
     # fix specimen_type
     df_sample["specimen_type"] = data["anatomic_site"]
@@ -854,7 +846,6 @@ def ccdi_to_gdc(file_path : str,
 
     df_sample = df_sample.drop_duplicates()
 
-
     ###################################
     # submitted_aligned_reads_Archer_Fusion
     ###################################
@@ -884,8 +875,9 @@ def ccdi_to_gdc(file_path : str,
     # is what is now always available every month.
     data = data[data["file_name"].str.contains("merged_bam", case=False, na=False)]
 
-
-    df_submitted_aligned_reads_Archer_Fusion["submitter_id"] = data["sequencing_file_id"]
+    df_submitted_aligned_reads_Archer_Fusion["submitter_id"] = data[
+        "sequencing_file_id"
+    ]
     df_submitted_aligned_reads_Archer_Fusion["read_groups.submitter_id"] = (
         data["library_id"] + "_rg"
     )
@@ -902,7 +894,6 @@ def ccdi_to_gdc(file_path : str,
     df_submitted_aligned_reads_Archer_Fusion = (
         df_submitted_aligned_reads_Archer_Fusion.drop_duplicates()
     )
-
 
     ###################################
     # submitted_aligned_reads_WXS
@@ -929,7 +920,6 @@ def ccdi_to_gdc(file_path : str,
     data = data[data["library_strategy"] == "WXS"]
 
     # CURRENTLY EMPTY, ALL WXS IS CRAM
-
 
     ###################################
     # submitted_unaligned_reads_Archer_Fusion
@@ -959,7 +949,6 @@ def ccdi_to_gdc(file_path : str,
 
     # CURRENTLY EMPTY, ALL ARCHER FUSION IS BAM ONLY
 
-
     ###################################
     # submitted_unaligned_reads_WXS
     ###################################
@@ -986,7 +975,6 @@ def ccdi_to_gdc(file_path : str,
     data = data[data["library_strategy"] == "WXS"]
     data["read_group_fix"] = data["library_id"] + "_rg"
 
-
     df_submitted_unaligned_reads_WXS["submitter_id"] = data["sequencing_file_id"]
     df_submitted_unaligned_reads_WXS["read_groups.submitter_id"] = (
         data["library_id"] + "_rg"
@@ -1001,21 +989,21 @@ def ccdi_to_gdc(file_path : str,
     df_submitted_unaligned_reads_WXS["project_id"] = "CCDI-MCI"
     df_submitted_unaligned_reads_WXS["type"] = "submitted_unaligned_reads"
 
-
     # read pair number fix
     df_submitted_unaligned_reads_WXS["read_pair_number"] = data["file_name"]
-    df_submitted_unaligned_reads_WXS["read_pair_number"] = df_submitted_unaligned_reads_WXS[
-        "read_pair_number"
-    ].str.extract(r"_(R\d+)_")
-
+    df_submitted_unaligned_reads_WXS["read_pair_number"] = (
+        df_submitted_unaligned_reads_WXS["read_pair_number"].str.extract(r"_(R\d+)_")
+    )
 
     # fix read_groups.submitter_id based on lane_number
     data["read_group_fix"] = data.apply(update_submitter_id, axis=1)
-    df_submitted_unaligned_reads_WXS["read_groups.submitter_id"] = data["read_group_fix"]
+    df_submitted_unaligned_reads_WXS["read_groups.submitter_id"] = data[
+        "read_group_fix"
+    ]
 
-
-    df_submitted_unaligned_reads_WXS = df_submitted_unaligned_reads_WXS.drop_duplicates()
-
+    df_submitted_unaligned_reads_WXS = (
+        df_submitted_unaligned_reads_WXS.drop_duplicates()
+    )
 
     ###################################
     # DF file write out
@@ -1037,6 +1025,5 @@ def ccdi_to_gdc(file_path : str,
                 print(f"TSV written {output_dir}/{output_name}.tsv")
             else:
                 print(f"Skipped {name} (empty DataFrame).")
-
 
     return output_dir
