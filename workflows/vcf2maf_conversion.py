@@ -653,8 +653,8 @@ def runner(
                     ## TESTING
                     f"echo {install_path}",
                     f"ls -lh {install_path}",
-                    "rm -r /usr/local/data/vcf2maf_output_*",
-                    "rm -r /usr/local/data/vcf2maf_working_*",
+                    #"rm -r /usr/local/data/vcf2maf_output_*",
+                    #"rm -r /usr/local/data/vcf2maf_working_*",
                 ]
             ).run()
         )
