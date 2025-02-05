@@ -517,7 +517,7 @@ def conversion_handler(
     df = read_input(mani)
 
     ## TESTING
-    df_test = df[33:34].reset_index()
+    df_test = df[:2].reset_index()
 
     for index, row in df_test.iterrows():  ##TESTING
         # for index, row in df.iterrows():
