@@ -257,7 +257,8 @@ def cancellation_hook(flow, flow_run, state):
 
         os.chdir("/usr/local/data/")
 
-        os.mkdir("test_upload")
+        if not os.path.exists("/usr/local/data/test_upload"):
+            os.mkdir("test_upload")
 
         os.chdir("/usr/local/data/test_upload")
 
