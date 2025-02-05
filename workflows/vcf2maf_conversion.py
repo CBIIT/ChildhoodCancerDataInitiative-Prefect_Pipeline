@@ -25,7 +25,7 @@ from functools import partial
 # prefect dependencies
 import boto3
 from botocore.exceptions import ClientError
-from prefect import flow, get_run_logger, runtime
+from prefect import flow, task, get_run_logger, runtime
 from src.utils import get_time, file_dl, folder_ul
 
 
@@ -395,6 +395,14 @@ def converter(
             w.write("\n".join(temp_sample))
         w.close()
 
+        if 'MB' in row['File Size']:
+            if float(row['File Size'].replace(" MB", "")) > 5.0:
+                buffer_size = 250 #smaller size to not overload memory
+            else:
+                buffer_size = 5000 #default
+        else:
+            buffer_size = 5000 #default
+
         # run commands to activate conda
         # run bcftools reheader for tumor/normal samples
         # unzip file
@@ -407,7 +415,7 @@ def converter(
                     "conda activate vcf2maf_38",
                     f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
                     f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
-                    f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']}", #--buffer-size 1000",
+                    f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']} #--buffer-size {buffer_size}",
                     "ls -l",  # confirm all files produced
                 ]
             ).run()
@@ -416,6 +424,9 @@ def converter(
         if f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}" in os.listdir("."):
             # rename and move file to output directory
             # and rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
+            
+            ##TODO: gzip the MAF file
+            
             os.rename(
                 f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
                 output_dir
