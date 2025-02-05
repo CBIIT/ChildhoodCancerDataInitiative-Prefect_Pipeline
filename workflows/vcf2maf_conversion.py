@@ -20,11 +20,12 @@ import pandas as pd
 import shutil
 from prefect_shell import ShellOperation
 from typing import Literal
+from functools import partial
 
 # prefect dependencies
 import boto3
 from botocore.exceptions import ClientError
-from prefect import flow, get_run_logger
+from prefect import flow, get_run_logger, runtime
 from src.utils import get_time, file_dl, folder_ul
 
 
@@ -251,16 +252,17 @@ def bcftools_setup(install_path):
         ).run()
     )
 
-def cancellation_hook(flow, flow_run, state):
-    if gl_process_type == 'convert':
-        # download the MAFs that have been produced so far
-
-        folder_ul(
-            local_folder=gl_output,
-            bucket=gl_bucket,
-            destination=gl_runner + "/",
+def cancellation_hook(flow, flow_run, state, **kwargs):
+    if process_type == 'convert':
+    
+        """folder_ul(
+            local_folder=output_dir,
+            bucket=bucket,
+            destination=runner_path + "/",
             sub_folder="",
-        )
+        )"""
+
+        print("CANCELLED!!!!!")
 
 
         return None
@@ -483,15 +485,6 @@ def conversion_handler(
 
     os.chdir(working_path)
 
-    # global vars if workflow gets interrupted/cancelled
-    global gl_bucket
-    global gl_runner
-    global gl_output
-
-    gl_bucket = bucket.copy()
-    gl_runner = runner_path.copy()
-    gl_output = output_dir.copy()
-
     # download manifest
     file_dl(bucket, manifest_path)
 
@@ -554,16 +547,14 @@ def conversion_handler(
 
     return None
 
-
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
-
 
 @flow(
     name="VCF2MAF Conversion",
     log_prints=True,
     flow_run_name="{runner_path}_" + f"{get_time()}",
-    on_cancellation=[cancellation_hook],
-    on_crashed=[cancellation_hook],
+    on_cancellation=[partial(cancellation_hook, process_type=runtime.flow_run.parameters.get('process_type'))],
+    on_crashed=[partial(cancellation_hook, process_type=runtime.flow_run.parameters.get('process_type'))],
 )
 def runner(
     bucket: str,
@@ -588,10 +579,6 @@ def runner(
     runner_logger = get_run_logger()
 
     runner_logger.info(">>> Running vcf2maf_conversion.py ....")
-    
-    global gl_process_type
-
-    gl_process_type = process_type.copy()
 
     dt = get_time()
 
@@ -670,3 +657,5 @@ def runner(
             ]
         ).run()
     )
+
+    return
