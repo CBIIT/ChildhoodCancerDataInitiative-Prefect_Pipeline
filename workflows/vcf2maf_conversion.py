@@ -252,8 +252,8 @@ def bcftools_setup(install_path):
         ).run()
     )
 
-def cancellation_hook(flow, flow_run, state, **kwargs):
-    if process_type == 'convert':
+def cancellation_hook(flow, flow_run, state):
+    if runtime.flow_run.parameters.get('process_type') == 'convert':
     
         """folder_ul(
             local_folder=output_dir,
@@ -553,8 +553,8 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
     name="VCF2MAF Conversion",
     log_prints=True,
     flow_run_name="{runner_path}_" + f"{get_time()}",
-    on_cancellation=[partial(cancellation_hook, process_type=runtime.flow_run.parameters.get('process_type'))],
-    on_crashed=[partial(cancellation_hook, process_type=runtime.flow_run.parameters.get('process_type'))],
+    on_cancellation=[cancellation_hook],
+    on_crashed=[cancellation_hook],
 )
 def runner(
     bucket: str,
