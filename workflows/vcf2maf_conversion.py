@@ -253,33 +253,32 @@ def bcftools_setup(install_path):
     )
 
 def cancellation_hook(flow, flow_run, state):
-    if runtime.flow_run.parameters.get('process_type') == 'convert':
+    #if runtime.flow_run.parameters.get('process_type') == 'convert':
 
-        os.chdir("/usr/local/data/")
+    os.chdir("/usr/local/data/")
 
-        if not os.path.exists("/usr/local/data/test_upload"):
-            os.mkdir("test_upload")
+    if not os.path.exists("/usr/local/data/test_upload"):
+        os.mkdir("test_upload")
 
-        os.chdir("/usr/local/data/test_upload")
+    os.chdir("/usr/local/data/test_upload")
 
-        with open("test.txt", "w+") as w:
-            w.write("test upload")
-        w.close()
+    with open("test.txt", "w+") as w:
+        w.write("test upload")
+    w.close()
 
-        os.chdir("..")
+    os.chdir("..")
 
-        from src.utils import folder_ul
-    
-        folder_ul(
-            local_folder="/usr/local/data/test_upload",
-            bucket=str(runtime.flow_run.parameters.get('bucket')),
-            destination=str(runtime.flow_run.parameters.get('runner_path')) + "/",
-            sub_folder="",
-        )
+    from src.utils import folder_ul
 
-        return None
-    else:
-        return None
+    folder_ul(
+        local_folder="/usr/local/data/test_upload",
+        bucket=str(runtime.flow_run.parameters.get('bucket')),
+        destination=str(runtime.flow_run.parameters.get('runner_path')) + "/",
+        sub_folder="",
+    )
+
+    return None
+
 
 
 def read_input(file_path: str):
@@ -470,6 +469,8 @@ def converter(
     name="vcf2maf_convert_handler",
     log_prints=True,
     flow_run_name="vcf2maf_convert_handler_" + f"{get_time()}",
+    on_cancellation=[cancellation_hook],
+    on_crashed=[cancellation_hook],
 )
 def conversion_handler(
     dt: str, bucket: str, runner_path: str, manifest_path: str, install_path: str
@@ -577,8 +578,6 @@ DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
     name="VCF2MAF Conversion",
     log_prints=True,
     flow_run_name="{runner_path}_" + f"{get_time()}",
-    on_cancellation=[cancellation_hook],
-    on_crashed=[cancellation_hook],
 )
 def runner(
     bucket: str,
