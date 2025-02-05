@@ -254,16 +254,29 @@ def bcftools_setup(install_path):
 
 def cancellation_hook(flow, flow_run, state):
     if runtime.flow_run.parameters.get('process_type') == 'convert':
+
+        os.chdir("/usr/local/data/")
+
+        ShellOperation(
+            commands=[
+                f"mkdir test_upload",
+            ]
+        ).run()
+
+        os.chdir("/usr/local/data/test_upload")
+
+        with open("test.txt", "w+") as w:
+            w.write("test upload")
+        w.close()
+
+        os.chdir("..")
     
-        """folder_ul(
-            local_folder=output_dir,
-            bucket=bucket,
-            destination=runner_path + "/",
+        folder_ul(
+            local_folder="test_upload",
+            bucket=runtime.flow_run.parameters.get('bucket'),
+            destination=runtime.flow_run.parameters.get('runner_path') + "/",
             sub_folder="",
-        )"""
-
-        print("CANCELLED!!!!!")
-
+        )
 
         return None
     else:
