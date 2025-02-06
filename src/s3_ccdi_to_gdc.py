@@ -1008,7 +1008,6 @@ def ccdi_to_gdc(
         df_submitted_unaligned_reads_WXS.drop_duplicates()
     )
 
-    logger.info("DF WRITE OUT")
     ###################################
     # DF file write out
     ###################################

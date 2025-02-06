@@ -328,7 +328,7 @@ def file_ul(bucket: str, output_folder: str, sub_folder: str, newfile: str):
     # extra_args={'ACL': 'bucket-owner-full-control'}
     source.upload_file(newfile, file_key)  # , extra_args)
 
-
+@task(name="Upload folder", task_run_name="upload_folder_{local_folder}", log_prints=True)
 def folder_ul(
     local_folder: str, bucket: str, destination: str, sub_folder: str
 ) -> None:
@@ -354,7 +354,7 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@task(log_prints=True)
+@task(name="Download folder", task_run_name="download_folder_{local_folder}", log_prints=True)
 def folder_dl(bucket: str, remote_folder: str) -> None:
     """Downloads a remote direcotry folder from s3
     bucket to local. it generates a folder that follows the
