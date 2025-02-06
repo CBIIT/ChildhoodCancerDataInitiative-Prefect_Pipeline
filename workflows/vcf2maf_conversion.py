@@ -450,11 +450,11 @@ def converter(
             )
 
             # move folder called <patient>_<tumor>_converted to output dir in case
-            os.chdir(working_path)
-            
             shutil.move(op_dir, output_dir)
 
             # remove temp dir and intermediate files
+            os.chdir(working_path)
+
             ShellOperation(commands=[f"rm -r {row['patient_id']}"]).run()
 
             return [row["patient_id"], row["tumor_sample_id"], True]
@@ -549,8 +549,8 @@ def conversion_handler(
         columns=["patient_id", "tumor_sample_id", "converted?"],
     ).to_csv(f"{output_dir}/conversion_summary.tsv", sep="\t", index=False)
 
-    # dl folder to somewhere else
-    folder_ul(
+    # dl folder to somewhere else ##TODO: make a download option to download files from runs
+    """folder_ul(
         local_folder=output_dir,
         bucket=bucket,
         destination=runner_path + "/",
@@ -575,7 +575,7 @@ def conversion_handler(
                 f"rm -r {output_dir}",
             ]
         ).run()
-    )
+    )"""
 
     return None
 
