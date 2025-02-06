@@ -45,5 +45,4 @@ def ccdi_to_gdc_run(bucket: str,
     logger.info(f"Uploading conversion folder {output_folder} to the bucket {bucket}")
     folder_ul(local_folder=output_folder, bucket=bucket, destination= runner, sub_folder="", )
 
-    print("SHOULD HAVE WRITTEN OUT")
     logger.info("Workflow finished!")

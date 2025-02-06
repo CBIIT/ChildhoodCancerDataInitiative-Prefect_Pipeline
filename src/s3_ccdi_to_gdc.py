@@ -90,6 +90,10 @@ def save_dataframe_as_nested_json(df: pd.DataFrame, output_file: str):
         df (pd.DataFrame): The DataFrame to convert to JSON.
         output_file (str): The path to the output JSON file.
     """
+
+    #set up logger for prefect
+    logger = get_run_logger()
+
     try:
         # Preprocess the DataFrame
         df = preprocess_dataframe(df)
@@ -101,9 +105,9 @@ def save_dataframe_as_nested_json(df: pd.DataFrame, output_file: str):
         with open(output_file, "w") as file:
             json.dump(nested_data, file, indent=4)
 
-        print(f"Nested JSON written to {output_file}.")
+        logger.info(f"Nested JSON written to {output_file}.")
     except Exception as e:
-        print(f"ERROR writing JSON: {e}")
+        logger.info(f"ERROR writing JSON: {e}")
 
 
 def read_xlsx(file_path: str, sheet: str):
@@ -210,6 +214,9 @@ def reconcile_experiment_names(df):
 def ccdi_to_gdc(
     file_path: str, CCDI_GDC_translation_file: str, platform_preservation_file: str
 ):
+    
+    logger = get_run_logger()
+
 
     ################
     #
@@ -1001,7 +1008,6 @@ def ccdi_to_gdc(
         df_submitted_unaligned_reads_WXS.drop_duplicates()
     )
 
-    print("Got to write out")
     ###################################
     # DF file write out
     ###################################
@@ -1019,11 +1025,9 @@ def ccdi_to_gdc(
                 save_dataframe_as_nested_json(
                     df=df, output_file=f"{output_dir}/{output_name}.json"
                 )
-                print(f"TSV written {output_dir}/{output_name}.tsv")
+                logger.info(f"TSV written {output_dir}/{output_name}.tsv")
             else:
-                print(f"Skipped {name} (empty DataFrame).")
+                logger.info(f"Skipped {name} (empty DataFrame).")
 
-
-    print("write out done")
 
     return output_dir
