@@ -42,7 +42,8 @@ def ccdi_to_gdc_run(bucket: str,
     output_folder = ccdi_to_gdc(file_path=ccdi_file, CCDI_GDC_translation_file=CCDI_GDC_translation_file, platform_preservation_file=platform_preservation_file )
 
     # upload output_folder to bucket
-    logger.info(f"Uploading coversion folder {output_folder} to the bucket {bucket}")
+    logger.info(f"Uploading conversion folder {output_folder} to the bucket {bucket}")
     folder_ul(local_folder=output_folder, bucket=bucket, destination= runner, sub_folder="", )
 
+    print("SHOULD HAVE WRITTEN OUT")
     logger.info("Workflow finished!")

@@ -1001,6 +1001,7 @@ def ccdi_to_gdc(
         df_submitted_unaligned_reads_WXS.drop_duplicates()
     )
 
+    print("Got to write out")
     ###################################
     # DF file write out
     ###################################
@@ -1021,5 +1022,8 @@ def ccdi_to_gdc(
                 print(f"TSV written {output_dir}/{output_name}.tsv")
             else:
                 print(f"Skipped {name} (empty DataFrame).")
+
+
+    print("write out done")
 
     return output_dir
