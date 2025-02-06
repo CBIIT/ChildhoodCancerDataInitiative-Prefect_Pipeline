@@ -1013,9 +1013,26 @@ def ccdi_to_gdc(
     # DF file write out
     ###################################
     # Identify all DataFrames in the current environment
-    dataframes = {
-        name: obj for name, obj in globals().items() if isinstance(obj, pd.DataFrame)
-    }
+    # dataframes = {
+    #     name: obj for name, obj in globals().items() if isinstance(obj, pd.DataFrame)
+    # }
+
+    # The original data frame identification seems to be problematic in Prefect
+    # Instead, I will just list the data frames that are produced
+    dataframes=[
+        df_aligned_reads_index,
+        df_aliquot,
+        df_case,
+        df_demographic,
+        df_diagnosis,
+        df_raw_methylation_array,
+        df_read_group,
+        df_sample,
+        df_submitted_aligned_reads_Archer_Fusion,
+        df_submitted_aligned_reads_WXS,
+        df_submitted_unaligned_reads_Archer_Fusion,
+        df_submitted_unaligned_reads_WXS
+    ]
 
     # Save each DataFrame as a TSV file
     for name, df in dataframes.items():
