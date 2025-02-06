@@ -423,7 +423,7 @@ def converter(
 
             # move wanted output files there
             os.rename(
-                f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
+                f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf.gz')}",
                 op_dir
                 + "/"
                 + f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf.gz')}",
