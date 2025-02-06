@@ -14,7 +14,7 @@ MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:st
 RETURN startNode.{node_label}_id as {node_label}_id
 """
 
-@flow(name="loop through all studies for participant ID pull", log_prints=True):
+@flow(name="loop through all studies for participant ID pull", log_prints=True)
 def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> None:
     """Loop through all studies for participant ID pull
 
