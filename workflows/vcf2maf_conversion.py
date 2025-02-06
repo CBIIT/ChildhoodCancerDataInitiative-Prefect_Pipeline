@@ -268,17 +268,7 @@ def cancellation_hook(flow, flow_run, state):
 
     os.chdir("..")
 
-    from src.utils import folder_ul
-
-    folder_ul(
-        local_folder="/usr/local/data/test_upload",
-        bucket=str(runtime.flow_run.parameters.get('bucket')),
-        destination=str(runtime.flow_run.parameters.get('runner_path')) + "/",
-        sub_folder="",
-    )
-
     return None
-
 
 
 def read_input(file_path: str):
@@ -346,8 +336,7 @@ def read_input(file_path: str):
     timeout_seconds=3600 #timeout after an hour to keep processes moving
 )
 def converter(
-    row: pd.Series, install_path: str, output_dir: str, working_path: str
-):
+    row: pd.Series, install_path: str, output_dir: str, working_path: str, runner_path: str, bucket: str):
     """Function to handle downloading VCF files and generating index files
 
     Args:
@@ -424,12 +413,18 @@ def converter(
             # rename and move file to output directory
             # and rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
             
-            ##TODO: gzip the MAF file
+            # gzip the MAF file
             ShellOperation(commands=[f"gzip {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}"]).run()
+
+            # make new folder called <patient>_<tumor>_converted
+            op_dir = f"{row["patient_id"]}_{row["tumor_sample_id"]}_converted"
             
+            os.mkdir(op_dir)
+
+            # move wanted output files there
             os.rename(
                 f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
-                output_dir
+                op_dir
                 + "/"
                 + f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf.gz')}",
             )
@@ -441,10 +436,21 @@ def converter(
             ):
                 os.rename(
                     f"{f_name.replace('vcf.gz', 'reheader.vep.vcf_warnings.txt')}",
-                    output_dir
+                    op_dir
                     + "/"
                     + f"{f_name.replace('vcf.gz', 'reheader.vep.vcf_warnings.txt')}",
                 )
+            
+            # upload covnerted folder to s3 storage
+            folder_ul(
+                local_folder=op_dir,
+                bucket=bucket,
+                destination=runner_path + "/",
+                sub_folder="",
+            )
+
+            # move folder called <patient>_<tumor>_converted to output dir in case
+            shutil.move(op_dir, output_dir)
 
             # remove temp dir and intermediate files
             os.chdir(working_path)
@@ -527,7 +533,7 @@ def conversion_handler(
         try:
             os.chdir(working_path)
             conversion_recording.append(
-                converter(row, install_path, output_dir, working_path)
+                converter(row, install_path, output_dir, working_path, runner_path, bucket)
             )
             runner_logger.info(f"Annotation and conversion of {row['patient_id']}'s VCF file {row['File Name']} complete")
         except Exception as e:
@@ -574,6 +580,8 @@ def conversion_handler(
     return None
 
 DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
+
+#TODO: make a new option to download output dir to S3 a given output dir name
 
 @flow(
     name="VCF2MAF Conversion",
