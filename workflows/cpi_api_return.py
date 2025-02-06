@@ -53,7 +53,7 @@ def consolidate_all_participant_id(folderpath: str, logger, output_name: str) ->
     csv_list = [os.path.join(folderpath, filename) for filename in os.listdir(folderpath) if filename.endswith("csv")]
     combined_df = pd.DataFrame(columns=["study_id","participant_id"])
     for csv in csv_list:
-        study_accession = csv.split("_")[0]
+        study_accession = csv.split("/")[1].split("_")[0]
         csv_df =  pd.read_csv(csv, header=0)
         csv_df["study_id"]=study_accession
         combined_df = pd.concat([combined_df, csv_df], ignore_index=True)
