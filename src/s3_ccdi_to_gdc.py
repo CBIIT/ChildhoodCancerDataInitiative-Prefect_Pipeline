@@ -1008,6 +1008,7 @@ def ccdi_to_gdc(
         df_submitted_unaligned_reads_WXS.drop_duplicates()
     )
 
+    logger.info("DF WRITE OUT")
     ###################################
     # DF file write out
     ###################################
@@ -1018,6 +1019,7 @@ def ccdi_to_gdc(
 
     # Save each DataFrame as a TSV file
     for name, df in dataframes.items():
+        logger.info(name)
         if isinstance(df, pd.DataFrame) and name.startswith("df_"):
             if not df.empty:  # Skip if the DataFrame is empty
                 output_name = name[3:]  # Remove the "df_" prefix
