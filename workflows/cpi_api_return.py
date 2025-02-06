@@ -40,7 +40,7 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
     # pulll study list
-    study_list = pull_uniq_studies(driver=driver, logger=logger)
+    study_list = pull_uniq_studies(driver=driver)
     logger.info(f"Study list: {study_list}")
 
     output_dir = "participant_id_per_study"
