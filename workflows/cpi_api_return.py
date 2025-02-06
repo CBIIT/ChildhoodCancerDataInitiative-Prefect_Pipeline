@@ -44,6 +44,10 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
     logger.info(f"Study list: {study_list}")
 
     output_dir = "participant_id_per_study"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    else:
+        pass
 
     for study in study_list:
         logger.info(f"Pulling participant_id from Node participant for study {study}")
