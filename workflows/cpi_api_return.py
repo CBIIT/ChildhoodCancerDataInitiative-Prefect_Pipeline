@@ -14,6 +14,33 @@ MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:st
 RETURN startNode.{node_label}_id as {node_label}_id
 """
 
+@flow(name="loop through all studies for participant ID pull", log_prints=True):
+def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> None:
+    """Loop through all studies for participant ID pull
+
+    Args:
+        study_list (list): A list of study accessions
+        driver (_type_): graph database driver
+        out_dir (str): output csv directory
+        logger (_type_): logger instance
+    """    
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    else:
+        pass
+    for study in study_list:
+        logger.info(f"Pulling participant_id from Node participant for study {study}")
+        pull_data_per_node_per_study.submit(
+            driver=driver,
+            data_to_csv=export_to_csv_per_node_per_study,
+            study_name=study,
+            node_label="participant",
+            query_str=cypher_query_particiapnt_per_study,
+            output_dir=out_dir,
+        )
+    return None
+    
+
 @flow(name="Participant ID pull per study", log_prints=True)
 def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
     """Pulls all participant ID from neo4j sandbox DB
@@ -44,21 +71,12 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
     logger.info(f"Study list: {study_list}")
 
     output_dir = "participant_id_per_study"
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    else:
-        pass
-
-    for study in study_list:
-        logger.info(f"Pulling participant_id from Node participant for study {study}")
-        pull_data_per_node_per_study.submit(
-            driver=driver,
-            data_to_csv=export_to_csv_per_node_per_study,
-            study_name=study,
-            node_label="participant",
-            query_str=cypher_query_particiapnt_per_study,
-            output_dir=output_dir,
-        )
+    pull_participant_id_loop(
+        study_list=study_list,
+        driver=driver,
+        out_dir=output_dir,
+        logger=logger
+    )
 
     logger.info("All participant_id per study pulled")
     bucket_folder = runner + "/db_participant_id_pull_per_study" + get_time()
