@@ -529,7 +529,7 @@ def conversion_handler(
 
     #for index, row in df_test.iterrows():  ##TESTING
     for index, row in df.iterrows():
-        runner_logger.info(f"Attempting annotation and conversion of file {index+1} of {len(df_test)}")
+        runner_logger.info(f"Attempting annotation and conversion of file {index+1} of {len(df)}")
         try:
             os.chdir(working_path)
             conversion_recording.append(
