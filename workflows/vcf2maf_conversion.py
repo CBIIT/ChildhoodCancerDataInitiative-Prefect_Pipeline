@@ -417,7 +417,7 @@ def converter(
             ShellOperation(commands=[f"gzip {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}"]).run()
 
             # make new folder called <patient>_<tumor>_converted
-            op_dir = f"{row["patient_id"]}_{row["tumor_sample_id"]}_converted"
+            op_dir = f"{row['patient_id']}_{row['tumor_sample_id']}_converted"
             
             os.mkdir(op_dir)
 
@@ -450,11 +450,11 @@ def converter(
             )
 
             # move folder called <patient>_<tumor>_converted to output dir in case
+            os.chdir(working_path)
+            
             shutil.move(op_dir, output_dir)
 
             # remove temp dir and intermediate files
-            os.chdir(working_path)
-
             ShellOperation(commands=[f"rm -r {row['patient_id']}"]).run()
 
             return [row["patient_id"], row["tumor_sample_id"], True]
