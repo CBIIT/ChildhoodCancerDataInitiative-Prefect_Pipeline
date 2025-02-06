@@ -79,7 +79,7 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
     )
 
     logger.info("All participant_id per study pulled")
-    bucket_folder = runner + "/db_participant_id_pull_per_study" + get_time()
+    bucket_folder = runner + "/db_participant_id_pull_per_study_" + get_time()
     logger.info(f"Uploading folder of {output_dir} to the bucket {bucket} at {bucket_folder}")
     folder_ul(
         bucket=bucket,
