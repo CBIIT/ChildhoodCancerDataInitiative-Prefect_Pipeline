@@ -7,7 +7,8 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.neo4j_data_tools import pull_uniq_studies, export_to_csv_per_node_per_study, pull_data_per_node_per_study, cypher_query_parameters
 from neo4j import GraphDatabase
-from src.utils import get_time, folder_ul
+from src.utils import get_time, file_ul
+import pandas as pd
 
 cypher_query_particiapnt_per_study = """
 MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
@@ -39,7 +40,27 @@ def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> 
             output_dir=out_dir,
         )
     return None
-    
+
+@flow(name="Combines participant ids from all studies into a single tsv", log_prints=True)
+def consolidate_all_participant_id(folderpath: str, logger, output_name: str) -> None:
+    """Read through csv files in the a folder and combines participant ids into a single file
+
+    Args:
+        folderpath (str): folder path that contains csv file of participant ids per study per file
+        logger (_type_): logger instance
+        output_name: a tsv file that contains all the 
+    """    
+    csv_list = [os.path.join(folderpath, filename) for filename in os.listdir(folderpath) if filename.endswith("csv")]
+    combined_df = pd.DataFrame(columns=["study_id","participant_id"])
+    for csv in csv_list:
+        study_accession = csv.split("_")[0]
+        csv_df =  pd.read_csv(csv, header=0)
+        csv_df["study_id"]=study_accession
+        combined_df = pd.concat([combined_df, csv_df], ignore_index=True)
+        del csv_df
+    combined_df.to_csv(output_name, sep="\t", index=False)
+    return None
+
 
 @flow(name="Participant ID pull per study", log_prints=True)
 def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
@@ -77,14 +98,19 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
         out_dir=output_dir,
         logger=logger
     )
-
     logger.info("All participant_id per study pulled")
-    bucket_folder = runner + "/db_participant_id_pull_per_study_" + get_time()
-    logger.info(f"Uploading folder of {output_dir} to the bucket {bucket} at {bucket_folder}")
-    folder_ul(
-        bucket=bucket,
-        local_folder=output_dir,
-        destination=bucket_folder,
-        sub_folder=""
+
+    # combines all participant id into a single tsv file
+    consolidate_all_participant_id(folderpath=output_dir, output_name="sandbox_participant_id.tsv", logger=logger)
+
+    bucket_folder = runner + "/db_participant_id_pull" + get_time()
+    logger.info(
+        f"Uploading participant_id file sandbox_participant_id.tsv to the bucket {bucket} at {bucket_folder}"
     )
-    logger.info("All participant_id per study uploaded to the bucket")
+    file_ul(
+        bucket=bucket,
+        output_folder=bucket_folder,
+        sub_folder="",
+        newfile="sandbox_participant_id.tsv",
+    )
+    logger.info("All participant_id uploaded to the bucket")
