@@ -10,7 +10,7 @@ from neo4j import GraphDatabase
 from src.utils import get_time, folder_ul
 
 cypher_query_particiapnt_per_study = """
-MATCH (startNode:{node_label}})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
+MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
 RETURN startNode.{node_label}_id as {node_label}_id
 """
 
