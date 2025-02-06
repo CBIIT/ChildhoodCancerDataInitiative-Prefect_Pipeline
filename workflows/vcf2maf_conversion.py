@@ -343,6 +343,7 @@ def read_input(file_path: str):
     name="vcf2maf_convert_vcf",
     log_prints=True,
     flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
+    timeout_seconds=3600 #timeout after an hour to keep processes moving
 )
 def converter(
     row: pd.Series, install_path: str, output_dir: str, working_path: str
@@ -424,12 +425,13 @@ def converter(
             # and rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
             
             ##TODO: gzip the MAF file
+            ShellOperation(commands=[f"gzip {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}"]).run()
             
             os.rename(
                 f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
                 output_dir
                 + "/"
-                + f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}",
+                + f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf.gz')}",
             )
 
             # if *vep.vcf_warnings.txt produced, copy over also for log info
@@ -665,8 +667,8 @@ def runner(
                     ## TESTING
                     f"echo {install_path}",
                     f"ls -lh {install_path}",
-                    #"rm -r /usr/local/data/vcf2maf_output_*",
-                    #"rm -r /usr/local/data/vcf2maf_working_*",
+                    "rm -r /usr/local/data/vcf2maf_output_*",
+                    "rm -r /usr/local/data/vcf2maf_working_*",
                 ]
             ).run()
         )
