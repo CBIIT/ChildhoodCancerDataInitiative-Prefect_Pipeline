@@ -403,7 +403,7 @@ def converter(
                     "conda activate vcf2maf_38",
                     f"{install_path}/bcftools/bcftools reheader -s sample.txt -o {f_name.replace('vcf.gz', 'reheader.vcf.gz')} {f_name}",
                     f"bgzip -d {f_name.replace('vcf.gz', 'reheader.vcf.gz')}",
-                    f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']} #--buffer-size {buffer_size}",
+                    f"vcf2maf.pl --input-vcf {f_name.replace('vcf.gz', 'reheader.vcf')} --output-maf {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')} --ref-fasta {install_path}/hs38DH.fa --vep-path {install_path}/miniconda3/envs/vcf2maf_38/bin --vep-data {install_path}/vep --ncbi-build GRCh38 --tumor-id {row['tumor_sample_id']}  --normal-id {row['normal_sample_id']} --buffer-size {buffer_size}",
                     "ls -l",  # confirm all files produced
                 ]
             ).run()
@@ -525,10 +525,10 @@ def conversion_handler(
     df = read_input(mani)
 
     ## TESTING
-    df_test = df[:2].reset_index()
+    #df_test = df[:2].reset_index()
 
-    for index, row in df_test.iterrows():  ##TESTING
-        # for index, row in df.iterrows():
+    #for index, row in df_test.iterrows():  ##TESTING
+    for index, row in df.iterrows():
         runner_logger.info(f"Attempting annotation and conversion of file {index+1} of {len(df_test)}")
         try:
             os.chdir(working_path)
