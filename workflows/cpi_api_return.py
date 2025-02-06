@@ -103,7 +103,7 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
     # combines all participant id into a single tsv file
     consolidate_all_participant_id(folderpath=output_dir, output_name="sandbox_participant_id.tsv", logger=logger)
 
-    bucket_folder = runner + "/db_participant_id_pull" + get_time()
+    bucket_folder = runner + "/db_participant_id_pull_" + get_time()
     logger.info(
         f"Uploading participant_id file sandbox_participant_id.tsv to the bucket {bucket} at {bucket_folder}"
     )
