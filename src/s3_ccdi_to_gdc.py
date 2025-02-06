@@ -1035,7 +1035,7 @@ def ccdi_to_gdc(
     ]
 
     # Save each DataFrame as a TSV file
-    for name, df in dataframes.items():
+    for name, df in dataframes:
         logger.info(name)
         if isinstance(df, pd.DataFrame) and name.startswith("df_"):
             if not df.empty:  # Skip if the DataFrame is empty
