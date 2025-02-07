@@ -7,13 +7,71 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.neo4j_data_tools import pull_uniq_studies, export_to_csv_per_node_per_study, pull_data_per_node_per_study, cypher_query_parameters
 from neo4j import GraphDatabase
-from src.utils import get_time, file_ul
+from src.utils import get_time, file_ul, get_secret
 import pandas as pd
+import requests
 
 cypher_query_particiapnt_per_study = """
 MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
 RETURN startNode.{node_label}_id as {node_label}_id
 """
+
+API_DOMAIN = "https://participantindex-dev.ccdi.cancer.gov"
+API_GET_DOMAINS = "/v1/domains"
+API_GET_RELEVANT_DOMAINS = "/v1/participant_ids/domains"
+
+@task(name="Get access token for CPI API", log_prints=True)
+def get_access_token(client_id: str, client_secret: str, token_url: str) -> str:
+    """Retrieve an access token using the client credentials.
+
+    Args:
+        client_id (str): _description_
+        client_secret (str): _description_
+        token_url (str): _description_
+
+    Raises:
+        Exception: _description_
+
+    Returns:
+        str: token string
+    """
+    payload = {"grant_type": "client_credentials", "scope": "custom"}
+    auth = (client_id, client_secret)
+
+    response = requests.post(token_url, data=payload, auth=auth, verify=False)
+
+    if response.status_code == 200:
+        access_token = response.json().get("access_token")
+        print(f"Debug: Access Token - {access_token}")
+        return access_token
+    else:
+        raise Exception(
+            f"Failed to get access token: {response.status_code} - {response.text}"
+        )
+
+@task(name="Get request return for CPI API", log_prints=True)
+def get_cpi_request(api_extension: str, access_token: str, request_body: str) -> dict:
+    """Send a GET request to the API with the sample body."""
+    headers = {
+        "Authorization": f"Bearer {access_token}",  # Ensure correct prefix
+        "Content-Type": "application/json",
+        "Accept": "application/json",  # Matching Postman behavior
+    }
+    api_url = API_DOMAIN + api_extension
+
+    print(f"Debug: Headers - {headers}")
+    print(f"Debug: Request Body - {request_body}")
+
+    response = requests.get(api_url, json=request_body, headers=headers, verify=False)
+
+    print(f"Debug: Response Code - {response.status_code}")
+    print(f"Debug: Response Text - {response.text}")
+
+    if response.status_code == 200:
+        return response.json()
+    else:
+        raise Exception(f"API request failed: {response.status_code} - {response.text}")
+
 
 @flow(name="loop through all studies for participant ID pull", log_prints=True)
 def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> None:
@@ -114,3 +172,31 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
         newfile="sandbox_participant_id.tsv",
     )
     logger.info("All participant_id uploaded to the bucket")
+
+@flow(name="Get Associated Domains of Participant IDs", log_prints=True)
+def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
+    """Get Associated Domains of Participant IDs
+
+    Args:
+        bucket (str): bucket of where outputs upload to
+        runner (str): unique runner name
+        uri_parameter (str): db uri parameter
+        username_parameter (str): db username parameter
+        password_parameter (str): db password parameter
+    """    
+    logger = get_run_logger()
+    logger.info("Getting uri, username and password parameter from AWS")
+
+    # get secrets from AWS secret manager
+    client_id = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="client_id")
+    secret = get_secret(secret_key_name="ccdi/nonprod/inventory/cpi_api_creds", secret_name_path="secret")
+    access_token_url = get_secret(secret_key_name="ccdi/nonprod/inventory/cpi_api_creds", secret_name_path="access_token_url")
+    access_token = get_access_token(client_id=client_id, client_secret=secret, token_url=access_token_url)
+    logger.info(f"get access token: {access_token}")
+
+    # get domains
+    domains_dict = get_cpi_request(
+        api_extension=API_GET_DOMAINS, access_token=access_token, request_body={}
+    )
+    print(domains_dict)
+    return None
