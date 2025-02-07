@@ -186,18 +186,18 @@ def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: 
         username_parameter (str): db username parameter
         password_parameter (str): db password parameter
     """    
-    logger = get_run_logger()
-    logger.info("Getting uri, username and password parameter from AWS")
+    # logger = get_run_logger()
+    # logger.info("Getting uri, username and password parameter from AWS")
 
     # get secrets from AWS secret manager
-    client_id = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="client_id")
-    print(client_id)
-    secret = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="secret")
-    print(secret)
-    access_token_url = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="access_token_url")
-    print(access_token_url)
-    access_token = get_access_token(client_id=client_id, client_secret=secret, token_url=access_token_url)
-    logger.info(f"get access token: {access_token}")
+    # client_id = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="client_id")
+    # print(client_id)
+    # secret = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="secret")
+    # print(secret)
+    # access_token_url = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="access_token_url")
+    # print(access_token_url)
+    # access_token = get_access_token(client_id=client_id, client_secret=secret, token_url=access_token_url)
+    # logger.info(f"get access token: {access_token}")
 
     # get domains
     request_body = {
@@ -206,6 +206,7 @@ def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: 
             {"domain_name": "USI", "participant_id": "PADJKU"},
         ]
     }
+    access_token = "eyJraWQiOiJHSWpSdjRtdHpuSnJYYWxuNllEc1p2ZjFzYVFnVzczMl81TTZZWEU4RU53IiwiYWxnIjoiUlMyNTYifQ.eyJ2ZXIiOjEsImp0aSI6IkFULlM5Vko4OUZxS0JqYUc3c3d4ak1hR2NiRGdMUF9uSzB1MlpSc1A1WHpaUE0iLCJpc3MiOiJodHRwczovL25paC1uY2kub2t0YS5jb20vb2F1dGgyL2F1c3FzdXltMGF0cFN4WFRBMjk3IiwiYXVkIjoiYXBpOi8vZGVmYXVsdCIsImlhdCI6MTczODk1NDg5NSwiZXhwIjoxNzM4OTU4NDk1LCJjaWQiOiIwb2FxdGlydXVpelU5bzFHWDI5NyIsInNjcCI6WyJjdXN0b20iXSwic3ViIjoiMG9hcXRpcnV1aXpVOW8xR1gyOTcifQ.fnQVoGc4Ps_YjrmmUzXjgwjwTzO5skdVXlZV0q2tQD2xazySNNf2f1rbg0FunJ0Y0Dj78V_zmC_-zo1mA1tuR_jVjVO6NUN0W8qC9_N88YEPJadOy9pzhnbHprMXamLTOZyPnA7kVI6HlsbaphKytvRFj__PM2Kv6AHosBTo7CbUj2Z_OtocLWxVLGVPQf5yvtLcRAMRrRRyStWAWRQjpdD2kchzziPQOhLnqSMlrOHGY5AO0iI4oyGscBMMsvBI6aHFMjreG40iyRKcJhgFFVVYb9K_iZwljq2LRI_Dof7yzw87tGipDc-_PV4ro9qdwg8WxitWZGDjS6EUUXYoOg"
     domains_dict = get_cpi_request(
         api_extension=API_GET_ASSOCIATED_PARTICIPANT_IDS,
         access_token=access_token,
@@ -213,3 +214,6 @@ def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: 
     )
     print(domains_dict)
     return None
+
+if __name__ == "__main__":
+    get_associated_domains_particpants(bucket="ccdi-validation", runner="QL", uri_parameter="uri", username_parameter="username", password_parameter="password")
