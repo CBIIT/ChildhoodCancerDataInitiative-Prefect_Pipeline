@@ -19,6 +19,7 @@ RETURN startNode.{node_label}_id as {node_label}_id
 API_DOMAIN = "https://participantindex-dev.ccdi.cancer.gov"
 API_GET_DOMAINS = "/v1/domains"
 API_GET_RELEVANT_DOMAINS = "/v1/participant_ids/domains"
+API_GET_ASSOCIATED_PARTICIPANT_IDS = "/v1/associated_participant_ids"
 
 @task(name="Get access token for CPI API", log_prints=True)
 def get_access_token(client_id: str, client_secret: str, token_url: str) -> str:
@@ -58,6 +59,7 @@ def get_cpi_request(api_extension: str, access_token: str, request_body: str) ->
         "Accept": "application/json",  # Matching Postman behavior
     }
     api_url = API_DOMAIN + api_extension
+    print(f"Debug: API URL - {api_url}")
 
     print(f"Debug: Headers - {headers}")
     print(f"Debug: Request Body - {request_body}")
@@ -195,8 +197,16 @@ def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: 
     logger.info(f"get access token: {access_token}")
 
     # get domains
+    request_body = {
+        "participant_ids": [
+            {"domain_name": "USI", "participant_id": "PAKZVD"},
+            {"domain_name": "USI", "participant_id": "PADJKU"},
+        ]
+    }
     domains_dict = get_cpi_request(
-        api_extension=API_GET_DOMAINS, access_token=access_token, request_body={}
+        api_extension=API_GET_ASSOCIATED_PARTICIPANT_IDS,
+        access_token=access_token,
+        request_body=request_body,
     )
     print(domains_dict)
     return None
