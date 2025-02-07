@@ -831,7 +831,6 @@ deployments:
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
-
   - name: guid-meta-check
     version: null
     tags: ["Production"]
