@@ -16,7 +16,7 @@ MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:st
 RETURN startNode.{node_label}_id as {node_label}_id
 """
 
-API_DOMAIN = "https://participantindex-dev.ccdi.cancer.gov"
+API_DOMAIN = "https://participantindex.ccdi.cancer.gov"
 API_GET_DOMAINS = "/v1/domains"
 API_GET_RELEVANT_DOMAINS = "/v1/participant_ids/domains"
 API_GET_ASSOCIATED_PARTICIPANT_IDS = "/v1/associated_participant_ids"
