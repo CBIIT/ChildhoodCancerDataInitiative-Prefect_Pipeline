@@ -191,8 +191,11 @@ def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: 
 
     # get secrets from AWS secret manager
     client_id = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="client_id")
+    print(client_id)
     secret = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="secret")
+    print(secret)
     access_token_url = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="access_token_url")
+    print(access_token_url)
     access_token = get_access_token(client_id=client_id, client_secret=secret, token_url=access_token_url)
     logger.info(f"get access token: {access_token}")
 
