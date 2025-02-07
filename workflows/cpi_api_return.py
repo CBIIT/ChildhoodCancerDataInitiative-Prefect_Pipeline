@@ -26,12 +26,12 @@ def get_access_token(client_id: str, client_secret: str, token_url: str) -> str:
     """Retrieve an access token using the client credentials.
 
     Args:
-        client_id (str): _description_
-        client_secret (str): _description_
-        token_url (str): _description_
+        client_id (str): client id string
+        client_secret (str): clinet secret string
+        token_url (str): token url string
 
     Raises:
-        Exception: _description_
+        Exception: Exception if failed to get access token
 
     Returns:
         str: token string
@@ -52,7 +52,19 @@ def get_access_token(client_id: str, client_secret: str, token_url: str) -> str:
 
 @task(name="Get request return for CPI API", log_prints=True)
 def get_cpi_request(api_extension: str, access_token: str, request_body: str) -> dict:
-    """Send a GET request to the API with the sample body."""
+    """Send a GET request to the API with the request body.
+
+    Args:
+        api_extension (str): api extension string
+        access_token (str): access token string
+        request_body (str): request body dict
+
+    Raises:
+        Exception: Exception if API request failed
+
+    Returns:
+        dict: response json
+    """ """Send a GET request to the API with the sample body."""
     headers = {
         "Authorization": f"Bearer {access_token}",  # Ensure correct prefix
         "Content-Type": "application/json",
