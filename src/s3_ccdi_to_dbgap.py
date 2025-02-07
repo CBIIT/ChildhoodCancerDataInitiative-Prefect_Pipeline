@@ -55,11 +55,14 @@ def create_meta_json(study_id: str) -> Dict:
     return return_dict
 
 
-@task
-def extract_ssm(sample_sheet_df: DataFrame, logger) -> DataFrame:
+@flow
+def extract_ssm(manifest_path: str, logger) -> DataFrame:
     """Extract subject sample df and only keeps samples with
     participant/subject value
     """
+    manifest_f = pd.ExcelFile(manifest_path)
+    workbook_dict = ccdi_manifest_to_dict(manifest_f)
+    sample_sheet_df = workbook_dict["sample"]
     logger.info(f"Number of samples in sample sheet: {sample_sheet_df.shape[0]}")
     participant_samples = sample_sheet_df[
         ["participant.participant_id", "sample_id"]
@@ -70,12 +73,76 @@ def extract_ssm(sample_sheet_df: DataFrame, logger) -> DataFrame:
         df_to_report = sample_sheet_df[participant_samples["SUBJECT_ID"].isna()][
             ["cell_line.cell_line_id", "pdx.pdx_id", "sample_id"]
         ]
-        logger.error(
-            f"{df_to_report.shape[0]} samples were not derived from participants and will not be included in submission file for now:\n"
+        logger.warning(
+            f"{df_to_report.shape[0]} samples were not derived from participants. The script will trace back to the participant id in the manifest:\n"
             + df_to_report.to_markdown(
                 tablefmt="fancy_grid",
                 index=False,
             )
+        )
+        participant_sample_mapping_df = sample_sheet_df[
+            ~(participant_samples["SUBJECT_ID"].isna())
+        ][["participant.participant_id", "sample_id"]]
+        pdx_sample_mapping_df = sample_sheet_df[
+            ~(sample_sheet_df["pdx.pdx_id"].isna())
+        ][["pdx.pdx_id", "sample_id"]]
+        cell_line_sample_mapping_df = sample_sheet_df[
+            ~(sample_sheet_df["cell_line.cell_line_id"].isna())
+        ][["cell_line.cell_line_id", "sample_id"]]
+
+        append_df = pd.DataFrame(columns=["SUBJECT_ID", "SAMPLE_ID"])
+        if pdx_sample_mapping_df.shape[0] > 0:
+            pdx_sheet_df = workbook_dict["pdx"]
+            sample_pdx_mapping_df = pdx_sheet_df[
+                ~pdx_sheet_df["sample.sample_id"].isna()
+            ][["sample.sample_id", "pdx_id"]]
+            for _, row in pdx_sample_mapping_df.iterrows():
+                pdx_id = row["pdx.pdx_id"]
+                sample_id = row["sample_id"]
+                # it should only have one match
+                upper_sample_id = sample_pdx_mapping_df[
+                    sample_pdx_mapping_df["pdx_id"] == pdx_id
+                ]["sample.sample_id"].values[0]
+                # should only have one match
+                upper_participant_id = participant_sample_mapping_df[
+                    participant_sample_mapping_df["sample_id"] == upper_sample_id
+                ]["participant.participant_id"].values[0]
+                record_to_append = pd.DataFrame.from_records(
+                    [{"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id}]
+                )
+                append_df = pd.concat([append_df, record_to_append], ignore_index=True)
+        else:
+            pass
+
+        if cell_line_sample_mapping_df.shape[0] > 0:
+            cell_line_sheet_df = workbook_dict["cell_line"]
+            sample_cell_line_mapping_df = cell_line_sheet_df[
+                ~cell_line_sheet_df["sample.sample_id"].isna()
+            ][["sample.sample_id", "cell_line_id"]]
+            for _, row in cell_line_sample_mapping_df.iterrows():
+                cell_line_id = row["cell_line.cell_line_id"]
+                sample_id = row["sample_id"]
+                # it should only have one match
+                upper_sample_id = sample_cell_line_mapping_df[
+                    cell_line_sample_mapping_df["cell_line_id"] == cell_line_id
+                ]["sample.sample_id"].values[0]
+                # should only have one match
+                upper_participant_id = participant_sample_mapping_df[
+                    participant_sample_mapping_df["sample_id"] == upper_sample_id
+                ]["participant.participant_id"].values[0]
+                record_to_append = pd.DataFrame.from_records(
+                    [{"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id}]
+                )
+                append_df = pd.concat([append_df, record_to_append], ignore_index=True)
+        else:
+            pass
+
+        # concatenate participant_samples and append_df
+        participant_samples = pd.concat(
+            [participant_samples, append_df], ignore_index=True
+        )
+        logger.info(
+            f"Number of samples with mapped participant id: {participant_samples.shape[0]}"
         )
     else:
         pass
@@ -467,8 +534,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     # dbgap submission is sample centered. Extract SSM information for first
     # subject_sample SSM df
     subject_sample = extract_ssm(
-        sample_sheet_df=sample_df,
-        logger=logger,
+        manifest_path=manifest, logger=logger
     )
 
     # subject_consent df

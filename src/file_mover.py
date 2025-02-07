@@ -23,6 +23,7 @@ import hashlib
 from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
 from typing import TypeVar
+import ast
 
 DataFrame = TypeVar("DataFrame")
 
@@ -37,6 +38,11 @@ def parse_file_url(url: str) -> tuple:
     parsed_url = urlparse(url)
     bucket_name = parsed_url.netloc
     object_key = parsed_url.path
+    # this is in case url is only bucket name, such as s3://my-bucket
+    if object_key == "":
+        object_key = "/"
+    else:
+        pass
     if object_key[0] == "/":
         object_key = object_key[1:]
     else:
@@ -474,7 +480,12 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
 
     runner_logger.info(f"transfer_df counts: {transfer_df.shape[0]}")
     logger.info(f"transfer_df counts: {transfer_df.shape[0]}")
+
+    # drop duplicates need to convert cp_object_parameter into str first
+    transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].astype(str)
     transfer_df.drop_duplicates(ignore_index=True, keep="first", inplace=True)
+    transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].apply(ast.literal_eval)
+    
     runner_logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
     logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
 

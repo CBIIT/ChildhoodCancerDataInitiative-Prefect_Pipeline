@@ -170,8 +170,7 @@ def pull_neo4j_stats(
         "count",
     )
 
-    # Concatenate the queries into a data frame
-
+    # Concatenate the queries into a data frame   
     build_df = pd.DataFrame(columns=["study_id", "column_name", "value"])
 
     build_df = pd.concat(
@@ -197,6 +196,19 @@ def pull_neo4j_stats(
     )
 
     build_df = build_df.drop_duplicates()
+
+    # Count duplicates based on 'study_id' and 'column_name'
+    duplicate_counts = build_df.groupby(["study_id", "column_name"]).size()
+    
+    # Filter for cases where there are more than one entry
+    duplicates = duplicate_counts[duplicate_counts > 1]
+    
+    # Print results
+    if not duplicates.empty:
+        logger.error("Duplicate entries found:")
+        logger.error(duplicates)
+    else:
+        logger.info("No duplicate entries found.")
 
     # Pivot the DataFrame
     df_wide = build_df.pivot(index="study_id", columns="column_name", values="value")
