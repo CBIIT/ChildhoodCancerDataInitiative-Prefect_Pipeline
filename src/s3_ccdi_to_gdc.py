@@ -212,7 +212,7 @@ def reconcile_experiment_names(df):
     flow_run_name="CCDI_to_GDC_" + f"{get_time()}",
 )
 def ccdi_to_gdc(
-    file_path: str, CCDI_GDC_translation_file: str, platform_preservation_file: str
+    file_path: str, ccdi_gdc_translation_file: str, platform_preservation_file: str
 ):
     
     logger = get_run_logger()
@@ -225,8 +225,8 @@ def ccdi_to_gdc(
     ################
 
     # if conv file are not present
-    if CCDI_GDC_translation_file == "":
-        CCDI_GDC_translation_file = None
+    if ccdi_gdc_translation_file == "":
+        ccdi_gdc_translation_file = None
 
     if platform_preservation_file == "":
         platform_preservation_file = None
@@ -243,7 +243,7 @@ def ccdi_to_gdc(
     todays_date = get_time()
 
     # Output file name based on input file name and date/time stamped.
-    output_dir = f"CCDI_GDC_conversion_{todays_date}"
+    output_dir = f"ccdi_gdc_conversion_{todays_date}"
 
     os.makedirs(output_dir, exist_ok=True)
 
@@ -297,11 +297,11 @@ def ccdi_to_gdc(
     #
     ##############
 
-    if CCDI_GDC_translation_file:
+    if ccdi_gdc_translation_file:
         # anatomic_site
-        CCDI_GDC_conv = pd.read_csv(CCDI_GDC_translation_file, sep="\t")
+        ccdi_gdc_conv = pd.read_csv(ccdi_gdc_translation_file, sep="\t")
         # clean up whitespace
-        CCDI_GDC_conv = CCDI_GDC_conv.applymap(
+        ccdi_gdc_conv = ccdi_gdc_conv.applymap(
             lambda x: x.strip() if isinstance(x, str) else x
         )
 
@@ -424,39 +424,39 @@ def ccdi_to_gdc(
     df_case["primary_site"] = "Not Applicable"
     df_case["disease_type"] = "Neoplasms, NOS"
 
-    CCDI_GDC_translation_dict_primary_site = create_translation_dict(
-        CCDI_GDC_conv, "primary_site"
+    ccdi_gdc_translation_dict_primary_site = create_translation_dict(
+        ccdi_gdc_conv, "primary_site"
     )
-    CCDI_GDC_translation_dict_disease_type = create_translation_dict(
-        CCDI_GDC_conv, "disease_type"
+    ccdi_gdc_translation_dict_disease_type = create_translation_dict(
+        ccdi_gdc_conv, "disease_type"
     )
 
     for index, row in df_case.iterrows():
         case = df_case["submitter_id"][index]
         data_case = data[data["participant.participant_id"] == case.strip("_demo")]
         if not data_case.empty:
-            if CCDI_GDC_translation_dict_primary_site:
+            if ccdi_gdc_translation_dict_primary_site:
                 if data_case["anatomic_site"].notna().all():
                     primary_site = data_case["anatomic_site"].dropna().unique()[0]
                     primary_site = primary_site.split(" : ")[1]
                     df_case["primary_site"][index] = primary_site
-            if CCDI_GDC_translation_dict_disease_type:
+            if ccdi_gdc_translation_dict_disease_type:
                 if data_case["diagnosis"].notna().all():
                     diagnosis = data_case["diagnosis"].dropna().unique()[0]
                     diagnosis = diagnosis.split(" : ")[1]
                     df_case["disease_type"][index] = diagnosis
 
-    if CCDI_GDC_translation_dict_primary_site:
+    if ccdi_gdc_translation_dict_primary_site:
         df_case["primary_site"] = (
             df_case["primary_site"]
-            .map(CCDI_GDC_translation_dict_primary_site)
+            .map(ccdi_gdc_translation_dict_primary_site)
             .fillna(df_case["primary_site"])
         )
 
-    if CCDI_GDC_translation_dict_disease_type:
+    if ccdi_gdc_translation_dict_disease_type:
         df_case["disease_type"] = (
             df_case["disease_type"]
-            .map(CCDI_GDC_translation_dict_disease_type)
+            .map(ccdi_gdc_translation_dict_disease_type)
             .fillna(df_case["disease_type"])
         )
 
@@ -586,36 +586,36 @@ def ccdi_to_gdc(
         "-999", "null"
     )
 
-    CCDI_GDC_translation_dict_diagnosis = create_translation_dict(
-        CCDI_GDC_conv, "primary_diagnosis"
+    ccdi_gdc_translation_dict_diagnosis = create_translation_dict(
+        ccdi_gdc_conv, "primary_diagnosis"
     )
-    CCDI_GDC_translation_dict_morpho = create_translation_dict(
-        CCDI_GDC_conv, "morphology"
+    ccdi_gdc_translation_dict_morpho = create_translation_dict(
+        ccdi_gdc_conv, "morphology"
     )
-    CCDI_GDC_translation_dict_tissue = create_translation_dict(
-        CCDI_GDC_conv, "tissue_or_organ_of_origin"
+    ccdi_gdc_translation_dict_tissue = create_translation_dict(
+        ccdi_gdc_conv, "tissue_or_organ_of_origin"
     )
 
     # fix diagnosis, morpho and site
 
-    if CCDI_GDC_translation_dict_diagnosis:
+    if ccdi_gdc_translation_dict_diagnosis:
         df_diagnosis["primary_diagnosis"] = (
             df_diagnosis["primary_diagnosis"]
-            .map(CCDI_GDC_translation_dict_diagnosis)
+            .map(ccdi_gdc_translation_dict_diagnosis)
             .fillna(df_diagnosis["primary_diagnosis"])
         )
 
-    if CCDI_GDC_translation_dict_morpho:
+    if ccdi_gdc_translation_dict_morpho:
         df_diagnosis["morphology"] = (
             df_diagnosis["morphology"]
-            .map(CCDI_GDC_translation_dict_morpho)
+            .map(ccdi_gdc_translation_dict_morpho)
             .fillna(df_diagnosis["morphology"])
         )
 
-    if CCDI_GDC_translation_dict_tissue:
+    if ccdi_gdc_translation_dict_tissue:
         df_diagnosis["tissue_or_organ_of_origin"] = (
             df_diagnosis["tissue_or_organ_of_origin"]
-            .map(CCDI_GDC_translation_dict_tissue)
+            .map(ccdi_gdc_translation_dict_tissue)
             .fillna(df_diagnosis["tissue_or_organ_of_origin"])
         )
 

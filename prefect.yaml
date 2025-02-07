@@ -844,7 +844,7 @@ deployments:
       bucket: "ccdi-validation"
       runner: ""
       file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
-      CCDI_GDC_translation_file: ""
+      ccdi_gdc_translation_file: ""
       platform_preservation_file: ""
 
     # pull action to overwrite from file pull action

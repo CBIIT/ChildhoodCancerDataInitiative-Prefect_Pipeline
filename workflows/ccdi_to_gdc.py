@@ -8,7 +8,7 @@ from src.utils import file_dl, get_time, folder_ul
 def ccdi_to_gdc_run(bucket: str, 
                     runner: str,
                     file_path: str,
-                    CCDI_GDC_translation_file : str, 
+                    ccdi_gdc_translation_file : str, 
                     platform_preservation_file : str,
                     )-> None:
     """Translation script to lift over data from CCDI to GDC submissions.
@@ -17,7 +17,7 @@ def ccdi_to_gdc_run(bucket: str,
         bucket (str): bucket name of where output goes to
         runner (str): unique runner name
         file_path (str): The CCDI Metadata manifest file. (XLSX)
-        CCDI_GDC_translation_file (str): The CCDI to GDC translation, containing all mappings for each value for each node. (TSV)
+        ccdi_gdc_translation_file (str): The CCDI to GDC translation, containing all mappings for each value for each node. (TSV)
         platform_preservation_file (str): The input file that contains sample_id, platform and preservation_method for that sample. (TSV)
 
     """
@@ -30,8 +30,8 @@ def ccdi_to_gdc_run(bucket: str,
     ccdi_file = os.path.basename(file_path)
 
     # download translation file
-    file_dl(filename=CCDI_GDC_translation_file, bucket=bucket)
-    CCDI_GDC_translation_file = os.path.basename(CCDI_GDC_translation_file)
+    file_dl(filename=ccdi_gdc_translation_file, bucket=bucket)
+    ccdi_gdc_translation_file = os.path.basename(ccdi_gdc_translation_file)
 
     # download platform_preservation file 
     file_dl(filename=platform_preservation_file, bucket=bucket)
@@ -39,7 +39,7 @@ def ccdi_to_gdc_run(bucket: str,
 
     # generate ccdi_to_gdc output
     logger.info(f"Converting ccdi manifest to gdc manifest: {ccdi_file}")
-    output_folder = ccdi_to_gdc(file_path=ccdi_file, CCDI_GDC_translation_file=CCDI_GDC_translation_file, platform_preservation_file=platform_preservation_file )
+    output_folder = ccdi_to_gdc(file_path=ccdi_file, ccdi_gdc_translation_file=ccdi_gdc_translation_file, platform_preservation_file=platform_preservation_file )
 
     # upload output_folder to bucket
     logger.info(f"Uploading conversion folder {output_folder} to the bucket {bucket}")
