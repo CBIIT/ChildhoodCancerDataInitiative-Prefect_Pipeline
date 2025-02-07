@@ -831,10 +831,9 @@ deployments:
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
-
-  - name: TEST-ccdi-gdc-transformation-32gb
+  - name: ccdi-gdc-transformation-16gb
     version: null
-    tags: ["TEST"]
+    tags: ["Production"]
     description: null
     entrypoint: workflows/ccdi_to_gdc.py:ccdi_to_gdc_run
     schedule: null
@@ -842,7 +841,7 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
-      runner: ""
+      runner: "runner_id"
       file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
       ccdi_gdc_translation_file: ""
       platform_preservation_file: ""
@@ -852,7 +851,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1440_CCDI_to_GDC_conv
+          branch: main
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -860,6 +859,6 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb
+      name: ccdi-curation-16gb
       work_queue_name: null
       job_variables: {}
