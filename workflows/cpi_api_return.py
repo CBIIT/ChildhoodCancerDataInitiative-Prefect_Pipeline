@@ -64,7 +64,7 @@ def get_cpi_request(api_extension: str, access_token: str, request_body: str) ->
 
     Returns:
         dict: response json
-    """ """Send a GET request to the API with the sample body."""
+    """
     headers = {
         "Authorization": f"Bearer {access_token}",  # Ensure correct prefix
         "Content-Type": "application/json",
