@@ -10,7 +10,7 @@ from neo4j import GraphDatabase
 from src.utils import get_time, file_ul, get_secret
 import pandas as pd
 import requests
-from prefect.cache_policies import NO_CACHE
+
 
 cypher_query_particiapnt_per_study = """
 MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
@@ -22,7 +22,7 @@ API_GET_DOMAINS = "/v1/domains"
 API_GET_RELEVANT_DOMAINS = "/v1/participant_ids/domains"
 API_GET_ASSOCIATED_PARTICIPANT_IDS = "/v1/associated_participant_ids"
 
-@task(name="Get access token for CPI API", log_prints=True, cache_policy=NO_CACHE)
+@task(name="Get access token for CPI API", log_prints=True)
 def get_access_token(client_id: str, client_secret: str, token_url: str) -> str:
     """Retrieve an access token using the client credentials.
 
@@ -51,7 +51,7 @@ def get_access_token(client_id: str, client_secret: str, token_url: str) -> str:
             f"Failed to get access token: {response.status_code} - {response.text}"
         )
 
-@task(name="Get request return for CPI API", log_prints=True, cache_policy=NO_CACHE)
+@task(name="Get request return for CPI API", log_prints=True)
 def get_cpi_request(api_extension: str, access_token: str, request_body: str) -> dict:
     """Send a GET request to the API with the request body.
 
