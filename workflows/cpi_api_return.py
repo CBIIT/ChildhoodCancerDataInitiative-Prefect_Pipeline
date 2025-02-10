@@ -66,6 +66,13 @@ def get_cpi_request(api_extension: str, access_token: str, request_body: str) ->
         dict: response json
     """
     headers = {
+        "Authorization": None,  # Ensure correct prefix
+        "Content-Type": "application/json",
+        "Accept": "application/json",  # Matching Postman behavior
+    }
+    print(f"Debug: Headers - {headers}")
+    
+    headers = {
         "Authorization": f"Bearer {access_token}",  # Ensure correct prefix
         "Content-Type": "application/json",
         "Accept": "application/json",  # Matching Postman behavior
