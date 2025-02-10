@@ -51,7 +51,7 @@ def get_access_token(client_id: str, client_secret: str, token_url: str) -> str:
             f"Failed to get access token: {response.status_code} - {response.text}"
         )
 
-@task(name="Get request return for CPI API", log_prints=True)
+@task(name="Get request return for CPI", log_prints=True)
 def get_cpi_request(api_extension: str, access_token: str, request_body: str) -> dict:
     """Send a GET request to the API with the request body.
 
@@ -78,6 +78,7 @@ def get_cpi_request(api_extension: str, access_token: str, request_body: str) ->
         "Content-Type": "application/json",
         "Accept": "application/json",  # Matching Postman behavior
     }
+    print(f"Debug: Headers with new token - {headers}")
     api_url = API_DOMAIN + api_extension
     print(f"Debug: API URL - {api_url}")
 
