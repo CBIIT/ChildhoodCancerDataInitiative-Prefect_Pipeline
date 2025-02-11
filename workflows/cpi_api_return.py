@@ -96,7 +96,7 @@ def get_cpi_request(api_extension: str, access_token: str, request_body: str) ->
         raise Exception(f"API request failed: {response.status_code} - {response.text}")
 
 
-@flow(name="loop through all studies for participant ID pull", log_prints=True, cache_key_fn=None, persist_result=False, retries=0)
+@flow(name="loop through all studies for participant ID pull", log_prints=True, persist_result=False, retries=0)
 def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> None:
     """Loop through all studies for participant ID pull
 
@@ -122,7 +122,7 @@ def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> 
         )
     return None
 
-@flow(name="Combines participant ids from all studies into a single tsv", log_prints=True, cache_key_fn=None, persist_result=False, retries=0)
+@flow(name="Combines participant ids from all studies into a single tsv", log_prints=True, persist_result=False, retries=0)
 def consolidate_all_participant_id(folderpath: str, logger, output_name: str) -> None:
     """Read through csv files in the a folder and combines participant ids into a single file
 
@@ -143,7 +143,7 @@ def consolidate_all_participant_id(folderpath: str, logger, output_name: str) ->
     return None
 
 
-@flow(name="Participant ID pull per study", log_prints=True, cache_key_fn=None, persist_result=False, retries=0)
+@flow(name="Participant ID pull per study", log_prints=True, persist_result=False, retries=0)
 def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
     """Pulls all participant ID from neo4j sandbox DB
 
@@ -196,7 +196,7 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
     )
     logger.info("All participant_id uploaded to the bucket")
 
-@flow(name="Get Associated Domains of Participant IDs", log_prints=True, cache_key_fn=None, persist_result=False, retries=0)
+@flow(name="Get Associated Domains of Participant IDs", log_prints=True, persist_result=False, retries=0)
 def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
     """Get Associated Domains of Participant IDs
 
