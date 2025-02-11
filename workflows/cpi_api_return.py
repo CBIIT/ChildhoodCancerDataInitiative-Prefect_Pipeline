@@ -51,7 +51,7 @@ def get_access_token(client_id: str, client_secret: str, token_url: str) -> str:
             f"Failed to get access token: {response.status_code} - {response.text}"
         )
 
-@task(name="Get request return for CPI", log_prints=True)
+@task(name="Get request return for CPI", log_prints=True, cache_key_fn=None)
 def get_cpi_request(api_extension: str, access_token: str, request_body: str) -> dict:
     """Send a GET request to the API with the request body.
 
