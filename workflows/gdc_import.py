@@ -1,27 +1,5 @@
 """ Script to submit node metadata to the GDC """
 
-"""Function 'map'
-runner
-	get_ip
-	get_secret
-	loader
-		read_json
-	dbgap_compare
-		dbgap_retrieve
-    compare_diff
-        retrieve_current_nodes
-            make_request
-        query_entities
-            make_request
-            entity_parser
-            sanitize_return
-        json_compare
-    submit
-        make_request
-        response_recorder
-            error_parser
-        sanitize_return
-"""
 
 ##############
 #
@@ -37,7 +15,6 @@ import logging
 from deepdiff import DeepDiff
 import pandas as pd
 import time
-import socket
 from typing import Literal
 
 import boto3
@@ -54,7 +31,14 @@ from src.utils import get_time, file_dl, folder_ul, sanitize_return
 
 
 def read_json(dir_path: str):
-    """Reads in submission JSON file and returns a list of dicts, checks node types."""
+    """Reads in submission JSON file and returns a list of dicts, checks node types.
+
+    Args:
+        dir_path (str): Local path on VM to JSON file with node metadata 
+
+    Returns:
+        list: Ingested list of node metadata in dict/JSON format
+    """
 
     runner_logger = get_run_logger()
 
@@ -68,18 +52,27 @@ def read_json(dir_path: str):
 
 
 def loader(dir_path: str, node_type: str):
-    """Checks that JSON file is a list of dicts and all nodes are of expected type and node type."""
+    """Checks that JSON file is a list of dicts and all nodes are of expected type and node type.
+
+    Args:
+        dir_path (str): Local path on VM to JSON file with node metadata  
+        node_type (str): GDC node type of nodes in metadata JSON file
+
+    Returns:
+        list: Parsed list of nodes that are of same node type as specified in workflow run
+    """
 
     runner_logger = get_run_logger()
 
     nodes = read_json(dir_path)
 
-    if type(nodes) != list:
+    if not isinstance(nodes, list):
         logging.error(f" JSON file {dir_path} not a list of dicts.")
         sys.exit(1)
 
     parsed_nodes = []
 
+    # check if all nodes are of expected node type and are in correct format
     for node in nodes:
         if node["type"] != node_type:
             runner_logger.warning(
@@ -92,6 +85,7 @@ def loader(dir_path: str, node_type: str):
         else:
             parsed_nodes.append(node)
 
+    # perform count on number of nodes parsed from import JSON
     diff = len(nodes) - len(parsed_nodes)
 
     runner_logger.info(f" {str(diff)} nodes were parsed from file for submission.")
@@ -105,8 +99,14 @@ def loader(dir_path: str, node_type: str):
     flow_run_name="gdc_import_dbgap_retrieve_" + f"{get_time()}",
 )
 def dbgap_retrieve(phs_id_version: str):
-    """With formatted phs ID and version, e.g. phs002790.v7,
-    query dbGaP for released subjects"""
+    """For case submissions only, with formatted phs ID and version, e.g. phs002790.v7, query dbGaP for released subjects
+
+    Args:
+        phs_id_version (str): phs ID and version, e.g. phs002790.v7 to check participants/cases against
+
+    Returns:
+        list: List of case IDs/barcodes that are present for the study in dbGaP
+    """
 
     runner_logger = get_run_logger()
 
@@ -118,6 +118,7 @@ def dbgap_retrieve(phs_id_version: str):
     # intial request
     response = requests.get(url)
 
+    # check if phs ID and URL are correct
     if not str(response.status_code).startswith("20"):
         runner_logger.error("ERROR with dbGaP request, check phs ID and url")
 
@@ -127,6 +128,7 @@ def dbgap_retrieve(phs_id_version: str):
         for subject in json.loads(response.text)["subjects"]
     ]
 
+    # paginate thru API calls to retrieve cases released in dbGaP
     while json.loads(response.text)["pagination"]["link"]["next"] != None:
         response = requests.get(json.loads(response.text)["pagination"]["link"]["next"])
         if not str(response.status_code).startswith("20"):
@@ -143,7 +145,7 @@ def dbgap_retrieve(phs_id_version: str):
     return subjects_dbgap
 
 def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5, delay=2):
-    """Wrapper for request function to handle timeouts and connection errors
+    """Wrapper for request function to handle request retries for timeouts and connection errors
 
     Args:
         req_type (str): Type of request (GET, PUT or POST)
@@ -159,6 +161,8 @@ def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5,
     runner_logger = get_run_logger()
     
     retries = 0
+
+    # for GET requests
     if req_type.upper() == 'GET':
         while retries < max_retries:
             try:
@@ -172,6 +176,7 @@ def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5,
                 runner_logger.warning(f"Error with request: {e}. Retrying...")
                 retries += 1
                 time.sleep(delay)
+    # for POST requests
     elif req_type.upper() == 'POST':
         while retries < max_retries:
             try:
@@ -181,6 +186,7 @@ def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5,
                 runner_logger.warning(f"Error with request: {e}. Retrying...")
                 retries += 1
                 time.sleep(delay)
+    # for PUT requests
     elif req_type.upper() == 'PUT':
         while retries < max_retries:
             try:
@@ -199,15 +205,25 @@ def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5,
     return str(e)
 
 def dbgap_compare(phs_id_version: str, nodes: list):
-    """Perform comparison of dbGaP released cases
-    for project to case nodes in submission file"""
+    """Perform comparison of dbGaP released cases for project to case nodes in submission file
+
+    Args:
+        phs_id_version (str): phs ID and version, e.g. phs002790.v7 to check participants/cases against
+        nodes (list): List of case nodes to check if released in dbGaP
+
+    Returns:
+        list: Parsed list of case nodes that are released in dbGaP
+    """
 
     runner_logger = get_run_logger()
 
+    # retrieve from dbGaP already released cases
     subjects_dbgap = dbgap_retrieve(phs_id_version)
 
+    # init list of parsed cases
     parsed_subjects = []
 
+    # compare lists
     for node in nodes:
         if node["submitter_id"] in subjects_dbgap:
             parsed_subjects.append(node)
@@ -219,19 +235,19 @@ def dbgap_compare(phs_id_version: str, nodes: list):
     return parsed_subjects
 
 
-def read_token(dir_path: str):
-    """Read in token file string"""
-    try:
-        token = open(dir_path).read().strip()
-    except ValueError as e:
-        logging.error(f" Error reading token file {dir_path}: {e}")
-        sys.exit(1)
-
-    return token
-
-
 def retrieve_current_nodes(project_id: str, node_type: str, token: str):
-    """Query and return all nodes already submitted to GDC for project and node type"""
+    """Query and return all nodes already submitted to GDC for project and node type
+
+    Args:
+        project_id (str): _description_
+        node_type (str): _description_
+        token (str): _description_
+
+    Returns:
+        _type_: _description_
+    """
+
+
     runner_logger = get_run_logger()
 
     offset_returns = []
@@ -819,7 +835,6 @@ def runner(
         else:
             chunk_size = 200
 
-        # error_df, success_uuid_df = submit(update_nodes, project_id, token, "update")
         for node_set in range(0, len(update_nodes), chunk_size):
 
             runner_logger.info(
@@ -841,6 +856,8 @@ def runner(
         error_df = pd.concat(error_df_list)
         success_uuid_df = pd.concat(success_uuid_df_list)
 
+
+        # save error and success messages to files
         error_df.to_csv(
             f"{project_id}_{node_type}_{dt}/UPDATED_NODES_SUBMISSION_ERRORS.tsv",
             sep="\t",
@@ -852,7 +869,7 @@ def runner(
             index=False,
         )
 
-    # folder upload
+    # folder upload to s3 location
     folder_ul(
         local_folder=f"{project_id}_{node_type}_{dt}",
         bucket=bucket,
