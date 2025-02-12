@@ -152,7 +152,7 @@ def guid_checker(file_path: str):
     logger.info("Starting GUID checker...")
 
     # Prepare output file name with a date suffix
-    file_name = os.path.splitext(os.path.basename(file_path))[0]
+    file_name = os.path.splitext(os.path.split(os.path.relpath(file_path))[1])[0]
     output_file = f"{file_name}_GUIDcheck_{get_current_date()}.xlsx"
 
     # Read all sheets from the input file
