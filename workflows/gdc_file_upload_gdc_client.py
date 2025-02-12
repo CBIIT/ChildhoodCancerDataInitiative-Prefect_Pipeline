@@ -265,8 +265,8 @@ def runner(
         runner_logger.info(
             ShellOperation(
                 commands=[
-                    f"rm -r {working_dir}",
-                    "ls -l /usr/local/data/",
+                    f"rm -r /usr/local/data/GDC_file_upload_*",
+                    "ls -l /usr/local/data/", #confirm removal of GDC_file_upload working dirs
                 ]
             ).run()
         )
