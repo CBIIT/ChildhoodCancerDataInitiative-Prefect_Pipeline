@@ -157,10 +157,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
 
     chunk_size = int(part_size * 1024 * 1024)
 
-    big_chunk = int(20 * 1024 * 1024)
-
     for index, row in df.iterrows():
-        # TODO: code in retries?
         try:
             f_bucket = row["s3_url"].split("/")[2]
             f_path = "/".join(row["s3_url"].split("/")[3:])
