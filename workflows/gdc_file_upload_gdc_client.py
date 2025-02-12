@@ -239,7 +239,7 @@ def uploader_handler(
                 ).run()"""
                 process = subprocess.Popen(
                         [
-                            gdc_client_exe_path",
+                            gdc_client_exe_path,
                             "upload",
                             row["id"],
                             "-t",
