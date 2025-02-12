@@ -313,6 +313,9 @@ def runner(
 
         file_metadata = read_input(file_name)
 
+        ##TESTING remove later
+        file_metadata = file_metadata[10:13]
+
         # chdir to working path
         os.chdir(working_dir)
 
