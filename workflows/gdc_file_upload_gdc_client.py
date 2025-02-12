@@ -395,6 +395,9 @@ def runner(
         # read in file manifest
         file_metadata = read_input(file_name)
 
+        ## TESTING
+        file_metadata = file_metadata[15:]
+
         # chdir to working path
         os.chdir(working_dir)
 
