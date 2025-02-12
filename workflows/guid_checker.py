@@ -1,32 +1,69 @@
-import requests
-from prefect import flow, get_run_logger
 import os
 import time
+import requests
 import pandas as pd
 import warnings
-from datetime import date
-from openpyxl.utils.dataframe import dataframe_to_rows
 from shutil import copy
+from datetime import date
+from prefect import flow, get_run_logger
+from openpyxl.utils.dataframe import dataframe_to_rows
 from src.utils import get_time, file_dl, file_ul
 
 
-def make_request(url):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response
-        else:
-            print(f"Received non-200 status code: {response.status_code}. Retrying...")
-            return None
-    except requests.exceptions.RequestException as e:
-        print(f"Error: {e}. Retrying...")
-        return None
+# Utility function to get the current date in YYYYMMDD format
+def get_current_date():
+    return date.today().strftime("%Y%m%d")
 
 
+# Function to send a GET request to a URL with retry logic
+def make_request(url, retries=3, delay=1):
+    """
+    Sends a GET request to the provided URL and retries if an error occurs.
+
+    Args:
+        url (str): The API endpoint URL.
+        retries (int): Number of retry attempts.
+        delay (float): Delay (in seconds) between retries.
+
+    Returns:
+        response (requests.Response or None): Response object if successful, otherwise None.
+    """
+    for attempt in range(retries):
+        try:
+            response = requests.get(url)
+            if response.status_code == 200:
+                return response  # Successful response
+            print(
+                f"Non-200 response ({response.status_code}), retrying... ({attempt+1}/{retries})"
+            )
+        except requests.exceptions.RequestException as e:
+            print(f"Request error: {e}, retrying... ({attempt+1}/{retries})")
+        time.sleep(delay)
+    return None  # Return None if all retries fail
+
+
+# Function to process a row and get the corresponding GUID from the Indexd API
 def pull_guids(row):
-    guidcheck_logger = get_run_logger()
+    """
+    Queries the Indexd API to retrieve the GUID for the given file based on its hash and size.
+    If 'dcf_indexd_guid' is already present in the row, the process is skipped.
 
-    # Extract hash and size from the dataframe
+    Args:
+        row (pd.Series): A row from the DataFrame containing file information.
+
+    Returns:
+        guid (str): The GUID retrieved from the API, or the existing GUID if already present.
+    """
+    logger = get_run_logger()
+
+    # Skip processing if 'dcf_indexd_guid' is already present and not empty
+    if pd.notna(row["dcf_indexd_guid"]) and row["dcf_indexd_guid"].strip():
+        logger.info(
+            f"GUID already present for file_url: {row['file_url']}. Skipping API call."
+        )
+        return row["dcf_indexd_guid"]
+
+    # Extract relevant details for the API call
     hash_value = row["md5sum"]
     size = row["file_size"]
     guid = row["dcf_indexd_guid"]
@@ -34,226 +71,167 @@ def pull_guids(row):
     file_name = os.path.basename(file_url)
     file_path = os.path.dirname(file_url)
 
-    # guidcheck_logger.info(f"Making API call for {hash_value} of size: {size}.")
-
-    # Send API request with query parameters
-    # Define the API endpoint URL
+    # Build the API request URL with query parameters
     api_url = (
         f"https://nci-crdc.datacommons.io/index/index?hash=md5:{hash_value}&size={size}"
     )
     response = make_request(api_url)
+    time.sleep(1.5)  # Pause to avoid overwhelming the API
 
-    time.sleep(1.5)
-
-    # Check if the request was successful
-    if response is not None and response.status_code == 200:
-        with open("API_indexd_calls.log", "a") as logfile:
-            logfile.write(
-                f"Response {response.status_code} for {hash_value} of size: {size}.\n"
-            )
-        # Parse the JSON response
+    if response is not None:
         data = response.json()
-        # Extract the relevant information from the response and append to results
-
-        if len(data["records"]) > 0:
+        if data["records"]:  # Check if any records were returned
             for record in data["records"]:
-                if os.path.basename(str(record["urls"][0])) == file_name:
-                    if os.path.dirname(str(record["urls"][0])) == file_path:
-                        guid = record["did"]
-                    else:
-                        pass
-                else:
-                    pass
-        else:
-            with open("API_indexd_calls.log", "a") as logfile:
-                logfile.write(f"WARNING: no match for {hash_value} of size: {size}.\n")
-            guidcheck_logger.warning(
-                f"No match for hash='{hash_value}' and size='{size}'"
-            )
+                if (
+                    os.path.basename(record["urls"][0]) == file_name
+                    and os.path.dirname(record["urls"][0]) == file_path
+                ):
+                    return record["did"]  # Return the matching GUID
+        logger.warning(f"No match found for hash='{hash_value}' and size='{size}'")
     else:
-        with open("API_indexd_calls.log", "a") as logfile:
-            logfile.write(f"ERROR: no response for {hash_value} of size: {size}.\n")
-        guidcheck_logger.error(f"No response for hash='{hash_value}' and size='{size}'")
+        logger.error(
+            f"No response from Indexd API for hash='{hash_value}' and size='{size}'"
+        )
 
-    return guid
+    return row["dcf_indexd_guid"]  # Return the original GUID if no match is found
 
 
-@flow(
-    name="guid_checker",
-    log_prints=True,
-    flow_run_name="guid_checker_" + f"{get_time()}",
-)
-def guid_checker(file_path: str):  # removed profile
-    guidcheck_logger = get_run_logger()
-    ##############
-    #
-    # File name rework
-    #
-    ##############
-    # Determine file ext and abs path
-    file_name = os.path.splitext(os.path.split(os.path.relpath(file_path))[1])[0]
-    file_dir_path = os.path.split(os.path.relpath(file_path))[0]
+# Function to read all sheets from an Excel file into a dictionary of DataFrames
+def read_excel_sheets(file_path):
+    """
+    Reads all sheets from an Excel file into a dictionary of DataFrames.
 
-    if file_dir_path == "":
-        file_dir_path = "."
+    Args:
+        file_path (str): Path to the Excel file.
 
-    # obtain the date
-    def refresh_date():
-        today = date.today()
-        today = today.strftime("%Y%m%d")
-        return today
-
-    todays_date = refresh_date()
-
-    # Output file name based on input file name and date/time stamped.
-    output_file = file_name + "_GUIDcheck" + todays_date
-
-    ##############
-    #
-    # Pull Dictionary Page to create node pulls
-    #
-    ##############
-
-    def read_xlsx(file_path: str, sheet: str):
-        # Read in excel file
-        warnings.simplefilter(action="ignore", category=UserWarning)
-        return pd.read_excel(file_path, sheet, dtype="string")
-
-    ##############
-    #
-    # Read in data
-    #
-    ##############
-
-    guidcheck_logger.info("Reading CCDI manifest file")
-
-    # create workbook
+    Returns:
+        dict: A dictionary where keys are sheet names and values are DataFrames.
+    """
+    warnings.simplefilter(
+        action="ignore", category=UserWarning
+    )  # Ignore warnings from openpyxl
     xlsx_data = pd.ExcelFile(file_path)
-
-    # create dictionary for dfs
-    meta_dfs = {}
-
-    # read in dfs and apply to dictionary
-    for sheet_name in xlsx_data.sheet_names:
-        meta_dfs[sheet_name] = read_xlsx(xlsx_data, sheet_name)
-    # close xlsx_data object
+    dfs = {
+        sheet: pd.read_excel(xlsx_data, sheet, dtype="string")
+        for sheet in xlsx_data.sheet_names
+    }
     xlsx_data.close()
+    return dfs
 
-    # remove model tabs from the meta_dfs
-    del meta_dfs["README and INSTRUCTIONS"]
-    del meta_dfs["Dictionary"]
-    del meta_dfs["Terms and Value Sets"]
 
-    # create a list of present tabs
-    dict_nodes = set(list(meta_dfs.keys()))
+# Function to remove completely empty tabs from a dictionary of DataFrames
+def remove_empty_tabs(dfs):
+    """
+    Removes sheets that are completely empty from the dictionary of DataFrames.
 
-    ##############
-    #
-    # Go through each tab and remove completely empty tabs
-    #
-    ##############
+    Args:
+        dfs (dict): Dictionary of DataFrames representing the Excel sheets.
 
-    guidcheck_logger.info("Removing empty CCDI Manifest file tabs")
+    Returns:
+        dict: Dictionary with non-empty sheets only.
+    """
+    return {
+        sheet: df
+        for sheet, df in dfs.items()
+        if not df.dropna(how="all").dropna(how="all", axis=1).empty
+    }
 
-    for node in dict_nodes:
-        # see if the tab contain any data
-        test_df = meta_dfs[node]
-        test_df = test_df.drop("type", axis=1)
-        test_df = test_df.dropna(how="all").dropna(how="all", axis=1)
-        # if there is no data, drop the node/tab
-        if test_df.empty:
-            del meta_dfs[node]
 
-    # determine nodes again
-    dict_nodes = set(list(meta_dfs.keys()))
+@flow(name="guid_checker", log_prints=True)
+def guid_checker(file_path: str):
+    """
+    Main flow to process an Excel file, check GUIDs using the Indexd API, and write the results to a new file.
 
-    guidcheck_logger.info("Calling Indexd API")
+    Args:
+        file_path (str): Path to the input Excel file.
 
-    for node in dict_nodes:
-        if "file_url" in meta_dfs[node].columns:
-            guidcheck_logger.info(f"Checking {node}.")
-            df = meta_dfs[node]
+    Returns:
+        str: Path to the output Excel file.
+    """
+    logger = get_run_logger()
+    logger.info("Starting GUID checker...")
 
-            #total_rows = len(df)
+    # Prepare output file name with a date suffix
+    file_name = os.path.splitext(os.path.basename(file_path))[0]
+    output_file = f"{file_name}_GUIDcheck_{get_current_date()}.xlsx"
 
+    # Read all sheets from the input file
+    meta_dfs = read_excel_sheets(file_path)
+
+    # Remove unnecessary sheets
+    meta_dfs.pop("README and INSTRUCTIONS", None)
+    meta_dfs.pop("Dictionary", None)
+    meta_dfs.pop("Terms and Value Sets", None)
+
+    # Remove sheets that are completely empty
+    meta_dfs = remove_empty_tabs(meta_dfs)
+
+    logger.info("Checking and updating GUIDs...")
+
+    # Iterate over each sheet and process rows with 'file_url'
+    for sheet_name, df in meta_dfs.items():
+        if "file_url" in df.columns:
+            logger.info(f"Processing sheet: {sheet_name}")
+            total_rows = len(df)
+
+            # Iterate over each row and update the 'dcf_indexd_guid' column only if it's empty
             for index, row in df.iterrows():
                 df.at[index, "dcf_indexd_guid"] = pull_guids(row)
+                logger.info(
+                    f"Processed {index + 1} out of {total_rows} entries for {sheet_name}."
+                )  # Progress counter
 
-                # guidcheck_logger.info(f"{index} / {total_rows}")
+            # Update the dictionary with the modified DataFrame
+            meta_dfs[sheet_name] = df
 
-            # df["dcf_indexd_guid"] = df.apply(pull_guids, axis=1)
-            meta_dfs[node] = df
+    # Copy the input file to the output file before updating it
+    copy(file_path, output_file)
 
-    def reorder_dataframe(dataframe, column_list: list, sheet_name: str, logger):
-        reordered_df = pd.DataFrame(columns=column_list)
-        for i in column_list:
-            if i in dataframe.columns:
-                reordered_df[i] = dataframe[i].tolist()
-            else:
-                logger.warning(f"Column {i} in sheet {sheet_name} was left empty")
-        return reordered_df
-
-    guidcheck_logger.info("Writing out the CatchERR using pd.ExcelWriter")
-    # save out template
-    checker_out_file = f"{output_file}.xlsx"
-    copy(src=file_path, dst=checker_out_file)
+    # Write the updated DataFrames back to the Excel file
     with pd.ExcelWriter(
-        checker_out_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+        output_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
     ) as writer:
-        # for each sheet df
-        for sheet_name in meta_dfs.keys():
-            sheet_df = meta_dfs[sheet_name]
-            sheet_df_col = sheet_df.columns.tolist()
-            template_sheet_df = pd.read_excel(file_path, sheet_name=sheet_name)
-            template_sheet_col = template_sheet_df.columns.tolist()
-            if sheet_df_col != template_sheet_col:
-                sheet_df = reorder_dataframe(
-                    dataframe=sheet_df,
-                    column_list=template_sheet_col,
-                    sheet_name=sheet_name,
-                    logger=guidcheck_logger,
-                )
-            else:
-                pass
-            sheet_df.to_excel(
+        for sheet_name, df in meta_dfs.items():
+            template_cols = pd.read_excel(
+                file_path, sheet_name=sheet_name
+            ).columns.tolist()
+            if list(df.columns) != template_cols:
+                df = df.reindex(columns=template_cols)
+            df.to_excel(
                 writer, sheet_name=sheet_name, index=False, header=False, startrow=1
             )
 
-    guidcheck_logger.info(
-        f"Process Complete. The output file can be found here: {file_dir_path}/{checker_out_file}"
-    )
-
-    return checker_out_file
+    logger.info(f"Process complete. Output file: {output_file}")
+    return output_file
 
 
-@flow(
-    name="guid_checker_runner",
-    log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",
-)
-def guid_checker_runner(
-    bucket: str,
-    file_path: str,
-    runner: str,
-):
+@flow(name="guid_checker_runner", log_prints=True)
+def guid_checker_runner(bucket: str, file_path: str, runner: str):
+    """
+    Wrapper flow that handles downloading the input file, running the GUID checker, and uploading the results.
 
-    # generate output folder name
-    output_folder = runner + "/guid_checker_outputs_" + get_time()
+    Args:
+        bucket (str): S3 bucket name.
+        file_path (str): Path to the input file in the bucket.
+        runner (str): Name of the runner for creating output directories.
+    """
+    # Prepare output folder name with a timestamp
+    output_folder = f"{runner}/guid_checker_outputs_{get_time()}"
 
-    # download the manifest
+    # Download the input file
     file_dl(bucket, file_path)
-
     file_path = os.path.basename(file_path)
 
+    # Run the GUID checker flow
     checker_out_file = guid_checker(file_path)
 
+    # Upload the result and log file back to the bucket
     file_ul(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
         newfile=checker_out_file,
     )
-
     file_ul(
         bucket=bucket,
         output_folder=output_folder,
@@ -264,7 +242,5 @@ def guid_checker_runner(
 
 if __name__ == "__main__":
     bucket = "my-source-bucket"
-    # test new version manifest and latest version template
     file_path = "inputs/test_file.xlsx"
-
     guid_checker_runner(bucket=bucket, file_path=file_path, runner="svb")
