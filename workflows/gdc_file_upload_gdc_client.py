@@ -370,10 +370,8 @@ def runner(
 
         runner_logger.info(f">>> Reading input manifest file {file_name} ....")
 
+        # read in file manifest
         file_metadata = read_input(file_name)
-
-        ##TESTING remove later
-        file_metadata = file_metadata[12:14]
 
         # chdir to working path
         os.chdir(working_dir)
