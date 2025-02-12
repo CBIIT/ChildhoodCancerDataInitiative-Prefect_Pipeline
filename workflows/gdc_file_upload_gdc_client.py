@@ -189,7 +189,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
             )
             try:
-                response = ShellOperation(commands=[f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"]).run()
+                response = ShellOperation(commands=[f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"], stream_output=False).run()
                 #runner_logger.info(response)
                 if f"upload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"Upload finished for file {row['id']}")
@@ -265,8 +265,8 @@ def runner(
         runner_logger.info(
             ShellOperation(
                 commands=[
-                    #"rm -r /usr/local/data/GDC_file_upload_*",
-                    "ls -l /usr/local/", #confirm removal of GDC_file_upload working dirs
+                    "rm -r /usr/local/data/GDC_file_upload_*",
+                    "ls -l /usr/local/data/", #confirm removal of GDC_file_upload working dirs
                 ]
             ).run()
         )
@@ -314,7 +314,7 @@ def runner(
         file_metadata = read_input(file_name)
 
         ##TESTING remove later
-        file_metadata = file_metadata[10:13]
+        file_metadata = file_metadata[11:13]
 
         # chdir to working path
         os.chdir(working_dir)
