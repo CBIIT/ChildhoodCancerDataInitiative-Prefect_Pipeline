@@ -10,7 +10,6 @@ import json
 import requests
 import os
 import sys
-import subprocess
 import pandas as pd
 
 # prefect dependencies
@@ -192,57 +191,14 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
             )
             try:
-                """if row['file_size'] < 5368709120: #5GB file size cutoff:
-                    process = subprocess.Popen(
-                        [
-                            "./gdc-client",
-                            "upload",
-                            row["id"],
-                            "-t",
-                            token_file,
-                            "-c",
-                            str(chunk_size),
-                            "-n",
-                            str(n_process),
-                        ],
-                        shell=False,
-                        text=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
-                    response = ShellOperation(commands=[f"{gdc_client_exe_path} upload {row["id"]} -t {token_file} -c {chunk_size} -n {n_process}"]).run()
-                else: # >= 5GB file size
-                    process = subprocess.Popen(
-                        [
-                            "./gdc-client",
-                            "upload",
-                            row["id"],
-                            "-t",
-                            token_file,
-                            "-c",
-                            #str(chunk_size),
-                            str(big_chunk),
-                            "-n",
-                            str(n_process), #8 connections
-                        ],
-                        shell=False,
-                        text=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
-                
-                std_out, std_err = process.communicate()"""
                 response = ShellOperation(commands=[f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"]).run()
-                runner_logger.info(response)
-                if f"upload finished for file {row['id']}" in response:
+                #runner_logger.info(response)
+                if f"upload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                 else:
-                    #runner_logger.info(std_out)
-                    #runner_logger.info(std_err)
                     runner_logger.info(response)
-                    #subresponses.append([row["id"], row["file_name"], std_out, std_err])
-                    subresponses.append([row["id"], row["file_name"], response, ""])
+                    subresponses.append([row["id"], row["file_name"], "check", "check"])
             except Exception as e:
                 runner_logger.error(
                     f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
