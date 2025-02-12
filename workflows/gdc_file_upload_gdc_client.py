@@ -15,6 +15,7 @@ import pandas as pd
 # prefect dependencies
 from typing import Literal
 from prefect_shell import ShellOperation
+import subprocess
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
@@ -230,21 +231,42 @@ def uploader_handler(
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
             )
             try:
-                response = ShellOperation(
+                """response = ShellOperation(
                     commands=[
                         f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"
                     ],
                     stream_output=False,
-                ).run()
+                ).run()"""
+                process = subprocess.Popen(
+                        [
+                            gdc_client_exe_path",
+                            "upload",
+                            row["id"],
+                            "-t",
+                            token_file,
+                            "-c",
+                            str(chunk_size),
+                            "-n",
+                            str(n_process),
+                        ],
+                        shell=False,
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
+                std_out, std_err = process.communicate()
 
                 # check if upload successful
-                if f"upload finished for file {row['id']}" in response[-1]:
+                #if f"upload finished for file {row['id']}" in response[-1]:
+                if f"upload finished for file {row['id']}" in std_out:
                     runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append(
                         [row["id"], row["file_name"], "uploaded: success"]
                     )
                 else:
-                    runner_logger.info(response)
+                    #runner_logger.info(response)
+                    runner_logger.info(std_out)
+                    runner_logger.info(std_err)
                     subresponses.append(
                         [row["id"], row["file_name"], "uploaded: false/check"]
                     )
