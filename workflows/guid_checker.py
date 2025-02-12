@@ -64,12 +64,8 @@ def pull_guids(row):
         return row["dcf_indexd_guid"]
 
     # Extract relevant details for the API call
-    hash_value = row["md5sum"]
-    size = row["file_size"]
-    guid = row["dcf_indexd_guid"]
-    file_url = row["file_url"]
-    file_name = os.path.basename(file_url)
-    file_path = os.path.dirname(file_url)
+    hash_value, size, file_url = row["md5sum"], row["file_size"], row["file_url"]
+    file_name, file_path = os.path.basename(file_url), os.path.dirname(file_url)
 
     # Build the API request URL with query parameters
     api_url = (
