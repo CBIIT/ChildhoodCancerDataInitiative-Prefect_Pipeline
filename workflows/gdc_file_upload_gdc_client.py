@@ -13,6 +13,7 @@ import sys
 import pandas as pd
 
 # prefect dependencies
+from typing import Literal
 from prefect_shell import ShellOperation
 import boto3
 from botocore.exceptions import ClientError
@@ -219,6 +220,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
 
     return subresponses
 
+DropDownChoices = Literal["upload_files", "remove_working_dirs"]
 
 @flow(
     name="GDC File Upload",
@@ -234,6 +236,7 @@ def runner(
     secret_key_name: str,
     upload_part_size_mb: int,
     n_processes: int,
+    process_type: DropDownChoices,
 ):
     """CCDI Pipeline to Upload files to GDC
 
@@ -246,6 +249,8 @@ def runner(
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
         upload_part_size_mb (int): The upload part size in MB
         n_processes (int): The number of client connections for multipart files uploads
+        process_type (str): Select whether to upload files or remove previous working dir instances from VM
+
     """
 
     # runner_logger setup
@@ -254,101 +259,124 @@ def runner(
 
     runner_logger.info(">>> Running GDC_FILE_UPLOAD.py ....")
 
-    dt = get_time()
+    if process_type == 'remove_working_dirs':
 
-    token_dir = os.getcwd() #directory where token and gdc-client will be stored
-
-    working_dir = f"/usr/local/data/GDC_file_upload_{project_id}_{dt}"
-
-    os.mkdir(working_dir) #make download dir for files to upload
-
-    runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
-
-    # download the input manifest file
-    file_dl(bucket, manifest_path)
-
-    # save a token file to give gdc-client
-    token = get_secret(secret_key_name).strip()
-
-    with open("token.txt", "w+") as w:
-        w.write(token)
-    w.close()
-
-    token_path = os.path.join(token_dir, "token.txt")
-
-    # secure token file
-    ShellOperation(commands=["chmod 600 token.txt"]).run()
-
-    # download the gdc-client
-    file_dl(bucket, gdc_client_path)
-
-    # change gdc-client to executable
-    ShellOperation(commands=["chmod 755 gdc-client"]).run()
-
-    gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
-
-    # extract manifest file name
-    file_name = os.path.basename(manifest_path)
-
-    runner_logger.info(f">>> Reading input file {file_name} ....")
-
-    file_metadata = read_input(file_name)
-
-    # chdir to working path
-    os.chdir(working_dir)
-
-    responses = []
-
-    chunk_size = 20
-
-    for chunk in range(0, len(file_metadata), chunk_size):
-        # query against indexd for the bucket URL of the file
-        runner_logger.info(
-            f"Grabbing s3 URL metadata for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
-        )
-
-        file_metadata_s3 = retrieve_s3_url(file_metadata[chunk:chunk+chunk_size])
 
         runner_logger.info(
-            f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
+            ShellOperation(
+                commands=[
+                    f"rm -r {working_dir}",
+                    "ls -l /usr/local/data/",
+                ]
+            ).run()
         )
-        subresponses = uploader_handler(
-            #file_metadata_s3[chunk : chunk + chunk_size],
-            file_metadata_s3,
-            gdc_client_exe_path,
-            token_path,
-            upload_part_size_mb,
-            n_processes,
+
+    else: # process_type == "upload_files"
+
+        dt = get_time()
+
+        token_dir = os.getcwd() #directory where token and gdc-client will be stored
+
+        working_dir = f"/usr/local/data/GDC_file_upload_{project_id}_{dt}"
+
+        os.mkdir(working_dir) #make download dir for files to upload
+
+        runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
+
+        # download the input manifest file
+        file_dl(bucket, manifest_path)
+
+        # save a token file to give gdc-client
+        token = get_secret(secret_key_name).strip()
+
+        with open("token.txt", "w+") as w:
+            w.write(token)
+        w.close()
+
+        token_path = os.path.join(token_dir, "token.txt")
+
+        # secure token file
+        ShellOperation(commands=["chmod 600 token.txt"]).run()
+
+        # download the gdc-client
+        file_dl(bucket, gdc_client_path)
+
+        # change gdc-client to executable
+        ShellOperation(commands=["chmod 755 gdc-client"]).run()
+
+        gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
+
+        # extract manifest file name
+        file_name = os.path.basename(manifest_path)
+
+        runner_logger.info(f">>> Reading input file {file_name} ....")
+
+        file_metadata = read_input(file_name)
+
+        # chdir to working path
+        os.chdir(working_dir)
+
+        responses = []
+
+        chunk_size = 20
+
+        for chunk in range(0, len(file_metadata), chunk_size):
+            # query against indexd for the bucket URL of the file
+            runner_logger.info(
+                f"Grabbing s3 URL metadata for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
+            )
+
+            file_metadata_s3 = retrieve_s3_url(file_metadata[chunk:chunk+chunk_size])
+
+            runner_logger.info(
+                f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
+            )
+            subresponses = uploader_handler(
+                #file_metadata_s3[chunk : chunk + chunk_size],
+                file_metadata_s3,
+                gdc_client_exe_path,
+                token_path,
+                upload_part_size_mb,
+                n_processes,
+            )
+            responses += subresponses
+
+        responses_df = pd.DataFrame(
+            responses, columns=["id", "file_name", "std_out", "std_err"]
         )
-        responses += subresponses
 
-    responses_df = pd.DataFrame(
-        responses, columns=["id", "file_name", "std_out", "std_err"]
-    )
+        # save response file
 
-    # save response file
+        responses_df.to_csv(
+            f"{working_dir}/{file_name}_upload_results.tsv",
+            sep="\t",
+            index=False,
+        )
 
-    responses_df.to_csv(
-        f"{working_dir}/{file_name}_upload_results.tsv",
-        sep="\t",
-        index=False,
-    )
+        # delete token file
+        if os.path.exists(token_path):
+            try:
+                os.remove(token_path)
+            except:
+                runner_logger.error(f"Cannot remove file token.txt.")
+        else:
+            runner_logger.warning(f"The file token.txt does not exist, cannot remove.")
 
-    # delete token file
-    if os.path.exists(token_path):
-        try:
-            os.remove(token_path)
-        except:
-            runner_logger.error(f"Cannot remove file token.txt.")
-    else:
-        runner_logger.warning(f"The file token.txt does not exist, cannot remove.")
+        # folder upload
+        folder_ul(
+            local_folder=f"{working_dir}",
+            bucket=bucket,
+            destination=runner + "/",
+            sub_folder="",
+        )
 
-    # folder upload
-    folder_ul(
-        local_folder=f"{working_dir}",
-        bucket=bucket,
-        destination=runner + "/",
-        sub_folder="",
-    )
+        # remove working dir
+        runner_logger.info(
+                ShellOperation(
+                    commands=[
+                        f"rm -r {working_dir}",
+                        "ls -l /usr/local/data/",
+                    ]
+                ).run()
+            )
 
-    #r
