@@ -10,20 +10,23 @@ import json
 import requests
 import os
 import sys
-import subprocess
 import pandas as pd
 
 # prefect dependencies
+from typing import Literal
+from prefect_shell import ShellOperation
+import subprocess
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
 from src.utils import get_time, file_dl, folder_ul, sanitize_return
 
+
 def read_input(file_path: str):
     """Read in TSV file and extract file_name, id (GDC uuid), md5sum and file_size columns
 
     Args:
-        file_path (str): path to input file that contains required cols
+        file_path (str): Path to input file that contains required cols
 
     Returns:
         pd.DataFrame: DataFrame with extracted necessary metadata
@@ -33,6 +36,7 @@ def read_input(file_path: str):
 
     f_name = os.path.basename(file_path)
 
+    # perform checks for metadata file format and entries
     try:
         file_metadata = pd.read_csv(f_name, sep="\t")[
             ["id", "md5sum", "file_size", "file_name"]
@@ -48,18 +52,38 @@ def read_input(file_path: str):
     return file_metadata
 
 
-def get_secret(secret_key_name):
+def get_secret(secret_key_name: str):
+    """_summary_
+
+    Args:
+        secret_key_name (str): Name of secret stored in AWS Secrets Manager
+
+    Raises:
+        e: Error when attempting to retrieve secret
+
+    Returns:
+        str: Secret hash returned from AWS Secrets Manager
+    """
+
+    runner_logger = get_run_logger()
+
+    # bucket and bucket location where secret is stored
     secret_name = "ccdi/nonprod/inventory/gdc-token"
+
+    # specify region name
     region_name = "us-east-1"
+
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
+
     try:
         get_secret_value_response = client.get_secret_value(SecretId=secret_name)
     except ClientError as e:
         # For a list of exceptions thrown, see
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-        raise e
+        runner_logger.error(f"Error when retrieving secret: {e}")
+        sys.exit(1)
 
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
 
@@ -82,20 +106,20 @@ def retrieve_s3_url(rows: pd.DataFrame):
     runner_logger = get_run_logger()
 
     for index, row in rows.iterrows():
+
+        # format the indexd URL
         query_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{row['md5sum']}&size={row['file_size']}"
 
         response = requests.get(query_url)
 
-        # parse response here
+        # Attempt to parse response here
         try:
             s3_url = ""
             for record in json.loads(response.text)["records"]:
                 for url in record["urls"]:
                     if url != "":
                         s3_url = url
-                        runner_logger.info(
-                            f"URL is: {s3_url}"
-                        )
+                        runner_logger.info(f"URL is: {s3_url}")
 
             if s3_url == "":
                 runner_logger.error(
@@ -134,7 +158,7 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
         subframe = retrieve_s3_url(file_metadata[chunk : chunk + chunk_size])
         subframes.append(subframe)
 
-    df_s3 = pd.concat(subframes)
+    df_s3 = pd.concat(subframes)  # concat all subsets of dataframe together
 
     return df_s3
 
@@ -144,18 +168,37 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     log_prints=True,
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
 )
-def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_process: int):
+def uploader_handler(
+    df: pd.DataFrame,
+    gdc_client_exe_path: str,
+    token_file: str,
+    part_size: int,
+    n_process: int,
+):
+    """Handles upload of chunk of files to GDC
+
+    Args:
+        df (pd.DataFrame): DataFrame of metadata for files to upload
+        gdc_client_exe_path (str): Path to S3 location where Linux gdc-client package is located
+        token_file (str): Name of VM stored instance of token
+        part_size (int): Size (in megabytes) that file chunks should be uploaded in
+        n_process (int): Number of concurrent connections to upload file
+
+    Returns:
+        list: A list of lists with file upload results
+    """
 
     runner_logger = get_run_logger()
 
+    # record upload results here
     subresponses = []
 
+    # convert part size from MB to bytes
     chunk_size = int(part_size * 1024 * 1024)
 
-    big_chunk = int(20 * 1024 * 1024)
-
     for index, row in df.iterrows():
-        # TODO: code in retries?
+        # attempt to download file from s3 ocation to VM
+        # to then upload with gdc-client
         try:
             f_bucket = row["s3_url"].split("/")[2]
             f_path = "/".join(row["s3_url"].split("/")[3:])
@@ -166,7 +209,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                     f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
                 )
             else:
-            # trying to re-use file_dl() function
+                # download file to VM to then upload with gdc-client 
                 file_dl(f_bucket, f_path)
                 runner_logger.info(f"Downloaded file {f_name}")
         except:
@@ -174,22 +217,29 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
             subresponses.append([row["id"], row["file_name"], "NOT uploaded"])
             continue  # skip rest of attempt since no file
 
-        # check that file exists
+        # check that file exists in VM
         if not os.path.isfile(row["file_name"]):
             runner_logger.error(
                 f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
             )
-            subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
-            continue
+            subresponses.append(
+                [row["id"], row["file_name"], "NOT uploaded: File not copied from s3"]
+            )
+            continue  # ignore rest of function
         else:  # proceed to uploaded with API
             runner_logger.info(
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
             )
             try:
-                if row['file_size'] < 5368709120: #5GB file size cutoff:
-                    process = subprocess.Popen(
+                """response = ShellOperation(
+                    commands=[
+                        f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"
+                    ],
+                    stream_output=False,
+                ).run()"""
+                process = subprocess.Popen(
                         [
-                            "./gdc-client",
+                            gdc_client_exe_path,
                             "upload",
                             row["id"],
                             "-t",
@@ -204,38 +254,27 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
                     )
-                else: # >= 5GB file size
-                    process = subprocess.Popen(
-                        [
-                            "./gdc-client",
-                            "upload",
-                            row["id"],
-                            "-t",
-                            token_file,
-                            "-c",
-                            #str(chunk_size),
-                            str(big_chunk),
-                            "-n",
-                            str(n_process), #8 connections
-                        ],
-                        shell=False,
-                        text=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
                 std_out, std_err = process.communicate()
+
+                # check if upload successful
+                #if f"upload finished for file {row['id']}" in response[-1]:
                 if f"upload finished for file {row['id']}" in std_out:
                     runner_logger.info(f"Upload finished for file {row['id']}")
-                    subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
+                    subresponses.append(
+                        [row["id"], row["file_name"], "uploaded: success"]
+                    )
                 else:
+                    #runner_logger.info(response)
                     runner_logger.info(std_out)
                     runner_logger.info(std_err)
-                    subresponses.append([row["id"], row["file_name"], std_out, std_err])
+                    subresponses.append(
+                        [row["id"], row["file_name"], "uploaded: false/check"]
+                    )
             except Exception as e:
                 runner_logger.error(
                     f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
                 )
-                subresponses.append([row["id"], row["file_name"], "NOT uploaded", e])
+                subresponses.append([row["id"], row["file_name"], f"NOT uploaded: {e}"])
 
             # delete file
             if os.path.exists(f_name):
@@ -248,11 +287,12 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
 
             # check delete
             if os.path.exists(f_name):
-                runner_logger.error(
-                    f"The file {f_name} still exists, error removing."
-                )
+                runner_logger.error(f"The file {f_name} still exists, error removing.")
 
     return subresponses
+
+
+DropDownChoices = Literal["upload_files", "remove_working_dirs"]
 
 
 @flow(
@@ -269,6 +309,7 @@ def runner(
     secret_key_name: str,
     upload_part_size_mb: int,
     n_processes: int,
+    process_type: DropDownChoices,
 ):
     """CCDI Pipeline to Upload files to GDC
 
@@ -281,6 +322,8 @@ def runner(
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
         upload_part_size_mb (int): The upload part size in MB
         n_processes (int): The number of client connections for multipart files uploads
+        process_type (str): Select whether to upload files or remove previous working dir instances from VM
+
     """
 
     # runner_logger setup
@@ -289,102 +332,138 @@ def runner(
 
     runner_logger.info(">>> Running GDC_FILE_UPLOAD.py ....")
 
-    dt = get_time()
-
-    os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
-
-    runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
-
-    process = subprocess.Popen(
-        ["df", "."],
-        shell=False,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-    )
-
-    std_out, std_err = process.communicate()
-
-    runner_logger.info(f"df . results: OUT: {std_out}, ERR: {std_err}")
-
-    # download the input manifest file
-    file_dl(bucket, manifest_path)
-
-    # save a token file to give gdc-client
-    token = get_secret(secret_key_name).strip()
-
-    with open("token.txt", "w+") as w:
-        w.write(token)
-    w.close()
-
-    # secure token file
-    subprocess.run(["chmod", "600", "token.txt"], shell=False)
-
-    # download the gdc-client
-    file_dl(bucket, gdc_client_path)
-
-    # change gdc-client to executable
-    subprocess.run(["chmod", "755", "gdc-client"], shell=False)
-
-    # extract file name before the workflow starts
-    file_name = os.path.basename(manifest_path)
-
-    runner_logger.info(f">>> Reading input file {file_name} ....")
-
-    file_metadata = read_input(file_name)
-
-    # then query against indexd for the bucket URL of the file
-
-    #file_metadata_s3 = retrieve_s3_url_handler(file_metadata)
-
-    responses = []
-
-    chunk_size = 20
-
-    for chunk in range(0, len(file_metadata), chunk_size):
-        runner_logger.info(
-            f"Grabbing s3 URL metadata for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
-        )
-
-        file_metadata_s3 = retrieve_s3_url(file_metadata[chunk:chunk+chunk_size])
+    if process_type == "remove_working_dirs":
 
         runner_logger.info(
-            f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
+            ShellOperation(
+                commands=[
+                    "rm -r /usr/local/data/GDC_file_upload_*",
+                    "ls -l /usr/local/data/",  # confirm removal of GDC_file_upload working dirs
+                ]
+            ).run()
         )
-        subresponses = uploader_handler(
-            #file_metadata_s3[chunk : chunk + chunk_size],
-            file_metadata_s3,
-            "token.txt",
-            upload_part_size_mb,
-            n_processes,
+
+    else:  # process_type == "upload_files"
+
+        runner_logger.info(f">>> Setting up env ....")
+
+        dt = get_time()
+
+        token_dir = os.getcwd()  # directory where token and gdc-client will be stored
+
+        working_dir = f"/usr/local/data/GDC_file_upload_{project_id}_{dt}"
+
+        # make dir to download files from DCF to VM, to then upload to GDC
+        if not os.path.exists(working_dir):
+            os.mkdir(working_dir)
+
+        # check that GDC API status is OK
+        runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
+
+        # download the input manifest file
+        file_dl(bucket, manifest_path)
+
+        # save a token file to give gdc-client
+        token = get_secret(secret_key_name).strip()
+
+        # save token locally since gdc-client takes a token file as input
+        # not the hash directly
+        with open("token.txt", "w+") as w:
+            w.write(token)
+        w.close()
+
+        # path to token file to provide to gdc-client for uploads
+        token_path = os.path.join(token_dir, "token.txt")
+
+        # secure token file
+        ShellOperation(commands=["chmod 600 token.txt"]).run()
+
+        # download the gdc-client
+        file_dl(bucket, gdc_client_path)
+
+        # change gdc-client to executable
+        ShellOperation(commands=["chmod 755 gdc-client"]).run()
+
+        # path to gdc-client for uploads
+        gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
+
+        # extract manifest file name
+        file_name = os.path.basename(manifest_path)
+
+        runner_logger.info(f">>> Reading input manifest file {file_name} ....")
+
+        # read in file manifest
+        file_metadata = read_input(file_name)
+
+        ## TESTING
+        file_metadata = file_metadata[15:]
+
+        # chdir to working path
+        os.chdir(working_dir)
+
+        # store results of uploads here
+        responses = []
+
+        # number of files to query S3 uploads and then upload consecutively in a flow
+        chunk_size = 20
+
+        for chunk in range(0, len(file_metadata), chunk_size):
+            # query against indexd for the bucket URL of the file
+            runner_logger.info(
+                f"Grabbing s3 URL metadata for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
+            )
+
+            # grab S3 URL data to download files to VM
+            file_metadata_s3 = retrieve_s3_url(
+                file_metadata[chunk : chunk + chunk_size]
+            )
+
+            runner_logger.info(
+                f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
+            )
+
+            # upload files in chunk
+            subresponses = uploader_handler(
+                file_metadata_s3,
+                gdc_client_exe_path,
+                token_path,
+                upload_part_size_mb,
+                n_processes,
+            )
+            responses += subresponses
+
+        responses_df = pd.DataFrame(responses, columns=["id", "file_name", "status"])
+
+        # save response file
+        responses_df.to_csv(
+            f"{working_dir}/{file_name}_upload_results.tsv",
+            sep="\t",
+            index=False,
         )
-        responses += subresponses
 
-    responses_df = pd.DataFrame(
-        responses, columns=["id", "file_name", "std_out", "std_err"]
-    )
+        # delete token file
+        if os.path.exists(token_path):
+            try:
+                os.remove(token_path)
+            except:
+                runner_logger.error(f"Cannot remove file token.txt.")
+        else:
+            runner_logger.warning(f"The file token.txt does not exist, cannot remove.")
 
-    # save response file
+        # download folder to S3 location
+        folder_ul(
+            local_folder=f"{working_dir}",
+            bucket=bucket,
+            destination=runner + "/",
+            sub_folder="",
+        )
 
-    responses_df.to_csv(
-        f"GDC_file_upload_{project_id}_{dt}/{file_name}_upload_results.tsv",
-        sep="\t",
-        index=False,
-    )
-
-    # delete token file
-    if os.path.exists("token.txt"):
-        try:
-            os.remove("token.txt")
-        except:
-            runner_logger.error(f"Cannot remove file token.txt.")
-    else:
-        runner_logger.warning(f"The file token.txt does not exist, cannot remove.")
-
-    # folder upload
-    folder_ul(
-        local_folder=f"GDC_file_upload_{project_id}_{dt}",
-        bucket=bucket,
-        destination=runner + "/",
-        sub_folder="",
-    )
+        # remove working dir
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    f"rm -r {working_dir}",
+                    "ls -l /usr/local/data/",
+                ]
+            ).run()
+        )
