@@ -232,7 +232,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     )
                 
                 std_out, std_err = process.communicate()"""
-                response = ShellOperation(commands=[f"{gdc_client_exe_path} upload {row["id"]} -t {token_file} -c {chunk_size} -n {n_process}"]).run()
+                response = ShellOperation(commands=[f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"]).run()
                 runner_logger.info(response)
                 if f"upload finished for file {row['id']}" in response:
                     runner_logger.info(f"Upload finished for file {row['id']}")
