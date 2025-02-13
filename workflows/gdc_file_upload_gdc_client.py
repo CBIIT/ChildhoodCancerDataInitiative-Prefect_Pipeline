@@ -342,7 +342,8 @@ def runner(
     token_path = os.path.join(token_dir, "token.txt")
 
     # secure token file
-    subprocess.run(["chmod", "600", "token.txt"], shell=False)
+    #subprocess.run(["chmod", "600", "token.txt"], shell=False)
+    ShellOperation(commands=["chmod 600 token.txt"]).run()
 
     # download the gdc-client
     file_dl(bucket, gdc_client_path)
@@ -425,6 +426,9 @@ def runner(
         destination=runner + "/",
         sub_folder="",
     )
+
+    # change back to starting dir
+    os.chdir(token_dir)
 
     # remove working dir
     runner_logger.info(
