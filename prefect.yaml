@@ -852,10 +852,11 @@ deployments:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
+  
   # base metadata
   - name: ccdi-gdc-import
     version: null
-    tags: ["TEST"]
+    tags: ["Production"]
     description: null
     entrypoint: workflows/gdc_import.py:runner
     schedule: null
@@ -876,7 +877,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1458_GDC_Import
+          branch: main
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
