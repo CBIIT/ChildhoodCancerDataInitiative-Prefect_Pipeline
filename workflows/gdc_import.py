@@ -239,12 +239,12 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     """Query and return all nodes already submitted to GDC for project and node type
 
     Args:
-        project_id (str): _description_
-        node_type (str): _description_
-        token (str): _description_
+        project_id (str): Project ID to submit node metadata for
+        node_type (str): Node type for nodes to submit
+        token (str): GDC token hash to make API calls with 
 
     Returns:
-        _type_: _description_
+        list: List of dict node metadata that has already been submitted successfully to GDC
     """
 
 
@@ -296,7 +296,6 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
 
         # check if anymore hits, if not break to speed up process
 
-
         if len(json.loads(response.text)["data"][node_type]) == n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
         elif len(json.loads(response.text)["data"][node_type]) < n_query:
@@ -318,7 +317,20 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     flow_run_name="gdc_import_query_entities_" + f"{get_time()}",
 )
 def query_entities(node_uuids: list, project_id: str, token: str):
-    """Query entity metadata from GDC to perform comparisons for nodes to update"""
+    """Query entity metadata from GDC to perform comparisons for nodes to update.
+    This function is different from retrieve_current_nodes() because one needs does not need to know
+    a priori the GDC uuids/submitter_id to retrieve metadata for as well as what properties 
+    to return for retrieve_current_nodes(); this function requires specifying a UUID 
+    and returns all properties. 
+
+    Args:
+        node_uuids (list): UUIDs of nodes already in GDC
+        project_id (str): Project ID to query node metadata for
+        token (str): GDC token hash to make API calls with 
+
+    Returns:
+        list: List of dict node metadata that have already been submitted successfully to GDC
+    """
 
     try:
         runner_logger = get_run_logger()
@@ -341,17 +353,17 @@ def query_entities(node_uuids: list, project_id: str, token: str):
 
         for offset in range(0, len(uuids), size):  # query 20 at a time
             runner_logger.info(f"Querying entities chunk {round(offset/size)+1} of {len(range(0, len(uuids), size))}")
-            uuids_fmt = ",".join(uuids[offset : offset + size])
+            uuids_fmt = ",".join(uuids[offset : offset + size]) #format UUIDs into comma sep list for API call
             retries = 0
             while retries < max_retries:
                 try:
-                    temp = make_request('get', api + uuids_fmt, token)
-                    entities = json.loads(temp.text)["entities"]
-                    retries = max_retries
+                    temp = make_request('get', api + uuids_fmt, token) #make request
+                    entities = json.loads(temp.text)["entities"] #extract entities from request
+                    retries = max_retries #update retries counter to exit loop
                 except:
                     runner_logger.error(
                         f" Entities request output malformed: {str(temp.text)}, for request {api+uuids_fmt} , trying again..."  # loads > dumps
-                    )
+                    ) # throw error if entities not found in API call return
                     retries += 1
                     time.sleep(2)
 
@@ -373,7 +385,14 @@ def query_entities(node_uuids: list, project_id: str, token: str):
         sys.exit(1)
 
 def entity_parser(node: dict):
-    """Parse out unnecessary GDC internal fields and handle null values"""
+    """Parse out unnecessary GDC internal fields and handle null values
+
+    Args:
+        node (dict): Node metadata returned from /entities API call
+
+    Returns:
+        dict: Node metadata with extraneous/GDC internal key-value pairs removed
+    """
 
     runner_logger = get_run_logger()
 
@@ -440,7 +459,15 @@ def entity_parser(node: dict):
 
 def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
     """Compare node entity metadata; if node in submission file is different than in GDC
-    then slate for import, otherwise ignore; use DeepDiff"""
+    then slate for import, otherwise ignore; use DeepDiff for comparison
+
+    Args:
+        submit_file_metadata (dict): Node metadata for a given node entity present in submission file
+        gdc_node_metadata (dict): Node metadata for a given node entity present in the GDC graph
+
+    Returns:
+        bool: Indication if metadata in file is different from what metadata has been submitted to GDC
+    """
 
     if DeepDiff(submit_file_metadata, gdc_node_metadata, ignore_order=True):
         return True
@@ -449,7 +476,18 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
 
 
 def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check_for_updates: str):
-    """Determine if nodes in submission file are new entities or already exist in GDC"""
+    """Determine if nodes in submission file are new entities or already exist in GDC
+
+    Args:
+        nodes (list): List of node entities in submission file to check  
+        project_id (str): GDC Project ID
+        node_type (str): Node entity type in GDC Data Model 
+        token (str): Token hash
+        check_for_updates (str): yes/no indication for checking previously submitted entities in GDC against nodes to be submitted for differences
+
+    Returns:
+        list: List of dict node metadata that is new (i.e. not previously submitted to GDC) or already submitted nodes
+    """
 
     runner_logger = get_run_logger()
 
@@ -535,25 +573,16 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check
 
 
 def error_parser(response: str):
-    """Read in a response and parse the returned message for output TSV files"""
+    """Read in a response and parse the returned message for output TSV files
 
-    runner_logger = get_run_logger()
+    Args:
+        response (str): API response from submission API call
 
-    # dict of types of responses with substring that appears in response message
-    # substring in message : parsed message
-    """error_repsonses = {
-        "is not one of": "Enum value not in list of acceptable values",
-        "already exists in the GDC": "POST requst to already existing submitter_id, try PUT instead",
-        "Additional properties are not allowed": "Extra, incorrect properties submitted with node",
-        "is less than the minimum of -32872": "int/num value for a field is less than the minimum (-32872)",
-        "is not in the current data model": "Specified node type not in data model",
-        "Invalid entity type": "Specified node type not in data model",
-        "is a required property": "Missing a required property",
-        "not found in dbGaP": "Case not found in dbGaP",
-    }"""
+    Returns:
+        str: Parsed and formatted error message or original response if error cannot be determined
+    """
 
-    # find error message from these
-    # error_found = False
+    # find error message from submission API call response
 
     try:
         enum_dict = json.loads(response)
@@ -585,7 +614,14 @@ def error_parser(response: str):
     flow_run_name="gdc_import_submission_response_recorder_" + f"{get_time()}",
 )
 def response_recorder(responses: list):
-    """Parse and record responses"""
+    """Parse and record responses
+
+    Args:
+        responses (list): List of responses from submission API calls
+
+    Returns:
+        pd.DataFrame: dataframe of parsed and formatted API call responses for readability 
+    """
 
     runner_logger = get_run_logger()
 
@@ -604,7 +640,7 @@ def response_recorder(responses: list):
             runner_logger.warning(
                 f" Unknown submission response code and status, {node[1]} for submitter_id {node[0]}"
             )
-
+    # convert recorded responses to dataframes or return empty dataframe if no data
     if errors:
         error_df = pd.DataFrame(errors)
         error_df.columns = ["submitter_id", "status_code", "message"]
@@ -626,7 +662,17 @@ def response_recorder(responses: list):
     flow_run_name="gdc_import_submission_" + f"{get_time()}",
 )
 def submit(nodes: list, project_id: str, token: str, submission_type: str):
-    """Submission of node entities with POST or PUT request"""
+    """Submission of node entities with POST or PUT request
+
+    Args:
+        nodes (list): Node entity metadata to submitt to GDC
+        project_id (str): GDC Project ID
+        token (str): Token hash to submit node entity metadata
+        submission_type (str): Either 'new' or 'update' to submit node entity metadata with POST (new) or PUT (update) request
+
+    Returns:
+        pd.DataFrame: dataframe of parsed and formatted API call responses for readability 
+    """
 
     runner_logger = get_run_logger()
 
@@ -694,8 +740,22 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
 
 
 def get_secret(secret_key_name):
+    """Retrieve token hash for GDC API calls from AWS Secrets Manager
+
+    Args:
+        secret_key_name (str): Name of secret stored in AWS Secrets Manager
+
+    Raises:
+        e: Error when attempting to retrieve secret
+
+    Returns:
+        str: Secret hash returned from AWS Secrets Manager
+    """
+
+    # bucket and bucket location where secret is stored
     secret_name = "ccdi/nonprod/inventory/gdc-token"
     region_name = "us-east-1"
+    
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
