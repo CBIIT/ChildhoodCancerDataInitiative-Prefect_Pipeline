@@ -64,6 +64,7 @@ def pull_guids(row):
         return row["dcf_indexd_guid"]
 
     # Extract relevant details for the API call
+    guid = ""
     hash_value, size, file_url = row["md5sum"], row["file_size"], row["file_url"]
     file_name, file_path = os.path.basename(file_url), os.path.dirname(file_url)
 
@@ -82,14 +83,15 @@ def pull_guids(row):
                     os.path.basename(record["urls"][0]) == file_name
                     and os.path.dirname(record["urls"][0]) == file_path
                 ):
-                    return record["did"]  # Return the matching GUID
-        logger.warning(f"No match found for hash='{hash_value}' and size='{size}'")
+                    guid = record["did"]  # Return the matching GUID
+                logger.info(f"Match found for hash='{hash_value}' and size='{size}': '{guid}'")
     else:
         logger.error(
             f"No response from Indexd API for hash='{hash_value}' and size='{size}'"
         )
 
-    return row["dcf_indexd_guid"]  # Return the original GUID if no match is found
+
+    return guid  # Return the original GUID if no match is found
 
 
 # Function to read all sheets from an Excel file into a dictionary of DataFrames
@@ -289,12 +291,12 @@ def guid_checker_runner(bucket: str, file_path: str, runner: str):
         sub_folder="",
         newfile=checker_out_file,
     )
-    file_ul(
-        bucket=bucket,
-        output_folder=output_folder,
-        sub_folder="",
-        newfile="API_indexd_calls.log",
-    )
+    # file_ul(
+    #     bucket=bucket,
+    #     output_folder=output_folder,
+    #     sub_folder="",
+    #     newfile="API_indexd_calls.log",
+    # )
 
 
 if __name__ == "__main__":
