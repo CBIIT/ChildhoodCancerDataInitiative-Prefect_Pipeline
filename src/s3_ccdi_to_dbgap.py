@@ -119,7 +119,7 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
                     print(f"pdx {pdx_id} doesn't have a parent id from sample node")
                     print(
                         pdx_sheet_df[pdx_sheet_df["pdx_id"] == pdx_id][
-                            "study.study_id", "sample.sample_id", "pdx_id"
+                            ["study.study_id", "sample.sample_id", "pdx_id"]
                         ]
                     )
         else:
@@ -156,7 +156,7 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
                     print(
                         cell_line_sheet_df[
                             cell_line_sheet_df["cell_line_id"] == cell_line_id
-                        ]["study.study_id", "sample.sample_id", "cell_line_id"]
+                        ][["study.study_id", "sample.sample_id", "cell_line_id"]]
                     )
         else:
             pass
