@@ -509,20 +509,16 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check
     ]
 
     # parse node entities in submission file that already exist in GDC
-    #if check_for_updates.lower() == 'yes':
     check_nodes = [
         node
         for node in nodes
         if node["submitter_id"]
         in list(set(submission_nodes_sub_ids) & set(gdc_nodes_sub_ids))
     ]
-    #else:
-        #check_nodes = []
 
     # assess if node entities in submission file that already exist in GDC
     # need to be updated in GDC (i.e. entities in file and GDC are different)
 
-    #if len(check_nodes) > 0:
     if check_for_updates.lower() == 'yes':
 
         update_nodes = []
