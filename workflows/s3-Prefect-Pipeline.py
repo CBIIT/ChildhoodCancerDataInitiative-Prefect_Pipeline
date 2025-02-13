@@ -224,46 +224,46 @@ def runner(
 
     if catcherr_out_file is not None:
 
-        ## run ValidationRy
-        #runner_logger.info("Running ValidationRy flow")
-        #try:
-        #    validation_out_file = ValidationRy_new(catcherr_out_file, input_template)
-        #except:
-        #    validation_out_file = None
-        ## upload ValidationRy output
-        #runner_logger.info(f"Uploading outputs of ValidationRy to bucket {bucket}")
-        #ccdi_wf_outputs_ul(
-        #    bucket=bucket,
-        #    output_folder=output_folder,
-        #    output_path=validation_out_file,
-        #    output_log=None,
-        #    wf_step="ValidationRy",
-        #    sub_folder="2_ValidationRy_output",
-        #)
-#
-        ## run CCDI to SRA
-        #runner_logger.info("Running CCDI to SRA submission file flow")
-        #try:
-        #    (sra_out_file, sra_out_log) = CCDI_to_SRA(
-        #        manifest=catcherr_out_file,
-        #        template=input_sra_template,
-        #        pre_submission=sra_previous_submission,
-        #    )
-        #except:
-        #    sra_out_file = None
-        #    sra_out_log = identify_data_curation_log_file(
-        #        start_str="CCDI_to_SRA_submission_"
-        #    )
-        #    # sra_out_log = "CCDI_to_SRA_submission_" + get_date() + ".log"
-        #runner_logger.info(f"Uploading outputs of SRA to bucket {bucket}")
-        #ccdi_wf_outputs_ul(
-        #    bucket=bucket,
-        #    output_folder=output_folder,
-        #    output_path=sra_out_file,
-        #    output_log=sra_out_log,
-        #    wf_step="CCDI-to-SRA",
-        #    sub_folder="3_SRA_submisison_output",
-        #)
+        # run ValidationRy
+        runner_logger.info("Running ValidationRy flow")
+        try:
+            validation_out_file = ValidationRy_new(catcherr_out_file, input_template)
+        except:
+            validation_out_file = None
+        # upload ValidationRy output
+        runner_logger.info(f"Uploading outputs of ValidationRy to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=validation_out_file,
+            output_log=None,
+            wf_step="ValidationRy",
+            sub_folder="2_ValidationRy_output",
+        )
+
+        # run CCDI to SRA
+        runner_logger.info("Running CCDI to SRA submission file flow")
+        try:
+            (sra_out_file, sra_out_log) = CCDI_to_SRA(
+                manifest=catcherr_out_file,
+                template=input_sra_template,
+                pre_submission=sra_previous_submission,
+            )
+        except:
+            sra_out_file = None
+            sra_out_log = identify_data_curation_log_file(
+                start_str="CCDI_to_SRA_submission_"
+            )
+            # sra_out_log = "CCDI_to_SRA_submission_" + get_date() + ".log"
+        runner_logger.info(f"Uploading outputs of SRA to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=sra_out_file,
+            output_log=sra_out_log,
+            wf_step="CCDI-to-SRA",
+            sub_folder="3_SRA_submisison_output",
+        )
 
 
         # run CCDI to dbGaP
@@ -288,46 +288,46 @@ def runner(
             sub_folder="4_dbGaP_submisison_output",
         )
 
-        ## run CCDI to dcf index
-        #runner_logger.info("Running CCDI to DCF Index files flow")
-        #try:
-        #    (dcf_index_file, dcf_index_log) = ccdi_to_dcf_index(ccdi_manifest=catcherr_out_file)
-        #except:
-        #    dcf_index_file = None
-        #    dcf_index_log = identify_data_curation_log_file(
-        #        start_str="CCDI_to_DCF_Index_"
-        #    )
-        #runner_logger.info(f"Uploading outputs of DCF index ofile to bucket {bucket}")
-        #ccdi_wf_outputs_ul(
-        #    bucket=bucket,
-        #    output_folder=output_folder,
-        #    output_path=dcf_index_file,
-        #    output_log=dcf_index_log,
-        #    wf_step="CCDI-to-DCF-Index",
-        #    sub_folder="5_DCF_index_output"
-        #)
-#
-        ## run CCDI to tabbreaker
-        #runner_logger.info("Running CCDI to TabBreaker flow")
-        #try:
-        #    (tabbreaker_output_folder, tabbreaker_out_log) = tabBreakeRy(
-        #        manifest=catcherr_out_file
-        #    )
-        #except:
-        #    tabbreaker_output_folder = None
-        #    tabbreaker_out_log = identify_data_curation_log_file(
-        #        start_str="CCDI_to_TabBreakeRy_"
-        #    )
-        #    # tabbreaker_out_log = "CCDI_to_TabBreakeRy_" + get_date() + ".log"
-        #runner_logger.info(f"Uploading outputs of TabBreaker to bucket {bucket}")
-        #ccdi_wf_outputs_ul(
-        #    bucket=bucket,
-        #    output_folder=output_folder,
-        #    output_path=tabbreaker_output_folder,
-        #    output_log=tabbreaker_out_log,
-        #    wf_step="CCDI-to-TabBreaker",
-        #    sub_folder="6_TabBreaker_output",
-        #)
+        # run CCDI to dcf index
+        runner_logger.info("Running CCDI to DCF Index files flow")
+        try:
+            (dcf_index_file, dcf_index_log) = ccdi_to_dcf_index(ccdi_manifest=catcherr_out_file)
+        except:
+            dcf_index_file = None
+            dcf_index_log = identify_data_curation_log_file(
+                start_str="CCDI_to_DCF_Index_"
+            )
+        runner_logger.info(f"Uploading outputs of DCF index ofile to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=dcf_index_file,
+            output_log=dcf_index_log,
+            wf_step="CCDI-to-DCF-Index",
+            sub_folder="5_DCF_index_output"
+        )
+
+        # run CCDI to tabbreaker
+        runner_logger.info("Running CCDI to TabBreaker flow")
+        try:
+            (tabbreaker_output_folder, tabbreaker_out_log) = tabBreakeRy(
+                manifest=catcherr_out_file
+            )
+        except:
+            tabbreaker_output_folder = None
+            tabbreaker_out_log = identify_data_curation_log_file(
+                start_str="CCDI_to_TabBreakeRy_"
+            )
+            # tabbreaker_out_log = "CCDI_to_TabBreakeRy_" + get_date() + ".log"
+        runner_logger.info(f"Uploading outputs of TabBreaker to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=tabbreaker_output_folder,
+            output_log=tabbreaker_out_log,
+            wf_step="CCDI-to-TabBreaker",
+            sub_folder="6_TabBreaker_output",
+        )
 
     else:
         pass
