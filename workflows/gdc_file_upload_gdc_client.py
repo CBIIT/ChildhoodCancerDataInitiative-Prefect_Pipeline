@@ -147,13 +147,13 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     log_prints=True,
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
 )
-def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_process: int):
+def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str, part_size: int, n_process: int):
     """Handles upload of chunk of files to GDC
 
     Args:
         df (pd.DataFrame): DataFrame of metadata for files to upload
-        gdc_client_exe_path (str): Path to S3 location where Linux gdc-client package is located
-        token_file (str): Name of VM stored instance of token
+        gdc_client_exe_path (str): Path to gdc-client package on VM
+        token_file (str): Path to VM stored instance of token
         part_size (int): Size (in megabytes) that file chunks should be uploaded in
         n_process (int): Number of concurrent connections to upload file
 
@@ -207,7 +207,8 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                 if row['file_size'] < 5368709120: #5GB file size cutoff:
                     process = subprocess.Popen(
                         [
-                            "./gdc-client",
+                            #"./gdc-client",
+                            gdc_client_exe_path,
                             "upload",
                             row["id"],
                             "-t",
@@ -225,7 +226,8 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                 else: # >= 5GB file size
                     process = subprocess.Popen(
                         [
-                            "./gdc-client",
+                            #"./gdc-client",
+                            gdc_client_exe_path,
                             "upload",
                             row["id"],
                             "-t",
@@ -392,7 +394,8 @@ def runner(
         subresponses = uploader_handler(
             #file_metadata_s3[chunk : chunk + chunk_size],
             file_metadata_s3,
-            "token.txt",
+            gdc_client_exe_path,
+            token_path,
             upload_part_size_mb,
             n_processes,
         )
