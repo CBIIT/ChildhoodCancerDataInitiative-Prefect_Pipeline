@@ -33,6 +33,7 @@ def read_input(file_path: str):
 
     f_name = os.path.basename(file_path)
 
+    # perform checks for metadata file format and entries
     try:
         file_metadata = pd.read_csv(f_name, sep="\t")[
             ["id", "md5sum", "file_size", "file_name"]
@@ -47,7 +48,7 @@ def read_input(file_path: str):
 
     return file_metadata
 
-
+##TODO: remove and replace with Utils implementation
 def get_secret(secret_key_name):
     secret_name = "ccdi/nonprod/inventory/gdc-token"
     region_name = "us-east-1"
@@ -82,6 +83,7 @@ def retrieve_s3_url(rows: pd.DataFrame):
     runner_logger = get_run_logger()
 
     for index, row in rows.iterrows():
+        # format the indexd URL
         query_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{row['md5sum']}&size={row['file_size']}"
 
         response = requests.get(query_url)
@@ -134,7 +136,7 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
         subframe = retrieve_s3_url(file_metadata[chunk : chunk + chunk_size])
         subframes.append(subframe)
 
-    df_s3 = pd.concat(subframes)
+    df_s3 = pd.concat(subframes)   # concat all subsets of dataframe together
 
     return df_s3
 
