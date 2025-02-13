@@ -955,6 +955,7 @@ deployments:
       file_path: ""
       runner: ""
       node_type: "case"
+      secret_name_path: "ccdi/nonprod/inventory/gdc-token"
       secret_key_name: "gdc-token"
       project_id: "CCDI-MCI"
       sstr: "phs002790.v7"
