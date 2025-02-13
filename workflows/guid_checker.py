@@ -73,23 +73,33 @@ def pull_guids(row):
         f"https://nci-crdc.datacommons.io/index/index?hash=md5:{hash_value}&size={size}"
     )
     response = make_request(api_url)
-    time.sleep(1.5)  # Pause to avoid overwhelming the API
+    time.sleep(1)  # Pause to avoid overwhelming the API
 
     if response is not None:
         data = response.json()
         if data["records"]:  # Check if any records were returned
             for record in data["records"]:
-                if (
-                    os.path.basename(record["urls"][0]) == file_name
-                    and os.path.dirname(record["urls"][0]) == file_path
-                ):
+                # Check at least the first five URLs in the record
+                urls_to_check = record["urls"][
+                    :5
+                ]  # Slice the first two URLs if available
+                matching_paths = set()
+
+                for url in urls_to_check:
+                    if os.path.basename(url) == file_name:
+                        if os.path.dirname(url) == file_path:
+                            matching_paths.add(os.path.dirname(url))
+
+                # Check if we found at least two different directory paths
+                if len(matching_paths) > 1:
                     guid = record["did"]  # Return the matching GUID
-                logger.info(f"Match found for hash='{hash_value}' and size='{size}': '{guid}'")
+                    logger.info(
+                        f"Match found for hash='{hash_value}' and size='{size}': '{guid}'"
+                    )
     else:
         logger.error(
             f"No response from Indexd API for hash='{hash_value}' and size='{size}'"
         )
-
 
     return guid  # Return the original GUID if no match is found
 
@@ -219,10 +229,13 @@ def guid_checker(file_path: str):
             logger.info(f"Checking {node}.")
             df = meta_dfs[node]
 
-            #total_rows = len(df)
+            total_rows = len(df)
+            row_count = 0
 
             for index, row in df.iterrows():
                 df.at[index, "dcf_indexd_guid"] = pull_guids(row)
+                row_count += 1
+                logger.info (f"Entry {row_count}/{total_rows}")
 
             meta_dfs[node] = df
 
