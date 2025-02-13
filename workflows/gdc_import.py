@@ -509,20 +509,21 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check
     ]
 
     # parse node entities in submission file that already exist in GDC
-    if check_for_updates.lower() == 'yes':
-        check_nodes = [
-            node
-            for node in nodes
-            if node["submitter_id"]
-            in list(set(submission_nodes_sub_ids) & set(gdc_nodes_sub_ids))
-        ]
-    else:
-        check_nodes = []
+    #if check_for_updates.lower() == 'yes':
+    check_nodes = [
+        node
+        for node in nodes
+        if node["submitter_id"]
+        in list(set(submission_nodes_sub_ids) & set(gdc_nodes_sub_ids))
+    ]
+    #else:
+        #check_nodes = []
 
     # assess if node entities in submission file that already exist in GDC
     # need to be updated in GDC (i.e. entities in file and GDC are different)
 
-    if len(check_nodes) > 0:
+    #if len(check_nodes) > 0:
+    if check_for_updates.lower() == 'yes':
 
         update_nodes = []
 
@@ -755,7 +756,7 @@ def get_secret(secret_key_name):
     # bucket and bucket location where secret is stored
     secret_name = "ccdi/nonprod/inventory/gdc-token"
     region_name = "us-east-1"
-    
+
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
