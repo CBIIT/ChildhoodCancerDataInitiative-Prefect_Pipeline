@@ -55,7 +55,7 @@ def create_meta_json(study_id: str) -> Dict:
     return return_dict
 
 
-@flow
+@flow(log_prints=True)
 def extract_ssm(manifest_path: str, logger) -> DataFrame:
     """Extract subject sample df and only keeps samples with
     participant/subject value
@@ -100,18 +100,28 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
             for _, row in pdx_sample_mapping_df.iterrows():
                 pdx_id = row["pdx.pdx_id"]
                 sample_id = row["sample_id"]
-                # it should only have one match
-                upper_sample_id = sample_pdx_mapping_df[
-                    sample_pdx_mapping_df["pdx_id"] == pdx_id
-                ]["sample.sample_id"].values[0]
-                # should only have one match
-                upper_participant_id = participant_sample_mapping_df[
-                    participant_sample_mapping_df["sample_id"] == upper_sample_id
-                ]["participant.participant_id"].values[0]
-                record_to_append = pd.DataFrame.from_records(
-                    [{"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id}]
-                )
-                append_df = pd.concat([append_df, record_to_append], ignore_index=True)
+                # it should only have one match or no match because pdx can point to study node
+                if pdx_id in sample_pdx_mapping_df["pdx_id"].tolist():
+                    upper_sample_id = sample_pdx_mapping_df[
+                        sample_pdx_mapping_df["pdx_id"] == pdx_id
+                    ]["sample.sample_id"].values[0]
+                    # should only have one match
+                    upper_participant_id = participant_sample_mapping_df[
+                        participant_sample_mapping_df["sample_id"] == upper_sample_id
+                    ]["participant.participant_id"].values[0]
+                    record_to_append = pd.DataFrame.from_records(
+                        [{"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id}]
+                    )
+                    append_df = pd.concat(
+                        [append_df, record_to_append], ignore_index=True
+                    )
+                else:
+                    print(f"pdx {pdx_id} doesn't have a parent id from sample node")
+                    print(
+                        pdx_sheet_df[pdx_sheet_df["pdx_id"] == pdx_id][
+                            "study.study_id", "sample.sample_id", "pdx_id"
+                        ]
+                    )
         else:
             pass
 
@@ -124,18 +134,30 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
             for _, row in cell_line_sample_mapping_df.iterrows():
                 cell_line_id = row["cell_line.cell_line_id"]
                 sample_id = row["sample_id"]
-                # it should only have one match
-                upper_sample_id = sample_cell_line_mapping_df[
-                    sample_cell_line_mapping_df["cell_line_id"] == cell_line_id
-                ]["sample.sample_id"].values[0]
-                # should only have one match
-                upper_participant_id = participant_sample_mapping_df[
-                    participant_sample_mapping_df["sample_id"] == upper_sample_id
-                ]["participant.participant_id"].values[0]
-                record_to_append = pd.DataFrame.from_records(
-                    [{"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id}]
-                )
-                append_df = pd.concat([append_df, record_to_append], ignore_index=True)
+                # it should only have one match or no match because some cell_line can poin to study
+                if cell_line_id in sample_cell_line_mapping_df["cell_line_id"].tolist():
+                    upper_sample_id = sample_cell_line_mapping_df[
+                        sample_cell_line_mapping_df["cell_line_id"] == cell_line_id
+                    ]["sample.sample_id"].values[0]
+                    # should only have one match
+                    upper_participant_id = participant_sample_mapping_df[
+                        participant_sample_mapping_df["sample_id"] == upper_sample_id
+                    ]["participant.participant_id"].values[0]
+                    record_to_append = pd.DataFrame.from_records(
+                        [{"SUBJECT_ID": upper_participant_id, "SAMPLE_ID": sample_id}]
+                    )
+                    append_df = pd.concat(
+                        [append_df, record_to_append], ignore_index=True
+                    )
+                else:
+                    print(
+                        f"cell_line {cell_line_id} doesn't have a parent id from sample node"
+                    )
+                    print(
+                        cell_line_sheet_df[
+                            cell_line_sheet_df["cell_line_id"] == cell_line_id
+                        ]["study.study_id", "sample.sample_id", "cell_line_id"]
+                    )
         else:
             pass
 
@@ -404,13 +426,22 @@ class Pre_dbGaP_combine(Task):
         )
 
         pre_subject_consent_df = pd.read_csv(
-            os.path.join(self.pre_sub_dir, pre_subject_consent), sep="\t", header=0, dtype=str
+            os.path.join(self.pre_sub_dir, pre_subject_consent),
+            sep="\t",
+            header=0,
+            dtype=str,
         )
         pre_subject_sample_df = pd.read_csv(
-            os.path.join(self.pre_sub_dir, pre_subject_sample), sep="\t", header=0, dtype=str
+            os.path.join(self.pre_sub_dir, pre_subject_sample),
+            sep="\t",
+            header=0,
+            dtype=str,
         )
         pre_sample_tumor_df = pd.read_csv(
-            os.path.join(self.pre_sub_dir, pre_sample_tumor), sep="\t", header=0, dtype=str
+            os.path.join(self.pre_sub_dir, pre_sample_tumor),
+            sep="\t",
+            header=0,
+            dtype=str,
         )
 
         combined_subject_consent = pd.concat(
@@ -433,7 +464,8 @@ class AddSynonym:
     def slice_subject_synonym(self):
         # filter rows with participant.participant_id nonempty, and the repository_of_synonym_id not equal to dbgap
         subject_synonym_df = self.synonym_df[
-            (self.synonym_df["participant.participant_id"].notna()) & (self.synonym_df["repository_of_synonym_id"] != "dbGaP")
+            (self.synonym_df["participant.participant_id"].notna())
+            & (self.synonym_df["repository_of_synonym_id"] != "dbGaP")
         ][
             ["participant.participant_id", "synonym_id", "repository_of_synonym_id"]
         ].dropna(
@@ -535,9 +567,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
 
     # dbgap submission is sample centered. Extract SSM information for first
     # subject_sample SSM df
-    subject_sample = extract_ssm(
-        manifest_path=manifest, logger=logger
-    )
+    subject_sample = extract_ssm(manifest_path=manifest, logger=logger)
 
     # subject_consent df
     subject_consent = extract_sc(
