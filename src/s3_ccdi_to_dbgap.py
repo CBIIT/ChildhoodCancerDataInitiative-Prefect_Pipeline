@@ -136,6 +136,8 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
                 sample_id = row["sample_id"]
                 # it should only have one match or no match because some cell_line can poin to study
                 if cell_line_id in sample_cell_line_mapping_df["cell_line_id"].tolist():
+                    print(cell_line_id)
+                    print(sample_cell_line_mapping_df["cell_line_id"].tolist())
                     upper_sample_id = sample_cell_line_mapping_df[
                         sample_cell_line_mapping_df["cell_line_id"] == cell_line_id
                     ]["sample.sample_id"].values[0]
