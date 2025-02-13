@@ -151,54 +151,115 @@ def guid_checker(file_path: str):
     file_name = os.path.splitext(os.path.split(os.path.relpath(file_path))[1])[0]
     output_file = f"{file_name}_GUIDcheck_{get_current_date()}.xlsx"
 
-    # Read all sheets from the input file
-    meta_dfs = read_excel_sheets(file_path)
+    ##############
+    #
+    # Pull Dictionary Page to create node pulls
+    #
+    ##############
 
-    # Remove unnecessary sheets
-    meta_dfs.pop("README and INSTRUCTIONS", None)
-    meta_dfs.pop("Dictionary", None)
-    meta_dfs.pop("Terms and Value Sets", None)
+    def read_xlsx(file_path: str, sheet: str):
+        # Read in excel file
+        warnings.simplefilter(action="ignore", category=UserWarning)
+        return pd.read_excel(file_path, sheet, dtype="string")
 
-    # Remove sheets that are completely empty
-    meta_dfs = remove_empty_tabs(meta_dfs)
+    ##############
+    #
+    # Read in data
+    #
+    ##############
 
-    logger.info("Checking and updating GUIDs...")
+    logger.info("Reading CCDI manifest file")
 
-    # Iterate over each sheet and process rows with 'file_url'
-    for sheet_name, df in meta_dfs.items():
-        if "file_url" in df.columns:
-            logger.info(f"Processing sheet: {sheet_name}")
-            total_rows = len(df)
+    # create workbook
+    xlsx_data = pd.ExcelFile(file_path)
 
-            # Iterate over each row and update the 'dcf_indexd_guid' column only if it's empty
+    # create dictionary for dfs
+    meta_dfs = {}
+
+    # read in dfs and apply to dictionary
+    for sheet_name in xlsx_data.sheet_names:
+        meta_dfs[sheet_name] = read_xlsx(xlsx_data, sheet_name)
+    # close xlsx_data object
+    xlsx_data.close()
+
+    # remove model tabs from the meta_dfs
+    del meta_dfs["README and INSTRUCTIONS"]
+    del meta_dfs["Dictionary"]
+    del meta_dfs["Terms and Value Sets"]
+
+    # create a list of present tabs
+    dict_nodes = set(list(meta_dfs.keys()))
+
+    ##############
+    #
+    # Go through each tab and remove completely empty tabs
+    #
+    ##############
+
+    logger.info("Removing empty CCDI Manifest file tabs")
+
+    for node in dict_nodes:
+        # see if the tab contain any data
+        test_df = meta_dfs[node]
+        test_df = test_df.drop("type", axis=1)
+        test_df = test_df.dropna(how="all").dropna(how="all", axis=1)
+        # if there is no data, drop the node/tab
+        if test_df.empty:
+            del meta_dfs[node]
+
+    # determine nodes again
+    dict_nodes = set(list(meta_dfs.keys()))
+
+    logger.info("Calling Indexd API")
+
+    for node in dict_nodes:
+        if "file_url" in meta_dfs[node].columns:
+            logger.info(f"Checking {node}.")
+            df = meta_dfs[node]
+
+            #total_rows = len(df)
+
             for index, row in df.iterrows():
                 df.at[index, "dcf_indexd_guid"] = pull_guids(row)
-                logger.info(
-                    f"Processed {index + 1} out of {total_rows} entries for {sheet_name}."
-                )  # Progress counter
 
-            # Update the dictionary with the modified DataFrame
-            meta_dfs[sheet_name] = df
+            meta_dfs[node] = df
 
-    # Copy the input file to the output file before updating it
-    copy(file_path, output_file)
+    def reorder_dataframe(dataframe, column_list: list, sheet_name: str, logger):
+        reordered_df = pd.DataFrame(columns=column_list)
+        for i in column_list:
+            if i in dataframe.columns:
+                reordered_df[i] = dataframe[i].tolist()
+            else:
+                logger.warning(f"Column {i} in sheet {sheet_name} was left empty")
+        return reordered_df
 
-    # Write the updated DataFrames back to the Excel file
+    logger.info("Writing out the CatchERR using pd.ExcelWriter")
+    # save out template
+    checker_out_file = output_file
+    copy(src=file_path, dst=checker_out_file)
     with pd.ExcelWriter(
-        output_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+        checker_out_file, mode="a", engine="openpyxl", if_sheet_exists="overlay"
     ) as writer:
-        for sheet_name, df in meta_dfs.items():
-            template_cols = pd.read_excel(
-                file_path, sheet_name=sheet_name
-            ).columns.tolist()
-            if list(df.columns) != template_cols:
-                df = df.reindex(columns=template_cols)
-            df.to_excel(
+        # for each sheet df
+        for sheet_name in meta_dfs.keys():
+            sheet_df = meta_dfs[sheet_name]
+            sheet_df_col = sheet_df.columns.tolist()
+            template_sheet_df = pd.read_excel(file_path, sheet_name=sheet_name)
+            template_sheet_col = template_sheet_df.columns.tolist()
+            if sheet_df_col != template_sheet_col:
+                sheet_df = reorder_dataframe(
+                    dataframe=sheet_df,
+                    column_list=template_sheet_col,
+                    sheet_name=sheet_name,
+                    logger=logger,
+                )
+            else:
+                pass
+            sheet_df.to_excel(
                 writer, sheet_name=sheet_name, index=False, header=False, startrow=1
             )
 
-    logger.info(f"Process complete. Output file: {output_file}")
-    return output_file
+    return checker_out_file
 
 
 @flow(name="guid_checker_runner", log_prints=True)
