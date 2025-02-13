@@ -96,6 +96,7 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
             sample_pdx_mapping_df = pdx_sheet_df[
                 ~pdx_sheet_df["sample.sample_id"].isna()
             ][["sample.sample_id", "pdx_id"]]
+            print(sample_pdx_mapping_df)
             for _, row in pdx_sample_mapping_df.iterrows():
                 pdx_id = row["pdx.pdx_id"]
                 sample_id = row["sample_id"]
@@ -119,12 +120,13 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
             sample_cell_line_mapping_df = cell_line_sheet_df[
                 ~cell_line_sheet_df["sample.sample_id"].isna()
             ][["sample.sample_id", "cell_line_id"]]
+            print(sample_cell_line_mapping_df)
             for _, row in cell_line_sample_mapping_df.iterrows():
                 cell_line_id = row["cell_line.cell_line_id"]
                 sample_id = row["sample_id"]
                 # it should only have one match
                 upper_sample_id = sample_cell_line_mapping_df[
-                    cell_line_sample_mapping_df["cell_line_id"] == cell_line_id
+                    sample_cell_line_mapping_df["cell_line_id"] == cell_line_id
                 ]["sample.sample_id"].values[0]
                 # should only have one match
                 upper_participant_id = participant_sample_mapping_df[
