@@ -241,7 +241,7 @@ def guid_checker(file_path: str):
                 logger.warning(f"Column {i} in sheet {sheet_name} was left empty")
         return reordered_df
 
-    logger.info("Writing out the CatchERR using pd.ExcelWriter")
+    logger.info("Writing out the new Manifest with newly found guids.")
     # save out template
     checker_out_file = output_file
     copy(src=file_path, dst=checker_out_file)
