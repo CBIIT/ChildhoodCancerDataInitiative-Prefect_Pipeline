@@ -16,7 +16,7 @@ def get_current_date():
 
 
 # Function to send a GET request to a URL with retry logic
-def make_request(url, retries=3, delay=1):
+def make_request(url, retries=3, delay=0.5):
     """
     Sends a GET request to the provided URL and retries if an error occurs.
 
@@ -73,7 +73,7 @@ def pull_guids(row):
         f"https://nci-crdc.datacommons.io/index/index?hash=md5:{hash_value}&size={size}"
     )
     response = make_request(api_url)
-    time.sleep(1)  # Pause to avoid overwhelming the API
+    time.sleep(0.5)  # Pause to avoid overwhelming the API
 
     if response is not None:
         data = response.json()
