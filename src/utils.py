@@ -1406,3 +1406,18 @@ def get_secret(secret_name_path: str, secret_key_name: str):
         raise e
 
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
+
+
+def sanitize_return(err_string: str, remove_value_list: list):
+    """Sanitize a string of provided substrings to remove. 
+
+    Args:
+        err_string (str): String to remove any secret or sensitive substrings from
+        remove_value_list (list): List of substrings to remove
+
+    Returns:
+        str: Sanitized string
+    """
+    for remove_value in remove_value_list:
+        err_string = err_string.replace(remove_value, "")
+    return err_string 

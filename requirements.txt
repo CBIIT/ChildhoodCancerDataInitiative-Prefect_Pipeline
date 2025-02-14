@@ -24,6 +24,7 @@ coolname==2.2.0
 croniter==2.0.1
 cryptography==41.0.3
 dateparser==1.2.0
+deepdiff==8.0.1
 delfick_project==0.7.9
 dnspython==2.4.2
 docker==6.1.3
