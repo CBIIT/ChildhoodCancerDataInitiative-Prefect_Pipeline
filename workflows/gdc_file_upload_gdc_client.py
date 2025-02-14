@@ -342,8 +342,6 @@ def runner(
 
     # path to token file to provide to gdc-client for uploads
     token_path = os.path.join(token_dir, "token.txt")
-    runner_logger.info(f"The token_path is {token_path}")
-
 
     # secure token file
     #subprocess.run(["chmod", "600", "token.txt"], shell=False)
@@ -355,11 +353,9 @@ def runner(
     # change gdc-client to executable
     #subprocess.run(["chmod", "755", "gdc-client"], shell=False)
     ShellOperation(commands=["chmod 755 gdc-client"]).run()
-    runner_logger.info(ShellOperation(commands=["ls -l"]).run())
 
     # path to gdc-client for uploads
     gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
-    runner_logger.info(f"The gdc_client_exe_path is {gdc_client_exe_path}")
 
     # extract file name before the workflow starts
     file_name = os.path.basename(manifest_path)
