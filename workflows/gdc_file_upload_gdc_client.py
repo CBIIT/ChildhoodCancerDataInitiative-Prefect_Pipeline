@@ -169,7 +169,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
     # convert part size from MB to bytes
     chunk_size = int(part_size * 1024 * 1024)
 
-    big_chunk = int(20 * 1024 * 1024)
+    #big_chunk = int(20 * 1024 * 1024)
 
     for index, row in df.iterrows():
         # download file from s3 location to VM
@@ -233,8 +233,8 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                             "-t",
                             token_file,
                             "-c",
-                            #str(chunk_size),
-                            str(big_chunk),
+                            str(chunk_size),
+                            #str(big_chunk),
                             "-n",
                             str(n_process), #8 connections
                         ],
@@ -366,7 +366,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ##TESTING
-    file_metadata = file_metadata[:2]
+    file_metadata = file_metadata[3:4]
 
     # chdir to working path
     os.chdir(working_dir)
@@ -408,7 +408,8 @@ def runner(
     # save response file
 
     responses_df.to_csv(
-        f"GDC_file_upload_{project_id}_{dt}/{file_name}_upload_results.tsv",
+        #f"GDC_file_upload_{project_id}_{dt}/{file_name}_upload_results.tsv",
+        f"{working_dir}/{file_name.replace('.tsv', '')}_upload_results.tsv",
         sep="\t",
         index=False,
     )
@@ -424,7 +425,7 @@ def runner(
 
     # folder upload
     folder_ul(
-        local_folder=f"GDC_file_upload_{project_id}_{dt}",
+        local_folder=f"{working_dir}",
         bucket=bucket,
         destination=runner + "/",
         sub_folder="",
