@@ -428,7 +428,7 @@ def runner(
 
     # folder upload
     folder_ul(
-        local_folder=f"GDC_file_upload_{project_id}_{dt}",
+        local_folder=f"{working_dir}",
         bucket=bucket,
         destination=runner + "/",
         sub_folder="",
