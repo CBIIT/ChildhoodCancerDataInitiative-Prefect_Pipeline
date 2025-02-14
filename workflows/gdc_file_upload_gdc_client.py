@@ -169,7 +169,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
     # convert part size from MB to bytes
     chunk_size = int(part_size * 1024 * 1024)
 
-    big_chunk = int(20 * 1024 * 1024)
+    #big_chunk = int(20 * 1024 * 1024)
 
     for index, row in df.iterrows():
         # download file from s3 location to VM
@@ -233,8 +233,8 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                             "-t",
                             token_file,
                             "-c",
-                            #str(chunk_size),
-                            str(big_chunk),
+                            str(chunk_size),
+                            #str(big_chunk),
                             "-n",
                             str(n_process), #8 connections
                         ],
@@ -342,6 +342,8 @@ def runner(
 
     # path to token file to provide to gdc-client for uploads
     token_path = os.path.join(token_dir, "token.txt")
+    runner_logger.info(f"The token_path is {token_path}")
+
 
     # secure token file
     #subprocess.run(["chmod", "600", "token.txt"], shell=False)
@@ -353,9 +355,11 @@ def runner(
     # change gdc-client to executable
     #subprocess.run(["chmod", "755", "gdc-client"], shell=False)
     ShellOperation(commands=["chmod 755 gdc-client"]).run()
+    runner_logger.info(ShellOperation(commands=["ls -l"]).run())
 
     # path to gdc-client for uploads
     gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
+    runner_logger.info(f"The gdc_client_exe_path is {gdc_client_exe_path}")
 
     # extract file name before the workflow starts
     file_name = os.path.basename(manifest_path)
