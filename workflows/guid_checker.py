@@ -80,22 +80,15 @@ def pull_guids(row):
         if data["records"]:  # Check if any records were returned
             for record in data["records"]:
                 # Check at least the first five URLs in the record
-                urls_to_check = record["urls"][
-                    :5
-                ]  # Slice the first two URLs if available
-                matching_paths = set()
+                urls_to_check = record["urls"]  # Slice the first five URLs if available
 
                 for url in urls_to_check:
                     if os.path.basename(url) == file_name:
                         if os.path.dirname(url) == file_path:
-                            matching_paths.add(os.path.dirname(url))
-
-                # Check if we found at least two different directory paths
-                if len(matching_paths) > 1:
-                    guid = record["did"]  # Return the matching GUID
-                    logger.info(
-                        f"Match found for hash='{hash_value}' and size='{size}': '{guid}'"
-                    )
+                            guid = record["did"]  # Return the matching GUID
+                            logger.info(
+                                f"Match found for hash='{hash_value}' and size='{size}': '{guid}'"
+                            )
     else:
         logger.error(
             f"No response from Indexd API for hash='{hash_value}' and size='{size}'"
