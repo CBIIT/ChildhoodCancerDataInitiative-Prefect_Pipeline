@@ -413,7 +413,7 @@ def runner(
 
     responses_df.to_csv(
         #f"GDC_file_upload_{project_id}_{dt}/{file_name}_upload_results.tsv",
-        f"{working_dir}/{file_name.replace(".tsv", "")}_upload_results.tsv",
+        f"{working_dir}/{file_name.replace('.tsv', '')}_upload_results.tsv",
         sep="\t",
         index=False,
     )
