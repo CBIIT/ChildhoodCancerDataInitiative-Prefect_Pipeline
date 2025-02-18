@@ -40,7 +40,7 @@ def read_input(file_path: str):
             ["id", "md5sum", "file_size", "file_name"]
         ]
     except:
-        runner_logger.error(f"Error reading and parsing file {f_name}.")
+        runner_logger.error(f"Error reading and parsing file {f_name}, check that headers exist: ['id', 'md5sum', 'file_size', 'file_name'].")
         sys.exit(1)
 
     if len(file_metadata) == 0:
