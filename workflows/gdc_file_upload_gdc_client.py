@@ -10,7 +10,8 @@ import json
 import requests
 import os
 import sys
-import subprocess
+#import subprocess
+from prefect_shell import ShellOperation
 import pandas as pd
 from time import sleep
 
@@ -327,7 +328,8 @@ def runner(
     w.close()
 
     # secure token file
-    subprocess.run(["chmod", "600", "token.txt"], shell=False)
+    #subprocess.run(["chmod", "600", "token.txt"], shell=False)
+    ShellOperation(commands=["chmod 600 token.txt"]).run()
 
     # path to token file to provide to gdc-client for uploads
     token_path = os.path.join(token_dir, "token.txt")
@@ -336,7 +338,8 @@ def runner(
     file_dl(bucket, gdc_client_path)
 
     # change gdc-client to executable
-    subprocess.run(["chmod", "755", "gdc-client"], shell=False)
+    #subprocess.run(["chmod", "755", "gdc-client"], shell=False)
+    ShellOperation(commands=["chmod 755 gdc-client"]).run()
 
     # path to gdc-client for uploads
     gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
@@ -349,7 +352,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[2:3]
+    file_metadata = file_metadata[4:5]
 
     # chdir to working path
     os.chdir(working_dir)
@@ -415,8 +418,22 @@ def runner(
     # remove working dir
     if os.path.exists(working_dir):
         try:
-            subprocess.run(["rm", "-r", working_dir], shell=False)
+            #subprocess.run(["rm", "-r", working_dir], shell=False)
+            ShellOperation(
+                commands=[
+                    f"rm -r {working_dir}",
+                ]
+            ).run()
         except Exception as e:
             runner_logger.error(f"Cannot remove working path {working_dir}: {e}.")
     else:
         runner_logger.warning(f"The path {working_dir} does not exist, cannot remove.")
+
+    # confirm status in /usr/local/data/
+    runner_logger.info(
+            ShellOperation(
+                commands=[
+                    "ls -l /usr/local/data/",
+                ]
+            ).run()
+        )
