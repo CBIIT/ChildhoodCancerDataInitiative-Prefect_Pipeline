@@ -118,7 +118,7 @@ def retrieve_s3_url(rows: pd.DataFrame):
                     f" Response is malformed: {str(response.text)} for query {query_url}, trying again ..."
                 )
                 retries += 1
-                sleep(2)
+                sleep(5)
 
         rows.loc[index, "s3_url"] = s3_url
 
@@ -294,7 +294,7 @@ def runner(
 
     runner_logger.info(">>> Running GDC_FILE_UPLOAD.py ....")
 
-    if process_type == "remove_working_dirs":
+    if process_type == "remove_old_working_dirs":
 
         runner_logger.info(
             ShellOperation(
