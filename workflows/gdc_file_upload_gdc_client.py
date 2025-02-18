@@ -195,7 +195,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 runner_logger.info(f"Downloaded file {f_name}")
         except:
             runner_logger.error(f"Cannot download file {row['file_name']}")
-            subresponses.append([row["id"], row["file_name"], "NOT uploaded"])
+            subresponses.append([row["id"], row["file_name"], "NOT uploaded", ""])
             continue  # skip rest of attempt since no file
 
         # check that file exists
