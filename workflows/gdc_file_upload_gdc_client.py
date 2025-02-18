@@ -151,8 +151,10 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
     subresponses = []
 
     chunk_size = int(part_size * 1024 * 1024)
+    runner_logger.info(f"The chunk size: {chunk_size}")
 
     big_chunk = int(20 * 1024 * 1024)
+    runner_logger.info(f"The big_chunk size: {big_chunk}")
 
     for index, row in df.iterrows():
         # TODO: code in retries?
@@ -334,7 +336,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[2:4]
+    file_metadata = file_metadata[4:6]
 
     # then query against indexd for the bucket URL of the file
 
