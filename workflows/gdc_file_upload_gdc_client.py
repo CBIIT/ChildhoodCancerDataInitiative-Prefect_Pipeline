@@ -189,6 +189,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
             )
             try:
                 if row['file_size'] < 5368709120: #5GB file size cutoff:
+                    runner_logger.info(f"UPLOADING WITH {chunk_size} size and {n_process} processes")
                     process = subprocess.Popen(
                         [
                             "./gdc-client",
@@ -207,6 +208,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                         stderr=subprocess.PIPE,
                     )
                 else: # >= 5GB file size
+                    runner_logger.info(f"UPLOADING WITH {big_chunk} size and 12 processes")
                     process = subprocess.Popen(
                         [
                             "./gdc-client",
@@ -336,7 +338,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[4:6]
+    file_metadata = file_metadata[7:8]
 
     # then query against indexd for the bucket URL of the file
 
