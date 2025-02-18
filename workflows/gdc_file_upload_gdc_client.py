@@ -14,7 +14,6 @@ import subprocess
 import pandas as pd
 
 # prefect dependencies
-from prefect_shell import ShellOperation
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
@@ -34,7 +33,6 @@ def read_input(file_path: str):
 
     f_name = os.path.basename(file_path)
 
-    # perform checks for metadata file format and entries
     try:
         file_metadata = pd.read_csv(f_name, sep="\t")[
             ["id", "md5sum", "file_size", "file_name"]
@@ -49,7 +47,7 @@ def read_input(file_path: str):
 
     return file_metadata
 
-##TODO: remove and replace with Utils implementation
+
 def get_secret(secret_key_name):
     secret_name = "ccdi/nonprod/inventory/gdc-token"
     region_name = "us-east-1"
@@ -84,7 +82,6 @@ def retrieve_s3_url(rows: pd.DataFrame):
     runner_logger = get_run_logger()
 
     for index, row in rows.iterrows():
-        # format the indexd URL
         query_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{row['md5sum']}&size={row['file_size']}"
 
         response = requests.get(query_url)
@@ -137,7 +134,7 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
         subframe = retrieve_s3_url(file_metadata[chunk : chunk + chunk_size])
         subframes.append(subframe)
 
-    df_s3 = pd.concat(subframes)   # concat all subsets of dataframe together
+    df_s3 = pd.concat(subframes)
 
     return df_s3
 
@@ -147,33 +144,18 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     log_prints=True,
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
 )
-def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str, part_size: int, n_process: int):
-    """Handles upload of chunk of files to GDC
-
-    Args:
-        df (pd.DataFrame): DataFrame of metadata for files to upload
-        gdc_client_exe_path (str): Path to gdc-client package on VM
-        token_file (str): Path to VM stored instance of token
-        part_size (int): Size (in megabytes) that file chunks should be uploaded in
-        n_process (int): Number of concurrent connections to upload file
-
-    Returns:
-        list: A list of lists with file upload results
-    """
+def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, max_n_process: int):
 
     runner_logger = get_run_logger()
 
-    # record upload results here
     subresponses = []
 
-    # convert part size from MB to bytes
     chunk_size = int(part_size * 1024 * 1024)
 
-    #big_chunk = int(20 * 1024 * 1024)
+    big_chunk = int(20 * 1024 * 1024)
 
     for index, row in df.iterrows():
-        # download file from s3 location to VM
-        # to then upload with gdc-client
+        # TODO: code in retries?
         try:
             f_bucket = row["s3_url"].split("/")[2]
             f_path = "/".join(row["s3_url"].split("/")[3:])
@@ -198,7 +180,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
             )
             subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
-            continue # skip rest of attempt since no file
+            continue
         else:  # proceed to uploaded with API
             runner_logger.info(
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
@@ -207,8 +189,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 if row['file_size'] < 5368709120: #5GB file size cutoff:
                     process = subprocess.Popen(
                         [
-                            #"./gdc-client",
-                            gdc_client_exe_path,
+                            "./gdc-client",
                             "upload",
                             row["id"],
                             "-t",
@@ -216,7 +197,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                             "-c",
                             str(chunk_size),
                             "-n",
-                            str(n_process),
+                            str(max_n_process),
                         ],
                         shell=False,
                         text=True,
@@ -226,17 +207,16 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 else: # >= 5GB file size
                     process = subprocess.Popen(
                         [
-                            #"./gdc-client",
-                            gdc_client_exe_path,
+                            "./gdc-client",
                             "upload",
                             row["id"],
                             "-t",
                             token_file,
                             "-c",
-                            str(chunk_size),
-                            #str(big_chunk),
+                            #str(chunk_size),
+                            str(big_chunk),
                             "-n",
-                            str(n_process), #8 connections
+                            str(12), #8 connections
                         ],
                         shell=False,
                         text=True,
@@ -244,8 +224,6 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                         stderr=subprocess.PIPE,
                     )
                 std_out, std_err = process.communicate()
-
-                #check if upload successful
                 if f"upload finished for file {row['id']}" in std_out:
                     runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
@@ -290,7 +268,7 @@ def runner(
     runner: str,
     secret_key_name: str,
     upload_part_size_mb: int,
-    n_processes: int,
+    max_n_processes: int,
 ):
     """CCDI Pipeline to Upload files to GDC
 
@@ -302,7 +280,7 @@ def runner(
         runner (str): Unique runner name
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
         upload_part_size_mb (int): The upload part size in MB
-        n_processes (int): The number of client connections for multipart files uploads
+        max_n_processes (int): The max number of client connections to upload the files smaller than 7 GB
     """
 
     # runner_logger setup
@@ -311,22 +289,23 @@ def runner(
 
     runner_logger.info(">>> Running GDC_FILE_UPLOAD.py ....")
 
-    runner_logger.info(f">>> Setting up env ....")
-
     dt = get_time()
 
-    token_dir = os.getcwd()  # directory where token and gdc-client will be stored
+    os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
 
-    working_dir = f"/usr/local/data/GDC_file_upload_{project_id}_{dt}"
-
-    # make dir to download files from DCF to VM, to then upload to GDC
-    if not os.path.exists(working_dir):
-        os.mkdir(working_dir)
-
-    #os.mkdir(f"GDC_file_upload_{project_id}_{dt}")
-
-    # check that GDC API status is OK
     runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
+
+    process = subprocess.Popen(
+        ["df", "."],
+        shell=False,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
+    std_out, std_err = process.communicate()
+
+    runner_logger.info(f"df . results: OUT: {std_out}, ERR: {std_err}")
 
     # download the input manifest file
     file_dl(bucket, manifest_path)
@@ -334,70 +313,50 @@ def runner(
     # save a token file to give gdc-client
     token = get_secret(secret_key_name).strip()
 
-    # save token locally since gdc-client takes a token file as input
-    # not the hash directly
     with open("token.txt", "w+") as w:
         w.write(token)
     w.close()
 
-    # path to token file to provide to gdc-client for uploads
-    token_path = os.path.join(token_dir, "token.txt")
-
     # secure token file
-    #subprocess.run(["chmod", "600", "token.txt"], shell=False)
-    ShellOperation(commands=["chmod 600 token.txt"]).run()
+    subprocess.run(["chmod", "600", "token.txt"], shell=False)
 
     # download the gdc-client
     file_dl(bucket, gdc_client_path)
 
     # change gdc-client to executable
-    #subprocess.run(["chmod", "755", "gdc-client"], shell=False)
-    ShellOperation(commands=["chmod 755 gdc-client"]).run()
-
-    # path to gdc-client for uploads
-    gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
+    subprocess.run(["chmod", "755", "gdc-client"], shell=False)
 
     # extract file name before the workflow starts
     file_name = os.path.basename(manifest_path)
 
     runner_logger.info(f">>> Reading input file {file_name} ....")
 
-    # read in file manifest
     file_metadata = read_input(file_name)
 
-    ##TESTING
-    file_metadata = file_metadata[3:4]
+    # then query against indexd for the bucket URL of the file
 
-    # chdir to working path
-    os.chdir(working_dir)
+    #file_metadata_s3 = retrieve_s3_url_handler(file_metadata)
 
-    # store results of uploads here
     responses = []
 
-    # number of files to query S3 uploads and then upload consecutively in a flow
     chunk_size = 20
 
     for chunk in range(0, len(file_metadata), chunk_size):
-        # query against indexd for the bucket URL of the file
         runner_logger.info(
             f"Grabbing s3 URL metadata for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
         )
 
-        # grab S3 URL data to download files to VM
         file_metadata_s3 = retrieve_s3_url(file_metadata[chunk:chunk+chunk_size])
 
         runner_logger.info(
             f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
         )
-
-        # upload files in chunk
         subresponses = uploader_handler(
             #file_metadata_s3[chunk : chunk + chunk_size],
             file_metadata_s3,
-            gdc_client_exe_path,
-            token_path,
+            "token.txt",
             upload_part_size_mb,
-            n_processes,
+            max_n_processes,
         )
         responses += subresponses
 
@@ -408,8 +367,7 @@ def runner(
     # save response file
 
     responses_df.to_csv(
-        #f"GDC_file_upload_{project_id}_{dt}/{file_name}_upload_results.tsv",
-        f"{working_dir}/{file_name.replace('.tsv', '')}_upload_results.tsv",
+        f"GDC_file_upload_{project_id}_{dt}/{file_name}_upload_results.tsv",
         sep="\t",
         index=False,
     )
@@ -425,21 +383,8 @@ def runner(
 
     # folder upload
     folder_ul(
-        local_folder=f"{working_dir}",
+        local_folder=f"GDC_file_upload_{project_id}_{dt}",
         bucket=bucket,
         destination=runner + "/",
         sub_folder="",
-    )
-
-    # change back to starting dir
-    os.chdir(token_dir)
-
-    # remove working dir
-    runner_logger.info(
-        ShellOperation(
-            commands=[
-                f"rm -r {working_dir}",
-                "ls -l /usr/local/data/",
-            ]
-        ).run()
     )
