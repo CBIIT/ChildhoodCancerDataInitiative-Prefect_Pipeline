@@ -992,6 +992,7 @@ deployments:
       manifest_path: ""
       gdc_client_path: ""
       runner: ""
+      secret_name_path: "ccdi/nonprod/inventory/gdc-token"
       secret_key_name: "gdc-token"
       upload_part_size_mb: 1
       n_processes: 4

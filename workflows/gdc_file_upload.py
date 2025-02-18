@@ -19,7 +19,7 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger
-from src.utils import get_time, file_dl, folder_ul
+from src.utils import get_time, file_dl, folder_ul, get_secret
 
 def read_input(file_path: str):
     """Read in TSV file and extract file_name, id (GDC uuid), md5sum and file_size columns
@@ -50,7 +50,7 @@ def read_input(file_path: str):
     return file_metadata
 
 
-def get_secret(secret_key_name):
+"""def get_secret(secret_key_name):
     secret_name = "ccdi/nonprod/inventory/gdc-token"
     region_name = "us-east-1"
     # Create a Secrets Manager client
@@ -63,7 +63,7 @@ def get_secret(secret_key_name):
         # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
         raise e
 
-    return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
+    return json.loads(get_secret_value_response["SecretString"])[secret_key_name]"""
 
 
 @flow(
@@ -271,6 +271,7 @@ def runner(
     manifest_path: str,
     gdc_client_path: str,
     runner: str,
+    secret_name_path: str,
     secret_key_name: str,
     upload_part_size_mb: int,
     n_processes: int,
@@ -284,6 +285,7 @@ def runner(
         manifest_path (str): File path of the CCDI file manifest in bucket
         gdc_client_path (str): Path to GDC client to download to VM
         runner (str): Unique runner name
+        secret_name_path (str): Path to AWS secrets manager where token hash stored
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
         upload_part_size_mb (int): The upload part size in MB
         n_processes (int): The number of client connections to upload the files smaller than 7 GB
@@ -328,7 +330,8 @@ def runner(
         file_dl(bucket, manifest_path)
 
         # save a token file to give gdc-client
-        token = get_secret(secret_key_name).strip()
+        #token = get_secret(secret_key_name).strip()
+        token = get_secret(secret_name_path, secret_key_name).strip()
 
         # save token locally since gdc-client takes a token file as input
         # not the hash directly
@@ -359,7 +362,7 @@ def runner(
         file_metadata = read_input(file_name)
 
         ## TESTING
-        file_metadata = file_metadata[8:9]
+        file_metadata = file_metadata[9:10]
 
         # chdir to working path
         os.chdir(working_dir)
