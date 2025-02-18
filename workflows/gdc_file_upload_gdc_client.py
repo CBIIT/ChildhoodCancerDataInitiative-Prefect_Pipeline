@@ -151,10 +151,6 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
     subresponses = []
 
     chunk_size = int(part_size * 1024 * 1024)
-    runner_logger.info(f"The chunk size: {chunk_size}")
-
-    big_chunk = int(20 * 1024 * 1024)
-    runner_logger.info(f"The big_chunk size: {big_chunk}")
 
     for index, row in df.iterrows():
         # TODO: code in retries?
@@ -188,27 +184,25 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
             )
             try:
-                if row['file_size'] < 5368709120: #5GB file size cutoff:
-                    runner_logger.info(f"UPLOADING WITH {chunk_size} size and {n_process} processes")
-                    process = subprocess.Popen(
-                        [
-                            "./gdc-client",
-                            "upload",
-                            row["id"],
-                            "-t",
-                            token_file,
-                            "-c",
-                            str(chunk_size),
-                            "-n",
-                            str(n_process),
-                        ],
-                        shell=False,
-                        text=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )
-                else: # >= 5GB file size
-                    runner_logger.info(f"UPLOADING WITH {big_chunk} size and 12 processes")
+                #if row['file_size'] < 5368709120: #5GB file size cutoff:
+                process = subprocess.Popen(
+                    [
+                        "./gdc-client",
+                        "upload",
+                        row["id"],
+                        "-t",
+                        token_file,
+                        "-c",
+                        str(chunk_size),
+                        "-n",
+                        str(n_process),
+                    ],
+                    shell=False,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                )
+                """else: # >= 5GB file size
                     process = subprocess.Popen(
                         [
                             "./gdc-client",
@@ -226,7 +220,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                         text=True,
                         stdout=subprocess.PIPE,
                         stderr=subprocess.PIPE,
-                    )
+                    )"""
                 std_out, std_err = process.communicate()
                 if f"upload finished for file {row['id']}" in std_out:
                     runner_logger.info(f"Upload finished for file {row['id']}")
