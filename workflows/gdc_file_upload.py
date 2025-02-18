@@ -49,23 +49,6 @@ def read_input(file_path: str):
 
     return file_metadata
 
-
-"""def get_secret(secret_key_name):
-    secret_name = "ccdi/nonprod/inventory/gdc-token"
-    region_name = "us-east-1"
-    # Create a Secrets Manager client
-    session = boto3.session.Session()
-    client = session.client(service_name="secretsmanager", region_name=region_name)
-    try:
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-    except ClientError as e:
-        # For a list of exceptions thrown, see
-        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
-        raise e
-
-    return json.loads(get_secret_value_response["SecretString"])[secret_key_name]"""
-
-
 @flow(
     name="gdc_upload_retrieve_s3_url",
     log_prints=True,
@@ -330,7 +313,6 @@ def runner(
         file_dl(bucket, manifest_path)
 
         # save a token file to give gdc-client
-        #token = get_secret(secret_key_name).strip()
         token = get_secret(secret_name_path, secret_key_name).strip()
 
         # save token locally since gdc-client takes a token file as input
@@ -360,9 +342,6 @@ def runner(
         runner_logger.info(f">>> Reading input file {file_name} ....")
 
         file_metadata = read_input(file_name)
-
-        ## TESTING
-        file_metadata = file_metadata[9:10]
 
         # chdir to working path
         os.chdir(working_dir)
