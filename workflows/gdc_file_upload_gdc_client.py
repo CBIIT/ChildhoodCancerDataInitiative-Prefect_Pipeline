@@ -82,11 +82,13 @@ def retrieve_s3_url(rows: pd.DataFrame):
     runner_logger = get_run_logger()
 
     for index, row in rows.iterrows():
+
+        # format the indexd URL
         query_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{row['md5sum']}&size={row['file_size']}"
 
         response = requests.get(query_url)
 
-        # parse response here
+        #Attempt to parse response here
         try:
             s3_url = ""
             for record in json.loads(response.text)["records"]:
@@ -121,6 +123,7 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     Returns:
         pd.DataFrame: DataFrame with s3 url appended to row for each file instance
     """
+
     runner_logger = get_run_logger()
 
     chunk_size = 300  # how many rows to send into retrieve_s3_url
@@ -184,14 +187,8 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
             )
             try:
-                # files between 4.5 and 5.5 GB need min 6 MB part size to upload successfully
-                #if 4831838208 < row['file_size'] < 5368709120:
                 # check if part size uploads file in < 1000 connections
                 if row['file_size'] / (part_size * 1024 * 1024) > 1000:
-                    """if part_size < 6:
-                        runner_logger.info(f"Files between 4.5 and 5.5 GB need minimum 6 MB part size to upload successfully, updating part size to 6 MB for this file.")
-                        chunk_size = int(6 * 1024 * 1024)
-                    else: """
                     #calculate needed part size
                     adequate_part_size = round(row['file_size'] / 1000 / 1024 / 1024) + 2 
                     runner_logger.info(f"Part size too small to upload successfully, updating part size to {adequate_part_size} MB for this file.")
@@ -329,7 +326,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[2:]
+    file_metadata = file_metadata[:2]
 
     # chdir to working path
     os.chdir(working_dir)
