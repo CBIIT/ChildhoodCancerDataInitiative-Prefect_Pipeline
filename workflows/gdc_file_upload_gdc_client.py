@@ -150,7 +150,7 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
 
     subresponses = []
 
-    chunk_size = int(part_size * 1024 * 1024)
+    ##MOVE
 
     for index, row in df.iterrows():
         # TODO: code in retries?
@@ -184,7 +184,15 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
             )
             try:
-                #if row['file_size'] < 5368709120: #5GB file size cutoff:
+                # files between 4.5 and 5.5 GB need min 6 MB part size to upload successfully
+                if 4831838208 < row['file_size'] < 5368709120:
+                    if part_size < 6:
+                        runner_logger.info(f"Files between 4.5 and 5.5 GB need minimum 6 MB part size to upload successfully, updating part size to 6 MB for this file.")
+                        chunk_size = int(6 * 1024 * 1024)
+                    else: 
+                        chunk_size = int(part_size * 1024 * 1024)
+                else:
+                    chunk_size = int(part_size * 1024 * 1024)
                 process = subprocess.Popen(
                     [
                         "./gdc-client",
@@ -202,25 +210,6 @@ def uploader_handler(df: pd.DataFrame, token_file: str, part_size: int, n_proces
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE,
                 )
-                """else: # >= 5GB file size
-                    process = subprocess.Popen(
-                        [
-                            "./gdc-client",
-                            "upload",
-                            row["id"],
-                            "-t",
-                            token_file,
-                            "-c",
-                            #str(chunk_size),
-                            str(big_chunk),
-                            "-n",
-                            str(12), #8 connections
-                        ],
-                        shell=False,
-                        text=True,
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
-                    )"""
                 std_out, std_err = process.communicate()
                 if f"upload finished for file {row['id']}" in std_out:
                     runner_logger.info(f"Upload finished for file {row['id']}")
@@ -332,7 +321,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[9:10]
+    file_metadata = file_metadata[10:11]
 
     # then query against indexd for the bucket URL of the file
 
