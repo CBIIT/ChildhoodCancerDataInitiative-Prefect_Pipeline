@@ -93,7 +93,7 @@ def retrieve_s3_url(rows: pd.DataFrame):
 
         response = requests.get(query_url)
 
-        s3_url = ""
+        s3_url = "" #init S3 URL
 
         #Attempt to parse response here
         while retries < max_retries:
