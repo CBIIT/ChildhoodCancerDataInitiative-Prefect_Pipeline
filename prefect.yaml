@@ -976,3 +976,41 @@ deployments:
       name: ccdi-curation-16gb
       work_queue_name: null
       job_variables: {}
+
+  # base metadata
+  - name: ccdi-gdc-file-upload
+    version: null
+    tags: [ "TEST" ]
+    description: null
+    entrypoint: workflows/gdc_file_upload.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      project_id: "CCDI-MCI"
+      manifest_path: ""
+      gdc_client_path: ""
+      runner: ""
+      secret_key_name: "gdc-token"
+      upload_part_size_mb: 1
+      n_processes: 4
+      process_type: "upload_files"
+
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.projects.steps.git_clone_project:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: CCDIDC-1504_GDC_File_Upload
+    - prefect.projects.steps.pip_install_requirements:
+        requirements_file: requirements.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-32gb
+      work_queue_name: null
+      job_variables: {}
