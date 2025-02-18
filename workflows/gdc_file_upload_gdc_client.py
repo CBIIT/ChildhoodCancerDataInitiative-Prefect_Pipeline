@@ -333,6 +333,9 @@ def runner(
 
     file_metadata = read_input(file_name)
 
+    ## TESTING
+    file_metadata = file_metadata[:2]
+
     # then query against indexd for the bucket URL of the file
 
     #file_metadata_s3 = retrieve_s3_url_handler(file_metadata)
