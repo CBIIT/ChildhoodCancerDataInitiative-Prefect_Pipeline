@@ -268,7 +268,7 @@ def runner(
     runner: str,
     secret_key_name: str,
     upload_part_size_mb: int,
-    max_n_processes: int,
+    n_processes: int,
 ):
     """CCDI Pipeline to Upload files to GDC
 
