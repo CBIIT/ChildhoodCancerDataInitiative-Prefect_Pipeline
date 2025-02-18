@@ -980,7 +980,7 @@ deployments:
   # base metadata
   - name: ccdi-gdc-file-upload
     version: null
-    tags: [ "TEST" ]
+    tags: [ "Production" ]
     description: null
     entrypoint: workflows/gdc_file_upload.py:runner
     schedule: null
@@ -990,12 +990,12 @@ deployments:
       bucket: "ccdi-validation"
       project_id: "CCDI-MCI"
       manifest_path: ""
-      gdc_client_path: ""
+      gdc_client_path: "bullenca/file_upload_test/gdc-client"
       runner: ""
       secret_name_path: "ccdi/nonprod/inventory/gdc-token"
       secret_key_name: "gdc-token"
-      upload_part_size_mb: 1
-      n_processes: 4
+      upload_part_size_mb: 6
+      n_processes: 40
       process_type: "upload_files"
 
 
@@ -1004,7 +1004,7 @@ deployments:
     - prefect.projects.steps.git_clone_project:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: CCDIDC-1504_GDC_File_Upload
+        branch: main
     - prefect.projects.steps.pip_install_requirements:
         requirements_file: requirements.txt
         directory: "{{ clone-step.directory }}"
