@@ -10,7 +10,6 @@ import json
 import requests
 import os
 import sys
-import subprocess
 from prefect_shell import ShellOperation
 import pandas as pd
 from time import sleep
@@ -219,25 +218,6 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     chunk_size = int(adequate_part_size * 1024 * 1024)
                 else:
                     chunk_size = int(part_size * 1024 * 1024)
-                """process = subprocess.Popen(
-                    [
-                        gdc_client_exe_path,
-                        "upload",
-                        row["id"],
-                        "-t",
-                        token_file,
-                        "-c",
-                        str(chunk_size),
-                        "-n",
-                        str(n_process),
-                    ],
-                    shell=False,
-                    text=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                )
-                std_out, std_err = process.communicate()
-                if f"upload finished for file {row['id']}" in std_out:"""
 
                 response = ShellOperation(
                     commands=[
@@ -250,11 +230,8 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                 else:
-                    #runner_logger.info(std_out)
-                    #runner_logger.info(std_err)
-                    #subresponses.append([row["id"], row["file_name"], std_out, std_err])
                     runner_logger.warning(f"Upload not successful for file {row['id']}")
-                    subresponses.append([row["id"], row["file_name"], "error during upload", "check"])
+                    subresponses.append([row["id"], row["file_name"], "NOT uploaded", "Failure duing upload"])
             except Exception as e:
                 runner_logger.error(
                     f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
@@ -339,7 +316,6 @@ def runner(
     w.close()
 
     # secure token file
-    #subprocess.run(["chmod", "600", "token.txt"], shell=False)
     ShellOperation(commands=["chmod 600 token.txt"]).run()
 
     # path to token file to provide to gdc-client for uploads
@@ -349,7 +325,6 @@ def runner(
     file_dl(bucket, gdc_client_path)
 
     # change gdc-client to executable
-    #subprocess.run(["chmod", "755", "gdc-client"], shell=False)
     ShellOperation(commands=["chmod 755 gdc-client"]).run()
 
     # path to gdc-client for uploads
@@ -363,7 +338,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[5:6]
+    file_metadata = file_metadata[6:7]
 
     # chdir to working path
     os.chdir(working_dir)
@@ -429,7 +404,6 @@ def runner(
     # remove working dir
     if os.path.exists(working_dir):
         try:
-            #subprocess.run(["rm", "-r", working_dir], shell=False)
             ShellOperation(
                 commands=[
                     f"rm -r {working_dir}",
