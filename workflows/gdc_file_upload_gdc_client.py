@@ -219,7 +219,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     chunk_size = int(adequate_part_size * 1024 * 1024)
                 else:
                     chunk_size = int(part_size * 1024 * 1024)
-                process = subprocess.Popen(
+                """process = subprocess.Popen(
                     [
                         gdc_client_exe_path,
                         "upload",
@@ -237,13 +237,24 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     stderr=subprocess.PIPE,
                 )
                 std_out, std_err = process.communicate()
-                if f"upload finished for file {row['id']}" in std_out:
+                if f"upload finished for file {row['id']}" in std_out:"""
+
+                response = ShellOperation(
+                    commands=[
+                        f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"
+                    ],
+                    stream_output=False,
+                ).run()
+
+                if f"upload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"Upload finished for file {row['id']}")
                     subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                 else:
-                    runner_logger.info(std_out)
-                    runner_logger.info(std_err)
-                    subresponses.append([row["id"], row["file_name"], std_out, std_err])
+                    #runner_logger.info(std_out)
+                    #runner_logger.info(std_err)
+                    #subresponses.append([row["id"], row["file_name"], std_out, std_err])
+                    runner_logger.warning(f"Upload not successful for file {row['id']}")
+                    subresponses.append([row["id"], row["file_name"], "error during upload", "check"])
             except Exception as e:
                 runner_logger.error(
                     f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
@@ -352,7 +363,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[4:5]
+    file_metadata = file_metadata[5:6]
 
     # chdir to working path
     os.chdir(working_dir)
