@@ -332,7 +332,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[8:9]
+    file_metadata = file_metadata[9:10]
 
     # then query against indexd for the bucket URL of the file
 
