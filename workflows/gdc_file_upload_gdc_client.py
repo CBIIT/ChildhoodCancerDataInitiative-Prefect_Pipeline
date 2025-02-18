@@ -185,12 +185,17 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
             )
             try:
                 # files between 4.5 and 5.5 GB need min 6 MB part size to upload successfully
-                if 4831838208 < row['file_size'] < 5368709120:
-                    if part_size < 6:
+                #if 4831838208 < row['file_size'] < 5368709120:
+                # check if part size uploads file in < 1000 connections
+                if row['file_size'] / (part_size * 1024 * 1024) > 1000:
+                    """if part_size < 6:
                         runner_logger.info(f"Files between 4.5 and 5.5 GB need minimum 6 MB part size to upload successfully, updating part size to 6 MB for this file.")
                         chunk_size = int(6 * 1024 * 1024)
-                    else: 
-                        chunk_size = int(part_size * 1024 * 1024)
+                    else: """
+                    #calculate needed part size
+                    adequate_part_size = round(row['file_size'] / 1000 / 1024 / 1024) + 2 
+                    runner_logger.info(f"Part size too small to upload successfully, updating part size to {adequate_part_size} MB for this file.")
+                    chunk_size = int(adequate_part_size * 1024 * 1024)
                 else:
                     chunk_size = int(part_size * 1024 * 1024)
                 process = subprocess.Popen(
@@ -324,7 +329,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[1:]
+    file_metadata = file_metadata[2:]
 
     # chdir to working path
     os.chdir(working_dir)
