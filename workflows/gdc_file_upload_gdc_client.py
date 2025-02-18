@@ -12,6 +12,7 @@ import os
 import sys
 import subprocess
 import pandas as pd
+from time import sleep
 
 # prefect dependencies
 import boto3
@@ -81,33 +82,42 @@ def retrieve_s3_url(rows: pd.DataFrame):
 
     runner_logger = get_run_logger()
 
+    max_retries = 3
+
     for index, row in rows.iterrows():
 
+        retries = 0
+        
         # format the indexd URL
         query_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{row['md5sum']}&size={row['file_size']}"
 
         response = requests.get(query_url)
 
-        #Attempt to parse response here
-        try:
-            s3_url = ""
-            for record in json.loads(response.text)["records"]:
-                for url in record["urls"]:
-                    if url != "":
-                        s3_url = url
-                        runner_logger.info(
-                            f"URL is: {s3_url}"
-                        )
+        s3_url = ""
 
-            if s3_url == "":
+        #Attempt to parse response here
+        while retries < max_retries:
+            try:
+                s3_url = ""
+                for record in json.loads(response.text)["records"]:
+                    for url in record["urls"]:
+                        if url != "":
+                            s3_url = url
+                            runner_logger.info(
+                                f"URL is: {s3_url}"
+                            )
+
+                if s3_url == "":
+                    runner_logger.error(
+                        f" No URL found: {str(response.text)} for query {query_url}"
+                    )
+                retries = max_retries #exit while loop
+            except:
                 runner_logger.error(
-                    f" No URL found: {str(response.text)} for query {query_url}"
+                    f" Response is malformed: {str(response.text)} for query {query_url}, trying again ..."
                 )
-        except:
-            runner_logger.error(
-                f" Response is malformed: {str(response.text)} for query {query_url}"
-            )
-            s3_url = ""
+                retries += 1
+                sleep(2)
 
         rows.loc[index, "s3_url"] = s3_url
 
@@ -148,15 +158,27 @@ def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
 )
 def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str, part_size: int, n_process: int):
+    """Handles upload of chunk of files to GDC
+
+    Args:
+        df (pd.DataFrame): DataFrame of metadata for files to upload
+        gdc_client_exe_path (str): Path to S3 location where Linux gdc-client package is located
+        token_file (str): Name of VM stored instance of token
+        part_size (int): Size (in megabytes) that file chunks should be uploaded in
+        n_process (int): Number of concurrent connections to upload file
+
+    Returns:
+        list: A list of lists with file upload results
+    """
 
     runner_logger = get_run_logger()
 
+    # record upload results here
     subresponses = []
 
-    ##MOVE
-
     for index, row in df.iterrows():
-        # TODO: code in retries?
+        # attempt to download file from s3 location to VM
+        # to then upload with gdc-client
         try:
             f_bucket = row["s3_url"].split("/")[2]
             f_path = "/".join(row["s3_url"].split("/")[3:])
@@ -167,7 +189,8 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
                 )
             else:
-            # trying to re-use file_dl() function
+
+                # download file to VM
                 file_dl(f_bucket, f_path)
                 runner_logger.info(f"Downloaded file {f_name}")
         except:
@@ -181,7 +204,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
             )
             subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
-            continue
+            continue # ignore rest of function since file not downloaded
         else:  # proceed to uploaded with API
             runner_logger.info(
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
@@ -326,7 +349,7 @@ def runner(
     file_metadata = read_input(file_name)
 
     ## TESTING
-    file_metadata = file_metadata[:2]
+    file_metadata = file_metadata[2:3]
 
     # chdir to working path
     os.chdir(working_dir)
