@@ -164,10 +164,16 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
         # attempt to download file from s3 location to VM
         # to then upload with gdc-client
         try:
+            runner_logger.info(f"The S3 URL is {row['s3_url']}")
+
             f_bucket = row["s3_url"].split("/")[2]
             f_path = "/".join(row["s3_url"].split("/")[3:])
             f_name = os.path.basename(f_path)
 
+            runner_logger.info(f"The bucket is {f_bucket}")
+            runner_logger.info(f"The path is {f_path}")
+            runner_logger.info(f"The file name is {f_name}")
+            
             if f_name != row["file_name"]:
                 runner_logger.warning(
                     f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
