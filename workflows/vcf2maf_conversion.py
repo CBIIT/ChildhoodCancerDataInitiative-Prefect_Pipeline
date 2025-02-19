@@ -675,7 +675,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
         else:
             ## Concatenation here
             if init_check == False:  # init MAF file
-                runner_logger(f"Initializing MAF file with file {row['file_name']} ...")
+                runner_logger.info(f"Initializing MAF file with file {row['file_name']} ...")
                 try:
                     ShellOperation(
                         commands=[f"cat {row['file_name']} >> {mega_maf}"]
@@ -683,7 +683,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     subresponses.append([row["file_name"], "True"])
                     init_check = True
                 except:
-                    runner_logger(
+                    runner_logger.info(
                         f"Failed to initialize MAF with file {row['file_name']}, trying with next file"
                     )
                     subresponses.append([row["file_name"], "False"])
@@ -697,12 +697,12 @@ def concantenation(bucket: str, manifest: str, dt: str):
                             f"cat {row['file_name']} | grep -vE '^\#|^Hugo_Symbol' >> {mega_maf}"
                         ]
                     ).run()
-                    runner_logger(
+                    runner_logger.info(
                         f"File {row['file_name']} concatenated to mega MAF {mega_maf}"
                     )
                     subresponses.append([row["file_name"], "True"])
                 except Exception as e:
-                    runner_logger(
+                    runner_logger.info(
                         f"Failed to concatenate MAF file {row['file_name']} to mega MAF {mega_maf}: {e}"
                     )
                     subresponses.append([row["file_name"], "False"])
