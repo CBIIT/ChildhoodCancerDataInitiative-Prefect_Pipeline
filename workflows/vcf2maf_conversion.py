@@ -579,7 +579,7 @@ def conversion_handler(
 
     return None
 
-DropDownChoices = Literal["env_setup", "convert", "env_tear_down"]
+DropDownChoices = Literal["env_setup", "convert", "concatenation", "env_tear_down"]
 
 #TODO: make a new option to download output dir to S3 a given output dir name
 
@@ -600,8 +600,8 @@ def runner(
     Args:
         bucket (str): Bucket name of where the manifest etc. is located in and the output goes to
         runner_path (str): Unique runner name
-        process_type (str): Whether to setup env, perform vcf22maf conversion or tear down env
-        manifest_path (str): Path to tab-delimited manifest with s3 URLs of VCF files to convert and tumor/normal sample barcodes
+        process_type (str): Whether to setup env, perform vcf2maf conversion, concatenate MAFs or tear down env
+        manifest_path (str): Path to tab-delimited manifest with s3 URLs of files to convert (and tumor/normal sample barcodes) or concatenate
         bwa_tarball_path (str): Path to bwakit tarball for ref seq installation
 
     Raises:
