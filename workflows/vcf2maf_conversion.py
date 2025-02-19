@@ -614,7 +614,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
 
     runner_logger = get_run_logger()
 
-    initialized = False
+    init_check = False
 
     # mk working dir
     os.mkdir(f"/usr/local/data/vcf2maf_concatenation_{dt}")
@@ -674,14 +674,14 @@ def concantenation(bucket: str, manifest: str, dt: str):
             continue  # ignore rest of function since file not downloaded
         else:
             ## Concatenation here
-            if initialized == False:  # init MAF file
+            if init_check == False:  # init MAF file
                 runner_logger(f"Initializing MAF file with file {row['file_name']} ...")
                 try:
                     ShellOperation(
                         commands=[f"cat {row['file_name']} >> {mega_maf}"]
                     ).run()
                     subresponses.append([row["file_name"], "True"])
-                    initialized = True
+                    init_check = True
                 except:
                     runner_logger(
                         f"Failed to initialize MAF with file {row['file_name']}, trying with next file"
