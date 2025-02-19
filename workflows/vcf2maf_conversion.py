@@ -385,7 +385,7 @@ def converter(
 
         if 'MB' in row['File Size']:
             if float(row['File Size'].replace(" MB", "")) > 5.0:
-                buffer_size = 250 #smaller size to not overload memory
+                buffer_size = 100 #smaller size to not overload memory
             else:
                 buffer_size = 5000 #default
         else:
