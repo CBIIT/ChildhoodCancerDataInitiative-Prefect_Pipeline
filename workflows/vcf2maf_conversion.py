@@ -579,6 +579,119 @@ def conversion_handler(
 
     return None
 
+def concantenation(bucket: str, manifest: str, dt: str):
+    """Concatenation of MAF function
+
+    Args:
+        bucket (str): S3 bucket where manifest stored
+        manifest (str): S3 path to manifest
+        dt (str): date-time to name working dir to store MAF
+
+    Returns:
+        list: list of concat operation results
+        str: name of mega maf file generated
+    """
+
+    runner_logger = get_run_logger()
+
+    initialized = False
+
+    #mk working dir
+    os.mkdir(f"/usr/local/data/vcf2maf_concatenation_{dt}")
+
+    # chdir to working dir
+    os.chdir(f"/usr/local/data/vcf2maf_concatenation_{dt}")
+
+    # mega maf file name
+    mega_maf = f"vcf2maf_concatenation_{dt}.maf"
+
+    # record concat results here
+    subresponses = []
+
+    # download manifest
+    file_dl(bucket, manifest)
+
+    f_name = os.path.basename(manifest)
+
+    # read in manifest
+    try: 
+        df_concat = pd.read_csv(f_name, sep="\t")
+        df = df_concat[['file_name', 's3_url']]
+
+    except Exception as e:
+        runner_logger.error(f"Cannot read in manifest file {f_name} due to error: {e}")
+        sys.exit(1)
+
+    for index, row in df.iterrows():
+
+        try:
+
+            f_bucket = row["s3_url"].split("/")[2]
+            f_path = "/".join(row["s3_url"].split("/")[3:])
+            f_name = os.path.basename(f_path)
+
+            if f_name != row["file_name"]:
+                runner_logger.warning(
+                    f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
+                )
+                subresponses.append([row["file_name"], "False"])
+                continue # skip rest of attempt since no file
+            else:
+
+                # download file to VM
+                file_dl(f_bucket, f_path)
+                runner_logger.info(f"Downloaded file {f_name}")
+        except:
+            runner_logger.error(f"Cannot download file {row['file_name']}")
+            subresponses.append([row["file_name"], "False"])
+            continue  # skip rest of attempt since no file
+
+        if not os.path.isfile(row["file_name"]): #check that file downloaded
+            runner_logger.error(
+                f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
+            )
+            subresponses.append([row["file_name"], "False"])
+            continue # ignore rest of function since file not downloaded
+        else: 
+            ## Concatenation here 
+            if initialized == False: #init MAF file 
+                runner_logger(f"Initializing MAF file with file {row['file_name']} ...")
+                try:
+                    ShellOperation(commands=[f"cat {row['file_name']} >> {mega_maf}"]).run()
+                    subresponses.append([row["file_name"], "True"])
+                    initialized = True
+                except:
+                    runner_logger(f"Failed to initialize MAF with file {row['file_name']}, trying with next file")
+                    subresponses.append([row["file_name"], "False"])
+            else: 
+                runner_logger.info(
+                f"Attempting concatenation of file {row['file_name']} ..."
+                )
+                try:
+                    ShellOperation(commands=[f"cat {row['file_name']} | grep -vE '^\#|^Hugo_Symbol' >> {mega_maf}"]).run()
+                    runner_logger(f"File {row['file_name']} concatenated to mega MAF {mega_maf}")
+                    subresponses.append([row["file_name"], "True"])
+                except Exception as e:
+                    runner_logger(f"Failed to concatenate MAF file {row['file_name']} to mega MAF {mega_maf}: {e}")
+                    subresponses.append([row["file_name"], "False"])
+
+            # delete file from VM
+            if os.path.exists(f_name):
+                os.remove(f_name)
+                runner_logger.info(f"The file {f_name} has been removed.")
+            else:
+                runner_logger.warning(
+                    f"The file {f_name} does not exist, cannot remove."
+                )
+
+            # check if file deleted from VM
+            if os.path.exists(f_name):
+                runner_logger.error(
+                    f"The file {f_name} still exists, error removing."
+                )
+
+    return subresponses, mega_maf #return recorded responses and name of mega_maf
+
 DropDownChoices = Literal["env_setup", "convert", "concatenation", "env_tear_down"]
 
 #TODO: make a new option to download output dir to S3 a given output dir name
@@ -662,6 +775,37 @@ def runner(
 
         conversion_handler(dt, bucket, runner_path, manifest_path, install_path)
 
+    elif process_type == "concatenation":
+
+        runner_logger.info(">>> Concatenating MAFs ....")
+
+        results, mega_maf = concantenation(bucket, manifest_path, dt)
+
+        if os.path.exists(f"/usr/local/data/{mega_maf.replace('.maf', '')}/{mega_maf}"):
+
+            # gzip file 
+            ShellOperation(commands=[f"gzip /usr/local/data/{mega_maf.replace('.maf', '')}/{mega_maf}"]).run()
+
+            # save concat results to tsv
+            pd.DataFrame(
+                results,
+                columns=["file_name", "status"],
+            ).to_csv(f"/usr/local/data/{mega_maf.replace('.maf', '')}/concatenation_results_{dt}.tsv", sep="\t", index=False)
+
+            # upload folder to S3
+            os.chdir(install_path)
+
+            folder_ul(
+                local_folder=f"/usr/local/data/{mega_maf.replace('.maf', '')}",
+                bucket=bucket,
+                destination=runner_path + "/",
+                sub_folder="",
+            )
+            
+        else:
+            runner_logger.warning(f"Mega MAF file /usr/local/data/{mega_maf.replace('.maf', '')}/{mega_maf} does not exist/not generated, nothing to transfer.")
+            sys.exit(1)
+    
     elif process_type == "env_tear_down":
 
         runner_logger.info(">>> Tear down env setup ....")
@@ -677,6 +821,7 @@ def runner(
                     f"ls -lh {install_path}",
                     "rm -r /usr/local/data/vcf2maf_output_*",
                     "rm -r /usr/local/data/vcf2maf_working_*",
+                    "rm -r /usr/local/data/vcf2maf_concatenation_*",
                 ]
             ).run()
         )
