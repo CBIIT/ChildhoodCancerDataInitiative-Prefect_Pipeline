@@ -61,6 +61,7 @@ def dl_conda_setup(install_path: str):
 
     return None
 
+
 @flow(
     name="vcf2maf_env_setup",
     log_prints=True,
@@ -104,13 +105,13 @@ def env_setup(install_path: str):
 )
 def env_check(install_path: str):
     """Check that conda packages installed correctly
-    
+
     Args:
         install_path (str): path on VM to start conda
 
     Returns:
         None
-    
+
     """
 
     runner_logger = get_run_logger()
@@ -137,13 +138,13 @@ def env_check(install_path: str):
 )
 def vep_setup(install_path: str):
     """Setup VEP env params and indexes
-    
+
     Args:
         install_path (str): path on VM to start conda and install VEP cache indexes
 
     Returns:
         None
-    
+
     """
 
     runner_logger = get_run_logger()
@@ -200,7 +201,7 @@ def bwa_setup(bucket, bwa_tarball, install_path):
     # extract file name from file path
     f_name = os.path.basename(bwa_tarball)
 
-    # run installation commands 
+    # run installation commands
     runner_logger.info(
         ShellOperation(
             commands=[
@@ -224,13 +225,13 @@ def bwa_setup(bucket, bwa_tarball, install_path):
 )
 def bcftools_setup(install_path):
     """Setup reference genome files needed by VEP
-    
+
     Args:
         install_path (str): path on VM to install bcftools
 
     Returns:
         None
-    
+
     """
 
     runner_logger = get_run_logger()
@@ -252,8 +253,9 @@ def bcftools_setup(install_path):
         ).run()
     )
 
+
 def cancellation_hook(flow, flow_run, state):
-    #if runtime.flow_run.parameters.get('process_type') == 'convert':
+    # if runtime.flow_run.parameters.get('process_type') == 'convert':
 
     os.chdir("/usr/local/data/")
 
@@ -333,10 +335,16 @@ def read_input(file_path: str):
     name="vcf2maf_convert_vcf",
     log_prints=True,
     flow_run_name="vcf2maf_convert_vcf_" + f"{get_time()}",
-    timeout_seconds=3600 #timeout after an hour to keep processes moving
+    timeout_seconds=3600,  # timeout after an hour to keep processes moving
 )
 def converter(
-    row: pd.Series, install_path: str, output_dir: str, working_path: str, runner_path: str, bucket: str):
+    row: pd.Series,
+    install_path: str,
+    output_dir: str,
+    working_path: str,
+    runner_path: str,
+    bucket: str,
+):
     """Function to handle downloading VCF files and generating index files
 
     Args:
@@ -383,13 +391,13 @@ def converter(
             w.write("\n".join(temp_sample))
         w.close()
 
-        if 'MB' in row['File Size']:
-            if float(row['File Size'].replace(" MB", "")) > 5.0:
-                buffer_size = 100 #smaller size to not overload memory
+        if "MB" in row["File Size"]:
+            if float(row["File Size"].replace(" MB", "")) > 5.0:
+                buffer_size = 100  # smaller size to not overload memory
             else:
-                buffer_size = 5000 #default
+                buffer_size = 5000  # default
         else:
-            buffer_size = 5000 #default
+            buffer_size = 5000  # default
 
         # run commands to activate conda
         # run bcftools reheader for tumor/normal samples
@@ -412,21 +420,21 @@ def converter(
         if f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}" in os.listdir("."):
             # rename and move file to output directory
             # and rename file from *reheader.vcf.gz.vep.maf to .vcf.vep.maf
-            
+
             # gzip the MAF file
-            ShellOperation(commands=[f"gzip {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}"]).run()
+            ShellOperation(
+                commands=[f"gzip {f_name.replace('vcf.gz', 'reheader.vcf.vep.maf')}"]
+            ).run()
 
             # make new folder called <patient>_<tumor>_converted
             op_dir = f"{row['patient_id']}_{row['tumor_sample_id']}_converted"
-            
+
             os.mkdir(op_dir)
 
             # move wanted output files there
             os.rename(
                 f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf.gz')}",
-                op_dir
-                + "/"
-                + f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf.gz')}",
+                op_dir + "/" + f"{f_name.replace('vcf.gz', 'reheader.vcf.vep.maf.gz')}",
             )
 
             # if *vep.vcf_warnings.txt produced, copy over also for log info
@@ -440,7 +448,7 @@ def converter(
                     + "/"
                     + f"{f_name.replace('vcf.gz', 'reheader.vep.vcf_warnings.txt')}",
                 )
-            
+
             # upload covnerted folder to s3 storage
             folder_ul(
                 local_folder=op_dir,
@@ -491,7 +499,7 @@ def conversion_handler(
         manifest_path (str): path of manifest in bucket
         install_path (str): install path to activate env
 
-    Returns: 
+    Returns:
         None
     """
 
@@ -525,17 +533,23 @@ def conversion_handler(
     df = read_input(mani)
 
     ## TESTING
-    #df_test = df[:2].reset_index()
+    # df_test = df[:2].reset_index()
 
-    #for index, row in df_test.iterrows():  ##TESTING
+    # for index, row in df_test.iterrows():  ##TESTING
     for index, row in df.iterrows():
-        runner_logger.info(f"Attempting annotation and conversion of file {index+1} of {len(df)}")
+        runner_logger.info(
+            f"Attempting annotation and conversion of file {index+1} of {len(df)}"
+        )
         try:
             os.chdir(working_path)
             conversion_recording.append(
-                converter(row, install_path, output_dir, working_path, runner_path, bucket)
+                converter(
+                    row, install_path, output_dir, working_path, runner_path, bucket
+                )
             )
-            runner_logger.info(f"Annotation and conversion of {row['patient_id']}'s VCF file {row['File Name']} complete")
+            runner_logger.info(
+                f"Annotation and conversion of {row['patient_id']}'s VCF file {row['File Name']} complete"
+            )
         except Exception as e:
             runner_logger.error(
                 f"Error with {row['patient_id']}'s VCF file {row['File Name']}, f{e}"
@@ -579,6 +593,12 @@ def conversion_handler(
 
     return None
 
+
+@flow(
+    name="vcf2maf_concat_maf",
+    log_prints=True,
+    flow_run_name="vcf2maf_concat_maf_" + f"{get_time()}",
+)
 def concantenation(bucket: str, manifest: str, dt: str):
     """Concatenation of MAF function
 
@@ -596,7 +616,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
 
     initialized = False
 
-    #mk working dir
+    # mk working dir
     os.mkdir(f"/usr/local/data/vcf2maf_concatenation_{dt}")
 
     # chdir to working dir
@@ -614,9 +634,9 @@ def concantenation(bucket: str, manifest: str, dt: str):
     f_name = os.path.basename(manifest)
 
     # read in manifest
-    try: 
+    try:
         df_concat = pd.read_csv(f_name, sep="\t")
-        df = df_concat[['file_name', 's3_url']]
+        df = df_concat[["file_name", "s3_url"]]
 
     except Exception as e:
         runner_logger.error(f"Cannot read in manifest file {f_name} due to error: {e}")
@@ -635,7 +655,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
                 )
                 subresponses.append([row["file_name"], "False"])
-                continue # skip rest of attempt since no file
+                continue  # skip rest of attempt since no file
             else:
 
                 # download file to VM
@@ -646,33 +666,45 @@ def concantenation(bucket: str, manifest: str, dt: str):
             subresponses.append([row["file_name"], "False"])
             continue  # skip rest of attempt since no file
 
-        if not os.path.isfile(row["file_name"]): #check that file downloaded
+        if not os.path.isfile(row["file_name"]):  # check that file downloaded
             runner_logger.error(
                 f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
             )
             subresponses.append([row["file_name"], "False"])
-            continue # ignore rest of function since file not downloaded
-        else: 
-            ## Concatenation here 
-            if initialized == False: #init MAF file 
+            continue  # ignore rest of function since file not downloaded
+        else:
+            ## Concatenation here
+            if initialized == False:  # init MAF file
                 runner_logger(f"Initializing MAF file with file {row['file_name']} ...")
                 try:
-                    ShellOperation(commands=[f"cat {row['file_name']} >> {mega_maf}"]).run()
+                    ShellOperation(
+                        commands=[f"cat {row['file_name']} >> {mega_maf}"]
+                    ).run()
                     subresponses.append([row["file_name"], "True"])
                     initialized = True
                 except:
-                    runner_logger(f"Failed to initialize MAF with file {row['file_name']}, trying with next file")
+                    runner_logger(
+                        f"Failed to initialize MAF with file {row['file_name']}, trying with next file"
+                    )
                     subresponses.append([row["file_name"], "False"])
-            else: 
+            else:
                 runner_logger.info(
-                f"Attempting concatenation of file {row['file_name']} ..."
+                    f"Attempting concatenation of file {row['file_name']} ..."
                 )
                 try:
-                    ShellOperation(commands=[f"cat {row['file_name']} | grep -vE '^\#|^Hugo_Symbol' >> {mega_maf}"]).run()
-                    runner_logger(f"File {row['file_name']} concatenated to mega MAF {mega_maf}")
+                    ShellOperation(
+                        commands=[
+                            f"cat {row['file_name']} | grep -vE '^\#|^Hugo_Symbol' >> {mega_maf}"
+                        ]
+                    ).run()
+                    runner_logger(
+                        f"File {row['file_name']} concatenated to mega MAF {mega_maf}"
+                    )
                     subresponses.append([row["file_name"], "True"])
                 except Exception as e:
-                    runner_logger(f"Failed to concatenate MAF file {row['file_name']} to mega MAF {mega_maf}: {e}")
+                    runner_logger(
+                        f"Failed to concatenate MAF file {row['file_name']} to mega MAF {mega_maf}: {e}"
+                    )
                     subresponses.append([row["file_name"], "False"])
 
             # delete file from VM
@@ -686,15 +718,15 @@ def concantenation(bucket: str, manifest: str, dt: str):
 
             # check if file deleted from VM
             if os.path.exists(f_name):
-                runner_logger.error(
-                    f"The file {f_name} still exists, error removing."
-                )
+                runner_logger.error(f"The file {f_name} still exists, error removing.")
 
-    return subresponses, mega_maf #return recorded responses and name of mega_maf
+    return subresponses, mega_maf  # return recorded responses and name of mega_maf
+
 
 DropDownChoices = Literal["env_setup", "convert", "concatenation", "env_tear_down"]
 
-#TODO: make a new option to download output dir to S3 a given output dir name
+# TODO: make a new option to download output dir to S3 a given output dir name
+
 
 @flow(
     name="VCF2MAF Conversion",
@@ -783,14 +815,22 @@ def runner(
 
         if os.path.exists(f"/usr/local/data/{mega_maf.replace('.maf', '')}/{mega_maf}"):
 
-            # gzip file 
-            ShellOperation(commands=[f"gzip /usr/local/data/{mega_maf.replace('.maf', '')}/{mega_maf}"]).run()
+            # gzip file
+            ShellOperation(
+                commands=[
+                    f"gzip /usr/local/data/{mega_maf.replace('.maf', '')}/{mega_maf}"
+                ]
+            ).run()
 
             # save concat results to tsv
             pd.DataFrame(
                 results,
                 columns=["file_name", "status"],
-            ).to_csv(f"/usr/local/data/{mega_maf.replace('.maf', '')}/concatenation_results_{dt}.tsv", sep="\t", index=False)
+            ).to_csv(
+                f"/usr/local/data/{mega_maf.replace('.maf', '')}/concatenation_results_{dt}.tsv",
+                sep="\t",
+                index=False,
+            )
 
             # upload folder to S3
             os.chdir(install_path)
@@ -801,11 +841,13 @@ def runner(
                 destination=runner_path + "/",
                 sub_folder="",
             )
-            
+
         else:
-            runner_logger.warning(f"Mega MAF file /usr/local/data/{mega_maf.replace('.maf', '')}/{mega_maf} does not exist/not generated, nothing to transfer.")
+            runner_logger.warning(
+                f"Mega MAF file /usr/local/data/{mega_maf.replace('.maf', '')}/{mega_maf} does not exist/not generated, nothing to transfer."
+            )
             sys.exit(1)
-    
+
     elif process_type == "env_tear_down":
 
         runner_logger.info(">>> Tear down env setup ....")
