@@ -702,7 +702,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     )
                     subresponses.append([row["file_name"], "True"])
                 except Exception as e:
-                    runner_logger.info(
+                    runner_logger.error(
                         f"Failed to concatenate MAF file {row['file_name']} to mega MAF {mega_maf}: {e}"
                     )
                     subresponses.append([row["file_name"], "False"])
