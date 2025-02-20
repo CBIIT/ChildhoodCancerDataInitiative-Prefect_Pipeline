@@ -64,7 +64,7 @@ def read_mci_staing_folder(bucket_path: str):
     return bucket_name, download_list, latest_pull_name
 
 
-@flow(name="find newly added", )
+#@flow(name="find newly added", )
 def find_newly_added(download_list: list[dict], prev_pulled_list:str):
     prev_file_list = pd.read_csv(prev_pulled_list, header=None)[0].tolist()
     diff_list = [i for i in download_list if i["filename"] not in prev_file_list]

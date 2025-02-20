@@ -608,9 +608,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: mci-release-manifest
+  - name: TEST-mci-release-manifest
     version: null
-    tags: ["Production"]
+    tags: ["TEST"]
     description: null
     entrypoint: workflows/mci_release_run.py:mci_release_manifest
     schedule: null
@@ -625,7 +625,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.1
+          branch: CCDIDC-1608_mci_release_manifest_update
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
