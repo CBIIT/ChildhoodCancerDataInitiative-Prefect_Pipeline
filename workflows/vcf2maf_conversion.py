@@ -653,7 +653,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                 runner_logger.warning(
                     f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
                 )
-                subresponses.append([row["file_name"], "False"])
+                subresponses.append([row["file_name"], "False", ""])
                 continue  # skip rest of attempt since no file
             else:
 
@@ -662,14 +662,14 @@ def concantenation(bucket: str, manifest: str, dt: str):
                 runner_logger.info(f"Downloaded file {f_name}")
         except:
             runner_logger.error(f"Cannot download file {f_name}")
-            subresponses.append([f_name, "False"])
+            subresponses.append([f_name, "False", ""])
             continue  # skip rest of attempt since no file
 
         if not os.path.isfile(f_name):  # check that file downloaded
             runner_logger.error(
                 f"File {f_name} not copied over or found from URL {row['s3_url']}"
             )
-            subresponses.append([f_name, "False"])
+            subresponses.append([f_name, "False", ""])
             continue  # ignore rest of function since file not downloaded
         else: # gzipped MAF file successfully downloaded, proceed with concatenation
             
@@ -683,7 +683,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                 runner_logger.info(
                     f"Failed to unzip MAF with file {f_name}"
                 )
-                subresponses.append([f_name, "False"])
+                subresponses.append([f_name, "False", ""])
                 continue
         
             ## Concatenation here
@@ -693,14 +693,10 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     ShellOperation(
                         commands=[f"cat {maf_name} >> {mega_maf}"]
                     ).run()
-                    runner_logger.info(ShellOperation(
-                        commands=[f"wc -l {maf_name} "]
-                    ).run())
                     line_count = ShellOperation(
                         commands=[f"wc -l {maf_name} "]
                     ).run()
-                    runner_logger.info(f"Line count {f_name}: {line_count[0].split(' ')[0]}")
-                    subresponses.append([f_name, "True"])
+                    subresponses.append([f_name, "True", int(line_count[0].split(' ')[0])-2])
                     init_check = True
                     runner_logger.info(
                         f"File {maf_name} initialized mega MAF {mega_maf}"
@@ -709,7 +705,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     runner_logger.info(
                         f"Failed to initialize MAF with file {maf_name}, trying with next file"
                     )
-                    subresponses.append([f_name, "False"])
+                    subresponses.append([f_name, "False", ""])
             else:
                 runner_logger.info(
                     f"Attempting concatenation of file {maf_name} ..."
@@ -723,19 +719,15 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     runner_logger.info(
                         f"File {maf_name} concatenated to mega MAF {mega_maf}"
                     )
-                    runner_logger.info(ShellOperation(
-                        commands=[f"wc -l {maf_name} "]
-                    ).run())
                     line_count = ShellOperation(
                         commands=[f"wc -l {maf_name} "]
                     ).run()
-                    runner_logger.info(f"Line count {f_name}: {line_count[0].split(' ')[0]}")
-                    subresponses.append([f_name, "True"])
+                    subresponses.append([f_name, "True", int(line_count[0].split(' ')[0])-2])
                 except Exception as e:
                     runner_logger.error(
                         f"Failed to concatenate MAF file {maf_name} to mega MAF {mega_maf}: {e}"
                     )
-                    subresponses.append([f_name, "False"])
+                    subresponses.append([f_name, "False", ""])
 
             # delete files from VM
             for f in [f_name, maf_name]:
@@ -856,7 +848,7 @@ def runner(
             # save concat results to tsv
             pd.DataFrame(
                 results,
-                columns=["file_name", "status"],
+                columns=["file_name", "status", "var_count"],
             ).to_csv(
                 f"/usr/local/data/{mega_maf.replace('.maf', '')}/concatenation_results_{dt}.tsv",
                 sep="\t",
