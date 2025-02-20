@@ -699,7 +699,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     line_count = ShellOperation(
                         commands=[f"wc -l {maf_name} "]
                     ).run()
-                    runner_logger.info(f"Line count {f_name}: {line_count}")
+                    runner_logger.info(f"Line count {f_name}: {line_count[0].spslit(" ")[0]}")
                     subresponses.append([f_name, "True"])
                     init_check = True
                     runner_logger.info(
@@ -723,6 +723,13 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     runner_logger.info(
                         f"File {maf_name} concatenated to mega MAF {mega_maf}"
                     )
+                    runner_logger.info(ShellOperation(
+                        commands=[f"wc -l {maf_name} "]
+                    ).run())
+                    line_count = ShellOperation(
+                        commands=[f"wc -l {maf_name} "]
+                    ).run()
+                    runner_logger.info(f"Line count {f_name}: {line_count[0].spslit(" ")[0]}")
                     subresponses.append([f_name, "True"])
                 except Exception as e:
                     runner_logger.error(
