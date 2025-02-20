@@ -693,6 +693,13 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     ShellOperation(
                         commands=[f"cat {maf_name} >> {mega_maf}"]
                     ).run()
+                    runner_logger.info(ShellOperation(
+                        commands=[f"wc -l {maf_name} "]
+                    ).run())
+                    line_count = ShellOperation(
+                        commands=[f"wc -l {maf_name} "]
+                    ).run()
+                    runner_logger.info(f"Line count {f_name}: {line_count}")
                     subresponses.append([f_name, "True"])
                     init_check = True
                     runner_logger.info(
