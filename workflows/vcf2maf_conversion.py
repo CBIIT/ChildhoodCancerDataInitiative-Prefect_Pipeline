@@ -600,7 +600,7 @@ def conversion_handler(
     flow_run_name="vcf2maf_concat_maf_" + f"{get_time()}",
 )
 def concantenation(bucket: str, manifest: str, dt: str):
-    """Concatenation of MAF function
+    """Concatenation of MAFs into mega MAF 
 
     Args:
         bucket (str): S3 bucket where manifest stored
@@ -635,8 +635,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
 
     # read in manifest
     try:
-        df_concat = pd.read_csv(f_name, sep="\t")
-        df = df_concat[["file_name", "s3_url"]]
+        df = pd.read_csv(f_name, sep="\t")[["file_name", "s3_url"]]
 
     except Exception as e:
         runner_logger.error(f"Cannot read in manifest file {f_name} due to error: {e}")
@@ -662,63 +661,78 @@ def concantenation(bucket: str, manifest: str, dt: str):
                 file_dl(f_bucket, f_path)
                 runner_logger.info(f"Downloaded file {f_name}")
         except:
-            runner_logger.error(f"Cannot download file {row['file_name']}")
-            subresponses.append([row["file_name"], "False"])
+            runner_logger.error(f"Cannot download file {f_name}")
+            subresponses.append([f_name, "False"])
             continue  # skip rest of attempt since no file
 
-        if not os.path.isfile(row["file_name"]):  # check that file downloaded
+        if not os.path.isfile(f_name):  # check that file downloaded
             runner_logger.error(
-                f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
+                f"File {f_name} not copied over or found from URL {row['s3_url']}"
             )
-            subresponses.append([row["file_name"], "False"])
+            subresponses.append([f_name, "False"])
             continue  # ignore rest of function since file not downloaded
-        else:
+        else: # gzipped MAF file successfully downloaded, proceed with concatenation
+            
+            ## unzip file first
+            try:
+                    ShellOperation(
+                        commands=[f"gunzip {f_name}"]
+                    ).run()
+                    maf_name = f_name.replace('.gz', '')
+            except:
+                runner_logger.info(
+                    f"Failed to unzip MAF with file {f_name}"
+                )
+                subresponses.append([f_name, "False"])
+                continue
+        
             ## Concatenation here
             if init_check == False:  # init MAF file
                 runner_logger.info(f"Initializing MAF file with file {row['file_name']} ...")
                 try:
                     ShellOperation(
-                        commands=[f"cat {row['file_name']} >> {mega_maf}"]
+                        commands=[f"cat {maf_name} >> {mega_maf}"]
                     ).run()
-                    subresponses.append([row["file_name"], "True"])
+                    subresponses.append([f_name, "True"])
                     init_check = True
                 except:
                     runner_logger.info(
-                        f"Failed to initialize MAF with file {row['file_name']}, trying with next file"
+                        f"Failed to initialize MAF with file {maf_name}, trying with next file"
                     )
-                    subresponses.append([row["file_name"], "False"])
+                    subresponses.append([f_name, "False"])
             else:
                 runner_logger.info(
-                    f"Attempting concatenation of file {row['file_name']} ..."
+                    f"Attempting concatenation of file {maf_name} ..."
                 )
                 try:
                     ShellOperation(
                         commands=[
-                            f"cat {row['file_name']} | grep -vE '^\#|^Hugo_Symbol' >> {mega_maf}"
+                            f"cat {maf_name} | grep -vE '^\#|^Hugo_Symbol' >> {mega_maf}"
                         ]
                     ).run()
                     runner_logger.info(
-                        f"File {row['file_name']} concatenated to mega MAF {mega_maf}"
+                        f"File {maf_name} concatenated to mega MAF {mega_maf}"
                     )
-                    subresponses.append([row["file_name"], "True"])
+                    subresponses.append([f_name, "True"])
                 except Exception as e:
                     runner_logger.error(
-                        f"Failed to concatenate MAF file {row['file_name']} to mega MAF {mega_maf}: {e}"
+                        f"Failed to concatenate MAF file {maf_name} to mega MAF {mega_maf}: {e}"
                     )
-                    subresponses.append([row["file_name"], "False"])
+                    subresponses.append([f_name, "False"])
 
-            # delete file from VM
-            if os.path.exists(f_name):
-                os.remove(f_name)
-                runner_logger.info(f"The file {f_name} has been removed.")
-            else:
-                runner_logger.warning(
-                    f"The file {f_name} does not exist, cannot remove."
-                )
+            # delete files from VM
+            for f in [f_name, maf_name]:
+                if os.path.exists(f):
+                    os.remove(f)
+                    runner_logger.info(f"The file {f} has been removed.")
+                else:
+                    runner_logger.warning(
+                        f"The file {f} does not exist, cannot remove."
+                    )
 
-            # check if file deleted from VM
-            if os.path.exists(f_name):
-                runner_logger.error(f"The file {f_name} still exists, error removing.")
+                # check if file deleted from VM
+                if os.path.exists(f):
+                    runner_logger.error(f"The file {f} still exists, error removing.")
 
     return subresponses, mega_maf  # return recorded responses and name of mega_maf
 
