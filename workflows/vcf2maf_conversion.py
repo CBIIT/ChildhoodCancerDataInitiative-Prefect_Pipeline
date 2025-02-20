@@ -695,6 +695,9 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     ).run()
                     subresponses.append([f_name, "True"])
                     init_check = True
+                    runner_logger.info(
+                        f"File {maf_name} initialized mega MAF {mega_maf}"
+                    )
                 except:
                     runner_logger.info(
                         f"Failed to initialize MAF with file {maf_name}, trying with next file"
