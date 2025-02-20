@@ -699,7 +699,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     line_count = ShellOperation(
                         commands=[f"wc -l {maf_name} "]
                     ).run()
-                    runner_logger.info(f"Line count {f_name}: {line_count[0].spslit(" ")[0]}")
+                    runner_logger.info(f"Line count {f_name}: {line_count[0].split(' ')[0]}")
                     subresponses.append([f_name, "True"])
                     init_check = True
                     runner_logger.info(
@@ -729,7 +729,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
                     line_count = ShellOperation(
                         commands=[f"wc -l {maf_name} "]
                     ).run()
-                    runner_logger.info(f"Line count {f_name}: {line_count[0].spslit(" ")[0]}")
+                    runner_logger.info(f"Line count {f_name}: {line_count[0].split(' ')[0]}")
                     subresponses.append([f_name, "True"])
                 except Exception as e:
                     runner_logger.error(
