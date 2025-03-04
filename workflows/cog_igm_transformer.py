@@ -16,7 +16,7 @@ from datetime import datetime
 
 # utils
 from src.cog_igm_utils import manifest_reader, cog_igm_json2tsv
-from src.utils import get_time, folder_ul, file_dl
+from src.utils import get_time, folder_ul, file_dl, get_logger, get_date
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
 
@@ -69,18 +69,19 @@ def cog_igm_transform(
         )
 
     #init logging
-    logger = logging.get_logger("COG_IGM_JSON2TSV")
-
-    log_filename = f"COG_IGM_JSON2TSV_{dt}.log"
+    #logger = logging.get_logger("COG_IGM_JSON2TSV")
+    #log_filename = f"COG_IGM_JSON2TSV_{dt}.log"
+    logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
+    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
 
     # logging config
-    logging.basicConfig(
+    """logging.basicConfig(
         filename=log_filename,
         encoding="utf-8",
         filemode="w",
         level=logging.INFO,
         format="%(name)s - %(levelname)s - %(message)s",
-    )
+    )"""
 
     # download the manifest file
     try:
