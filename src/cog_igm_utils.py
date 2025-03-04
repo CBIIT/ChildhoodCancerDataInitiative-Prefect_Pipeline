@@ -9,11 +9,15 @@ import logging
 import itertools
 from collections import defaultdict
 from prefect import flow, task, get_run_logger
-from src.utils import file_dl
+from src.utils import file_dl, get_time
 
 logger = logging.getLogger("cog_igm_utils")
 
-#flow here
+@flow(
+    name="Manifest Reader",
+    log_prints=True,
+    flow_run_name="manifest_reader-{runner}_" + f"{get_time()}",
+)
 def manifest_reader(manifest_path: str):
     """Read in and parse manifest of JSONs to transform
 
@@ -38,7 +42,11 @@ def manifest_reader(manifest_path: str):
 
     return manifest_df
 
-#flow here
+@flow(
+    name="JSON Downloader",
+    log_prints=True,
+    flow_run_name="json_downloader-{runner}_" + f"{get_time()}",
+)
 def json_downloader(manifest: pd.DataFrame):
     """Flow for downloading JSONs to VM for parsing and verifying file_name uniqueness
 
@@ -82,7 +90,11 @@ def json_downloader(manifest: pd.DataFrame):
     
 
 
-#flow here
+@flow(
+    name="JSON Distinguish",
+    log_prints=True,
+    flow_run_name="json_distinguisher-{runner}_" + f"{get_time()}",
+)
 def distinguisher(f_path: str):
     """Attempt to load json and determine type
 
@@ -161,7 +173,11 @@ def distinguish(dir_path: str):
     # segregate into dict of lists and return dict
     return sorted_dict
 
-# flow here
+@flow(
+    name="JSON2TSV",
+    log_prints=True,
+    flow_run_name="josn2tsv-{runner}_" + f"{get_time()}",
+)
 def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, output_path: str, get_time: str):
 
     runner_logger = get_run_logger()
@@ -251,6 +267,20 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     else:
         igm_success_count = 0
         igm_error_count = 0
+    
+    if len(json_sorted["other"]) > 0:
+        # save list of others to output dir
+        with open(f"{output_path}/other_jsons_{get_time}.txt", "w+") as w:
+            w.write("\n".join(json_sorted["other"]))
+        w.close()
+
+    if len(json_sorted["error"]) > 0:
+        # save list of error JSONs that could not have type determined to output dir
+        with open(f"{output_path}/undertermined_jsons_{get_time}.txt", "w+") as w:
+            w.write("\n".join(json_sorted["error"]))
+        w.close()
+    
+    return cog_success_count, cog_error_count, igm_success_count, igm_error_count
 
 
 def read_cog_jsons(dir_path: str, cog_jsons: list):
