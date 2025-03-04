@@ -16,7 +16,7 @@ logger = logging.getLogger("cog_igm_utils")
 @flow(
     name="Manifest Reader",
     log_prints=True,
-    flow_run_name="manifest_reader-{runner}_" + f"{get_time()}",
+    flow_run_name="manifest_reader_" + f"{get_time()}",
 )
 def manifest_reader(manifest_path: str):
     """Read in and parse manifest of JSONs to transform
@@ -45,7 +45,7 @@ def manifest_reader(manifest_path: str):
 @flow(
     name="JSON Downloader",
     log_prints=True,
-    flow_run_name="json_downloader-{runner}_" + f"{get_time()}",
+    flow_run_name="json_downloader_" + f"{get_time()}",
 )
 def json_downloader(manifest: pd.DataFrame):
     """Flow for downloading JSONs to VM for parsing and verifying file_name uniqueness
@@ -93,7 +93,7 @@ def json_downloader(manifest: pd.DataFrame):
 @flow(
     name="JSON Distinguish",
     log_prints=True,
-    flow_run_name="json_distinguisher-{runner}_" + f"{get_time()}",
+    flow_run_name="json_distinguisher_" + f"{get_time()}",
 )
 def distinguisher(f_path: str):
     """Attempt to load json and determine type
@@ -176,7 +176,7 @@ def distinguish(dir_path: str):
 @flow(
     name="JSON2TSV",
     log_prints=True,
-    flow_run_name="josn2tsv-{runner}_" + f"{get_time()}",
+    flow_run_name="json2tsv_" + f"{get_time()}",
 )
 def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, output_path: str, get_time: str):
 
