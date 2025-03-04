@@ -188,9 +188,9 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
         raise ValueError(f"Parsing type {parsing} is not one of {valid}.")
     
     # download JSON files
-    json_downloader(manifest)
+    json_downloader(manifest[:5])
 
-    json_dir_path = "."
+    json_dir_path = working_path
 
     json_sorted = distinguish(json_dir_path)
 
@@ -280,6 +280,7 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
             w.write("\n".join(json_sorted["error"]))
         w.close()
     
+    runner_logger.info(cog_success_count, cog_error_count, igm_success_count, igm_error_count)
     return cog_success_count, cog_error_count, igm_success_count, igm_error_count
 
 
