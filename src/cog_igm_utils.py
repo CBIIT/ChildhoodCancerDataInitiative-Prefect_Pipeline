@@ -175,7 +175,7 @@ def distinguish(dir_path: str, logger):
     log_prints=True,
     flow_run_name="json2tsv_" + f"{get_time()}",
 )
-def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, output_path: str, get_time: str):
+def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, output_path: str, dt: str):
 
     # get run logger
     runner_logger = get_run_logger()
@@ -214,13 +214,13 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
 
         # transform COG JSONs and concatenate
         df_reshape, cog_success_count, cog_error_count = cog_to_tsv(
-            json_dir_path, json_sorted["cog"], cog_op, get_time, logger
+            json_dir_path, json_sorted["cog"], cog_op, dt, logger
         )
 
         # if -f option to parse by form, run form_parser
         if parsing in ["cog_only", "cog_and_igm"]:
             if len(df_reshape) > 0:
-                cog_form_parser(df_reshape, get_time, cog_op, logger)
+                cog_form_parser(df_reshape, dt, cog_op, logger)
             else:
                 logger.error(
                     "Cannot perform COG form-level parsing, no valid COG JSONs read in."
@@ -257,7 +257,7 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
         for assay_type in ["igm.tumor_normal", "igm.archer_fusion", "igm.methylation"]:
             if len(json_sorted[assay_type]) > 0:
                 df_reshape, temp_success_count, temp_error_count = igm_to_tsv(
-                    json_dir_path, json_sorted[assay_type], assay_type, igm_op, get_time, results_parse, logger
+                    json_dir_path, json_sorted[assay_type], assay_type, igm_op, dt, results_parse, logger
                 )
 
                 igm_success_count += temp_success_count
@@ -274,13 +274,13 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     
     if len(json_sorted["other"]) > 0:
         # save list of others to output dir
-        with open(f"{output_path}/other_jsons_{get_time}.txt", "w+") as w:
+        with open(f"{output_path}/other_jsons_{dt}.txt", "w+") as w:
             w.write("\n".join(json_sorted["other"]))
         w.close()
 
     if len(json_sorted["error"]) > 0:
         # save list of error JSONs that could not have type determined to output dir
-        with open(f"{output_path}/undertermined_jsons_{get_time}.txt", "w+") as w:
+        with open(f"{output_path}/undertermined_jsons_{dt}.txt", "w+") as w:
             w.write("\n".join(json_sorted["error"]))
         w.close()
     
