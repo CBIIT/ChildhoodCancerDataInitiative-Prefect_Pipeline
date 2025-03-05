@@ -184,11 +184,11 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     # create logger for log file
     #logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="debug")
     log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
-    logger = logging.getLogger("MCI_JSON2TSV")
+    logger = logging.getLogger("COG_IGM_JSON2TSV")
 
     # logging config
     logging.basicConfig(
-        filename=f"JSON2TSV.log",
+        filename=log_filename,
         encoding="utf-8",
         filemode="w",
         level=logging.INFO,
