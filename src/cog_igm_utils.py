@@ -102,11 +102,6 @@ def json_downloader(manifest: pd.DataFrame, logger):
             )
 
 
-@flow(
-    name="JSON Distinguish",
-    log_prints=True,
-    flow_run_name="json_distinguisher_" + f"{get_time()}",
-)
 def distinguisher(f_path: str, logger):
     """Attempt to load json and determine type
 
@@ -145,7 +140,11 @@ def distinguisher(f_path: str, logger):
         runner_logger.error(f"Error reading file at {f_path}: {e}")
         return "error"
 
-
+@flow(
+    name="JSON Distinguish",
+    log_prints=True,
+    flow_run_name="json_distinguisher_" + f"{get_time()}",
+)
 def distinguish(dir_path: str, logger):
     """Function to distinguish between file types (COG JSON, IGM JSON or other)
 
