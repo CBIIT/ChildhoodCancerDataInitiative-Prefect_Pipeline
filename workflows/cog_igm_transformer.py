@@ -129,12 +129,19 @@ def cog_igm_transform(
     else:
         runner_logger.info(f"\t>>> # IGM JSON Files NOT Transformed (Errors): {igm_error_count}")
     runner_logger.info(
-        f"\t>>> Check log file {output_path}/JSON2TSV_{get_time}.log for additional information\n"
+        f"\t>>> Check log file {output_path}/JSON2TSV_{dt}.log for additional information\n"
     )
 
     # move log file to output dir and shutdown logging
-    os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
-    logging.shutdown()
+    #os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
+    #logging.shutdown()
+    runner_logger.info(
+            ShellOperation(
+                commands=[
+                    "ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
+                ]
+            ).run()
+        )
 
     #upload output dir 
     folder_ul(
