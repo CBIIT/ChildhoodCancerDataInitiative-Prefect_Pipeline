@@ -11,10 +11,6 @@ from collections import defaultdict
 from prefect import flow, task, get_run_logger
 from src.utils import file_dl, get_time, get_logger, get_date
 
-#logger = logging.getLogger("cog_igm_utils")
-logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
-log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log" #TODO need to return to main script to download file
-
 @flow(
     name="Manifest Reader",
     log_prints=True,
@@ -49,7 +45,7 @@ def manifest_reader(manifest_path: str):
     log_prints=True,
     flow_run_name="json_downloader_" + f"{get_time()}",
 )
-def json_downloader(manifest: pd.DataFrame):
+def json_downloader(manifest: pd.DataFrame, logger):
     """Flow for downloading JSONs to VM for parsing and verifying file_name uniqueness
 
     Args:
@@ -97,7 +93,7 @@ def json_downloader(manifest: pd.DataFrame):
     log_prints=True,
     flow_run_name="json_distinguisher_" + f"{get_time()}",
 )
-def distinguisher(f_path: str):
+def distinguisher(f_path: str, logger):
     """Attempt to load json and determine type
 
     Args:
@@ -130,7 +126,7 @@ def distinguisher(f_path: str):
         return "error"
 
 
-def distinguish(dir_path: str):
+def distinguish(dir_path: str, logger):
     """Function to distinguish between file types (COG JSON, IGM JSON or other)
 
     Args:
@@ -164,7 +160,7 @@ def distinguish(dir_path: str):
             )
         else:
             for f in json_files:
-                sorted_dict[distinguisher(f"{dir_path}/{f}")].append(f)
+                sorted_dict[distinguisher(f"{dir_path}/{f}", logger)].append(f)
     else:
         logger.error(f"Input path {dir_path} does not exist.")
         sys.exit(
@@ -186,8 +182,8 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     runner_logger = get_run_logger()
 
     # create logger for log file
-    #logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
-    #log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
+    logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
+    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
 
@@ -195,11 +191,11 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
         raise ValueError(f"Parsing type {parsing} is not one of {valid}.")
     
     # download JSON files
-    json_downloader(manifest[:5])
+    json_downloader(manifest[:5], logger)
 
     json_dir_path = working_path
 
-    json_sorted = distinguish(json_dir_path)
+    json_sorted = distinguish(json_dir_path, logger)
 
     #if len(json_sorted["cog"]) == 0 and len(json_sorted["igm"]) == 0:
     if sum([len(json_sorted[k]) for k in ["cog", "igm.methylation", "igm.archer_fusion", "igm.tumor_normal"]]) == 0:
@@ -217,13 +213,13 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
 
         # transform COG JSONs and concatenate
         df_reshape, cog_success_count, cog_error_count = cog_to_tsv(
-            json_dir_path, json_sorted["cog"], cog_op, get_time
+            json_dir_path, json_sorted["cog"], cog_op, get_time, logger
         )
 
         # if -f option to parse by form, run form_parser
         if parsing in ["cog_only", "cog_and_igm"]:
             if len(df_reshape) > 0:
-                cog_form_parser(df_reshape, get_time, cog_op)
+                cog_form_parser(df_reshape, get_time, cog_op, logger)
             else:
                 logger.error(
                     "Cannot perform COG form-level parsing, no valid COG JSONs read in."
@@ -260,7 +256,7 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
         for assay_type in ["igm.tumor_normal", "igm.archer_fusion", "igm.methylation"]:
             if len(json_sorted[assay_type]) > 0:
                 df_reshape, temp_success_count, temp_error_count = igm_to_tsv(
-                    json_dir_path, json_sorted[assay_type], assay_type, igm_op, get_time, results_parse
+                    json_dir_path, json_sorted[assay_type], assay_type, igm_op, get_time, results_parse, logger
                 )
 
                 igm_success_count += temp_success_count
@@ -288,10 +284,10 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
         w.close()
     
     runner_logger.info(cog_success_count, cog_error_count, igm_success_count, igm_error_count)
-    return cog_success_count, cog_error_count, igm_success_count, igm_error_count
+    return cog_success_count, cog_error_count, igm_success_count, igm_error_count, log_filename
 
 
-def read_cog_jsons(dir_path: str, cog_jsons: list):
+def read_cog_jsons(dir_path: str, cog_jsons: list, logger):
     """Reads in COG JSON files and return concatenated DataFrame.
 
     Args:
@@ -379,7 +375,7 @@ def custom_json_parser(pairs: dict):
     return result
 
 
-def expand_cog_df(df: pd.DataFrame):
+def expand_cog_df(df: pd.DataFrame, logger):
     """Function to parse participant JSON and output TSV of values and column header reference
 
     Args:
@@ -483,7 +479,7 @@ def expand_cog_df(df: pd.DataFrame):
     return df_expanded, df_saslabels
 
 
-def cog_to_tsv(dir_path: str, cog_jsons: list, cog_op: str, timestamp: str):
+def cog_to_tsv(dir_path: str, cog_jsons: list, cog_op: str, timestamp: str, logger):
     """
     Function to call the reading in and transformation of COG JSON files
 
@@ -500,12 +496,12 @@ def cog_to_tsv(dir_path: str, cog_jsons: list, cog_op: str, timestamp: str):
     """
 
     # read in JSONs
-    df_ingest, success_count, error_count = read_cog_jsons(dir_path, cog_jsons)
+    df_ingest, success_count, error_count = read_cog_jsons(dir_path, cog_jsons, logger)
 
     if success_count > 0:
 
         # transform JSONs and generate column name reference file
-        df_reshape, df_saslabels = expand_cog_df(df_ingest)
+        df_reshape, df_saslabels = expand_cog_df(df_ingest, logger)
 
         # save data files to output COG directory
         df_reshape.to_csv(
@@ -522,7 +518,7 @@ def cog_to_tsv(dir_path: str, cog_jsons: list, cog_op: str, timestamp: str):
         return pd.DataFrame(), success_count, error_count
 
 
-def cog_form_parser(df: pd.DataFrame, timestamp: str, cog_op: str) -> pd.DataFrame:
+def cog_form_parser(df: pd.DataFrame, timestamp: str, cog_op: str, logger) -> pd.DataFrame:
     """Split transformed JSON data into TSVs for each form type
 
     Args:
@@ -678,7 +674,7 @@ def flatten_igm(json_obj: dict, parent_key="", flatten_dict=None, parse_type=Non
     return flatten_dict
 
 
-def igm_full_form_convert(flatten_dict: dict):
+def igm_full_form_convert(flatten_dict: dict, logger):
     """Convert flattened JSON to pd.DataFrame
 
     Args:
@@ -702,6 +698,7 @@ def igm_to_tsv(
     igm_op: str,
     timestamp: str,
     results_parse: bool,
+    logger
 ):
     """Function to call the reading in and transformation of IGM JSON files
 
@@ -736,7 +733,7 @@ def igm_to_tsv(
             file_2_flat = json.load(open(file_path))
             flatten_dict1 = flatten_igm(file_2_flat)
 
-            flatten_dict_df = igm_full_form_convert(flatten_dict1)
+            flatten_dict_df = igm_full_form_convert(flatten_dict1, logger)
 
             df_list.append(flatten_dict_df)
 

@@ -71,8 +71,8 @@ def cog_igm_transform(
     #init logging
     #logger = logging.get_logger("COG_IGM_JSON2TSV")
     #log_filename = f"COG_IGM_JSON2TSV_{dt}.log"
-    logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
-    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
+    #logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
+    #log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
 
     # logging config
     """logging.basicConfig(
@@ -109,7 +109,7 @@ def cog_igm_transform(
     os.chdir(working_path)
 
     #perform parsing
-    cog_success_count, cog_error_count, igm_success_count, igm_error_count = cog_igm_json2tsv(manifest_df, form_parsing, working_path, output_path, dt)
+    cog_success_count, cog_error_count, igm_success_count, igm_error_count, log_filename = cog_igm_json2tsv(manifest_df, form_parsing, working_path, output_path, dt)
 
     end_time = datetime.now()
     time_diff = end_time - start_time
@@ -133,12 +133,12 @@ def cog_igm_transform(
     )
 
     # move log file to output dir and shutdown logging
-    #os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
+    os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
     #logging.shutdown()
     runner_logger.info(
             ShellOperation(
                 commands=[
-                    f"ls -l {working_path}",  # confirm removal of COG_IGM_Transform working dirs
+                    f"ls -l {output_dir}",  # confirm removal of COG_IGM_Transform working dirs
                 ]
             ).run()
         )
