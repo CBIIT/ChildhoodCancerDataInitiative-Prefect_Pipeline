@@ -119,7 +119,7 @@ def distinguisher(f_path: str, logger):
                 return "igm.methylation"
             else:  # not known
                 logger.error(f"Error reading file at {f_path}: IGM assay type unknown.")
-                runner_logger.error(f"Error reading file at {f_path}: IGM assay type unknown.")a
+                runner_logger.error(f"Error reading file at {f_path}: IGM assay type unknown.")
                 return "error"
         else:
             return "other"
