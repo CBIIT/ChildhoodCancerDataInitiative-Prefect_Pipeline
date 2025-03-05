@@ -187,7 +187,7 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     logger = get_logger("COG_IGM_JSON2TSV")
 
     # logging config
-    get_logger.basicConfig(
+    logger.basicConfig(
         filename=log_filename,
         encoding="utf-8",
         filemode="w",
