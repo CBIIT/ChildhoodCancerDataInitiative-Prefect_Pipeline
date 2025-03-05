@@ -9,7 +9,7 @@ import logging
 import itertools
 from collections import defaultdict
 from prefect import flow, task, get_run_logger
-from src.utils import file_dl, get_time
+from src.utils import file_dl, get_time, get_logger, get_date
 
 logger = logging.getLogger("cog_igm_utils")
 
@@ -180,7 +180,12 @@ def distinguish(dir_path: str):
 )
 def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, output_path: str, get_time: str):
 
+    # get run logger
     runner_logger = get_run_logger()
+
+    # create logger for log file
+    logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
+    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
 
