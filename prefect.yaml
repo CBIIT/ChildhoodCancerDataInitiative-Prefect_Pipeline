@@ -608,9 +608,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-mci-release-manifest
+  - name: mci-release-manifest
     version: null
-    tags: ["TEST"]
+    tags: ["Production"]
     description: null
     entrypoint: workflows/mci_release_run.py:mci_release_manifest
     schedule: null
@@ -618,14 +618,14 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
-      template_tag: "1.9.1"
+      template_tag: "2.1.0"
 
     # pull action to overwrite from file pull action
     pull:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1608_mci_release_manifest_update
+          branch: 1.3.3
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
