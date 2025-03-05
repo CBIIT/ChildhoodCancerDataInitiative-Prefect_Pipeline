@@ -8,7 +8,6 @@
 ##############
 
 #builtin
-import logging
 import os
 import sys
 from typing import Literal

@@ -5,7 +5,6 @@ import sys
 import json
 import pandas as pd
 import openpyxl
-import logging
 import itertools
 from collections import defaultdict
 from prefect import flow, task, get_run_logger
