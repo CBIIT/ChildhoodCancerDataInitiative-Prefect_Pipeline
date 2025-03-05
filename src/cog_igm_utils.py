@@ -7,9 +7,8 @@ import pandas as pd
 import openpyxl
 import itertools
 from collections import defaultdict
-from prefect import flow, task, get_run_logger
-from prefect.logging import get_logger
-from src.utils import file_dl, get_time, get_date
+from prefect import flow, get_run_logger
+from src.utils import file_dl, get_time, get_date, get_logger
 
 @flow(
     name="Manifest Reader",
@@ -184,15 +183,16 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     # create logger for log file
     #logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="debug")
     log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
-    logger = get_logger("COG_IGM_JSON2TSV")
+    logger = get_logger(log_filename, "info")
 
     # logging config
-    logger.basicConfig(
+    """logging.basicConfig(
         filename=log_filename,
         encoding="utf-8",
         filemode="w",
         level=get_logger.INFO,
-        format="%(name)s - %(levelname)s - %(message)s",)
+        format="%(name)s - %(levelname)s - %(message)s",)"""
+    
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
 
