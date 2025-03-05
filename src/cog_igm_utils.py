@@ -192,7 +192,7 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
         encoding="utf-8",
         filemode="w",
         level=logging.INFO,
-        format="%(name)s - %(levelname)s - %(message)s",
+        format="%(name)s - %(levelname)s - %(message)s",)
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
 
