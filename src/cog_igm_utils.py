@@ -65,10 +65,10 @@ def json_downloader(manifest: pd.DataFrame, logger):
         f_name = os.path.basename(f_path)
 
         if f_name != row["file_name"]:
-                runner_logger.warning(
+                runner_logger.error(
                     f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
                 )
-                logger.warning(
+                logger.error(
                     f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
                 )
         else:
@@ -102,6 +102,8 @@ def distinguisher(f_path: str, logger):
         str: File type (COG JSON, IGM JSON or other) or error
     """
 
+    runner_logger = get_run_logger()
+
     try:
         f_begin = open(f_path, "rb").read(1000)  # read in first 1000 bytes of file
 
@@ -117,11 +119,13 @@ def distinguisher(f_path: str, logger):
                 return "igm.methylation"
             else:  # not known
                 logger.error(f"Error reading file at {f_path}: IGM assay type unknown.")
+                runner_logger.error(f"Error reading file at {f_path}: IGM assay type unknown.")a
                 return "error"
         else:
             return "other"
     except Exception as e:
         logger.error(f"Error reading file at {f_path}: {e}")
+        runner_logger.error(f"Error reading file at {f_path}: {e}")
         return "error"
 
 
@@ -134,6 +138,8 @@ def distinguish(dir_path: str, logger):
     Returns:
         dict: Sorting of file names for files by type (COG JSON, IGM JSON, other file or error file)
     """
+
+    runner_logger = get_run_logger()
 
     # initialize dict of files by type
     sorted_dict = {
@@ -154,6 +160,7 @@ def distinguish(dir_path: str, logger):
         json_files = [i for i in os.listdir(dir_path) if i.endswith(".json")]
         if len(json_files) == 0:
             logger.error(f"Input path {dir_path} does not contain any JSON files.")
+            runner_logger.error(f"Input path {dir_path} does not contain any JSON files.")
             sys.exit(
                 f"Process exited: Input path {dir_path} does not contain any JSON files, please check and try again."
             )
@@ -162,6 +169,7 @@ def distinguish(dir_path: str, logger):
                 sorted_dict[distinguisher(f"{dir_path}/{f}", logger)].append(f)
     else:
         logger.error(f"Input path {dir_path} does not exist.")
+        runner_logger.error(f"Input path {dir_path} does not exist.")
         sys.exit(
             f"Process exited: Input path {dir_path} does not exist, please check and try again."
         )
@@ -201,6 +209,9 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     #if len(json_sorted["cog"]) == 0 and len(json_sorted["igm"]) == 0:
     if sum([len(json_sorted[k]) for k in ["cog", "igm.methylation", "igm.archer_fusion", "igm.tumor_normal"]]) == 0:
         runner_logger.error(
+            f"\n\t>>> No COG or IGM JSON files to covert in input directory, please check and try again."
+        )
+        logger.error(
             f"\n\t>>> No COG or IGM JSON files to covert in input directory, please check and try again."
         )
         sys.exit(1)
@@ -274,17 +285,22 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     
     if len(json_sorted["other"]) > 0:
         # save list of others to output dir
+        logger.info(f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted["other"])}")
+        runner_logger.info(f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted["other"])}")
         with open(f"{output_path}/other_jsons_{dt}.txt", "w+") as w:
             w.write("\n".join(json_sorted["other"]))
         w.close()
 
     if len(json_sorted["error"]) > 0:
         # save list of error JSONs that could not have type determined to output dir
+        logger.info(f"Number of JSONS that could not be identified/opened: {len(json_sorted["error"])}")
+        runner_logger.info(f"Number of JSONS that could not be identified/opened: {len(json_sorted["error"])}")
         with open(f"{output_path}/undertermined_jsons_{dt}.txt", "w+") as w:
             w.write("\n".join(json_sorted["error"]))
         w.close()
     
     logger.info(f"Conversion done: COG Success {cog_success_count}, COG error {cog_error_count}, IGM Success {igm_success_count}, IGM error {igm_error_count}")
+    runner_logger.info(f"Conversion done: COG Success {cog_success_count}, COG error {cog_error_count}, IGM Success {igm_success_count}, IGM error {igm_error_count}")
     return cog_success_count, cog_error_count, igm_success_count, igm_error_count, log_filename
 
 
@@ -309,6 +325,9 @@ def read_cog_jsons(dir_path: str, cog_jsons: list, logger):
             key-value pairs of the JSON object before they are converted
             into a dictionary; aids in accounting for multiple `data` keys
     """
+    
+    runner_logger = get_run_logger()
+    
     concatenated_df = pd.DataFrame()
     df_list = []  # List to hold DataFrames
 
@@ -337,6 +356,7 @@ def read_cog_jsons(dir_path: str, cog_jsons: list, logger):
         except ValueError as e:
             error_count += 1
             logger.error(f" Error reading {filename}: {e}")
+            runner_logger.error(f" Error reading {filename}: {e}")
 
     # Concatenate all the DataFrames
     if len(df_list) > 0:
@@ -344,7 +364,7 @@ def read_cog_jsons(dir_path: str, cog_jsons: list, logger):
         return concatenated_df, success_count, error_count
     else:
         logger.error(" No valid COG JSON files found and/or failed to open.")
-        #sys.exit("\n\t>>> Process Exited: No valid JSON files found.")
+        runner_logger.error(" No valid COG JSON files found and/or failed to open.")
         return pd.DataFrame(), success_count, error_count
 
 
@@ -555,11 +575,11 @@ def cog_form_parser(df: pd.DataFrame, timestamp: str, cog_op: str, logger) -> pd
     else:
         logger.error(
             "No valid DataFrame found to \
-            parse into form-level TSVs"
+            parse into form-level COG TSVs"
         )
         sys.exit(
             "\n\t>>> Process Exited: No valid DataFrame found to \
-            parse into form-level TSVs"
+            parse into form-level COG TSVs"
         )
 
     return None
@@ -685,10 +705,13 @@ def igm_full_form_convert(flatten_dict: dict, logger):
         pd.DataFrame: The flattened JSON converted to pd.DataFrame
     """
 
+    runner_logger = get_run_logger()
+
     try:
         return pd.DataFrame([flatten_dict])
     except Exception as e:
-        logger.error(f"Error converting flattened JSON to pd.DataFrame: {e}")
+        logger.error(f"Error converting flattened IGM JSON to pd.DataFrame: {e}")
+        runner_logger.error(f"Error converting flattened IGM JSON to pd.DataFrame: {e}")
         return pd.DataFrame()
 
 
@@ -718,6 +741,8 @@ def igm_to_tsv(
         int: The count of JSON files unsuccessfully processed
     """
 
+    runner_logger = get_run_logger()
+
     valid = ["igm.tumor_normal", "igm.archer_fusion", "igm.methylation"]
 
     if assay_type not in valid:
@@ -743,6 +768,8 @@ def igm_to_tsv(
         except Exception as e:
             error_count += 1
             logger.error(f" Error converting IGM JSON to TSV for file {file_path}: {e}")
+            runner_logger.error(f" Error converting IGM JSON to TSV for file {file_path}: {e}")
+
 
     if results_parse:
         # make output dir
