@@ -15,7 +15,7 @@ from datetime import datetime
 
 # utils
 from src.cog_igm_utils import manifest_reader, cog_igm_json2tsv
-from src.utils import get_time, folder_ul, file_dl, get_logger, get_date
+from src.utils import get_time, folder_ul, file_dl
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
 
