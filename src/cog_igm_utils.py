@@ -97,6 +97,9 @@ def json_downloader(manifest: pd.DataFrame, logger):
             logger.info(
                 f"Renamed file {row['file_name']} to {new_file_name} to be unique."
             )
+            runner_logger.info(
+                f"Renamed file {row['file_name']} to {new_file_name} to be unique."
+            )
 
 
 @flow(
@@ -218,8 +221,12 @@ def cog_igm_json2tsv(
     if parsing not in valid:
         raise ValueError(f"Parsing type {parsing} is not one of {valid}.")
 
+    # chunked downloading of JSON files 
+    chunk_size = 200
+
     # download JSON files
-    json_downloader(manifest, logger)
+    for chunk in range(0, len(manifest), chunk_size):
+        json_downloader(manifest[chunk:chunk+chunk_size], logger)
 
     json_dir_path = working_path
 
