@@ -11,7 +11,9 @@ from collections import defaultdict
 from prefect import flow, task, get_run_logger
 from src.utils import file_dl, get_time, get_logger, get_date
 
-logger = logging.getLogger("cog_igm_utils")
+#logger = logging.getLogger("cog_igm_utils")
+logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
+log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log" #TODO need to return to main script to download file
 
 @flow(
     name="Manifest Reader",
@@ -184,8 +186,8 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     runner_logger = get_run_logger()
 
     # create logger for log file
-    logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
-    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
+    #logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
+    #log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
 
