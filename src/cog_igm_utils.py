@@ -181,7 +181,7 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     runner_logger = get_run_logger()
 
     # create logger for log file
-    logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="info")
+    logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="debug")
     log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
