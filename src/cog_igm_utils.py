@@ -285,16 +285,16 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     
     if len(json_sorted["other"]) > 0:
         # save list of others to output dir
-        logger.info(f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted["other"])}")
-        runner_logger.info(f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted["other"])}")
+        logger.info(f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted['other'])}")
+        runner_logger.info(f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted['other'])}")
         with open(f"{output_path}/other_jsons_{dt}.txt", "w+") as w:
             w.write("\n".join(json_sorted["other"]))
         w.close()
 
     if len(json_sorted["error"]) > 0:
         # save list of error JSONs that could not have type determined to output dir
-        logger.info(f"Number of JSONS that could not be identified/opened: {len(json_sorted["error"])}")
-        runner_logger.info(f"Number of JSONS that could not be identified/opened: {len(json_sorted["error"])}")
+        logger.info(f"Number of JSONS that could not be identified/opened: {len(json_sorted['error'])}")
+        runner_logger.info(f"Number of JSONS that could not be identified/opened: {len(json_sorted['error'])}")
         with open(f"{output_path}/undertermined_jsons_{dt}.txt", "w+") as w:
             w.write("\n".join(json_sorted["error"]))
         w.close()
