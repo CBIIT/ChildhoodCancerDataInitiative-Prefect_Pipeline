@@ -15,7 +15,7 @@ from datetime import datetime
 
 # utils
 from src.cog_igm_utils import manifest_reader, cog_igm_json2tsv
-from src.utils import get_time, folder_ul, file_dl
+from src.utils import get_time, folder_ul, file_dl, get_date
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
 
@@ -132,7 +132,7 @@ def cog_igm_transform(
     )
 
     # move log file to output dir and shutdown logging
-    #os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
+    os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
     #logging.shutdown()
     runner_logger.info(
             ShellOperation(

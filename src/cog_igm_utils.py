@@ -181,19 +181,10 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     runner_logger = get_run_logger()
 
     # create logger for log file
-    #logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="debug")
     log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
     logger = get_logger("COG_IGM_JSON2TSV", "info")
-
-    # logging config
-    """logging.basicConfig(
-        filename=log_filename,
-        encoding="utf-8",
-        filemode="w",
-        level=get_logger.INFO,
-        format="%(name)s - %(levelname)s - %(message)s",)"""
     
-    logger.info("TEST 12345667888")
+    logger.info(f"Logs beginning at {get_time()}")
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
 
@@ -293,7 +284,7 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
             w.write("\n".join(json_sorted["error"]))
         w.close()
     
-    runner_logger.info(f"COG Success {cog_success_count}, COG error {cog_error_count}, IGM Success {igm_success_count}, IGM error {igm_error_count}")
+    logger.info(f"Conversion done: COG Success {cog_success_count}, COG error {cog_error_count}, IGM Success {igm_success_count}, IGM error {igm_error_count}")
     return cog_success_count, cog_error_count, igm_success_count, igm_error_count, log_filename
 
 
