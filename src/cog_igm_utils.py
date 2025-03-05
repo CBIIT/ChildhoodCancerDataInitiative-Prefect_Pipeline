@@ -10,6 +10,7 @@ from collections import defaultdict
 from prefect import flow, get_run_logger
 from src.utils import file_dl, get_time, get_date, get_logger
 
+
 @flow(
     name="Manifest Reader",
     log_prints=True,
@@ -30,14 +31,21 @@ def manifest_reader(manifest_path: str):
     file_name = os.path.basename(manifest_path)
 
     try:
-        manifest_df = pd.read_excel(file_name, sheet_name="clinical_measure_file", engine="openpyxl")
-        #parse only COG and IGM clinical reports and return uniq file ID and s3 URL in df
-        manifest_df = manifest_df[manifest_df.data_category.isin(["Clinical;COG Clinical Report", "Clinical;IGM Clinical Report"])][['clinical_measure_file_id', 'file_name', 'file_size', 'file_url']]
+        manifest_df = pd.read_excel(
+            file_name, sheet_name="clinical_measure_file", engine="openpyxl"
+        )
+        # parse only COG and IGM clinical reports and return uniq file ID and s3 URL in df
+        manifest_df = manifest_df[
+            manifest_df.data_category.isin(
+                ["Clinical;COG Clinical Report", "Clinical;IGM Clinical Report"]
+            )
+        ][["clinical_measure_file_id", "file_name", "file_size", "file_url"]]
     except Exception as e:
         runner_logger.error(f"Cannot read in manifest {file_name} due to error: {e}")
         sys.exit(1)
 
     return manifest_df
+
 
 @flow(
     name="JSON Downloader",
@@ -54,8 +62,8 @@ def json_downloader(manifest: pd.DataFrame, logger):
         None
     """
 
-    #check for duplicate file_names
-    dups = manifest[manifest['file_name'].duplicated(keep=False)]['file_name'].to_list()
+    # check for duplicate file_names
+    dups = manifest[manifest["file_name"].duplicated(keep=False)]["file_name"].to_list()
 
     runner_logger = get_run_logger()
 
@@ -65,12 +73,12 @@ def json_downloader(manifest: pd.DataFrame, logger):
         f_name = os.path.basename(f_path)
 
         if f_name != row["file_name"]:
-                runner_logger.error(
-                    f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
-                )
-                logger.error(
-                    f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
-                )
+            runner_logger.error(
+                f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
+            )
+            logger.error(
+                f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
+            )
         else:
             try:
                 file_dl(f_bucket, f_path)
@@ -78,13 +86,17 @@ def json_downloader(manifest: pd.DataFrame, logger):
                 runner_logger.error(f"Cannot download file {row['file_name']}: {e}")
                 logger.error(f"Cannot download file {row['file_name']}: {e}")
 
-
         # if file name is in dups list, rename to clinical_measure_file_id + JSON to be uniq
-        if row['file_name'] in dups:
-            new_file_name = row['clinical_measure_file_id'] if row['clinical_measure_file_id'].endswith(".json") else row['clinical_measure_file_id'] + ".json"
-            os.rename(row['file_name'], new_file_name)
-            logger.info(f"Renamed file {row['file_name']} to {new_file_name} to be unique.")
-    
+        if row["file_name"] in dups:
+            new_file_name = (
+                row["clinical_measure_file_id"]
+                if row["clinical_measure_file_id"].endswith(".json")
+                else row["clinical_measure_file_id"] + ".json"
+            )
+            os.rename(row["file_name"], new_file_name)
+            logger.info(
+                f"Renamed file {row['file_name']} to {new_file_name} to be unique."
+            )
 
 
 @flow(
@@ -119,7 +131,9 @@ def distinguisher(f_path: str, logger):
                 return "igm.methylation"
             else:  # not known
                 logger.error(f"Error reading file at {f_path}: IGM assay type unknown.")
-                runner_logger.error(f"Error reading file at {f_path}: IGM assay type unknown.")
+                runner_logger.error(
+                    f"Error reading file at {f_path}: IGM assay type unknown."
+                )
                 return "error"
         else:
             return "other"
@@ -160,7 +174,9 @@ def distinguish(dir_path: str, logger):
         json_files = [i for i in os.listdir(dir_path) if i.endswith(".json")]
         if len(json_files) == 0:
             logger.error(f"Input path {dir_path} does not contain any JSON files.")
-            runner_logger.error(f"Input path {dir_path} does not contain any JSON files.")
+            runner_logger.error(
+                f"Input path {dir_path} does not contain any JSON files."
+            )
             sys.exit(
                 f"Process exited: Input path {dir_path} does not contain any JSON files, please check and try again."
             )
@@ -178,12 +194,15 @@ def distinguish(dir_path: str, logger):
     # segregate into dict of lists and return dict
     return sorted_dict
 
+
 @flow(
     name="JSON2TSV",
     log_prints=True,
     flow_run_name="json2tsv_" + f"{get_time()}",
 )
-def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, output_path: str, dt: str):
+def cog_igm_json2tsv(
+    manifest: pd.DataFrame, parsing: str, working_path: str, output_path: str, dt: str
+):
 
     # get run logger
     runner_logger = get_run_logger()
@@ -191,23 +210,36 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     # create logger for log file
     log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
     logger = get_logger("COG_IGM_JSON2TSV", "info")
-    
+
     logger.info(f"Logs beginning at {get_time()}")
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
 
     if parsing not in valid:
         raise ValueError(f"Parsing type {parsing} is not one of {valid}.")
-    
+
     # download JSON files
-    json_downloader(manifest[:5], logger)
+    json_downloader(manifest, logger)
 
     json_dir_path = working_path
 
     json_sorted = distinguish(json_dir_path, logger)
 
-    #if len(json_sorted["cog"]) == 0 and len(json_sorted["igm"]) == 0:
-    if sum([len(json_sorted[k]) for k in ["cog", "igm.methylation", "igm.archer_fusion", "igm.tumor_normal"]]) == 0:
+    # if len(json_sorted["cog"]) == 0 and len(json_sorted["igm"]) == 0:
+    if (
+        sum(
+            [
+                len(json_sorted[k])
+                for k in [
+                    "cog",
+                    "igm.methylation",
+                    "igm.archer_fusion",
+                    "igm.tumor_normal",
+                ]
+            ]
+        )
+        == 0
+    ):
         runner_logger.error(
             f"\n\t>>> No COG or IGM JSON files to covert in input directory, please check and try again."
         )
@@ -236,7 +268,9 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
                 logger.error(
                     "Cannot perform COG form-level parsing, no valid COG JSONs read in."
                 )
-                runner_logger.error("Cannot perform COG form-level parsing, no valid COG JSONs read in.")
+                runner_logger.error(
+                    "Cannot perform COG form-level parsing, no valid COG JSONs read in."
+                )
     else:
         cog_success_count = 0
         cog_error_count = 0
@@ -268,7 +302,13 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
         for assay_type in ["igm.tumor_normal", "igm.archer_fusion", "igm.methylation"]:
             if len(json_sorted[assay_type]) > 0:
                 df_reshape, temp_success_count, temp_error_count = igm_to_tsv(
-                    json_dir_path, json_sorted[assay_type], assay_type, igm_op, dt, results_parse, logger
+                    json_dir_path,
+                    json_sorted[assay_type],
+                    assay_type,
+                    igm_op,
+                    dt,
+                    results_parse,
+                    logger,
                 )
 
                 igm_success_count += temp_success_count
@@ -278,30 +318,48 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
                 logger.error(
                     "Cannot perform IGM variant results-level parsing, no valid IGM JSONs read in."
                 )
-                runner_logger.error("Cannot perform IGM variant results-level parsing, no valid IGM JSONs read in.")
+                runner_logger.error(
+                    "Cannot perform IGM variant results-level parsing, no valid IGM JSONs read in."
+                )
     else:
         igm_success_count = 0
         igm_error_count = 0
-    
+
     if len(json_sorted["other"]) > 0:
         # save list of others to output dir
         logger.info(f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted['other'])}")
-        runner_logger.info(f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted['other'])}")
+        runner_logger.info(
+            f"Number of other/nonIGM nonCOG JSONS: {len(json_sorted['other'])}"
+        )
         with open(f"{output_path}/other_jsons_{dt}.txt", "w+") as w:
             w.write("\n".join(json_sorted["other"]))
         w.close()
 
     if len(json_sorted["error"]) > 0:
         # save list of error JSONs that could not have type determined to output dir
-        logger.info(f"Number of JSONS that could not be identified/opened: {len(json_sorted['error'])}")
-        runner_logger.info(f"Number of JSONS that could not be identified/opened: {len(json_sorted['error'])}")
+        logger.info(
+            f"Number of JSONS that could not be identified/opened: {len(json_sorted['error'])}"
+        )
+        runner_logger.info(
+            f"Number of JSONS that could not be identified/opened: {len(json_sorted['error'])}"
+        )
         with open(f"{output_path}/undertermined_jsons_{dt}.txt", "w+") as w:
             w.write("\n".join(json_sorted["error"]))
         w.close()
-    
-    logger.info(f"Conversion done: COG Success {cog_success_count}, COG error {cog_error_count}, IGM Success {igm_success_count}, IGM error {igm_error_count}")
-    runner_logger.info(f"Conversion done: COG Success {cog_success_count}, COG error {cog_error_count}, IGM Success {igm_success_count}, IGM error {igm_error_count}")
-    return cog_success_count, cog_error_count, igm_success_count, igm_error_count, log_filename
+
+    logger.info(
+        f"Conversion done: COG Success {cog_success_count}, COG error {cog_error_count}, IGM Success {igm_success_count}, IGM error {igm_error_count}"
+    )
+    runner_logger.info(
+        f"Conversion done: COG Success {cog_success_count}, COG error {cog_error_count}, IGM Success {igm_success_count}, IGM error {igm_error_count}"
+    )
+    return (
+        cog_success_count,
+        cog_error_count,
+        igm_success_count,
+        igm_error_count,
+        log_filename,
+    )
 
 
 def read_cog_jsons(dir_path: str, cog_jsons: list, logger):
@@ -325,9 +383,9 @@ def read_cog_jsons(dir_path: str, cog_jsons: list, logger):
             key-value pairs of the JSON object before they are converted
             into a dictionary; aids in accounting for multiple `data` keys
     """
-    
+
     runner_logger = get_run_logger()
-    
+
     concatenated_df = pd.DataFrame()
     df_list = []  # List to hold DataFrames
 
@@ -342,9 +400,7 @@ def read_cog_jsons(dir_path: str, cog_jsons: list, logger):
                 json_str = f.read()
 
                 # Parse the string manually to capture all `data` sections
-                json_data = json.loads(
-                    json_str, object_pairs_hook=custom_json_parser
-                )
+                json_data = json.loads(json_str, object_pairs_hook=custom_json_parser)
 
                 # Normalize the JSON data into a DataFrame
                 df = pd.json_normalize(json_data)
@@ -455,7 +511,6 @@ def expand_cog_df(df: pd.DataFrame, logger):
                     f" Skipping data section(s) for upi {upi} form {form_name}, not in valid format for parsing"
                 )
 
-
             # Generate rows for each 'data' section (now lists of lists)
             form_rows = []
             for data_block in data_sections:
@@ -475,7 +530,10 @@ def expand_cog_df(df: pd.DataFrame, logger):
 
                             # Collect SASLabel and column_name pair
                             saslabel_data.append(
-                                {"column_name": column_name, "SASLabel": SASLabel.strip()}
+                                {
+                                    "column_name": column_name,
+                                    "SASLabel": SASLabel.strip(),
+                                }
                             )
                 form_rows.append(form_row)
 
@@ -533,13 +591,15 @@ def cog_to_tsv(dir_path: str, cog_jsons: list, cog_op: str, timestamp: str, logg
         )
 
         return df_reshape, success_count, error_count
-    
+
     else:
         # return empty dataframe since no files to process
         return pd.DataFrame(), success_count, error_count
 
 
-def cog_form_parser(df: pd.DataFrame, timestamp: str, cog_op: str, logger) -> pd.DataFrame:
+def cog_form_parser(
+    df: pd.DataFrame, timestamp: str, cog_op: str, logger
+) -> pd.DataFrame:
     """Split transformed JSON data into TSVs for each form type
 
     Args:
@@ -583,6 +643,7 @@ def cog_form_parser(df: pd.DataFrame, timestamp: str, cog_op: str, logger) -> pd
         )
 
     return None
+
 
 IGM_CORE_FIELDS = [
     "version",
@@ -722,7 +783,7 @@ def igm_to_tsv(
     igm_op: str,
     timestamp: str,
     results_parse: bool,
-    logger
+    logger,
 ):
     """Function to call the reading in and transformation of IGM JSON files
 
@@ -768,8 +829,9 @@ def igm_to_tsv(
         except Exception as e:
             error_count += 1
             logger.error(f" Error converting IGM JSON to TSV for file {file_path}: {e}")
-            runner_logger.error(f" Error converting IGM JSON to TSV for file {file_path}: {e}")
-
+            runner_logger.error(
+                f" Error converting IGM JSON to TSV for file {file_path}: {e}"
+            )
 
     if results_parse:
         # make output dir
