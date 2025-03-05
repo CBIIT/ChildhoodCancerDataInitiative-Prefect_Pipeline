@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import pandas as pd
+import logging
 import openpyxl
 import itertools
 from collections import defaultdict
@@ -181,8 +182,17 @@ def cog_igm_json2tsv(manifest: pd.DataFrame, parsing: str, working_path: str, ou
     runner_logger = get_run_logger()
 
     # create logger for log file
-    logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="debug")
+    #logger = get_logger(loggername="COG_IGM_JSON2TSV", log_level="debug")
     log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
+    logger = logging.getLogger("MCI_JSON2TSV")
+
+    # logging config
+    logging.basicConfig(
+        filename=f"JSON2TSV.log",
+        encoding="utf-8",
+        filemode="w",
+        level=logging.INFO,
+        format="%(name)s - %(levelname)s - %(message)s",
 
     valid = ["cog_only", "igm_only", "cog_and_igm"]
 
