@@ -1,4 +1,4 @@
-"""Utility functions to transform data in COG JSONs post-TSV conversion and perform mappings back to SAS Labels """
+"""Further transforms of COG data and perform mappings back to SAS Labels """
 
 import pandas as pd
 import numpy as np
