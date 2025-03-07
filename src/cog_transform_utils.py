@@ -2,8 +2,17 @@
 
 import pandas as pd
 import numpy as np
+import sys
+from datetime import datetime
 
-#TODO Functions for reshaping the data, move to src utiulity script:
+##for testing
+def get_time() -> str:
+    """Returns the current time"""
+    now = datetime.now()
+    dt_string = now.strftime("%Y%m%d_T%H%M%S")
+    return dt_string
+
+
 def clean_column_semicolon_concat(
     df: pd.DataFrame, new_col_name: str, col_name1: str, col_name2: str
 ):
@@ -58,14 +67,14 @@ def clean_column_space_colon_concat(
     return df
 
 
-@flow(
+"""@flow(
     name="COG Transformer",
     log_prints=True,
     flow_run_name="cog-transformer-{runner}-" + f"{get_time()}",
-)
-def cog_transformer(json_dir: str):
+)"""
+def cog_transformer(df_reshape: pd.DataFrame):
     # Data Reshape/mutate
-    df_reshape, df_saslabels = cog_to_tsv(json_dir)
+    #df_reshape, df_saslabels = cog_to_tsv(json_dir)
 
     # the specific columns we want in our mutation df
     direct_columns = [
@@ -448,4 +457,13 @@ def cog_transformer(json_dir: str):
     # Create the final column order by adding the extra columns to the end
     final_order = output_order + additional_columns
 
-    df_mutation[final_order].to_csv(f"COG_CCDI_submission_{get_time}.tsv", sep="\t", index=False)
+    df_mutation[final_order].to_csv(f"COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)
+
+
+
+if __name__=="__main__":
+    #testing
+    df_reshape = pd.read_csv(sys.argv[1], sep="\t",low_memory=False)
+
+    cog_transformer(df_reshape)
+
