@@ -129,7 +129,7 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
 
     try:
         # Upload parts concurrently
-        with ThreadPoolExecutor() as executor:
+        with ThreadPoolExecutor(max_workers=5) as executor:
             future_to_part = {executor.submit(upload_part, part_number): part_number for part_number in range(1, num_parts + 1)}
             for future in as_completed(future_to_part):
                 part_number = future_to_part[future]
