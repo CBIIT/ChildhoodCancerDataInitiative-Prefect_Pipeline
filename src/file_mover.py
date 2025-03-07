@@ -140,6 +140,9 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
                     logger.error(f"Error uploading part {part_number}: {e}")
                     raise
 
+        # Sort parts by PartNumber before completing the multipart upload
+        parts.sort(key=lambda x: x["PartNumber"])
+
         # Complete the multipart upload
         s3_client.complete_multipart_upload(
             Bucket=destination_bucket,
