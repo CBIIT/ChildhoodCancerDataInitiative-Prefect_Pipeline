@@ -24,6 +24,7 @@ from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
 from typing import TypeVar
 import ast
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 DataFrame = TypeVar("DataFrame")
 
@@ -110,28 +111,37 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
     # Initialize parts list
     parts = []
 
+    def upload_part(part_number):
+        start_byte = (part_number - 1) * part_size
+        end_byte = min(part_number * part_size - 1, file_size - 1)
+        byte_range = f"bytes={start_byte}-{end_byte}"
+
+        response = s3_client.upload_part_copy(
+            Bucket=destination_bucket,
+            Key=destination_key,
+            CopySource={"Bucket": source_bucket, "Key": source_key},
+            PartNumber=part_number,
+            UploadId=upload_id,
+            CopySourceRange=byte_range,
+        )
+
+        return {"PartNumber": part_number, "ETag": response["CopyPartResult"]["ETag"]}
+
     try:
-        # Upload parts
-        for part_number in range(1, num_parts + 1):
-            # Calculate the byte range for this part
-            start_byte = (part_number - 1) * part_size
-            end_byte = min(part_number * part_size - 1, file_size - 1)
-            byte_range = f"bytes={start_byte}-{end_byte}"
+        # Upload parts concurrently
+        with ThreadPoolExecutor(max_workers=50) as executor:
+            future_to_part = {executor.submit(upload_part, part_number): part_number for part_number in range(1, num_parts + 1)}
+            for future in as_completed(future_to_part):
+                part_number = future_to_part[future]
+                try:
+                    part = future.result()
+                    parts.append(part)
+                except Exception as e:
+                    logger.error(f"Error uploading part {part_number}: {e}")
+                    raise
 
-            # Upload a part
-            response = s3_client.upload_part_copy(
-                Bucket=destination_bucket,
-                Key=destination_key,
-                CopySource={"Bucket": source_bucket, "Key": source_key},
-                PartNumber=part_number,
-                UploadId=upload_id,
-                CopySourceRange=byte_range,
-            )
-
-            # Append the response to the parts list
-            parts.append(
-                {"PartNumber": part_number, "ETag": response["CopyPartResult"]["ETag"]}
-            )
+        # Sort parts by PartNumber before completing the multipart upload
+        parts.sort(key=lambda x: x["PartNumber"])
 
         # Complete the multipart upload
         s3_client.complete_multipart_upload(

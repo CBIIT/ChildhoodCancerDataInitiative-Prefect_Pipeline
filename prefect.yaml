@@ -269,7 +269,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.1.1
+          branch: main
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -277,7 +277,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb
+      name: ccdi-curation-60gb
       work_queue_name: null
       job_variables: {}
 
