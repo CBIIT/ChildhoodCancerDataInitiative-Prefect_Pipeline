@@ -277,7 +277,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb
+      name: ccdi-curation-60gb
       work_queue_name: null
       job_variables: {}
 
