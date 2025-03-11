@@ -350,7 +350,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "c3dc-curation"
       uri_parameter: "uri"
       username_parameter: "username"
       password_parameter: "password"
