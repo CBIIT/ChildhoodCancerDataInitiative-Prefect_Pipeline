@@ -723,6 +723,11 @@ def ccdi_to_gdc(
 
     df_raw_methylation_array = df_raw_methylation_array.drop_duplicates()
 
+    df_data_file_list = pd.concat(
+        [df_data_file_list[data_file_columns], data[data_file_columns]],
+        ignore_index=True,
+    )
+
     ###################################
     # read_group
     ###################################
@@ -921,7 +926,10 @@ def ccdi_to_gdc(
     )
 
     # Add files to the data file list dataframe
-    df_data_file_list = pd.concat([df_data_file_list[data_file_columns], data[data_file_columns]], ignore_index=True)
+    df_data_file_list = pd.concat(
+        [df_data_file_list[data_file_columns], data[data_file_columns]],
+        ignore_index=True,
+    )
 
     ###################################
     # submitted_aligned_reads_WXS
@@ -950,7 +958,10 @@ def ccdi_to_gdc(
     # CURRENTLY EMPTY, ALL WXS IS CRAM
 
     # Add files to the data file list dataframe
-    df_data_file_list = pd.concat([df_data_file_list[data_file_columns], data[data_file_columns]], ignore_index=True)
+    df_data_file_list = pd.concat(
+        [df_data_file_list[data_file_columns], data[data_file_columns]],
+        ignore_index=True,
+    )
 
     ###################################
     # submitted_unaligned_reads_Archer_Fusion
@@ -981,7 +992,10 @@ def ccdi_to_gdc(
     # CURRENTLY EMPTY, ALL ARCHER FUSION IS BAM ONLY
 
     # Add files to the data file list dataframe
-    df_data_file_list = pd.concat([df_data_file_list[data_file_columns], data[data_file_columns]], ignore_index=True)
+    df_data_file_list = pd.concat(
+        [df_data_file_list[data_file_columns], data[data_file_columns]],
+        ignore_index=True,
+    )
 
     ###################################
     # submitted_unaligned_reads_WXS
@@ -1040,7 +1054,10 @@ def ccdi_to_gdc(
     )
 
     # Add files to the data file list dataframe
-    df_data_file_list = pd.concat([df_data_file_list[data_file_columns], data[data_file_columns]], ignore_index=True)
+    df_data_file_list = pd.concat(
+        [df_data_file_list[data_file_columns], data[data_file_columns]],
+        ignore_index=True,
+    )
 
     ###################################
     # DF file write out
