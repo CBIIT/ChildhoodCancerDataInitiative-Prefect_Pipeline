@@ -91,7 +91,7 @@ def save_dataframe_as_nested_json(df: pd.DataFrame, output_file: str):
         output_file (str): The path to the output JSON file.
     """
 
-    #set up logger for prefect
+    # set up logger for prefect
     logger = get_run_logger()
 
     try:
@@ -214,9 +214,8 @@ def reconcile_experiment_names(df):
 def ccdi_to_gdc(
     file_path: str, ccdi_gdc_translation_file: str, platform_preservation_file: str
 ):
-    
-    logger = get_run_logger()
 
+    logger = get_run_logger()
 
     ################
     #
@@ -308,6 +307,30 @@ def ccdi_to_gdc(
     if platform_preservation_file:
         # platform and preservation
         platform_preservation_conv = pd.read_csv(platform_preservation_file, sep="\t")
+
+    #####################
+    #####################
+    ##
+    ## SETUP FOR DATA FILES
+    ##
+    #####################
+    #####################
+
+    # We have to capture all data files that are present in the meta_dfs. There should not be an issue
+    # with capturing all data files, as the next script will only access the files that are called for by file metadata.
+    # Thus we will pass along the file_name, file_size, md5sum, and file_url to the next script.
+    df_data_file_list = pd.DataFrame(
+        {
+            "submitter_id": pd.Series(dtype="str"),
+            "file_url": pd.Series(dtype="str"),
+            "file_name": pd.Series(dtype="str"),
+            "file_size": pd.Series(dtype="str"),
+            "md5sum": pd.Series(dtype="str"),
+        }
+    )
+
+    # Create a list of all data file metadata columns
+    data_file_columns = ["submitter_id", "file_url", "file_name", "file_size", "md5sum"]
 
     #####################
     #####################
@@ -898,6 +921,9 @@ def ccdi_to_gdc(
         df_submitted_aligned_reads_Archer_Fusion.drop_duplicates()
     )
 
+    # Add files to the data file list dataframe
+    df_data_file_list = pd.concat([df_data_file_list[data_file_columns], data[data_file_columns]], ignore_index=True)
+
     ###################################
     # submitted_aligned_reads_WXS
     ###################################
@@ -923,6 +949,9 @@ def ccdi_to_gdc(
     data = data[data["library_strategy"] == "WXS"]
 
     # CURRENTLY EMPTY, ALL WXS IS CRAM
+
+    # Add files to the data file list dataframe
+    df_data_file_list = pd.concat([df_data_file_list[data_file_columns], data[data_file_columns]], ignore_index=True)
 
     ###################################
     # submitted_unaligned_reads_Archer_Fusion
@@ -951,6 +980,9 @@ def ccdi_to_gdc(
     data = data[data["library_strategy"] == "Archer Fusion"]
 
     # CURRENTLY EMPTY, ALL ARCHER FUSION IS BAM ONLY
+
+    # Add files to the data file list dataframe
+    df_data_file_list = pd.concat([df_data_file_list[data_file_columns], data[data_file_columns]], ignore_index=True)
 
     ###################################
     # submitted_unaligned_reads_WXS
@@ -1008,6 +1040,9 @@ def ccdi_to_gdc(
         df_submitted_unaligned_reads_WXS.drop_duplicates()
     )
 
+    # Add files to the data file list dataframe
+    df_data_file_list = pd.concat([df_data_file_list[data_file_columns], data[data_file_columns]], ignore_index=True)
+
     ###################################
     # DF file write out
     ###################################
@@ -1018,19 +1053,20 @@ def ccdi_to_gdc(
 
     # The original data frame identification seems to be problematic in Prefect
     # Instead, I will just list the data frames that are produced
-    dataframes={
-        'df_aligned_reads_index': df_aligned_reads_index,
-        'df_aliquot': df_aliquot,
-        'df_case': df_case,
-        'df_demographic': df_demographic,
-        'df_diagnosis': df_diagnosis,
-        'df_raw_methylation_array': df_raw_methylation_array,
-        'df_read_group': df_read_group,
-        'df_sample': df_sample,
-        'df_submitted_aligned_reads_Archer_Fusion': df_submitted_aligned_reads_Archer_Fusion,
-        'df_submitted_aligned_reads_WXS': df_submitted_aligned_reads_WXS,
-        'df_submitted_unaligned_reads_Archer_Fusion': df_submitted_unaligned_reads_Archer_Fusion,
-        'df_submitted_unaligned_reads_WXS': df_submitted_unaligned_reads_WXS
+    dataframes = {
+        "df_aligned_reads_index": df_aligned_reads_index,
+        "df_aliquot": df_aliquot,
+        "df_case": df_case,
+        "df_demographic": df_demographic,
+        "df_diagnosis": df_diagnosis,
+        "df_raw_methylation_array": df_raw_methylation_array,
+        "df_read_group": df_read_group,
+        "df_sample": df_sample,
+        "df_submitted_aligned_reads_Archer_Fusion": df_submitted_aligned_reads_Archer_Fusion,
+        "df_submitted_aligned_reads_WXS": df_submitted_aligned_reads_WXS,
+        "df_submitted_unaligned_reads_Archer_Fusion": df_submitted_unaligned_reads_Archer_Fusion,
+        "df_submitted_unaligned_reads_WXS": df_submitted_unaligned_reads_WXS,
+        "df_data_file_list": df_data_file_list,
     }
 
     # Save each DataFrame as a TSV file
@@ -1046,6 +1082,5 @@ def ccdi_to_gdc(
                 logger.info(f"TSV written {output_dir}/{output_name}.tsv")
             else:
                 logger.info(f"Skipped {name} (empty DataFrame).")
-
 
     return output_dir
