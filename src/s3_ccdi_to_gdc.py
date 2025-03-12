@@ -321,7 +321,6 @@ def ccdi_to_gdc(
     # Thus we will pass along the file_name, file_size, md5sum, and file_url to the next script.
     df_data_file_list = pd.DataFrame(
         {
-            "submitter_id": pd.Series(dtype="str"),
             "file_url": pd.Series(dtype="str"),
             "file_name": pd.Series(dtype="str"),
             "file_size": pd.Series(dtype="str"),
@@ -330,7 +329,7 @@ def ccdi_to_gdc(
     )
 
     # Create a list of all data file metadata columns
-    data_file_columns = ["submitter_id", "file_url", "file_name", "file_size", "md5sum"]
+    data_file_columns = ["file_url", "file_name", "file_size", "md5sum"]
 
     #####################
     #####################
