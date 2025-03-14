@@ -665,7 +665,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
 
     # create flag directory for non-GRU consent
     if non_gru:
-        non_gru_dir_path = os.path.join(output_dir_path, "!!!NON-GRU_STUDY!!!")
+        non_gru_dir_path = os.path.join(output_dir_path, "/!!!NON-GRU_STUDY!!!")
         Path(non_gru_dir_path).mkdir(parents=True, exist_ok=True)
         logger.warning(f"This is a Non-GRU Study. Created an output folder if not exist at {non_gru_dir_path}")
 
