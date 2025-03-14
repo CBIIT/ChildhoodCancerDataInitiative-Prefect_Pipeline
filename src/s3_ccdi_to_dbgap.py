@@ -557,12 +557,18 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         logger.warning(
             "No CONSENT value found in CCDI study manifest. All Consent is assumed to be GRU"
         )
+        # Study is GRU, flag non-GRU as False
+        non_gru = False
     elif study_consent == "GRU":
         logger.info(f"Consent {study_consent} was found in CCDI study manifest")
+        # Study is GRU, flag non-GRU as False
+        non_gru = False
     else:
         logger.error(
             f"Consent {study_consent} was found in CCDI study manifest. Please fix the encoded value for CONSENT in SC_DD.xlsx before submission."
         )
+        # create a non-GRU boolean flag to trigger the directory creation later
+        non_gru = True
 
     # check synonym of subject and sample in synonym tab
     (subject_synonym, sample_synonym) = check_synonym(synonym_df=synonym_df)
@@ -656,6 +662,12 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     output_folder_name = study_id + "_dbGaP_submission_" + get_date()
     Path(output_dir_path).mkdir(parents=True, exist_ok=True)
     logger.info(f"Created an output folder if not exist at {output_dir_path}")
+
+    # create flag directory for non-GRU consent
+    if non_gru:
+        Path(os.path.join(os.getcwd(), "!!!NON-GRU_STUDY!!!")).mkdir(
+            parents=True, exist_ok=True
+        )
 
     # write dd files
     subject_consent_dd_df.to_excel(
