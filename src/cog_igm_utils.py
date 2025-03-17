@@ -261,7 +261,7 @@ def cog_igm_json2tsv(
         # make cog output dir path
         cog_op = f"{output_path}/COG"
         if not os.path.exists(cog_op):
-            os.mkdir(cog_op)
+            os.makedirs(cog_op)
 
         # transform COG JSONs and concatenate
         df_reshape, cog_success_count, cog_error_count = cog_to_tsv(
