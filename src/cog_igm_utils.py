@@ -9,6 +9,7 @@ import itertools
 from collections import defaultdict
 from prefect import flow, get_run_logger
 from src.utils import file_dl, get_time, get_date, get_logger
+from src.cog_transform_utils import cog_transformer
 
 @flow(
     name="Manifest Reader",
@@ -271,6 +272,7 @@ def cog_igm_json2tsv(
         if parsing in ["cog_only", "cog_and_igm"]:
             if len(df_reshape) > 0:
                 cog_form_parser(df_reshape, dt, cog_op, logger)
+                cog_transformer(df_reshape)
             else:
                 logger.error(
                     "Cannot perform COG form-level parsing, no valid COG JSONs read in."
