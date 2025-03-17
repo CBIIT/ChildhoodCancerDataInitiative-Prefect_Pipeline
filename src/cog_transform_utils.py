@@ -74,9 +74,10 @@ def clean_column_space_colon_concat(
     log_prints=True,
     flow_run_name="cog-transformer-" + f"{get_time()}",
 )
-def cog_transformer(df_reshape: pd.DataFrame):
+def cog_transformer(df_reshape: pd.DataFrame, output_dir: str):
     # Data Reshape/mutate
-    #df_reshape, df_saslabels = cog_to_tsv(json_dir)
+
+    runner_logger = get_run_logger()
 
     # the specific columns we want in our mutation df
     direct_columns = [
@@ -459,7 +460,7 @@ def cog_transformer(df_reshape: pd.DataFrame):
     # Create the final column order by adding the extra columns to the end
     final_order = output_order + additional_columns
 
-    df_mutation[final_order].to_csv(f"COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)
+    df_mutation[final_order].to_csv(f"{output_dir}/COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)
 
 
 
@@ -467,5 +468,5 @@ if __name__=="__main__":
     #testing
     df_reshape = pd.read_csv(sys.argv[1], sep="\t",low_memory=False)
 
-    cog_transformer(df_reshape)
+    cog_transformer(df_reshape, "./")
 
