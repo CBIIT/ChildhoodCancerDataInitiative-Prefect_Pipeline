@@ -74,10 +74,14 @@ def clean_column_space_colon_concat(
     log_prints=True,
     flow_run_name="cog-transformer-" + f"{get_time()}",
 )
-def cog_transformer(df_reshape: pd.DataFrame, output_dir: str):
+#todo >> sending in huge pd Dataframe into flow, needs to read in file name instead
+def cog_transformer(df_reshape_file_name: str, output_dir: str): 
     # Data Reshape/mutate
 
     runner_logger = get_run_logger()
+
+    # Load the data
+    df_reshape = pd.read_csv(df_reshape_file_name, sep="\t", low_memory=False)
 
     # the specific columns we want in our mutation df
     direct_columns = [
@@ -468,5 +472,5 @@ if __name__=="__main__":
     #testing
     df_reshape = pd.read_csv(sys.argv[1], sep="\t",low_memory=False)
 
-    cog_transformer(df_reshape, "./")
+    cog_transformer(df_reshape, ".")
 

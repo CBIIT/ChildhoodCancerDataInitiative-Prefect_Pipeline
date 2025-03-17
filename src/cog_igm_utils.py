@@ -594,14 +594,15 @@ def cog_to_tsv(dir_path: str, cog_jsons: list, cog_op: str, timestamp: str, logg
         df_reshape, df_saslabels = expand_cog_df(df_ingest, logger)
 
         # save data files to output COG directory
+        df_reshape_file_name = f"{cog_op}/COG_JSON_table_conversion_{timestamp}.tsv"
         df_reshape.to_csv(
-            f"{cog_op}/COG_JSON_table_conversion_{timestamp}.tsv", sep="\t", index=False
+            df_reshape_file_name, sep="\t", index=False
         )
         df_saslabels.to_csv(
             f"{cog_op}/COG_saslabels_{timestamp}.tsv", sep="\t", index=False
         )
 
-        return df_reshape, success_count, error_count
+        return df_reshape, df_reshape_file_name, success_count, error_count
 
     else:
         # return empty dataframe since no files to process
