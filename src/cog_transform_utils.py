@@ -77,6 +77,7 @@ def cog_transformer(df_reshape: pd.DataFrame):
     #df_reshape, df_saslabels = cog_to_tsv(json_dir)
 
     # the specific columns we want in our mutation df
+    #TODO - can we add anymore columns?
     direct_columns = [
         "upi",
         "DEMOGRAPHY.DM_ETHNIC",
@@ -129,6 +130,7 @@ def cog_transformer(df_reshape: pd.DataFrame):
     df_mutation = df_reshape[selected_columns]
 
     # Rename columns that do not have value changes
+    #TODO check if FINAL diagnosis is one that Pat mentioned
     df_mutation = df_mutation.rename(
         columns={
             "upi": "participant_id",
@@ -268,6 +270,7 @@ def cog_transformer(df_reshape: pd.DataFrame):
     df_mutation = df_mutation.drop(columns=agent_columns_to_combine)
 
     # Step 5: Rename suffix pattern to agent name
+    #TODO check if these are in list?
     df_mutation = df_mutation.rename(
         columns={
             "AGT_ADM_NM_A01": "13-cis- retinoic acid (13cRA, Isotretinoin, Accutane)",
