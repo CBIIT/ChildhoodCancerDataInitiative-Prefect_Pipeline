@@ -10,7 +10,6 @@ from collections import defaultdict
 from prefect import flow, get_run_logger
 from src.utils import file_dl, get_time, get_date, get_logger
 
-
 @flow(
     name="Manifest Reader",
     log_prints=True,
@@ -529,6 +528,7 @@ def expand_cog_df(df: pd.DataFrame, logger):
                         form_field_id = field.get("form_field_id")
                         SASLabel = field.get("SASLabel")
                         value = field.get("value")
+                        cde_id = field.get("cde_id")
 
                         # Ensure form_field_id exists
                         if form_field_id:
@@ -541,6 +541,7 @@ def expand_cog_df(df: pd.DataFrame, logger):
                                 {
                                     "column_name": column_name,
                                     "SASLabel": SASLabel.strip(),
+                                    "cde_id" : cde_id
                                 }
                             )
                 form_rows.append(form_row)
