@@ -541,7 +541,7 @@ def expand_cog_df(df: pd.DataFrame, logger):
                                 {
                                     "column_name": column_name,
                                     "SASLabel": SASLabel.strip(),
-                                    "cde_id" : cde_id
+                                    "cde_id" : str(cde_id)
                                 }
                             )
                 form_rows.append(form_row)
