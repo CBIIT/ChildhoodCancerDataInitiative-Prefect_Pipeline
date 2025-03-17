@@ -72,7 +72,7 @@ def clean_column_space_colon_concat(
 @flow(
     name="COG Transformer",
     log_prints=True,
-    flow_run_name="cog-transformer-{runner}-" + f"{get_time()}",
+    flow_run_name="cog-transformer-" + f"{get_time()}",
 )
 def cog_transformer(df_reshape: pd.DataFrame):
     # Data Reshape/mutate
