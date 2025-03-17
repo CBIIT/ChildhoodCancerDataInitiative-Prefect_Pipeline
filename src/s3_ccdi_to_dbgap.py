@@ -668,7 +668,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         non_gru_dir_path = os.path.join(output_dir_path, "!!!NON-GRU_STUDY!!!")
         Path(non_gru_dir_path).mkdir(parents=True, exist_ok=True)
         # make a file in the non_gru directory
-        with open(os.path.join(non_gru_dir_path, "!!!NON-GRU_STUDY!!!"), "w") as f:
+        with open(os.path.join(non_gru_dir_path, "!!!NON-GRU_STUDY!!!.txt"), "w") as f:
             f.write(f"This is a Non-GRU Study. It is {study_consent}.")
         logger.warning(f"This is a Non-GRU Study. Created an output folder if not exist at {non_gru_dir_path}")
 
