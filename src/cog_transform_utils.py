@@ -14,7 +14,6 @@ def get_time() -> str:
     dt_string = now.strftime("%Y%m%d_T%H%M%S")
     return dt_string
 
-
 def clean_column_semicolon_concat(
     df: pd.DataFrame, new_col_name: str, col_name1: str, col_name2: str
 ):
@@ -140,6 +139,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         columns={
             "upi": "participant_id",
             "DEMOGRAPHY.DM_SEX": "sex_at_birth",
+            "COG_UPR_DX.MORPHO_TEXT" : "diagnosis",
+            "COG_UPR_DX.MORPHO_ICDO" : "icd_o_code",
             "FINAL_DIAGNOSIS.PRIMDXDSCAT": "primary_diagnosis_disease_group",
             "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
             "ON_STUDY_DX_CNS.TUMOR_GP_ST": "tumor_grade",
@@ -172,9 +173,10 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     df_mutation = clean_column_space_colon_concat(
         df_mutation, "primary_site", "COG_UPR_DX.TOPO_ICDO", "COG_UPR_DX.TOPO_TEXT"
     )
-    df_mutation = clean_column_space_colon_concat(
+    #TODO: remove below, keeping ICDO separate from morpho text
+    """df_mutation = clean_column_space_colon_concat(
         df_mutation, "diagnosis", "COG_UPR_DX.MORPHO_ICDO", "COG_UPR_DX.MORPHO_TEXT"
-    )
+    )"""
     df_mutation = clean_column_semicolon_concat(
         df_mutation, "CNS_category", "CNS_category", "CNS_category_other"
     )
@@ -244,6 +246,13 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     df_mutation["treatment"] = (
         df_mutation["treatment"].str.replace(r";+", ";", regex=True).str.strip(";")
     )
+
+    #format race enum cases
+    for index, row in df_mutation.iterrows():
+        race = row['race'].split(";")[0]
+        eth = row['race'].split(";")[1]
+        case_fix = " ".join([word[0].upper() + word[1:].lower() for word in race.split(" ")]).replace("Or", "or").replace("Other", "other")
+        df_mutation.loc[index, race] = case_fix + ";" + eth
 
     # Remove the old treatment columns
     df_mutation = df_mutation.drop(columns=treatment_cols)
@@ -402,10 +411,10 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
 
     # Clean ups
-    # Use regex to remove (C##.#) from diagnosis
-    df_mutation["diagnosis"] = df_mutation["diagnosis"].str.replace(
+    # Use regex to remove (C##.#) from diagnosis - TODO is this necessary? since C##.# is for topo data not morpho data
+    """df_mutation["diagnosis"] = df_mutation["diagnosis"].str.replace(
         r" \([A-Z0-9._]+\)", "", regex=True
-    )
+    )"""
 
     # remove "follow_up_ids" for row that don't actually have follow-up data
     df_mutation["follow_up_id"] = np.where(
@@ -442,6 +451,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "sex_at_birth",
         "diagnosis_id",
         "diagnosis",
+        "icd_o_code",
         "CNS_category",
         "CNS_diagnosis",
         "age_at_diagnosis",
