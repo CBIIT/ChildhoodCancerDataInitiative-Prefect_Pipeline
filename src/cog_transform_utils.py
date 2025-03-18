@@ -431,8 +431,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
             "COG_UPR_DX.ADM_DX_CD_SEQ",
             "COG_UPR_DX.TOPO_ICDO",
             "COG_UPR_DX.TOPO_TEXT",
-            "COG_UPR_DX.MORPHO_ICDO",
-            "COG_UPR_DX.MORPHO_TEXT",
             "CNS_category_other",
             "DEMOGRAPHY.DM_BRTHDAT",
             "COG_UPR_DX.DX_DT",
