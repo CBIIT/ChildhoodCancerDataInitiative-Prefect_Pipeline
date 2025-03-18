@@ -264,7 +264,7 @@ def cog_igm_json2tsv(
             os.makedirs(cog_op)
 
         # transform COG JSONs and concatenate
-        df_reshape, cog_success_count, cog_error_count = cog_to_tsv(
+        df_reshape, df_reshape_file_name, cog_success_count, cog_error_count = cog_to_tsv(
             json_dir_path, json_sorted["cog"], cog_op, dt, logger
         )
 
@@ -272,7 +272,7 @@ def cog_igm_json2tsv(
         if parsing in ["cog_only", "cog_and_igm"]:
             if len(df_reshape) > 0:
                 cog_form_parser(df_reshape, dt, cog_op, logger)
-                cog_transformer(df_reshape, cog_op)
+                cog_transformer(df_reshape_file_name, cog_op)
             else:
                 logger.error(
                     "Cannot perform COG form-level parsing, no valid COG JSONs read in."
@@ -606,7 +606,7 @@ def cog_to_tsv(dir_path: str, cog_jsons: list, cog_op: str, timestamp: str, logg
 
     else:
         # return empty dataframe since no files to process
-        return pd.DataFrame(), success_count, error_count
+        return pd.DataFrame(), "", success_count, error_count
 
 
 def cog_form_parser(
