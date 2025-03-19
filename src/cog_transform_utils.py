@@ -17,6 +17,17 @@ def get_time() -> str:
 def clean_column_semicolon_concat(
     df: pd.DataFrame, new_col_name: str, col_name1: str, col_name2: str
 ):
+    """Concatenate values from col_name1 and col_name2 with ';' between them, handling NaNs
+
+    Args:
+        df (pd.DataFrame): DataFrame to perform changes
+        new_col_name (str): New column name for dataframe for 2 concatenated columns
+        col_name1 (str): first column to be concatenated
+        col_name2 (str): second column to be concatenated
+
+    Returns:
+        pd.DataFrame: modified dataframe
+    """
     # Concatenate values from col_name1 and col_name2 with ';' between them, handling NaNs
     df[new_col_name] = np.where(
         df[col_name1].notna() & df[col_name2].notna(),
@@ -35,6 +46,17 @@ def clean_column_semicolon_concat(
 def clean_column_underscore_concat(
     df: pd.DataFrame, new_col_name: str, col_name1: str, col_name2: str
 ):
+    """Concatenate values from col_name1 and col_name2 with '_' between them, handling NaNs
+
+    Args:
+        df (pd.DataFrame): DataFrame to perform changes
+        new_col_name (str): New column name for dataframe for 2 concatenated columns
+        col_name1 (str): first column to be concatenated
+        col_name2 (str): second column to be concatenated
+
+    Returns:
+        pd.DataFrame: modified dataframe
+    """
     # Concatenate values from col_name1 and col_name2 with '_' between them, handling NaNs
     df[new_col_name] = np.where(
         df[col_name1].notna() & df[col_name2].notna(),
@@ -53,7 +75,17 @@ def clean_column_underscore_concat(
 def clean_column_space_colon_concat(
     df: pd.DataFrame, new_col_name: str, col_name1: str, col_name2: str
 ):
-    """Concatenate values from col_name1 and col_name2 with ' : ' between them, handling NaNs"""
+    """Concatenate values from col_name1 and col_name2 with ' : ' between them, handling NaNs
+
+    Args:
+        df (pd.DataFrame): DataFrame to perform changes
+        new_col_name (str): New column name for dataframe for 2 concatenated columns
+        col_name1 (str): first column to be concatenated
+        col_name2 (str): second column to be concatenated
+
+    Returns:
+        pd.DataFrame: modified dataframe
+    """
     # Concatenate values from col_name1 and col_name2 with ' : ' between them, handling NaNs
     df[new_col_name] = np.where(
         df[col_name1].notna() & df[col_name2].notna(),
@@ -73,8 +105,27 @@ def clean_column_space_colon_concat(
     log_prints=True,
     flow_run_name="cog-transformer-" + f"{get_time()}",
 )
-#todo >> sending in huge pd Dataframe into flow, needs to read in file name instead
 def cog_transformer(df_reshape_file_name: str, output_dir: str): 
+    """
+    Transforms and reshapes COG data to map back to SAS Labels and CCDI data model.
+
+    This function performs various transformations on the input DataFrame, including:
+    - Selecting specific columns
+    - Renaming columns
+    - Concatenating columns with specific delimiters
+    - Calculating new columns based on existing data
+    - Applying conditional logic to create new columns
+    - Combining multiple columns into a single column
+    - Dropping unnecessary columns
+    - Removing duplicates
+
+    Args:
+        df_reshape_file_name (str): Path to the input TSV file containing the reshaped data.
+        output_dir (str): Directory where the output TSV file will be saved.
+
+    Returns:
+        None
+    """
     # Data Reshape/mutate
 
     runner_logger = get_run_logger()
@@ -173,10 +224,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     df_mutation = clean_column_space_colon_concat(
         df_mutation, "primary_site", "COG_UPR_DX.TOPO_ICDO", "COG_UPR_DX.TOPO_TEXT"
     )
-    #TODO: remove below, keeping ICDO separate from morpho text
-    """df_mutation = clean_column_space_colon_concat(
-        df_mutation, "diagnosis", "COG_UPR_DX.MORPHO_ICDO", "COG_UPR_DX.MORPHO_TEXT"
-    )"""
+
     df_mutation = clean_column_semicolon_concat(
         df_mutation, "CNS_category", "CNS_category", "CNS_category_other"
     )
@@ -252,7 +300,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         race = row['race'].split(";")[0]
         eth = row['race'].split(";")[1]
         case_fix = " ".join([word[0].upper() + word[1:].lower() for word in race.split(" ")]).replace("Or", "or").replace("Other", "other")
-        df_mutation.loc[index, race] = case_fix + ";" + eth
+        df_mutation.loc[index, "race"] = case_fix + ";" + eth
 
     # Remove the old treatment columns
     df_mutation = df_mutation.drop(columns=treatment_cols)
@@ -411,10 +459,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
 
     # Clean ups
-    # Use regex to remove (C##.#) from diagnosis - TODO is this necessary? since C##.# is for topo data not morpho data
-    """df_mutation["diagnosis"] = df_mutation["diagnosis"].str.replace(
-        r" \([A-Z0-9._]+\)", "", regex=True
-    )"""
 
     # remove "follow_up_ids" for row that don't actually have follow-up data
     df_mutation["follow_up_id"] = np.where(

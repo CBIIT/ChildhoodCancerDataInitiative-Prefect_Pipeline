@@ -37,8 +37,7 @@ def manifest_reader(manifest_path: str):
         # parse only COG and IGM clinical reports and return uniq file ID and s3 URL in df
         manifest_df = manifest_df[
             manifest_df.data_category.isin(
-                #["Clinical;COG Clinical Report", "Clinical;IGM Clinical Report"]
-                ["Clinical;COG Clinical Report"] #testing COG transformations
+                ["Clinical;COG Clinical Report", "Clinical;IGM Clinical Report"]
             )
         ][["clinical_measure_file_id", "file_name", "file_size", "file_url"]]
     except Exception as e:
