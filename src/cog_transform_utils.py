@@ -461,8 +461,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     # Clean ups
 
     # set age values to int types
-    df_mutation["age_at_diagnosis"] = df_mutation["age_at_diagnosis"].astype(int)
-    df_mutation["age_at_follow_up"] = df_mutation["age_at_follow_up"].astype(int)
+    df_mutation["age_at_diagnosis"] = df_mutation["age_at_diagnosis"].fillna("").astype(str).str.replace(".0", "")
+    df_mutation["age_at_follow_up"] = df_mutation["age_at_follow_up"].fillna("").astype(str).str.replace(".0", "")
 
     # Use regex to remove (C##.#) from diagnosis
     df_mutation["diagnosis"] = df_mutation["diagnosis"].str.replace(
