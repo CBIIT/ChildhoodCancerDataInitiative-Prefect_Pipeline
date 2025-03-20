@@ -139,6 +139,13 @@ def cog_igm_transform(
     )
 
     # clean up working dir
-    os.chdir("/usr/local/data/")
+    os.chdir("~")
 
-    os.rename(working_path, f"/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CCDIDC-1355_COG-Transformation-Script/{working_dir}")
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                "rm -r /usr/local/data/COG_IGM_Transform_*",
+                "ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
+            ]
+        ).run()
+    )
