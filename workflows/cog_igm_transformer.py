@@ -138,6 +138,9 @@ def cog_igm_transform(
         sub_folder="",
     )
 
+    # clean up working dir
+    os.chdir("/usr/local/data/")
+
     runner_logger.info(
         ShellOperation(
             commands=[
