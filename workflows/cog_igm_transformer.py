@@ -141,7 +141,7 @@ def cog_igm_transform(
     runner_logger.info(
         ShellOperation(
             commands=[
-                f"rm -r {working_path}"
+                f"rm -r {working_path}",
                 f"ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
             ]
         ).run()
