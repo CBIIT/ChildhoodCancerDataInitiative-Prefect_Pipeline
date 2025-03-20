@@ -11,7 +11,6 @@ import os
 import sys
 from typing import Literal
 from datetime import datetime
-import shutil
 
 # utils
 from src.cog_igm_utils import manifest_reader, cog_igm_json2tsv
@@ -25,7 +24,7 @@ from prefect_shell import ShellOperation
 #
 ##############
 
-FormParsing = Literal["cog_only", "igm_only", "cog_and_igm"]
+FormParsing = Literal["cog_only", "igm_only", "cog_and_igm", "data_clean_up"]
 
 
 @flow(
@@ -54,9 +53,9 @@ def cog_igm_transform(
     dt = get_time()
 
     runner_logger.info(">>> Running cog_igm_transformer.py ....")
-    
-    # clean up previous working dir
-    runner_logger.info(
+
+    if form_parsing == 'data_clean_up':
+        runner_logger.info(
         ShellOperation(
             commands=[
                 "rm -r /usr/local/data/COG_IGM_Transform_*",
@@ -64,91 +63,90 @@ def cog_igm_transform(
             ]
         ).run()
     )
-
-    # download the manifest file
-    try:
-        file_dl(bucket, manifest_path)
-    except Exception as e:
-        runner_logger.error(f"Cannot download manifest from path {manifest_path}: {e}")
-        sys.exit(1)
-
-    # load in the manifest
-    manifest_df = manifest_reader(manifest_path)
-
-    # create working dir name
-    working_dir = f"COG_IGM_Transform_working"
-    working_path = f"/usr/local/data/{working_dir}"
-    if not os.path.exists(working_path):
-        os.mkdir(working_path)
-
-    # create output dir for logs etc
-    output_dir = f"COG_IGM_Transform_output_{dt}"
-    output_path = f"/usr/local/data/{working_dir}/{output_dir}"
-    if not os.path.exists(output_path):
-        os.mkdir(output_path)
-
-    # change to working dir
-    os.chdir(working_path)
-
-    # perform parsing
-    (
-        cog_success_count,
-        cog_error_count,
-        igm_success_count,
-        igm_error_count,
-        log_filename,
-    ) = cog_igm_json2tsv(manifest_df, form_parsing, working_path, output_path, dt)
-
-    end_time = datetime.now()
-    time_diff = end_time - start_time
-    runner_logger.info(f"\n\t>>> Time to Completion: {time_diff}")
-    runner_logger.info(
-        f"\t>>> # COG JSON Files Successfully Transformed: {cog_success_count}"
-    )
-    if cog_error_count > 0:
-        runner_logger.info(
-            f"\t>>> # COG JSON Files NOT Transformed (Errors): {cog_error_count}, check log file {output_path}/JSON2TSV_{get_time}.log for errors"
-        )
+        
     else:
-        runner_logger.info(
-            f"\t>>> # COG JSON Files NOT Transformed (Errors): {cog_error_count}"
-        )
-    runner_logger.info(
-        f"\t>>> # IGM JSON Files Successfully Transformed: {igm_success_count}"
-    )
-    if igm_error_count > 0:
-        runner_logger.info(
-            f"\t>>> # IGM JSON Files NOT Transformed (Errors): {igm_error_count}, check log file {output_path}/JSON2TSV_{get_time}.log for errors \n"
-        )
-    else:
-        runner_logger.info(
-            f"\t>>> # IGM JSON Files NOT Transformed (Errors): {igm_error_count}"
-        )
-    runner_logger.info(
-        f"\t>>> Check log file {output_path}/JSON2TSV_{dt}.log for additional information\n"
-    )
-
-    # move log file to output dir and shutdown logging
-    os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
-
-    # upload output dir
-    folder_ul(
-        local_folder=f"{output_dir}",
-        bucket=bucket,
-        destination=runner + "/",
-        sub_folder="",
-    )
-
-    # clean up working dir
-    os.chdir("/home/")
     
-    if os.path.exists(working_path):
-        shutil.rmtree(working_path)
+        # clean up previous working dir
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    "rm -r /usr/local/data/COG_IGM_Transform_*",
+                    "ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
+                ]
+            ).run()
+        )
 
-    runner_logger.info(
-        ShellOperation(
-            commands=[
-                "ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
-            ]
-        ).run()
-    )
+        # download the manifest file
+        try:
+            file_dl(bucket, manifest_path)
+        except Exception as e:
+            runner_logger.error(f"Cannot download manifest from path {manifest_path}: {e}")
+            sys.exit(1)
+
+        # load in the manifest
+        manifest_df = manifest_reader(manifest_path)
+
+        # create working dir name
+        working_dir = f"COG_IGM_Transform_working"
+        working_path = f"/usr/local/data/{working_dir}"
+        if not os.path.exists(working_path):
+            os.mkdir(working_path)
+
+        # create output dir for logs etc
+        output_dir = f"COG_IGM_Transform_output_{dt}"
+        output_path = f"/usr/local/data/{working_dir}/{output_dir}"
+        if not os.path.exists(output_path):
+            os.mkdir(output_path)
+
+        # change to working dir
+        os.chdir(working_path)
+
+        # perform parsing
+        (
+            cog_success_count,
+            cog_error_count,
+            igm_success_count,
+            igm_error_count,
+            log_filename,
+        ) = cog_igm_json2tsv(manifest_df, form_parsing, working_path, output_path, dt)
+
+        end_time = datetime.now()
+        time_diff = end_time - start_time
+        runner_logger.info(f"\n\t>>> Time to Completion: {time_diff}")
+        runner_logger.info(
+            f"\t>>> # COG JSON Files Successfully Transformed: {cog_success_count}"
+        )
+        if cog_error_count > 0:
+            runner_logger.info(
+                f"\t>>> # COG JSON Files NOT Transformed (Errors): {cog_error_count}, check log file {output_path}/JSON2TSV_{get_time}.log for errors"
+            )
+        else:
+            runner_logger.info(
+                f"\t>>> # COG JSON Files NOT Transformed (Errors): {cog_error_count}"
+            )
+        runner_logger.info(
+            f"\t>>> # IGM JSON Files Successfully Transformed: {igm_success_count}"
+        )
+        if igm_error_count > 0:
+            runner_logger.info(
+                f"\t>>> # IGM JSON Files NOT Transformed (Errors): {igm_error_count}, check log file {output_path}/JSON2TSV_{get_time}.log for errors \n"
+            )
+        else:
+            runner_logger.info(
+                f"\t>>> # IGM JSON Files NOT Transformed (Errors): {igm_error_count}"
+            )
+        runner_logger.info(
+            f"\t>>> Check log file {output_path}/JSON2TSV_{dt}.log for additional information\n"
+        )
+
+        # move log file to output dir and shutdown logging
+        os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
+
+        # upload output dir
+        folder_ul(
+            local_folder=f"{output_dir}",
+            bucket=bucket,
+            destination=runner + "/",
+            sub_folder="",
+        )
+
