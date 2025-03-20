@@ -1017,9 +1017,9 @@ deployments:
       job_variables: {}
 
   # base metadata
-  - name: TEST-ccdi-cog_igm-transform
+  - name: ccdi-cog_igm-transform
     version: null
-    tags: [ "TEST" ]
+    tags: [ "Production" ]
     description: null
     entrypoint: workflows/cog_igm_transformer.py:cog_igm_transform
     schedule: null
@@ -1037,7 +1037,7 @@ deployments:
     - prefect.projects.steps.git_clone_project:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: CCDIDC-1355_COG-Transformation-Script
+        branch: main
     - prefect.projects.steps.pip_install_requirements:
         requirements_file: requirements.txt
         directory: "{{ clone-step.directory }}"
