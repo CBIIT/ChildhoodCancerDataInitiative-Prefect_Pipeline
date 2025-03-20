@@ -138,11 +138,11 @@ def cog_igm_transform(
         sub_folder="",
     )
 
-    #TODO perform clean up of working dir before shutting down
-    """runner_logger.info(
+    runner_logger.info(
         ShellOperation(
             commands=[
+                f"rm -r {working_path}"
                 f"ls -l {working_path}",  # confirm removal of COG_IGM_Transform working dirs
             ]
         ).run()
-    )"""
+    )
