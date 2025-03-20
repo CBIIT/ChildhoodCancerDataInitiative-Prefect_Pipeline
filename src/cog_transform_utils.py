@@ -159,8 +159,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "FOLLOW_UP.DZ_EXM_REP_IND_2",
     ]
 
-    # set "COG_UPR_DX.ADM_DX_CD_SEQ" col to int type for parsing later
-    df_reshape["COG_UPR_DX.ADM_DX_CD_SEQ"] = df_reshape["COG_UPR_DX.ADM_DX_CD_SEQ"].astype(int)
+    # set "COG_UPR_DX.ADM_DX_CD_SEQ" col to int type for parsing later while handling NANs
+    df_reshape["COG_UPR_DX.ADM_DX_CD_SEQ"] = df_reshape["COG_UPR_DX.ADM_DX_CD_SEQ"].astype('Int64')
 
     # columns we want in our mutation df that require certain patterns
     pattern_columns_followup = [
