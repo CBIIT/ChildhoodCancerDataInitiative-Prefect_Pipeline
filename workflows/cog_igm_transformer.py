@@ -142,7 +142,7 @@ def cog_igm_transform(
         ShellOperation(
             commands=[
                 f"rm -r {working_path}"
-                f"ls -l {working_path}",  # confirm removal of COG_IGM_Transform working dirs
+                f"ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
             ]
         ).run()
     )
