@@ -54,6 +54,8 @@ def cog_igm_transform(
 
     runner_logger.info(">>> Running cog_igm_transformer.py ....")
 
+    runner_logger.info(f"Current dir: {os.getcwd()}")
+    
     # clean up previous working dir
     runner_logger.info(
         ShellOperation(
@@ -141,4 +143,4 @@ def cog_igm_transform(
     # clean up working dir
     os.chdir("/usr/local/data/")
 
-    os.rename(working_path, f"/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CCDIDC-1355_COG-Transformation-Script/{working_path}")
+    #os.rename(working_path, f"/opt/prefect/ChildhoodCancerDataInitiative-Prefect_Pipeline-CCDIDC-1355_COG-Transformation-Script/{working_dir}")
