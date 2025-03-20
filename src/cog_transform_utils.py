@@ -159,6 +159,9 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "FOLLOW_UP.DZ_EXM_REP_IND_2",
     ]
 
+    # set "COG_UPR_DX.ADM_DX_CD_SEQ" col to int type for parsing later
+    df_reshape["COG_UPR_DX.ADM_DX_CD_SEQ"] = df_reshape["COG_UPR_DX.ADM_DX_CD_SEQ"].astype(int)
+
     # columns we want in our mutation df that require certain patterns
     pattern_columns_followup = [
         col
@@ -460,12 +463,24 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     # Clean ups
 
+    # set age values to int types
+    df_mutation["age_at_diagnosis"] = df_mutation["age_at_diagnosis"].astype(int)
+    df_mutation["age_at_follow_up"] = df_mutation["age_at_follow_up"].astype(int)
+
+    # Use regex to remove (C##.#) from diagnosis
+    df_mutation["diagnosis"] = df_mutation["diagnosis"].str.replace(
+        r" \([A-Z0-9._]+\)", "", regex=True
+    )
+
     # remove "follow_up_ids" for row that don't actually have follow-up data
     df_mutation["follow_up_id"] = np.where(
         df_mutation["follow_up_id"].str.contains("Follow-up", case=False, na=False),
         df_mutation["follow_up_id"],
         "",
     )
+
+    #format follow_up_ids
+    df_mutation["follow_up_id"] = df_mutation["follow_up_id"].str.replace(" ", "_").str.replace("(", "").str.replace(")", "") 
 
     # Delete old columns that are no longer needed
     df_mutation = df_mutation.drop(
