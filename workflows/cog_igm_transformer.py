@@ -11,6 +11,7 @@ import os
 import sys
 from typing import Literal
 from datetime import datetime
+import shutil
 
 # utils
 from src.cog_igm_utils import manifest_reader, cog_igm_json2tsv
@@ -140,11 +141,13 @@ def cog_igm_transform(
 
     # clean up working dir
     os.chdir("/home/")
+    
+    if os.path.exists(working_path):
+        shutil.rmtree(working_path)
 
     runner_logger.info(
         ShellOperation(
             commands=[
-                "rm -rf /usr/local/data/COG_IGM_Transform_*",
                 "ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
             ]
         ).run()
