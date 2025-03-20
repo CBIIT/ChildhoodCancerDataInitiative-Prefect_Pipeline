@@ -139,7 +139,7 @@ def cog_igm_transform(
     )
 
     # clean up working dir
-    os.chdir("~")
+    os.chdir("/home/")
 
     runner_logger.info(
         ShellOperation(
