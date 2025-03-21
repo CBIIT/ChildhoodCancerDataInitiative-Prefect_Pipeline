@@ -41,7 +41,7 @@ def cog_igm_transform(
         bucket (str): Bucket name of where the manifest is located in and the output goes to
         runner (str): Unique runner name where manifest located and where to direct outputs to
         manifest_path (str): File path of the CCDI study manifest
-        form_parsing (str): Select whether to parse out form level TSVs for COG, or parse variant sections of IGM or parse both
+        form_parsing (str): Select whether to parse out form level TSVs for COG, or parse variant sections of IGM or parse both OR perform data clean up previously downloaded JSONs
 
     """
 
