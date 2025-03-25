@@ -314,35 +314,36 @@ def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> t
     try:
         first_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=first_url)
         second_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=second_url)
+        file_name = first_url.split("/")[-1]
         if first_md5sum == second_md5sum:
-            return (first_md5sum, second_md5sum, "Pass")
+            return (file_name, first_md5sum, second_md5sum, "Pass")
         else:
-            return (first_md5sum, second_md5sum, "Fail")
+            return (file_name, first_md5sum, second_md5sum, "Fail")
     except ClientError as ec:
         logger.error(
             f"ClientError occurred while calculating md5sum of {first_url} and {second_url}: {ec}"
         )
-        return ("", "", "Error")
+        return ("", "", "", "Error")
     except ReadTimeoutError as er:
         logger.error(
             f"ReadTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {er}"
         )
-        return ("", "", "Error")
+        return ("", "", "", "Error")
     except ConnectTimeoutError as econ:
         logger.error(
             f"ConnectTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {econ}"
         )
-        return ("", "", "Error")
+        return ("", "", "", "Error")
     except ResponseStreamingError as erres:
         logger.error(
             f"ConnectTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {erres}"
         )
-        return ("", "", "Error")
+        return ("", "", "", "Error")
     except Exception as ex:
         logger.error(
             f"Error occurred while calculating  md5sum of {first_url} and {second_url}: {ex}"
         )
-        return ("", "", "Error")
+        return ("", "", "", "Error")
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Compare md5sum Concurrently")
@@ -565,7 +566,8 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             md5sum_compare_result.extend(j_md5sum_compare_result)
             
             #intermediate output of md5sum check results
-            pd.DataFrame(md5sum_compare_result).to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
+            int_df = pd.DataFrame(md5sum_compare_result).columns = ["file_name", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]
+            int_df.to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
             file_ul(
                 bucket=bucket,
                 output_folder=intermediate_out,
