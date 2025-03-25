@@ -32,7 +32,7 @@ def file_mover(bucket: str, file_path: str, runner: str, dest_bucket_path: str) 
     manifest_path = os.path.basename(file_path)
 
     # Start file moving and generating new files
-    modified_manifest, mover_log, summary_table =  move_manifest_files(manifest_path=manifest_path, dest_bucket_path=dest_bucket_path)
+    modified_manifest, mover_log, summary_table =  move_manifest_files(manifest_path=manifest_path, dest_bucket_path=dest_bucket_path, intermediate_out=runner, bucket=bucket)
 
     # upload files to bucket
     output_folder = os.path.join(runner, "file_mover_outputs_" + get_time())

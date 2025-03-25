@@ -253,9 +253,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: ccdi-file-copier
+  - name: TEST-ccdi-file-copier
     version: null
-    tags: ["Production"]
+    tags: ["TEST"]
     description: null
     entrypoint: workflows/File_Mover.py:file_mover
     schedule: null
@@ -269,7 +269,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
+          branch: CCDIDC-1665_md5sum_chunk
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"

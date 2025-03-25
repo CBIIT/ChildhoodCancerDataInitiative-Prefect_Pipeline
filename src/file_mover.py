@@ -7,6 +7,7 @@ from src.utils import (
     get_date,
     get_time,
     calculate_object_md5sum_new,
+    file_ul,
 )
 from botocore.exceptions import (
     ClientError,
@@ -392,7 +393,7 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
     log_prints=True,
     flow_run_name="move-manifest-files-" + f"{get_time()}",
 )
-def move_manifest_files(manifest_path: str, dest_bucket_path: str):
+def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_out: str, bucket: str) -> tuple:
     """Checks file node sheets and replaces the "file_url"
     with a new url in prod bucket
     Returns a new manifest with new
@@ -562,6 +563,15 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
                 f"md5sum check completed: {j+1}/{len(urls_before_chunks)}"
             )
             md5sum_compare_result.extend(j_md5sum_compare_result)
+            
+            #intermediate output of md5sum check results
+            pd.DataFrame(md5sum_compare_result).to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
+            file_ul(
+                bucket=bucket,
+                output_folder=intermediate_out,
+                sub_folder="",
+                newfile=f"intermediate_md5sum_check_{get_date()}.tsv"
+            )
 
         # add md5sum comparison result to transfer_df
         transfer_df = add_md5sum_results(
