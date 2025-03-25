@@ -566,15 +566,15 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             )
             md5sum_compare_result.extend([i[1:] for i in j_md5sum_compare_result])
 
-            transfer_df = add_md5sum_results(
-                transfer_df=transfer_df[j * chunk_len : (j + 1) * chunk_len], md5sum_results=md5sum_compare_result
+            int_transfer_df = add_md5sum_results(
+                transfer_df=transfer_df[0 : (j + 1) * chunk_len], md5sum_results=md5sum_compare_result
             )
             
             #intermediate output of md5sum check results
             #int_df = pd.DataFrame(md5sum_compare_result)
             #int_df.columns = ["file_name", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]
             #int_df.to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
-            transfer_df[
+            int_transfer_df[
                 [
                     "node",
                     "url_before_cp",
