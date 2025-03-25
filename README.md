@@ -64,3 +64,37 @@ Run the command line below in your terminal to download the workflow outputs.
 ```bash
 aws s3 cp s3://ccdi-validation/<your_runner_id>/ ./<your-runner-id>/ --recursive
 ```
+
+### Transformation script
+
+The transformation script requires three command line arguments:
+
+1. The directory that contains all the harmonized JSON files to transform, organized such that the directory contains one subdirectory for each study in C3DC, and each study's subdirectory contains all of the study's harmonized JSON files
+
+    Example directory structure:
+
+    ```text
+    data\
+    ├───phs000466\
+    │       phs000466_discovery.harmonized.json
+    │
+    ├───phs000467\
+    │       phs000467_discovery.harmonized.json
+    │       phs000467_validation.harmonized.json
+    │
+    ├───phs000468\
+    │       phs000468_discovery.harmonized.json
+    │       phs000468_validation.harmonized.json
+    │
+    └───phs003519\
+            phs003519.harmonized.json
+    ```
+
+2. The path to the datamodel's model MDF file
+3. The path to the datamodel's props MDF file
+
+Example usage:
+
+```bash
+python src/json_to_tsv.py data/ c3dc-model/model-desc/c3dc-model.yml c3dc-model/model-desc/c3dc-model-props.yml
+```
