@@ -564,11 +564,27 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
                 f"md5sum check completed: {j+1}/{len(urls_before_chunks)}"
             )
             md5sum_compare_result.extend([i[1:] for i in j_md5sum_compare_result])
+
+            transfer_df = add_md5sum_results(
+                transfer_df=transfer_df, md5sum_results=md5sum_compare_result
+            )
             
             #intermediate output of md5sum check results
-            int_df = pd.DataFrame(md5sum_compare_result)
-            int_df.columns = ["file_name", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]
-            int_df.to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
+            #int_df = pd.DataFrame(md5sum_compare_result)
+            #int_df.columns = ["file_name", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]
+            #int_df.to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
+            transfer_df[
+                [
+                    "node",
+                    "url_before_cp",
+                    "url_after_cp",
+                    "transfer_status",
+                    "md5sum_check",
+                    "md5sum_before_cp",
+                    "md5sum_after_cp",
+                ]
+            ].to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
+            
             file_ul(
                 bucket=bucket,
                 output_folder=intermediate_out,
