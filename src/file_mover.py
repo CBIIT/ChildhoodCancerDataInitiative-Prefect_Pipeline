@@ -563,7 +563,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             runner_logger.info(
                 f"md5sum check completed: {j+1}/{len(urls_before_chunks)}"
             )
-            md5sum_compare_result.extend(j_md5sum_compare_result)
+            md5sum_compare_result.extend([i[1:] for i in j_md5sum_compare_result])
             
             #intermediate output of md5sum check results
             int_df = pd.DataFrame(md5sum_compare_result)
