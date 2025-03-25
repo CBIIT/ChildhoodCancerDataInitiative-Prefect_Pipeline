@@ -544,8 +544,9 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             transfer_df["transfer_status"] == "Success", "url_after_cp"
         ].tolist()
         # url list needs to be break into chunks
-        urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=100)
-        urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=100)
+        chunk_len = 100
+        urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=chunk_len)
+        urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=chunk_len)
         md5sum_compare_result = []
         logger.info(
             f"Md5sum check will be processed into {len(urls_before_chunks)} chunks"
@@ -566,7 +567,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             md5sum_compare_result.extend([i[1:] for i in j_md5sum_compare_result])
 
             transfer_df = add_md5sum_results(
-                transfer_df=transfer_df, md5sum_results=md5sum_compare_result
+                transfer_df=transfer_df[j * chunk_len : (j + 1) * chunk_len], md5sum_results=md5sum_compare_result
             )
             
             #intermediate output of md5sum check results
