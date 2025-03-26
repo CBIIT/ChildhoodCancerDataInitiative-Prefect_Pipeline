@@ -7,6 +7,7 @@ from src.utils import (
     get_date,
     get_time,
     calculate_object_md5sum_new,
+    file_ul,
 )
 from botocore.exceptions import (
     ClientError,
@@ -314,34 +315,34 @@ def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> t
         first_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=first_url)
         second_md5sum = calculate_object_md5sum_new(s3_client=s3_client, url=second_url)
         if first_md5sum == second_md5sum:
-            return (first_md5sum, second_md5sum, "Pass")
+            return (first_url, first_md5sum, second_md5sum, "Pass")
         else:
-            return (first_md5sum, second_md5sum, "Fail")
+            return (first_url, first_md5sum, second_md5sum, "Fail")
     except ClientError as ec:
         logger.error(
             f"ClientError occurred while calculating md5sum of {first_url} and {second_url}: {ec}"
         )
-        return ("", "", "Error")
+        return (first_url, "", "", "Error")
     except ReadTimeoutError as er:
         logger.error(
             f"ReadTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {er}"
         )
-        return ("", "", "Error")
+        return (first_url, "", "", "Error")
     except ConnectTimeoutError as econ:
         logger.error(
             f"ConnectTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {econ}"
         )
-        return ("", "", "Error")
+        return (first_url, "", "", "Error")
     except ResponseStreamingError as erres:
         logger.error(
             f"ConnectTimeoutError occurred while calculating  md5sum of {first_url} and {second_url}: {erres}"
         )
-        return ("", "", "Error")
+        return (first_url, "", "", "Error")
     except Exception as ex:
         logger.error(
             f"Error occurred while calculating  md5sum of {first_url} and {second_url}: {ex}"
         )
-        return ("", "", "Error")
+        return (first_url, "", "", "Error")
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Compare md5sum Concurrently")
@@ -386,13 +387,20 @@ def list_to_chunks(mylist: list, chunk_len: int) -> list:
     ]
     return chunks
 
+def int_results_recorder(transfer_df: DataFrame, md5sum_results: list[list]) -> DataFrame:
+    """Record the intermediate results of md5sum check"""
+    int_df = pd.DataFrame(md5sum_results)
+    int_df.columns = ["url_before_cp", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]
+    transfer_parse = transfer_df[transfer_df.url_before_cp.isin(int_df.url_before_cp)]
+    int_df = transfer_parse.merge(int_df, on="url_before_cp")
+    return int_df
 
 @flow(
     name="Move Manifest Files",
     log_prints=True,
     flow_run_name="move-manifest-files-" + f"{get_time()}",
 )
-def move_manifest_files(manifest_path: str, dest_bucket_path: str):
+def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_out: str, bucket: str) -> tuple:
     """Checks file node sheets and replaces the "file_url"
     with a new url in prod bucket
     Returns a new manifest with new
@@ -542,9 +550,14 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             transfer_df["transfer_status"] == "Success", "url_after_cp"
         ].tolist()
         # url list needs to be break into chunks
-        urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=100)
-        urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=100)
+        chunk_len = 100
+        int_results = [] #record int results here
+
+        urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=chunk_len)
+        urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=chunk_len)
+
         md5sum_compare_result = []
+
         logger.info(
             f"Md5sum check will be processed into {len(urls_before_chunks)} chunks"
         )
@@ -561,7 +574,29 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str):
             runner_logger.info(
                 f"md5sum check completed: {j+1}/{len(urls_before_chunks)}"
             )
-            md5sum_compare_result.extend(j_md5sum_compare_result)
+            md5sum_compare_result.extend([i[1:] for i in j_md5sum_compare_result])
+
+            # record the intermediate results
+            int_results.extend(j_md5sum_compare_result)
+            int_transfer_df = int_results_recorder(transfer_df, int_results)
+            int_transfer_df[
+                [
+                    "node",
+                    "url_before_cp",
+                    "url_after_cp",
+                    "transfer_status",
+                    "md5sum_check",
+                    "md5sum_before_cp",
+                    "md5sum_after_cp",
+                ]
+            ].to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
+            
+            file_ul(
+                bucket=bucket,
+                output_folder=intermediate_out,
+                sub_folder="",
+                newfile=f"intermediate_md5sum_check_{get_date()}.tsv"
+            )
 
         # add md5sum comparison result to transfer_df
         transfer_df = add_md5sum_results(
