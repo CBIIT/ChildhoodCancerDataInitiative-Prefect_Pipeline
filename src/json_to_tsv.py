@@ -9,8 +9,6 @@ import uuid
 from bento_mdf import MDF
 from pathlib import Path
 
-logger = logging.getLogger(__name__)
-
 # String values that we must assume
 FOREIGN_ID_SUFFIX = '_id'
 PARENT_NODE_ID = 'study_id'
@@ -21,6 +19,7 @@ PRIMARY_KEY_NAME = 'id'
 def main():
     # Set up logging
     logging.basicConfig(format='%(message)s', level=logging.INFO, stream=sys.stdout)
+    logger = logging.getLogger(__name__)
 
     args = sys.argv[1:]
 
@@ -36,38 +35,11 @@ def main():
 
     # Node names we expect from the JSON files
     model = get_datamodel(model_mdf_path, props_mdf_path)
-    node_names = get_node_names(model)
     dir_paths = get_data_subdirectories(data_dir)
 
     logger.info(f'Found {len(dir_paths)} subdirectories\n')
 
-    # Look at all the files in the data directory, grouping files within a subdirectory into a single study
-    for dir_path in dir_paths:
-        all_json_data = dict.fromkeys(node_names, [])
-        file_paths = get_file_paths(dir_path)
-
-        logger.info(f'Found {len(file_paths)} JSON file(s) in subdirectory {dir_path}\n')
-
-        # Skip if no JSON files in subdirectory
-        if not file_paths:
-            continue
-
-        for file_path in file_paths:
-            logger.info(f'Reading data from {file_path}...\n')
-
-            json_file = open(file_path, encoding='utf8')
-            json_data = json.load(json_file)
-
-            for node_name in node_names:
-                if node_name not in json_data:
-                    continue
-
-                all_json_data[node_name] = all_json_data.get(node_name) + json_data.get(node_name)
-
-            json_file.close()
-            logger.info(f'Finished reading data from {file_path}...\n')
-
-        process_json_data(all_json_data, model)
+    process_json_files(dir_paths, model, logger)
 
 def get_data_subdirectories(data_dir):
     """ Get subdirectories to read data from
@@ -137,23 +109,6 @@ def get_foreign_ids(model, node_name):
 
     return foreign_ids
 
-def get_node_names(model):
-    """ Gets the names of the nodes in the datamodel
-
-    Args:
-        model (Model): The datamodel
-
-    Returns:
-        list: The node names
-    """
-
-    singular_node_names = model.nodes.keys()
-    plural_node_names = [
-        pluralize(singular_node_name) for singular_node_name in singular_node_names
-    ]
-
-    return plural_node_names
-
 def get_study_id(data):
     """ Get the value of study_id
 
@@ -216,60 +171,87 @@ def pluralize(word):
 
     return p.plural(word)
 
-def process_json_data(data, model):
+def process_json_files(dir_paths, model, logger):
     """ Writes JSON data into TSV files
 
     Args:
-        data (dict): JSON data
+        dir_paths (list): Paths to JSON files
         model (Model): The datamodel
     """
 
     node_names_to_plural = {
         name: pluralize(name) for name in model.nodes.keys()
     }
+    node_names_plural = list(node_names_to_plural.values())
 
-    # Parse study_id first, because UUIDs need it
-    logger.info(f'Parsing {PARENT_NODE_ID} from JSON...\n')
-    study_id = get_study_id(data)
+    # Look at all the files in the data directory, grouping files within a subdirectory into a single study
+    for dir_path in dir_paths:
+        file_paths = get_file_paths(dir_path)
+        all_json_data = dict.fromkeys(node_names_plural, [])
 
-    # Write a TSV file for each node type
-    for (node_name, node_name_plural) in node_names_to_plural.items():
-        logger.info(f'Parsing {node_name} records from JSON...\n')
+        logger.info(f'Found {len(file_paths)} JSON file(s) in subdirectory {dir_path}\n')
 
-        records = data.get(node_name_plural)
-
-        if not records:
-            logger.warning(f'No {node_name} records! Skipping {node_name}...\n')
+        # Skip if no JSON files in subdirectory
+        if not file_paths:
             continue
 
-        foreign_ids = get_foreign_ids(model, node_name)
-        node = model.nodes.get(node_name)
-        props = node.props
-        tsv_path = Path.cwd() / 'data' / f'{study_id} {node_name_plural}.tsv'
+        for file_path in file_paths:
+            logger.info(f'Reading data from {file_path}...\n')
 
-        logger.info(f'Writing {node_name} records to TSV...')
+            json_file = open(file_path, encoding='utf8')
+            json_data = json.load(json_file)
 
-        # Write TSV
-        with open(tsv_path, 'w', encoding='utf-8', newline='') as tsv_file:
-            # Write the column headers
-            tsv_headers = ['type'] + list(props.keys()) + foreign_ids
-            tsv_writer = csv.writer(tsv_file, delimiter='\t', dialect='unix')
-            tsv_writer.writerow(tsv_headers)
+            for node_name_plural in node_names_plural:
+                if node_name_plural not in json_data:
+                    continue
 
-            # Write each record to a TSV row
-            for record in records:
-                record_id = record.get(f'{node_name}{FOREIGN_ID_SUFFIX}')
-                row = read_record(record, props, foreign_ids)
-                uuid = make_uuid(node_name, study_id, record_id)
-                row[PRIMARY_KEY_NAME] = uuid
-                row_list = [node_name] + [row[prop_name] for prop_name in props.keys()]
+                all_json_data[node_name_plural] = all_json_data.get(node_name_plural) + json_data.get(node_name_plural)
 
-                tsv_writer.writerow(row_list)
+            json_file.close()
+            logger.info(f'Finished reading data from {file_path}...\n')
 
-            tsv_file.close()
+        # Parse study_id first, because UUIDs need it
+        logger.info(f'Parsing {PARENT_NODE_ID} from JSON...\n')
+        study_id = get_study_id(all_json_data)
 
-        logger.info(f'Finished writing {node_name} records to TSV\n')
-        logger.info(f'Finished parsing {node_name} records\n')
+        # Write a TSV file for each node type
+        for (node_name, node_name_plural) in node_names_to_plural.items():
+            logger.info(f'Parsing {node_name} records from JSON...\n')
+
+            records = all_json_data.get(node_name_plural)
+
+            if not records:
+                logger.warning(f'No {node_name} records! Skipping {node_name}...\n')
+                continue
+
+            foreign_ids = get_foreign_ids(model, node_name)
+            node = model.nodes.get(node_name)
+            props = node.props
+            tsv_path = Path.cwd() / 'data' / f'{study_id} {node_name_plural}.tsv'
+
+            logger.info(f'Writing {node_name} records to TSV...')
+
+            # Write TSV
+            with open(tsv_path, 'w', encoding='utf-8', newline='') as tsv_file:
+                # Write the column headers
+                tsv_headers = ['type'] + list(props.keys()) + foreign_ids
+                tsv_writer = csv.writer(tsv_file, delimiter='\t', dialect='unix')
+                tsv_writer.writerow(tsv_headers)
+
+                # Write each record to a TSV row
+                for record in records:
+                    record_id = record.get(f'{node_name}{FOREIGN_ID_SUFFIX}')
+                    row = read_record(record, props, foreign_ids)
+                    uuid = make_uuid(node_name, study_id, record_id)
+                    row[PRIMARY_KEY_NAME] = uuid
+                    row_list = [node_name] + [row[prop_name] for prop_name in props.keys()] + [row[foreign_id] for foreign_id in foreign_ids]
+
+                    tsv_writer.writerow(row_list)
+
+                tsv_file.close()
+
+            logger.info(f'Finished writing {node_name} records to TSV\n')
+            logger.info(f'Finished parsing {node_name} records\n')
 
 def read_record(record, props, foreign_ids):
     """ Reads properties from a record
