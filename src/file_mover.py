@@ -551,7 +551,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
         ].tolist()
         # url list needs to be break into chunks
         ##testing
-        chunk_len = 5
+        chunk_len = 50
         int_results = []
         urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=chunk_len)
         urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=chunk_len)
