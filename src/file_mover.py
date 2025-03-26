@@ -550,12 +550,14 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             transfer_df["transfer_status"] == "Success", "url_after_cp"
         ].tolist()
         # url list needs to be break into chunks
-        ##testing
-        chunk_len = 50
-        int_results = []
+        chunk_len = 100
+        int_results = [] #record int results here
+
         urls_before_chunks = list_to_chunks(mylist=urls_before_transfer, chunk_len=chunk_len)
         urls_after_chunks = list_to_chunks(mylist=urls_after_transfer, chunk_len=chunk_len)
+
         md5sum_compare_result = []
+
         logger.info(
             f"Md5sum check will be processed into {len(urls_before_chunks)} chunks"
         )
