@@ -1,3 +1,7 @@
+# Data files
+c3dc-model/
+data/
+
 # testing file
 test_inputs/
 
@@ -27,6 +31,7 @@ eggs/
 lib/
 lib64/
 parts/
+.python-version
 sdist/
 var/
 wheels/
@@ -249,3 +254,6 @@ fabric.properties
 
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
+
+# VS Code
+.vscode/
