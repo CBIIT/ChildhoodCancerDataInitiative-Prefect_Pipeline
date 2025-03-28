@@ -148,8 +148,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "COG_UPR_DX.TOPO_ICDO",
         "FINAL_DIAGNOSIS.PRIMDXDSCAT",
         "COG_UPR_DX.REG_STAGE_CODE_TEXT",
-        "ON_STUDY_DX_CNS.TUMOR_GP_ST",
-        "ON_STUDY_DX_CNS.CNSTMRMSTG",
         "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT",
         "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS",
         "FOLLOW_UP.REP_EVAL_PD_TP",
@@ -194,8 +192,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
             "COG_UPR_DX.MORPHO_ICDO" : "icd_o_code",
             "FINAL_DIAGNOSIS.PRIMDXDSCAT": "primary_diagnosis_disease_group",
             "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
-            "ON_STUDY_DX_CNS.TUMOR_GP_ST": "tumor_grade",
-            "ON_STUDY_DX_CNS.CNSTMRMSTG": "tumor_m_stage",
             "FOLLOW_UP.PT_VST": "vital_status",
             "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT": "CNS_category",
             "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS": "CNS_category_other",
@@ -517,9 +513,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "response",
         "treatment",
         "agent",
-        "tumor_m_stage",
         "registry_stage_code",
-        "tumor_grade",
     ]
 
     # Identify any additional columns that are not in output_order
