@@ -7,18 +7,9 @@ import pandas as pd
 import openpyxl
 import itertools
 from collections import defaultdict
-from prefect import flow, task, get_run_logger
+from prefect import flow, get_run_logger
 from src.utils import file_dl, get_time, get_date, get_logger
 from src.cog_transform_utils import cog_transformer
-from prefect.task_runners import ConcurrentTaskRunner
-
-def dataframe_to_chunks(mydf: pd.DataFrame, chunk_len: int) -> list:
-    """Break a list into a list of chunks"""
-    chunks = [
-        mydf[i * chunk_len : (i + 1) * chunk_len]
-        for i in range((len(mydf) + chunk_len - 1) // chunk_len)
-    ]
-    return chunks
 
 @flow(
     name="Manifest Reader",
@@ -65,23 +56,23 @@ def manifest_reader(manifest_path: str):
     return manifest_df
 
 
-@task(
+@flow(
     name="JSON Downloader",
-    tags=["concurrency-test"],
-    retries=3,
-    retry_delay_seconds=0.5,
     log_prints=True,
+    flow_run_name="json_downloader_" + f"{get_time()}",
 )
-def json_downloader(manifest: pd.DataFrame, dups: list, logger):
+def json_downloader(manifest: pd.DataFrame, logger):
     """Flow for downloading JSONs to VM for parsing and verifying file_name uniqueness
 
     Args:
         manifest (pd.DataFrame): Manifest of file_names and s3 URLs
-        dups (list): list of duplicate file names
 
     Returns:
         None
     """
+
+    # check for duplicate file_names
+    dups = manifest[manifest["file_name"].duplicated(keep=False)]["file_name"].to_list()
 
     runner_logger = get_run_logger()
 
@@ -119,25 +110,6 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
                 f"Renamed file {row['file_name']} to {new_file_name} to be unique."
             )
 
-@flow(task_runner=ConcurrentTaskRunner(), name="JSON Downloader Flow", log_prints=True,)
-def json_downloader_flow(manifest: pd.DataFrame, logger):
-
-    runner_logger = get_run_logger()
-
-    # chunked downloading of JSON files 
-    chunk_size = 200
-
-    # download JSON files
-    chunks = dataframe_to_chunks(manifest, chunk_size)
-
-    # check for duplicate file_names
-    dups = manifest[manifest["file_name"].duplicated(keep=False)]["file_name"].to_list()
-
-    i = 1
-    for chunk in chunks:
-        runner_logger.info(f"Downloading JSON chunk {i} of {len(manifest)//chunk_size+1}")
-        json_downloader(chunk, dups, logger)
-        i += 1
 
 def distinguisher(f_path: str, logger):
     """Attempt to load json and determine type
@@ -257,11 +229,13 @@ def cog_igm_json2tsv(
     if parsing not in valid:
         raise ValueError(f"Parsing type {parsing} is not one of {valid}.")
 
-    """for chunk in range(0, len(manifest), chunk_size):
-        runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest)//chunk_size+1}")
-        json_downloader(manifest[chunk:chunk+chunk_size], logger)"""
+    # chunked downloading of JSON files 
+    chunk_size = 200
 
-    json_downloader_flow(manifest, logger)
+    # download JSON files
+    for chunk in range(0, len(manifest), chunk_size):
+        runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest)//chunk_size+1}")
+        json_downloader(manifest[chunk:chunk+chunk_size], logger)
 
     json_dir_path = working_path
 
