@@ -142,7 +142,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "DEMOGRAPHY.DM_SEX",
         "DEMOGRAPHY.DM_CRACE",
         "COG_UPR_DX.ADM_DX_CD_SEQ",
-        "COG_UPR_DX.DX_DT",
+        "COG_UPR_DX.DATE_DIA",
         "DEMOGRAPHY.DM_BRTHDAT",
         "COG_UPR_DX.TOPO_TEXT",
         "COG_UPR_DX.MORPHO_TEXT",
@@ -229,12 +229,12 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     # EQUATIONS
 
-    age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].notna() & df_mutation["COG_UPR_DX.DX_DT"].notna() & df_mutation["FOLLOW_UP.PT_FU_END_DT"].notna()]
-    no_age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].isna() | df_mutation["COG_UPR_DX.DX_DT"].isna() | df_mutation["FOLLOW_UP.PT_FU_END_DT"].isna()]
+    age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].notna() & df_mutation["COG_UPR_DX.DATE_DIA"].notna() & df_mutation["FOLLOW_UP.PT_FU_END_DT"].notna()]
+    no_age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].isna() | df_mutation["COG_UPR_DX.DATE_DIA"].isna() | df_mutation["FOLLOW_UP.PT_FU_END_DT"].isna()]
 
     age_data["age_at_diagnosis"] = abs(
         age_data["DEMOGRAPHY.DM_BRTHDAT"].astype(float)
-    ) + abs(age_data["COG_UPR_DX.DX_DT"].astype(float))
+    ) + abs(age_data["COG_UPR_DX.DATE_DIA"].astype(float))
     age_data["age_at_follow_up"] = abs(
         age_data["DEMOGRAPHY.DM_BRTHDAT"].astype(float)
     ) + abs(age_data["FOLLOW_UP.PT_FU_END_DT"].astype(float))
@@ -494,7 +494,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
             "COG_UPR_DX.TOPO_TEXT",
             "CNS_category_other",
             "DEMOGRAPHY.DM_BRTHDAT",
-            "COG_UPR_DX.DX_DT",
+            "COG_UPR_DX.DATE_DIA",
             "FOLLOW_UP.COMP_RESP_CONF_IND_3",
             "FOLLOW_UP.DZ_EXM_REP_IND_2",
             "FOLLOW_UP.REP_EVAL_PD_TP",
