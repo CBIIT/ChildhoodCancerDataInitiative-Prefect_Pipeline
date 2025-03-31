@@ -133,7 +133,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     # Load the data
     df_reshape = pd.read_csv(df_reshape_file_name, sep="\t", low_memory=False)
 
-    df_reshape.replace('.', '', inplace=True)
+    df_reshape.replace('.', '', inplace=True) #fix issue where should be blank/null but only a period supplied
 
     # the specific columns we want in our mutation df
     direct_columns = [
@@ -183,7 +183,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     selected_columns = list(set(selected_columns))
 
     # Apply the selected columns to the new mutation df
-    df_mutation = df_reshape[selected_columns]
+    df_mutation = df_reshape[selected_columns].fillna("")
 
     # Rename columns that do not have value changes
     df_mutation = df_mutation.rename(
@@ -228,13 +228,20 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     )
 
     # EQUATIONS
-    df_mutation["age_at_diagnosis"] = abs(
-        df_mutation["DEMOGRAPHY.DM_BRTHDAT"].astype(float)
-    ) + abs(df_mutation["COG_UPR_DX.DX_DT"].astype(float))
-    df_mutation["age_at_follow_up"] = abs(
-        df_mutation["DEMOGRAPHY.DM_BRTHDAT"].astype(float)
-    ) + abs(df_mutation["FOLLOW_UP.PT_FU_END_DT"].astype(float))
 
+    age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].notna() & df_mutation["COG_UPR_DX.DX_DT"].notna() & df_mutation["FOLLOW_UP.PT_FU_END_DT"].notna()]
+    no_age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].isna() | df_mutation["COG_UPR_DX.DX_DT"].isna() | df_mutation["FOLLOW_UP.PT_FU_END_DT"].isna()]
+
+    age_data["age_at_diagnosis"] = abs(
+        age_data["DEMOGRAPHY.DM_BRTHDAT"].astype(float)
+    ) + abs(age_data["COG_UPR_DX.DX_DT"].astype(float))
+    age_data["age_at_follow_up"] = abs(
+        age_data["DEMOGRAPHY.DM_BRTHDAT"].astype(float)
+    ) + abs(age_data["FOLLOW_UP.PT_FU_END_DT"].astype(float))
+
+
+    #rejoin the dataframes
+    df_mutation = pd.concat([age_data, no_age_data], ignore_index=True)
 
     # CONDITIONAL
 
