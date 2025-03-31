@@ -35,7 +35,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     # EQUATIONS
 
-    age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].notna() & df_mutation["COG_UPR_DX.DATE_DIA"].notna() & df_mutation["FOLLOW_UP.PT_FU_END_DT"].notna()]
+    """age_do = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].notna() & df_mutation["COG_UPR_DX.DATE_DIA"].notna() & df_mutation["FOLLOW_UP.PT_FU_END_DT"].notna()]
     no_age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].isna() | df_mutation["COG_UPR_DX.DATE_DIA"].isna() | df_mutation["FOLLOW_UP.PT_FU_END_DT"].isna()].drop(
         ["COG_UPR_DX.DATE_DIA",
         "DEMOGRAPHY.DM_BRTHDAT",
@@ -50,10 +50,9 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     ) + abs(age_data["COG_UPR_DX.DATE_DIA"].astype(float))
     age_data["age_at_follow_up"] = abs(
         age_data["DEMOGRAPHY.DM_BRTHDAT"].astype(float)
-    ) + abs(age_data["FOLLOW_UP.PT_FU_END_DT"].astype(float))
+    ) + abs(age_data["FOLLOW_UP.PT_FU_END_DT"].astype(float))"""
 
-
-    #rejoin the dataframes
-    df_mutation = pd.concat([age_data, no_age_data], ignore_index=True)
+    df_mutation["age_at_diagnosis"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["COG_UPR_DX.DATE_DIA"])
+    df_mutation["age_at_follow_up"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["FOLLOW_UP.PT_FU_END_DT"])
 
     df_mutation.to_csv(f"{output_dir}/COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)
