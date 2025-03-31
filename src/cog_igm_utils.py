@@ -22,7 +22,12 @@ def dataframe_to_chunks(mydf: pd.DataFrame, chunk_len: int) -> list:
     ]
     return chunks
 
-def parallel_json_downloader(urls, dups, logger, max_workers=5):
+@flow(
+    name="Parallel JSON Downloader",
+    log_prints=True,
+    flow_run_name="json_downloader_parallel" + f"{get_time()}",
+)
+def parallel_json_downloader(urls, dups, logger, max_workers=2):
     """Parallelize the execution of json_downloader for a list of URLs."""
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         partial_downloader = partial(json_downloader, dups=dups, logger=logger)
