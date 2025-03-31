@@ -141,7 +141,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "DEMOGRAPHY.DM_ETHNIC",
         "DEMOGRAPHY.DM_SEX",
         "DEMOGRAPHY.DM_CRACE",
-        "COG_UPR_DX.ADM_DX_CD_SEQ",
+        "COG_UPR_DX.PTDT_IDP",
         "COG_UPR_DX.DATE_DIA",
         "DEMOGRAPHY.DM_BRTHDAT",
         "COG_UPR_DX.TOPO_TEXT",
@@ -214,7 +214,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         df_mutation, "race", "DEMOGRAPHY.DM_CRACE", "DEMOGRAPHY.DM_ETHNIC"
     )
     df_mutation = clean_column_underscore_concat(
-        df_mutation, "diagnosis_id", "participant_id", "COG_UPR_DX.ADM_DX_CD_SEQ"
+        df_mutation, "diagnosis_id", "participant_id", "COG_UPR_DX.PTDT_IDP"
     )
     df_mutation = clean_column_underscore_concat(
         df_mutation, "follow_up_id", "participant_id", "FOLLOW_UP.REP_EVAL_PD_TP"
@@ -478,7 +478,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         columns=[
             "DEMOGRAPHY.DM_CRACE",
             "DEMOGRAPHY.DM_ETHNIC",
-            "COG_UPR_DX.ADM_DX_CD_SEQ",
+            "COG_UPR_DX.PTDT_IDP",
             "COG_UPR_DX.TOPO_ICDO",
             "COG_UPR_DX.TOPO_TEXT",
             "CNS_category_other",
