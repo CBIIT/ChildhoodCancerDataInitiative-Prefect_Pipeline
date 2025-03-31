@@ -14,25 +14,6 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 
 
-def dataframe_to_chunks(mydf: pd.DataFrame, chunk_len: int) -> list:
-    """Break a list into a list of chunks"""
-    chunks = [
-        mydf[i * chunk_len : (i + 1) * chunk_len]
-        for i in range((len(mydf) + chunk_len - 1) // chunk_len)
-    ]
-    return chunks
-
-@flow(
-    name="Parallel JSON Downloader",
-    log_prints=True,
-    flow_run_name="json_downloader_parallel" + f"{get_time()}",
-)
-def parallel_json_downloader(urls, dups, logger, max_workers=2):
-    """Parallelize the execution of json_downloader for a list of URLs."""
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        futures = [executor.submit(json_downloader, chunk, dups, logger) for chunk in urls]
-    return futures
-
 @flow(
     name="Manifest Reader",
     log_prints=True,
@@ -256,17 +237,11 @@ def cog_igm_json2tsv(
     # chunked downloading of JSON files 
     chunk_size = 200
 
-    chunks = dataframe_to_chunks(manifest, chunk_size)
-
     # download JSON files
-    """for chunk in range(0, len(manifest), chunk_size):
+    for chunk in range(0, len(manifest), chunk_size):
         runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest)//chunk_size+1}")
-        json_downloader(manifest[chunk:chunk+chunk_size], dups, logger)"""
+        json_downloader(manifest[chunk:chunk+chunk_size], dups, logger)
     
-    try:
-        parallel_json_downloader(urls=chunks, dups=dups, logger=logger)
-    except Exception as e:
-        runner_logger.error("Error: {e}")
 
     json_dir_path = working_path
 
