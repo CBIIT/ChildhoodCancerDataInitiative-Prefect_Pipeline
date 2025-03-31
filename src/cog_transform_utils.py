@@ -183,7 +183,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     selected_columns = list(set(selected_columns))
 
     # Apply the selected columns to the new mutation df
-    df_mutation = df_reshape[selected_columns].fillna("")
+    df_mutation = df_reshape[selected_columns]
 
     # Rename columns that do not have value changes
     df_mutation = df_mutation.rename(

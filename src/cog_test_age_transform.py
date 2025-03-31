@@ -31,6 +31,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "FOLLOW_UP.PT_FU_END_DT",
     ]
 
+    df_mutation = df_reshape[direct_columns]
 
     # EQUATIONS
 
