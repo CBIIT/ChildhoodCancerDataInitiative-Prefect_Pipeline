@@ -10,6 +10,28 @@ from collections import defaultdict
 from prefect import flow, get_run_logger
 from src.utils import file_dl, get_time, get_date, get_logger
 from src.cog_transform_utils import cog_transformer
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+
+
+def dataframe_to_chunks(mydf: pd.DataFrame, chunk_len: int) -> list:
+    """Break a list into a list of chunks"""
+    chunks = [
+        mydf[i * chunk_len : (i + 1) * chunk_len]
+        for i in range((len(mydf) + chunk_len - 1) // chunk_len)
+    ]
+    return chunks
+
+@flow(
+    name="Parallel JSON Downloader",
+    log_prints=True,
+    flow_run_name="json_downloader_parallel" + f"{get_time()}",
+)
+def parallel_json_downloader(urls, dups, logger, max_workers=2):
+    """Parallelize the execution of json_downloader for a list of URLs."""
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = [executor.submit(json_downloader, chunk, dups, logger) for chunk in urls]
+    return futures
 
 @flow(
     name="Manifest Reader",
@@ -61,7 +83,7 @@ def manifest_reader(manifest_path: str):
     log_prints=True,
     flow_run_name="json_downloader_" + f"{get_time()}",
 )
-def json_downloader(manifest: pd.DataFrame, logger):
+def json_downloader(manifest: pd.DataFrame, dups: list, logger):
     """Flow for downloading JSONs to VM for parsing and verifying file_name uniqueness
 
     Args:
@@ -70,9 +92,6 @@ def json_downloader(manifest: pd.DataFrame, logger):
     Returns:
         None
     """
-
-    # check for duplicate file_names
-    dups = manifest[manifest["file_name"].duplicated(keep=False)]["file_name"].to_list()
 
     runner_logger = get_run_logger()
 
@@ -109,6 +128,8 @@ def json_downloader(manifest: pd.DataFrame, logger):
             runner_logger.info(
                 f"Renamed file {row['file_name']} to {new_file_name} to be unique."
             )
+    
+    return None
 
 
 def distinguisher(f_path: str, logger):
@@ -229,13 +250,23 @@ def cog_igm_json2tsv(
     if parsing not in valid:
         raise ValueError(f"Parsing type {parsing} is not one of {valid}.")
 
+    # check for duplicate file_names
+    dups = manifest[manifest["file_name"].duplicated(keep=False)]["file_name"].to_list()
+    
     # chunked downloading of JSON files 
     chunk_size = 200
 
+    chunks = dataframe_to_chunks(manifest, chunk_size)
+
     # download JSON files
-    for chunk in range(0, len(manifest), chunk_size):
+    """for chunk in range(0, len(manifest), chunk_size):
         runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest)//chunk_size+1}")
-        json_downloader(manifest[chunk:chunk+chunk_size], logger)
+        json_downloader(manifest[chunk:chunk+chunk_size], dups, logger)"""
+    
+    try:
+        parallel_json_downloader(urls=chunks, dups=dups, logger=logger)
+    except Exception as e:
+        runner_logger.error("Error: {e}")
 
     json_dir_path = working_path
 
