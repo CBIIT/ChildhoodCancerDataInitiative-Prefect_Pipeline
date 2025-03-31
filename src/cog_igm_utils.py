@@ -259,7 +259,10 @@ def cog_igm_json2tsv(
         runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest)//chunk_size+1}")
         json_downloader(manifest[chunk:chunk+chunk_size], dups, logger)"""
     
-    parallel_json_downloader(urls=chunks, dups=dups, logger=logger)
+    try:
+        parallel_json_downloader(urls=chunks, dups=dups, logger=logger)
+    except Exception as e:
+        runner_logger.error("Error: {e}")
 
     json_dir_path = working_path
 
