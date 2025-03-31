@@ -11,6 +11,7 @@ from prefect import flow, get_run_logger
 from src.utils import file_dl, get_time, get_date, get_logger
 from src.cog_transform_utils import cog_transformer
 from concurrent.futures import ThreadPoolExecutor
+from functools import partial
 
 
 def dataframe_to_chunks(mydf: pd.DataFrame, chunk_len: int) -> list:
@@ -24,7 +25,8 @@ def dataframe_to_chunks(mydf: pd.DataFrame, chunk_len: int) -> list:
 def parallel_json_downloader(urls, dups, logger, max_workers=5):
     """Parallelize the execution of json_downloader for a list of URLs."""
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        results = list(executor.map(json_downloader, urls, dups, logger))
+        partial_downloader = partial(json_downloader, dups=dups, logger=logger)
+        results = list(executor.map(partial_downloader, urls))
     return results
 
 @flow(
