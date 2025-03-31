@@ -122,6 +122,8 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
             runner_logger.info(
                 f"Renamed file {row['file_name']} to {new_file_name} to be unique."
             )
+    
+    return None
 
 
 def distinguisher(f_path: str, logger):
