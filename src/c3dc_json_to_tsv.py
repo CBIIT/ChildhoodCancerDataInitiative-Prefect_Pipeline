@@ -1,13 +1,15 @@
 # Reads harmonized JSON files and produces TSV files
 
 import csv
+import hashlib
 import inflect
 import json
-import logging
+import re
 import sys
 import uuid
 from bento_mdf import MDF
 from pathlib import Path
+from utils import get_logger
 
 # String values that we must assume
 FOREIGN_ID_SUFFIX = '_id'
@@ -18,8 +20,7 @@ PRIMARY_KEY_NAME = 'id'
 
 def main():
     # Set up logging
-    logging.basicConfig(format='%(message)s', level=logging.INFO, stream=sys.stdout)
-    logger = logging.getLogger(__name__)
+    logger = get_logger(__name__, 'info')
 
     args = sys.argv[1:]
 
@@ -137,22 +138,42 @@ def get_study_id(data):
 
     return study_id
 
-def make_uuid(node_type, study_id, record_id):
+def make_uuid(node_type, study_id, row, foreign_ids):
     """ Makes a UUID for a record
 
     Args:
         node_type (str): The name of the node type
         study_id (str): The study_id value of the record's study
-        record_id (str): The ..._id value of the record
+        row (dict): The record as a map of property names to property values
+        foreign_ids (list): The record's properties that are foreign IDs
 
     Returns:
         str: The record's UUID
     """
 
+    row_str = ''
+    foreign_str = ''.join([
+        str(row[foreign_id]) for foreign_id in foreign_ids
+    ]) if foreign_ids else ''
+
+    if node_type == 'participant':
+        row_str = row['participant_id']
+    elif node_type == 'reference_file':
+        row_str = row['reference_file_url']
+    else:
+        id_pattern = fr'\b\w+{FOREIGN_ID_SUFFIX}\b'
+        identifying_props = [
+            prop for prop in row if prop != PRIMARY_KEY_NAME and not re.fullmatch(id_pattern, prop)
+        ]
+        row_str = ''.join([
+            str(row[prop]) for prop in identifying_props
+        ]) if identifying_props else ''
+
     uuid_name = ''.join([
         node_type,
         study_id,
-        record_id
+        row_str,
+        foreign_str
     ])
 
     return str(uuid.uuid5(uuid.NAMESPACE_URL, uuid_name))
@@ -178,6 +199,8 @@ def process_json_files(dir_paths, model, logger):
         dir_paths (list): Paths to JSON files
         model (Model): The datamodel
     """
+
+    uuids = set() # Hashes of previously encountered primary keys
 
     node_names_to_plural = {
         name: pluralize(name) for name in model.nodes.keys()
@@ -242,7 +265,16 @@ def process_json_files(dir_paths, model, logger):
                 for record in records:
                     record_id = record.get(f'{node_name}{FOREIGN_ID_SUFFIX}')
                     row = read_record(record, props, foreign_ids)
-                    uuid = make_uuid(node_name, study_id, record_id)
+                    uuid = make_uuid(node_name, study_id, row, foreign_ids)
+
+                    # Skip record if duplicate
+                    if uuid in uuids:
+                        logger.warning(f'Duplicate {node_name} record {record_id} found (UUID {uuid})')
+                        continue
+                    else:
+                        uuids.add(uuid)
+
+                    # Assemble the row: UUID, type, props, foreign IDs
                     row[PRIMARY_KEY_NAME] = uuid
                     row_list = [node_name] + [row[prop_name] for prop_name in props.keys()] + [row[foreign_id] for foreign_id in foreign_ids]
 
@@ -285,6 +317,11 @@ def read_record(record, props, foreign_ids):
         row[foreign_id] = record.get(foreign_id)
 
     return row
+
+def sha256_checksum(value):
+    hasher = hashlib.sha256()
+    hasher.update(str(value).encode('utf-8'))
+    return hasher.hexdigest()
 
 if __name__ == '__main__':
     main()
