@@ -67,7 +67,7 @@ def manifest_reader(manifest_path: str):
 
 @task(
     name="JSON Downloader",
-    tags=["concurrency-small"],
+    tags=["concurrency-test"],
     retries=3,
     retry_delay_seconds=0.5,
     log_prints=True,
