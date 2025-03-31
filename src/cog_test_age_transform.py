@@ -36,7 +36,14 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     # EQUATIONS
 
     age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].notna() & df_mutation["COG_UPR_DX.DX_DT"].notna() & df_mutation["FOLLOW_UP.PT_FU_END_DT"].notna()]
-    no_age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].isna() | df_mutation["COG_UPR_DX.DX_DT"].isna() | df_mutation["FOLLOW_UP.PT_FU_END_DT"].isna()]
+    no_age_data = df_mutation[df_mutation["DEMOGRAPHY.DM_BRTHDAT"].isna() | df_mutation["COG_UPR_DX.DX_DT"].isna() | df_mutation["FOLLOW_UP.PT_FU_END_DT"].isna()].drop(
+        ["COG_UPR_DX.DX_DT",
+        "DEMOGRAPHY.DM_BRTHDAT",
+        "FOLLOW_UP.PT_FU_END_DT",], axis=1
+    )
+
+    no_age_data["age_at_diagnosis"] = np.nan
+    no_age_data["age_at_follow_up"] = np.nan
 
     age_data["age_at_diagnosis"] = abs(
         age_data["DEMOGRAPHY.DM_BRTHDAT"].astype(float)
