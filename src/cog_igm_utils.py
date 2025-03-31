@@ -30,9 +30,8 @@ def dataframe_to_chunks(mydf: pd.DataFrame, chunk_len: int) -> list:
 def parallel_json_downloader(urls, dups, logger, max_workers=2):
     """Parallelize the execution of json_downloader for a list of URLs."""
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        partial_downloader = partial(json_downloader, dups=dups, logger=logger)
-        results = list(executor.map(partial_downloader, urls))
-    return results
+        futures = [executor.submit(json_downloader, chunk, dups, logger) for chunk in urls]
+    return futures
 
 @flow(
     name="Manifest Reader",
