@@ -133,6 +133,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     # Load the data
     df_reshape = pd.read_csv(df_reshape_file_name, sep="\t", low_memory=False)
 
+    df_reshape = df.applymap(lambda x: x.replace('\n\r', ' ').replace('\n', ' ').replace('\r', ' ') if isinstance(x, str) else x)
+
     df_reshape.replace('.', np.nan, inplace=True) #fix issue where should be blank/null but only a period supplied
 
     df_reshape.replace('', np.nan, inplace=True) #fix issue where should be blank/null but only a blank str supplied
