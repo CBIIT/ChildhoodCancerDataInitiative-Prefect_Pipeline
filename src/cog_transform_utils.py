@@ -135,9 +135,9 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     df_reshape.replace('.', np.nan, inplace=True) #fix issue where should be blank/null but only a period supplied
 
-    df_reshape.replace('', np.nan, inplace=True) #fix issue where should be blank/null but only a period supplied
+    df_reshape.replace('', np.nan, inplace=True) #fix issue where should be blank/null but only a blank str supplied
 
-    df_reshape.replace(' ', np.nan, inplace=True) #fix issue where should be blank/null but only a period supplied
+    df_reshape.replace(' ', np.nan, inplace=True) #fix issue where should be blank/null but only a space supplied
 
     # the specific columns we want in our mutation df
     direct_columns = [
