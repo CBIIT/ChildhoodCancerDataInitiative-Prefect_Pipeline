@@ -135,6 +135,10 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     df_reshape.replace('.', np.nan, inplace=True) #fix issue where should be blank/null but only a period supplied
 
+    df_reshape.replace('', np.nan, inplace=True) #fix issue where should be blank/null but only a period supplied
+
+    df_reshape.replace(' ', np.nan, inplace=True) #fix issue where should be blank/null but only a period supplied
+
     # the specific columns we want in our mutation df
     direct_columns = [
         "upi",
@@ -231,6 +235,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     df_mutation["age_at_diagnosis"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["COG_UPR_DX.DATE_DIA"])
     df_mutation["age_at_follow_up"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["FOLLOW_UP.PT_FU_END_DT"])
+
 
     # CONDITIONAL
 
