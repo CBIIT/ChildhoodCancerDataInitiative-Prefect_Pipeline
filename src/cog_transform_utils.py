@@ -235,6 +235,10 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     # EQUATIONS
 
+    df_mutation['DEMOGRAPHY.DM_BRTHDAT'] = df_mutation['DEMOGRAPHY.DM_BRTHDAT'].apply(lambda x: np.nan if isinstance(x, str) else x)
+    df_mutation['COG_UPR_DX.DATE_DIA'] = df_mutation['COG_UPR_DX.DATE_DIA'].apply(lambda x: np.nan if isinstance(x, str) else x)
+    df_mutation['FOLLOW_UP.PT_FU_END_DT'] = df_mutation['FOLLOW_UP.PT_FU_END_DT'].apply(lambda x: np.nan if isinstance(x, str) else x)
+
     df_mutation["age_at_diagnosis"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["COG_UPR_DX.DATE_DIA"])
     df_mutation["age_at_follow_up"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["FOLLOW_UP.PT_FU_END_DT"])
 
