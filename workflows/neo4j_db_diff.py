@@ -1,6 +1,8 @@
 from prefect import flow, get_run_logger
 import os
 import sys
+from typing import Literal
+
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -8,8 +10,8 @@ from src.utils import get_secret, get_date, get_time, file_ul
 from src.neo4j_data_tools import counts_DB_all_nodes_all_studies_w_secrets
 
 
-DropDownChoices1 = ["Curation", "QA", "Dev"]
-DropDownChoices2 = ["Curation", "QA", "Dev"]
+DropDownChoices1 = Literal["Curation", "QA", "Dev"]
+DropDownChoices2 = Literal["Curation", "QA", "Dev"]
 
 @flow(name="Get diff between sandbox and dev neo4j instances", log_prints=True)
 def diff_sandbox_dev_neo4j(bucket: str, runner: str, database_1: DropDownChoices1, database_2: DropDownChoices2) -> None:
