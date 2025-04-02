@@ -422,8 +422,10 @@ def read_cog_jsons(dir_path: str, cog_jsons: list, logger):
                 # Read the file as a string
                 json_str = f.read()
 
+                json_str_clean= json_str.replace('\n\r', ' ').replace('\n', ' ').replace('\r', ' ')
+
                 # Parse the string manually to capture all `data` sections
-                json_data = json.loads(json_str, object_pairs_hook=custom_json_parser)
+                json_data = json.loads(json_str_clean, object_pairs_hook=custom_json_parser)
 
                 # Normalize the JSON data into a DataFrame
                 df = pd.json_normalize(json_data)
