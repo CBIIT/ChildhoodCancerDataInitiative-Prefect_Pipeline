@@ -247,7 +247,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     # Create Response
     # Define the conditions
-    """conditions_response = [
+    conditions_response = [
         (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Yes"),
         (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")
         & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "Yes"),
@@ -531,9 +531,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     # Create the final column order by adding the extra columns to the end
     final_order = output_order + additional_columns
 
-    df_mutation[final_order].to_csv(f"{output_dir}/COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)"""
-
-    df_mutation.to_csv(f"{output_dir}/COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)
+    df_mutation[final_order].to_csv(f"{output_dir}/COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)
 
 
 
