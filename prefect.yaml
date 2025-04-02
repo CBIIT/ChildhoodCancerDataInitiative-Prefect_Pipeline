@@ -1085,6 +1085,9 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
+      runner: "your_uniq_id"
+      database_1: "Curation"
+      database_2: "Dev"
 
     # pull action to overwrite from file pull action
     pull:
