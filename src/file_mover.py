@@ -260,7 +260,7 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> st
             logger.info(
                 f"File {copy_source} had already been copied to destination bucket path. Skip"
             )
-            runner_logger.info(
+            print(
                 f"File {copy_source} had already been copied to destination bucket path. Skip"
             )
             transfer_status = "Success"
