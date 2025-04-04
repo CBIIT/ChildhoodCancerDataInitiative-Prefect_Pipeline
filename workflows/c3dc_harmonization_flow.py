@@ -17,7 +17,14 @@ sys.path.append(parent_dir)
 
 from src.c3dc_json_summary import create_c3dc_json_summaries
 from src.c3dc_json_to_tsv import process_json_files, get_datamodel, get_data_subdirectories
-from src.utils import folder_dl, folder_ul, get_time, get_logger, get_date, file_ul
+from src.utils import (
+    download_s3_folder,
+    folder_ul,
+    get_time,
+    get_logger,
+    get_date,
+    file_ul,
+)
 
 @task(name="Download C3DC Model Files", log_prints=True)
 def download_c3dc_model(model_tag: str = "") -> tuple[str, str]:
@@ -129,7 +136,7 @@ def c3dc_summary_transformation_flow(
     logger.info("Starting C3DC Harmonization Flow")
 
     # download the json data from
-    folder_dl(bucket=bucket, remote_folder=json_folder_path)
+    download_s3_folder(bucket=bucket, s3_folder=json_folder_path, local_dir=".")
     logger.info(f"Downloaded json data from bucket {bucket} folder path {json_folder_path}")
     print(os.listdir("."))
     # rename folder name to data/
@@ -145,7 +152,7 @@ def c3dc_summary_transformation_flow(
     # create summary for json file per study
     # json_summary_folder holds all the summary files
     logger.info(f"Creating json summaries for harmonized json files")
-    create_c3dc_json_summaries(folder_path=folder_name, output_dir=json_summary_folder)
+    create_c3dc_json_summaries(folder_path="./data", output_dir=json_summary_folder)
     logger.info("Uploading json summaries to s3 bucket")
     upload_folder = runner.rstrip("/") + "/" + "c3dc_transformation_outputs_" + get_time()
     folder_ul(bucket=bucket, local_folder=json_summary_folder, destination=upload_folder, sub_folder="")
