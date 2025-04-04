@@ -131,7 +131,7 @@ def c3dc_summary_transformation_flow(
     # download the json data from
     folder_dl(bucket=bucket, remote_folder=json_folder_path)
     logger.info(f"Downloaded json data from bucket {bucket} folder path {json_folder_path}")
-    folder_name = os.path.basename(json_folder_path)
+    folder_name = os.path.basename(json_folder_path.strip("/"))
     logger.info(f"Downloaded json data folder name {folder_name}")
     # rename folder name to data/
     os.rename(os.path.join(os.getcwd(),folder_name), os.path.join(os.getcwd(),"data"))
