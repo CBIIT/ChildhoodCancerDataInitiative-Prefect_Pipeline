@@ -1057,34 +1057,6 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
-
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.projects.steps.git_clone_project:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.3.0
-      - prefect.projects.steps.pip_install_requirements:
-          requirements_file: requirements.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-curation-8gb
-      work_queue_name: null
-      job_variables: {}     
-
-  - name: TEST-ccdi-neo4j-db_diff
-    version: null
-    tags: ["Production"]
-    description: null
-    entrypoint: workflows/neo4j_db_diff.py:diff_sandbox_dev_neo4j
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
       runner: "your_uniq_id"
       database_1: "Curation"
       database_2: "Dev"
@@ -1094,7 +1066,7 @@ deployments:
       - prefect.projects.steps.git_clone_project:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1678_db_diff_rework
+          branch: main
       - prefect.projects.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
@@ -1104,4 +1076,5 @@ deployments:
     work_pool:
       name: ccdi-curation-8gb
       work_queue_name: null
-      job_variables: {}     
+      job_variables: {}
+
