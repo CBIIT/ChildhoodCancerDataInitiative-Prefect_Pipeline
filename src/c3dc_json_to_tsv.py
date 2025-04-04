@@ -9,7 +9,7 @@ import sys
 import uuid
 from bento_mdf import MDF
 from pathlib import Path
-from utils import get_logger
+from src.utils import get_logger
 
 # String values that we must assume
 FOREIGN_ID_SUFFIX = '_id'
