@@ -136,7 +136,7 @@ def c3dc_summary_transformation_flow(
     logger.info("Starting C3DC Harmonization Flow")
 
     # download the json data from
-    download_s3_folder(bucket=bucket, s3_folder=json_folder_path, local_dir=".")
+    download_s3_folder(bucket_name=bucket, s3_folder=json_folder_path, local_dir=".")
     logger.info(f"Downloaded json data from bucket {bucket} folder path {json_folder_path}")
     print(os.listdir("."))
     # rename folder name to data/
