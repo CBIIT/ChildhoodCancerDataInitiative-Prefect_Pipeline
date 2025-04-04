@@ -165,7 +165,7 @@ def c3dc_summary_transformation_flow(
     logger.info(f"Found {len(dir_paths)} subdirectories\n")
     # start transforming json files to tsv files
     logger.info(f"Transforming json files to tsv files")
-    transform_logger = get_logger(logger_name="transform_logger", log_level="INFO")
+    transform_logger = get_logger(loggername="transform_logger", log_level="INFO")
     transform_logger_filename = (
         "transform_logger_" + get_date() + ".log"
     )
