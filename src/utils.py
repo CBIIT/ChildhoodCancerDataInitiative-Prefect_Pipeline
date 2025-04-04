@@ -378,6 +378,39 @@ def folder_dl(bucket: str, remote_folder: str) -> None:
     return None
 
 
+@task(name="new download s3 folder", log_prints=True)
+def download_s3_folder(
+    bucket_name: str, s3_folder: str, local_dir: str = "./download"
+) -> None:
+    """
+    Download a nested folder from an S3 bucket to a local directory.
+
+    :param bucket_name: Name of the S3 bucket
+    :param s3_folder: Folder path in the S3 bucket (prefix)
+    :param local_dir: Local directory to download into
+    """
+    s3 = boto3.resource("s3")
+    bucket = s3.Bucket(bucket_name)
+
+    for obj in bucket.objects.filter(Prefix=s3_folder):
+        # Skip if it's a folder placeholder (common in S3)
+        if obj.key.endswith("/"):
+            continue
+
+        # Get the relative path and local file path
+        relative_path = os.path.relpath(obj.key, s3_folder)
+        local_file_path = os.path.join(local_dir, relative_path)
+
+        # Create local directory if it doesn't exist
+        os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+
+        print(f"Downloading: s3://{bucket_name}/{obj.key} -> {local_file_path}")
+        bucket.download_file(obj.key, local_file_path)
+
+    print("Download completed.")
+    return None
+
+
 @flow(
     name="Upload ccdi workflow inputs", flow_run_name="upload_input_" + f"{get_time()}"
 )
