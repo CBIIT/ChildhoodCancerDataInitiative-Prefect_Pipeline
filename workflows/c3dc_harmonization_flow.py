@@ -17,7 +17,7 @@ sys.path.append(parent_dir)
 
 from src.c3dc_json_summary import create_c3dc_json_summaries
 from src.c3dc_json_to_tsv import process_json_files, get_datamodel, get_data_subdirectories
-from src.utils import folder_dl, folder_ul, get_time
+from src.utils import folder_dl, folder_ul, get_time, get_logger, get_date, file_ul
 
 @task(name="Download C3DC Model Files", log_prints=True)
 def download_c3dc_model(model_tag: str = "") -> tuple[str, str]:
@@ -159,7 +159,11 @@ def c3dc_summary_transformation_flow(
     logger.info(f"Found {len(dir_paths)} subdirectories\n")
     # start transforming json files to tsv files
     logger.info(f"Transforming json files to tsv files")
-    process_json_files(dir_paths, model, logger)
+    transform_logger = get_logger(logger_name="transform_logger", log_level="INFO")
+    transform_logger_filename = (
+        "transform_logger_" + get_date() + ".log"
+    )
+    process_json_files(dir_paths, model, transform_logger)
 
     # extract tsv files from the data folder
     logger.info(f"Extracting tsv files from the data folder")
@@ -169,5 +173,12 @@ def c3dc_summary_transformation_flow(
     logger.info(f"Uploading tsv files to bucket {bucket} folder path {tsv_output_folder}")
     folder_ul(bucket=bucket, local_folder=tsv_output_folder, destination=upload_folder, sub_folder="")
     logger.info(f"Uploaded tsv files to bucket {bucket} folder path {upload_folder}")
+    # upload transform logger to the bucket
+    file_ul(
+        bucket=bucket,
+        output_folder=os.path.join(upload_folder, "transformed_tsv"),
+        sub_folder="",
+        newfile=transform_logger_filename,
+    )
 
     logger.info("C3DC Harmonization Flow completed successfully")
