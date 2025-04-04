@@ -161,7 +161,7 @@ def c3dc_summary_transformation_flow(
     logger.info(f"Downloaded c3dc model files {model_yaml} and {props_yaml}")
     # get the mdf model object
     model = get_datamodel(model_mdf_path=model_yaml, props_mdf_path=props_yaml)
-    dir_paths = get_data_subdirectories("./data")
+    dir_paths = get_data_subdirectories(Path("./data").resolve())
     logger.info(f"Found {len(dir_paths)} subdirectories\n")
     # start transforming json files to tsv files
     logger.info(f"Transforming json files to tsv files")
