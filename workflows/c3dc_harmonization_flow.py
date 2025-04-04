@@ -134,7 +134,7 @@ def c3dc_summary_transformation_flow(
     folder_name = os.path.basename(json_folder_path)
     logger.info(f"Downloaded json data folder name {folder_name}")
     # rename folder name to data/
-    os.rename(folder_name, "data")
+    os.rename(os.path.join(os.getcwd(),folder_name), os.path.join(os.getcwd(),"data"))
 
     # create a folder that holds the summary outputs
     current_dir = os.getcwd()
