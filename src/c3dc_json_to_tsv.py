@@ -318,10 +318,5 @@ def read_record(record, props, foreign_ids):
 
     return row
 
-def sha256_checksum(value):
-    hasher = hashlib.sha256()
-    hasher.update(str(value).encode('utf-8'))
-    return hasher.hexdigest()
-
 if __name__ == '__main__':
     main()
