@@ -288,6 +288,26 @@ def runner(
     relationship_mapping_file: str = "path_to/nodes_file/in/s3_bucket",
 ):
 
+    # Output column names
+    output_column_names = [
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+    ]
+
+    # Input column names for nodes and relationships
+    input_column_names = [
+        "node_old",
+        "property_old",
+        "version_old",
+        "node_new",
+        "property_new",
+        "version_new",
+    ]
+
     # create a logging object
     runner_logger = get_run_logger()
 
@@ -375,6 +395,7 @@ def runner(
     # use the mapping file
     else:
         merged_df = pd.read_csv(os.path.basename(nodes_mapping_file), sep="\t")
+        merged_df.columns = input_column_names
 
     # Create new df based on input for the diffs that were noted.
     new_merged = []
@@ -426,22 +447,9 @@ def runner(
 
     nodes_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_nodes_{current_date}.tsv"
 
-    new_merged_df.to_csv(
-        nodes_mapping_file_name,
-        sep="\t",
-        index=False,
-    )
-
     # UPLOAD NODES file
 
     output_folder = os.path.join(runner, "model_mapping_maker_" + get_time())
-
-    file_ul(
-        bucket=bucket,
-        output_folder=output_folder,
-        sub_folder="",
-        newfile=nodes_mapping_file_name,
-    )
 
     # final setup to make sure that [node].[node]_ids get moved when a property moves from
     # one node to a new node, especially an established node, it is likely this is needed.
@@ -477,6 +485,8 @@ def runner(
         merged_df_relate = pd.read_csv(
             os.path.basename(relationship_mapping_file), sep="\t"
         )
+        # convert to input column names
+        merged_df_relate.columns = input_column_names
 
     # Do final fixes to remove new mappings that have been accounted for.
     merged_df_relate = clean_up_partial_dups(
@@ -492,22 +502,6 @@ def runner(
 
     relationship_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_relationship_{current_date}.tsv"
 
-    # write out of relationship file
-    merged_df_relate.to_csv(
-        relationship_mapping_file_name,
-        sep="\t",
-        index=False,
-    )
-
-    # UPLOAD RELATIONSHIP file
-
-    file_ul(
-        bucket=bucket,
-        output_folder=output_folder,
-        sub_folder="",
-        newfile=relationship_mapping_file_name,
-    )
-
     # Create concatenation of mapping and nodes plus clean up
     final_merged = pd.concat([new_merged_df, merged_df_relate], ignore_index=True)
     final_merged = final_merged.fillna("")
@@ -516,23 +510,6 @@ def runner(
     final_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_MAPPING_{current_date}.tsv"
 
     final_merged_out = final_merged
-
-    # add the linkage properties onto the property data frame
-
-    final_merged_out.to_csv(
-        final_mapping_file_name,
-        sep="\t",
-        index=False,
-    )
-
-    # UPLOAD RELATIONSHIP file
-
-    file_ul(
-        bucket=bucket,
-        output_folder=output_folder,
-        sub_folder="",
-        newfile=final_mapping_file_name,
-    )
 
     # Last step to create a more human readable format
     results = []
@@ -587,7 +564,10 @@ def runner(
     comparison_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_comparison_{current_date}.tsv"
 
     comparison_df_out = comparison_df
-    # # Change column names for prefect script
+
+    # Upload files with better headers
+
+    # # Change column names for prefect script for comparison
     comparison_df_out.columns = [
         "state",
         "lift_from_node",
@@ -604,8 +584,6 @@ def runner(
         index=False,
     )
 
-    # UPLOAD RELATIONSHIP file
-
     file_ul(
         bucket=bucket,
         output_folder=output_folder,
@@ -613,17 +591,41 @@ def runner(
         newfile=comparison_mapping_file_name,
     )
 
-    # Reupload fixed MAPPING file with new headers
+    # Change relationship column names for prefect script output
+    merged_df_relate.columns = output_column_names
 
-    # Change column names for prefect script
-    final_merged_out.columns = [
-        "lift_from_node",
-        "lift_from_property",
-        "lift_from_version",
-        "lift_to_node",
-        "lift_to_property",
-        "lift_to_version",
-    ]
+    # write out of relationship file
+    merged_df_relate.to_csv(
+        relationship_mapping_file_name,
+        sep="\t",
+        index=False,
+    )
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=nodes_mapping_file_name,
+    )
+
+    # Change nodeship column names for prefect script output
+    new_merged_df.columns = output_column_names
+
+    new_merged_df.to_csv(
+        nodes_mapping_file_name,
+        sep="\t",
+        index=False,
+    )
+
+    file_ul(
+        bucket=bucket,
+        output_folder=output_folder,
+        sub_folder="",
+        newfile=relationship_mapping_file_name,
+    )
+
+    # Change MAPPING column names for prefect script output
+    final_merged_out.columns = output_column_names
 
     # add the linkage properties onto the property data frame
 
@@ -641,4 +643,3 @@ def runner(
         sub_folder="",
         newfile=final_mapping_file_name,
     )
-
