@@ -1079,7 +1079,7 @@ deployments:
       job_variables: {}
 
   # base metadata
-  - name: model-mapping-maker-8gb
+  - name: TEST-model-mapping-maker-8gb
     version: null
     tags: ["Production"]
     description: null
