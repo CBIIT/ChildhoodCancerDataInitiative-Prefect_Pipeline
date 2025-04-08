@@ -445,8 +445,6 @@ def runner(
         new_merged_df["version_old"].dropna().unique().tolist()[0]
     )
 
-    nodes_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_nodes_{current_date}.tsv"
-
     # UPLOAD NODES file
 
     output_folder = os.path.join(runner, "model_mapping_maker_" + get_time())
@@ -500,16 +498,10 @@ def runner(
     merged_df_relate = merged_df_relate[new_merged_df.columns]
     merged_df_relate = merged_df_relate.fillna("")
 
-    relationship_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_relationship_{current_date}.tsv"
-
     # Create concatenation of mapping and nodes plus clean up
     final_merged = pd.concat([new_merged_df, merged_df_relate], ignore_index=True)
     final_merged = final_merged.fillna("")
     final_merged = final_merged.drop_duplicates()
-
-    final_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_MAPPING_{current_date}.tsv"
-
-    final_merged_out = final_merged
 
     # Last step to create a more human readable format
     results = []
@@ -561,11 +553,11 @@ def runner(
     comparison_df = comparison_df.fillna("")
     comparison_df = comparison_df.drop_duplicates()
 
+    # Upload files with better headers
+
     comparison_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_comparison_{current_date}.tsv"
 
     comparison_df_out = comparison_df
-
-    # Upload files with better headers
 
     # # Change column names for prefect script for comparison
     comparison_df_out.columns = [
@@ -592,9 +584,11 @@ def runner(
     )
 
     # Change relationship column names for prefect script output
+
+    relationship_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_relationship_{current_date}.tsv"
+
     merged_df_relate.columns = output_column_names
 
-    # write out of relationship file
     merged_df_relate.to_csv(
         relationship_mapping_file_name,
         sep="\t",
@@ -605,10 +599,13 @@ def runner(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
-        newfile=nodes_mapping_file_name,
+        newfile=relationship_mapping_file_name,
     )
 
     # Change nodeship column names for prefect script output
+
+    nodes_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_nodes_{current_date}.tsv"
+
     new_merged_df.columns = output_column_names
 
     new_merged_df.to_csv(
@@ -621,10 +618,14 @@ def runner(
         bucket=bucket,
         output_folder=output_folder,
         sub_folder="",
-        newfile=relationship_mapping_file_name,
+        newfile=nodes_mapping_file_name,
     )
 
     # Change MAPPING column names for prefect script output
+    final_mapping_file_name = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}_MAPPING_{current_date}.tsv"
+
+    final_merged_out = final_merged
+
     final_merged_out.columns = output_column_names
 
     # add the linkage properties onto the property data frame
