@@ -1095,7 +1095,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1130,7 +1130,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.3.4
@@ -1164,7 +1164,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.3.4
@@ -1198,7 +1198,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.3.4
@@ -1232,7 +1232,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.3.4
@@ -1266,7 +1266,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.3.4
@@ -1295,7 +1295,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1323,7 +1323,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.1.4
@@ -1351,7 +1351,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
@@ -1383,7 +1383,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
@@ -1415,7 +1415,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
@@ -1443,7 +1443,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1473,7 +1473,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
@@ -1512,7 +1512,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
@@ -1542,7 +1542,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1570,7 +1570,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1598,7 +1598,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1654,7 +1654,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1682,7 +1682,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.16
@@ -1711,7 +1711,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.3.3
@@ -1739,7 +1739,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1767,7 +1767,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1795,7 +1795,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1823,7 +1823,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.3
@@ -1851,7 +1851,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: CCDIDC-1334_sra_library_id
@@ -1879,7 +1879,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
@@ -1907,7 +1907,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.0.1
@@ -1929,7 +1929,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.1.7
@@ -1951,7 +1951,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.2.0
@@ -1979,7 +1979,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 1.2.2
@@ -2011,7 +2011,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
@@ -2048,7 +2048,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
@@ -2087,7 +2087,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-    - prefect.deployments.steps.git_clone_project:
+    - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: main
@@ -2118,7 +2118,7 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.deployments.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
