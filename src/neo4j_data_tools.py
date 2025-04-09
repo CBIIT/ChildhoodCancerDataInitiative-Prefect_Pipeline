@@ -646,13 +646,15 @@ def pull_uniq_nodes(driver) -> List:
     return unique_nodes
 
 
-@task
+@task(log_prints=True)
 def pull_uniq_studies(driver) -> List:
     """Return a list of studies in DB"""
     session = driver.session()
     try:
         study_list_response = session.run(Neo4jCypherQuery.study_list_cypher_query)
         study_list = [record["study_id"] for record in study_list_response]
+        print(study_list)
+        print(f"number of studies: {len(study_list)}")
     except:
         traceback.print_exc()
         raise
