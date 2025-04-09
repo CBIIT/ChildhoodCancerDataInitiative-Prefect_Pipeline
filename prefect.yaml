@@ -1083,6 +1083,32 @@ deployments:
 #
 #################
 
+  - name: bucket-reader-2gb-v3
+    version: null
+    tags: ["Production","V3"]
+    description: null
+    entrypoint: workflows/bucket_reader.py:reader
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: 1.0.1
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
 
   # base metadata
   - name: ccdi-data-curation-2gb-v3
@@ -1252,33 +1278,6 @@ deployments:
     # infra-specific fields
     work_pool:
       name: ccdi-curation-60gb-prefect-3.2.14-python3.9
-      work_queue_name: null
-      job_variables: {}
-
-  - name: bucket-reader-2gb-v3
-    version: null
-    tags: ["Production","V3"]
-    description: null
-    entrypoint: workflows/bucket_reader.py:reader
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone_project:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.1
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
 
