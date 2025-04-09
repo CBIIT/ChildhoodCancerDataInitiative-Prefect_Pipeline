@@ -1098,7 +1098,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: 1.0.1
+          branch: CCDIDC-1696-PrefectV3-updates
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
