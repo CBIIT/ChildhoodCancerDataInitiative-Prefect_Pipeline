@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import sys
 from datetime import datetime
-from src.utils import get_time
+from src.utils import get_time, get_date, get_logger
 from prefect import flow, get_run_logger
 
 ##for testing
@@ -130,6 +130,14 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     runner_logger = get_run_logger()
 
+    log_filename = f"{output_dir}/COG_IGM_JSON2TSV_cog_transformations" + get_date() + ".log"
+    logger = get_logger("COG_IGM_JSON2TSV_cog_transformations", "info")
+
+    # Log the start of the transformation
+    logger.info("Starting COG data transformation process.")
+    logger.info(f"Input file: {df_reshape_file_name}")
+    logger.info(f"Output directory: {output_dir}")
+
     # Load the data
     df_reshape = pd.read_csv(df_reshape_file_name, sep="\t", low_memory=False)
 
@@ -163,6 +171,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "FOLLOW_UP.PT_VST",
         "FOLLOW_UP.COMP_RESP_CONF_IND_3",
         "FOLLOW_UP.DZ_EXM_REP_IND_2",
+        "FOLLOW_UP.PT_INF_CU_FU_COL_IND",
     ]
 
     # columns we want in our mutation df that require certain patterns
@@ -188,8 +197,29 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     )
     selected_columns = list(set(selected_columns))
 
+    # Log selected columns
+    logger.info(f"Selected columns for transformation: {selected_columns}")
+
     # Apply the selected columns to the new mutation df
     df_mutation = df_reshape[selected_columns]
+
+    # drop rows where FOLLOW_UP.PT_INF_CU_FU_COL_IND == "No"
+    df_mutation = df_mutation[
+        df_mutation["FOLLOW_UP.PT_INF_CU_FU_COL_IND"].str.contains("No", na=False) == False
+    ]
+
+    # Check for follow-ups not in sequential order
+    logger.info("Checking for sequential order of follow-ups")
+    for upi, group in df_mutation.groupby("upi"):
+        group = group.sort_values(by="FOLLOW_UP.REP_EVAL_PD_TP", ascending=True)
+        previous_date = None
+        for index, row in group.iterrows():
+            current_date = row["FOLLOW_UP.PT_FU_END_DT"]
+            if previous_date is not None and current_date < previous_date:
+                logger.error(
+                    f"Logic error for participant_id {upi}: FOLLOW_UP.PT_FU_END_DT {current_date} is less than the preceding FOLLOW_UP.PT_FU_END_DT {previous_date}."
+                )
+            previous_date = current_date
 
     # Rename columns that do not have value changes
     df_mutation = df_mutation.rename(
@@ -212,8 +242,30 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         }
     )
 
+    # Log renamed columns
+    logger.info("Renamed columns:")
+    for old_col, new_col in {
+        "upi": "participant_id",
+        "DEMOGRAPHY.DM_SEX": "sex_at_birth",
+        "COG_UPR_DX.MORPHO_TEXT": "diagnosis",
+        "COG_UPR_DX.MORPHO_ICDO": "icd_o_code",
+        "FINAL_DIAGNOSIS.PRIMDXDSCAT": "primary_diagnosis_disease_group",
+        "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
+        "FOLLOW_UP.PT_VST": "vital_status",
+        "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT": "CNS_category",
+        "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS": "CNS_category_other",
+    }.items():
+        logger.info(f"  {old_col} -> {new_col}")
 
     # Create new columns that have value changes
+
+    # Log concatenation operations
+    logger.info("Performing concatenation operations:")
+    logger.info("  Creating 'race' by concatenating DEMOGRAPHY.DM_CRACE and DEMOGRAPHY.DM_ETHNIC with ';'")
+    logger.info("  Creating 'diagnosis_id' by concatenating participant_id and COG_UPR_DX.PTDT_IDP with '_'")
+    logger.info("  Creating 'follow_up_id' by concatenating participant_id and FOLLOW_UP.REP_EVAL_PD_TP with '_'")
+    logger.info("  Creating 'primary_site' by concatenating COG_UPR_DX.TOPO_ICDO and COG_UPR_DX.TOPO_TEXT with ' : '")
+    logger.info("  Updating 'CNS_category' by concatenating CNS_category and CNS_category_other with ';'")
 
     # CONCATENATIONS
     df_mutation = clean_column_semicolon_concat(
@@ -233,6 +285,11 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         df_mutation, "CNS_category", "CNS_category", "CNS_category_other"
     )
 
+    # Log calculation operations
+    logger.info("Performing calculation operations:")
+    logger.info("  Calculating 'age_at_diagnosis' as the sum of DEMOGRAPHY.DM_BRTHDAT and COG_UPR_DX.DATE_DIA")
+    logger.info("  Calculating 'age_at_follow_up' as the sum of DEMOGRAPHY.DM_BRTHDAT and FOLLOW_UP.PT_FU_END_DT")
+
     # EQUATIONS
 
     df_mutation['DEMOGRAPHY.DM_BRTHDAT'] = pd.to_numeric(df_mutation['DEMOGRAPHY.DM_BRTHDAT'], errors='coerce')
@@ -242,6 +299,11 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     df_mutation["age_at_diagnosis"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["COG_UPR_DX.DATE_DIA"])
     df_mutation["age_at_follow_up"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["FOLLOW_UP.PT_FU_END_DT"])
 
+
+    # Log conditional operations
+    logger.info("Performing conditional operations:")
+    logger.info("  Creating 'response' based on FOLLOW_UP.COMP_RESP_CONF_IND_3 and FOLLOW_UP.DZ_EXM_REP_IND_2")
+    logger.info("  Creating 'CNS_diagnosis' by combining CNS_DIAGNOSIS_DETAIL columns with ';'")
 
     # CONDITIONAL
 
@@ -337,114 +399,67 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     df_mutation = df_mutation.drop(columns=agent_columns_to_combine)
 
     # Step 5: Rename suffix pattern to agent name
-    df_mutation = df_mutation.rename(
-        columns={
-            "AGT_ADM_NM_A01": "13-cis- retinoic acid (13cRA, Isotretinoin, Accutane)",
-            "AGT_ADM_NM_A02": "Bevacizumab (Avastin)",
-            "AGT_ADM_NM_A03": "Bleomycin (Blenoxane, BLEO)",
-            "AGT_ADM_NM_A04": "Busulfan (Myleran)",
-            "AGT_ADM_NM_A05": "Carboplatin (CBDCA)",
-            "AGT_ADM_NM_A06": "Carmustine (BiCNU, BCNU)",
-            "AGT_ADM_NM_A07": "Cetuximab (Erbitux)",
-            "AGT_ADM_NM_A08": "Cisplatin (Platinol, CDDP)",
-            "AGT_ADM_NM_A09": "Crizotinib (Xalkori)",
-            "AGT_ADM_NM_A10": "Cyclophosphamide (Cytoxan, CTX)",
-            "AGT_ADM_NM_A11": "Cytarabine (Ara-C, Cytosine arabinoside, Cytosar)",
-            "AGT_ADM_NM_A12": "Dacarbazine (DTIC)",
-            "AGT_ADM_NM_A13": "Dactinomycin (Cosmegen, ACT-D, actinomycin-D)",
-            "AGT_ADM_NM_A14": "Dexamethasone (Decadron, DEX)",
-            "AGT_ADM_NM_A15": "Dinutuximab (Unituxin, ch 14.18)",
-            "AGT_ADM_NM_A16": "Docetaxel (Taxotere)",
-            "AGT_ADM_NM_A17": "Doxorubicin (Adriamycin, ADR)",
-            "AGT_ADM_NM_A18": "Eribulin (Halaven)",
-            "AGT_ADM_NM_A19": "Erlotinib (Tarceva)",
-            "AGT_ADM_NM_A20": "Etoposide (VePesid, VP-16)",
-            "AGT_ADM_NM_A21": "Fluorouracil (5-FU)",
-            "AGT_ADM_NM_A22": "Ganitumab (AMG 479)",
-            "AGT_ADM_NM_A23": "Gefitinib (Iressa)",
-            "AGT_ADM_NM_A24": "Gemcitabine (Gemzar, dFdC)",
-            "AGT_ADM_NM_A25": "Ifosfamide (IFOS, IFEX)",
-            "AGT_ADM_NM_A26": "Interleukin 2 (IL-2, Proleukin, Aldesleukin)",
-            "AGT_ADM_NM_A27": "Irinotecan (CPT-11, Camptosar)",
-            "AGT_ADM_NM_A28": "Lapatinib (Tykerb, Tyverb)",
-            "AGT_ADM_NM_A29": "Lenalidomide (Revlimid)",
-            "AGT_ADM_NM_A30": "Lomustine (CeeNU, CCNU)",
-            "AGT_ADM_NM_A31": "Melphalan (Alkeran, l-PAM)",
-            "AGT_ADM_NM_A32": "Methotrexate (MTX)",
-            "AGT_ADM_NM_A33": "MIBG (Iobenguane, metaiodobenzylguanidine)",
-            "AGT_ADM_NM_A34": "Mitomycin C (Mutamycin, MTC)",
-            "AGT_ADM_NM_A35": "Oxaliplatin (Eloxatin)",
-            "AGT_ADM_NM_A36": "Paclitaxel (Taxol)",
-            "AGT_ADM_NM_A37": "Pazopanib (Votrient)",
-            "AGT_ADM_NM_A38": "Prednisone (Deltasone, PRED)",
-            "AGT_ADM_NM_A39": "Sirolimus (Rapamycin, Rapamune)",
-            "AGT_ADM_NM_A40": "Sorafenib (Nexavar)",
-            "AGT_ADM_NM_A41": "Sunitinib (Sutent)",
-            "AGT_ADM_NM_A42": "Temozolomide (TMZ, Temodar)",
-            "AGT_ADM_NM_A43": "Temsirolimus (Torisel)",
-            "AGT_ADM_NM_A44": "Topotecan (Hycamptin)",
-            "AGT_ADM_NM_A45": "Vandetanib (Caprelsa)",
-            "AGT_ADM_NM_A46": "Vinblastine (Velban, VLB)",
-            "AGT_ADM_NM_A47": "Vincristine (Oncovin, VCR)",
-            "AGT_ADM_NM_A48": "Vinorelbine (Navelbine)",
-            "AGT_ADM_NM_A49": "Vorinostat (SAHA)",
-            "AGT_ADM_NM_A50": "Other",
-        }
-    )
+    chemo_agent_rename = {
+        "AGT_ADM_NM_A01": "13-cis- retinoic acid (13cRA, Isotretinoin, Accutane)",
+        "AGT_ADM_NM_A02": "Bevacizumab (Avastin)",
+        "AGT_ADM_NM_A03": "Bleomycin (Blenoxane, BLEO)",
+        "AGT_ADM_NM_A04": "Busulfan (Myleran)",
+        "AGT_ADM_NM_A05": "Carboplatin (CBDCA)",
+        "AGT_ADM_NM_A06": "Carmustine (BiCNU, BCNU)",
+        "AGT_ADM_NM_A07": "Cetuximab (Erbitux)",
+        "AGT_ADM_NM_A08": "Cisplatin (Platinol, CDDP)",
+        "AGT_ADM_NM_A09": "Crizotinib (Xalkori)",
+        "AGT_ADM_NM_A10": "Cyclophosphamide (Cytoxan, CTX)",
+        "AGT_ADM_NM_A11": "Cytarabine (Ara-C, Cytosine arabinoside, Cytosar)",
+        "AGT_ADM_NM_A12": "Dacarbazine (DTIC)",
+        "AGT_ADM_NM_A13": "Dactinomycin (Cosmegen, ACT-D, actinomycin-D)",
+        "AGT_ADM_NM_A14": "Dexamethasone (Decadron, DEX)",
+        "AGT_ADM_NM_A15": "Dinutuximab (Unituxin, ch 14.18)",
+        "AGT_ADM_NM_A16": "Docetaxel (Taxotere)",
+        "AGT_ADM_NM_A17": "Doxorubicin (Adriamycin, ADR)",
+        "AGT_ADM_NM_A18": "Eribulin (Halaven)",
+        "AGT_ADM_NM_A19": "Erlotinib (Tarceva)",
+        "AGT_ADM_NM_A20": "Etoposide (VePesid, VP-16)",
+        "AGT_ADM_NM_A21": "Fluorouracil (5-FU)",
+        "AGT_ADM_NM_A22": "Ganitumab (AMG 479)",
+        "AGT_ADM_NM_A23": "Gefitinib (Iressa)",
+        "AGT_ADM_NM_A24": "Gemcitabine (Gemzar, dFdC)",
+        "AGT_ADM_NM_A25": "Ifosfamide (IFOS, IFEX)",
+        "AGT_ADM_NM_A26": "Interleukin 2 (IL-2, Proleukin, Aldesleukin)",
+        "AGT_ADM_NM_A27": "Irinotecan (CPT-11, Camptosar)",
+        "AGT_ADM_NM_A28": "Lapatinib (Tykerb, Tyverb)",
+        "AGT_ADM_NM_A29": "Lenalidomide (Revlimid)",
+        "AGT_ADM_NM_A30": "Lomustine (CeeNU, CCNU)",
+        "AGT_ADM_NM_A31": "Melphalan (Alkeran, l-PAM)",
+        "AGT_ADM_NM_A32": "Methotrexate (MTX)",
+        "AGT_ADM_NM_A33": "MIBG (Iobenguane, metaiodobenzylguanidine)",
+        "AGT_ADM_NM_A34": "Mitomycin C (Mutamycin, MTC)",
+        "AGT_ADM_NM_A35": "Oxaliplatin (Eloxatin)",
+        "AGT_ADM_NM_A36": "Paclitaxel (Taxol)",
+        "AGT_ADM_NM_A37": "Pazopanib (Votrient)",
+        "AGT_ADM_NM_A38": "Prednisone (Deltasone, PRED)",
+        "AGT_ADM_NM_A39": "Sirolimus (Rapamycin, Rapamune)",
+        "AGT_ADM_NM_A40": "Sorafenib (Nexavar)",
+        "AGT_ADM_NM_A41": "Sunitinib (Sutent)",
+        "AGT_ADM_NM_A42": "Temozolomide (TMZ, Temodar)",
+        "AGT_ADM_NM_A43": "Temsirolimus (Torisel)",
+        "AGT_ADM_NM_A44": "Topotecan (Hycamptin)",
+        "AGT_ADM_NM_A45": "Vandetanib (Caprelsa)",
+        "AGT_ADM_NM_A46": "Vinblastine (Velban, VLB)",
+        "AGT_ADM_NM_A47": "Vincristine (Oncovin, VCR)",
+        "AGT_ADM_NM_A48": "Vinorelbine (Navelbine)",
+        "AGT_ADM_NM_A49": "Vorinostat (SAHA)",
+        "AGT_ADM_NM_A50": "Other"
+    }
+    
+    df_mutation = df_mutation.rename(columns={chemo_agent_rename})
+
+    logger.info("Renamed chemo agent columns:")
+    for old_col, new_col in chemo_agent_rename.items():
+        logger.info(f"  {old_col} -> {new_col}")
 
     # Step 6, replace 'checked' of agent cols with the agent
-    agent_cols = [
-        "13-cis- retinoic acid (13cRA, Isotretinoin, Accutane)",
-        "Bevacizumab (Avastin)",
-        "Bleomycin (Blenoxane, BLEO)",
-        "Busulfan (Myleran)",
-        "Carboplatin (CBDCA)",
-        "Carmustine (BiCNU, BCNU)",
-        "Cetuximab (Erbitux)",
-        "Cisplatin (Platinol, CDDP)",
-        "Crizotinib (Xalkori)",
-        "Cyclophosphamide (Cytoxan, CTX)",
-        "Cytarabine (Ara-C, Cytosine arabinoside, Cytosar)",
-        "Dacarbazine (DTIC)",
-        "Dactinomycin (Cosmegen, ACT-D, actinomycin-D)",
-        "Dexamethasone (Decadron, DEX)",
-        "Dinutuximab (Unituxin, ch 14.18)",
-        "Docetaxel (Taxotere)",
-        "Doxorubicin (Adriamycin, ADR)",
-        "Eribulin (Halaven)",
-        "Erlotinib (Tarceva)",
-        "Etoposide (VePesid, VP-16)",
-        "Fluorouracil (5-FU)",
-        "Ganitumab (AMG 479)",
-        "Gefitinib (Iressa)",
-        "Gemcitabine (Gemzar, dFdC)",
-        "Ifosfamide (IFOS, IFEX)",
-        "Interleukin 2 (IL-2, Proleukin, Aldesleukin)",
-        "Irinotecan (CPT-11, Camptosar)",
-        "Lapatinib (Tykerb, Tyverb)",
-        "Lenalidomide (Revlimid)",
-        "Lomustine (CeeNU, CCNU)",
-        "Melphalan (Alkeran, l-PAM)",
-        "Methotrexate (MTX)",
-        "MIBG (Iobenguane, metaiodobenzylguanidine)",
-        "Mitomycin C (Mutamycin, MTC)",
-        "Oxaliplatin (Eloxatin)",
-        "Paclitaxel (Taxol)",
-        "Pazopanib (Votrient)",
-        "Prednisone (Deltasone, PRED)",
-        "Sirolimus (Rapamycin, Rapamune)",
-        "Sorafenib (Nexavar)",
-        "Sunitinib (Sutent)",
-        "Temozolomide (TMZ, Temodar)",
-        "Temsirolimus (Torisel)",
-        "Topotecan (Hycamptin)",
-        "Vandetanib (Caprelsa)",
-        "Vinblastine (Velban, VLB)",
-        "Vincristine (Oncovin, VCR)",
-        "Vinorelbine (Navelbine)",
-        "Vorinostat (SAHA)",
-        "Other",
-    ]
+    agent_cols = [val for key, val in chemo_agent_rename.items()]
 
     # Replace "checked" with the column name in the specified columns
     for col in agent_cols:
@@ -499,8 +514,13 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
             "FOLLOW_UP.DZ_EXM_REP_IND_2",
             "FOLLOW_UP.REP_EVAL_PD_TP",
             "FOLLOW_UP.PT_FU_END_DT",
+            "FOLLOW_UP.PT_INF_CU_FU_COL_IND",
         ]
     )
+
+    # Log dropped columns
+    logger.info("Dropped columns:")
+    logger.info("  DEMOGRAPHY.DM_CRACE, DEMOGRAPHY.DM_ETHNIC, COG_UPR_DX.PTDT_IDP, COG_UPR_DX.TOPO_ICDO, COG_UPR_DX.TOPO_TEXT, CNS_category_other, DEMOGRAPHY.DM_BRTHDAT, COG_UPR_DX.DATE_DIA, FOLLOW_UP.COMP_RESP_CONF_IND_3, FOLLOW_UP.DZ_EXM_REP_IND_2, FOLLOW_UP.REP_EVAL_PD_TP, FOLLOW_UP.PT_FU_END_DT")
 
     df_mutation = df_mutation.drop_duplicates()
 
@@ -531,8 +551,13 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     # Create the final column order by adding the extra columns to the end
     final_order = output_order + additional_columns
 
+    # Log final column order
+    logger.info(f"Final column order: {final_order}")
+
     df_mutation[final_order].to_csv(f"{output_dir}/COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)
 
+    # Log the end of the transformation
+    logger.info("COG data transformation process completed successfully.")
 
 
 if __name__=="__main__":
