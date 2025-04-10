@@ -41,7 +41,7 @@ griffe>=0.49.0,<2.0.0
 h11==0.14.0
 h2==4.1.0
 hpack==4.0.0
-httpcore==1.0.2
+httpcore==1.0.0
 httpx==0.25.2
 humanize==4.9.0
 hyperframe==6.0.1
