@@ -605,7 +605,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             md5sum_compare_result.extend([i[1:] for i in j_md5sum_compare_result])
 
             # record the intermediate results
-            intermediate_file_name = f"{os.path.basename(manifest_path).replace(".xlsx", "")}_intermediate_md5sum_check.tsv"
+            intermediate_file_name = f"{os.path.basename(manifest_path).replace('.xlsx', '')}_intermediate_md5sum_check.tsv"
             int_results.extend(j_md5sum_compare_result)
             int_transfer_df = int_results_recorder(transfer_df, int_results)
             int_transfer_df[
