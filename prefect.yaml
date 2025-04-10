@@ -20,7 +20,7 @@ pull:
       repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
       branch: main
   - prefect.projects.steps.pip_install_requirements:
-      requirements_file: requirements_V3.txt
+      requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
 
