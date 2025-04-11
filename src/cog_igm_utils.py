@@ -131,7 +131,6 @@ def file_dl(dl_parameter: dict, dups, logger, runner_logger):
     log_prints=True,
     flow_run_name="json_downloader_" + f"{get_time()}",
     task_runner=ConcurrentTaskRunner(), 
-    name="Copy Files Concurrently"
 )
 def json_downloader(manifest: pd.DataFrame, dups: list, logger):
     """Flow for downloading JSONs to VM for parsing and verifying file_name uniqueness
