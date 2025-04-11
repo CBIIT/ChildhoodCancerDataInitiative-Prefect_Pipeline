@@ -4,6 +4,7 @@ import os
 import sys
 import json
 import pandas as pd
+import time
 import openpyxl
 import itertools
 from collections import defaultdict
@@ -144,6 +145,9 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
     """
 
     runner_logger = get_run_logger()
+
+    # throttle submission of tasks to avoid overwhelming the system
+    time.sleep(0.25)
 
     #setup with list of dicts to iterate over and then run with map
     submit_list = []
