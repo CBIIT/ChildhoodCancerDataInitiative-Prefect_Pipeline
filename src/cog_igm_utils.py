@@ -79,7 +79,6 @@ def set_s3_resource():
 
 @task(
     name="Download file", 
-    name="download_file", 
     log_prints=True,
     tags=["json-downloader-tag"],
     retries=3,
