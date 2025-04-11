@@ -113,7 +113,6 @@ rsa==4.7.2
 ruamel.yaml==0.18.10
 ruamel.yaml.clib==0.2.12
 s3-tree==0.1.0
-s3transfer==0.11.4
 shellingham==1.5.4
 sgqlc==16.4
 six==1.17.0
