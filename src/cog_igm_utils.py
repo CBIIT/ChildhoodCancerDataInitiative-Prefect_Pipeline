@@ -79,7 +79,7 @@ def set_s3_resource():
 
 @task(
     name="Download file", 
-    task_run_name="download_file_{filename}", 
+    task_run_name="download_file_{dl_parameter['file_path']}", 
     log_prints=True,
     tags=["json-downloader-tag"],
     retries=3,
