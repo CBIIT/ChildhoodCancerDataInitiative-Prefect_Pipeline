@@ -124,13 +124,13 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         output_dir (str): Directory where the output TSV file will be saved.
 
     Returns:
-        None
+        log_filename (str): Name of the log file created during the transformation process.
     """
     # Data Reshape/mutate
 
     runner_logger = get_run_logger()
 
-    log_filename = f"{output_dir}/COG_IGM_JSON2TSV_cog_transformations" + get_date() + ".log"
+    log_filename = f"COG_IGM_JSON2TSV_cog_transformations" + get_date() + ".log"
     logger = get_logger("COG_IGM_JSON2TSV_cog_transformations", "info")
 
     # Log the start of the transformation
@@ -567,6 +567,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     # Close the logger 
     logger.handlers[0].close()
+
+    return log_filename
 
 
 if __name__=="__main__":
