@@ -7,11 +7,12 @@ import pandas as pd
 import openpyxl
 import itertools
 from collections import defaultdict
-from prefect import flow, get_run_logger
-from src.utils import file_dl, get_time, get_date, get_logger
+from prefect import task, flow, get_run_logger
+from src.utils import get_time, get_date, get_logger
 from src.cog_transform_utils import cog_transformer
-from concurrent.futures import ThreadPoolExecutor
-from functools import partial
+import boto3
+from botocore.exceptions import ClientError
+from prefect.task_runners import ConcurrentTaskRunner
 
 
 @flow(
@@ -58,23 +59,96 @@ def manifest_reader(manifest_path: str):
 
     return manifest_df
 
+def set_s3_resource():
+    """This method sets the s3_resource object to either use localstack
+    for local development if the LOCALSTACK_ENDPOINT_URL variable is
+    defined and returns the object
+    """
+    localstack_endpoint = os.environ.get("LOCALSTACK_ENDPOINT_URL")
+    if localstack_endpoint != None:
+        AWS_REGION = "us-east-1"
+        AWS_PROFILE = "localstack"
+        ENDPOINT_URL = localstack_endpoint
+        boto3.setup_default_session(profile_name=AWS_PROFILE)
+        s3_resource = boto3.resource(
+            "s3", region_name=AWS_REGION, endpoint_url=ENDPOINT_URL
+        )
+    else:
+        s3_resource = boto3.resource("s3")
+    return s3_resource
+
+@task(
+    name="Download file", 
+    task_run_name="download_file_{filename}", 
+    log_prints=True,
+    tags=["json-downloader-tag"],
+    retries=3,
+    retry_delay_seconds=0.5,
+)
+def file_dl(dl_parameter: dict, dups, logger, runner_logger):
+    """File download using bucket name and filename
+    filename is the key path in bucket
+    file is the basename
+    """
+    # Set the s3 resource object for local or remote execution
+    bucket = dl_parameter['bucket']
+    file_path = dl_parameter['file_path']
+    s3 = set_s3_resource()
+    source = s3.Bucket(bucket)
+    file_key = file_path
+    row = dl_parameter['row']
+    filename = os.path.basename(dl_parameter['file_path'])
+    try:
+        source.download_file(file_key, filename)
+        # if file name is in dups list, rename to clinical_measure_file_id + JSON to be uniq
+        if filename in dups:
+            new_file_name = (
+                row["clinical_measure_file_id"]
+                if row["clinical_measure_file_id"].endswith(".json")
+                else row["clinical_measure_file_id"] + ".json"
+            )
+            os.rename(row["file_name"], new_file_name)
+            logger.info(
+                f"Renamed file {row['file_name']} to {new_file_name} to be unique."
+            )
+            runner_logger.info(
+                f"Renamed file {row['file_name']} to {new_file_name} to be unique."
+            )
+    except ClientError as ex:
+        ex_code = ex.response["Error"]["Code"]
+        ex_message = ex.response["Error"]["Message"]
+        print(
+            f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}"
+        )
+        logger.error(f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}")
+        raise
+
+
+
 
 @flow(
     name="JSON Downloader",
     log_prints=True,
     flow_run_name="json_downloader_" + f"{get_time()}",
+    task_runner=ConcurrentTaskRunner(), 
+    name="Copy Files Concurrently"
 )
 def json_downloader(manifest: pd.DataFrame, dups: list, logger):
     """Flow for downloading JSONs to VM for parsing and verifying file_name uniqueness
 
     Args:
         manifest (pd.DataFrame): Manifest of file_names and s3 URLs
+        dups (list): List of duplicate file_names
+        logger: Logger object for logging messages
 
     Returns:
         None
     """
 
     runner_logger = get_run_logger()
+
+    #setup with list of dicts to iterate over and then run with map
+    submit_list = []
 
     for index, row in manifest.iterrows():
         f_bucket = row["file_url"].split("/", 3)[2]
@@ -89,26 +163,10 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
                 f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
             )
         else:
-            try:
-                file_dl(f_bucket, f_path)
-            except Exception as e:
-                runner_logger.error(f"Cannot download file {row['file_name']}: {e}")
-                logger.error(f"Cannot download file {row['file_name']}: {e}")
+            submit_list.append({"bucket" : f_bucket, "file_path" : f_path, "row": row}) 
 
-        # if file name is in dups list, rename to clinical_measure_file_id + JSON to be uniq
-        if row["file_name"] in dups:
-            new_file_name = (
-                row["clinical_measure_file_id"]
-                if row["clinical_measure_file_id"].endswith(".json")
-                else row["clinical_measure_file_id"] + ".json"
-            )
-            os.rename(row["file_name"], new_file_name)
-            logger.info(
-                f"Renamed file {row['file_name']} to {new_file_name} to be unique."
-            )
-            runner_logger.info(
-                f"Renamed file {row['file_name']} to {new_file_name} to be unique."
-            )
+
+    file_dl.map(submit_list, dups, logger, runner_logger)
     
     return None
 
