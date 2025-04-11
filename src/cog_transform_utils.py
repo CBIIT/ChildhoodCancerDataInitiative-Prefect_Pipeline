@@ -457,7 +457,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         "AGT_ADM_NM_A50": "Other"
     }
     
-    df_mutation = df_mutation.rename(columns={chemo_agent_rename})
+    df_mutation = df_mutation.rename(columns=chemo_agent_rename)
 
     logger.info("Renamed chemo agent columns:")
     for old_col, new_col in chemo_agent_rename.items():
@@ -567,7 +567,5 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
 if __name__=="__main__":
     #testing
-    df_reshape = pd.read_csv(sys.argv[1], sep="\t",low_memory=False)
-
-    cog_transformer(df_reshape, ".")
+    cog_transformer(sys.argv[1], ".")
 
