@@ -55,7 +55,6 @@ kubernetes==28.1.0
 localstack-client==2.5
 Mako==1.3.9
 Markdown==3.7
-markdown-it-py==3.0.0
 MarkupSafe==3.0.2
 mdurl==0.1.2
 mock==5.1.0
