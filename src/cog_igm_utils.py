@@ -165,7 +165,7 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
             submit_list.append({"bucket" : f_bucket, "file_path" : f_path, "row": row}) 
 
 
-    file_dl.map(submit_list, dups, logger, runner_logger)
+    file_dl.map(submit_list, dups=dups, logger=logger, runner_logger=runner_logger)
     
     return None
 
