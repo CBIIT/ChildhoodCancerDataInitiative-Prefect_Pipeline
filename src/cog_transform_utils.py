@@ -214,12 +214,17 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
         group = group.sort_values(by="FOLLOW_UP.REP_EVAL_PD_TP", ascending=True)
         previous_date = None
         for index, row in group.iterrows():
-            current_date = row["FOLLOW_UP.PT_FU_END_DT"]
-            if previous_date is not None and current_date < previous_date:
+            try:
+                current_date = row["FOLLOW_UP.PT_FU_END_DT"]
+                if previous_date is not None and current_date < previous_date:
+                    logger.error(
+                        f"Logic error for participant_id {upi}: FOLLOW_UP.PT_FU_END_DT {current_date} is less than the preceding FOLLOW_UP.PT_FU_END_DT {previous_date}."
+                    )
+                previous_date = current_date
+            except Exception as e:
                 logger.error(
-                    f"Logic error for participant_id {upi}: FOLLOW_UP.PT_FU_END_DT {current_date} is less than the preceding FOLLOW_UP.PT_FU_END_DT {previous_date}."
+                    f"Error processing participant_id {upi}: {e}"
                 )
-            previous_date = current_date
 
     # Rename columns that do not have value changes
     df_mutation = df_mutation.rename(
