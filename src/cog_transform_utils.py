@@ -565,6 +565,10 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     logger.info("COG data transformation process completed successfully.")
 
 
+    # Close the logger 
+    logger.handlers[0].close()
+
+
 if __name__=="__main__":
     #testing
     cog_transformer(sys.argv[1], ".")
