@@ -1,5 +1,6 @@
 """Further transforms of COG data and perform mappings back to SAS Labels and CCDI data model"""
 
+import os
 import pandas as pd
 import numpy as np
 import sys
@@ -568,8 +569,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     # Close the logger 
     logger.handlers[0].close()
 
-    return log_filename
-
+    os.rename(log_filename, f"{output_dir}/{log_filename}")
 
 if __name__=="__main__":
     #testing
