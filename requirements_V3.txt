@@ -16,6 +16,7 @@ pytz==2025.2
 s3transfer==0.11.4
 sgqlc==16.4
 six==1.17.0
+tabulate==0.9.0
 typing_extensions==4.13.2
 tzdata==2025.2
 urllib3==1.26.20
