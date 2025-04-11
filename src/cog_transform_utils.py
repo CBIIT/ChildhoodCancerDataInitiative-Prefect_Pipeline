@@ -570,7 +570,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str, logger):
     # Close the logger 
     logger.handlers[0].close()
 
-    os.rename(log_filename, f"{output_dir}/{log_filename}")
+    #os.rename(log_filename, f"{output_dir}/{log_filename}")
 
 if __name__=="__main__":
     #testing
