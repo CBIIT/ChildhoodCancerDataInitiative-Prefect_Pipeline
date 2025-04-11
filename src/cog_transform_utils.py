@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import sys
 from datetime import datetime
-from src.utils import get_time, get_date, get_logger
+from src.utils import get_time, get_date
 from prefect import flow, get_run_logger
 
 ##for testing
@@ -106,7 +106,7 @@ def clean_column_space_colon_concat(
     log_prints=True,
     flow_run_name="cog-transformer-" + f"{get_time()}",
 )
-def cog_transformer(df_reshape_file_name: str, output_dir: str): 
+def cog_transformer(df_reshape_file_name: str, output_dir: str, logger): 
     """
     Transforms and reshapes COG data to map back to SAS Labels and CCDI data model.
 
@@ -123,6 +123,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
     Args:
         df_reshape_file_name (str): Path to the input TSV file containing the reshaped data.
         output_dir (str): Directory where the output TSV file will be saved.
+        logger (Logger): Logger object for logging messages during the transformation process.
 
     Returns:
         log_filename (str): Name of the log file created during the transformation process.
@@ -131,8 +132,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     runner_logger = get_run_logger()
 
-    log_filename = f"COG_IGM_JSON2TSV_cog_transformations" + get_date() + ".log"
-    logger = get_logger("COG_IGM_JSON2TSV_cog_transformations", "info")
+    #log_filename = f"COG_IGM_JSON2TSV_cog_transformations" + get_date() + ".log"
+    #logger = get_logger("COG_IGM_JSON2TSV_cog_transformations", "info")
 
     # Log the start of the transformation
     logger.info("Starting COG data transformation process.")
@@ -206,7 +207,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):
 
     # drop rows where FOLLOW_UP.PT_INF_CU_FU_COL_IND == "No"
     df_mutation = df_mutation[
-        df_mutation["FOLLOW_UP.PT_INF_CU_FU_COL_IND"].str.contains("No", na=False) == False
+        df_mutation["FOLLOW_UP.PT_INF_CU_FU_COL_IND"] == "Yes"
     ]
 
     # Check for follow-ups not in sequential order
