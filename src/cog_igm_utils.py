@@ -7,7 +7,7 @@ import pandas as pd
 import openpyxl
 import itertools
 from collections import defaultdict
-from prefect import task, flow, get_run_logger
+from prefect import task, flow, get_run_logger, unmapped
 from src.utils import get_time, get_date, get_logger
 from src.cog_transform_utils import cog_transformer
 import boto3
@@ -165,7 +165,7 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
             submit_list.append({"bucket" : f_bucket, "file_path" : f_path, "row": row}) 
 
 
-    file_dl.map(submit_list, dups=dups, logger=logger, runner_logger=runner_logger)
+    file_dl.map(submit_list, unmapped(dups=dups), unmapped(logger=logger), unmapped(runner_logger=runner_logger))
     
     return None
 
