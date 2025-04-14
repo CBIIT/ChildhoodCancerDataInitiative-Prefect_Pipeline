@@ -107,7 +107,7 @@ def count_success_fail(deletion_status: list) -> tuple:
     return count_success, count_fail
 
 
-@task(name="if single object exists",retries=3, retry_delay_seconds=0.5)
+@task(name="if single object exists",retries=3, retry_delay_seconds=1)
 def if_object_exists(key_path: str, bucket: str, s3_client, logger) -> None:
     """Retrives the metadata of an object without returning the
     object itself
@@ -149,7 +149,7 @@ def parse_bucket_folder_path(bucket_folder_path: str) -> tuple:
     return bucket, folder_path
 
 
-@task(retries=3, retry_delay_seconds=0.5)
+@task(retries=3, retry_delay_seconds=1)
 def construct_staging_bucket_key(
     object_prod_bucket_key: str, prod_bucket_path: str, staging_bucket_path: str
 ) -> str:
@@ -175,7 +175,7 @@ def construct_staging_bucket_key(
     return object_staging_bucket_key
 
 
-@task(retries=3, retry_delay_seconds=0.5, tags=["file-remover-tag"])
+@task(retries=3, retry_delay_seconds=1, tags=["file-remover-tag"])
 def get_md5sum(object_key: str, bucket_name: str, s3_client) -> str:
     """
     Calculate md5sum of an object using url
@@ -271,7 +271,7 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
 @task(
     name="Delete Single S3 Object",
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     tags=["file-remover-tag"],
 )
 def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
