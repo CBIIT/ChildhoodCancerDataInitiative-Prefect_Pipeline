@@ -235,7 +235,7 @@ def copy_file_by_size(
     name="Copy an object file",
     tags=["file-mover-2-tag"],
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     log_prints=True,
 )
 def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> str:
@@ -310,7 +310,7 @@ def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> li
     name="Compare md5sum values",
     tags=["md5sum-cal-2-tag"],
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     log_prints=True,
 )
 def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> tuple:
