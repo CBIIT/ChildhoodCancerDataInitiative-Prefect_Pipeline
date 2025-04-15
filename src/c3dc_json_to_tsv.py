@@ -9,10 +9,11 @@ import sys
 import uuid
 from bento_mdf import MDF
 from pathlib import Path
-from src.utils import get_logger
+from utils import get_logger
 
 # String values that we must assume
 FOREIGN_ID_SUFFIX = '_id'
+ID_SUFFIX = '_id'
 PARENT_NODE_ID = 'study_id'
 PARENT_NODE_NAME = 'study'
 PARENT_NODE_NAME_PLURAL = 'studies'
@@ -41,6 +42,30 @@ def main():
     logger.info(f'Found {len(dir_paths)} subdirectories\n')
 
     process_json_files(dir_paths, model, logger)
+
+def foreign_id_name(foreign_node_name):
+    """ Get the foreign ID name of a foreign node
+
+    Args:
+        foreign_node_name (str): The name of the foreign node
+
+    Returns:
+        str: The foreign ID name
+    """
+
+    return f'{foreign_node_name}.{foreign_node_name}{FOREIGN_ID_SUFFIX}'
+
+def foreign_key_name(foreign_node_name):
+    """ Get the foreign key name of a foreign node
+
+    Args:
+        foreign_node_name (str): The name of the foreign node
+
+    Returns:
+        str: The foreign key name
+    """
+
+    return f'{foreign_node_name}.{PRIMARY_KEY_NAME}'
 
 def get_data_subdirectories(data_dir):
     """ Get subdirectories to read data from
@@ -97,6 +122,15 @@ def get_file_paths(dir_path):
     return file_paths
 
 def get_foreign_ids(model, node_name):
+    """ Gets ID property names of foreign nodes
+    Args:
+        model (Model): The datamodel
+        node_name (str): The name of the node
+
+    Returns:
+        list: List of ID property names of foreign nodes
+    """
+
     foreign_ids = []
 
     for edge in model.edges.values():
@@ -106,9 +140,55 @@ def get_foreign_ids(model, node_name):
         if source_node_name != node_name:
             continue
 
-        foreign_ids.append(f'{destination_node_name}.{destination_node_name}{FOREIGN_ID_SUFFIX}')
+        foreign_ids.append(f'{foreign_id_name(destination_node_name)}')
 
     return foreign_ids
+
+def get_foreign_keys(model, node_name):
+    """ Gets foreign key property names of foreign nodes
+    Args:
+        model (Model): The datamodel
+        node_name (str): The name of the node
+
+    Returns:
+        list: List of foreign key property names of foreign nodes
+    """
+
+    foreign_keys = []
+
+    for edge in model.edges.values():
+        destination_node_name = edge.dst.handle
+        source_node_name = edge.src.handle
+
+        if source_node_name != node_name:
+            continue
+
+        foreign_keys.append(f'{foreign_key_name(destination_node_name)}')
+
+    return foreign_keys
+
+def get_parent_node_names(model, node_name):
+    """ Gets names of parent nodes
+    Args:
+        model (Model): The datamodel
+        node_name (str): The name of the node
+
+    Returns:
+        list: List of names of parent nodes
+    """
+
+    foreign_keys = []
+
+    for edge in model.edges.values():
+        destination_node_name = edge.dst.handle
+        source_node_name = edge.src.handle
+
+        if source_node_name != node_name:
+            continue
+
+        foreign_keys.append(destination_node_name)
+
+    return foreign_keys
 
 def get_study_id(data):
     """ Get the value of study_id
@@ -137,6 +217,18 @@ def get_study_id(data):
         study_id = study_data.get(PARENT_NODE_ID)
 
     return study_id
+
+def id_name(node_name):
+    """ Get the ID name of a node
+
+    Args:
+        node_name (str): The name of the node
+
+    Returns:
+        str: The ID name
+    """
+
+    return f'{node_name}{ID_SUFFIX}'
 
 def make_uuid(node_type, study_id, row, foreign_ids):
     """ Makes a UUID for a record
@@ -211,6 +303,7 @@ def process_json_files(dir_paths, model, logger):
     for dir_path in dir_paths:
         file_paths = get_file_paths(dir_path)
         all_json_data = dict.fromkeys(node_names_plural, [])
+        all_records = {} # Stores records read from JSON
 
         logger.info(f'Found {len(file_paths)} JSON file(s) in subdirectory {dir_path}\n')
 
@@ -237,8 +330,11 @@ def process_json_files(dir_paths, model, logger):
         logger.info(f'Parsing {PARENT_NODE_ID} from JSON...\n')
         study_id = get_study_id(all_json_data)
 
-        # Write a TSV file for each node type
+        # Store data from JSON in a dict
         for (node_name, node_name_plural) in node_names_to_plural.items():
+            if node_name not in all_records:
+                all_records[node_name] = {}
+
             logger.info(f'Parsing {node_name} records from JSON...\n')
 
             records = all_json_data.get(node_name_plural)
@@ -250,35 +346,74 @@ def process_json_files(dir_paths, model, logger):
             foreign_ids = get_foreign_ids(model, node_name)
             node = model.nodes.get(node_name)
             props = node.props
-            tsv_path = Path.cwd() / 'data' / f'{study_id} {node_name_plural}.tsv'
 
+            # Assign UUIDs
+            for record in records:
+                record_id = record.get(f'{id_name(node_name)}')
+                row = read_record(record, props, foreign_ids)
+                uuid = make_uuid(node_name, study_id, row, foreign_ids)
+
+                # Skip record if duplicate
+                if uuid in uuids:
+                    logger.warning(f'Duplicate {node_name} record {record_id} found (UUID {uuid})')
+                    continue
+
+                uuids.add(uuid)
+                row[PRIMARY_KEY_NAME] = uuid
+                all_records[node_name][record_id] = row
+
+            logger.info(f'Finished parsing {node_name} records\n')
+
+        # Assign foreign keys to records
+        for (node_name, _) in node_names_to_plural.items():
+            logger.info(f'Assigning foreign keys to {node_name} records...\n')
+
+            if not all_records[node_name]:
+                logger.warning(f'No {node_name} records! Skipping {node_name}...\n')
+                continue
+
+            parent_node_names = get_parent_node_names(model, node_name)
+
+            for record_id in all_records[node_name]:
+                # Assign foreign keys to record
+                for parent_node_name in parent_node_names:
+                    foreign_key = None
+                    parent_id = all_records[node_name][record_id].get(foreign_id_name(parent_node_name))
+
+                    if parent_id:
+                        parent_node = all_records[parent_node_name][parent_id]
+                        foreign_key = parent_node.get(PRIMARY_KEY_NAME)
+
+                    all_records[node_name][record_id][foreign_key_name(parent_node_name)] = foreign_key
+
+                    # Foreign ID no longer needed
+                    del all_records[node_name][record_id][foreign_id_name(parent_node_name)]
+
+            logger.info(f'Finished assigning foreign keys to {node_name} records\n')
+
+        # Write a TSV file for each node type
+        for (node_name, node_name_plural) in node_names_to_plural.items():
             logger.info(f'Writing {node_name} records to TSV...')
+
+            if not all_records[node_name]:
+                logger.warning(f'No {node_name} records! Skipping {node_name}...\n')
+                continue
+
+            foreign_keys = get_foreign_keys(model, node_name)
+            node = model.nodes.get(node_name)
+            props = node.props
+            tsv_path = Path.cwd() / 'data' / f'{study_id} {node_name_plural}.tsv'
 
             # Write TSV
             with open(tsv_path, 'w', encoding='utf-8', newline='') as tsv_file:
                 # Write the column headers
-                tsv_headers = ['type'] + list(props.keys()) + foreign_ids
+                tsv_headers = ['type'] + list(props.keys()) + foreign_keys
                 tsv_writer = csv.writer(tsv_file, delimiter='\t', dialect='unix')
                 tsv_writer.writerow(tsv_headers)
 
                 # Write each record to a TSV row
-                for record in records:
-                    record_id = record.get(f'{node_name}{FOREIGN_ID_SUFFIX}')
-                    row = read_record(record, props, foreign_ids)
-                    uuid = make_uuid(node_name, study_id, row, foreign_ids)
-
-                    # Skip record if duplicate
-                    if uuid in uuids:
-                        logger.warning(f'Duplicate {node_name} record {record_id} found (UUID {uuid})')
-                        continue
-                    else:
-                        uuids.add(uuid)
-
-                    # Assemble the row: UUID, type, props, foreign IDs
-                    row[PRIMARY_KEY_NAME] = uuid
-                    row_list = [node_name] + [row[prop_name] for prop_name in props.keys()] + [row[foreign_id] for foreign_id in foreign_ids]
-
-                    tsv_writer.writerow(row_list)
+                for record in all_records[node_name].values():
+                    tsv_writer.writerow(to_tsv_row(record, node_name, props, foreign_keys))
 
                 tsv_file.close()
 
@@ -317,6 +452,28 @@ def read_record(record, props, foreign_ids):
         row[foreign_id] = record.get(foreign_id)
 
     return row
+
+def to_tsv_row(record, node_name, props, foreign_keys):
+    """ Converts a record to a TSV row
+
+    Args:
+        record (dict): The record
+        node_name (str): The name of the node
+        props (dict): Properties to read from the record
+        foreign_keys (list): Foreign key properties to read from the record
+
+    Returns:
+        list: List of property values
+    """
+
+    native_vals = [
+        record[prop_name] for prop_name in props.keys()
+    ]
+    foreign_vals = [
+        record[foreign_key] for foreign_key in foreign_keys
+    ]
+
+    return [node_name] + native_vals + foreign_vals
 
 if __name__ == '__main__':
     main()
