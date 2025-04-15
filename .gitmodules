@@ -1,0 +1,4 @@
+[submodule "prefect-toolkit"]
+	path = prefect-toolkit
+	url = https://github.com/CBIIT/prefect-toolkit
+	branch = main

@@ -1063,12 +1063,10 @@ deployments:
     # pull action to overwrite from file pull action
     pull:
       - prefect.deployments.steps.git_clone:
-          repository: https://github.com/CBIIT/prefect-toolkit.git
-          branch: main
-      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: CCDIDC-1674_liftover_rework
+          include_submodules: True
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
