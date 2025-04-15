@@ -2,7 +2,7 @@ from prefect import flow, task, get_run_logger
 import os
 from typing import Literal
 import sys
-sys.path.insert(0, os.path.abspath("../prefect-toolkit/src"))
+sys.path.insert(0, os.path.abspath("../../prefect-toolkit/src"))
 from commons.datamodel import GetDataModel
 
 AcrynomDropDown = Literal["ccdi", "cds"]
