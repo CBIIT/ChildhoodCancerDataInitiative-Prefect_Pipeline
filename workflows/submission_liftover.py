@@ -38,5 +38,6 @@ def submission_liftover(
     logger.info(f"downloaded lift from model file and props file: {lift_from_model_file}, {list_from_props_file}")
     lift_to_model_file, lift_to_props_file = getmodel.dl_model_files(commons_acronym=lift_to_acronym, tag=lift_to_tag)
     logger.info(f"downloaded lift to model file and props file: {lift_to_model_file}, {lift_to_props_file}")
+    logger.info(f"all the files in current directory: {*os.listdir(),}")
 
     return None
