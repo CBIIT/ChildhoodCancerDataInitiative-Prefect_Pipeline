@@ -58,7 +58,7 @@ def submission_liftover(
 
     # download the set of submission files
     folder_dl(bucket=bucket, remote_folder=submission_path)
-    logger.info(f"Downloaded submission files folder from bucket: {submission_path}")
+    logger.info(f"Downloaded submission files folder from bucket {bucket}: {submission_path}")
 
     # download mapping file
     file_dl(bucket=bucket, filename=liftover_mapping_filepath)
@@ -75,7 +75,7 @@ def submission_liftover(
 - mapping file lift to tag {mapping_lift_to_tag}
 - provided lift to tag {lift_to_tag}"""
         )
-        raise ValueError(f"Mapping file {mapping_file} does not match the lift from tag {lift_from_tag}.")
+        raise ValueError(f"Mapping file {mapping_file} contains tags that do not match the provided tags.")
     else:
         logger.info(
             f"Tags found in mapping file {mapping_file} match the lift from tag {lift_from_tag} and lift to tag {lift_to_tag}"
