@@ -2,6 +2,9 @@ from prefect import flow, task, get_run_logger
 import os
 from typing import Literal
 import sys
+from src.utils import folder_dl, file_dl
+from src.manifest_liftover import liftover_tags
+
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from src.commons.datamodel import GetDataModel, ReadDataModel
 
@@ -52,5 +55,30 @@ def submission_liftover(
     )
     # list all the files and directories in the current directory
     logger.info(f"all the files in current directory: {*os.listdir(),}")
+
+    # download the set of submission files
+    folder_dl(bucket=bucket, remote_folder=submission_path)
+    logger.info(f"Downloaded submission files folder from bucket: {submission_path}")
+
+    # download mapping file
+    file_dl(bucket=bucket, filename=liftover_mapping_filepath)
+    mapping_file = os.path.basename(liftover_mapping_filepath)
+    logger.info(f"Downloaded mapping file {mapping_file} from bucket {bucket}")
+
+    # check if the tag version in the mapping file matches to
+    mapping_lift_from_tag, mapping_lift_to_tag = liftover_tags(liftover_mapping_path=mapping_file)
+    if mapping_lift_from_tag != lift_from_tag or mapping_lift_to_tag != lift_to_tag:
+        logger.error(
+            f"""Mapping file contains tags that do not match to what you provided:
+- mapping file lift from tag {mapping_lift_from_tag}
+- provided lift from tag {lift_from_tag}
+- mapping file lift to tag {mapping_lift_to_tag}
+- provided lift to tag {lift_to_tag}"""
+        )
+        raise ValueError(f"Mapping file {mapping_file} does not match the lift from tag {lift_from_tag}.")
+    else:
+        logger.info(
+            f"Tags found in mapping file {mapping_file} match the lift from tag {lift_from_tag} and lift to tag {lift_to_tag}"
+        )
 
     return None
