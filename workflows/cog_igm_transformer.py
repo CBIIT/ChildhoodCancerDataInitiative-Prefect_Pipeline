@@ -142,10 +142,6 @@ def cog_igm_transform(
 
         # move log file to output dir and shutdown logging
         os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
-        os.rename(
-            cog_transform_log,
-            f"{output_path}/{cog_transform_log.replace(get_date(), dt)}",
-        )
 
         # upload output dir
         folder_ul(

@@ -7,6 +7,7 @@ import sys
 from datetime import datetime
 from src.utils import get_time, get_date
 from prefect import flow, get_run_logger
+from prefect_shell import ShellOperation
 import logging  # Add this import
 
 ##for testing
@@ -575,6 +576,17 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     # Log the end of the transformation
     logger.info("COG data transformation process completed successfully.")
+
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                "pwd",
+                "ls -l ."
+                "ls -l /usr/local/data/",
+                f"ls -l {output_dir}"
+            ]
+        ).run()
+    )
 
     return log_filename  # Return the log file name for reference
 
