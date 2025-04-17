@@ -354,7 +354,7 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@task(name="Download folder", task_run_name="download_folder_{local_folder}", log_prints=True)
+@task(name="Download folder", task_run_name="download_folder_{remote_folder}", log_prints=True)
 def folder_dl(bucket: str, remote_folder: str) -> None:
     """Downloads a remote direcotry folder from s3
     bucket to local. it generates a folder that follows the
