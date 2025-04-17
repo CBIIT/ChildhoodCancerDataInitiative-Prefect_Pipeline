@@ -7,6 +7,7 @@ import sys
 from datetime import datetime
 from src.utils import get_time, get_date
 from prefect import flow, get_run_logger
+import logging  # Add this import
 
 ##for testing
 def get_time() -> str:
@@ -106,7 +107,16 @@ def clean_column_space_colon_concat(
     log_prints=True,
     flow_run_name="cog-transformer-" + f"{get_time()}",
 )
-def cog_transformer(df_reshape_file_name: str, output_dir: str, logger): 
+def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logger parameter
+    # Set up logging
+    log_filename = f"COG_IGM_JSON2TSV_cog_transformations_{get_time()}.log"
+    logging.basicConfig(
+        filename=log_filename,
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    logger = logging.getLogger("COG_Transformer")
+
     """
     Transforms and reshapes COG data to map back to SAS Labels and CCDI data model.
 
@@ -566,13 +576,10 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str, logger):
     # Log the end of the transformation
     logger.info("COG data transformation process completed successfully.")
 
+    return log_filename  # Return the log file name for reference
 
-    # Close the logger 
-    logger.handlers[0].close()
-
-    #os.rename(log_filename, f"{output_dir}/{log_filename}")
-
-if __name__=="__main__":
-    #testing
-    cog_transformer(sys.argv[1], ".")
+if __name__ == "__main__":
+    # Testing
+    log_file = cog_transformer(sys.argv[1], ".")
+    print(f"Logs written to: {log_file}")
 

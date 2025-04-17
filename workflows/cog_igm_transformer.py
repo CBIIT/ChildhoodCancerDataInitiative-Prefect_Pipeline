@@ -108,6 +108,7 @@ def cog_igm_transform(
             igm_success_count,
             igm_error_count,
             log_filename,
+            cog_transform_log,
         ) = cog_igm_json2tsv(manifest_df, form_parsing, working_path, output_path, dt)
 
         end_time = datetime.now()

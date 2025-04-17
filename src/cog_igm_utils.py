@@ -346,7 +346,8 @@ def cog_igm_json2tsv(
         if parsing in ["cog_only", "cog_and_igm"]:
             if len(df_reshape) > 0:
                 cog_form_parser(df_reshape, dt, cog_op, logger)
-                cog_transformer(df_reshape_file_name, cog_op, logger)
+                cog_transform_log = cog_transformer(df_reshape_file_name, cog_op, logger)
+                print(f"COG transform log: {cog_transform_log}")
                 
             else:
                 logger.error(
@@ -443,6 +444,7 @@ def cog_igm_json2tsv(
         igm_success_count,
         igm_error_count,
         log_filename,
+        cog_transform_log
     )
 
 
