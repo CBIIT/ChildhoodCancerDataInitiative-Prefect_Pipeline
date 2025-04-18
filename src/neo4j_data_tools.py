@@ -78,7 +78,7 @@ RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
     )
     node_id_cypher_query_query: str = (
         """
-MATCH (study:study{{study_id:"{study_id}"}})-[*0..7]-(node:{node})
+MATCH (study:study{{study_id:"{study_id}"}})<-[*0..7]-(node:{node})
 RETURN node.id AS id
 """
     )
@@ -997,6 +997,10 @@ def validate_DB_with_input_tsvs(
         studies_dataframe=ingested_studies_dataframe[["study_id", "node"]],
         logger=logger,
     )
+    for key in db_id_list_all_studies.keys():
+        print("db_id_list_all_studies:", key)
+        for subkey in db_id_list_all_studies[key].keys():
+            print("db_id_list_all_studies subkey:", subkey)
 
     logger.info("Start comparing db pulled id with ids in tsv files")
     comparison_df = compare_id_input_db(
