@@ -813,7 +813,8 @@ def compare_id_input_db(
     return comparison_df
 
 
-@flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
+#@flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
+@flow(log_prints=True)
 def pull_node_ids_all_studies_write(
     driver, studies_dataframe: DataFrame, logger
 ) -> str:
