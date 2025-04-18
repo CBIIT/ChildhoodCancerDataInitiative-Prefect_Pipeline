@@ -998,9 +998,9 @@ def validate_DB_with_input_tsvs(
         logger=logger,
     )
     for key in db_id_list_all_studies.keys():
-        print("db_id_list_all_studies:", key)
+        logger.info("db_id_list_all_studies:", key)
         for subkey in db_id_list_all_studies[key].keys():
-            print("db_id_list_all_studies subkey:", subkey)
+            logger.info("db_id_list_all_studies subkey:", subkey)
 
     logger.info("Start comparing db pulled id with ids in tsv files")
     comparison_df = compare_id_input_db(
