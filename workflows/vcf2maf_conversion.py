@@ -873,7 +873,7 @@ def runner(
             )
             sys.exit(1)
 
-    elif process_type == "check_env":
+    elif process_type == "env_check":
         
         runner_logger.info(">>> Check env setup ....")
 
