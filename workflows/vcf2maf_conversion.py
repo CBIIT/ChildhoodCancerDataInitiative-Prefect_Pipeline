@@ -125,7 +125,7 @@ def env_check(install_path: str):
                 "samtools --version",
                 "vep --help",
                 f"{install_path}/bcftools/bcftools --version",
-                "vcf2maf.pl --version",
+                "vcf2maf.pl --help",
 
             ]
         ).run()
