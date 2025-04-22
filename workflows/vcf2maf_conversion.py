@@ -124,6 +124,8 @@ def env_check(install_path: str):
                 "conda activate vcf2maf_38",
                 "samtools --version",
                 "vep --help",
+                f"{install_path}/bcftools/bcftools --version",
+
             ]
         ).run()
     )
@@ -746,7 +748,7 @@ def concantenation(bucket: str, manifest: str, dt: str):
     return subresponses, mega_maf  # return recorded responses and name of mega_maf
 
 
-DropDownChoices = Literal["env_setup", "convert", "concatenation", "env_tear_down"]
+DropDownChoices = Literal["env_setup", "convert", "concatenation", "env_tear_down", "env_check"]
 
 # TODO: make a new option to download output dir to S3 a given output dir name
 
@@ -871,6 +873,12 @@ def runner(
             )
             sys.exit(1)
 
+    elif process_type == "check_env":
+        
+        runner_logger.info(">>> Check env setup ....")
+
+        env_check(install_path)
+    
     elif process_type == "env_tear_down":
 
         runner_logger.info(">>> Tear down env setup ....")
