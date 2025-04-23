@@ -2,8 +2,9 @@ from prefect import flow, task, get_run_logger
 import os
 from typing import Literal
 import sys
-from src.utils import folder_dl, file_dl
+from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_date
 from src.manifest_liftover import liftover_tags
+from src.liftover_generic import liftover_to_tsv
 
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from src.commons.datamodel import GetDataModel, ReadDataModel
@@ -80,5 +81,17 @@ def submission_liftover(
         logger.info(
             f"Tags found in mapping file {mapping_file} match the lift from tag {lift_from_tag} and lift to tag {lift_to_tag}"
         )
+
+    liftover_output, logger_file_name = liftover_to_tsv(
+        mapping_file=mapping_file,
+        submission_path=submission_path,
+        lift_to_model=lift_to_model_file,
+        lift_to_props=lift_to_props_file,
+    )
+    upload_path = os.path.join(runner, "liftover_pipeline_output_" + get_date())
+    folder_ul(bucket=bucket, local_folder=liftover_output, destination=upload_path, sub_folder="")
+    file_ul(bucket=bucket, output_folder=upload_path, sub_folder="", newfile = logger_file_name)
+    logger.info(f"Uploaded liftover output folder {liftover_output} to bucket {bucket} at {upload_path}")
+    logger.info("Liftover pipeline completed successfully.")
 
     return None
