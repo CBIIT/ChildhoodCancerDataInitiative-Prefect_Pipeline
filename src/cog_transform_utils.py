@@ -94,7 +94,7 @@ def clean_column_underscore_simple_concat(
         (df[col_name1].notna() & df[col_name1] != "") & (df[col_name2].notna() & df[col_name2] != ""),
         df[col_name1].fillna("").astype(str)
         + f"_{str_val}",
-        df[col_name1].fillna("").astype(str),
+        "",
     )
 
     # Remove trailing "_" from the concatenated string
