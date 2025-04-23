@@ -75,7 +75,7 @@ def clean_column_underscore_concat(
     return df
 
 def clean_column_underscore_simple_concat(
-    df: pd.DataFrame, new_col_name: str, col_name1: str, str_val: str
+    df: pd.DataFrame, new_col_name: str, col_name1: str, col_name2: str, str_val: str
 ):
     """Concatenate values from col_name1 and a STRING value with '_' between them, handling NaNs
 
@@ -83,6 +83,7 @@ def clean_column_underscore_simple_concat(
         df (pd.DataFrame): DataFrame to perform changes
         new_col_name (str): New column name for dataframe for 2 concatenated columns
         col_name1 (str): first column to be concatenated
+        col_name2 (str): second column to be check if empty/NaN
         str_val (str): STRING value to be concatenated
 
     Returns:
@@ -90,7 +91,7 @@ def clean_column_underscore_simple_concat(
     """
     # Concatenate values from col_name1 and col_name2 with '_' between them, handling NaNs
     df[new_col_name] = np.where(
-        (df[col_name1].notna() & df[col_name1] != ""),
+        (df[col_name1].notna() & df[col_name1] != "") & (df[col_name2].notna() & df[col_name2] != ""),
         df[col_name1].fillna("").astype(str)
         + f"_{str_val}",
         df[col_name1].fillna("").astype(str),
@@ -552,7 +553,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     
     df_mutation = clean_column_underscore_simple_concat(
-        df_mutation, "treatment_response_id", "follow_up_id", "response",
+        df_mutation, "treatment_response_id", "follow_up_id", "response", "response"
     )
 
     # Delete old columns that are no longer needed
