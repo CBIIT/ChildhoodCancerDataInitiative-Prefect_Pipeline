@@ -166,7 +166,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
     logger = logging.getLogger("COG_Transformer")"""
-    log_filename = "COG_IGM_JSON2TSV_COG_Transform_" + get_date() + ".log"
+    log_filename = f"{output_dir}/COG_IGM_JSON2TSV_COG_Transform_" + get_date() + ".log"
     logger = get_logger(log_filename, "info")
     
     

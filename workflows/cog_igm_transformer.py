@@ -84,7 +84,7 @@ def cog_igm_transform(
             sys.exit(1)
 
         # load in the manifest
-        manifest_df = manifest_reader(manifest_path)
+        manifest_df = manifest_reader(manifest_path)[:1000]
 
         # create working dir name
         working_dir = f"COG_IGM_Transform_working"
@@ -142,7 +142,7 @@ def cog_igm_transform(
 
         # move log file to output dir and shutdown logging
         os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
-        os.rename(cog_transform_log, f"{output_path}/{cog_transform_log.replace(get_date(), dt)}")
+        #os.rename(cog_transform_log, f"{output_path}/{cog_transform_log.replace(get_date(), dt)}")
 
         # upload output dir
         folder_ul(
