@@ -555,7 +555,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     #format follow_up_ids
     df_mutation["follow_up_id"] = df_mutation["follow_up_id"].str.replace(" ", "_").str.replace("(", "").str.replace(")", "")
 
-    
+    #generate treatment_response_id
     df_mutation = clean_column_underscore_simple_concat(
         df_mutation, "treatment_response_id", "follow_up_id", "response", "response"
     )
