@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import sys
 from datetime import datetime
-from src.utils import get_time, get_date
+from src.utils import get_time, get_date, get_logger
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
 import logging  # Add this import
@@ -136,15 +136,6 @@ def clean_column_space_colon_concat(
     flow_run_name="cog-transformer-" + f"{get_time()}",
 )
 def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logger parameter
-    # Set up logging
-    log_filename = f"COG_IGM_JSON2TSV_cog_transformations_{get_time()}.log"
-    logging.basicConfig(
-        filename=log_filename,
-        level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(message)s",
-    )
-    logger = logging.getLogger("COG_Transformer")
-
     """
     Transforms and reshapes COG data to map back to SAS Labels and CCDI data model.
 
@@ -166,6 +157,19 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     Returns:
         log_filename (str): Name of the log file created during the transformation process.
     """
+    
+        # Set up logging
+    """log_filename = f"COG_IGM_JSON2TSV_cog_transformations_{get_time()}.log"
+    logging.basicConfig(
+        filename=log_filename,
+        level=logging.INFO,
+        format="%(asctime)s - %(levelname)s - %(message)s",
+    )
+    logger = logging.getLogger("COG_Transformer")"""
+    log_filename = "COG_IGM_JSON2TSV_COG_Transform_" + get_date() + ".log"
+    logger = get_logger(log_filename, "info")
+    
+    
     # Data Reshape/mutate
 
     runner_logger = get_run_logger()
@@ -321,9 +325,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     )
     df_mutation = clean_column_underscore_concat(
         df_mutation, "follow_up_id", "participant_id", "FOLLOW_UP.REP_EVAL_PD_TP"
-    )
-    df_mutation = clean_column_underscore_simple_concat(
-        df_mutation, "treatment_response_id", "follow_up_id", "response",
     )
     df_mutation = clean_column_space_colon_concat(
         df_mutation, "primary_site", "COG_UPR_DX.TOPO_ICDO", "COG_UPR_DX.TOPO_TEXT"
@@ -537,6 +538,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         r" \([A-Z0-9._]+\)", "", regex=True
     )
 
+    logger.info("Formatting follow_up_id and treatment_response_id columns")
+    
     # remove "follow_up_ids" for row that don't actually have follow-up data
     df_mutation["follow_up_id"] = np.where(
         df_mutation["follow_up_id"].str.contains("Follow-up", case=False, na=False),
@@ -545,7 +548,12 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     )
 
     #format follow_up_ids
-    df_mutation["follow_up_id"] = df_mutation["follow_up_id"].str.replace(" ", "_").str.replace("(", "").str.replace(")", "") 
+    df_mutation["follow_up_id"] = df_mutation["follow_up_id"].str.replace(" ", "_").str.replace("(", "").str.replace(")", "")
+
+    
+    df_mutation = clean_column_underscore_simple_concat(
+        df_mutation, "treatment_response_id", "follow_up_id", "response",
+    )
 
     # Delete old columns that are no longer needed
     df_mutation = df_mutation.drop(
@@ -587,6 +595,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "follow_up_id",
         "age_at_follow_up",
         "vital_status",
+        "treatment_response_id",
         "response",
         "treatment",
         "agent",
