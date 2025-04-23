@@ -90,11 +90,15 @@ def clean_column_underscore_simple_concat(
         pd.DataFrame: modified dataframe
     """
     # Concatenate values from col_name1 and col_name2 with '_' between them, handling NaNs
+    mask = (
+    df[col_name1].notna() & (df[col_name1] != "") &
+    df[col_name2].notna() & (df[col_name2] != "")
+)
+
     df[new_col_name] = np.where(
-        (df[col_name1].notna() & df[col_name1] != "") & (df[col_name2].notna() & df[col_name2] != ""),
-        df[col_name1].fillna("").astype(str)
-        + f"_{str_val}",
-        "",
+        mask,
+        df[col_name1].astype(str) + f"_{str_val}",
+        ""
     )
 
     # Remove trailing "_" from the concatenated string
