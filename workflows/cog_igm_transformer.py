@@ -84,7 +84,7 @@ def cog_igm_transform(
             sys.exit(1)
 
         # load in the manifest
-        manifest_df = manifest_reader(manifest_path)[:1000]
+        manifest_df = manifest_reader(manifest_path)
 
         # create working dir name
         working_dir = f"COG_IGM_Transform_working"
