@@ -171,7 +171,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
     logger = logging.getLogger("COG_Transformer")"""
-    log_filename = f"{output_dir}/COG_IGM_JSON2TSV_COG_Transform_" + get_date() + ".log"
+    log_filename = f"{output_dir}/COG_IGM_JSON2TSV_COG_Transform_"
     logger = get_logger(log_filename, "info")
     
     
@@ -543,7 +543,11 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         r" \([A-Z0-9._]+\)", "", regex=True
     )
 
-    logger.info("Formatting follow_up_id and treatment_response_id columns")
+    logger.info("Formatting follow_up_id, treatment_id and treatment_response_id columns")
+    logger.info("  Remove 'follow_up_ids' for rows that don't actually have follow-up data")
+    logger.info("  Reformat follow_up_ids by replacing spaces with '_' and removing parentheses")
+    logger.info("  Generate treatment_id by combining follow_up_id with '_treatment' for rows with treatment data")
+    logger.info("  Generate treatment_response_id by combining follow_up_id with '_response' for rows with response data")
     
     # remove "follow_up_ids" for row that don't actually have follow-up data
     df_mutation["follow_up_id"] = np.where(
@@ -555,6 +559,11 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     #format follow_up_ids
     df_mutation["follow_up_id"] = df_mutation["follow_up_id"].str.replace(" ", "_").str.replace("(", "").str.replace(")", "")
 
+    #generate treatment_id
+    df_mutation = clean_column_underscore_simple_concat(
+        df_mutation, "treatment_id", "follow_up_id", "treatment", "treatment"
+    )
+    
     #generate treatment_response_id
     df_mutation = clean_column_underscore_simple_concat(
         df_mutation, "treatment_response_id", "follow_up_id", "response", "response"
