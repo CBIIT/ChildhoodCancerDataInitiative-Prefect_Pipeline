@@ -171,7 +171,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         format="%(asctime)s - %(levelname)s - %(message)s",
     )
     logger = logging.getLogger("COG_Transformer")"""
-    log_filename = f"{output_dir}/COG_IGM_JSON2TSV_COG_Transform_"
+    log_filename = f"{output_dir}/COG_IGM_JSON2TSV_COG_Transform"
     logger = get_logger(log_filename, "info")
     
     
@@ -189,6 +189,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     # Load the data
     df_reshape = pd.read_csv(df_reshape_file_name, sep="\t", low_memory=False)
+    
+    logger.info("Starting row count: %d", len(df_reshape))
 
     df_reshape = df_reshape.applymap(lambda x: x.replace('\n\r', ' ').replace('\n', ' ').replace('\r', ' ') if isinstance(x, str) else x)
 
@@ -252,6 +254,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     # Apply the selected columns to the new mutation df
     df_mutation = df_reshape[selected_columns]
 
+    logger.info("Row count after selecting columns: %d", len(df_mutation))
+
     # drop rows where FOLLOW_UP.PT_INF_CU_FU_COL_IND == "No"
     df_mutation = df_mutation[
         df_mutation["FOLLOW_UP.PT_INF_CU_FU_COL_IND"] == "Yes"
@@ -274,6 +278,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
                 logger.error(
                     f"Error processing participant_id {upi}: {e}"
                 )
+
+    logger.info("Row count after check for follow-ups not in sequential order: %d", len(df_mutation))
 
     # Rename columns that do not have value changes
     df_mutation = df_mutation.rename(
@@ -339,6 +345,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         df_mutation, "CNS_category", "CNS_category", "CNS_category_other"
     )
 
+    logger.info("Row count after concatenation operations: %d", len(df_mutation))
+
     # Log calculation operations
     logger.info("Performing calculation operations:")
     logger.info("  Calculating 'age_at_diagnosis' as the sum of DEMOGRAPHY.DM_BRTHDAT and COG_UPR_DX.DATE_DIA")
@@ -353,6 +361,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     df_mutation["age_at_diagnosis"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["COG_UPR_DX.DATE_DIA"])
     df_mutation["age_at_follow_up"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["FOLLOW_UP.PT_FU_END_DT"])
 
+    logger.info("Row count after calculation operations: %d", len(df_mutation))
 
     # Log conditional operations
     logger.info("Performing conditional operations:")
@@ -376,7 +385,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     # Apply the conditions and choices to create the 'response' column
     df_mutation["response"] = np.select(conditions_response, choices_response, default="")
 
-
+    logger.info("Row count after conditional operations: %d", len(df_mutation))
     # Create CNS diagnosis
     # Select columns that start with 'CNS_DIAGNOSIS_DETAIL'
     cns_diagnosis_columns = df_mutation.filter(like="CNS_DIAGNOSIS_DETAIL.").columns
@@ -415,6 +424,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     df_mutation["treatment"] = (
         df_mutation["treatment"].str.replace(r";+", ";", regex=True).str.strip(";")
     )
+
+    logger.info("Row count after treatment operations: %d", len(df_mutation))
 
     #format race enum cases
     for index, row in df_mutation.iterrows():
@@ -528,6 +539,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         df_mutation["agent"].str.replace(r";+", ";", regex=True).str.strip(";")
     )
 
+    logger.info("Row count after agent operations: %d", len(df_mutation))
+
     # Step 8, temove the old agent columns
     df_mutation = df_mutation.drop(columns=agent_cols)
 
@@ -548,7 +561,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     logger.info("  Reformat follow_up_ids by replacing spaces with '_' and removing parentheses")
     logger.info("  Generate treatment_id by combining follow_up_id with '_treatment' for rows with treatment data")
     logger.info("  Generate treatment_response_id by combining follow_up_id with '_response' for rows with response data")
-    
+
     # remove "follow_up_ids" for row that don't actually have follow-up data
     df_mutation["follow_up_id"] = np.where(
         df_mutation["follow_up_id"].str.contains("Follow-up", case=False, na=False),
@@ -568,6 +581,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     df_mutation = clean_column_underscore_simple_concat(
         df_mutation, "treatment_response_id", "follow_up_id", "response", "response"
     )
+
+    logger.info("Row count after clean up operations: %d", len(df_mutation))
 
     # Delete old columns that are no longer needed
     df_mutation = df_mutation.drop(
@@ -594,6 +609,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     df_mutation = df_mutation.drop_duplicates()
 
+    logger.info("Row count after dropping duplicates: %d", len(df_mutation))
+
     output_order = [
         "participant_id",
         "race",
@@ -611,6 +628,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "vital_status",
         "treatment_response_id",
         "response",
+        "treatment_id",
         "treatment",
         "agent",
         "registry_stage_code",
