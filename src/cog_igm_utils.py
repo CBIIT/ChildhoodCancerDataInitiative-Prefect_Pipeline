@@ -147,7 +147,7 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
     runner_logger = get_run_logger()
 
     # throttle submission of tasks to avoid overwhelming the system
-    time.sleep(1)
+    time.sleep(2)
     #setup with list of dicts to iterate over and then run with map
     submit_list = []
 

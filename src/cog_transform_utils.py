@@ -256,10 +256,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     logger.info("Row count after selecting columns: %d", len(df_mutation))
 
-    # drop rows where FOLLOW_UP.PT_INF_CU_FU_COL_IND == "No"
-    df_mutation = df_mutation[
-        df_mutation["FOLLOW_UP.PT_INF_CU_FU_COL_IND"] == "Yes"
-    ]
 
     # Check for follow-ups not in sequential order
     logger.info("Checking for sequential order of follow-ups")
