@@ -578,6 +578,12 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         df_mutation, "treatment_response_id", "follow_up_id", "response", "response"
     )
 
+    # Check and update diagnosis_id column
+    logger.info("  Validating and updating 'diagnosis_id' column")
+    df_mutation["diagnosis_id"] = df_mutation["diagnosis_id"].apply(
+        lambda x: f"{x}_diagnosis" if pd.notna(x) and x != "" and not x.split("_")[-1].isdigit() else x
+    )
+
     logger.info("Row count after clean up operations: %d", len(df_mutation))
 
     # Delete old columns that are no longer needed
