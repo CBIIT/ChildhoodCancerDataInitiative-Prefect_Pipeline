@@ -3,7 +3,7 @@ import sys
 import pandas as pd
 from prefect import flow, task, get_run_logger
 from typing import TypeVar
-from src.utils import get_logger, get_date
+from src.utils import get_logger, get_date, get_time
 
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from src.commons.datamodel import ReadDataModel
@@ -320,7 +320,7 @@ def liftover_to_tsv(
     log_name = "liftover_workflow_" + get_date() + ".log"
 
     output_folder = (
-        os.path.basename(submission_folder.strip("/")) + "_liftover_output_" + get_date()
+        os.path.basename(submission_folder.strip("/")) + "_liftover_output_" + get_time()
     )
     os.makedirs(output_folder, exist_ok=True)
     logger.info(f"Created output folder: {output_folder}")
