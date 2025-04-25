@@ -92,7 +92,7 @@ def find_unlifted_props(
         print_unlifted_df = unlifted_props.to_markdown(
             tablefmt="rounded_grid", index=False
         ).replace("\n", "\n\t")
-        logger.warning(f"Unlifted props: \n{print_unlifted_df}")
+        logger.warning(f"Unlifted props: \n\t{print_unlifted_df}")
         print(f"Unlifted props: \n\t{print_unlifted_df}")
     else:
         logger.info(f"All non-empty props in submission tsv files are lifted.")

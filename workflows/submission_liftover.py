@@ -43,6 +43,8 @@ def submission_liftover(
     logger.info(f"downloaded lift from model file and props file: {lift_from_model_file}, {list_from_props_file}")
     os.rename(lift_from_model_file, f"{lift_from_tag}_{lift_from_model_file}")
     os.rename(list_from_props_file, f"{lift_from_tag}_{list_from_props_file}")
+    lift_from_model_file = f"{lift_from_tag}_{lift_from_model_file}"
+    list_from_props_file = f"{lift_from_tag}_{list_from_props_file}"
     logger.info(
         f"Model files have been renamed into: {lift_from_tag}_{lift_from_model_file} and {lift_from_tag}_{list_from_props_file}"
     )
@@ -51,6 +53,8 @@ def submission_liftover(
     logger.info(f"downloaded lift to model file and props file: {lift_to_model_file}, {lift_to_props_file}")
     os.rename(lift_to_model_file, f"{lift_to_tag}_{lift_to_model_file}")
     os.rename(lift_to_props_file, f"{lift_to_tag}_{lift_to_props_file}")
+    lift_to_model_file = f"{lift_to_tag}_{lift_to_model_file}"
+    lift_to_props_file = f"{lift_to_tag}_{lift_to_props_file}"
     logger.info(
         f"Model files have been renamed into: {lift_to_tag}_{lift_to_model_file} and {lift_to_tag}_{lift_to_props_file}"
     )
