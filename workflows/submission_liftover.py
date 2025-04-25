@@ -2,7 +2,7 @@ from prefect import flow, task, get_run_logger
 import os
 from typing import Literal
 import sys
-from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_date
+from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_time
 from src.manifest_liftover import liftover_tags
 from src.liftover_generic import liftover_to_tsv
 
@@ -92,7 +92,7 @@ def submission_liftover(
         lift_to_model=lift_to_model_file,
         lift_to_props=lift_to_props_file,
     )
-    upload_path = os.path.join(runner, "liftover_pipeline_output_" + get_date())
+    upload_path = os.path.join(runner, "liftover_pipeline_output_" + get_time())
     folder_ul(bucket=bucket, local_folder=liftover_output, destination=upload_path, sub_folder="")
     file_ul(bucket=bucket, output_folder=upload_path, sub_folder="", newfile = logger_file_name)
     logger.info(f"Uploaded liftover output folder {liftover_output} to bucket {bucket} at {upload_path}")

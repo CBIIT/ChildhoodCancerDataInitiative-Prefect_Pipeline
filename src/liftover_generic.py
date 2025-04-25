@@ -246,16 +246,14 @@ def single_node_liftover(
                 print(
                     f"Property {row_property_to} in template node {lift_to_node} contains concatenated values from multiple properties from the same node in manifest"
                 )
-        print("before dropping empty rows")
-        print(lift_to_n_df)
-        print(lift_to_n_df.shape[0])
         # remove any row with all missing value
         lift_to_n_df.dropna(axis=0, how="all", inplace=True)
         # add value to the type node
         lift_to_n_df["type"] = lift_to_node
-        print("after dropping empty rows")
-        print(lift_to_n_df)
-        print(lift_to_n_df.shape[0])
+        logger.info(
+            f"After dropping empty rows, {lift_to_n_df.shape[0]} row(s) from lift_from node {n} will be added to {lift_to_node}"
+        )
+        print(f"After dropping empty rows, {lift_to_n_df.shape[0]} row(s) from lift_from node {n} will be added to {lift_to_node}")
         # only append the lift_to_n_df to the lift_to_df if it has any unempty rows
         if lift_to_n_df.shape[0] == 0:
             pass
