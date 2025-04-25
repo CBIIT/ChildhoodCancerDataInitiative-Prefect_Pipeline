@@ -205,6 +205,7 @@ def single_node_liftover(
     # for each manifest node, create a separate dataframe in the mapped template node
     # after liftover, append the df to the concatenate_df
     for n in manifest_nodes:
+        print(f"adding {n} to {lift_to_node} sheet")
         # n is the manifest node name, not necessarily equals to template node
         lift_to_n_df = model_to_df(
             model_file=lift_to_model_file,
@@ -245,16 +246,24 @@ def single_node_liftover(
                 print(
                     f"Property {row_property_to} in template node {lift_to_node} contains concatenated values from multiple properties from the same node in manifest"
                 )
+        print("before dropping empty rows")
+        print(lift_to_n_df)
+        print(lift_to_n_df.shape[0])
         # remove any row with all missing value
         lift_to_n_df.dropna(axis=0, how="all", inplace=True)
         # add value to the type node
         lift_to_n_df["type"] = lift_to_node
-        logger.info(lift_to_n_df)
+        print("after dropping empty rows")
         print(lift_to_n_df)
-        # add lift_to_n_df to the lift_to_df
-        lift_to_df = pd.concat(
-            [lift_to_df, lift_to_n_df], ignore_index=True, axis=0
-        )
+        print(lift_to_n_df.shape[0])
+        # only append the lift_to_n_df to the lift_to_df if it has any unempty rows
+        if lift_to_n_df.shape[0] == 0:
+            pass
+        else:
+            # add lift_to_n_df to the lift_to_df
+            lift_to_df = pd.concat(
+                [lift_to_df, lift_to_n_df], ignore_index=True, axis=0
+            )
     # handle default value
     mapping_df_complete = pd.read_csv(full_mapping_file, sep="\t", header=0)
     mapping_df_complete_lift_to = mapping_df_complete[
