@@ -93,7 +93,7 @@ def find_unlifted_props(
             tablefmt="rounded_grid", index=False
         ).replace("\n", "\n\t")
         logger.warning(f"Unlifted props: \n{print_unlifted_df}")
-        print(f"Unlifted props: \n{print_unlifted_df}")
+        print(f"Unlifted props: \n\t{print_unlifted_df}")
     else:
         logger.info(f"All non-empty props in submission tsv files are lifted.")
         print(f"All non-empty props in submission tsv files are lifted.")
@@ -112,7 +112,7 @@ def model_to_df(model_file: str, props_file: str, node_type: str) -> DataFrame:
     Returns:
         DataFrame: a dataframe
     """
-    readmodel = ReadDataModel(model_file=model_file, props_file=props_file)
+    readmodel = ReadDataModel(model_file=model_file, prop_file=props_file)
     model_obj = readmodel._get_model()
     node_prop_list = readmodel._get_node_prop_list(
         model_obj=model_obj, node_name=node_type
