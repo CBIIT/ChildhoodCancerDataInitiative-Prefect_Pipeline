@@ -114,7 +114,7 @@ def model_to_df(model_file: str, props_file: str, node_type: str) -> DataFrame:
     """
     readmodel = ReadDataModel(model_file=model_file, prop_file=props_file)
     model_obj = readmodel._get_model()
-    node_prop_list = readmodel._get_node_prop_list(
+    node_prop_list = readmodel.get_node_prop_list(
         model_obj=model_obj, node_name=node_type
     )
     node_prop_list = ["type"] + node_prop_list
