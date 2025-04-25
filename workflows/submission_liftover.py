@@ -84,7 +84,7 @@ def submission_liftover(
 
     liftover_output, logger_file_name = liftover_to_tsv(
         mapping_file=mapping_file,
-        submission_path=submission_path,
+        submission_folder=submission_path,
         lift_to_model=lift_to_model_file,
         lift_to_props=lift_to_props_file,
     )
