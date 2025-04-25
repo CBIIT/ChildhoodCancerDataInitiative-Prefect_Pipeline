@@ -220,6 +220,8 @@ def single_node_liftover(
             na_values=["NA", "na", "N/A", "n/a", ""],
             dtype="string",
         )
+        logger.info(f"lift from node {n} contains {lift_from_df.shape[0]} row(s)")
+        print(f"lift from node {n} contains {lift_from_df.shape[0]} row(s)")
         n_mapping = mapping_df[
             (mapping_df["lift_to_node"] == lift_to_node)
             & (mapping_df["lift_from_node"] == n)
