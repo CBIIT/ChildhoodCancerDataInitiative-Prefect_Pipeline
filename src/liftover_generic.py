@@ -249,6 +249,8 @@ def single_node_liftover(
             lift_to_n_df.dropna(axis=0, how="all", inplace=True)
             # add value to the type node
             lift_to_n_df["type"] = lift_to_node
+            logger.info(lift_to_n_df)
+            print(lift_to_n_df)
             # add lift_to_n_df to the lift_to_df
             lift_to_df = pd.concat(
                 [lift_to_df, lift_to_n_df], ignore_index=True, axis=0
@@ -309,7 +311,7 @@ def liftover_to_tsv(
     log_name = "liftover_workflow_" + get_date() + ".log"
 
     output_folder = (
-        os.path.basename(submission_folder) + "_liftover_output_" + get_date()
+        os.path.basename(submission_folder.strip("/")) + "_liftover_output_" + get_date()
     )
     os.makedirs(output_folder, exist_ok=True)
     logger.info(f"Created output folder: {output_folder}")
