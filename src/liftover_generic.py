@@ -245,16 +245,16 @@ def single_node_liftover(
                 print(
                     f"Property {row_property_to} in template node {lift_to_node} contains concatenated values from multiple properties from the same node in manifest"
                 )
-            # remove any row with all missing value
-            lift_to_n_df.dropna(axis=0, how="all", inplace=True)
-            # add value to the type node
-            lift_to_n_df["type"] = lift_to_node
-            logger.info(lift_to_n_df)
-            print(lift_to_n_df)
-            # add lift_to_n_df to the lift_to_df
-            lift_to_df = pd.concat(
-                [lift_to_df, lift_to_n_df], ignore_index=True, axis=0
-            )
+        # remove any row with all missing value
+        lift_to_n_df.dropna(axis=0, how="all", inplace=True)
+        # add value to the type node
+        lift_to_n_df["type"] = lift_to_node
+        logger.info(lift_to_n_df)
+        print(lift_to_n_df)
+        # add lift_to_n_df to the lift_to_df
+        lift_to_df = pd.concat(
+            [lift_to_df, lift_to_n_df], ignore_index=True, axis=0
+        )
     # handle default value
     mapping_df_complete = pd.read_csv(full_mapping_file, sep="\t", header=0)
     mapping_df_complete_lift_to = mapping_df_complete[
