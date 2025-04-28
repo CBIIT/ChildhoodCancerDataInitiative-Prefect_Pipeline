@@ -13,7 +13,7 @@ from src.commons.datamodel import GetDataModel, ReadDataModel
 FromAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc", "unknown"]
 ToAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc"]
 
-@task(name="extract lifto to tag in mapping file", log_prints=True)
+@task(name="extract lift to tag in mapping file", log_prints=True)
 def lift_to_tag_in_mapping(liftover_mapping_path: str) -> str:
     """Get the lift to tag from the mapping file.
 
@@ -90,7 +90,7 @@ def submission_liftover(
         logger.info("You didn't provided a lift from acronym. No model or props file of lift from will be downloaded")
 
     # list all the files and directories in the current directory
-    logger.info(f"all the files in current directory: {*os.listdir(),}")
+    # logger.info(f"all the files in current directory: {*os.listdir(),}")
 
     # download the set of submission files
     folder_dl(bucket=bucket, remote_folder=submission_path)
