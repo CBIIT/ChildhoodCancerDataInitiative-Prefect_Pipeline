@@ -151,6 +151,22 @@ def identify_file_type(tsv_folder: str) -> dict:
     return return_dict
 
 
+def lift_from_type_df(type_mapping_dict: dict) -> DataFrame:
+    """This function creates a dataframe of the lift from type
+
+    Args:
+        type_mapping_dict (dict): a dictionary of file type with node as key and a list of file type as value
+
+    Returns:
+        DataFrame: a dataframe of the lift from filename and type
+    """
+    # create an empty dataframe with the column name of the node type
+    lift_from_df = pd.DataFrame(columns=["File Name", "Type"])
+    for k, v in type_mapping_dict.items():
+        item_df = pd.DataFrame({"File Name": [v], "Type": [k]})
+        lift_from_df = pd.concat([lift_from_df, item_df], ignore_index=True)
+    return lift_from_df
+
 def single_node_liftover(
     mapping_df: DataFrame,
     full_mapping_file: str,
@@ -327,6 +343,15 @@ def liftover_to_tsv(
 
     # may be used in the future
     # lift_to_model_read = ReadDataModel(model_file=lift_to_model, prop_file=lift_to_props)
+    
+    # print a table of submission tsv filee and their types
+    lift_from_mapping_dict = identify_file_type(tsv_folder=submission_folder)
+    lift_from_mapping_df = lift_from_type_df(type_mapping_dict=lift_from_mapping_dict)
+    print_file_type_str = lift_from_mapping_df.to_markdown(
+        tablefmt="rounded_grid", index=False
+    ).replace("\n", "\n\t")
+    logger.info(f"File type in submission tsv files: \n\t{print_file_type_str}")
+    print(f"File type in submission tsv files: \n\t{print_file_type_str}")
 
     # find non empty metadata tsv files (lift from)
     non_empty_props = find_non_empty_props(tsv_folder=submission_folder)

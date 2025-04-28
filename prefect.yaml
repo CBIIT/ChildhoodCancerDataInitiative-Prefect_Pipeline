@@ -1059,6 +1059,7 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
+      lift_from_tag: ""
 
     # pull action to overwrite from file pull action
     pull:
