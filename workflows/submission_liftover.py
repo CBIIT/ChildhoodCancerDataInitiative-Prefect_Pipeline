@@ -1,6 +1,7 @@
 from prefect import flow, task, get_run_logger
 import os
 from typing import Literal
+import pandas as pd
 import sys
 from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_time
 from src.manifest_liftover import liftover_tags
@@ -9,15 +10,39 @@ from src.liftover_generic import liftover_to_tsv
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from src.commons.datamodel import GetDataModel, ReadDataModel
 
-AcrynomDropDown = Literal["ccdi", "cds"]
+FromAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc", "unknown"]
+ToAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc"]
+
+@task(name="extract lifto to tag in mapping file", log_prints=True)
+def lift_to_tag_in_mapping(liftover_mapping_path: str) -> str:
+    """Get the lift to tag from the mapping file.
+
+    Args:
+        liftover_mapping_path (str): path to the mapping file
+
+    Returns:
+        str: lift to tag
+    """
+    mapping_df = pd.read_csv(liftover_mapping_path, sep="\t")
+    lift_to = mapping_df["lift_to_version"].dropna().unique().tolist()
+    if len(lift_to) > 1:
+        print(
+            f"More than one lift to versions were found in mapping file: {*lift_to,}"
+        )
+        raise ValueError(
+            f"More than one lift to versions were found in mapping file: {*lift_to,}"
+        )
+    else:
+        pass
+    return lift_to[0]
 
 @flow(name="Submission liftover", log_prints=True)
 def submission_liftover(
     bucket: str,
     submission_path: str,
-    lift_from_acronym: AcrynomDropDown,
+    lift_from_acronym: FromAcrynomDropDown,
     lift_from_tag: str,
-    lift_to_acronym: AcrynomDropDown,
+    lift_to_acronym: ToAcrynomDropDown,
     lift_to_tag: str,
     liftover_mapping_filepath: str,
     runner: str,
@@ -38,16 +63,7 @@ def submission_liftover(
 
     getmodel = GetDataModel()
 
-    # download the lift from model and props file. Then rename them
-    lift_from_model_file, list_from_props_file = getmodel.dl_model_files(commons_acronym=lift_from_acronym, tag=lift_from_tag)
-    logger.info(f"downloaded lift from model file and props file: {lift_from_model_file}, {list_from_props_file}")
-    os.rename(lift_from_model_file, f"{lift_from_tag}_{lift_from_model_file}")
-    os.rename(list_from_props_file, f"{lift_from_tag}_{list_from_props_file}")
-    lift_from_model_file = f"{lift_from_tag}_{lift_from_model_file}"
-    list_from_props_file = f"{lift_from_tag}_{list_from_props_file}"
-    logger.info(
-        f"Model files have been renamed into: {lift_from_tag}_{lift_from_model_file} and {lift_from_tag}_{list_from_props_file}"
-    )
+    # downloadi lift to models files first
     # download the lift to model and props file. Then rename them
     lift_to_model_file, lift_to_props_file = getmodel.dl_model_files(commons_acronym=lift_to_acronym, tag=lift_to_tag)
     logger.info(f"downloaded lift to model file and props file: {lift_to_model_file}, {lift_to_props_file}")
@@ -58,6 +74,21 @@ def submission_liftover(
     logger.info(
         f"Model files have been renamed into: {lift_to_tag}_{lift_to_model_file} and {lift_to_tag}_{lift_to_props_file}"
     )
+
+    if lift_from_acronym != "unknown":
+        # download the lift from model and props file. Then rename them
+        lift_from_model_file, list_from_props_file = getmodel.dl_model_files(commons_acronym=lift_from_acronym, tag=lift_from_tag)
+        logger.info(f"downloaded lift from model file and props file: {lift_from_model_file}, {list_from_props_file}")
+        os.rename(lift_from_model_file, f"{lift_from_tag}_{lift_from_model_file}")
+        os.rename(list_from_props_file, f"{lift_from_tag}_{list_from_props_file}")
+        lift_from_model_file = f"{lift_from_tag}_{lift_from_model_file}"
+        list_from_props_file = f"{lift_from_tag}_{list_from_props_file}"
+        logger.info(
+            f"Model files have been renamed into: {lift_from_tag}_{lift_from_model_file} and {lift_from_tag}_{list_from_props_file}"
+        )
+    else:
+        logger.info("You didn't provided a lift from acronym. No model or props files of lift from will be downloaded")
+
     # list all the files and directories in the current directory
     logger.info(f"all the files in current directory: {*os.listdir(),}")
 
@@ -70,21 +101,35 @@ def submission_liftover(
     mapping_file = os.path.basename(liftover_mapping_filepath)
     logger.info(f"Downloaded mapping file {mapping_file} from bucket {bucket}")
 
-    # check if the tag version in the mapping file matches to
-    mapping_lift_from_tag, mapping_lift_to_tag = liftover_tags(liftover_mapping_path=mapping_file)
-    if mapping_lift_from_tag != lift_from_tag or mapping_lift_to_tag != lift_to_tag:
-        logger.error(
-            f"""Mapping file contains tags that do not match to what you provided:
+    if lift_from_acronym != "unknown":
+        # check if the tag version in the mapping file matches to
+        mapping_lift_from_tag, mapping_lift_to_tag = liftover_tags(liftover_mapping_path=mapping_file)
+        if mapping_lift_from_tag != lift_from_tag or mapping_lift_to_tag != lift_to_tag:
+            logger.error(
+                f"""Mapping file contains tags that do not match to what you provided:
 - mapping file lift from tag {mapping_lift_from_tag}
 - provided lift from tag {lift_from_tag}
 - mapping file lift to tag {mapping_lift_to_tag}
 - provided lift to tag {lift_to_tag}"""
-        )
-        raise ValueError(f"Mapping file {mapping_file} contains tags that do not match the provided tags.")
+            )
+            raise ValueError(f"Mapping file {mapping_file} contains tags that do not match the provided tags.")
+        else:
+            logger.info(
+                f"Tags found in mapping file {mapping_file} match the lift from tag {lift_from_tag} and lift to tag {lift_to_tag}"
+            )
     else:
-        logger.info(
-            f"Tags found in mapping file {mapping_file} match the lift from tag {lift_from_tag} and lift to tag {lift_to_tag}"
-        )
+        mapping_lift_to_tag = lift_to_tag_in_mapping(liftover_mapping_path=mapping_file)
+        if mapping_lift_to_tag != lift_to_tag:
+            logger.error(
+                f"""Mapping file contains tags that do not match to what you provided:
+- mapping file lift to tag {mapping_lift_to_tag}
+- provided lift to tag {lift_to_tag}"""
+            )
+            raise ValueError(f"Mapping file {mapping_file} contains tags that do not match the provided tags.")
+        else:
+            logger.info(
+                f"Tag found in mapping file {mapping_file} match the lift to tag {lift_to_tag}"
+            )
 
     liftover_output, logger_file_name = liftover_to_tsv(
         mapping_file=mapping_file,
