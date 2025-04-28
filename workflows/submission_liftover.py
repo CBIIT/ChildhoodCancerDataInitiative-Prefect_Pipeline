@@ -47,18 +47,18 @@ def submission_liftover(
     liftover_mapping_filepath: str,
     runner: str,
 ) -> None:
-    """A generalized liftover pipeline that can liftover 
+    """A generalized liftover pipeline that can liftover a set of submission tsv files to another version of submission tsv files.
 
     Args:
         bucket (str): bucket name
         submission_path (str): path to the submission file(s) under bucket, e.g. "submissions/submission_tsv_files/"
-        lift_from_acronym (AcrynomDropDown): lift from acronym
-        lift_from_tag (str): tag of lift from
-        lift_to_acronym (AcrynomDropDown): lift to acronym
+        lift_from_acronym (AcrynomDropDown): lift from acronym. Choose one from the dropdown list
+        lift_from_tag (str): tag of lift from. This can be left empty if lift_from_acronym is UNKNOWN
+        lift_to_acronym (AcrynomDropDown): lift to acronym. Choose one from the dropdown list
         lift_to_tag (str): tag of lift to
         liftover_mapping_filepath (str): Mapping file path under bucket, e.g., "mapping_files/ccdi_2.1.0_to_cds_6.0.2_mapping.tsv"
         runner (str): unique runner identifier
-    """     
+    """
     logger = get_run_logger()
 
     getmodel = GetDataModel()
@@ -87,7 +87,7 @@ def submission_liftover(
             f"Model files have been renamed into: {lift_from_tag}_{lift_from_model_file} and {lift_from_tag}_{list_from_props_file}"
         )
     else:
-        logger.info("You didn't provided a lift from acronym. No model or props files of lift from will be downloaded")
+        logger.info("You didn't provided a lift from acronym. No model or props file of lift from will be downloaded")
 
     # list all the files and directories in the current directory
     logger.info(f"all the files in current directory: {*os.listdir(),}")
