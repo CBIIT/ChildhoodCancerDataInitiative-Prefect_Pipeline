@@ -91,7 +91,7 @@ def submission_liftover(
 
     Args:
         bucket (str): bucket name
-        submission_path (str): folder path contains a set of tsv files under bucket OR file path of CCDI metadata manifest , e.g. "submissions/submission_tsv_files/"
+        submission_path (str): folder path contains a set of tsv files under bucket, e.g. "submissions/submission_tsv_files/" OR file path of CCDI metadata manifest (The lift_from_acrynom must be CCDI in this case)
         lift_from_acronym (AcrynomDropDown): lift from acronym. Choose one from the dropdown list
         lift_from_tag (str): tag of lift from. This can be left empty if lift_from_acronym is UNKNOWN
         lift_to_acronym (AcrynomDropDown): lift to acronym. Choose one from the dropdown list
