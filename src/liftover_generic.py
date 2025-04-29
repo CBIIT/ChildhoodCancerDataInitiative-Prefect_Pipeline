@@ -117,7 +117,8 @@ def model_to_df(model_file: str, props_file: str, node_type: str) -> DataFrame:
     node_prop_list = readmodel.get_node_props_list(
         model_obj=model_obj, node_name=node_type
     )
-    node_prop_list = ["type"] + node_prop_list
+    parent_nodes_props = get_parent_nodes_props(model_obj=model_obj, node_name=node_type)
+    node_prop_list = ["type"] + parent_nodes_props + node_prop_list
     return_df = pd.DataFrame(columns=node_prop_list)
     return return_df
 
@@ -167,6 +168,34 @@ def lift_from_type_df(type_mapping_dict: dict) -> DataFrame:
         lift_from_df = pd.concat([lift_from_df, item_df], ignore_index=True)
     return lift_from_df
 
+
+def get_parent_nodes_props(model_obj, node_name: str) -> list[str]:
+    """Returns a list of parent nodes of the given node and their key propreties
+
+    Args:
+        model_obj (_type_): MDF model object
+        node_name (str): node name
+
+    Returns:
+        list[str]: A list of str that can be used as linkage property in the template
+    """    
+    return_list = []
+    # get all the parent nodes of a given node
+    edges_list = [e.triplet for e in model_obj.edges_by_src(model_obj.nodes[node_name])]
+    for edge in edges_list:
+        edge_parent_node_name = edge[2]
+        parent_node_obj = model_obj.nodes[edge_parent_node_name]
+        parent_node_obj_props_name = [x for x in parent_node_obj.props]
+        for prop in parent_node_obj_props_name:
+            prop_obj = parent_node_obj.props[prop]
+            # check if the prop is the key prop
+            if prop_obj.is_key:
+                return_list.append(edge_parent_node_name + "." + prop)
+            else:
+                pass
+    return return_list
+
+@task(task_run_name= "single node liftover of {lift_to_node}", log_prints=True)
 def single_node_liftover(
     mapping_df: DataFrame,
     full_mapping_file: str,
