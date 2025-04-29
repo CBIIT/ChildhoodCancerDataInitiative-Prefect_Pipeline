@@ -1,7 +1,7 @@
 import os
 import sys
 import pandas as pd
-from prefect import flow, task, get_run_logger
+from prefect import flow, task
 from typing import TypeVar
 from src.utils import get_logger, get_date, get_time
 

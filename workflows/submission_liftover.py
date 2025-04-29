@@ -8,7 +8,7 @@ from src.manifest_liftover import liftover_tags
 from src.liftover_generic import liftover_to_tsv
 
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
-from src.commons.datamodel import GetDataModel, ReadDataModel
+from src.commons.datamodel import GetDataModel
 
 FromAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc", "unknown"]
 ToAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc"]
