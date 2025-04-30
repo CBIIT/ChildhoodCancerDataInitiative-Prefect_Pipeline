@@ -1,7 +1,6 @@
 import os
 import sys
 import pandas as pd
-import json
 from prefect import flow, task
 from typing import TypeVar
 from src.utils import get_logger, get_date, get_time
@@ -60,7 +59,7 @@ def find_unlifted_props(
         dict: a dictionary of unlifted props with node as key and a list of unlifted props as value
     """
     non_empty_props = find_non_empty_props(tsv_folder=tsv_folder)
-    print(json.dumps(non_empty_props,indent=4))
+    #print(json.dumps(non_empty_props,indent=4))
     mapping_df = pd.read_csv(liftover_mapping_filepath, sep="\t", header=0)
     mapping_df_mapped =  mapping_df.dropna(subset=["lift_from_node","lift_from_property","lift_to_node","lift_to_property"], how="any", ignore_index=True)
     mapping_df_lift_from = mapping_df_mapped[["lift_from_node", "lift_from_property"]]
@@ -69,9 +68,9 @@ def find_unlifted_props(
     unlifted_props = pd.DataFrame(columns=["node", "unlifted_property"])
 
     for node in non_empty_props.keys():
-        print(node)
+        #print(node)
         node_nonempty_props = non_empty_props[node]
-        print(node_nonempty_props)
+        #print(node_nonempty_props)
         for prop in node_nonempty_props:
             filtered_mapping_df = mapping_df_lift_from[
                 (mapping_df_lift_from["lift_from_node"] == node)
