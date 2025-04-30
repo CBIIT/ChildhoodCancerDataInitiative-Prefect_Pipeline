@@ -103,6 +103,9 @@ def submission_liftover(
 
     getmodel = GetDataModel()
 
+    # define the upload path for outputs in the bucket 
+    upload_path = os.path.join(runner, "liftover_pipeline_output_" + get_time())
+
     # downloadi lift to models files first
     # download the lift to model and props file. Then rename them
     lift_to_model_file, lift_to_props_file = getmodel.dl_model_files(
@@ -149,6 +152,13 @@ def submission_liftover(
         logger.info(f"Downloaded CCDI manifest file {ccdi_manifest} from bucket {bucket}")
         # parse ccdi manifest into a set of tsv files
         submission_path = parse_ccdi_manifest_to_tsv(manifest_path=ccdi_manifest)
+        # upload the parsed tsv files to the bucket
+        folder_ul(
+            bucket=bucket,
+            local_folder=submission_path,
+            destination=upload_path,
+            sub_folder="",
+        )
     # if the lift_from_acronym is else, download the set of submission files
     else:
         # download the set of submission files
@@ -204,7 +214,7 @@ def submission_liftover(
         lift_to_model=lift_to_model_file,
         lift_to_props=lift_to_props_file,
     )
-    upload_path = os.path.join(runner, "liftover_pipeline_output_" + get_time())
+
     folder_ul(
         bucket=bucket,
         local_folder=liftover_output,
