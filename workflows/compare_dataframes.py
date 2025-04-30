@@ -124,4 +124,4 @@ def compare_dataframes_runner(
 
     runner_logger.info(f"Files uploaded to bucket: {bucket}/{runner}/{output_dir}")
     # Upload the output files to S3
-    folder_ul(local_folder=output_dir, bucket=bucket, destination=runner)
+    folder_ul(local_folder=output_dir, bucket=bucket, destination=runner, sub_folder="")
