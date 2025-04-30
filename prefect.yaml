@@ -2132,3 +2132,37 @@ deployments:
       name: ccdi-curation-8gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
+
+
+  - name: TEST-compare-dataframes-v3
+    version: null
+    tags: ["TEST","V3"]
+    description: null
+    entrypoint: workflows/compare_dataframes.py:compare_dataframes_runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "your_uniq_id"
+      file_path_1: ""
+      file_path_2: ""
+      join_column_1: ""
+      join_column_2: ""
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1718-compare-manifest
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
