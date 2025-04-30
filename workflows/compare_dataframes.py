@@ -91,8 +91,8 @@ def compare_dataframes_runner(
         file_path_1 (str): File path of the first file to compare
         file_path_2 (str): File path of the second file to compare
         runner (str): Unique runner name (also becomes directory output path)
-        join_column1 (str): Column name in the first DataFrame to join on
-        join_column2 (str): Column name in the second DataFrame to join on
+        join_column_1 (str): Column name in the first DataFrame to join on
+        join_column_2 (str): Column name in the second DataFrame to join on
     """
 
     # create a logging object
