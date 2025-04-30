@@ -334,6 +334,19 @@ def single_node_liftover(
     else:
         # no action if no default_value column found in the mapping file
         pass
+
+    # report error if the study node has more than one entry
+    if lift_to_node == "study" or lift_to_node == "program":
+        if lift_to_df.shape[0] > 1:
+            logger.error(
+                f"More than one entry found in study node {lift_to_node} after liftover. Please address this issue. Usually, only one data entry is expected."
+            )
+            print(
+                f"More than one entry found in study node {lift_to_node} after liftover. Please address this issue. Usually, only one data entry is expected."
+            )
+        else:
+            pass
+
     # save the dataframe lift_to_df to a tsv file
     tsv_name = lift_to_node + "_" + get_date() + ".tsv"
     lift_to_df.to_csv(
