@@ -4,7 +4,7 @@ from datetime import datetime
 import os
 from src.utils import get_time, file_dl, folder_ul
 
-date_stamp = get_time
+date_stamp = get_time()
 
 output_dir = f"file_compare_{date_stamp}"
 
