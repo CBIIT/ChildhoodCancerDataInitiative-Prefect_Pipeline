@@ -9,7 +9,7 @@ import sys
 import uuid
 from bento_mdf import MDF
 from pathlib import Path
-from src.utils import get_logger
+from utils import get_logger
 
 # String values that we must assume
 FOREIGN_ID_SUFFIX = '_id'
@@ -260,12 +260,12 @@ def make_uuid(node_type, study_id, row, foreign_ids):
         row_str = ''.join([
             str(row[prop]) for prop in identifying_props
         ]) if identifying_props else ''
+        row_str = ''.join(row_str + foreign_str)
 
     uuid_name = ''.join([
         node_type,
         study_id,
-        row_str,
-        foreign_str
+        row_str
     ])
 
     return str(uuid.uuid5(uuid.NAMESPACE_URL, uuid_name))
