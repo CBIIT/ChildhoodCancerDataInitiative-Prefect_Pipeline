@@ -50,7 +50,7 @@ def read_json(dir_path: str):
 
     return nodes
 
-
+@task(name="gdc_import_loader", log_prints=True)
 def loader(dir_path: str, node_type: str):
     """Checks that JSON file is a list of dicts and all nodes are of expected type and node type.
 
@@ -234,7 +234,7 @@ def dbgap_compare(phs_id_version: str, nodes: list):
 
     return parsed_subjects
 
-
+@task(name="gdc_import_retrieve_current_nodes", log_prints=True)
 def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     """Query and return all nodes already submitted to GDC for project and node type
 
@@ -480,7 +480,7 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
     else:
         return False
 
-
+@flow(name="gdc_import_compare_diff", log_prints=True)
 def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check_for_updates: str):
     """Determine if nodes in submission file are new entities or already exist in GDC
 
