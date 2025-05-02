@@ -469,9 +469,15 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
         bool: Indication if metadata in file is different from what metadata has been submitted to GDC
     """
 
-    if DeepDiff(submit_file_metadata, gdc_node_metadata, ignore_order=True):
+    #extract only properties found in submission node from gdc node
+    gdc_node_metadata_parse = {}
+    for key in submit_file_metadata.keys():
+        if key in gdc_node_metadata.keys():
+            gdc_node_metadata_parse[key] = gdc_node_metadata[key]
+
+    if DeepDiff(submit_file_metadata, gdc_node_metadata_parse, ignore_order=True):
         print(submit_file_metadata)
-        print(gdc_node_metadata)
+        print(gdc_node_metadata_parse)
         return True
     else:
         return False
