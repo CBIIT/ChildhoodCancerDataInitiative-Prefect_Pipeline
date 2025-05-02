@@ -19,7 +19,7 @@ from typing import Literal
 
 import boto3
 from botocore.exceptions import ClientError
-from prefect import flow, get_run_logger
+from prefect import flow,task, get_run_logger
 from src.utils import get_time, file_dl, folder_ul, sanitize_return, get_secret
 
 
@@ -456,7 +456,7 @@ def entity_parser(node: dict):
 
     return node
 
-
+@task(name="gdc_import_json_compare", log_prints=True)
 def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
     """Compare node entity metadata; if node in submission file is different than in GDC
     then slate for import, otherwise ignore; use DeepDiff for comparison
@@ -470,6 +470,8 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
     """
 
     if DeepDiff(submit_file_metadata, gdc_node_metadata, ignore_order=True):
+        print(submit_file_metadata)
+        print(gdc_node_metadata)
         return True
     else:
         return False
