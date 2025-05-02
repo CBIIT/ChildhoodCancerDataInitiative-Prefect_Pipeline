@@ -254,8 +254,6 @@ def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: st
 
     runner_logger = get_run_logger()
 
-    token = get_secret(secret_name_path, secret_key_name).strip()
-
     offset_returns = []
     endpt = "https://api.gdc.cancer.gov/submission/graphql"
     null = ""  # None
@@ -298,7 +296,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: st
             runner_logger.error(
                 f" Response is malformed: {str(response.text)} for query {str(query2)}, trying again..."  # loads > dumps
             )
-            response = make_request("post", endpt, token, req_data=query2)
+            response = make_request("post", endpt, secret_name_path, secret_key_name, req_data=query2)
 
         # check if anymore hits, if not break to speed up process
 
@@ -365,7 +363,7 @@ def query_entities(node_uuids: list, project_id: str, secret_name_path: str, sec
             retries = 0
             while retries < max_retries:
                 try:
-                    temp = make_request('get', api + uuids_fmt, token) #make request
+                    temp = make_request('get', api + uuids_fmt, secret_name_path, secret_key_name) #make request
                     entities = json.loads(temp.text)["entities"] #extract entities from request
                     retries = max_retries #update retries counter to exit loop
                 except:
@@ -708,7 +706,8 @@ def submit(nodes: list, project_id: str, secret_name_path: str, secret_key_name:
             for node in nodes:
                 res = make_request("post",
                     api,
-                    token,
+                    secret_name_path,
+                    secret_key_name
                     req_data=node
                 )
 
@@ -721,7 +720,8 @@ def submit(nodes: list, project_id: str, secret_name_path: str, secret_key_name:
             for node in nodes:
                 res = make_request("put",
                     api,
-                    token,
+                    secret_name_path,
+                    secret_key_name
                     req_data=node
                 )
 
