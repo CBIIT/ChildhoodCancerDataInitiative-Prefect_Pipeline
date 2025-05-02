@@ -456,7 +456,6 @@ def entity_parser(node: dict):
 
     return node
 
-@task(name="gdc_import_json_compare", log_prints=True)
 def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
     """Compare node entity metadata; if node in submission file is different than in GDC
     then slate for import, otherwise ignore; use DeepDiff for comparison
@@ -469,15 +468,14 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
         bool: Indication if metadata in file is different from what metadata has been submitted to GDC
     """
 
-    #extract only properties found in submission node from gdc node
+    #extract only properties found in submission node from gdc node to perform comparison
+    #in order to exclude added on, non-required props from GDC
     gdc_node_metadata_parse = {}
     for key in submit_file_metadata.keys():
         if key in gdc_node_metadata.keys():
             gdc_node_metadata_parse[key] = gdc_node_metadata[key]
 
     if DeepDiff(submit_file_metadata, gdc_node_metadata_parse, ignore_order=True):
-        print(submit_file_metadata)
-        print(gdc_node_metadata_parse)
         return True
     else:
         return False
