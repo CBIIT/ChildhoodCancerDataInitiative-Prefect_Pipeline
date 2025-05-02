@@ -288,7 +288,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: st
         query2 = {"query": query1, "variables": null}
 
         # retrieve response
-        response = make_request("post", endpt, token, req_data=query2)
+        response = make_request("post", endpt, secret_name_path, secret_key_name, req_data=query2)
 
         # check if malformed
         try:
