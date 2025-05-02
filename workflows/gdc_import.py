@@ -707,7 +707,7 @@ def submit(nodes: list, project_id: str, secret_name_path: str, secret_key_name:
                 res = make_request("post",
                     api,
                     secret_name_path,
-                    secret_key_name
+                    secret_key_name,
                     req_data=node
                 )
 
@@ -721,7 +721,7 @@ def submit(nodes: list, project_id: str, secret_name_path: str, secret_key_name:
                 res = make_request("put",
                     api,
                     secret_name_path,
-                    secret_key_name
+                    secret_key_name,
                     req_data=node
                 )
 
