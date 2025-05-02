@@ -19,7 +19,7 @@ from typing import Literal
 
 import boto3
 from botocore.exceptions import ClientError
-from prefect import flow,task, get_run_logger
+from prefect import flow, task, get_run_logger
 from src.utils import get_time, file_dl, folder_ul, sanitize_return, get_secret
 
 
@@ -798,9 +798,6 @@ def runner(
 
     # check the manifest version before the workflow starts
     file_name = os.path.basename(file_path)
-
-    # get token
-    #token = get_secret(secret_name_path, secret_key_name).strip()
 
     # load in nodes file
     nodes = loader(file_name, node_type)
