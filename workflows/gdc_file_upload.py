@@ -49,92 +49,6 @@ def read_input(file_path: str):
 
     return file_metadata
 
-@flow(
-    name="gdc_upload_retrieve_s3_url",
-    log_prints=True,
-    flow_run_name="gdc_upload_retrieve_s3_url_" + f"{get_time()}",
-)
-def retrieve_s3_url(rows: pd.DataFrame):
-    """Query indexd with md5sum and file_size to retrieve file s3 url
-
-    Args:
-        rows (pd.DataFrame): Chunked input DataFrame with required metadata (md5sum and file_size)
-
-    Returns:
-        pd.DataFrame: DataFrame with s3 url appended to row for each file instance
-    """
-
-    runner_logger = get_run_logger()
-
-    max_retries = 3
-
-    for index, row in rows.iterrows():
-
-        retries = 0
-        
-        # format the indexd URL
-        query_url = f"https://nci-crdc.datacommons.io/index/index?hash=md5:{row['md5sum']}&size={row['file_size']}"
-
-        response = requests.get(query_url)
-
-        s3_url = "" #init S3 URL
-
-        #Attempt to parse response here
-        while retries < max_retries:
-            try:
-                s3_url = ""
-                for record in json.loads(response.text)["records"]:
-                    for url in record["urls"]:
-                        if url != "":
-                            if os.path.basename(url) == row['file_name']:
-                                s3_url = url
-                                runner_logger.info(
-                                    f"URL is: {s3_url}")
-
-                if s3_url == "":
-                    runner_logger.error(
-                        f" No URL found: {str(response.text)} for query {query_url}"
-                    )
-                retries = max_retries #exit while loop
-            except:
-                runner_logger.error(
-                    f" Response is malformed: {str(response.text)} for query {query_url}, trying again ..."
-                )
-                retries += 1
-                sleep(5)
-
-        rows.loc[index, "s3_url"] = s3_url
-
-    return rows
-
-
-def retrieve_s3_url_handler(file_metadata: pd.DataFrame):
-    """Handle flow input for s3 URL retrieval
-
-    Args:
-        file_metadata (pd.DataFrame): DataFrame containing id, md5sum and file_size
-
-    Returns:
-        pd.DataFrame: DataFrame with s3 url appended to row for each file instance
-    """
-
-    runner_logger = get_run_logger()
-
-    chunk_size = 300  # how many rows to send into retrieve_s3_url
-
-    subframes = []  # list to store dfs containing s3 urls + other metadata
-
-    for chunk in range(0, len(file_metadata), chunk_size):
-        runner_logger.info(
-            f"Querying s3 urls for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))} of files"
-        )
-        subframe = retrieve_s3_url(file_metadata[chunk : chunk + chunk_size])
-        subframes.append(subframe)
-
-    df_s3 = pd.concat(subframes)
-
-    return df_s3
-
 
 @flow(
     name="gdc_upload_file_upload",
@@ -164,10 +78,10 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
         # attempt to download file from s3 location to VM
         # to then upload with gdc-client
         try:
-            runner_logger.info(f"The S3 URL is {row['s3_url']}")
+            runner_logger.info(f"The S3 URL is {row['file_url']}")
 
-            f_bucket = row["s3_url"].split("/")[2]
-            f_path = "/".join(row["s3_url"].split("/")[3:])
+            f_bucket = row["file_url"].split("/")[2]
+            f_path = "/".join(row["file_url"].split("/")[3:])
             f_name = os.path.basename(f_path)
 
             runner_logger.info(f"The bucket is {f_bucket}")
@@ -191,7 +105,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
         # check that file exists
         if not os.path.isfile(row["file_name"]):
             runner_logger.error(
-                f"File {row['file_name']} not copied over or found from URL {row['s3_url']}"
+                f"File {row['file_name']} not copied over or found from URL {row['file_url']}"
             )
             subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
             continue # ignore rest of function since file not downloaded
