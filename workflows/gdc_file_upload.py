@@ -175,10 +175,6 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 f_bucket = row["file_url"].split("/")[2]
                 f_path = "/".join(row["file_url"].split("/")[3:])
                 f_name = os.path.basename(f_path)
-
-                runner_logger.info(f"The bucket is {f_bucket}")
-                runner_logger.info(f"The path is {f_path}")
-                runner_logger.info(f"The file name is {f_name}")
                 
                 if f_name != row["file_name"]:
                     runner_logger.warning(
@@ -223,7 +219,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     commands=[
                         f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"
                     ],
-                    stream_output=False,
+                    stream_output=True,
                 ).run()
 
                 # check uploads results from streamed output
