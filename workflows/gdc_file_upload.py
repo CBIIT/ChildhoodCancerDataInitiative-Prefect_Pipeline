@@ -111,7 +111,7 @@ def read_input(file_path: str):
     return file_metadata
 
 @task(name="matching_uuid_task", log_prints=True)
-def matching_uuid(manifest_df: pd.DataFrame, already_submitted: pd.DataFrame):
+def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
     """Retrieve UUIDs from GDC and match to file rows by md5sum and file_name"""
 
     print(manifest_df)
@@ -119,15 +119,29 @@ def matching_uuid(manifest_df: pd.DataFrame, already_submitted: pd.DataFrame):
     print(already_submitted)
 
     #merge 2 dataframes on md5sum and file_name
-    manifest_df = manifest_df.merge(already_submitted, on=["md5sum", "file_name"], how="left", suffixes=("", "_already_submitted"))
+    manifest_df = manifest_df.merge(entities_in_gdc, on=["md5sum", "file_name", "file_size"], how="left", suffixes=("", "_gdc"))
     print(manifest_df)
     print(manifest_df.columns)
 
+    #find rows in manifest_df that do not have a matching md5sum and file_name
+    not_found_in_gdc = manifest_df[manifest_df["id"].isnull()]
+    not_found_in_gdc['status'] = "metadata not found, skip"
+    
     #filter out files in already_submitted with file_state == "validated", status column = "already uploaded, skip"
-
-    #filter out files in manifest_df that do not have a matching md5sum and file_name, status column = "metadata not found, skip"
+    already_submitted = manifest_df[manifest_df["file_state"] == "validated"]
+    already_submitted['status'] = "already uploaded, skip"
 
     #match id in already_submitted to manifest_df by file_name and md5sum, status column left blank
+    manifest_df = manifest_df[(manifest_df["id"].notnull()) & (manifest_df["file_state"] != "validated")]
+    manifest_df['status'] = "already uploaded, skip"
+
+    #combine all 3 dataframes
+    combined_df = pd.concat([manifest_df, already_submitted, not_found_in_gdc], ignore_index=True)
+    print(combined_df)
+    print(combined_df.columns)
+    
+    #drop unnecessary columns
+    
 
 
 
