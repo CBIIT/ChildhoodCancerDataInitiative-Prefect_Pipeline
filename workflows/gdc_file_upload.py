@@ -139,6 +139,8 @@ def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
 
     #reorder columns
     manifest_df = manifest_df[['id', 'submitter_id', 'file_name', 'md5sum', 'file_size', 'file_state', 'state', 'file_url', 'status']]
+    already_submitted = already_submitted[['id', 'submitter_id', 'file_name', 'md5sum', 'file_size', 'file_state', 'state', 'file_url', 'status']]
+    not_found_in_gdc = not_found_in_gdc[['id', 'submitter_id', 'file_name', 'md5sum', 'file_size', 'file_state', 'state', 'file_url', 'status']]
     
     return not_found_in_gdc, already_submitted, manifest_df
 
