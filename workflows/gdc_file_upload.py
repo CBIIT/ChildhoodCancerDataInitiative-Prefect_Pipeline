@@ -322,7 +322,7 @@ def runner(
     Args:
         bucket (str): Bucket name of where the manifest is located in and the response output goes to
         project_id (str): GDC Project ID to submit to (e.g. CCDI-MCI, TARGET-AML)
-        manifest_path (str): File path of the CCDI file manifest in bucket
+        manifest_path (str): File path of the CCDI file manifest in bucket. Manifest must contain cols file_url, file_name, file_size and md5sum.
         gdc_client_path (str): Path to GDC client to download to VM
         node_type (str): Node type to submit to GDC (e.g. submitted_aligned_reads, clinical_supplement, etc.)
         runner (str): Unique runner name and output folder path
