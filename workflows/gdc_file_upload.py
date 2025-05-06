@@ -20,7 +20,7 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, task, get_run_logger
-from src.utils import get_time, file_dl, folder_ul, get_secret
+from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret
 from src.gdc_utils import retrieve_current_nodes
 
 @task(name="env_setup")
@@ -110,14 +110,20 @@ def read_input(file_path: str):
 
     return file_metadata
 
-@task(name="matching_uuid_task", log_prints=True)
 def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
-    """Retrieve UUIDs from GDC and match to file rows by md5sum and file_name"""
+    """Retrieve UUIDs from GDC and match to file rows by md5sum and file_name
+    
+    Args:
+        manifest_df (pd.DataFrame): DataFrame of metadata for files to upload
+        entities_in_gdc (pd.DataFrame): DataFrame of UUIDs and file metadata already uploaded to GDC
+    
+    Returns:
+        pd.DataFrame: DataFrame of metadata for files to upload with UUIDs and status
+    
+    """
 
     #merge 2 dataframes on md5sum and file_name
     manifest_df = manifest_df.merge(entities_in_gdc, on=["md5sum", "file_name", "file_size"], how="left", suffixes=("", "_gdc"))
-    print(manifest_df)
-    print(manifest_df.columns)
 
     #find rows in manifest_df that do not have a matching md5sum and file_name
     not_found_in_gdc = manifest_df[manifest_df["id"].isnull()]
@@ -129,15 +135,9 @@ def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
 
     #match id in already_submitted to manifest_df by file_name and md5sum, status column left blank
     manifest_df = manifest_df[(manifest_df["id"].notnull()) & (manifest_df["file_state"] != "validated")]
-    manifest_df['status'] = "already uploaded, skip"
-
-    #combine all 3 dataframes
-    combined_df = pd.concat([manifest_df, already_submitted, not_found_in_gdc], ignore_index=True)
-    print(combined_df)
-    print(combined_df.columns)
+    manifest_df['status'] = ""
     
-    #drop unnecessary columns
-    return None
+    return not_found_in_gdc, already_submitted, manifest_df
 
 
 @flow(
@@ -151,55 +151,60 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
     Args:
         df (pd.DataFrame): DataFrame of metadata for files to upload
         gdc_client_exe_path (str): Path to S3 location where Linux gdc-client package is located
-        token_file (str): Name of VM stored instance of token
+        token_file (str): Name of VM-stored instance of token
         part_size (int): Size (in megabytes) that file chunks should be uploaded in
         n_process (int): Number of concurrent connections to upload file
 
     Returns:
-        list: A list of lists with file upload results
+        pd.DataFrame: Updated sub-manifest with file upload results
     """
 
     runner_logger = get_run_logger()
 
-    # record upload results here
-    subresponses = []
-
     for index, row in df.iterrows():
         # attempt to download file from s3 location to VM
         # to then upload with gdc-client
-        try:
-            runner_logger.info(f"The S3 URL is {row['file_url']}")
+        if row["status"] != "":
+            runner_logger.info(
+                f"File {row['file_name']} (UUID: {row['id']}) has status: {row['status']}."
+            )
+        else:
+            try:
+                runner_logger.info(f"The S3 URL is {row['file_url']}")
 
-            f_bucket = row["file_url"].split("/")[2]
-            f_path = "/".join(row["file_url"].split("/")[3:])
-            f_name = os.path.basename(f_path)
+                f_bucket = row["file_url"].split("/")[2]
+                f_path = "/".join(row["file_url"].split("/")[3:])
+                f_name = os.path.basename(f_path)
 
-            runner_logger.info(f"The bucket is {f_bucket}")
-            runner_logger.info(f"The path is {f_path}")
-            runner_logger.info(f"The file name is {f_name}")
-            
-            if f_name != row["file_name"]:
-                runner_logger.warning(
-                    f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
-                )
-            else:
+                runner_logger.info(f"The bucket is {f_bucket}")
+                runner_logger.info(f"The path is {f_path}")
+                runner_logger.info(f"The file name is {f_name}")
+                
+                if f_name != row["file_name"]:
+                    runner_logger.warning(
+                        f"Expected file name {row['file_name']} does not match observed file name in s3 url, {f_name}, not downloading file"
+                    )
+                else:
 
-                # download file to VM
-                file_dl(f_bucket, f_path)
-                runner_logger.info(f"Downloaded file {f_name}")
-        except:
-            runner_logger.error(f"Cannot download file {row['file_name']}")
-            subresponses.append([row["id"], row["file_name"], "NOT uploaded", ""])
-            continue  # skip rest of attempt since no file
+                    # download file to VM
+                    file_dl(f_bucket, f_path)
+                    runner_logger.info(f"Downloaded file {f_name}")
+            except:
+                runner_logger.error(f"Cannot download file {row['file_name']}")
+                df.loc[index, 'status'] = "ERROR: File not copied from s3"
+                #subresponses.append([row["id"], row["file_name"], "NOT uploaded", ""])
+                continue  # skip rest of attempt since no file
 
         # check that file exists
         if not os.path.isfile(row["file_name"]):
             runner_logger.error(
                 f"File {row['file_name']} not copied over or found from URL {row['file_url']}"
             )
-            subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
+            #subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
+            df.loc[index, 'status'] = f"File {row['file_name']} not copied over or found from URL {row['file_url']}"
             continue # ignore rest of function since file not downloaded
-        else:  # proceed to uploaded with API
+        else:  # proceed to uploaded with API           
+
             runner_logger.info(
                 f"Attempting upload of file {row['file_name']} (UUID: {row['id']}), file_size {round(row['file_size']/(1024**3), 2)} GB ...."
             )
@@ -224,15 +229,18 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 # check uploads results from streamed output
                 if f"upload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"Upload finished for file {row['id']}")
-                    subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
+                    #subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
+                    df.loc[index, 'status'] = "uploaded"
                 else:
                     runner_logger.warning(f"Upload not successful for file {row['id']}")
-                    subresponses.append([row["id"], row["file_name"], "NOT uploaded", "Failure duing upload"])
+                    #subresponses.append([row["id"], row["file_name"], "NOT uploaded", "Failure duing upload"])
+                    df.loc[index, 'status'] = "ERROR: NOT uploaded, Failure during upload"
             except Exception as e:
                 runner_logger.error(
                     f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
                 )
-                subresponses.append([row["id"], row["file_name"], "NOT uploaded", e])
+                #subresponses.append([row["id"], row["file_name"], "NOT uploaded", e])
+                df.loc[index, 'status'] = f"ERROR: {e}, Failure during upload"
 
             # delete file from VM
             if os.path.exists(f_name):
@@ -249,7 +257,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     f"The file {f_name} still exists, error removing."
                 )
 
-    return subresponses
+    return df
 
 DropDownChoices = Literal["upload_files", "remove_old_working_dirs", "check_status"]
 
@@ -279,7 +287,7 @@ def runner(
         manifest_path (str): File path of the CCDI file manifest in bucket
         gdc_client_path (str): Path to GDC client to download to VM
         node_type (str): Node type to submit to GDC (e.g. submitted_aligned_reads, clinical_supplement, etc.)
-        runner (str): Unique runner name
+        runner (str): Unique runner name and output folder path
         secret_name_path (str): Path to AWS secrets manager where token hash stored
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
         upload_part_size_mb (int): The upload part size in MB
@@ -336,10 +344,8 @@ def runner(
         # chdir to working path
         os.chdir(working_dir)
         
-        # store results of uploads here
-        responses = []
-
-        #TODO: perform query for UUIDs and files already uploaded to GDC
+        # perform query for UUIDs and files already uploaded to GDC
+        runner_logger.info(f">>> Querying entity metadata for nodes already submitted to GDC ....")
         already_uploaded = retrieve_current_nodes(
             project_id=project_id,
             node_type=node_type,
@@ -350,31 +356,38 @@ def runner(
         # compare md5sum and file_name to already uploaded files
         already_uploaded_df = pd.DataFrame(already_uploaded)
 
-        print(already_uploaded_df.to_dict(orient="records"))
+        runner_logger.info(f">>> Parsing entity metadata for nodes already submitted to GDC, mathcing UUIDs ....")
 
-        matching_uuid(file_metadata, already_uploaded_df)
+        not_found_in_gdc, already_submitted, matched = matching_uuid(file_metadata, already_uploaded_df)
 
+        #save not_found_in_gdc and already_submitted dataframes to working dir
+        not_found_in_gdc.to_csv(
+            f"{working_dir}/{file_name.replace('.tsv', '_not_found_in_gdc.tsv')}",
+            sep="\t",
+            index=False,
+        )
+        already_submitted.to_csv(
+            f"{working_dir}/{file_name.replace('.tsv', '_already_submitted.tsv')}",
+            sep="\t",
+            index=False,
+        )
+        
 
         # number of files to query S3 uploads and then upload consecutively in a flow
         chunk_size = 20
 
-        runner_logger.info(f">>> Uploading files in manifest {file_name} ....")
+        responses = []
+
+        runner_logger.info(f">>> Uploading {len(matched[matched.status == ""])} files in manifest ....")
 
         #exclude for testing for now
-        """for chunk in range(0, len(file_metadata), chunk_size):
+        for chunk in range(0, len(matched), chunk_size):
             # query against indexd for the bucket URL of the file
             runner_logger.info(
-                f"Matching UUIDs for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
-            )
-
-            # grab S3 URL data to download files to VM
-            file_metadata_s3 = matching_uuid(file_metadata[chunk:chunk+chunk_size])
-
-            runner_logger.info(
-                f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
+                f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(matched), chunk_size))}"
             )
             subresponses = uploader_handler(
-                file_metadata_s3,
+                matched,
                 gdc_client_exe_path,
                 token_path,
                 upload_part_size_mb,
@@ -382,16 +395,31 @@ def runner(
             )
             responses += subresponses
 
-        responses_df = pd.DataFrame(
-            responses, columns=["id", "file_name", "std_out", "std_err"]
-        )
+            #upload intermediate subresponses to S3 in case of crash or cancellation
+            subresponses_df = pd.DataFrame(responses)
+            int_out_fname = f'{working_dir}/{file_name.replace(".tsv", "_intermediate_upload_results.tsv")}'
+            # save intermediate response file
+            subresponses_df.to_csv(int_out_fname,
+                sep="\t",
+                index=False,
+            )
+            # upload intermediate response file to S3
+            file_ul(
+                bucket=bucket,
+                output_folder=runner,
+                sub_folder="",
+                newfile=int_out_fname
 
+            )
+
+        responses_df = pd.DataFrame(responses)
+        
         # save response file
         responses_df.to_csv(
             f"{working_dir}/{file_name}_upload_results.tsv",
             sep="\t",
             index=False,
-        )"""
+        )
 
         # delete token file
         if os.path.exists(token_path):
