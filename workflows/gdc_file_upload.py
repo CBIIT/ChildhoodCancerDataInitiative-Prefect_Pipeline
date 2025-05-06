@@ -6,11 +6,8 @@
 #
 ##############
 
-import json
 import requests
 import os
-import sys
-import time
 from prefect_shell import ShellOperation
 import pandas as pd
 from time import sleep
