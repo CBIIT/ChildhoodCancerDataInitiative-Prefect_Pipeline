@@ -393,10 +393,10 @@ def runner(
                 upload_part_size_mb,
                 n_processes,
             )
-            responses += subresponses
+            responses.append(subresponses)
 
             #upload intermediate subresponses to S3 in case of crash or cancellation
-            subresponses_df = pd.DataFrame(responses)
+            subresponses_df = pd.concat(responses)
             int_out_fname = f'{working_dir}/{file_name.replace(".tsv", "_intermediate_upload_results.tsv")}'
             # save intermediate response file
             subresponses_df.to_csv(int_out_fname,
@@ -412,7 +412,7 @@ def runner(
 
             )
 
-        responses_df = pd.DataFrame(responses)
+        responses_df = pd.concat(responses)
         
         # save response file
         responses_df.to_csv(
