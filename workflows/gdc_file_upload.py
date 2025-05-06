@@ -80,6 +80,8 @@ def env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_
     # path to gdc-client for uploads
     gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
 
+    runner_logger.info(f">>> ✅ Setting up env complete.")
+
     return token_path, token_dir, gdc_client_exe_path, working_dir, dt
 
 
@@ -281,15 +283,15 @@ def uploader_handler(
             # delete file from VM
             if os.path.exists(f_name):
                 os.remove(f_name)
-                runner_logger.info(f"The file {f_name} has been removed.")
+                runner_logger.info(f"✅ The file {f_name} has been removed.")
             else:
                 runner_logger.warning(
-                    f"The file {f_name} does not exist, cannot remove."
+                    f"❌ The file {f_name} does not exist, cannot remove."
                 )
 
             # check if file deleted from VM
             if os.path.exists(f_name):
-                runner_logger.error(f"The file {f_name} still exists, error removing.")
+                runner_logger.error(f"❌ The file {f_name} still exists, error removing.")
 
     return df
 
@@ -420,7 +422,7 @@ def runner(
         )
 
         runner_logger.info(
-            f">>> Parsing complete, of {len(file_metadata)} starting files,\n\t\t\t {len(matched)} files to upload,\n\t\t\t {len(already_submitted)} files were already submitted and validated,\n\t\t\t {len(not_found_in_gdc)} were not found to be submitted in GDC"
+            f">>> ✅ Parsing complete, of {len(file_metadata)} starting files,\n\t\t {len(matched)} files to upload,\n\t\t {len(already_submitted)} files were already submitted and validated,\n\t\t {len(not_found_in_gdc)} were not found to be submitted in GDC"
         )
 
         if len(matched) > 0:
@@ -517,5 +519,5 @@ def runner(
 
     else:
         runner_logger.error(
-            f"The submitted process_type {process_type} not one of ['upload_files', 'remove_old_working_dirs']"
+            f"The submitted process_type {process_type} not one of ['upload_files', 'remove_old_working_dirs', 'check_status']"
         )
