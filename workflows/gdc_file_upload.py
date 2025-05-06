@@ -111,12 +111,24 @@ def read_input(file_path: str):
     return file_metadata
 
 @task(name="matching_uuid_task", log_prints=True)
-def matching_uuid(manifest_df, already_submitted):
+def matching_uuid(manifest_df: pd.DataFrame, already_submitted: pd.DataFrame):
     """Retrieve UUIDs from GDC and match to file rows by md5sum and file_name"""
 
     print(manifest_df)
 
     print(already_submitted)
+
+    #merge 2 dataframes on md5sum and file_name
+    manifest_df = manifest_df.merge(already_submitted, on=["md5sum", "file_name"], how="left", suffixes=("", "_already_submitted"))
+    print(manifest_df)
+    print(manifest_df.columns)
+
+    #filter out files in already_submitted with file_state == "validated", status column = "already uploaded, skip"
+
+    #filter out files in manifest_df that do not have a matching md5sum and file_name, status column = "metadata not found, skip"
+
+    #match id in already_submitted to manifest_df by file_name and md5sum, status column left blank
+
 
 
     return None
@@ -332,7 +344,9 @@ def runner(
         # compare md5sum and file_name to already uploaded files
         already_uploaded_df = pd.DataFrame(already_uploaded)
 
-        print(already_uploaded_df)
+        print(already_uploaded_df.to_dict(orient="records"))
+
+        matching_uuid(file_metadata, already_uploaded_df)
 
 
         # number of files to query S3 uploads and then upload consecutively in a flow

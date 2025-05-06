@@ -70,7 +70,7 @@ def make_request(req_type: str, url: str, secret_name_path: str, secret_key_name
     runner_logger.error(f"Max retries reached. {req_type.upper()} request {url} failed.")
     return str(e)
 
-@task(name="gdc_retrieve_current_nodes", log_prints=True)
+@flow(name="gdc_retrieve_current_nodes", log_prints=True)
 def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: str, secret_key_name: str):
     """Query and return all nodes already submitted to GDC for project and node type
 
