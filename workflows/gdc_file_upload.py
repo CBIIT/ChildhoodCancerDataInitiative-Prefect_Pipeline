@@ -114,10 +114,6 @@ def read_input(file_path: str):
 def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
     """Retrieve UUIDs from GDC and match to file rows by md5sum and file_name"""
 
-    print(manifest_df)
-
-    print(already_submitted)
-
     #merge 2 dataframes on md5sum and file_name
     manifest_df = manifest_df.merge(entities_in_gdc, on=["md5sum", "file_name", "file_size"], how="left", suffixes=("", "_gdc"))
     print(manifest_df)
@@ -141,10 +137,6 @@ def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
     print(combined_df.columns)
     
     #drop unnecessary columns
-    
-
-
-
     return None
 
 
