@@ -114,7 +114,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: st
             + str(n_query)
             + ", offset:"
             + str(offset)
-            + "){\n\t\tsubmitter_id\n\t\tid\n\t\tfile_siz\n\t\tfile_name\n\t\tmd5sum\n\t\tfile_state\n\t\tstate\n\t}\n}"
+            + "){\n\t\tsubmitter_id\n\t\tid\n\t\tfile_size\n\t\tfile_name\n\t\tmd5sum\n\t\tfile_state\n\t\tstate\n\t}\n}"
         )
         query2 = {"query": query1, "variables": null}
 
