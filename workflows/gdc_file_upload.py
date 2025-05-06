@@ -378,7 +378,7 @@ def runner(
 
         responses = []
 
-        runner_logger.info(f">>> Uploading {len(matched[matched.status == ""])} files in manifest ....")
+        runner_logger.info(f">>> Uploading {len(matched[matched.status == ''])} files in manifest ....")
 
         #exclude for testing for now
         for chunk in range(0, len(matched), chunk_size):
