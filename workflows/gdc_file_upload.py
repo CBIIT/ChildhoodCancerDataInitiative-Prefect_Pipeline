@@ -186,7 +186,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     file_dl(f_bucket, f_path)
                     runner_logger.info(f"Downloaded file {f_name}")
             except:
-                runner_logger.error(f"Cannot download file {row['file_name']}")
+                runner_logger.error(f"❌ Cannot download file {row['file_name']}")
                 df.loc[index, 'status'] = "ERROR: File not copied from s3"
                 #subresponses.append([row["id"], row["file_name"], "NOT uploaded", ""])
                 continue  # skip rest of attempt since no file
@@ -194,7 +194,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
         # check that file exists
         if not os.path.isfile(row["file_name"]):
             runner_logger.error(
-                f"File {row['file_name']} not copied over or found from URL {row['file_url']}"
+                f"❌ File {row['file_name']} not copied over or found from URL {row['file_url']}"
             )
             #subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
             df.loc[index, 'status'] = f"File {row['file_name']} not copied over or found from URL {row['file_url']}"
@@ -219,12 +219,12 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     commands=[
                         f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"
                     ],
-                    stream_output=True,
+                    stream_output=False,
                 ).run()
 
                 # check uploads results from streamed output
                 if f"pload finished for file {row['id']}" in response[-1]:
-                    runner_logger.info(f"Upload finished for file {row['id']}")
+                    runner_logger.info(f"✅ Upload finished for file {row['id']}")
                     #subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                     df.loc[index, 'status'] = "uploaded"
                 else:
@@ -233,7 +233,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                     df.loc[index, 'status'] = "ERROR: NOT uploaded, Failure during upload"
             except Exception as e:
                 runner_logger.error(
-                    f"Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
+                    f"❌ Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
                 )
                 #subresponses.append([row["id"], row["file_name"], "NOT uploaded", e])
                 df.loc[index, 'status'] = f"ERROR: {e}, Failure during upload"
