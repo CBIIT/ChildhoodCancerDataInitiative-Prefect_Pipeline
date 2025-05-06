@@ -373,54 +373,60 @@ def runner(
             index=False,
         )
         
+        if len(matched) > 0:
+            # number of files to query S3 uploads and then upload consecutively in a flow
+            chunk_size = 20
 
-        # number of files to query S3 uploads and then upload consecutively in a flow
-        chunk_size = 20
+            responses = []
 
-        responses = []
+            runner_logger.info(f">>> Uploading {len(matched[matched.status == ''])} files in manifest ....")
 
-        runner_logger.info(f">>> Uploading {len(matched[matched.status == ''])} files in manifest ....")
+            #exclude for testing for now
+            for chunk in range(0, len(matched), chunk_size):
+                # query against indexd for the bucket URL of the file
+                runner_logger.info(
+                    f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(matched), chunk_size))}"
+                )
+                subresponses = uploader_handler(
+                    matched,
+                    gdc_client_exe_path,
+                    token_path,
+                    upload_part_size_mb,
+                    n_processes,
+                )
+                responses.append(subresponses)
 
-        #exclude for testing for now
-        for chunk in range(0, len(matched), chunk_size):
-            # query against indexd for the bucket URL of the file
-            runner_logger.info(
-                f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(matched), chunk_size))}"
-            )
-            subresponses = uploader_handler(
-                matched,
-                gdc_client_exe_path,
-                token_path,
-                upload_part_size_mb,
-                n_processes,
-            )
-            responses.append(subresponses)
+                #upload intermediate subresponses to S3 in case of crash or cancellation
+                subresponses_df = pd.concat(responses)
+                int_out_fname = f'{working_dir}/{file_name.replace(".tsv", "")}_intermediate_upload_results_{dt}.tsv'
+                # save intermediate response file
+                subresponses_df.to_csv(int_out_fname,
+                    sep="\t",
+                    index=False,
+                )
+                # upload intermediate response file to S3
+                file_ul(
+                    bucket=bucket,
+                    output_folder=runner,
+                    sub_folder="",
+                    newfile=int_out_fname
 
-            #upload intermediate subresponses to S3 in case of crash or cancellation
-            subresponses_df = pd.concat(responses)
-            int_out_fname = f'{working_dir}/{file_name.replace(".tsv", "")}_intermediate_upload_results_{dt}.tsv'
-            # save intermediate response file
-            subresponses_df.to_csv(int_out_fname,
+                )
+
+            responses_df = pd.concat(responses)
+            
+            # save response file
+            responses_df.to_csv(
+                f"{working_dir}/{file_name}_upload_results_{dt}.tsv",
                 sep="\t",
                 index=False,
             )
-            # upload intermediate response file to S3
-            file_ul(
-                bucket=bucket,
-                output_folder=runner,
-                sub_folder="",
-                newfile=int_out_fname
-
+        else:
+            matched.to_csv(
+                f"{working_dir}/{file_name}_upload_results_{dt}.tsv",
+                sep="\t",
+                index=False,
             )
-
-        responses_df = pd.concat(responses)
-        
-        # save response file
-        responses_df.to_csv(
-            f"{working_dir}/{file_name}_upload_results_{dt}.tsv",
-            sep="\t",
-            index=False,
-        )
 
         # delete token file
         if os.path.exists(token_path):
