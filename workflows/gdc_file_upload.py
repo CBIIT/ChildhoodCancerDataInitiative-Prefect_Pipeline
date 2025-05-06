@@ -79,7 +79,7 @@ def env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_
     # path to gdc-client for uploads
     gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
 
-    return token_path, token_dir, gdc_client_exe_path, working_dir
+    return token_path, token_dir, gdc_client_exe_path, working_dir, dt
 
 @task(name="read_input_manifest_{file_path}")
 def read_input(file_path: str):
@@ -136,6 +136,9 @@ def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
     #match id in already_submitted to manifest_df by file_name and md5sum, status column left blank
     manifest_df = manifest_df[(manifest_df["id"].notnull()) & (manifest_df["file_state"] != "validated")]
     manifest_df['status'] = ""
+
+    #reorder columns
+    manifest_df = manifest_df[['id', 'submitter_id', 'file_name', 'md5sum', 'file_size', 'file_state', 'state', 'file_url', 'status']]
     
     return not_found_in_gdc, already_submitted, manifest_df
 
@@ -226,7 +229,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 if f"pload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"✅ Upload finished for file {row['id']}")
                     #subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
-                    df.loc[index, 'status'] = "uploaded"
+                    df.loc[index, 'status'] = "success"
                 else:
                     runner_logger.warning(f"Upload not successful for file {row['id']}")
                     #subresponses.append([row["id"], row["file_name"], "NOT uploaded", "Failure duing upload"])
@@ -325,7 +328,7 @@ def runner(
     elif process_type == "upload_files":
 
         # setup env
-        token_path, token_dir, gdc_client_exe_path, working_dir = env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_path)
+        token_path, token_dir, gdc_client_exe_path, working_dir, dt = env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_path)
 
         # download the input manifest file
         file_dl(bucket, manifest_path)
@@ -358,12 +361,12 @@ def runner(
 
         #save not_found_in_gdc and already_submitted dataframes to working dir
         not_found_in_gdc.to_csv(
-            f"{working_dir}/{file_name.replace('.tsv', '_not_found_in_gdc.tsv')}",
+            f"{working_dir}/{file_name.replace('.tsv', '')}_not_found_in_gdc_{dt}.tsv",
             sep="\t",
             index=False,
         )
         already_submitted.to_csv(
-            f"{working_dir}/{file_name.replace('.tsv', '_already_submitted.tsv')}",
+            f"{working_dir}/{file_name.replace('.tsv', '')}_already_submitted_{dt}.tsv",
             sep="\t",
             index=False,
         )
@@ -393,7 +396,7 @@ def runner(
 
             #upload intermediate subresponses to S3 in case of crash or cancellation
             subresponses_df = pd.concat(responses)
-            int_out_fname = f'{working_dir}/{file_name.replace(".tsv", "_intermediate_upload_results.tsv")}'
+            int_out_fname = f'{working_dir}/{file_name.replace(".tsv", "")}_intermediate_upload_results_{dt}.tsv'
             # save intermediate response file
             subresponses_df.to_csv(int_out_fname,
                 sep="\t",
@@ -412,7 +415,7 @@ def runner(
         
         # save response file
         responses_df.to_csv(
-            f"{working_dir}/{file_name}_upload_results.tsv",
+            f"{working_dir}/{file_name}_upload_results_{dt}.tsv",
             sep="\t",
             index=False,
         )
