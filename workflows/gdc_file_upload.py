@@ -10,6 +10,7 @@ import json
 import requests
 import os
 import sys
+import time
 from prefect_shell import ShellOperation
 import pandas as pd
 from time import sleep
@@ -18,11 +19,71 @@ from typing import Literal
 # prefect dependencies
 import boto3
 from botocore.exceptions import ClientError
-from prefect import flow, get_run_logger
+from prefect import flow, task, get_run_logger
 from src.utils import get_time, file_dl, folder_ul, get_secret
+from src.gdc_utils import retrieve_current_nodes
 
+@task(name="env_setup")
+def env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_path):
+    """Setup gdc-client and other env objects
+
+    Args:
+        bucket (str): S3 bucket name
+        gdc_client_path (str): path to gdc-client in S3 bucket
+        project_id (str): Project ID to query and upload nodes for
+        secret_key_name (str): Secret Key Name
+        secret_name_path (str): Secret Key Path
+
+    Returns:
+        str: path to token file to pass to gdc-client
+        str: directory where token and gdc-client will be stored
+        str: path to gdc-client
+        str: path to working directory where files downloaded 
+    """
+
+    runner_logger = get_run_logger()
+
+    runner_logger.info(f">>> Setting up env ....")
+
+    dt = get_time()
+
+    token_dir = os.getcwd()  # directory where token and gdc-client will be stored
+
+    working_dir = f"/usr/local/data/GDC_file_upload_{project_id}_{dt}"
+
+    # make dir to download files from DCF to VM, to then upload to GDC
+    if not os.path.exists(working_dir):
+        os.mkdir(working_dir)
+
+    # save a token file to give gdc-client
+    token = get_secret(secret_name_path, secret_key_name).strip()
+
+    # save token locally since gdc-client takes a token file as input
+    # not the hash directly
+    with open("token.txt", "w+") as w:
+        w.write(token)
+    w.close()
+
+    # secure token file
+    ShellOperation(commands=["chmod 600 token.txt"]).run()
+
+    # path to token file to provide to gdc-client for uploads
+    token_path = os.path.join(token_dir, "token.txt")
+
+    # download the gdc-client
+    file_dl(bucket, gdc_client_path)
+
+    # change gdc-client to executable
+    ShellOperation(commands=["chmod 755 gdc-client"]).run()
+
+    # path to gdc-client for uploads
+    gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
+
+    return token_path, token_dir, gdc_client_exe_path, working_dir
+
+@task(name="read_input_manifest_{file_path}")
 def read_input(file_path: str):
-    """Read in TSV file and extract file_name, id (GDC uuid), md5sum and file_size columns
+    """Read in TSV file and extract file_name, md5sum and file_size columns
 
     Args:
         file_path (str): path to input file that contains required cols
@@ -33,21 +94,32 @@ def read_input(file_path: str):
 
     runner_logger = get_run_logger()
 
-    f_name = os.path.basename(file_path)
+    file_metadata = pd.read_csv(file_path, sep="\t")
 
-    try:
-        file_metadata = pd.read_csv(f_name, sep="\t")[
-            ["id", "md5sum", "file_size", "file_name"]
-        ]
-    except:
-        runner_logger.error(f"Error reading and parsing file {f_name}, check that headers exist: ['id', 'md5sum', 'file_size', 'file_name'].")
-        sys.exit(1)
+    required_cols = ["file_url", "md5sum", "file_size", "file_name"]
 
-    if len(file_metadata) == 0:
-        runner_logger.error(f"Error reading and parsing file {f_name}; empty file")
-        sys.exit(1)
+    # check if required columns exist in the dataframe
+    for col in required_cols:
+        if col not in file_metadata.columns:
+            raise ValueError(f"Missing required column: {col}")
+    
+    for col in required_cols:
+        if file_metadata[col].isnull().any():
+            raise ValueError(f"Missing values in required column: {col}")
+
 
     return file_metadata
+
+@task(name="matching_uuid_task", log_prints=True)
+def matching_uuid(manifest_df, already_submitted):
+    """Retrieve UUIDs from GDC and match to file rows by md5sum and file_name"""
+
+    print(manifest_df)
+
+    print(already_submitted)
+
+
+    return None
 
 
 @flow(
@@ -161,7 +233,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
 
     return subresponses
 
-DropDownChoices = Literal["upload_files", "remove_old_working_dirs"]
+DropDownChoices = Literal["upload_files", "remove_old_working_dirs", "check_status"]
 
 @flow(
     name="GDC File Upload",
@@ -173,6 +245,7 @@ def runner(
     project_id: str,
     manifest_path: str,
     gdc_client_path: str,
+    node_type: str,
     runner: str,
     secret_name_path: str,
     secret_key_name: str,
@@ -187,12 +260,13 @@ def runner(
         project_id (str): GDC Project ID to submit to (e.g. CCDI-MCI, TARGET-AML)
         manifest_path (str): File path of the CCDI file manifest in bucket
         gdc_client_path (str): Path to GDC client to download to VM
+        node_type (str): Node type to submit to GDC (e.g. submitted_aligned_reads, clinical_supplement, etc.)
         runner (str): Unique runner name
         secret_name_path (str): Path to AWS secrets manager where token hash stored
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
         upload_part_size_mb (int): The upload part size in MB
         n_processes (int): The number of client connections to upload the files smaller than 7 GB
-        process_type (str): Select whether to upload files or remove previous working dir instances from VM
+        process_type (str): Select whether to upload files, remove previous working dir instances from VM or check GDC API status
     """
 
     # runner_logger setup
@@ -212,49 +286,27 @@ def runner(
             ).run()
         )
     
-    elif process_type == "upload_files":
+    elif process_type == "check_status":
 
-        runner_logger.info(f">>> Setting up env ....")
-
-        dt = get_time()
-
-        token_dir = os.getcwd()  # directory where token and gdc-client will be stored
-
-        working_dir = f"/usr/local/data/GDC_file_upload_{project_id}_{dt}"
-
-        # make dir to download files from DCF to VM, to then upload to GDC
-        if not os.path.exists(working_dir):
-            os.mkdir(working_dir)
+        runner_logger.info(f">>> Checking GDC API status ....")
 
         # check that GDC API status is OK
         runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
 
+        # check that GDC API status is OK
+        runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/submissions").text)
+
+        # check that GDC API status is OK
+        runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/projects").text)
+    
+    
+    elif process_type == "upload_files":
+
+        # setup env
+        token_path, token_dir, gdc_client_exe_path, working_dir = env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_path)
+
         # download the input manifest file
         file_dl(bucket, manifest_path)
-
-        # save a token file to give gdc-client
-        token = get_secret(secret_name_path, secret_key_name).strip()
-
-        # save token locally since gdc-client takes a token file as input
-        # not the hash directly
-        with open("token.txt", "w+") as w:
-            w.write(token)
-        w.close()
-
-        # secure token file
-        ShellOperation(commands=["chmod 600 token.txt"]).run()
-
-        # path to token file to provide to gdc-client for uploads
-        token_path = os.path.join(token_dir, "token.txt")
-
-        # download the gdc-client
-        file_dl(bucket, gdc_client_path)
-
-        # change gdc-client to executable
-        ShellOperation(commands=["chmod 755 gdc-client"]).run()
-
-        # path to gdc-client for uploads
-        gdc_client_exe_path = os.path.join(token_dir, "gdc-client")
 
         # extract file name before the workflow starts
         file_name = os.path.basename(manifest_path)
@@ -269,19 +321,34 @@ def runner(
         # store results of uploads here
         responses = []
 
+        #TODO: perform query for UUIDs and files already uploaded to GDC
+        already_uploaded = retrieve_current_nodes(
+            project_id=project_id,
+            node_type=node_type,
+            secret_name_path=secret_name_path,
+            secret_key_name=secret_key_name,
+        )
+
+        # compare md5sum and file_name to already uploaded files
+        already_uploaded_df = pd.DataFrame(already_uploaded)
+
+        print(already_uploaded_df)
+
+
         # number of files to query S3 uploads and then upload consecutively in a flow
         chunk_size = 20
 
         runner_logger.info(f">>> Uploading files in manifest {file_name} ....")
 
-        for chunk in range(0, len(file_metadata), chunk_size):
+        #exclude for testing for now
+        """for chunk in range(0, len(file_metadata), chunk_size):
             # query against indexd for the bucket URL of the file
             runner_logger.info(
-                f"Grabbing s3 URL metadata for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
+                f"Matching UUIDs for chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
             )
 
             # grab S3 URL data to download files to VM
-            file_metadata_s3 = retrieve_s3_url(file_metadata[chunk:chunk+chunk_size])
+            file_metadata_s3 = matching_uuid(file_metadata[chunk:chunk+chunk_size])
 
             runner_logger.info(
                 f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
@@ -304,7 +371,7 @@ def runner(
             f"{working_dir}/{file_name}_upload_results.tsv",
             sep="\t",
             index=False,
-        )
+        )"""
 
         # delete token file
         if os.path.exists(token_path):
@@ -341,3 +408,4 @@ def runner(
 
     else:
         runner_logger.error(f"The submitted process_type {process_type} not one of ['upload_files', 'remove_old_working_dirs']")
+

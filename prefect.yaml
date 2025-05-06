@@ -1020,6 +1020,7 @@ deployments:
       project_id: "CCDI-MCI"
       manifest_path: ""
       gdc_client_path: "bullenca/file_upload_test/gdc-client"
+      node_type: "submitted_aligned_reads"
       runner: ""
       secret_name_path: "ccdi/nonprod/inventory/gdc-token"
       secret_key_name: "gdc-token"
