@@ -219,7 +219,6 @@ def uploader_handler(
             except:
                 runner_logger.error(f"❌ Cannot download file {row['file_name']}")
                 df.loc[index, "status"] = "ERROR: File not copied from s3"
-                # subresponses.append([row["id"], row["file_name"], "NOT uploaded", ""])
                 continue  # skip rest of attempt since no file
 
         # check that file exists
@@ -227,7 +226,6 @@ def uploader_handler(
             runner_logger.error(
                 f"❌ File {row['file_name']} not copied over or found from URL {row['file_url']}"
             )
-            # subresponses.append([row["id"], row["file_name"], "NOT uploaded", "File not copied from s3"])
             df.loc[index, "status"] = (
                 f"File {row['file_name']} not copied over or found from URL {row['file_url']}"
             )
@@ -262,11 +260,9 @@ def uploader_handler(
                 # check uploads results from streamed output
                 if f"pload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"✅ Upload finished for file {row['id']}")
-                    # subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                     df.loc[index, "status"] = "success"
                 else:
                     runner_logger.warning(f"Upload not successful for file {row['id']}")
-                    # subresponses.append([row["id"], row["file_name"], "NOT uploaded", "Failure duing upload"])
                     df.loc[index, "status"] = (
                         "ERROR: NOT uploaded, Failure during upload"
                     )
@@ -274,7 +270,6 @@ def uploader_handler(
                 runner_logger.error(
                     f"❌ Upload of file {row['file_name']} (UUID: {row['id']}) failed due to exception: {e}"
                 )
-                # subresponses.append([row["id"], row["file_name"], "NOT uploaded", e])
                 df.loc[index, "status"] = f"ERROR: {e}, Failure during upload"
 
             # delete file from VM
