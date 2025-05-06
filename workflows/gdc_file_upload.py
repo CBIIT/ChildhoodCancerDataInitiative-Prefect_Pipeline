@@ -223,7 +223,7 @@ def uploader_handler(df: pd.DataFrame, gdc_client_exe_path: str, token_file: str
                 ).run()
 
                 # check uploads results from streamed output
-                if f"upload finished for file {row['id']}" in response[-1]:
+                if f"pload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"Upload finished for file {row['id']}")
                     #subresponses.append([row["id"], row["file_name"], "uploaded", "success"])
                     df.loc[index, 'status'] = "uploaded"
