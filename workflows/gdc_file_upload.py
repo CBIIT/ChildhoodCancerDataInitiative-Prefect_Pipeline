@@ -68,6 +68,8 @@ def env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_
     # path to token file to provide to gdc-client for uploads
     token_path = os.path.join(token_dir, "token.txt")
 
+    runner_logger.info(f"Token path: {token_path}")
+
     # download the gdc-client
     file_dl(bucket, gdc_client_path)
 
@@ -335,6 +337,10 @@ def runner(
         process_type == "remove_old_working_dirs"
     ):  # remove previous GDC_file_upload working dirs to clear space
 
+        runner_logger.info(
+            f">>> Removing old GDC_file_upload working directories ...."
+        )
+        
         runner_logger.info(
             ShellOperation(
                 commands=[
