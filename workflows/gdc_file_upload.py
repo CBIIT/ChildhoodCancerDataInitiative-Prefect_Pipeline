@@ -486,13 +486,13 @@ def runner(
             )
 
         # delete token file
-        """if os.path.exists(token_path):
+        if os.path.exists(token_path):
             try:
                 os.remove(token_path)
             except:
                 runner_logger.error(f"Cannot remove file token.txt.")
         else:
-            runner_logger.warning(f"The file token.txt does not exist, cannot remove.")"""
+            runner_logger.warning(f"The file token.txt does not exist, cannot remove.")
 
         # folder upload
         folder_ul(
