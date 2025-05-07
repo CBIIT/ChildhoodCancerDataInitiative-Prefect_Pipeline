@@ -359,6 +359,17 @@ def runner(
         # check that GDC API status is OK
         runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/projects").text)
 
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    "echo 'check /usr/local/data/'",
+                    "ls -l /usr/local/data/",  # confirm removal of GDC_file_upload working dirs
+                    "echo 'check current working dir'",
+                    "ls -l",  # confirm removal of GDC_file_upload working dirs
+                ]
+            ).run()
+        )
+
     elif process_type == "upload_files":
 
         # setup env
