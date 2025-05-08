@@ -165,8 +165,6 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     results = compare_md5sum_flow(
         first_url_list=first_url_list,
         second_url_list=second_url_list,
-        s3_client=s3_client,
-        logger=runner_logger,
     )
 
     meta_df["copy_status"] = copy_status
