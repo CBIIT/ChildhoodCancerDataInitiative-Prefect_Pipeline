@@ -79,14 +79,14 @@ def identify_obj_dir(uri_list: list, logger) -> list: ##TESTING
         uri_check =  check_if_directory(s3_client=s3_client, uri_path=uri)
         if uri_check == "object":
             obj_list.append(uri)
-            #logger.info(f"uri {uri} is an object")
+            logger.info(f"uri {uri} is an object")
         elif uri_check ==  "directory":
-            #logger.info(f"uri {uri} is a directory")
+            logger.info(f"uri {uri} is a directory")
             uri_item_list = retrieve_objects_from_bucket_path(bucket_folder_path=uri)
             uri_path_list = ["s3://" + i["Bucket"] + "/" + i["Key"] for i in uri_item_list]
             obj_list.extend(uri_path_list)
         else:
-            #logger.error(f"uri {uri} is not valid. Neither obj nor dir")
+            logger.error(f"uri {uri} is not valid. Neither obj nor dir")
             print(f"uri {uri} is not valid. Neither obj nor dir")
 
     return obj_list
