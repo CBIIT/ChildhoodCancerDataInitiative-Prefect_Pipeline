@@ -69,21 +69,22 @@ def check_if_directory(s3_client, uri_path: str) -> None:
         name="If Directory",
         log_prints=True
 )
-def identify_obj_dir(uri_list: list, logger) -> list:
+#def identify_obj_dir(uri_list: list, logger) -> list: ##TESTING
+def identify_obj_dir(uri_list: list) -> list:
     obj_list = []
     s3_client = set_s3_session_client()
     for uri in uri_list:
         uri_check =  check_if_directory(s3_client=s3_client, uri_path=uri)
         if uri_check == "object":
             obj_list.append(uri)
-            logger.info(f"uri {uri} is an object")
+            #logger.info(f"uri {uri} is an object")
         elif uri_check ==  "directory":
-            logger.info(f"uri {uri} is a directory")
+            #logger.info(f"uri {uri} is a directory")
             uri_item_list = retrieve_objects_from_bucket_path(bucket_folder_path=uri)
             uri_path_list = ["s3://" + i["Bucket"] + "/" + i["Key"] for i in uri_item_list]
             obj_list.extend(uri_path_list)
         else:
-            logger.error(f"uri {uri} is not valid. Neither obj nor dir")
+            #logger.error(f"uri {uri} is not valid. Neither obj nor dir")
             print(f"uri {uri} is not valid. Neither obj nor dir")
 
     return obj_list
@@ -112,12 +113,13 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     file_dl(bucket=bucket, filename = obj_list_tsv_path)
     runner_logger.info(f"Downloaded list of s3 uri file: {obj_list_tsv_path}")
     tsv_name = os.path.basename(obj_list_tsv_path)
-    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])
+    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])[:10]
     logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
     runner_logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
 
     # identify if the uri in the tsv file dir or obj
-    uri_list = identify_obj_dir(uri_list=tsv_df["original_uri"].tolist(), logger=logger)
+    #uri_list = identify_obj_dir(uri_list=tsv_df["original_uri"].tolist(), logger=logger) ##TESTING
+    uri_list = identify_obj_dir(uri_list=tsv_df["original_uri"].tolist())
     tsv_df = pd.DataFrame({"original_uri": uri_list})
     logger.info(f"A total of {tsv_df.shape[0]} objects will be moved")
     runner_logger.info(f"A total of {tsv_df.shape[0]} objects will be moved")
