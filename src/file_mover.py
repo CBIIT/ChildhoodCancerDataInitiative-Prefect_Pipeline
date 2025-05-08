@@ -234,13 +234,13 @@ def copy_file_by_size(
 
 @task(
     name="Copy an object file",
-    tags=["file-mover-2-tag"],
+    tags=["{concurrency_tag}"],
     retries=3,
     retry_delay_seconds=1,
     log_prints=True,
     cache_policy=NO_CACHE,
 )
-def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> str:
+def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concurrency_tag) -> str:
     """Copy objects between two locations defined by copy_parameter
 
     It checks if the file has been transferred (Key and object Content length/size) before trasnfer process
@@ -289,7 +289,7 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> st
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
-def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> list:
+def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concurrency_tag) -> list:
     """Copy of list of file concurrently"""
     s3_client = set_s3_session_client()
     
@@ -298,7 +298,7 @@ def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> li
     
     for params in copy_parameter_list:
         # Submit the task with a delay of 0.25 seconds
-        transfer_status_list.append(copy_file_task.submit(params, s3_client, logger, runner_logger))
+        transfer_status_list.append(copy_file_task.submit(params, s3_client, logger, runner_logger, concurrency_tag))
         
         # Throttle task submission with a 0.25-second delay
         time.sleep(0.25)

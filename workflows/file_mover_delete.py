@@ -9,7 +9,7 @@ from prefect.cache_policies import NO_CACHE
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.utils import get_time, file_dl, file_ul, get_date, set_s3_session_client, get_logger
-from src.file_mover import copy_object_parameter, dest_object_url, copy_file_task, parse_file_url, compare_md5sum_flow
+from src.file_mover import copy_object_parameter, dest_object_url, copy_file_flow, parse_file_url, compare_md5sum_flow
 from src.file_remover import objects_deletion, retrieve_objects_from_bucket_path
 
 DataFrame = TypeVar("DataFrame")
@@ -131,10 +131,13 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     runner_logger.info("Start moving files")
     s3_client = set_s3_session_client()
     copy_parameter_list = meta_df["copy_parameter"].tolist()
-    copy_status = []
+    """copy_status = []
     for copy_parameter  in copy_parameter_list:
         item_status = copy_file_task(copy_parameter=copy_parameter, s3_client=s3_client, logger=logger, runner_logger=runner_logger)
-        copy_status.append(item_status)
+        copy_status.append(item_status)"""
+    copy_status = copy_file_flow(
+        copy_parameter_list=copy_parameter_list,concurrency_tag="file_mover_delete_copy",logger=logger, runner_logger=runner_logger, concurrency_tag="file_mover_delete_copy")
+    
 
     # compare md5sum
     runner_logger.info("Start comparing md5sum before and after copy")
@@ -160,16 +163,16 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     first_url_list = meta_df["original_uri"].tolist()
     second_url_list = meta_df["dest_uri"].tolist()
 
-    results = compare_md5sum_flow(
+    md5sum_results = compare_md5sum_flow(
         first_url_list=first_url_list,
         second_url_list=second_url_list,
         concurrency_tag="file_mover_delete_md5sum",
     )
 
     meta_df["copy_status"] = copy_status
-    meta_df["original_md5sum"] = [result[1] for result in results]
-    meta_df["dest_md5sum"] = [result[2] for result in results]
-    meta_df["md5sum_check"] = [result[3] for result in results]
+    meta_df["original_md5sum"] = [result[1] for result in md5sum_results]
+    meta_df["dest_md5sum"] = [result[2] for result in md5sum_results]
+    meta_df["md5sum_check"] = [result[3] for result in md5sum_results]
 
 
     # upload files to bucket
