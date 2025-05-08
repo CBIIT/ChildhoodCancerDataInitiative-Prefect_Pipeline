@@ -114,7 +114,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     file_dl(bucket=bucket, filename = obj_list_tsv_path)
     runner_logger.info(f"Downloaded list of s3 uri file: {obj_list_tsv_path}")
     tsv_name = os.path.basename(obj_list_tsv_path)
-    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])[:-15:-10]
+    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])[:1000]
     logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
     runner_logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
 
@@ -136,8 +136,12 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     for copy_parameter  in copy_parameter_list:
         item_status = copy_file_task(copy_parameter=copy_parameter, s3_client=s3_client, logger=logger, runner_logger=runner_logger)
         copy_status.append(item_status)"""
-    copy_status = copy_file_flow(
-        copy_parameter_list=copy_parameter_list,logger=logger, runner_logger=runner_logger, concurrency_tag="file_mover_delete_copy")
+    copy_status = []
+    for chunk in range(0, len(copy_parameter_list), 500):
+        runner_logger.info(f"Copying {chunk} to {chunk+500} files")
+        int_copy_status = copy_file_flow(
+            copy_parameter_list=copy_parameter_list[chunk:chunk+500],logger=logger, runner_logger=runner_logger, concurrency_tag="file_mover_delete_copy")
+        copy_status.extend(int_copy_status)
     
 
     # compare md5sum
@@ -161,15 +165,25 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     meta_df["original_md5sum"] = first_md5sum
     meta_df["dest_md5sum"] = second_md5sum
     meta_df["md5sum_check"] = compare_md5sum_status"""
-
+    # compare md5sum
     first_url_list = meta_df["original_uri"].tolist()
     second_url_list = meta_df["dest_uri"].tolist()
+    md5sum_results = []
 
-    md5sum_results = compare_md5sum_flow(
+    for chunk in range(0, len(first_url_list), 500):
+        runner_logger.info(f"Comparing md5sum for {chunk} to {chunk+500} files")
+        int_md5sum_results = compare_md5sum_flow(
+            first_url_list=first_url_list[chunk:chunk+500],
+            second_url_list=second_url_list[chunk:chunk+500],
+            concurrency_tag="file_mover_delete_md5sum",
+        )
+        md5sum_results.extend(int_md5sum_results)
+
+    """md5sum_results = compare_md5sum_flow(
         first_url_list=first_url_list,
         second_url_list=second_url_list,
         concurrency_tag="file_mover_delete_md5sum",
-    )
+    )"""
 
     meta_df["copy_status"] = copy_status
     meta_df["original_md5sum"] = [result[1] for result in md5sum_results]
