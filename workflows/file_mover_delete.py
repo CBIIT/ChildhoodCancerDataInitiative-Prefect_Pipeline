@@ -136,7 +136,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
         item_status = copy_file_task(copy_parameter=copy_parameter, s3_client=s3_client, logger=logger, runner_logger=runner_logger)
         copy_status.append(item_status)"""
     copy_status = copy_file_flow(
-        copy_parameter_list=copy_parameter_list,concurrency_tag="file_mover_delete_copy",logger=logger, runner_logger=runner_logger, concurrency_tag="file_mover_delete_copy")
+        copy_parameter_list=copy_parameter_list,logger=logger, runner_logger=runner_logger, concurrency_tag="file_mover_delete_copy")
     
 
     # compare md5sum
