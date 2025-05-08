@@ -144,7 +144,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     for i in range(meta_df.shape[0]):
         original_uri_i = meta_df["original_uri"][i]
         dest_uri_i = meta_df["dest_uri"][i]
-        i_original_md5sum, i_dest_md5sum, comparison_result = compare_md5sum_task(first_url=original_uri_i, second_url=dest_uri_i, s3_client=s3_client,  logger=logger)
+        i_original_url, i_original_md5sum, i_dest_md5sum, comparison_result = compare_md5sum_task(first_url=original_uri_i, second_url=dest_uri_i, s3_client=s3_client, logger=logger)
         first_md5sum.append(i_original_md5sum)
         second_md5sum.append(i_dest_md5sum)
         compare_md5sum_status.append(comparison_result)
