@@ -114,7 +114,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     file_dl(bucket=bucket, filename = obj_list_tsv_path)
     runner_logger.info(f"Downloaded list of s3 uri file: {obj_list_tsv_path}")
     tsv_name = os.path.basename(obj_list_tsv_path)
-    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])[16:22] ##TESTING
+    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])
     logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
     runner_logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
 
@@ -131,6 +131,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     runner_logger.info("Start moving files")
     s3_client = set_s3_session_client()
     copy_parameter_list = meta_df["copy_parameter"].tolist()
+    ## KEEP BELOW UNTIL MERGED TO PROD JUST IN CASE
     """copy_status = []
     for copy_parameter  in copy_parameter_list:
         item_status = copy_file_task(copy_parameter=copy_parameter, s3_client=s3_client, logger=logger, runner_logger=runner_logger)
@@ -141,6 +142,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
 
     # compare md5sum
     runner_logger.info("Start comparing md5sum before and after copy")
+    ## KEEP BELOW UNTIL MERGED TO PROD JUST IN CASE
     """first_md5sum = []
     second_md5sum = []
     compare_md5sum_status = []
