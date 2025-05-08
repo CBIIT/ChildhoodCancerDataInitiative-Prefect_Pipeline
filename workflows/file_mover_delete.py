@@ -114,7 +114,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     file_dl(bucket=bucket, filename = obj_list_tsv_path)
     runner_logger.info(f"Downloaded list of s3 uri file: {obj_list_tsv_path}")
     tsv_name = os.path.basename(obj_list_tsv_path)
-    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])
+    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])[:-15:-10]
     logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
     runner_logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
 
