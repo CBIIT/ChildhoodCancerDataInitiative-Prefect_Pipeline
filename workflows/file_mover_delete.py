@@ -66,7 +66,7 @@ def check_if_directory(s3_client, uri_path: str) -> None:
     print(if_dir)
     return if_dir
 
-@flow(
+@task(
         name="If Directory",
         log_prints=True,
         cache_policy=NO_CACHE,
