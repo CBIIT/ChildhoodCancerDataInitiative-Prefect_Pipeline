@@ -91,7 +91,8 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     return dest_url
 
 
-def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> None:
+#def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> None:
+def copy_large_file(copy_parameter: dict, file_size: int, s3_client, runner_logger) -> str:
     # collect source bucket, source key, destination bucket, and destination key
     source_bucket, source_key = copy_parameter["CopySource"].split("/", 1)
     copy_source = copy_parameter["CopySource"]
@@ -138,7 +139,8 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
                     part = future.result()
                     parts.append(part)
                 except Exception as e:
-                    logger.error(f"Error uploading part {part_number}: {e}")
+                    #logger.error(f"Error uploading part {part_number}: {e}")
+                    runner_logger.error(f"Error uploading part {part_number}: {e}")
                     raise
 
         # Sort parts by PartNumber before completing the multipart upload
@@ -152,10 +154,10 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
             MultipartUpload={"Parts": parts},
         )
 
-        logger.info(
-            f"Multipart transferred successfully from {copy_source} to {destination_bucket}/{destination_key}"
-        )
-        print(
+        #logger.info(
+        #    f"Multipart transferred successfully from {copy_source} to {destination_bucket}/{destination_key}"
+        #)
+        runner_logger(
             f"Multipart transferred successfully from {copy_source} to {destination_bucket}/{destination_key}"
         )
         transfer_status = "Success"
@@ -164,14 +166,16 @@ def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> 
         s3_client.abort_multipart_upload(
             Bucket=destination_bucket, Key=destination_key, UploadId=upload_id
         )
-        logger.info(f"Multipart copy Failed to copy file {copy_source}: {e}")
-        print(f"Multipart copy Failed to copy file {copy_source}: {e}")
+        #logger.info(f"Multipart copy Failed to copy file {copy_source}: {e}")
+        runner_logger.info(f"Multipart copy Failed to copy file {copy_source}: {e}")
+        #print(f"Multipart copy Failed to copy file {copy_source}: {e}")
         transfer_status = "Fail"
     return transfer_status
 
 
 def copy_file_by_size(
-    copy_parameter: dict, file_size: int, s3_client, logger, runner_logger
+    #copy_parameter: dict, file_size: int, s3_client, logger, runner_logger
+    copy_parameter: dict, file_size: int, s3_client, runner_logger
 ):
     """Copy objects between two locations defined by copy_parameter
 
@@ -184,25 +188,26 @@ def copy_file_by_size(
     copy_source = copy_parameter["CopySource"]
     # test if file_size larger than 5GB, 5*1024*1024*1024
     if file_size > 5368709120:
-        # runner_logger.info(
-        #    f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
-        # )
-        logger.info(
+        runner_logger.info(
             f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
         )
+        #logger.info(
+        #    f"File size {file_size} of {copy_source} larger than 5GB. Start multipart upload process"
+        #)
         transfer_status = copy_large_file(
             copy_parameter=copy_parameter,
             file_size=file_size,
             s3_client=s3_client,
-            logger=logger,
+            runner_logger=runner_logger,
+            #logger=logger,
         )
     else:
-        # runner_logger.info(
-        #    f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
-        # )
-        logger.info(
+        runner_logger.info(
             f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
         )
+        #logger.info(
+        #    f"File size {file_size} of {copy_source} less than 5GB. Copy object file using copy_object of s3_client object"
+        #)
         try:
             s3_client.copy_object(**copy_parameter)
             transfer_status = "Success"
@@ -212,20 +217,20 @@ def copy_file_by_size(
             ex_message = ex.response["Error"]["Message"]
             if ex_code == "NoSuchKey":
                 object_name = ex.response["Error"]["Key"]
-                logger.error(ex_code + ":" + ex_message + " " + object_name)
+                #logger.error(ex_code + ":" + ex_message + " " + object_name)
                 runner_logger.error(ex_code + ":" + ex_message + " " + object_name)
             elif ex_code == "NoSuchBucket":
                 bucket_name = ex.response["Error"]["Code"]["BucketName"]
-                logger.error(
-                    ex_code + ":" + ex_message + " Bucket name: " + bucket_name
-                )
+                #logger.error(
+                #    ex_code + ":" + ex_message + " Bucket name: " + bucket_name
+                #)
                 runner_logger.error(
                     ex_code + ":" + ex_message + " Bucket name: " + bucket_name
                 )
             else:
-                logger.error(
-                    "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
-                )
+                #logger.error(
+                #    "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
+                #)
                 runner_logger.error(
                     "Error info:\n" + json.dumps(ex.response["Error"], indent=4)
                 )
@@ -240,7 +245,8 @@ def copy_file_by_size(
     log_prints=True,
     cache_policy=NO_CACHE,
 )
-def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concurrency_tag) -> str:
+#def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concurrency_tag) -> str:
+def copy_file_task(copy_parameter: dict, s3_client, runner_logger, concurrency_tag) -> str:
     """Copy objects between two locations defined by copy_parameter
 
     It checks if the file has been transferred (Key and object Content length/size) before trasnfer process
@@ -259,9 +265,9 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concu
             Bucket=copy_parameter["Bucket"], Key=copy_parameter["Key"]
         )
         if dest_object["ContentLength"] == file_size:
-            logger.info(
-                f"File {copy_source} had already been copied to destination bucket path. Skip"
-            )
+            #logger.info(
+            #    f"File {copy_source} had already been copied to destination bucket path. Skip"
+            #)
             print(
                 f"File {copy_source} had already been copied to destination bucket path. Skip"
             )
@@ -272,7 +278,7 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concu
                 copy_parameter=copy_parameter,
                 file_size=file_size,
                 s3_client=s3_client,
-                logger=logger,
+                #logger=logger,
                 runner_logger=runner_logger,
             )
 
@@ -282,14 +288,15 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concu
             copy_parameter=copy_parameter,
             file_size=file_size,
             s3_client=s3_client,
-            logger=logger,
+            #logger=logger,
             runner_logger=runner_logger,
         )
     return transfer_status
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
-def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concurrency_tag) -> list:
+#def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concurrency_tag) -> list:
+def copy_file_flow(copy_parameter_list: list[dict], runner_logger, concurrency_tag) -> list:
     """Copy of list of file concurrently"""
     s3_client = set_s3_session_client()
     
@@ -298,7 +305,8 @@ def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concu
     
     for params in copy_parameter_list:
         # Submit the task with a delay of 0.25 seconds
-        transfer_status_list.append(copy_file_task.submit(params, s3_client, logger, runner_logger, concurrency_tag))
+        #transfer_status_list.append(copy_file_task.submit(params, s3_client, logger, runner_logger, concurrency_tag))
+        transfer_status_list.append(copy_file_task.submit(params, s3_client, runner_logger, concurrency_tag))
         
         # Throttle task submission with a 0.25-second delay
         time.sleep(0.25)

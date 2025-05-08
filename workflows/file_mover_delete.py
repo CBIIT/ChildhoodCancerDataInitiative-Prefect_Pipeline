@@ -114,7 +114,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     file_dl(bucket=bucket, filename = obj_list_tsv_path)
     runner_logger.info(f"Downloaded list of s3 uri file: {obj_list_tsv_path}")
     tsv_name = os.path.basename(obj_list_tsv_path)
-    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])
+    tsv_df = pd.read_csv(tsv_name, sep="\t", header=None, names =  ["original_uri"])[-10:]
     logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
     runner_logger.info(f"{tsv_df.shape[0]} items were found in file {tsv_name}")
 
@@ -137,9 +137,8 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
         item_status = copy_file_task(copy_parameter=copy_parameter, s3_client=s3_client, logger=logger, runner_logger=runner_logger)
         copy_status.append(item_status)"""
     copy_status = copy_file_flow(
-        copy_parameter_list=copy_parameter_list,logger=logger, runner_logger=runner_logger, concurrency_tag="file_mover_delete_copy")
+        copy_parameter_list=copy_parameter_list, runner_logger=runner_logger, concurrency_tag="file_mover_delete_copy")
     
-
     # compare md5sum
     runner_logger.info("Start comparing md5sum before and after copy")
     ## KEEP BELOW UNTIL MERGED TO PROD JUST IN CASE
