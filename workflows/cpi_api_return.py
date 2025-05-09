@@ -7,9 +7,10 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.neo4j_data_tools import pull_uniq_studies, export_to_csv_per_node_per_study, pull_data_per_node_per_study, cypher_query_parameters
 from neo4j import GraphDatabase
-from src.utils import get_time, file_ul, get_secret
+from src.utils import get_time, file_ul, get_secret, list_to_chunks, folder_ul
 import pandas as pd
 import requests
+import json
 
 
 cypher_query_particiapnt_per_study = """
@@ -123,12 +124,11 @@ def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> 
     return None
 
 @flow(name="Combines participant ids from all studies into a single tsv", log_prints=True)
-def consolidate_all_participant_id(folderpath: str, logger, output_name: str) -> None:
+def consolidate_all_participant_id(folderpath: str, output_name: str) -> None:
     """Read through csv files in the a folder and combines participant ids into a single file
 
     Args:
         folderpath (str): folder path that contains csv file of participant ids per study per file
-        logger (_type_): logger instance
         output_name: a tsv file that contains all the 
     """    
     csv_list = [os.path.join(folderpath, filename) for filename in os.listdir(folderpath) if filename.endswith("csv")]
@@ -144,12 +144,12 @@ def consolidate_all_participant_id(folderpath: str, logger, output_name: str) ->
 
 
 @flow(name="Participant ID pull per study", log_prints=True)
-def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
+def pull_participants_in_db(bucket: str, upload_folder: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
     """Pulls all participant ID from neo4j sandbox DB
 
     Args:
         bucket (str): bucket of where outputs upload to
-        runner (str): unique runner name
+        upload_folder (str): unique runner name
         uri_parameter (str): db uri parameter
         username_parameter (str): db username parameter
         password_parameter (str): db password parameter
@@ -182,22 +182,205 @@ def pull_participants_in_db(bucket: str, runner: str, uri_parameter: str, userna
     logger.info("All participant_id per study pulled")
 
     # combines all participant id into a single tsv file
-    consolidate_all_participant_id(folderpath=output_dir, output_name="sandbox_participant_id.tsv", logger=logger)
+    participant_filename = "sandbox_participant_id_" + get_time() + ".tsv"
+    consolidate_all_participant_id(
+        folderpath=output_dir,
+        output_name=participant_filename,
+    )
 
-    bucket_folder = runner + "/db_participant_id_pull_" + get_time()
+
     logger.info(
         f"Uploading participant_id file sandbox_participant_id.tsv to the bucket {bucket} at {bucket_folder}"
     )
     file_ul(
         bucket=bucket,
-        output_folder=bucket_folder,
+        output_folder=upload_folder,
         sub_folder="",
-        newfile="sandbox_participant_id.tsv",
+        newfile=participant_filename,
     )
-    logger.info("All participant_id uploaded to the bucket")
+    logger.info(f"All participant_id uploaded to the bucket {bucket} at {upload_folder}")
+    # remove the local file
+    return participant_filename
 
-@flow(name="Get Associated Domains of Participant IDs", log_prints=True)
-def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
+@task(name="Get all domain information", log_prints=True)
+def get_all_doamin_info(client_id: str, client_secret: str, token_url: str) -> str:
+    """Get all domain information from the API
+
+    Args:
+        client_id (str): _description_
+        client_secret (str): _description_
+        token_url (str): _description_
+
+    Returns:
+        str: domain information file name
+    """    
+    access_token = get_access_token(
+        client_id=client_id, client_secret=client_secret, token_url=token_url
+    )
+    all_domains = get_cpi_request(
+        api_extension=API_GET_DOMAINS, access_token=access_token, request_body={}
+    )
+    domain_info_file = "all_domains.json"
+    with open("all_domains.json", "w") as file:
+        json.dump(all_domains, file)
+    return domain_info_file
+
+
+def reformat_domain_dict(filepath: str) -> dict:
+    """Read a json file of domain API return and reformat into a dictionary
+
+    Args:
+        filepath (str): filepath of API regarding all domains
+
+    Returns:
+        dict: a dictionary of domain names
+    """
+    with open(filepath, "r") as file:
+        domain_list = json.load(file)
+    return_dict = {}
+    for domain in domain_list:
+        domain_name = domain["domain_name"]
+        return_dict[domain_name] = domain
+    return return_dict
+
+@task(name="Fetch associated ids for participants", log_prints=True)
+def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id: str, client_secret: str, token_url: str) -> str:
+    """Read a tsv and get associatd id from different domains and returns a file per study
+
+    Args:
+        filepath (str): filepath of a tsv which contains participant_id and study accession
+        out_dir (str): output directory
+        domain_file (str): a json file contains all the domain metadata
+        client_id (str): cpi api client id
+        client_secret (str): cpi api client secret
+        token_url (str): cpi api token url
+    
+    Returns:
+        str: filepath of the output file
+    """
+    domain_dict = reformat_domain_dict(filepath=domain_file)
+
+    id_df = pd.read_csv(filepath, sep="\t")
+    uniq_studies = list(id_df["study_id"].unique())
+
+    for study in uniq_studies:
+        # for each study, get a new token
+        token = get_access_token(
+            client_id=client_id, client_secret=client_secret, token_url=token_url
+        )
+        # create a file for each study
+        study_filename = f"{study}_participant_associated_domains.tsv"
+        study_filepath = f"{out_dir}/{study_filename}"
+        study_associated_df = pd.DataFrame(
+            columns=[
+                "study_id",
+                "participant_id",
+                "associated_id",
+                "domain_name",
+                "domain_description",
+                "domain_category",
+                "data_location",
+            ]
+        )
+        study_associated_df.to_csv(study_filepath, sep="\t", index=False)
+
+        # get subset of participant_ids for each study
+        study_df = id_df[id_df["study_id"] == study]
+        participant_ids = list(study_df["participant_id"])
+        print(f"study {study} has {len(participant_ids)} participant_ids")
+        # break the participant_id list into chunks for API call
+        participant_ids_list = list_to_chunks(participant_ids, 50)
+        print(f"chunks for study {study}: {len(participant_ids_list)}")
+
+        for item in participant_ids_list:
+
+            # get associated domains for 50 participant_ids
+            item_list = []
+            for participant_id in item:
+                item_list.append(
+                    {"domain_name": study, "participant_id": participant_id}
+                )
+            relevant_domains_item_return = get_cpi_request(
+                api_extension=API_GET_ASSOCIATED_PARTICIPANT_IDS,
+                access_token=token,
+                request_body={"participant_ids": item_list},
+            )
+            # reformt return for easier access
+            relevant_domains_item_return_reformat = {}
+            # relevant_domains_item_return["participant_ids"] is a list
+            for return_item in relevant_domains_item_return["participant_ids"]:
+                # return_item["associated_ids"] is a list
+                relevant_domains_item_return_reformat[return_item["participant_id"]] = (
+                    return_item["associated_ids"]
+                )
+            records_to_write = []
+            for id in item:
+                if id in relevant_domains_item_return_reformat.keys():
+                    id_associated_domains = relevant_domains_item_return_reformat[id]
+                    if len(id_associated_domains) > 0:
+                        for single_associated_domain in id_associated_domains:
+                            records_to_write.append(
+                                {
+                                    "study_id": study,
+                                    "participant_id": id,
+                                    "associated_id": single_associated_domain[
+                                        "participant_id"
+                                    ],
+                                    "domain_name": single_associated_domain[
+                                        "domain_name"
+                                    ],
+                                    "domain_category": single_associated_domain[
+                                        "domain_category"
+                                    ],
+                                    "domain_description": domain_dict[
+                                        single_associated_domain["domain_name"]
+                                    ]["domain_description"],
+                                    "data_location": domain_dict[
+                                        single_associated_domain["domain_name"]
+                                    ]["data_location"],
+                                }
+                            )
+                    else:
+                        pass
+                        # records_to_write.append(
+                        #    {
+                        #        "study_id": study,
+                        #        "participant_id": id,
+                        #        "associated_id": None,
+                        #        "domain_name": None,
+                        #        "domain_description": None,
+                        #        "domain_category": None,
+                        #        "data_location": None,
+                        #    }
+                        # )
+                else:
+                    pass
+                    # records_to_write.append(
+                    #    {
+                    #        "study_id": study,
+                    #        "participant_id": id,
+                    #        "associated_id": None,
+                    #        "domain_name": None,
+                    #        "domain_description": None,
+                    #        "domain_category": None,
+                    #        "data_location": None,
+                    #    }
+                    # )
+            # append the dataframe to exisitng file
+            if len(records_to_write) > 0:
+                study_df = pd.read_csv(study_filepath, sep="\t")
+                study_df = pd.concat(
+                    [study_df, pd.DataFrame(records_to_write)], ignore_index=True
+                )
+                study_df.to_csv(study_filepath, sep="\t", index=False)
+            else:
+                pass
+
+    return None
+
+
+@flow(name="Get Associated Domains of CCDI Participants", log_prints=True)
+def get_associated_domains_ids(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
     """Get Associated Domains of Participant IDs
 
     Args:
@@ -210,6 +393,19 @@ def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: 
     logger = get_run_logger()
     logger.info("Getting uri, username and password parameter from AWS")
 
+    upload_folder = runner.strip("/") + "/cpi_api_return_" + get_time()
+
+    # pull participant id from neo4j sandbox DB
+    participant_filename = pull_participants_in_db(
+        bucket=bucket,
+        upload_folder=upload_folder,
+        uri_parameter=uri_parameter,
+        username_parameter=username_parameter,
+        password_parameter=password_parameter,
+    )
+    logger.info("All participant_id pulled from neo4j sandbox DB")
+   
+    
     # get secrets from AWS secret manager
     client_id = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="client_id")
     #print(client_id)
@@ -217,24 +413,27 @@ def get_associated_domains_particpants(bucket: str, runner: str, uri_parameter: 
     #print(secret)
     access_token_url = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="access_token_url")
     #print(access_token_url)
-    access_token = get_access_token(client_id=client_id, client_secret=secret, token_url=access_token_url)
-    logger.info(f"get access token: {access_token}")
 
-    # get domains
-    request_body = {
-        "participant_ids": [
-            {"domain_name": "USI", "participant_id": "PAKZVD"},
-            {"domain_name": "USI", "participant_id": "PADJKU"},
-        ]
-    }
+    # get all domain information
+    domain_file = get_all_doamin_info(client_id=client_id, client_secret=secret, token_url=access_token_url)
+    logger.info("Fetched all domain metadata from CPI API")
 
-    domains_dict = get_cpi_request(
-        api_extension=API_GET_ASSOCIATED_PARTICIPANT_IDS,
-        access_token=access_token,
-        request_body=request_body,
+    # get associated ids for all the participants
+    out_dir = "associated_participant_ids_" + get_time()
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+    else:
+        pass
+    get_associated_ids(
+        filepath=participant_filename,
+        out_dir=out_dir,
+        domain_file=domain_file,
+        client_id=client_id,
+        client_secret=secret,
+        token_url=access_token_url,
     )
-    print(domains_dict)
-    return None
+    logger.info(f"Fetched asscociated ids for all participants in the tsv {participant_filename}")
+    folder_ul(local_folder=out_dir, bucket=bucket, destination=upload_folder, sub_folder="")
+    logger.info(f"Uploaded associated ids for all participants to the bucket {bucket} folder path {upload_folder}")
 
-if __name__ == "__main__":
-    get_associated_domains_particpants(bucket="ccdi-validation", runner="QL", uri_parameter="uri", username_parameter="username", password_parameter="password")
+    return None
