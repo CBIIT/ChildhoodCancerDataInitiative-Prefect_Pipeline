@@ -908,3 +908,65 @@ deployments:
       name: ccdi-curation-8gb
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-cpi-api-return
+    version: null
+    tags: ["TEST"]
+    description: null
+    entrypoint: workflows/cpi_api_return.py:get_associated_domains_particpants
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      uri_parameter: "uri"
+      username_parameter: "username"
+      password_parameter: "password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: no-cache
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: TEST-cpi-api-response
+    version: null
+    tags: ["TEST", "QIONG", "CPI"]
+    description: "Test cpi api response"
+    entrypoint: workflows/cpi_api_return.py:get_associated_domains_ids
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      uri_parameter: "uri"
+      username_parameter: "username"
+      password_parameter: "password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-1558_CPI_validation
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}
