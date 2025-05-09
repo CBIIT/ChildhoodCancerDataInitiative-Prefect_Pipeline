@@ -202,7 +202,7 @@ def pull_participants_in_db(bucket: str, upload_folder: str, uri_parameter: str,
     # remove the local file
     return participant_filename
 
-@task(name="Get all domain information", log_prints=True)
+@flow(name="Get all domain information", log_prints=True)
 def get_all_doamin_info(client_id: str, client_secret: str, token_url: str) -> str:
     """Get all domain information from the API
 
@@ -243,7 +243,7 @@ def reformat_domain_dict(filepath: str) -> dict:
         return_dict[domain_name] = domain
     return return_dict
 
-@task(name="Fetch associated ids for participants", log_prints=True)
+@flow(name="Fetch associated ids for participants", log_prints=True)
 def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id: str, client_secret: str, token_url: str) -> str:
     """Read a tsv and get associatd id from different domains and returns a file per study
 
