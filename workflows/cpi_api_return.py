@@ -190,7 +190,7 @@ def pull_participants_in_db(bucket: str, upload_folder: str, uri_parameter: str,
 
 
     logger.info(
-        f"Uploading participant_id file sandbox_participant_id.tsv to the bucket {bucket} at {bucket_folder}"
+        f"Uploading participant_id file sandbox_participant_id.tsv to the bucket {bucket} at {upload_folder}"
     )
     file_ul(
         bucket=bucket,
