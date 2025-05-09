@@ -404,6 +404,7 @@ def get_associated_domains_ids(bucket: str, runner: str, uri_parameter: str, use
         password_parameter=password_parameter,
     )
     logger.info("All participant_id pulled from neo4j sandbox DB")
+    logger.info(f"Uploaded sandbox pulled participant_id file to the bucket {bucket} at {upload_folder}")
    
     
     # get secrets from AWS secret manager
@@ -417,6 +418,8 @@ def get_associated_domains_ids(bucket: str, runner: str, uri_parameter: str, use
     # get all domain information
     domain_file = get_all_doamin_info(client_id=client_id, client_secret=secret, token_url=access_token_url)
     logger.info("Fetched all domain metadata from CPI API")
+    file_ul(bucket=bucket, output_folder=upload_folder, sub_folder="", newfile=domain_file)
+    logger.info(f"Uploaded all domain metadata to the bucket {bucket} at {upload_folder})")
 
     # get associated ids for all the participants
     out_dir = "associated_participant_ids_" + get_time()
