@@ -545,7 +545,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
     transfer_status_list = []
     for h in transfer_chuncks:
         try:
-            h_transfer_status_list = copy_file_flow(h, logger, runner_logger)
+            h_transfer_status_list = copy_file_flow(h, logger, runner_logger, concurrency_tag="ccdi-file-copier-tag")
             transfer_status_list.extend(h_transfer_status_list)
 
 
@@ -599,6 +599,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             j_md5sum_compare_result = compare_md5sum_flow(
                 first_url_list=urls_before_chunks[j],
                 second_url_list=urls_after_chunks[j],
+                concurrency_tag="ccdi-file-copier-tag"
             )
             # add logging info on the md5sum check progress
             logger.info(f"md5sum check completed: {j+1}/{len(urls_before_chunks)}")
