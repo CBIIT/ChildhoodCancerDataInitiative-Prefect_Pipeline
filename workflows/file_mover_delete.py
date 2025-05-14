@@ -330,7 +330,7 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
     runner_logger.info(
         f"After removing duplicates, a total of {tsv_df.shape[0]} objects will be moved"
     )
-    for i in uri_list:
+    for i in list(set(uri_list)):
         # in case one file needs to be moved to multiplei destinations
         i_dest_uri_list = tsv_df[tsv_df["original_uri"] == i]["dest_uri"].values.tolist()
         for dest_uri in i_dest_uri_list:
