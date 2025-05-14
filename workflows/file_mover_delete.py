@@ -284,9 +284,9 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
     which covers use cases when the runner doesn't want to preserve the original file path strucutre.
 
     Args:
-        bucket (str): Bucket of where tsv lives and output goes to.
+        bucket (str): Bucket of where output goes to.
         runner (str): unique runner name
-        obj_tsv_file_path (str): A tsv file which contains two columns, original_uri and dest_uri. Valid s3 uri format is expected under each column, e.g., s3://{bucket-name}/{file-path}/{file-name}). 
+        obj_tsv_file_path (str): A tsv file s3 uri (s3://{bucket-name}/{file-path}/{tsv-name}.tsv) which contains two columns, original_uri and dest_uri. Valid s3 uri format is expected under each column, e.g., s3://{bucket-name}/{file-path}/{file-name}).
     """
     current_time = get_time()
     # create logger
@@ -348,6 +348,7 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
             concurrency_tag="file-mover-delete-alt-copy",
         )
         copy_status.extend(int_copy_status)
+    print(copy_status)
 
     # compare md5sum
     # compare md5sum
