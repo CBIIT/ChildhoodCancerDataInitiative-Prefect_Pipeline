@@ -347,10 +347,10 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
             runner_logger=runner_logger,
             concurrency_tag="file-mover-delete-alt-copy",
         )
+        print(int_copy_status)
         copy_status.extend(int_copy_status)
     print(copy_status)
 
-    # compare md5sum
     # compare md5sum
     first_url_list = tsv_df["original_uri"].tolist()
     second_url_list = tsv_df["dest_uri"].tolist()
