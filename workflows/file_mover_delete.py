@@ -336,6 +336,7 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
         for dest_uri in i_dest_uri_list:
             dest_uri_parameter = generate_copy_parameter(original_uri=i, dest_uri=dest_uri)
             copy_parameter_list.append(dest_uri_parameter)
+    print(copy_parameter_list)
 
     # start copy files
     copy_status = []
