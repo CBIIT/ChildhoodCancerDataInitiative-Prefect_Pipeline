@@ -297,7 +297,8 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
     # uplload folder path
     upload_folder  = os.path.join(runner, "file_mover_delete_outputs_" + current_time)
 
-    file_dl(bucket=bucket, filename = obj_tsv_file_path)
+    tsv_bucket, tsv_keypath = parse_file_url(url=obj_tsv_file_path)
+    file_dl(bucket=tsv_bucket, filename=tsv_keypath)
     runner_logger.info(f"Downloaded list of s3 uri file: {obj_tsv_file_path}")
     tsv_name = os.path.basename(obj_tsv_file_path)
     tsv_df = pd.read_csv(tsv_name, sep="\t", header=0)
@@ -401,5 +402,5 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
         print(
             tsv_df[["original_uri", "md5sum_check"]][tsv_df["md5sum_check"] != "Pass"]
         )
-    
+
     return None
