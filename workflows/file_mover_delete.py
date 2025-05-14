@@ -81,8 +81,6 @@ def check_if_directory(s3_client, uri_path: str) -> None:
             err_code = err.response["Error"]["Code"]
             err_message = err.response["Error"]["Message"]
             print(f"{err_code}: {err_message} {uri_path}")
-
-    print(if_dir)
     return if_dir
 
 @task(
@@ -336,7 +334,6 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
         for dest_uri in i_dest_uri_list:
             dest_uri_parameter = generate_copy_parameter(original_uri=i, dest_uri=dest_uri)
             copy_parameter_list.append(dest_uri_parameter)
-    print(copy_parameter_list)
 
     # start copy files
     copy_status = []
@@ -348,9 +345,7 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
             runner_logger=runner_logger,
             concurrency_tag="file-mover-delete-alt-copy",
         )
-        print(int_copy_status)
         copy_status.extend(int_copy_status)
-    print(copy_status)
 
     # compare md5sum
     first_url_list = tsv_df["original_uri"].tolist()
