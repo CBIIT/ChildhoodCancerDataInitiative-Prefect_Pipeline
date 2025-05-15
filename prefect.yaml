@@ -937,13 +937,44 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
+  - name: ccdi-cpi-api-fetch
+    version: null
+    tags: ["Production", "V2", "CPI"]
+    description: "Fetch associated ids of all CCDI participants using CPI API"
+    entrypoint: workflows/cpi_api_return.py:get_associated_domains_ids
+    schedule: null
+    
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      uri_parameter: "uri"
+      username_parameter: "username"
+      password_parameter: "password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.projects.steps.git_clone_project:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.projects.steps.pip_install_requirements:
+          requirements_file: requirements.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-8gb
+      work_queue_name: null
+      job_variables: {}
+
+
   - name: ccdi-gdc-transformation-16gb
     version: null
     tags: ["Production","V2"]
     description: null
     entrypoint: workflows/ccdi_to_gdc.py:ccdi_to_gdc_run
-    schedule: null
-
+    
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
@@ -2166,3 +2197,4 @@ deployments:
       name: ccdi-curation-2gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
+
