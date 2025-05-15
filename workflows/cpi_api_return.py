@@ -72,24 +72,15 @@ def get_cpi_request(api_extension: str, access_token: str, request_body: str) ->
         "Content-Type": "application/json",
         "Accept": "application/json",  # Matching Postman behavior
     }
-    print(f"Debug: Headers - {headers}")
     
     headers = {
         "Authorization": f"Bearer {access_token}",  # Ensure correct prefix
         "Content-Type": "application/json",
         "Accept": "application/json",  # Matching Postman behavior
     }
-    print(f"Debug: Headers with new token - {headers}")
     api_url = API_DOMAIN + api_extension
-    print(f"Debug: API URL - {api_url}")
-
-    print(f"Debug: Headers - {headers}")
-    print(f"Debug: Request Body - {request_body}")
 
     response = requests.get(api_url, json=request_body, headers=headers, verify=False)
-
-    print(f"Debug: Response Code - {response.status_code}")
-    print(f"Debug: Response Text - {response.text}")
 
     if response.status_code == 200:
         return response.json()
