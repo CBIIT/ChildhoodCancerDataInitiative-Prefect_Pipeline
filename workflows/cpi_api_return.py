@@ -204,12 +204,12 @@ def pull_participants_in_db(bucket: str, upload_folder: str, uri_parameter: str,
 
 @flow(name="Get all domain information", log_prints=True)
 def get_all_doamin_info(client_id: str, client_secret: str, token_url: str) -> str:
-    """Get all domain information from the API
+    """Get all domain information from CPI API
 
     Args:
-        client_id (str): _description_
-        client_secret (str): _description_
-        token_url (str): _description_
+        client_id (str): client id
+        client_secret (str): client secret
+        token_url (str): cpi token url
 
     Returns:
         str: domain information file name
@@ -220,8 +220,8 @@ def get_all_doamin_info(client_id: str, client_secret: str, token_url: str) -> s
     all_domains = get_cpi_request(
         api_extension=API_GET_DOMAINS, access_token=access_token, request_body={}
     )
-    domain_info_file = "all_domains.json"
-    with open("all_domains.json", "w") as file:
+    domain_info_file = "all_domains_metadata.json"
+    with open(domain_info_file, "w") as file:
         json.dump(all_domains, file)
     return domain_info_file
 
@@ -381,7 +381,7 @@ def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id:
 
 @flow(name="Get Associated Domains of CCDI Participants", log_prints=True)
 def get_associated_domains_ids(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
-    """Get Associated Domains of Participant IDs
+    """Get Associated id(s) of all CCDI participants in sandbox DB using CPI API
 
     Args:
         bucket (str): bucket of where outputs upload to
