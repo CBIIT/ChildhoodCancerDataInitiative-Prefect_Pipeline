@@ -30,7 +30,7 @@ Do you want to create a mega-merged manifest of all the diff manifests identifie
 
 
 @flow(name="Read MCI staging folder", log_prints=True)
-def read_mci_staing_folder(bucket_path: str):
+def read_mci_staging_folder(bucket_path: str):
     s3_client = set_s3_session_client()
     s3_paginator = s3_client.get_paginator("list_objects_v2")
 
@@ -64,9 +64,11 @@ def read_mci_staing_folder(bucket_path: str):
     return bucket_name, download_list, latest_pull_name
 
 
-@flow(name="find newly added", )
-def find_newly_added(download_list: list[dict], prev_pulled_list:str):
+@flow(name="find newly added", log_prints=True)
+def find_newly_added(bucket_path: str, prev_pulled_list:str):
     prev_file_list = pd.read_csv(prev_pulled_list, header=None)[0].tolist()
+    # run read_mci_staging_folder
+    bucket_name, download_list, latest_pull_name = read_mci_staging_folder(bucket_path=bucket_path) 
     diff_list = [i for i in download_list if i["filename"] not in prev_file_list]
     print(f"Newly added file counts: {len(diff_list)}")
     # create a file containing only diff filenames
@@ -75,7 +77,7 @@ def find_newly_added(download_list: list[dict], prev_pulled_list:str):
     diff_filename_str = "\n".join([i["filename"] for i in diff_list])
     with open(diff_filename, "w") as diff_file:
         diff_file.write(diff_filename_str)
-    return diff_list, diff_filename
+    return bucket_name, latest_pull_name, diff_list, diff_filename
 
 
 @flow(name="download diff files", log_prints=True)

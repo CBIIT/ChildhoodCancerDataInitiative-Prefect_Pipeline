@@ -328,7 +328,7 @@ def file_ul(bucket: str, output_folder: str, sub_folder: str, newfile: str):
     # extra_args={'ACL': 'bucket-owner-full-control'}
     source.upload_file(newfile, file_key)  # , extra_args)
 
-
+@task(name="Upload folder", task_run_name="upload_folder_{local_folder}", log_prints=True)
 def folder_ul(
     local_folder: str, bucket: str, destination: str, sub_folder: str
 ) -> None:
@@ -354,7 +354,7 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@task(log_prints=True)
+@task(name="Download folder", task_run_name="download_folder_{remote_folder}", log_prints=True)
 def folder_dl(bucket: str, remote_folder: str) -> None:
     """Downloads a remote direcotry folder from s3
     bucket to local. it generates a folder that follows the
@@ -1099,7 +1099,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
     tags=["md5sum-cal-tag"],
     name="Calculate one object md5sum",
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     log_prints=True,
 )
 def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
@@ -1117,7 +1117,7 @@ def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
     tags=["size-cal-tag"],
     name="Calculate one object size",
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     log_prints=True,
 )
 def calculate_single_size_task(s3uri: str, s3_client) -> str:
@@ -1406,3 +1406,18 @@ def get_secret(secret_name_path: str, secret_key_name: str):
         raise e
 
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
+
+
+def sanitize_return(err_string: str, remove_value_list: list):
+    """Sanitize a string of provided substrings to remove. 
+
+    Args:
+        err_string (str): String to remove any secret or sensitive substrings from
+        remove_value_list (list): List of substrings to remove
+
+    Returns:
+        str: Sanitized string
+    """
+    for remove_value in remove_value_list:
+        err_string = err_string.replace(remove_value, "")
+    return err_string 

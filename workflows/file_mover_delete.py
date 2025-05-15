@@ -4,11 +4,12 @@ import sys
 import pandas as pd
 from typing import TypeVar
 from botocore.errorfactory import ClientError
+from prefect.cache_policies import NO_CACHE
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.utils import get_time, file_dl, file_ul, get_date, set_s3_session_client, get_logger
-from src.file_mover import copy_object_parameter, dest_object_url, copy_file_task, parse_file_url, compare_md5sum_task
+from src.file_mover import copy_object_parameter, dest_object_url, copy_file_flow, parse_file_url, compare_md5sum_flow
 from src.file_remover import objects_deletion, retrieve_objects_from_bucket_path
 
 DataFrame = TypeVar("DataFrame")
@@ -65,9 +66,10 @@ def check_if_directory(s3_client, uri_path: str) -> None:
     print(if_dir)
     return if_dir
 
-@flow(
+@task(
         name="If Directory",
-        log_prints=True
+        log_prints=True,
+        cache_policy=NO_CACHE,
 )
 def identify_obj_dir(uri_list: list, logger) -> list:
     obj_list = []
@@ -129,28 +131,65 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     runner_logger.info("Start moving files")
     s3_client = set_s3_session_client()
     copy_parameter_list = meta_df["copy_parameter"].tolist()
-    copy_status = []
+    ## KEEP BELOW UNTIL MERGED TO PROD JUST IN CASE
+    """copy_status = []
     for copy_parameter  in copy_parameter_list:
         item_status = copy_file_task(copy_parameter=copy_parameter, s3_client=s3_client, logger=logger, runner_logger=runner_logger)
-        copy_status.append(item_status)
+        copy_status.append(item_status)"""
+    copy_status = []
+    for chunk in range(0, len(copy_parameter_list), 500):
+        runner_logger.info(f"Copying {chunk} to {chunk+500} files")
+        int_copy_status = copy_file_flow(
+            copy_parameter_list=copy_parameter_list[chunk:chunk+500],logger=logger, runner_logger=runner_logger, concurrency_tag="file_mover_delete_copy")
+        copy_status.extend(int_copy_status)
+    
 
     # compare md5sum
     runner_logger.info("Start comparing md5sum before and after copy")
-    first_md5sum = []
+    ## KEEP BELOW UNTIL MERGED TO PROD JUST IN CASE
+    """first_md5sum = []
     second_md5sum = []
     compare_md5sum_status = []
     for i in range(meta_df.shape[0]):
         original_uri_i = meta_df["original_uri"][i]
         dest_uri_i = meta_df["dest_uri"][i]
-        i_original_md5sum, i_dest_md5sum, comparison_result = compare_md5sum_task(first_url=original_uri_i, second_url=dest_uri_i, s3_client=s3_client,  logger=logger)
+        i_original_url, i_original_md5sum, i_dest_md5sum, comparison_result = compare_md5sum_task(first_url=original_uri_i, second_url=dest_uri_i, s3_client=s3_client, logger=logger)
+        
         first_md5sum.append(i_original_md5sum)
         second_md5sum.append(i_dest_md5sum)
         compare_md5sum_status.append(comparison_result)
+    
+
 
     meta_df["copy_status"] = copy_status
     meta_df["original_md5sum"] = first_md5sum
     meta_df["dest_md5sum"] = second_md5sum
-    meta_df["md5sum_check"] = compare_md5sum_status
+    meta_df["md5sum_check"] = compare_md5sum_status"""
+    # compare md5sum
+    first_url_list = meta_df["original_uri"].tolist()
+    second_url_list = meta_df["dest_uri"].tolist()
+    md5sum_results = []
+
+    for chunk in range(0, len(first_url_list), 500):
+        runner_logger.info(f"Comparing md5sum for {chunk} to {chunk+500} files")
+        int_md5sum_results = compare_md5sum_flow(
+            first_url_list=first_url_list[chunk:chunk+500],
+            second_url_list=second_url_list[chunk:chunk+500],
+            concurrency_tag="file_mover_delete_md5sum",
+        )
+        md5sum_results.extend(int_md5sum_results)
+
+    """md5sum_results = compare_md5sum_flow(
+        first_url_list=first_url_list,
+        second_url_list=second_url_list,
+        concurrency_tag="file_mover_delete_md5sum",
+    )"""
+
+    meta_df["copy_status"] = copy_status
+    meta_df["original_md5sum"] = [result[1] for result in md5sum_results]
+    meta_df["dest_md5sum"] = [result[2] for result in md5sum_results]
+    meta_df["md5sum_check"] = [result[3] for result in md5sum_results]
+
 
     # upload files to bucket
     output_folder = os.path.join(runner, "file_mover_delete_outputs_" + current_time)

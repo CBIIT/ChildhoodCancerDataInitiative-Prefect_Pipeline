@@ -5,7 +5,6 @@ from prefect import flow, get_run_logger, pause_flow_run
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.mci_monthly_release import (
-    read_mci_staing_folder,
     download_diff_files,
     find_newly_added,
     ProceedtoMergeInput,
@@ -50,14 +49,9 @@ def mci_release_manifest(
     prev_pull_list = os.path.basename(previous_pull_list_path)
     logger.info(f"Downlaoded previously pulled manifest list: {prev_pull_list}")
 
-    # identify all files in mci manifests bucket path
-    staging_bucket, staging_manifests_list, latest_pull_filename = (
-        read_mci_staing_folder(bucket_path=mci_manifests_bucket_path)
-    )
-
-    # identify the diff
-    diff_list, diff_filename = find_newly_added(
-        download_list=staging_manifests_list, prev_pulled_list=prev_pull_list
+    # read the bucket path and identify the diff
+    staging_bucket, latest_pull_filename, diff_list, diff_filename = find_newly_added(
+        bucket_path=mci_manifests_bucket_path, prev_pulled_list=prev_pull_list
     )
     logger.info(f"Newly added manifests counts: {len(diff_list)}")
 
