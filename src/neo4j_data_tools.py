@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.task_runners import ConcurrentTaskRunner
+from prefect.task_runners import ThreadPoolTaskRunner
 from neo4j import GraphDatabase
 import pandas as pd
 import numpy as np
@@ -734,7 +735,7 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
 @task(
     name="Pull ids a node a study",
     task_run_name="pull_ids_{node}_{study_id}",
-    tags=["concurrency-test"],
+    tags=["db-query-tag"],
 )
 def pull_ids_node_study(
     driver, export_ids_csv, study_id: str, node: str, output_dir: str
@@ -813,7 +814,7 @@ def compare_id_input_db(
     return comparison_df
 
 
-@flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
 def pull_node_ids_all_studies_write(
     driver, studies_dataframe: DataFrame, logger
 ) -> str:
@@ -834,13 +835,14 @@ def pull_node_ids_all_studies_write(
     for i in range(len(node_chunks)):
         # print(f"study_id_list: {*study_id_chunks[i],}")
         # print(f"node_list: {*node_chunks[i],}")
-        pull_ids_node_study.map(
+        future = pull_ids_node_study.map(
             driver,
             export_node_ids_a_study,
             study_id_chunks[i],
             node_chunks[i],
             temp_folder_name,
         )
+        future.result()
 
     return temp_folder_name
 
