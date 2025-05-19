@@ -909,15 +909,15 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     temp_folder_name = f"db_node_entry_counts_all_studies_{random.choice(range(1000))}"
     os.mkdir(temp_folder_name)
     logger.info("Start pulling entry counts per node per study")
-    for study in study_list:
-        logger.info(f"Pulling entry counts per node for study {study}")
-        future = pull_all_nodes_a_study.map(
-            driver=driver,
-            export_to_csv=export_node_counts_a_study,
-            study_id=study,
-            output_dir=temp_folder_name,
-        )
-        future.result()
+    
+    logger.info(f"Pulling entry counts per node for study list {*study_list,}")
+    future = pull_all_nodes_a_study.map(
+        driver=driver,
+        export_to_csv=export_node_counts_a_study,
+        study_id=study_list,
+        output_dir=temp_folder_name,
+    )
+    future.result()
 
     return temp_folder_name
 
@@ -1139,10 +1139,12 @@ def query_db_to_csv(
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
     # fetch unique nodes and unique studies
-    logger.info("Fetching all unique nodes DB")
+    logger.info("Fetching all unique nodes in DB")
     unique_nodes = pull_uniq_nodes(driver=driver)
+    logger.info("Fetching all unique studies in DB")
     unqiue_studies = pull_uniq_studies(driver=driver)
     logger.info(f"Nodes list: {*unique_nodes,}")
+    logger.info(f"Studies list: {*unqiue_studies,}")
 
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
