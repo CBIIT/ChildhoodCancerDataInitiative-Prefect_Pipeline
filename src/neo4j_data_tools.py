@@ -24,6 +24,7 @@ import tempfile
 import traceback
 from botocore.exceptions import ClientError
 import random
+import itertools
 
 
 DataFrame = TypeVar("DataFrame")
@@ -477,6 +478,7 @@ def pull_data_per_node(
     name="Pull node data per study",
     task_run_name="pull_node_data_{node_label}_{study_name}",
     cache_policy=NO_CACHE,
+    tags=["pull-db-tag"],
 )
 def pull_data_per_node_per_study(
     driver,
@@ -560,19 +562,33 @@ def pull_nodes_loop(
     print(per_study_per_node_out_dir)
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
-    for study in study_list:
-        #for node_label in node_list:
-        #logger.info(f"Pulling from Node {node_label}")
-        logger.info(f"Pulling from study {study}")
-        future = pull_data_per_node_per_study.map(
+    study_node_pair = list(itertools.product(study_list, node_list))
+
+    logger.info("start pulling data per node per study")
+
+    future = pull_data_per_node_per_study.map(
             driver=driver,
             data_to_csv=export_to_csv_per_node_per_study,
-            study_name=study,
-            node_label=node_list,
+            study_name=[x for x, y in study_node_pair],
+            node_label=[y for x, y in study_node_pair],
             query_str=cypher_phrase,
             output_dir=per_study_per_node_out_dir,
         )
-        future.result()
+    future.result()
+
+    #for study in study_list:
+    #    #for node_label in node_list:
+    #    #logger.info(f"Pulling from Node {node_label}")
+    #    logger.info(f"Pulling from study {study}")
+    #    future = pull_data_per_node_per_study.map(
+    #        driver=driver,
+    #        data_to_csv=export_to_csv_per_node_per_study,
+    #        study_name=study,
+    #        node_label=node_list,
+    #        query_str=cypher_phrase,
+    #        output_dir=per_study_per_node_out_dir,
+    #    )
+    #    future.result()
     return None
 
 
@@ -636,7 +652,10 @@ def pull_study_node(driver, out_dir: str) -> None:
     return None
 
 
-@task
+@task(
+    cache_policy=NO_CACHE,
+    name="Pull unique nodes from neo4j DB",
+)
 def pull_uniq_nodes(driver) -> List:
     """Return a list of nodes in the neo4j DB"""
     session = driver.session()
@@ -651,7 +670,10 @@ def pull_uniq_nodes(driver) -> List:
     return unique_nodes
 
 
-@task
+@task(
+    cache_policy=NO_CACHE,
+    name= "Pull unique study ids from neo4j DB",
+)
 def pull_uniq_studies(driver) -> List:
     """Return a list of studies in DB"""
     session = driver.session()
