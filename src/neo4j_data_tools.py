@@ -561,17 +561,18 @@ def pull_nodes_loop(
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
     for study in study_list:
-        for node_label in node_list:
-            logger.info(f"Pulling from Node {node_label}")
-            future = pull_data_per_node_per_study.map(
-                driver=driver,
-                data_to_csv=export_to_csv_per_node_per_study,
-                study_name=study,
-                node_label=node_label,
-                query_str=cypher_phrase,
-                output_dir=per_study_per_node_out_dir,
-            )
-            future.result()
+        #for node_label in node_list:
+        #logger.info(f"Pulling from Node {node_label}")
+        logger.info(f"Pulling from study {study}")
+        future = pull_data_per_node_per_study.map(
+            driver=driver,
+            data_to_csv=export_to_csv_per_node_per_study,
+            study_name=study,
+            node_label=node_list,
+            query_str=cypher_phrase,
+            output_dir=per_study_per_node_out_dir,
+        )
+        future.result()
     return None
 
 
