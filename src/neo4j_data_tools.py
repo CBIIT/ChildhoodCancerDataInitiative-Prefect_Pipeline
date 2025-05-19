@@ -11,6 +11,7 @@ from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.task_runners import ConcurrentTaskRunner
 from prefect.task_runners import ThreadPoolTaskRunner
+from prefect.cache_policies import NO_CACHE
 from neo4j import GraphDatabase
 import pandas as pd
 import numpy as np
@@ -475,6 +476,7 @@ def pull_data_per_node(
 @task(
     name="Pull node data per study",
     task_run_name="pull_node_data_{node_label}_{study_name}",
+    cache_policy=NO_CACHE,
 )
 def pull_data_per_node_per_study(
     driver,
@@ -546,7 +548,7 @@ def pull_uniqvalue_property_loop(node_property: DataFrame, driver, logger) -> st
     return out_dir
 
 
-@flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
 def pull_nodes_loop(
     study_list: list, node_list: list, driver, out_dir: str, logger
 ) -> None:
@@ -561,7 +563,7 @@ def pull_nodes_loop(
     for study in study_list:
         for node_label in node_list:
             logger.info(f"Pulling from Node {node_label}")
-            pull_data_per_node_per_study.submit(
+            future = pull_data_per_node_per_study.map(
                 driver=driver,
                 data_to_csv=export_to_csv_per_node_per_study,
                 study_name=study,
@@ -569,6 +571,7 @@ def pull_nodes_loop(
                 query_str=cypher_phrase,
                 output_dir=per_study_per_node_out_dir,
             )
+            future.result()
     return None
 
 
@@ -689,6 +692,7 @@ def export_node_counts_a_study(tx, study_id: str, output_dir: str) -> None:
 @task(
     name="Pull counts per node a study",
     task_run_name="pull_counts_per_node_study_{study_id}",
+    cache_policy=NO_CACHE,
 )
 def pull_all_nodes_a_study(
     driver, export_to_csv, study_id: str, output_dir: str
@@ -736,6 +740,7 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     name="Pull ids a node a study",
     task_run_name="pull_ids_{node}_{study_id}",
     tags=["db-query-tag"],
+    cache_policy=NO_CACHE,
 )
 def pull_ids_node_study(
     driver, export_ids_csv, study_id: str, node: str, output_dir: str
@@ -872,7 +877,7 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
     return ids_dict
 
 
-@flow(task_runner=ConcurrentTaskRunner())
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
 def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     """Returns temp folder which contains counts all nodes(except study node)
     of all studies in a DB
@@ -883,12 +888,13 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     logger.info("Start pulling entry counts per node per study")
     for study in study_list:
         logger.info(f"Pulling entry counts per node for study {study}")
-        pull_all_nodes_a_study.submit(
+        future = pull_all_nodes_a_study.map(
             driver=driver,
             export_to_csv=export_node_counts_a_study,
             study_id=study,
             output_dir=temp_folder_name,
         )
+        future.result()
 
     return temp_folder_name
 
