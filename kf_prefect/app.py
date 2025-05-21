@@ -7,8 +7,8 @@ manifest content.
 
 from typing import Optional
 import boto3
-from src.kf_object_tagger import KFObjectTagger
-from src.utils.config import source_config_s3
+from kf_prefect.src.utils import KFObjectTagger
+from kf_prefect.src.utils.config import source_config_s3
 from prefect import flow, task, get_run_logger
 
 

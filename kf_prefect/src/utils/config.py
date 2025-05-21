@@ -2,7 +2,7 @@ from typing import Any
 
 import yaml
 
-from src.utils.models import Config
+from kf_prefect.src.utils.models import Config
 
 
 def source_config_local(config_path: str) -> Config:

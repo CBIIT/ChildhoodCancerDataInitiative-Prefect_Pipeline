@@ -31,7 +31,7 @@ deployments:
     version: null
     tags: ["TEST","V3"]
     description: null
-    entrypoint: kf-prefect/app.py:main
+    entrypoint: kf_prefect/app.py:main
     schedule: null
 
     # flow-specific parameters

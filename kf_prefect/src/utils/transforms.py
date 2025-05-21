@@ -20,7 +20,7 @@ Functions:
 import logging
 from typing import Any, Dict, List
 
-from src.utils.models import ConfigStatusMap
+from kf_prefect.src.utils.models import ConfigStatusMap
 
 
 def parse_s3_url(

@@ -29,7 +29,7 @@ from botocore.exceptions import ClientError
 from mypy_boto3_s3 import S3Client
 from mypy_boto3_s3.type_defs import PutObjectOutputTypeDef
 
-from src.utils.models import Config, FileType
+from kf_prefect.src.utils.models import Config, FileType
 
 
 def get_client(config: Config) -> S3Client:

@@ -40,9 +40,9 @@ from src.utils.boto_helper import (
     tag_objects,
     upload_object,
 )
-from src.utils.logger import get_logger
-from src.utils.models import Config, FileType
-from src.utils.transforms import enrich_manifest
+from kf_prefect.src.utils.logger import get_logger
+from kf_prefect.src.utils.models import Config, FileType
+from kf_prefect.src.utils.transforms import enrich_manifest
 
 
 class KFObjectTagger:
