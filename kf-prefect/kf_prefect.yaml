@@ -1,0 +1,58 @@
+# Welcome to your prefect.yaml file! You can use this file for storing and managing
+# configuration for deploying your flows. We recommend committing this file to source
+# control along with your flow code.
+
+# Generic metadata about this project
+name: s3-Prefect-Workflow
+prefect-version: 2.14.19
+
+# build section allows you to manage and build docker images
+build: null
+
+# push section allows you to manage if and how this project is uploaded to remote locations
+push: null
+
+# pull section allows you to provide instructions for cloning this project in remote locations
+
+pull:
+  - prefect.projects.steps.git_clone_project:
+      id: clone-step
+      repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+      branch: main
+  - prefect.projects.steps.pip_install_requirements:
+      requirements_file: requirements_v3.txt
+      directory: "{{ clone-step.directory }}"
+      stream_output: False
+
+# the deployments section allows you to provide configuration for deploying flows
+deployments:
+  # base metadata
+  - name: kf-object-tagger
+    version: null
+    tags: ["TEST","V3"]
+    description: null
+    entrypoint: kf-prefect/flows/app.py:main
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      config_file: "input/test-manifest.csv"
+      bucket: "ccdi-kidsfirst-transfer-manifest-test-bucket"
+      prefix: ""
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
