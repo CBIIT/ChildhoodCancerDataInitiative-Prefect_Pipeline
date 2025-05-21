@@ -38,7 +38,7 @@ deployments:
     parameters:
       config_bucket: "ccdi-kidsfirst-transfer-manifest-test-bucket"
       config_key: "input/minimal-config.yml"
-      bucket: "ccdi-kidsfirst-transfer-manifest-test-bucket"
+      bucket: "ccdi-kidsfirst-transfer-manifest-test-bucket-nci"
       prefix: ""
 
     # pull action to overwrite from file pull action
