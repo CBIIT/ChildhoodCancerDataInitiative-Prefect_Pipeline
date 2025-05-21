@@ -6,7 +6,7 @@ manifest content.
 """
 
 from typing import Optional
-
+import boto3
 from src.kf_object_tagger import KFObjectTagger
 from src.utils.config import source_config_s3
 from prefect import flow, task, get_run_logger
@@ -88,17 +88,21 @@ def run_tag_inventory_process(
     flow_run_name="Kids First Object Tagger+{config_file}",
 )
 def main(
-    config_file: str, bucket: Optional[str] = None, prefix: Optional[str] = None
+    config_bucket: str, config_key: str, bucket: Optional[str] = None, prefix: Optional[str] = None
 ) -> None:
     """
     Main function.
     """
-    config = source_config_s3(bucket= bucket, key = config_file)
+
+    session = boto3.Session()
+    client = session.client("s3")
+
+    config = source_config_s3(bucket= config_bucket, key = config_key, client=client)
     kf = KFObjectTagger(config)
 
     run_tagging_process(kf)
 
     if bucket:
-        run_tag_inventory_process(kf, bucket, prefix)
+        run_tag_inventory_process(kf, config_bucket, prefix)
 
     return None

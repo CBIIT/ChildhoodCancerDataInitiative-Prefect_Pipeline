@@ -36,7 +36,8 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      config_file: "input/test-manifest.csv"
+      config_bucket: "ccdi-kidsfirst-transfer-manifest-test-bucket"
+      config_key: "input/minimal-config.yml"
       bucket: "ccdi-kidsfirst-transfer-manifest-test-bucket"
       prefix: ""
 
