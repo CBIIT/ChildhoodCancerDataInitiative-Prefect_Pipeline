@@ -93,7 +93,7 @@ def main(
     """
     Main function.
     """
-    config = source_config_s3(config_file)
+    config = source_config_s3(bucket= bucket, key = config_file)
     kf = KFObjectTagger(config)
 
     run_tagging_process(kf)
