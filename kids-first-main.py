@@ -13,14 +13,40 @@ session = boto3.Session()
 client = session.client('s3')
 
 class Manifest(BaseModel):
-    manifest_bucket: str
-    manifest_key: str
-    manifest_url_column: str 
-    manifest_status_column: str
+    bucket: str = Field(
+        title="Manifest Bucket Name",
+        description="The name of the S3 bucket where the manifest is stored",
+        default="ccdi-kidsfirst-transfer-manifests"
+    )
 
-class DataBucket(BaseModel):
-    nci_data_bucket: str
-    nci_data_bucket_suffix: str
+    key: str = Field(
+        title="Manifest Key",
+        description="The S3 key for the manifest file",
+    )
+
+    url_column: str = Field(
+        title="Manifest URL Column",
+        description="The name of the column in the manifest that contains the S3 URLs",
+        default="urls"
+    )
+
+    status_column: str = Field(
+        title="Manifest Status Column",
+        description="The name of the column in the manifest that contains the object status",
+        default="registration_status"
+    )
+
+class NciDataBucket(BaseModel):
+    bucket: str = Field(
+        title="NCI Data Bucket Name",
+        description="The name of the S3 Bucket where CHOP data was transferred to",
+    )
+
+    suffix: str = Field(
+        title="NCI Data Bucket Suffix",
+        description="The suffix of the S3 bucket where CHOP data was transferred to",
+        default="nci"
+    )
 
 class StatusMapValues(BaseModel):
     kf_registered: bool = Field(
@@ -35,13 +61,15 @@ class StatusMapValues(BaseModel):
 
 
 class Config(BaseModel):
-    manifest_bucket: str
-    manifest_key: str
-    manifest_url_column: str 
-    manifest_status_column: str
+    manifest: Manifest = Field(
+        title="Manifest Configuration",
+        description="Configuration parameters for the manifest file",
+    )
 
-    nci_data_bucket: str
-    nci_data_bucket_suffix: str
+    nci_data_bucket: NciDataBucket = Field(
+        title="NCI Data Bucket Configuration",
+        description="Configuration parameters for the NCI data bucket where CHOP data was transferred to",
+    )
 
     status_map: List[Dict[str, StatusMapValues]] = Field(
         title="Release and Registration Status Map Lookup",
@@ -232,22 +260,22 @@ def main(config: Config):
 
     logger.info("Starting Kids First Object Tagger flow")
     logger.info("Loading manifest from S3")
-    manifest1 = load_manifest(client, config.manifest_bucket, config.manifest_key)
+    manifest1 = load_manifest(client, config.manifest.bucket, config.manifest.key)
 
     logger.info("Parsing manifest URL column")
-    manifest2 = parse_manifest_url(manifest1, config.manifest_url_column)
+    manifest2 = parse_manifest_url(manifest1, config.manifest.url_column)
 
     logger.info("Validating bucket name parsed from the URL column")
-    manifest3 = validate_manifest_bucket_name(manifest2, config.nci_data_bucket, config.nci_data_bucket_suffix)
+    manifest3 = validate_manifest_bucket_name(manifest2, config.nci_data_bucket.bucket, config.nci_data_bucket.suffix)
     
     logger.info("Parsing object status column")
-    manifest4 = parse_object_status(manifest3, config.manifest_status_column, config.status_map)
+    manifest4 = parse_object_status(manifest3, config.manifest.status_column, config.status_map)
 
     logger.info("Uploading manifest to S3")
     upload_enriched_manifest = upload_object(
         client,
-        config.manifest_bucket,
-        config.manifest_key.replace("/input/", "/enriched_manifest/"),
+        config.manifest.bucket,
+        config.manifest.key.replace("/input/", "/enriched_manifest/"),
         manifest4
     )
 
@@ -257,13 +285,13 @@ def main(config: Config):
         logger.error("Manifest upload failed")
 
     logger.info("Tagging objects in S3")
-    tagged_objects = tag_objects(client, manifest4, config.nci_data_bucket)
+    tagged_objects = tag_objects(client, manifest4, config.nci_data_bucket.bucket)
 
     logger.info("Upload Tagging Report to S3")
     upload_tagging_report = upload_object(
         client,
-        config.manifest_bucket,
-        config.manifest_key.replace("/input/", "/tagging_report/"),
+        config.manifest.bucket,
+        config.manifest.key.replace("/input/", "/tagging_report/"),
         tagged_objects
     )
 
