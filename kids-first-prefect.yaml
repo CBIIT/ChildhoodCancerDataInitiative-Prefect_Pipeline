@@ -31,7 +31,7 @@ deployments:
     version: null
     tags: ["TEST","V3"]
     description: null
-    entrypoint: workflows/kids-first-main.py:main
+    entrypoint: workflows/kids-first-main.py:kf_main_runner
     schedule: null
 
     # pull action to overwrite from file pull action

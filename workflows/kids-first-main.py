@@ -243,7 +243,7 @@ def tag_objects(
 
 
 @flow(name="Kids First Object Tagger")
-def main(config: Config):
+def kf_main_runner(config: Config):
 
     logger.info("Starting Kids First Object Tagger flow")
     logger.info("Loading manifest from S3")
