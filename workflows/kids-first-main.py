@@ -86,7 +86,7 @@ class Config(BaseModel):
         ],
     )
 
-
+@flow
 def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]:
     try:
         result = s3_client.get_object(Bucket=bucket, Key=key)
@@ -96,7 +96,7 @@ def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]
     except ClientError as err:
         raise err
 
-
+@flow
 def parse_manifest_url(
     manifest: List[Dict[str, Any]], manifest_url_column: str
 ) -> List[Dict[str, Any]]:
@@ -134,7 +134,7 @@ def parse_manifest_url(
             response.append(row)
     return response
 
-
+@flow
 def validate_manifest_bucket_name(
     manifest: List[Dict[str, Any]], nci_data_bucket: str, nci_data_bucket_suffix: str
 ) -> List[Dict[str, Any]]:
@@ -147,7 +147,7 @@ def validate_manifest_bucket_name(
         response.append(row)
     return response
 
-
+@flow
 def parse_object_status(
     manifest: List[Dict[str, Any]],
     manifest_status_column: str,
@@ -181,7 +181,7 @@ def parse_object_status(
         response.append(row)
     return response
 
-
+@flow
 def upload_object(
     s3_client: Any, bucket: str, key: str, manifest: List[Dict[str, Any]]
 ) -> bool:
@@ -197,7 +197,7 @@ def upload_object(
     else:
         return False
 
-
+@flow
 def tag_objects(
     s3_client: Any, manifest: List[Dict[str, Any]], nci_data_bucket: str
 ) -> List[Dict[str, Any]]:
