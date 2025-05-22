@@ -12,18 +12,6 @@ session = boto3.Session()
 client = session.client("s3")
 
 
-class StatusMapValues(BaseModel):
-    kf_registered: bool = Field(
-        title="Kids First Registered Status",
-        description="Whether the object is registered in Kids First",
-    )
-
-    kf_released: bool = Field(
-        title="Kids First Released Status",
-        description="Whether the object is released in Kids First",
-    )
-
-
 class Config(BaseModel):
 
     manifest_bucket: str = Field(
