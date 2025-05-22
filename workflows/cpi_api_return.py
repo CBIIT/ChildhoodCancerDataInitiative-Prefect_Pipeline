@@ -102,16 +102,17 @@ def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> 
         os.makedirs(out_dir)
     else:
         pass
-    for study in study_list:
-        logger.info(f"Pulling participant_id from Node participant for study {study}")
-        pull_data_per_node_per_study.submit(
-            driver=driver,
-            data_to_csv=export_to_csv_per_node_per_study,
-            study_name=study,
-            node_label="participant",
-            query_str=cypher_query_particiapnt_per_study,
-            output_dir=out_dir,
-        )
+
+    logger.info(f"Pulling participant_id from Node participant for study list {*study,}")
+    future = pull_data_per_node_per_study.map(
+        driver=driver,
+        data_to_csv=export_to_csv_per_node_per_study,
+        study_name=study_list,
+        node_label="participant",
+        query_str=cypher_query_particiapnt_per_study,
+        output_dir=out_dir,
+    )
+    future.result()
     return None
 
 @flow(name="Combines participant ids from all studies into a single tsv", log_prints=True)
