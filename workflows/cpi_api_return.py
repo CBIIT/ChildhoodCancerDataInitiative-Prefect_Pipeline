@@ -103,7 +103,7 @@ def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> 
     else:
         pass
 
-    logger.info(f"Pulling participant_id from Node participant for study list {*study,}")
+    logger.info(f"Pulling participant_id from Node participant for study list {*study_list,}")
     future = pull_data_per_node_per_study.map(
         driver=driver,
         data_to_csv=export_to_csv_per_node_per_study,
