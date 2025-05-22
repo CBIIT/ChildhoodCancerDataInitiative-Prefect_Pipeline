@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 from typing import TypeVar
 from src.utils import get_time
+from prefect.cache_policies import NO_CACHE
 
 
 DataFrame = TypeVar("DataFrame")
@@ -175,7 +176,7 @@ def construct_staging_bucket_key(
     return object_staging_bucket_key
 
 
-@task(retries=3, retry_delay_seconds=1, tags=["file-remover-tag"])
+@task(retries=3, retry_delay_seconds=1, tags=["file-remover-tag"], cache_policy=NO_CACHE)
 def get_md5sum(object_key: str, bucket_name: str, s3_client) -> str:
     """
     Calculate md5sum of an object using url
