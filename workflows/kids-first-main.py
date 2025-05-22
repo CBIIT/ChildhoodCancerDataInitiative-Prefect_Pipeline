@@ -13,7 +13,6 @@ client = session.client("s3")
 
 
 class Config(BaseModel):
-
     manifest_bucket: str = Field(
         title="Manifest Bucket Name",
         description="The name of the S3 bucket where the manifest is stored",
@@ -234,7 +233,7 @@ def tag_objects(
                 else:
                     row["tagged"] = False
             except ClientError as e:
-                logger.error(f"Error tagging object {row['chop_key']}: {e}")
+                logger.error("Error tagging object %s: %s", row["chop_key"], e)
                 row["tagged"] = False
         else:
             row["tagged"] = False
