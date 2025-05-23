@@ -39,26 +39,26 @@ class ObjectDeletionInput(RunInput):
     proceed_to_delete: str
 
 
-def check_if_directory(s3_client, uri_path: str) -> None:
-    bucket, keypath = parse_file_url(url=uri_path)
-    try:
-        s3_client.head_object(Bucket=bucket, Key=keypath)
-        if_dir = "object"
-    except ClientError as e:
-        err_code = e.response["Error"]["Code"]
-        err_message = e.response["Error"]["Message"]
-        print(f"{err_code}: {err_message} {uri_path}")
-        try:
-            result = s3_client.list_objects(Bucket=bucket, Prefix=keypath, MaxKeys=1)
-            if "Contents" in result:
-                if_dir = "directory"
-            else:
-                if_dir = "invalid"
-        except ClientError as err:
-            err_code = err.response["Error"]["Code"]
-            err_message = err.response["Error"]["Message"]
-            print(f"{err_code}: {err_message} {uri_path}")
-    return if_dir
+#def check_if_directory(s3_client, uri_path: str) -> None:
+#    bucket, keypath = parse_file_url(url=uri_path)
+#    try:
+#        s3_client.head_object(Bucket=bucket, Key=keypath)
+#        if_dir = "object"
+#    except ClientError as e:
+#        err_code = e.response["Error"]["Code"]
+#        err_message = e.response["Error"]["Message"]
+#        print(f"{err_code}: {err_message} {uri_path}")
+#        try:
+#            result = s3_client.list_objects(Bucket=bucket, Prefix=keypath, MaxKeys=1)
+#            if "Contents" in result:
+#                if_dir = "directory"
+#            else:
+#                if_dir = "invalid"
+#        except ClientError as err:
+#            err_code = err.response["Error"]["Code"]
+#            err_message = err.response["Error"]["Message"]
+#            print(f"{err_code}: {err_message} {uri_path}")
+#    return if_dir
 
 
 @dataclass
@@ -357,11 +357,9 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     for page in pages:
         if "Contents" in page.keys():
             for obj in page["Contents"]:
-                obj_full_path = os.path.join(bucket, obj["Key"])
                 # check if the obj is an object file
                 # sometimes the list will return a directory instead of an object
-                if_obj_obj = check_if_directory(s3_client=s3, uri_path = obj_full_path)
-                if if_obj_obj == "object":
+                if not obj["Key"].endswith("/"):
                     obj_dict = {
                         "Bucket": bucket,
                         "Key": obj["Key"],
@@ -369,7 +367,7 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
                     }
                     bucket_object_dict_list.append(obj_dict)
                 else:
-                    logger.info(f"Object {obj_full_path} is not an object file. Will pass")
+                    logger.info(f"Object {os.path.join(bucket,obj["Key"])} is a directory obj. Will pass")
                     pass
         else:
             logger.info(f"No object file found under {bucket_folder_path}")
