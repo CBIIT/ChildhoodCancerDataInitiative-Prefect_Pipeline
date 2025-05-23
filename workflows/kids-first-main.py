@@ -206,6 +206,7 @@ def upload_object(
 def tag_objects(
     s3_client: Any, manifest: List[Dict[str, Any]], nci_data_bucket: str
 ) -> List[Dict[str, Any]]:
+    logger = get_run_logger()
     response: List[Dict[str, Any]] = []
     for row in manifest:
         cond1 = row["valid_url"]
