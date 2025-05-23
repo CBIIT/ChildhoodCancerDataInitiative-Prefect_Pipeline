@@ -87,7 +87,7 @@ class Config(BaseModel):
 
 
 @task
-def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]:
+def load_manifest((s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]], cache_policy=NO_CACHE):
     try:
         result = s3_client.get_object(Bucket=bucket, Key=key)
         manifest = result["Body"].read().decode("utf-8").splitlines()
