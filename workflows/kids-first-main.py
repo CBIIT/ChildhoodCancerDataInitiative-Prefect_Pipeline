@@ -186,7 +186,7 @@ def parse_object_status(
     return response
 
 
-@task
+@task(cache_policy=NO_CACHE)
 def upload_object(
     s3_client: Any, bucket: str, key: str, manifest: List[Dict[str, Any]]
 ) -> bool:
