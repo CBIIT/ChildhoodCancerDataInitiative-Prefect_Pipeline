@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 from typing import TypeVar
 from src.utils import get_time
+from workflows.file_mover_delete import check_if_directory
 from prefect.cache_policies import NO_CACHE
 
 
@@ -311,7 +312,7 @@ def delete_objects_by_uri(uri_list: list[str], logger) -> list:
     return delete_status_list
 
 
-@flow
+@flow(name="Retrive objects from a s3 bucket path", log_prints=True)
 def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     """Returns a list of dict for object files located under bucket_folder_path
 
@@ -335,13 +336,20 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     for page in pages:
         if "Contents" in page.keys():
             for obj in page["Contents"]:
-                obj_dict = {
-                    "Bucket": bucket,
-                    "Key": obj["Key"],
-                    "Size": obj["Size"],
-                }
-                bucket_object_dict_list.append(obj_dict)
-
+                obj_full_path = os.path.join(bucket, obj["Key"])
+                # check if the obj is an object file
+                # sometimes the list will return a directory instead of an object
+                if_obj_obj = check_if_directory(s3_client=s3, uri_path = obj_full_path)
+                if if_obj_obj == "object":
+                    obj_dict = {
+                        "Bucket": bucket,
+                        "Key": obj["Key"],
+                        "Size": obj["Size"],
+                    }
+                    bucket_object_dict_list.append(obj_dict)
+                else:
+                    logger.info(f"Object {obj_full_path} is not an object file. Will pass")
+                    pass
         else:
             logger.info(f"No object file found under {bucket_folder_path}")
             break
