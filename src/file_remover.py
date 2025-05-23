@@ -39,7 +39,7 @@ class ObjectDeletionInput(RunInput):
     proceed_to_delete: str
 
 
-#def check_if_directory(s3_client, uri_path: str) -> None:
+# def check_if_directory(s3_client, uri_path: str) -> None:
 #    bucket, keypath = parse_file_url(url=uri_path)
 #    try:
 #        s3_client.head_object(Bucket=bucket, Key=keypath)
@@ -367,7 +367,8 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
                     }
                     bucket_object_dict_list.append(obj_dict)
                 else:
-                    logger.info(f"Object {os.path.join(bucket,obj["Key"])} is a directory obj. Will pass")
+                    obj_full_path = os.path.join(bucket, obj["Key"])
+                    logger.info(f"Object {obj_full_path} is a directory obj. Will pass")
                     pass
         else:
             logger.info(f"No object file found under {bucket_folder_path}")
