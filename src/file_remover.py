@@ -11,7 +11,6 @@ import pandas as pd
 import numpy as np
 from typing import TypeVar
 from src.utils import get_time
-from workflows.file_mover_delete import check_if_directory
 from prefect.cache_policies import NO_CACHE
 
 
@@ -38,6 +37,28 @@ class NoManifestPathInput(RunInput):
 
 class ObjectDeletionInput(RunInput):
     proceed_to_delete: str
+
+
+def check_if_directory(s3_client, uri_path: str) -> None:
+    bucket, keypath = parse_file_url(url=uri_path)
+    try:
+        s3_client.head_object(Bucket=bucket, Key=keypath)
+        if_dir = "object"
+    except ClientError as e:
+        err_code = e.response["Error"]["Code"]
+        err_message = e.response["Error"]["Message"]
+        print(f"{err_code}: {err_message} {uri_path}")
+        try:
+            result = s3_client.list_objects(Bucket=bucket, Prefix=keypath, MaxKeys=1)
+            if "Contents" in result:
+                if_dir = "directory"
+            else:
+                if_dir = "invalid"
+        except ClientError as err:
+            err_code = err.response["Error"]["Code"]
+            err_message = err.response["Error"]["Message"]
+            print(f"{err_code}: {err_message} {uri_path}")
+    return if_dir
 
 
 @dataclass
