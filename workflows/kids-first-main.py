@@ -7,7 +7,6 @@ from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger, task
 from pydantic import BaseModel, Field
 
-logger = get_run_logger()
 session = boto3.Session()
 client = session.client("s3")
 
@@ -86,6 +85,7 @@ class Config(BaseModel):
         ],
     )
 
+
 @task
 def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]:
     try:
@@ -95,6 +95,7 @@ def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]
         return [row for row in reader]
     except ClientError as err:
         raise err
+
 
 @task
 def parse_manifest_url(
@@ -134,6 +135,7 @@ def parse_manifest_url(
             response.append(row)
     return response
 
+
 @task
 def validate_manifest_bucket_name(
     manifest: List[Dict[str, Any]], nci_data_bucket: str, nci_data_bucket_suffix: str
@@ -146,6 +148,7 @@ def validate_manifest_bucket_name(
             row["manifest_bucket_matches_expected"] = False
         response.append(row)
     return response
+
 
 @task
 def parse_object_status(
@@ -181,6 +184,7 @@ def parse_object_status(
         response.append(row)
     return response
 
+
 @task
 def upload_object(
     s3_client: Any, bucket: str, key: str, manifest: List[Dict[str, Any]]
@@ -196,6 +200,7 @@ def upload_object(
         return True
     else:
         return False
+
 
 @task
 def tag_objects(
@@ -238,7 +243,7 @@ def tag_objects(
 
 @flow(name="Kids First Object Tagger")
 def kf_main_runner(config: Config):
-
+    logger = get_run_logger()
     logger.info("Starting Kids First Object Tagger flow")
     logger.info("Loading manifest from S3")
     manifest1 = load_manifest(client, config.manifest_bucket, config.manifest_key)
