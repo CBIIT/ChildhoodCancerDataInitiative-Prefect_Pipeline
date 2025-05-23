@@ -5,6 +5,7 @@ from typing import Any, Dict, List
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, get_run_logger, task
+from prefect.cache_policies import NO_CACHE
 from pydantic import BaseModel, Field
 
 session = boto3.Session()
@@ -86,8 +87,8 @@ class Config(BaseModel):
     )
 
 
-@task
-def load_manifest((s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]], cache_policy=NO_CACHE):
+@task (cache_policy=NO_CACHE)
+def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]:
     try:
         result = s3_client.get_object(Bucket=bucket, Key=key)
         manifest = result["Body"].read().decode("utf-8").splitlines()
