@@ -169,7 +169,7 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
 
     file_dl.map(submit_list, unmapped(dups), unmapped(logger), unmapped(runner_logger))
     
-    return None
+    return file_dl.result()
 
 
 def distinguisher(f_path: str, logger):
