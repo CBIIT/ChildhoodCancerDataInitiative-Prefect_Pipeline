@@ -14,6 +14,7 @@ from src.cog_transform_utils import cog_transformer
 import boto3
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
+from prefect.cache_policies import NO_CACHE
 
 
 @flow(
@@ -84,6 +85,7 @@ def set_s3_resource():
     tags=["json-downloader-tag"],
     retries=3,
     retry_delay_seconds=0.5,
+    cache_policy=NO_CACHE,  
 )
 def file_dl(dl_parameter: dict, dups, logger, runner_logger):
     """File download using bucket name and filename
@@ -167,9 +169,9 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
             submit_list.append({"bucket" : f_bucket, "file_path" : f_path, "row": row}) 
 
 
-    file_dl.map(submit_list, unmapped(dups), unmapped(logger), unmapped(runner_logger))
+    downloads = file_dl.map(submit_list, unmapped(dups), unmapped(logger), unmapped(runner_logger))
     
-    return None
+    return downloads.result()
 
 
 def distinguisher(f_path: str, logger):
