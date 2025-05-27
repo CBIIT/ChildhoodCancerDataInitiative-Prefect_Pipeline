@@ -123,7 +123,7 @@ def file_dl(dl_parameter: dict, dups, logger, runner_logger):
             f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}"
         )
         logger.error(f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}")
-        raise
+        #raise
 
 
 
