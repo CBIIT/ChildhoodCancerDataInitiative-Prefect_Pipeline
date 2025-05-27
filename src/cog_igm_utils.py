@@ -84,7 +84,7 @@ def set_s3_resource():
     log_prints=True,
     tags=["json-downloader-tag"],
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     cache_policy=NO_CACHE,  
 )
 def file_dl(dl_parameter: dict, dups, logger, runner_logger):
