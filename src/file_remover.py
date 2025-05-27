@@ -311,7 +311,7 @@ def delete_objects_by_uri(uri_list: list[str], logger) -> list:
     return delete_status_list
 
 
-@flow
+@flow(name="Retrive objects from a s3 bucket path", log_prints=True)
 def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     """Returns a list of dict for object files located under bucket_folder_path
 
@@ -335,13 +335,19 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     for page in pages:
         if "Contents" in page.keys():
             for obj in page["Contents"]:
-                obj_dict = {
-                    "Bucket": bucket,
-                    "Key": obj["Key"],
-                    "Size": obj["Size"],
-                }
-                bucket_object_dict_list.append(obj_dict)
-
+                # check if the obj is an object file
+                # sometimes the list will return a directory instead of an object
+                if not obj["Key"].endswith("/"):
+                    obj_dict = {
+                        "Bucket": bucket,
+                        "Key": obj["Key"],
+                        "Size": obj["Size"],
+                    }
+                    bucket_object_dict_list.append(obj_dict)
+                else:
+                    obj_full_path = os.path.join(bucket, obj["Key"])
+                    logger.info(f"Object {obj_full_path} is a directory obj. Will pass")
+                    pass
         else:
             logger.info(f"No object file found under {bucket_folder_path}")
             break
