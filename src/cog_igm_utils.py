@@ -170,9 +170,9 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
             submit_list.append({"bucket" : f_bucket, "file_path" : f_path, "row": row}) 
 
 
-    file_dl.map(submit_list, unmapped(dups), unmapped(logger), unmapped(runner_logger))
+    downloads = file_dl.map(submit_list, unmapped(dups), unmapped(logger), unmapped(runner_logger))
     
-    return file_dl.result()
+    return downloads.result()
 
 
 def distinguisher(f_path: str, logger):
