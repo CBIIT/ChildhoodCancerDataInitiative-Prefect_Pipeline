@@ -163,31 +163,28 @@ def parse_object_status(
     status_map: List[Dict[str, Dict[str, bool]]],
 ) -> List[Dict[str, Any]]:
     """Parse the manifest status column to determine Kids First registration and release status."""
+    logger = get_run_logger()
     response: List[Dict[str, Any]] = []
+
     for row in manifest:
+        row["kf_registered"] = None
+        row["kf_released"] = None
+        row["kf_status_valid"] = False
+        row["invalid_status_reason"] = "Status value does not match config status map"
+
         if not row[manifest_status_column]:
-            row["kf_registered"] = None
-            row["kf_released"] = None
-            row["kf_status_valid"] = False
+            logger.warning("No status column detected for object %s, ", row["chop_key"])
             row["invalid_status_reason"] = "No status column detected"
 
-        if row[manifest_status_column] not in status_map:
-            row["kf_registered"] = None
-            row["kf_released"] = None
-            row["kf_status_valid"] = False
-            row["invalid_status_reason"] = "Invalid status value"
-
-        else:
-            for status in status_map:
-                if row[manifest_status_column] in status:
-                    row["kf_registered"] = status[row[manifest_status_column]][
-                        "kf_registered"
-                    ]
-                    row["kf_released"] = status[row[manifest_status_column]][
-                        "kf_released"
-                    ]
-                    row["kf_status_valid"] = True
-                    row["invalid_status_reason"] = None
+        for status in status_map:
+            if row[manifest_status_column] in status:
+                row["kf_registered"] = status[row[manifest_status_column]][
+                    "kf_registered"
+                ]
+                row["kf_released"] = status[row[manifest_status_column]]["kf_released"]
+                row["kf_status_valid"] = True
+                row["invalid_status_reason"] = None
+                break
         response.append(row)
     return response
 
