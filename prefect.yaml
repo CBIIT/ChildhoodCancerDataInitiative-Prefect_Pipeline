@@ -1049,9 +1049,9 @@ deployments:
       job_variables: {}
 
   # liftover metadata between projects
-  - name: TEST-liftover-generic
+  - name: liftover-generic
     version: null
-    tags: [ "TEST", "Qiong" ]
+    tags: [ "Production", "V3", "CCDI", "CDS" ]
     description: null
     entrypoint: workflows/submission_liftover.py:submission_liftover
     schedule: null
@@ -1066,7 +1066,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1674_liftover_rework
+          branch: main
           include_submodules: True
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
