@@ -13,6 +13,8 @@ client = session.client("s3")
 
 
 class Config(BaseModel):
+    """Custom type for the configuration of the workflow."""
+
     manifest_bucket: str = Field(
         title="Manifest Bucket Name",
         description="The name of the S3 bucket where the manifest is stored",
@@ -87,8 +89,9 @@ class Config(BaseModel):
     )
 
 
-@task (cache_policy=NO_CACHE)
+@task(cache_policy=NO_CACHE)
 def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]:
+    """Load the manifest from S3 and return it as a list of dictionaries."""
     try:
         result = s3_client.get_object(Bucket=bucket, Key=key)
         manifest = result["Body"].read().decode("utf-8").splitlines()
@@ -102,6 +105,7 @@ def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]
 def parse_manifest_url(
     manifest: List[Dict[str, Any]], manifest_url_column: str
 ) -> List[Dict[str, Any]]:
+    """Parse the manifest URL column to extract bucket and key information."""
     response: List[Dict[str, Any]] = []
 
     for row in manifest:
@@ -141,6 +145,7 @@ def parse_manifest_url(
 def validate_manifest_bucket_name(
     manifest: List[Dict[str, Any]], nci_data_bucket: str, nci_data_bucket_suffix: str
 ) -> List[Dict[str, Any]]:
+    """Validate that the bucket name parsed from the URL column matches the expected NCI data bucket."""
     response: List[Dict[str, Any]] = []
     for row in manifest:
         if f'{row["chop_bucket"]}-{nci_data_bucket_suffix}' == nci_data_bucket:
@@ -157,6 +162,7 @@ def parse_object_status(
     manifest_status_column: str,
     status_map: List[Dict[str, Dict[str, bool]]],
 ) -> List[Dict[str, Any]]:
+    """Parse the manifest status column to determine Kids First registration and release status."""
     response: List[Dict[str, Any]] = []
     for row in manifest:
         if not row[manifest_status_column]:
@@ -189,7 +195,9 @@ def parse_object_status(
 @task(cache_policy=NO_CACHE)
 def upload_object(
     s3_client: Any, bucket: str, key: str, manifest: List[Dict[str, Any]]
-) -> bool:
+) -> None:
+    """Upload an object to S3 as a CSV file."""
+    logger = get_run_logger()
     buffer = StringIO()
     writer = csv.DictWriter(buffer, fieldnames=manifest[0].keys())
     writer.writeheader()
@@ -198,99 +206,117 @@ def upload_object(
         Bucket=bucket, Key=key, Body=buffer.getvalue(), ContentType="text/csv"
     )
     if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
-        return True
+        logger.info("... Object uploaded successfully to %s/%s", bucket, key)
     else:
-        return False
+        logger.warning(
+            "... Failed to upload object to %s/%s with status code %s",
+            bucket,
+            key,
+            response["ResponseMetadata"]["HTTPStatusCode"],
+        )
 
 
 @task(cache_policy=NO_CACHE)
 def tag_objects(
     s3_client: Any, manifest: List[Dict[str, Any]], nci_data_bucket: str
 ) -> List[Dict[str, Any]]:
+    """Tag objects in the NCI data bucket based on the manifest."""
     logger = get_run_logger()
+
     response: List[Dict[str, Any]] = []
     for row in manifest:
         cond1 = row["valid_url"]
         cond2 = row["manifest_bucket_matches_expected"]
         cond3 = row["kf_status_valid"]
 
-        if cond1 and cond2 and cond3:
-            try:
-                result = s3_client.put_object_tagging(
-                    Bucket=nci_data_bucket,
-                    Key=row["chop_key"],
-                    Tagging={
-                        "TagSet": [
-                            {
-                                "Key": "kf_registered",
-                                "Value": str(row["kf_registered"]),
-                            },
-                            {"Key": "kf_released", "Value": str(row["kf_released"])},
-                        ]
-                    },
-                )
-                if result["ResponseMetadata"]["HTTPStatusCode"] == 200:
-                    row["tagged"] = True
-                else:
-                    row["tagged"] = False
-            except ClientError as e:
-                logger.error("Error tagging object %s: %s", row["chop_key"], e)
+        if not cond1:
+            logger.warning("Skipping object %s due to invalid URL", row["chop_key"])
+            row["tagged"] = False
+            response.append(row)
+            continue
+
+        if not cond2:
+            logger.warning(
+                "Skipping object %s due to mismatched bucket name", row["chop_key"]
+            )
+            row["tagged"] = False
+            response.append(row)
+            continue
+
+        if not cond3:
+            logger.warning(
+                "Skipping object %s due to invalid Kids First status", row["chop_key"]
+            )
+            row["tagged"] = False
+            response.append(row)
+            continue
+
+        try:
+            result = s3_client.put_object_tagging(
+                Bucket=nci_data_bucket,
+                Key=row["chop_key"],
+                Tagging={
+                    "TagSet": [
+                        {
+                            "Key": "kf_registered",
+                            "Value": str(row["kf_registered"]),
+                        },
+                        {"Key": "kf_released", "Value": str(row["kf_released"])},
+                    ]
+                },
+            )
+            if result["ResponseMetadata"]["HTTPStatusCode"] == 200:
+                row["tagged"] = True
+            else:
                 row["tagged"] = False
-        else:
+        except ClientError as e:
+            logger.error("Error tagging object %s: %s", row["chop_key"], e)
             row["tagged"] = False
 
         response.append(row)
+
     return response
 
 
 @flow(name="Kids First Object Tagger")
 def kf_main_runner(config: Config):
     logger = get_run_logger()
-    logger.info("Starting Kids First Object Tagger flow")
-    logger.info("Loading manifest from S3")
+    logger.info("*** STARTING KIDS FIRST OBJECT TAGGER WORKFLOW ***")
+
+    logger.info("*** LOADING MANIFEST FROM S3 ***")
     manifest1 = load_manifest(client, config.manifest_bucket, config.manifest_key)
 
-    logger.info("Parsing manifest URL column")
+    logger.info("*** PARSING MANIFEST URL COLUMN ***")
     manifest2 = parse_manifest_url(manifest1, config.manifest_url_column)
 
-    logger.info("Validating bucket name parsed from the URL column")
+    logger.info("*** VALIDATING BUCKET NAME PARSED FROM THE URL COLUMN ***")
     manifest3 = validate_manifest_bucket_name(
         manifest2, config.nci_bucket, config.nci_bucket_suffix
     )
 
-    logger.info("Parsing object status column")
+    logger.info("*** PARSING COLUMN TO DETERMINE REGISTRATION/RELEASE STATUS ***")
     manifest4 = parse_object_status(
         manifest3, config.manifest_status_column, config.status_map
     )
 
-    logger.info("Uploading manifest to S3")
-    upload_enriched_manifest = upload_object(
+    logger.info("*** UPLOADING ENRICHED MANIFEST TO S3 ***")
+    upload_object(
         client,
         config.manifest_bucket,
         config.manifest_key.replace("/input/", "/enriched_manifest/"),
         manifest4,
     )
 
-    if upload_enriched_manifest:
-        logger.info("Manifest uploaded successfully")
-    else:
-        logger.error("Manifest upload failed")
-
-    logger.info("Tagging objects in S3")
+    logger.info("*** TAGGING OBJECTS IN NCI DATA BUCKET ***")
     tagged_objects = tag_objects(client, manifest4, config.nci_bucket)
 
-    logger.info("Upload Tagging Report to S3")
-    upload_tagging_report = upload_object(
+    logger.info("*** UPLOADING TAGGING REPORT TO S3 ***")
+    upload_object(
         client,
         config.manifest_bucket,
         config.manifest_key.replace("/input/", "/tagging_report/"),
         tagged_objects,
     )
 
-    if upload_tagging_report:
-        logger.info("Tagging report uploaded successfully")
-    else:
-        logger.error("Tagging report upload failed")
-
-    logger.info("Kids First Object Tagger flow completed")
-    return tagged_objects
+    logger.info("*** KIDS FIRST OBJECT TAGGER WORKFLOW COMPLETED ***")
+    return None
