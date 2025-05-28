@@ -89,7 +89,7 @@ class Config(BaseModel):
     )
 
 
-@task(cache_policy=NO_CACHE)
+@task(name="Load Manifest from S3", cache_policy=NO_CACHE)
 def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]:
     """Load the manifest from S3 and return it as a list of dictionaries."""
     try:
@@ -101,7 +101,7 @@ def load_manifest(s3_client: Any, bucket: str, key: str) -> List[Dict[str, Any]]
         raise err
 
 
-@task
+@task(name="Parse Manifest URL Column")
 def parse_manifest_url(
     manifest: List[Dict[str, Any]], manifest_url_column: str
 ) -> List[Dict[str, Any]]:
@@ -141,7 +141,7 @@ def parse_manifest_url(
     return response
 
 
-@task
+@task(name="Validate Manifest Bucket Name")
 def validate_manifest_bucket_name(
     manifest: List[Dict[str, Any]], nci_data_bucket: str, nci_data_bucket_suffix: str
 ) -> List[Dict[str, Any]]:
@@ -156,7 +156,7 @@ def validate_manifest_bucket_name(
     return response
 
 
-@task
+@task(name="Parse Object Status")
 def parse_object_status(
     manifest: List[Dict[str, Any]],
     manifest_status_column: str,
@@ -192,7 +192,7 @@ def parse_object_status(
     return response
 
 
-@task(cache_policy=NO_CACHE)
+@task(name="Upload Object", cache_policy=NO_CACHE)
 def upload_object(
     s3_client: Any, bucket: str, key: str, manifest: List[Dict[str, Any]]
 ) -> None:
@@ -216,7 +216,7 @@ def upload_object(
         )
 
 
-@task(cache_policy=NO_CACHE)
+@task(name="Tag Objects", cache_policy=NO_CACHE)
 def tag_objects(
     s3_client: Any, manifest: List[Dict[str, Any]], nci_data_bucket: str
 ) -> List[Dict[str, Any]]:
@@ -280,6 +280,7 @@ def tag_objects(
 
 @flow(name="Kids First Object Tagger")
 def kf_main_runner(config: Config):
+    """Main workflow to tag Kids First objects in the NCI data bucket."""
     logger = get_run_logger()
     logger.info("*** STARTING KIDS FIRST OBJECT TAGGER WORKFLOW ***")
 
