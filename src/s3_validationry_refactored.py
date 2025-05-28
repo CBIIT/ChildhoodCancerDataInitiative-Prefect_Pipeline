@@ -1161,7 +1161,7 @@ def check_buckets_access(bucket_list: list[str]) -> dict:
 @task(
     name="if a single obj exists in bucket",
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     tags=["validation-tag"],
 )
 def validate_single_manifest_obj_in_bucket(s3_uri: str, s3_client) -> bool:

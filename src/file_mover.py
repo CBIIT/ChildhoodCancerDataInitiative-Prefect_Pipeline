@@ -1,5 +1,4 @@
 import os
-import sys
 from src.utils import (
     CheckCCDI,
     set_s3_session_client,
@@ -20,12 +19,13 @@ from shutil import copy
 import numpy as np
 import pandas as pd
 import json
-import hashlib
 from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
+from prefect.cache_policies import NO_CACHE
 from typing import TypeVar
 import ast
 from concurrent.futures import ThreadPoolExecutor, as_completed
+import time
 
 DataFrame = TypeVar("DataFrame")
 
@@ -234,12 +234,13 @@ def copy_file_by_size(
 
 @task(
     name="Copy an object file",
-    tags=["concurrency-test"],
+    tags=["{concurrency_tag}"],
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     log_prints=True,
+    cache_policy=NO_CACHE,
 )
-def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> str:
+def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concurrency_tag) -> str:
     """Copy objects between two locations defined by copy_parameter
 
     It checks if the file has been transferred (Key and object Content length/size) before trasnfer process
@@ -261,9 +262,9 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> st
             logger.info(
                 f"File {copy_source} had already been copied to destination bucket path. Skip"
             )
-            # runner_logger.info(
-            #    f"File {copy_source} had already been copied to destination bucket path. Skip"
-            # )
+            print(
+                f"File {copy_source} had already been copied to destination bucket path. Skip"
+            )
             transfer_status = "Success"
         else:
             # if the destin object size is different from source, copy the object
@@ -288,24 +289,34 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger) -> st
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
-def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger) -> list:
+def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concurrency_tag) -> list:
     """Copy of list of file concurrently"""
     s3_client = set_s3_session_client()
-    transfer_status_list = copy_file_task.map(
-        copy_parameter_list, s3_client, logger, runner_logger
-    )
+    
+    # Create an empty list to store the tasks.
+    transfer_status_list = []
+    
+    for params in copy_parameter_list:
+        # Submit the task with a delay of 0.25 seconds
+        transfer_status_list.append(copy_file_task.submit(params, s3_client, logger, runner_logger, concurrency_tag))
+        
+        # Throttle task submission with a 0.25-second delay
+        time.sleep(0.25)
+    
     s3_client.close()
+    
     return [i.result() for i in transfer_status_list]
 
 
 @task(
     name="Compare md5sum values",
-    tags=["concurrency-test"],
+    tags=["{concurrency_tag}"],
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     log_prints=True,
+    cache_policy=NO_CACHE,
 )
-def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> tuple:
+def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger, concurrency_tag) -> tuple:
     """Compares the md5sum of two objects
 
     compare_md5sum_task can return three status for comparison
@@ -346,13 +357,26 @@ def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger) -> t
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Compare md5sum Concurrently")
-def compare_md5sum_flow(first_url_list: list[str], second_url_list: list[str]) -> list:
+def compare_md5sum_flow(first_url_list: list[str], second_url_list: list[str], concurrency_tag: str) -> list:
     """Compare md5sum of two list of urls concurrently"""
     s3_client = set_s3_session_client()
     runner_logger = get_run_logger()
-    compare_list = compare_md5sum_task.map(
-        first_url_list, second_url_list, s3_client=s3_client, logger=runner_logger
-    )
+
+    # Create an empty list to store the tasks.
+    compare_list = []
+
+    for i in range(len(first_url_list)):
+        # Submit the task with a delay of 0.25 seconds
+        compare_list.append(
+            compare_md5sum_task.submit(
+                first_url_list[i], second_url_list[i], s3_client, runner_logger, concurrency_tag
+            )
+        )
+
+        # Throttle task submission with a 0.25-second delay
+        time.sleep(0.25)
+    # Wait for all tasks to complete and collect the results        
+
     s3_client.close()
     return [i.result() for i in compare_list]
 
@@ -520,8 +544,15 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
     )
     transfer_status_list = []
     for h in transfer_chuncks:
-        h_transfer_status_list = copy_file_flow(h, logger, runner_logger)
-        transfer_status_list.extend(h_transfer_status_list)
+        try:
+            h_transfer_status_list = copy_file_flow(h, logger, runner_logger, concurrency_tag="ccdi-file-copier-tag")
+            transfer_status_list.extend(h_transfer_status_list)
+
+
+        except Exception as ex:
+            logger.error(f"Error occurred while copying files: {ex}")
+            runner_logger.error(f"Error occurred while copying files: {ex}")
+            transfer_status_list.extend(["Fail"] * len(h))
 
     # transfer_status_list = copy_file_flow(transfer_parameter_list, logger)
     transfer_df["transfer_status"] = transfer_status_list
@@ -568,6 +599,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             j_md5sum_compare_result = compare_md5sum_flow(
                 first_url_list=urls_before_chunks[j],
                 second_url_list=urls_after_chunks[j],
+                concurrency_tag="ccdi-file-copier-tag"
             )
             # add logging info on the md5sum check progress
             logger.info(f"md5sum check completed: {j+1}/{len(urls_before_chunks)}")
@@ -577,6 +609,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
             md5sum_compare_result.extend([i[1:] for i in j_md5sum_compare_result])
 
             # record the intermediate results
+            intermediate_file_name = f"{os.path.basename(manifest_path).replace('.xlsx', '')}_intermediate_md5sum_check.tsv"
             int_results.extend(j_md5sum_compare_result)
             int_transfer_df = int_results_recorder(transfer_df, int_results)
             int_transfer_df[
@@ -589,13 +622,13 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
                     "md5sum_before_cp",
                     "md5sum_after_cp",
                 ]
-            ].to_csv(f"intermediate_md5sum_check_{get_date()}.tsv", sep="\t", index=False)
+            ].to_csv(intermediate_file_name, sep="\t", index=False)
             
             file_ul(
                 bucket=bucket,
                 output_folder=intermediate_out,
                 sub_folder="",
-                newfile=f"intermediate_md5sum_check_{get_date()}.tsv"
+                newfile=intermediate_file_name
             )
 
         # add md5sum comparison result to transfer_df

@@ -10,6 +10,8 @@ from dataclasses import dataclass
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.task_runners import ConcurrentTaskRunner
+from prefect.task_runners import ThreadPoolTaskRunner
+from prefect.cache_policies import NO_CACHE
 from neo4j import GraphDatabase
 import pandas as pd
 import numpy as np
@@ -22,6 +24,7 @@ import tempfile
 import traceback
 from botocore.exceptions import ClientError
 import random
+import itertools
 
 
 DataFrame = TypeVar("DataFrame")
@@ -474,6 +477,8 @@ def pull_data_per_node(
 @task(
     name="Pull node data per study",
     task_run_name="pull_node_data_{node_label}_{study_name}",
+    cache_policy=NO_CACHE,
+    tags=["pull-db-tag"],
 )
 def pull_data_per_node_per_study(
     driver,
@@ -545,7 +550,7 @@ def pull_uniqvalue_property_loop(node_property: DataFrame, driver, logger) -> st
     return out_dir
 
 
-@flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
 def pull_nodes_loop(
     study_list: list, node_list: list, driver, out_dir: str, logger
 ) -> None:
@@ -557,17 +562,19 @@ def pull_nodes_loop(
     print(per_study_per_node_out_dir)
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
-    for study in study_list:
-        for node_label in node_list:
-            logger.info(f"Pulling from Node {node_label}")
-            pull_data_per_node_per_study.submit(
-                driver=driver,
-                data_to_csv=export_to_csv_per_node_per_study,
-                study_name=study,
-                node_label=node_label,
-                query_str=cypher_phrase,
-                output_dir=per_study_per_node_out_dir,
-            )
+    study_node_pair = list(itertools.product(study_list, node_list))
+
+    logger.info("start pulling data per node per study")
+
+    future = pull_data_per_node_per_study.map(
+            driver=driver,
+            data_to_csv=export_to_csv_per_node_per_study,
+            study_name=[x for x, y in study_node_pair],
+            node_label=[y for x, y in study_node_pair],
+            query_str=cypher_phrase,
+            output_dir=per_study_per_node_out_dir,
+        )
+    future.result()
     return None
 
 
@@ -631,7 +638,10 @@ def pull_study_node(driver, out_dir: str) -> None:
     return None
 
 
-@task
+@task(
+    cache_policy=NO_CACHE,
+    name="Pull unique nodes from neo4j DB",
+)
 def pull_uniq_nodes(driver) -> List:
     """Return a list of nodes in the neo4j DB"""
     session = driver.session()
@@ -646,7 +656,10 @@ def pull_uniq_nodes(driver) -> List:
     return unique_nodes
 
 
-@task
+@task(
+    cache_policy=NO_CACHE,
+    name= "Pull unique study ids from neo4j DB",
+)
 def pull_uniq_studies(driver) -> List:
     """Return a list of studies in DB"""
     session = driver.session()
@@ -688,6 +701,7 @@ def export_node_counts_a_study(tx, study_id: str, output_dir: str) -> None:
 @task(
     name="Pull counts per node a study",
     task_run_name="pull_counts_per_node_study_{study_id}",
+    cache_policy=NO_CACHE,
 )
 def pull_all_nodes_a_study(
     driver, export_to_csv, study_id: str, output_dir: str
@@ -734,7 +748,8 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
 @task(
     name="Pull ids a node a study",
     task_run_name="pull_ids_{node}_{study_id}",
-    tags=["concurrency-test"],
+    tags=["db-query-tag"],
+    cache_policy=NO_CACHE,
 )
 def pull_ids_node_study(
     driver, export_ids_csv, study_id: str, node: str, output_dir: str
@@ -813,7 +828,7 @@ def compare_id_input_db(
     return comparison_df
 
 
-@flow(task_runner=ConcurrentTaskRunner(), log_prints=True)
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
 def pull_node_ids_all_studies_write(
     driver, studies_dataframe: DataFrame, logger
 ) -> str:
@@ -834,13 +849,14 @@ def pull_node_ids_all_studies_write(
     for i in range(len(node_chunks)):
         # print(f"study_id_list: {*study_id_chunks[i],}")
         # print(f"node_list: {*node_chunks[i],}")
-        pull_ids_node_study.map(
+        future = pull_ids_node_study.map(
             driver,
             export_node_ids_a_study,
             study_id_chunks[i],
             node_chunks[i],
             temp_folder_name,
         )
+        future.result()
 
     return temp_folder_name
 
@@ -870,7 +886,7 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
     return ids_dict
 
 
-@flow(task_runner=ConcurrentTaskRunner())
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
 def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     """Returns temp folder which contains counts all nodes(except study node)
     of all studies in a DB
@@ -879,14 +895,15 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     temp_folder_name = f"db_node_entry_counts_all_studies_{random.choice(range(1000))}"
     os.mkdir(temp_folder_name)
     logger.info("Start pulling entry counts per node per study")
-    for study in study_list:
-        logger.info(f"Pulling entry counts per node for study {study}")
-        pull_all_nodes_a_study.submit(
-            driver=driver,
-            export_to_csv=export_node_counts_a_study,
-            study_id=study,
-            output_dir=temp_folder_name,
-        )
+    
+    logger.info(f"Pulling entry counts per node for study list {*study_list,}")
+    future = pull_all_nodes_a_study.map(
+        driver=driver,
+        export_to_csv=export_node_counts_a_study,
+        study_id=study_list,
+        output_dir=temp_folder_name,
+    )
+    future.result()
 
     return temp_folder_name
 
@@ -1108,10 +1125,12 @@ def query_db_to_csv(
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
     # fetch unique nodes and unique studies
-    logger.info("Fetching all unique nodes DB")
+    logger.info("Fetching all unique nodes in DB")
     unique_nodes = pull_uniq_nodes(driver=driver)
+    logger.info("Fetching all unique studies in DB")
     unqiue_studies = pull_uniq_studies(driver=driver)
     logger.info(f"Nodes list: {*unique_nodes,}")
+    logger.info(f"Studies list: {*unqiue_studies,}")
 
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")

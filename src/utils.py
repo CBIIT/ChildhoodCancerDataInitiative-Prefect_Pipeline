@@ -354,11 +354,7 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@task(
-    name="Download folder",
-    task_run_name="download_folder_{remote_folder}",
-    log_prints=True,
-)
+@task(name="Download folder", task_run_name="download_folder_{remote_folder}", log_prints=True)
 def folder_dl(bucket: str, remote_folder: str) -> None:
     """Downloads a remote direcotry folder from s3
     bucket to local. it generates a folder that follows the
@@ -1103,7 +1099,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
     tags=["md5sum-cal-tag"],
     name="Calculate one object md5sum",
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     log_prints=True,
 )
 def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
@@ -1121,7 +1117,7 @@ def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
     tags=["size-cal-tag"],
     name="Calculate one object size",
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     log_prints=True,
 )
 def calculate_single_size_task(s3uri: str, s3_client) -> str:

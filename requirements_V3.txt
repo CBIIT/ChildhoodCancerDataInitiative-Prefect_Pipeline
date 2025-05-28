@@ -1,6 +1,7 @@
 bento-mdf==0.10.0
 boto3==1.37.32
 botocore==1.37.32
+deepdiff==8.0.1
 graphql-core==3.2.6
 greenlet==3.1.1
 h2==4.2.0

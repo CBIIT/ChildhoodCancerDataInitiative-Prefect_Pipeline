@@ -359,7 +359,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             file=outf,
         )
 
-        non_utf_8_array = ["®", "™", "©"]
+        non_utf_8_array = ["®", "™", "©", '–', '—']
 
         non_utf_8_array = "|".join(non_utf_8_array)
 
@@ -380,7 +380,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         )
             df = df.map(
                 lambda x: (
-                    x.replace("®", "(R)").replace("™", "(TM)").replace("©", "(C)")
+                    x.replace("®", "(R)").replace("™", "(TM)").replace("©", "(C)").replace("–", "-").replace("—", "-")
                     if isinstance(x, str)
                     else x
                 )

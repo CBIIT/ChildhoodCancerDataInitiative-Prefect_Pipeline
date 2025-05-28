@@ -11,6 +11,7 @@ import pandas as pd
 import numpy as np
 from typing import TypeVar
 from src.utils import get_time
+from prefect.cache_policies import NO_CACHE
 
 
 DataFrame = TypeVar("DataFrame")
@@ -107,7 +108,7 @@ def count_success_fail(deletion_status: list) -> tuple:
     return count_success, count_fail
 
 
-@task(name="if single object exists",retries=3, retry_delay_seconds=0.5)
+@task(name="if single object exists",retries=3, retry_delay_seconds=1)
 def if_object_exists(key_path: str, bucket: str, s3_client, logger) -> None:
     """Retrives the metadata of an object without returning the
     object itself
@@ -149,7 +150,7 @@ def parse_bucket_folder_path(bucket_folder_path: str) -> tuple:
     return bucket, folder_path
 
 
-@task(retries=3, retry_delay_seconds=0.5)
+@task(retries=3, retry_delay_seconds=1)
 def construct_staging_bucket_key(
     object_prod_bucket_key: str, prod_bucket_path: str, staging_bucket_path: str
 ) -> str:
@@ -175,7 +176,7 @@ def construct_staging_bucket_key(
     return object_staging_bucket_key
 
 
-@task(retries=3, retry_delay_seconds=0.5, tags=["file-remover-tag"])
+@task(retries=3, retry_delay_seconds=1, tags=["file-remover-tag"], cache_policy=NO_CACHE)
 def get_md5sum(object_key: str, bucket_name: str, s3_client) -> str:
     """
     Calculate md5sum of an object using url
@@ -271,7 +272,7 @@ def objects_if_exist(key_path_list: list[str], bucket: str, logger) -> list:
 @task(
     name="Delete Single S3 Object",
     retries=3,
-    retry_delay_seconds=0.5,
+    retry_delay_seconds=1,
     tags=["file-remover-tag"],
 )
 def delete_single_object_by_uri(object_uri: str, s3_client, logger) -> str:
@@ -310,7 +311,7 @@ def delete_objects_by_uri(uri_list: list[str], logger) -> list:
     return delete_status_list
 
 
-@flow
+@flow(name="Retrive objects from a s3 bucket path", log_prints=True)
 def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     """Returns a list of dict for object files located under bucket_folder_path
 
@@ -334,13 +335,19 @@ def retrieve_objects_from_bucket_path(bucket_folder_path: str) -> list[dict]:
     for page in pages:
         if "Contents" in page.keys():
             for obj in page["Contents"]:
-                obj_dict = {
-                    "Bucket": bucket,
-                    "Key": obj["Key"],
-                    "Size": obj["Size"],
-                }
-                bucket_object_dict_list.append(obj_dict)
-
+                # check if the obj is an object file
+                # sometimes the list will return a directory instead of an object
+                if not obj["Key"].endswith("/"):
+                    obj_dict = {
+                        "Bucket": bucket,
+                        "Key": obj["Key"],
+                        "Size": obj["Size"],
+                    }
+                    bucket_object_dict_list.append(obj_dict)
+                else:
+                    obj_full_path = os.path.join(bucket, obj["Key"])
+                    logger.info(f"Object {obj_full_path} is a directory obj. Will pass")
+                    pass
         else:
             logger.info(f"No object file found under {bucket_folder_path}")
             break

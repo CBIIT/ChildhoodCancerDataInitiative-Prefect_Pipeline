@@ -19,7 +19,7 @@ from typing import Literal
 
 import boto3
 from botocore.exceptions import ClientError
-from prefect import flow, get_run_logger
+from prefect import flow, task, get_run_logger
 from src.utils import get_time, file_dl, folder_ul, sanitize_return, get_secret
 
 
@@ -29,7 +29,7 @@ from src.utils import get_time, file_dl, folder_ul, sanitize_return, get_secret
 #
 ##############
 
-
+@task(name="gdc_import_read_submission_json", log_prints=True)
 def read_json(dir_path: str):
     """Reads in submission JSON file and returns a list of dicts, checks node types.
 
@@ -50,7 +50,7 @@ def read_json(dir_path: str):
 
     return nodes
 
-
+@task(name="gdc_import_loader", log_prints=True)
 def loader(dir_path: str, node_type: str):
     """Checks that JSON file is a list of dicts and all nodes are of expected type and node type.
 
@@ -144,13 +144,14 @@ def dbgap_retrieve(phs_id_version: str):
 
     return subjects_dbgap
 
-def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5, delay=2):
+def make_request(req_type: str, url: str, secret_name_path: str, secret_key_name: str, req_data="", max_retries=5, delay=2):
     """Wrapper for request function to handle request retries for timeouts and connection errors
 
     Args:
         req_type (str): Type of request (GET, PUT or POST)
         url (str): API URL to make request to
-        token (str): GDC auth token string
+        secret_name_path (str): Path to AWS secrets manager where token hash stored
+        secret_key_name (str): Authentication token string secret key name for GDC submission
         data (dict, optional): JSON formatted data. Defaults to {} (no data).
         max_retries (int, optional): _description_. Defaults to 3.
         delay (int, optional): _description_. Defaults to 10.
@@ -159,6 +160,8 @@ def make_request(req_type: str, url: str, token:str, req_data="", max_retries=5,
         str: Request response
     """
     runner_logger = get_run_logger()
+
+    token = get_secret(secret_name_path, secret_key_name).strip()
     
     retries = 0
 
@@ -234,14 +237,15 @@ def dbgap_compare(phs_id_version: str, nodes: list):
 
     return parsed_subjects
 
-
-def retrieve_current_nodes(project_id: str, node_type: str, token: str):
+@task(name="gdc_import_retrieve_current_nodes", log_prints=True)
+def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: str, secret_key_name: str):
     """Query and return all nodes already submitted to GDC for project and node type
 
     Args:
         project_id (str): Project ID to submit node metadata for
         node_type (str): Node type for nodes to submit
-        token (str): GDC token hash to make API calls with 
+        secret_name_path (str): Path to AWS secrets manager where token hash stored
+        secret_key_name (str): Authentication token string secret key name for GDC submission
 
     Returns:
         list: List of dict node metadata that has already been submitted successfully to GDC
@@ -282,7 +286,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
         query2 = {"query": query1, "variables": null}
 
         # retrieve response
-        response = make_request("post", endpt, token, req_data=query2)
+        response = make_request("post", endpt, secret_name_path, secret_key_name, req_data=query2)
 
         # check if malformed
         try:
@@ -292,7 +296,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
             runner_logger.error(
                 f" Response is malformed: {str(response.text)} for query {str(query2)}, trying again..."  # loads > dumps
             )
-            response = make_request("post", endpt, token, req_data=query2)
+            response = make_request("post", endpt, secret_name_path, secret_key_name, req_data=query2)
 
         # check if anymore hits, if not break to speed up process
 
@@ -316,7 +320,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, token: str):
     log_prints=True,
     flow_run_name="gdc_import_query_entities_" + f"{get_time()}",
 )
-def query_entities(node_uuids: list, project_id: str, token: str):
+def query_entities(node_uuids: list, project_id: str, secret_name_path: str, secret_key_name: str):
     """Query entity metadata from GDC to perform comparisons for nodes to update.
     This function is different from retrieve_current_nodes() because one needs does not need to know
     a priori the GDC uuids/submitter_id to retrieve metadata for as well as what properties 
@@ -331,6 +335,8 @@ def query_entities(node_uuids: list, project_id: str, token: str):
     Returns:
         list: List of dict node metadata that have already been submitted successfully to GDC
     """
+
+    token = get_secret(secret_name_path, secret_key_name).strip()
 
     try:
         runner_logger = get_run_logger()
@@ -357,7 +363,7 @@ def query_entities(node_uuids: list, project_id: str, token: str):
             retries = 0
             while retries < max_retries:
                 try:
-                    temp = make_request('get', api + uuids_fmt, token) #make request
+                    temp = make_request('get', api + uuids_fmt, secret_name_path, secret_key_name) #make request
                     entities = json.loads(temp.text)["entities"] #extract entities from request
                     retries = max_retries #update retries counter to exit loop
                 except:
@@ -456,7 +462,6 @@ def entity_parser(node: dict):
 
     return node
 
-
 def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
     """Compare node entity metadata; if node in submission file is different than in GDC
     then slate for import, otherwise ignore; use DeepDiff for comparison
@@ -469,20 +474,28 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
         bool: Indication if metadata in file is different from what metadata has been submitted to GDC
     """
 
-    if DeepDiff(submit_file_metadata, gdc_node_metadata, ignore_order=True):
+    #extract only properties found in submission node from gdc node to perform comparison
+    #in order to exclude added on, non-required props from GDC
+    gdc_node_metadata_parse = {}
+    for key in submit_file_metadata.keys():
+        if key in gdc_node_metadata.keys():
+            gdc_node_metadata_parse[key] = gdc_node_metadata[key]
+
+    if DeepDiff(submit_file_metadata, gdc_node_metadata_parse, ignore_order=True):
         return True
     else:
         return False
 
-
-def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check_for_updates: str):
+@flow(name="gdc_import_compare_diff", log_prints=True)
+def compare_diff(nodes: list, project_id: str, node_type: str, secret_name_path: str, secret_key_name: str, check_for_updates: str):
     """Determine if nodes in submission file are new entities or already exist in GDC
 
     Args:
         nodes (list): List of node entities in submission file to check  
         project_id (str): GDC Project ID
         node_type (str): Node entity type in GDC Data Model 
-        token (str): Token hash
+        secret_name_path (str): Path to AWS secrets manager where token hash stored
+        secret_key_name (str): Authentication token string secret key name for GDC submission
         check_for_updates (str): yes/no indication for checking previously submitted entities in GDC against nodes to be submitted for differences
 
     Returns:
@@ -492,7 +505,7 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check
     runner_logger = get_run_logger()
 
     # retrieve node entities already in GDC
-    gdc_nodes = retrieve_current_nodes(project_id, node_type, token)
+    gdc_nodes = retrieve_current_nodes(project_id, node_type, secret_name_path, secret_key_name)
 
     # submitter_ids of node entities already in GDC
     gdc_nodes_sub_ids = [node["submitter_id"] for node in gdc_nodes]
@@ -542,7 +555,7 @@ def compare_diff(nodes: list, project_id: str, node_type: str, token: str, check
             )
             gdc_entities.update(
                 query_entities(
-                    check_nodes_ids[chunk : chunk + chunk_size], project_id, token
+                    check_nodes_ids[chunk : chunk + chunk_size], project_id, secret_name_path, secret_key_name
                 )
             )
 
@@ -658,13 +671,14 @@ def response_recorder(responses: list):
     log_prints=True,
     flow_run_name="gdc_import_submission_" + f"{get_time()}",
 )
-def submit(nodes: list, project_id: str, token: str, submission_type: str):
+def submit(nodes: list, project_id: str, secret_name_path: str, secret_key_name: str, submission_type: str):
     """Submission of node entities with POST or PUT request
 
     Args:
         nodes (list): Node entity metadata to submitt to GDC
         project_id (str): GDC Project ID
-        token (str): Token hash to submit node entity metadata
+        secret_name_path (str): Path to AWS secrets manager where token hash stored
+        secret_key_name (str): Authentication token string secret key name for GDC submission
         submission_type (str): Either 'new' or 'update' to submit node entity metadata with POST (new) or PUT (update) request
 
     Returns:
@@ -672,6 +686,8 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
     """
 
     runner_logger = get_run_logger()
+
+    token = get_secret(secret_name_path, secret_key_name).strip()
 
     try:
         assert submission_type in [
@@ -690,7 +706,8 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
             for node in nodes:
                 res = make_request("post",
                     api,
-                    token,
+                    secret_name_path,
+                    secret_key_name,
                     req_data=node
                 )
 
@@ -703,7 +720,8 @@ def submit(nodes: list, project_id: str, token: str, submission_type: str):
             for node in nodes:
                 res = make_request("put",
                     api,
-                    token,
+                    secret_name_path,
+                    secret_key_name,
                     req_data=node
                 )
 
@@ -781,9 +799,6 @@ def runner(
     # check the manifest version before the workflow starts
     file_name = os.path.basename(file_path)
 
-    # get token
-    token = get_secret(secret_name_path, secret_key_name).strip()
-
     # load in nodes file
     nodes = loader(file_name, node_type)
 
@@ -794,7 +809,7 @@ def runner(
         nodes = dbgap_compare(sstr, nodes)
 
     # parse nodes into new and update nodes
-    new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, token, check_for_updates)
+    new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, secret_name_path, secret_key_name, check_for_updates)
 
     # get time for file outputs
     dt = get_time()
@@ -828,7 +843,7 @@ def runner(
             )
 
             error_df_temp, success_uuid_df_temp = submit(
-                new_nodes[node_set : node_set + chunk_size], project_id, token, "new"
+                new_nodes[node_set : node_set + chunk_size], project_id, secret_name_path, secret_key_name, "new"
             )
 
             error_df_list.append(error_df_temp)
@@ -874,7 +889,8 @@ def runner(
             error_df_temp, success_uuid_df_temp = submit(
                 update_nodes[node_set : node_set + chunk_size],
                 project_id,
-                token,
+                secret_name_path, 
+                secret_key_name,
                 "update",
             )
 
