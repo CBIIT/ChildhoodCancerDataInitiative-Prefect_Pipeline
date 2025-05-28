@@ -1,3 +1,4 @@
+bento-mdf==0.10.0
 boto3==1.37.32
 botocore==1.37.32
 deepdiff==8.0.1
