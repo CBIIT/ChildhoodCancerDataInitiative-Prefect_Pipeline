@@ -1,4 +1,5 @@
 import csv
+import datetime
 from io import StringIO
 from typing import Any, Dict, List
 
@@ -279,6 +280,8 @@ def tag_objects(
 def kf_main_runner(config: Config):
     """Main workflow to tag Kids First objects in the NCI data bucket."""
     logger = get_run_logger()
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     logger.info("*** STARTING KIDS FIRST OBJECT TAGGER WORKFLOW ***")
 
     logger.info("*** LOADING MANIFEST FROM S3 ***")
@@ -301,7 +304,7 @@ def kf_main_runner(config: Config):
     upload_object(
         client,
         config.manifest_bucket,
-        config.manifest_key.replace("/input/", "/enriched_manifest/"),
+        config.manifest_key.replace("/input/", f"{timestamp}/enriched_manifest/"),
         manifest4,
     )
 
@@ -312,7 +315,7 @@ def kf_main_runner(config: Config):
     upload_object(
         client,
         config.manifest_bucket,
-        config.manifest_key.replace("/input/", "/tagging_report/"),
+        config.manifest_key.replace("/input/", f"{timestamp}/tagging_report/"),
         tagged_objects,
     )
 
