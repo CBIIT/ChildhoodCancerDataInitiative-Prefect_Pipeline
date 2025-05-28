@@ -304,7 +304,7 @@ def kf_main_runner(config: Config):
     upload_object(
         client,
         config.manifest_bucket,
-        config.manifest_key.replace("/input/", f"{timestamp}/enriched_manifest/"),
+        config.manifest_key.replace("/input/", f"/enriched_manifest/{timestamp}/"),
         manifest4,
     )
 
@@ -315,7 +315,7 @@ def kf_main_runner(config: Config):
     upload_object(
         client,
         config.manifest_bucket,
-        config.manifest_key.replace("/input/", f"{timestamp}/tagging_report/"),
+        config.manifest_key.replace("/input/", f"/tagging_report/{timestamp}/"),
         tagged_objects,
     )
 
