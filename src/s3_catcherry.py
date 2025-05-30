@@ -380,10 +380,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             f"\tWARNING: The property, {col}, contained a NaN value on row: {rows[i]+1}\n",
                             file=outf,
                         )
-                        print(
-                            f"\tWARNING: The property, {col}, contained a NaN value on row: {rows[i]+1}\n"
-                        )
-                # check the non-NAN values for any non-UTF-8 values.
+                        print(f"\tWARNING: The property, {col}, contained a NaN value on row: {rows[i]+1}\n")
+                # check for any of the values in the array
                 if df[col].str.contains(non_utf_8_array).any():
                     # only if they have an issue, then print out the node.
                     print(f"\n{node}\n----------", file=outf)
