@@ -368,10 +368,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # for each node
         for node in dict_nodes:
             df = meta_dfs[node]
-            print(node)
             # for each column
             for col in df.columns:
-                print(col)
                 # check for any of the values in the array
                 if df[col].str.contains(non_utf_8_array).any():
                     # only if they have an issue, then print out the node.
