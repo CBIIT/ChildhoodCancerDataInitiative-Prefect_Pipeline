@@ -370,6 +370,17 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             df = meta_dfs[node]
             # for each column
             for col in df.columns:
+                # if there is a NAN value in the column, print a warning for that row
+                if df[col].isna().any():
+                    rows = np.where(df[col].isna())[0]
+                    for i in range(0, len(rows)):
+                        print(
+                            f"\tWARNING: The property, {col}, contained a NaN value on row: {rows[i]+1}\n",
+                            file=outf,
+                        )
+                        print(
+                            f"\tWARNING: The property, {col}, contained a NaN value on row: {rows[i]+1}\n"
+                        )
                 # check for any of the values in the array
                 if df[col].str.contains(non_utf_8_array).any():
                     # only if they have an issue, then print out the node.
