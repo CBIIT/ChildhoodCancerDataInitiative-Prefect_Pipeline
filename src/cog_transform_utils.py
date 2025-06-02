@@ -168,9 +168,13 @@ def summarizer(df: pd.DataFrame, logger: logging.Logger):
                 "unique_value": value,
                 "count": count
             })
-            
+    
+    df_summary = pd.DataFrame(summary)
 
-    return pd.DataFrame(summary)
+    #replace all blank strings with value <BLANK>
+    df_summary['unique_value'] = df_summary['unique_value'].replace('', '<BLANK>')
+
+    return df_summary
 
 
 @flow(
