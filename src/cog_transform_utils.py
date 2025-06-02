@@ -135,6 +135,48 @@ def clean_column_space_colon_concat(
 
     return df
 
+def summarizer(df: pd.DataFrame, logger: logging.Logger):
+    """Summarizes the DataFrame by counting unique values in each column and logging the results. 
+    Also counts the number of instances of each unique value and the number of null values in each column.
+    Returns a long dataframe structure with the summary of unique values and their counts for each column.
+
+    Args:
+        df (pd.DataFrame): The DataFrame to summarize.
+        logger (logging.Logger): Logger object for logging messages.
+
+    Returns:
+        A dictionary with the summary of unique values and their counts for each column.
+    """
+    logger.info("Starting summarization of COG CCDI transformation.")
+
+    # Create a long DataFrame structure with the summary
+    summary = pd.DataFrame({
+        "column": [],
+        "unique_value": [],
+        "count": []
+    })
+
+    # Count unique values in each column
+    unique_counts = df.nunique()
+    logger.info("Unique value counts:")
+    for column, count in unique_counts.items():
+        logger.info(f"  {column}: {count} unique values")
+    logger.info("Counting instances of each unique value in each column:")
+    for column in df.columns:
+        value_counts = df[column].value_counts(dropna=False)
+        logger.info(f"  {column} value counts:")
+        for value, count in value_counts.items():
+            logger.info(f"    {value}: {count} instances")
+            summary = summary.append({
+                "column": column,
+                "unique_value": value,
+                "count": count
+            }, ignore_index=True)
+            
+
+    return summary
+
+
 @flow(
     name="COG Transformer",
     log_prints=True,
@@ -174,7 +216,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     log_filename = f"{output_dir}/COG_IGM_JSON2TSV_COG_Transform"
     logger = get_logger(log_filename, "info")
     
-    
+    dt = get_time()
+
     # Data Reshape/mutate
 
     runner_logger = get_run_logger()
@@ -649,7 +692,12 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     # Log final column order
     logger.info(f"Final column order: {final_order}")
 
-    df_mutation[final_order].to_csv(f"{output_dir}/COG_CCDI_submission_{get_time()}.tsv", sep="\t", index=False)
+    # save to file
+    df_mutation[final_order].to_csv(f"{output_dir}/COG_CCDI_submission_{dt}.tsv", sep="\t", index=False)
+
+    # perform summary of the transformation and save to file
+    summary_cog = summarizer(df_mutation, logger)
+    summary_cog.to_csv(f"{output_dir}/COG_CCDI_summary_{dt}.tsv", sep="\t", index=False)
 
     # Log the end of the transformation
     logger.info("COG data transformation process completed successfully.")
