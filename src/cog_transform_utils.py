@@ -150,11 +150,7 @@ def summarizer(df: pd.DataFrame, logger: logging.Logger):
     logger.info("Starting summarization of COG CCDI transformation.")
 
     # Create a long DataFrame structure with the summary
-    summary = pd.DataFrame({
-        "column": [],
-        "unique_value": [],
-        "count": []
-    })
+    summary = []
 
     # Count unique values in each column
     unique_counts = df.nunique()
@@ -167,14 +163,14 @@ def summarizer(df: pd.DataFrame, logger: logging.Logger):
         logger.info(f"  {column} value counts:")
         for value, count in value_counts.items():
             logger.info(f"    {value}: {count} instances")
-            summary = summary.append({
+            summary.append({
                 "column": column,
                 "unique_value": value,
                 "count": count
-            }, ignore_index=True)
+            })
             
 
-    return summary
+    return pd.DataFrame(summary)
 
 
 @flow(
