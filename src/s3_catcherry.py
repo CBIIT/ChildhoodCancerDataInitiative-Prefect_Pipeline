@@ -150,6 +150,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # Go through each tab and remove completely empty tabs
     #
     ##############
+    catcherr_logger.info("Removing empty tabs from the manifest file")
 
     for node in dict_nodes:
         # see if the tab contain any data
@@ -168,6 +169,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # Start Log Printout
     #
     ##############
+    catcherr_logger.info("Starting log printout")
     catcherr_out_log = f"{output_file}.txt"
     with open(f"{file_dir_path}/{catcherr_out_log}", "w") as outf:
 
@@ -188,6 +190,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        catcherr_logger.info("Checking Terms and Value Sets")
         print(
             "The following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file. If the values present do not match, they will noted and in some cases the values will be replaced:\n----------",
             file=outf,
@@ -210,6 +213,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         # for each tab
         for node in dict_nodes:
+            catcherr_logger.info(node)
             print(f"\n{node}\n----------", file=outf)
             df = meta_dfs[node]
             properties = df.columns
@@ -361,7 +365,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         catcherr_logger.info("UTF-8 fixing")
 
-        non_utf_8_array = ["®", "™", "©", '–', '—']
+        non_utf_8_array = ["®", "™", "©", "–", "—"]
 
         non_utf_8_array = "|".join(non_utf_8_array)
 
@@ -378,9 +382,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     for i in range(0, len(rows)):
                         print(
                             f"The property, {col}, contained a NaN value on row: {rows[i]+1}\n",
-                            file=outf
+                            file=outf,
                         )
-                        catcherr_logger.warning(f"The property, {col}, contained a NaN value on row: {rows[i]+1}\n")
+                        catcherr_logger.warning(
+                            f"The property, {col}, contained a NaN value on row: {rows[i]+1}\n"
+                        )
                 # check for any of the values in the array
                 if df[col].str.contains(non_utf_8_array).any():
                     # only if they have an issue, then print out the node.
@@ -393,7 +399,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         )
             df = df.map(
                 lambda x: (
-                    x.replace("®", "(R)").replace("™", "(TM)").replace("©", "(C)").replace("–", "-").replace("—", "-")
+                    x.replace("®", "(R)")
+                    .replace("™", "(TM)")
+                    .replace("©", "(C)")
+                    .replace("–", "-")
+                    .replace("—", "-")
                     if isinstance(x, str)
                     else x
                 )
@@ -405,6 +415,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # Check and replace non-html encoded characters in URLs
         #
         ##############
+
+        catcherr_logger.info("HTML encoding fixing")
 
         print(
             "\nCertain characters (comma, space) do not handle being used in HTML, due to this, the following characters were changed.\n----------",
@@ -443,6 +455,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # File_access check and ACL/authz creation
         #
         ##############
+
+        catcherr_logger.info("File access checks and ACL/authz creation")
 
         print(
             "\nThe following section will check the file_access values, and create derived values for acl and authz.\n----------",
@@ -487,6 +501,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # File_mapping_level check
         #
         ##############
+        catcherr_logger.info("File mapping level checks and value creation")
 
         print(
             "\nThe following section will check the file_mapping_level (fml) values, and create values when blank.\n----------",
@@ -528,6 +543,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # Fix URL paths
         #
         ##############
+
+        catcherr_logger.info("Fixing file urls")
 
         print(
             "\nCheck the following url columns (file_url), to make sure the full file url is present and fix entries that are not:\n----------\n\nWARNING: If you are seeing a large number of 'ERROR: There is an unresolvable issue...', it is likely there are two or more buckets and this is the script trying and failing at checks against the other bucket for the file.",
@@ -670,6 +687,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        catcherr_logger.info("Reapplying HTML encoding changes")
+
         for node in dict_nodes:
             # for a column called file_url
             if "file_url" in meta_dfs[node].columns:
@@ -689,6 +708,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # Assign guids to files
         #
         ##############
+
+        catcherr_logger.info("Assigning GUIDs to files")
 
         catcherr_logger.info(
             "The file based nodes will now have a guid assigned to each unique file"
@@ -729,6 +750,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     #
     ##############
 
+    catcherr_logger.info("Replacing NaN values with empty strings")
+
     for node in dict_nodes:
         df = meta_dfs[node]
         df = df.fillna("")
@@ -740,6 +763,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # Replace any no-break space before writing output
     #
     ##############
+
+    catcherr_logger.info("Replacing no-break spaces with regular spaces")
+
     def replace_no_break_space(meta_dfs: dict, dict_nodes: list[str]) -> dict:
         for node in dict_nodes:
             node_df = meta_dfs[node]
@@ -747,7 +773,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 col for col, dt in node_df.dtypes.items() if dt == object
             ]
             for col_i in node_df_str_cols:
-                node_df[col_i] = node_df[col_i].str.replace("\u00A0", " ")
+                node_df[col_i] = node_df[col_i].str.replace("\u00a0", " ")
             meta_dfs[node] = node_df
         return meta_dfs
 
@@ -758,6 +784,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # Write out
     #
     ##############
+    catcherr_logger.info("Reordering dataframes to match template")
 
     def reorder_dataframe(dataframe, column_list: list, sheet_name: str, logger):
         reordered_df = pd.DataFrame(columns=column_list)
