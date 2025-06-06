@@ -358,7 +358,7 @@ class DD_dataframe(Task):
                 "UNK=Unknown",
             ],
             "SUBJECT_SOURCE": ["Source repository where subjects originate", "string"],
-            "SOURCE_SUBJECT_ID": ["Subjet ID used in the Source Repository", "string"],
+            "SOURCE_SUBJECT_ID": ["Subject ID used in the Source Repository", "string"],
         }
         self.subject_sample_dd = {
             "VARNAME": ["VARDESC", "TYPE", "VALUES"],
