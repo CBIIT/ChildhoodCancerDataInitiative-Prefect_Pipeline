@@ -474,7 +474,7 @@ class AddSynonym:
             (self.synonym_df["participant.participant_id"].notna())
             & (self.synonym_df["repository_of_synonym_id"] != "dbGaP")
         ][
-            ["participant.participant_id", "synonym_id", "repository_of_synonym_id"]
+            ["participant.participant_id", "associated_id", "repository_of_synonym_id"]
         ].dropna(
             subset=["participant.participant_id"], how="all"
         )
@@ -484,7 +484,7 @@ class AddSynonym:
     def slice_sample_synonym(self):
         sample_synonym_df = self.synonym_df[
             self.synonym_df["repository_of_synonym_id"] == "BioSample"
-        ][["sample.sample_id", "synonym_id", "repository_of_synonym_id"]].dropna(
+        ][["sample.sample_id", "associated_id", "repository_of_synonym_id"]].dropna(
             subset=["sample.sample_id"], how="all"
         )
         # print(sample_synonym_df.to_markdown())
@@ -496,9 +496,33 @@ class AddSynonym:
             columns={
                 "participant.participant_id": "SUBJECT_ID",
                 "repository_of_synonym_id": "SUBJECT_SOURCE",
-                "synonym_id": "SOURCE_SUBJECT_ID",
+                "associated_id": "SOURCE_SUBJECT_ID",
             }
         )
+
+        # if SUBJECT_ID is not unique, determine the largest number of duplication.
+        if subject_synonym_df["SUBJECT_ID"].duplicated().any():
+            max_duplication = subject_synonym_df["SUBJECT_ID"].value_counts().max()
+            # Then create a new set of SUBJECT_SOURCE and SUBJECT_SOURCE_ID columns counting up to the maximum duplication, starting from 2.
+            # For examples, if there are 3 rows with the same SUBJECT_ID, the first column will be SUBJECT_SOURCE and SUBJECT_SOURCE_ID, followed by SUBJECT_SOURCE_2 and SUBJECT_SOURCE_ID_2, and so on.
+            for i in range(2, max_duplication + 1):
+                subject_synonym_df[f"SUBJECT_SOURCE_{i}"] = ""
+                subject_synonym_df[f"SUBJECT_SOURCE_ID_{i}"] = subject_synonym_df["SUBJECT_ID"].astype(str) + "_" + i.astype(str)
+            
+            # Then for each duplicate SUBJECT_ID, assign the corresponding SUBJECT_SOURCE and SOURCE_SUBJECT_ID to the new columns, ensuring only one per SUBJECT_ID.
+            for subject_id in subject_synonym_df["SUBJECT_ID"].unique():
+                rows = subject_synonym_df[subject_synonym_df["SUBJECT_ID"] == subject_id]
+                if len(rows) > 1:
+                    for i, row in enumerate(rows.itertuples(), start=2):
+                        subject_synonym_df.at[row.Index, f"SUBJECT_SOURCE_{i}"] = row.SUBJECT_SOURCE
+                        subject_synonym_df.at[row.Index, f"SOURCE_SUBJECT_ID_{i}"] = row.SOURCE_SUBJECT_ID
+            
+            # Keep the first occurrence of SUBJECT_ID and drop the rest
+            subject_synonym_df = subject_synonym_df.drop_duplicates(subset=["SUBJECT_ID"]).reset_index(drop=True)
+
+        else:
+            pass
+
         # left merged with subject_consent_df
         merged_subject_df = subject_consent_df.merge(
             subject_synonym_df, how="left", on="SUBJECT_ID"
@@ -511,7 +535,7 @@ class AddSynonym:
             columns={
                 "sample.sample_id": "SAMPLE_ID",
                 "repository_of_synonym_id": "SAMPLE_SOURCE",
-                "synonym_id": "SOURCE_SAMPLE_ID",
+                "associated_id": "SOURCE_SAMPLE_ID",
             }
         )
         # left merged with sample_attribute_df
