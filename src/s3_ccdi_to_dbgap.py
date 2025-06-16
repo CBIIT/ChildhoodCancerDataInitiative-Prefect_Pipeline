@@ -508,10 +508,15 @@ class AddSynonym:
             # For examples, if there are 3 rows with the same SUBJECT_ID, the first column will be SUBJECT_SOURCE and SUBJECT_SOURCE_ID, followed by SUBJECT_SOURCE_2 and SUBJECT_SOURCE_ID_2, and so on.
             for i in range(2, max_duplication + 1):
                 subject_synonym_df[f"SUBJECT_SOURCE_{i}"] = ""
-                subject_synonym_df[f"SUBJECT_SOURCE_ID_{i}"] = subject_synonym_df["SUBJECT_ID"].astype(str) + "_" + f"{i}"
-            
+                subject_synonym_df[f"SUBJECT_SOURCE_ID_{i}"] = ""
+
             # Then for each duplicate SUBJECT_ID, assign the corresponding SUBJECT_SOURCE and SOURCE_SUBJECT_ID to the new columns, ensuring only one per SUBJECT_ID.
+            # For example, if there are 6 max duplications, but this subject only has 3, then SUBJECT_SOURCE_4 and SUBJECT_SOURCE_ID_4 and onward will be empty.
+            # The first occurrence of SUBJECT_ID will have SUBJECT_SOURCE and SOURCE_SUBJECT_ID, the second occurrence will be placed in the first instance row under the SUBJECT_SOURCE_2 and SOURCE_SUBJECT_ID_2 columns, and so on.
+            # Iterate through each unique SUBJECT_ID and assign the corresponding SUBJECT_SOURCE and SOURCE_SUBJECT_ID to the new columns
+            subject_synonym_df = subject_synonym_df.reset_index(drop=True) 
             for subject_id in subject_synonym_df["SUBJECT_ID"].unique():
+                print(f"Processing SUBJECT_ID: {subject_id}")
                 rows = subject_synonym_df[subject_synonym_df["SUBJECT_ID"] == subject_id]
                 if len(rows) > 1:
                     for i, row in enumerate(rows.itertuples(), start=2):
@@ -736,3 +741,5 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger.info("Script finished!")
 
     return (output_folder_name, logger_filename)
+
+
