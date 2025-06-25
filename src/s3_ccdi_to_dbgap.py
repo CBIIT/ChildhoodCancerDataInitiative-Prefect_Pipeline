@@ -649,6 +649,17 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         subject_consent = AddSynonym(synonym_df=synonym_df).merge_subject_synonym(
             subject_consent_df=subject_consent
         )
+        # since synonyms exist, we need to check how many extra columns were added.
+        # extra_col_count is equal to the largest number column suffix number.
+        extra_col_count = 1
+        for col in subject_consent.columns:
+            if "SUBJECT_SOURCE_" in col:
+                try:
+                    col_num = int(col.split("_")[-1])
+                    if col_num > extra_col_count:
+                        extra_col_count = col_num
+                except ValueError:
+                    continue
     else:
         pass
     # check if each participant only appears in one row
@@ -673,6 +684,48 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     ) = DD_dataframe().create_dd_all(
         subject_synonym=subject_synonym, sample_synonym=sample_synonym
     )
+
+    # if extra_col_count exists, add extra rows to subject_consent_dd_df
+    # the extra rows will be SUBJECT_SOURCE_2, SOURCE_SUBJECT_ID_2, SUBJECT_SOURCE_3, SOURCE_SUBJECT_ID_3, etc.
+    # for example:
+    # "SUBJECT_SOURCE": ["Source repository where subjects originate", "string"],
+    # "SOURCE_SUBJECT_ID": ["Subject ID used in the Source Repository", "string"],
+    if subject_synonym:
+        for i in range(2, extra_col_count + 1):
+            subject_consent_dd_df = pd.concat(
+                [
+                    subject_consent_dd_df,
+                    pd.DataFrame.from_records(
+                        [
+                            {
+                                "VARNAME": f"SUBJECT_SOURCE_{i}",
+                                "VARDESC": "Source repository where subjects originate",
+                                "TYPE": "string",
+                                "VALUES": "",
+                            }
+                        ]
+                    ),
+                ],
+                ignore_index=True,
+            )
+            subject_consent_dd_df = pd.concat(
+                [
+                    subject_consent_dd_df,
+                    pd.DataFrame.from_records(
+                        [
+                            {
+                                "VARNAME": f"SOURCE_SUBJECT_ID_{i}",
+                                "VARDESC": "Subject ID used in the Source Repository",
+                                "TYPE": "string",
+                                "VALUES": "",
+                            }
+                        ]
+                    ),
+                ],
+                ignore_index=True,
+            )
+    else:
+        pass
 
     if pre_submission is not None:
         try:
@@ -769,5 +822,6 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger.info("Script finished!")
 
     return (output_folder_name, logger_filename)
+
 
 
