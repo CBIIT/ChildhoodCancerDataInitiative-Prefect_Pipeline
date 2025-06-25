@@ -690,35 +690,33 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     # for example, each row will be like::
     # ["SUBJECT_SOURCE_i", "Source repository where subjects originate", "string"],
     # ["SOURCE_SUBJECT_ID_i", "Subject ID used in the Source Repository", "string"],
-    if subject_synonym:
-        if extra_col_count > 1:
-            for i in range(2, extra_col_count + 1):
-                new_row_source = pd.DataFrame.from_records(
-                    [
-                        {
-                            "VARNAME": f"SUBJECT_SOURCE_{i}",
-                            "VARDESC": "Source repository where subjects originate",
-                            "TYPE": "string",
-                            "VALUES": "",
-                        }
-                    ]
-                )
-                new_row_id = pd.DataFrame.from_records(
-                    [
-                        {
-                            "VARNAME": f"SOURCE_SUBJECT_ID_{i}",
-                            "VARDESC": "Subject ID used in the Source Repository",
-                            "TYPE": "string",
-                            "VALUES": "",
-                        }
-                    ]
-                )
-                subject_consent_dd_df = pd.concat(
-                    [subject_consent_dd_df, new_row_source, new_row_id],
-                    ignore_index=True,
-                )
-        else:
-            pass
+    # the new rows will be added to the end of the dataframe, and aligned via the already existing columns.
+    if subject_synonym and extra_col_count > 1:
+        for i in range(2, extra_col_count + 1):
+            new_row_source = pd.DataFrame.from_records(
+                [
+                    {
+                        "VARNAME": f"SUBJECT_SOURCE_{i}",
+                        "VARDESC": "Source repository where subjects originate",
+                        "TYPE": "string",
+                        "VALUES": pd.NA,
+                    }
+                ]
+            )
+            new_row_id = pd.DataFrame.from_records(
+                [
+                    {
+                        "VARNAME": f"SOURCE_SUBJECT_ID_{i}",
+                        "VARDESC": "Subject ID used in the Source Repository",
+                        "TYPE": "string",
+                        "VALUES": pd.NA,
+                    }
+                ]
+            )
+            subject_consent_dd_df = pd.concat(
+                [subject_consent_dd_df, new_row_source, new_row_id],
+                ignore_index=True,
+            )
     else:
         pass
 
@@ -817,6 +815,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger.info("Script finished!")
 
     return (output_folder_name, logger_filename)
+
 
 
 
