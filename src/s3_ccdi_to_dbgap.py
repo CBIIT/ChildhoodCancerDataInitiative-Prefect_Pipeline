@@ -713,8 +713,8 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
                     }
                 ]
             )
-            subject_consent_dd_df = pd.concat(
-                [subject_consent_dd_df, new_row_source, new_row_id],
+            subject_consent_dd_df = subject_consent_dd_df.concat(
+                [new_row_source, new_row_id],
                 ignore_index=True,
             )
     else:
