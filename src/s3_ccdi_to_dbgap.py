@@ -503,28 +503,40 @@ class AddSynonym:
         # if SUBJECT_ID is not unique, determine the largest number of duplication.
         if subject_synonym_df["SUBJECT_ID"].duplicated().any():
             max_duplication = subject_synonym_df["SUBJECT_ID"].value_counts().max()
-            print(max_duplication)
             # Then create a new set of SUBJECT_SOURCE and SUBJECT_SOURCE_ID columns counting up to the maximum duplication, starting from 2.
             # For examples, if there are 3 rows with the same SUBJECT_ID, the first column will be SUBJECT_SOURCE and SUBJECT_SOURCE_ID, followed by SUBJECT_SOURCE_2 and SUBJECT_SOURCE_ID_2, and so on.
             for i in range(2, max_duplication + 1):
                 subject_synonym_df[f"SUBJECT_SOURCE_{i}"] = ""
-                subject_synonym_df[f"SUBJECT_SOURCE_ID_{i}"] = ""
+                subject_synonym_df[f"SOURCE_SUBJECT_ID_{i}"] = ""
 
-            # Then for each duplicate SUBJECT_ID, assign the corresponding SUBJECT_SOURCE and SOURCE_SUBJECT_ID to the new columns, ensuring only one per SUBJECT_ID.
-            # For example, if there are 6 max duplications, but this subject only has 3, then SUBJECT_SOURCE_4 and SUBJECT_SOURCE_ID_4 and onward will be empty.
-            # The first occurrence of SUBJECT_ID will have SUBJECT_SOURCE and SOURCE_SUBJECT_ID, the second occurrence will be placed in the first instance row under the SUBJECT_SOURCE_2 and SOURCE_SUBJECT_ID_2 columns, and so on.
-            # Iterate through each unique SUBJECT_ID and assign the corresponding SUBJECT_SOURCE and SOURCE_SUBJECT_ID to the new columns
+            # Iterate through the rows of subject_synonym_df and fill in the new columns accordingly.
             subject_synonym_df = subject_synonym_df.reset_index(drop=True) 
+            # For each unqiue SUBJECT_ID, find all SUBJECT_IDs that have multiple rows.
             for subject_id in subject_synonym_df["SUBJECT_ID"].unique():
                 print(f"Processing SUBJECT_ID: {subject_id}")
                 rows = subject_synonym_df[subject_synonym_df["SUBJECT_ID"] == subject_id]
+                # If there are multiple rows, starting with the lowest index row, fill in the new columns up to the number of duplications.
+                # Drop the duplicate rows that were added onto the first occurence, keeping the first occurrence.
                 if len(rows) > 1:
-                    for i, row in enumerate(rows.itertuples(), start=2):
-                        subject_synonym_df.at[row.Index, f"SUBJECT_SOURCE_{i}"] = row.SUBJECT_SOURCE
-                        subject_synonym_df.at[row.Index, f"SOURCE_SUBJECT_ID_{i}"] = row.SOURCE_SUBJECT_ID
+                    for idx, (index, row) in enumerate(rows.iterrows()):
+                        if idx == 0:
+                            continue
+                        else:
+                            subject_synonym_df.at[
+                                rows.index[0], f"SUBJECT_SOURCE_{idx + 1}"
+                            ] = row["SUBJECT_SOURCE"]
+                            subject_synonym_df.at[
+                                rows.index[0], f"SOURCE_SUBJECT_ID_{idx + 1}"
+                            ] = row["SOURCE_SUBJECT_ID"]
+                    # Drop the duplicate rows that were added onto the first occurence, keeping the first occurrence
+                    subject_synonym_df = subject_synonym_df.drop(rows.index[1:])
+                else:
+                    continue
+            subject_synonym_df = subject_synonym_df.reset_index(drop=True)
             
-            # Keep the first occurrence of SUBJECT_ID and drop the rest
-            subject_synonym_df = subject_synonym_df.drop_duplicates(subset=["SUBJECT_ID"]).reset_index(drop=True)
+            
+            # # Keep the first occurrence of SUBJECT_ID and drop the rest
+            # subject_synonym_df = subject_synonym_df.drop_duplicates(subset=["SUBJECT_ID"]).reset_index(drop=True)
 
         else:
             pass
