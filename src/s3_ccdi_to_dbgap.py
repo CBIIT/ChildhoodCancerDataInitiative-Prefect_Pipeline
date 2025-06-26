@@ -804,4 +804,3 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
 
     return (output_folder_name, logger_filename)
 
-
