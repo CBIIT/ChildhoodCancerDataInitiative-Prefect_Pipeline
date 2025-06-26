@@ -360,6 +360,7 @@ def cog_igm_json2tsv(
     else:
         cog_success_count = 0
         cog_error_count = 0
+        cog_transform_log = ""
 
     if (
         len(
