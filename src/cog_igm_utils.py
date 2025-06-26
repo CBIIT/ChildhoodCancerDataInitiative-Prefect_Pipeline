@@ -357,6 +357,8 @@ def cog_igm_json2tsv(
                 runner_logger.error(
                     "Cannot perform COG form-level parsing, no valid COG JSONs read in."
                 )
+        else:
+            cog_transform_log = ""
     else:
         cog_success_count = 0
         cog_error_count = 0
