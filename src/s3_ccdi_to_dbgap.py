@@ -692,17 +692,15 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     if subject_synonym and extra_col_count > 1:
         for i in range(2, extra_col_count + 1):
             new_row_source = pd.DataFrame([{
-                "VARNAME": f"SUBJECT_SOURCE_{i}",
-                "VARDESC": "Source repository where subjects originate",
-                "TYPE": "string",
-                "VALUES": pd.NA
-            }], columns=subject_consent_dd_df.columns)
+                'index':f"SUBJECT_SOURCE_{i}",
+                0:"Source repository where subjects originate",
+                1:"string",
+            }])
             new_row_id = pd.DataFrame([{
-                "VARNAME": f"SOURCE_SUBJECT_ID_{i}",
-                "VARDESC": "Subject ID used in the Source Repository",
-                "TYPE": "string",
-                "VALUES": pd.NA
-            }], columns=subject_consent_dd_df.columns)
+                'index': f"SOURCE_SUBJECT_ID_{i}",
+                0: "Subject ID used in the Source Repository",
+                1: "string",
+            }])
             subject_consent_dd_df = pd.concat(
                 [subject_consent_dd_df, new_row_source, new_row_id],
                 ignore_index=True
@@ -805,8 +803,5 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger.info("Script finished!")
 
     return (output_folder_name, logger_filename)
-
-
-
 
 
