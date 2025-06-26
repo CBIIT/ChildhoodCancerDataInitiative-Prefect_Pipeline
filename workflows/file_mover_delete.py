@@ -141,6 +141,18 @@ def identify_obj_uri_valid(filename: str, col_name: str, logger) -> list:
 
     return obj_list, invalid_uri_list
 
+def int_results_recorder(first_url_list: list[str], second_url_list: list[str], md5sum_results: list[list]) -> DataFrame:
+    """Record the intermediate results of md5sum check"""
+    int_df = pd.DataFrame(md5sum_results)
+    int_df.columns = ["md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]
+    int_df["url_before_cp"] = first_url_list
+    int_df["url_after_cp"] = second_url_list
+    int_df["transfer_status"] = "success"
+
+    #reorder cols
+    int_df = int_df[["url_before_cp", "url_after_cp", "transfer_status", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]]
+    return int_df
+
 
 @flow(
     name="file mover and delete",
@@ -182,11 +194,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     runner_logger.info("Start moving files")
     s3_client = set_s3_session_client()
     copy_parameter_list = meta_df["copy_parameter"].tolist()
-    ## KEEP BELOW UNTIL MERGED TO PROD JUST IN CASE
-    """copy_status = []
-    for copy_parameter  in copy_parameter_list:
-        item_status = copy_file_task(copy_parameter=copy_parameter, s3_client=s3_client, logger=logger, runner_logger=runner_logger)
-        copy_status.append(item_status)"""
+    
     copy_status = []
     for chunk in range(0, len(copy_parameter_list), 500):
         runner_logger.info(f"Copying {chunk} to {chunk+500} files")
@@ -197,29 +205,12 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
 
     # compare md5sum
     runner_logger.info("Start comparing md5sum before and after copy")
-    ## KEEP BELOW UNTIL MERGED TO PROD JUST IN CASE
-    """first_md5sum = []
-    second_md5sum = []
-    compare_md5sum_status = []
-    for i in range(meta_df.shape[0]):
-        original_uri_i = meta_df["original_uri"][i]
-        dest_uri_i = meta_df["dest_uri"][i]
-        i_original_url, i_original_md5sum, i_dest_md5sum, comparison_result = compare_md5sum_task(first_url=original_uri_i, second_url=dest_uri_i, s3_client=s3_client, logger=logger)
-        
-        first_md5sum.append(i_original_md5sum)
-        second_md5sum.append(i_dest_md5sum)
-        compare_md5sum_status.append(comparison_result)
     
-
-
-    meta_df["copy_status"] = copy_status
-    meta_df["original_md5sum"] = first_md5sum
-    meta_df["dest_md5sum"] = second_md5sum
-    meta_df["md5sum_check"] = compare_md5sum_status"""
     # compare md5sum
     first_url_list = meta_df["original_uri"].tolist()
     second_url_list = meta_df["dest_uri"].tolist()
     md5sum_results = []
+    int_md5sum_results = []
 
     for chunk in range(0, len(first_url_list), 500):
         runner_logger.info(f"Comparing md5sum for {chunk} to {chunk+500} files")
@@ -229,6 +220,23 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
             concurrency_tag="file_mover_delete_md5sum",
         )
         md5sum_results.extend(int_md5sum_results)
+
+        intermediate_file_name = f"{os.path.basename(obj_list_tsv_path).split('.')[0]}_intermediate_md5sum_check.tsv"
+        int_transfer_df = int_results_recorder(first_url_list[chunk:chunk+500],second_url_list[chunk:chunk+500], md5sum_results)
+
+        int_md5sum_results.append(int_transfer_df)
+
+        # pd.concat to intermediate file
+        int_out_df = pd.concat(int_md5sum_results, ignore_index=True)
+
+        int_out_df.to_csv(intermediate_file_name, sep="\t", index=False)
+        
+        file_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            sub_folder="",
+            newfile=intermediate_file_name
+        )
 
     """md5sum_results = compare_md5sum_flow(
         first_url_list=first_url_list,
