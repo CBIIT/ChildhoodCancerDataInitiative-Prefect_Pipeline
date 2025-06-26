@@ -149,7 +149,7 @@ def int_results_recorder(meta_df: pd.DataFrame, md5sum_results: list[list]) -> D
     int_df = transfer_parse.merge(int_df, on="original_uri")
 
     #reorder cols
-    int_df = int_df[["url_before_cp", "url_after_cp", "transfer_status", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]]
+    int_df = int_df[["original_uri", "dest_uri", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]]
     return int_df
 
 
