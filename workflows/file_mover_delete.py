@@ -151,8 +151,8 @@ def int_results_recorder(meta_df: pd.DataFrame, md5sum_results: list[list]) -> D
     print(int_df)
 
     #reorder cols
-    int_df = int_df[["original_uri", "dest_uri", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]]
-    print(int_df)
+    #int_df = int_df[["original_uri", "dest_uri", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]]
+    #print(int_df)
     return int_df
 
 
@@ -213,6 +213,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     second_url_list = meta_df["dest_uri"].tolist()
     md5sum_results = []
     int_md5sum_results = []
+    intermediate_file_name = f"{os.path.basename(obj_list_tsv_path).split('.')[0]}_intermediate_md5sum_check.tsv"
 
     for chunk in range(0, len(first_url_list), 500):
         runner_logger.info(f"Comparing md5sum for {chunk} to {chunk+500} files")
@@ -222,8 +223,6 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
             concurrency_tag="file_mover_delete_md5sum",
         )
         md5sum_results.extend(int_md5sum_results)
-
-        intermediate_file_name = f"{os.path.basename(obj_list_tsv_path).split('.')[0]}_intermediate_md5sum_check.tsv"
         int_transfer_df = int_results_recorder(meta_df, md5sum_results)
 
         int_md5sum_results.append(int_transfer_df)
