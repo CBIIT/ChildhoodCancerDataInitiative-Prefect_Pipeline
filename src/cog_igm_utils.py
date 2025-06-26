@@ -41,20 +41,7 @@ def manifest_reader(manifest_path: str):
             file_name, sheet_name="clinical_measure_file", engine="openpyxl"
         )
         # parse only COG and IGM clinical reports and return uniq file ID and s3 URL in df
-        manifest_df = manifest_df[
-            manifest_df.data_category.isin(
-                ["Clinical;COG Clinical Report", 
-                "Clinical;IGM Clinical Report", 
-                "COG Clinical Data", 
-                "Methylation Clinical Data", 
-                "Tumor Normal Clinical Data", 
-                "Gene Fusion Clinical Data", 
-                "Clinical;COG Clinical Data",
-                "Clinical;Methylation",
-                "Clinical;Tumor Normal",
-                "Clinical;Gene Fusion"]
-            )
-        ][["clinical_measure_file_id", "file_name", "file_size", "file_url"]]
+        manifest_df = manifest_df[["clinical_measure_file_id", "file_name", "file_size", "file_url"]]
     except Exception as e:
         runner_logger.error(f"Cannot read in manifest {file_name} due to error: {e}")
         sys.exit(1)
