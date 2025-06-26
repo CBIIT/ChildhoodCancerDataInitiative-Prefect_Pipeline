@@ -141,13 +141,12 @@ def identify_obj_uri_valid(filename: str, col_name: str, logger) -> list:
 
     return obj_list, invalid_uri_list
 
-def int_results_recorder(first_url_list: list[str], second_url_list: list[str], md5sum_results: list[list]) -> DataFrame:
+def int_results_recorder(meta_df: pd.DataFrame, md5sum_results: list[list]) -> DataFrame:
     """Record the intermediate results of md5sum check"""
     int_df = pd.DataFrame(md5sum_results)
-    int_df.columns = ["md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]
-    int_df["url_before_cp"] = first_url_list
-    int_df["url_after_cp"] = second_url_list
-    int_df["transfer_status"] = "success"
+    int_df.columns = ["original_uri", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]
+    transfer_parse = meta_df[meta_df.original_uri.isin(int_df.original_uri)]
+    int_df = transfer_parse.merge(int_df, on="original_uri")
 
     #reorder cols
     int_df = int_df[["url_before_cp", "url_after_cp", "transfer_status", "md5sum_before_cp", "md5sum_after_cp", "md5sum_check"]]
@@ -222,7 +221,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
         md5sum_results.extend(int_md5sum_results)
 
         intermediate_file_name = f"{os.path.basename(obj_list_tsv_path).split('.')[0]}_intermediate_md5sum_check.tsv"
-        int_transfer_df = int_results_recorder(first_url_list[chunk:chunk+500],second_url_list[chunk:chunk+500], md5sum_results)
+        int_transfer_df = int_results_recorder(meta_df, md5sum_results)
 
         int_md5sum_results.append(int_transfer_df)
 
