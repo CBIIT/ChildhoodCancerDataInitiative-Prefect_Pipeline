@@ -54,6 +54,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb
@@ -87,6 +88,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -120,6 +122,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb
@@ -153,6 +156,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb
@@ -186,6 +190,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-60gb
@@ -212,6 +217,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb
@@ -240,6 +246,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb
@@ -267,6 +274,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-60gb
@@ -294,6 +302,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb
@@ -324,6 +333,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -354,6 +364,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-c3dc-16gb
@@ -381,6 +392,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb
@@ -410,6 +422,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb
@@ -448,6 +461,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -477,6 +491,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb
@@ -504,6 +519,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -531,6 +547,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -557,6 +574,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb
@@ -584,6 +602,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb
@@ -611,6 +630,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb
@@ -639,6 +659,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -666,6 +687,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb
@@ -693,6 +715,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb
@@ -720,6 +743,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -747,6 +771,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb
@@ -774,6 +799,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-60gb
@@ -801,6 +827,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb
@@ -872,6 +899,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -899,6 +927,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -929,6 +958,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -959,6 +989,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb
@@ -995,6 +1026,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb
@@ -1062,6 +1094,7 @@ deployments:
       requirements_file: requirements.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb
@@ -1095,6 +1128,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb-prefect-3.2.14-python3.9
@@ -1129,6 +1163,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb-prefect-3.2.14-python3.9
@@ -1162,6 +1197,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -1195,6 +1231,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb-prefect-3.2.14-python3.9
@@ -1228,6 +1265,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb-prefect-3.2.14-python3.9
@@ -1261,6 +1299,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-60gb-prefect-3.2.14-python3.9
@@ -1289,6 +1328,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb-prefect-3.2.14-python3.9
@@ -1316,6 +1356,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-60gb-prefect-3.2.14-python3.9
@@ -1343,6 +1384,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb-prefect-3.2.14-python3.9
@@ -1374,6 +1416,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb-prefect-3.2.14-python3.9
@@ -1404,6 +1447,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-c3dc-16gb-prefect-2.20.3-python3.9
@@ -1431,6 +1475,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb-prefect-3.2.14-python3.9
@@ -1460,6 +1505,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb-prefect-3.2.14-python3.9
@@ -1498,6 +1544,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -1527,6 +1574,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb-prefect-3.2.14-python3.9
@@ -1554,6 +1602,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -1581,6 +1630,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -1607,6 +1657,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb-prefect-3.2.14-python3.9
@@ -1634,6 +1685,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb-prefect-3.2.14-python3.9
@@ -1661,6 +1713,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb-prefect-3.2.14-python3.9
@@ -1689,6 +1742,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -1716,6 +1770,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb-prefect-3.2.14-python3.9
@@ -1743,6 +1798,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb-prefect-3.2.14-python3.9
@@ -1770,13 +1826,14 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
     work_queue_name: null
     job_variables: {}
 
-- name: file-mover-v3
+- name: TEST-file-mover-v3
   version: null
   tags: [ "Production", "V3" ]
   description: null
@@ -1797,6 +1854,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb-prefect-3.2.14-python3.9
@@ -1824,6 +1882,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-60gb-prefect-3.2.14-python3.9
@@ -1851,6 +1910,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-32gb-prefect-3.2.14-python3.9
@@ -1922,6 +1982,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -1949,6 +2010,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -1980,6 +2042,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb-prefect-3.2.14-python3.9
@@ -2016,6 +2079,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb-prefect-3.2.14-python3.9
@@ -2084,6 +2148,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -2116,6 +2181,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-2gb-prefect-3.2.14-python3.9
@@ -2146,6 +2212,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-8gb-prefect-3.2.14-python3.9
@@ -2176,6 +2243,7 @@ deployments:
       requirements_file: requirements_V3.txt
       directory: "{{ clone-step.directory }}"
       stream_output: False
+
   # infra-specific fields
   work_pool:
     name: ccdi-curation-16gb-prefect-3.2.14-python3.9
