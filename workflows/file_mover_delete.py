@@ -215,6 +215,9 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     int_md5sum_dfs = []
     intermediate_file_name = f"{os.path.basename(obj_list_tsv_path).split('.')[0]}_intermediate_md5sum_check_{current_time}.tsv"
 
+    #ouput folder specify 
+    output_folder = os.path.join(runner, "file_mover_delete_outputs_" + current_time)
+
     for chunk in range(0, len(first_url_list), 500):
         runner_logger.info(f"Comparing md5sum for {chunk} to {chunk+500} files")
         int_md5sum_results = compare_md5sum_flow(
@@ -239,11 +242,6 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
             newfile=intermediate_file_name
         )
 
-    """md5sum_results = compare_md5sum_flow(
-        first_url_list=first_url_list,
-        second_url_list=second_url_list,
-        concurrency_tag="file_mover_delete_md5sum",
-    )"""
 
     meta_df["copy_status"] = copy_status
     meta_df["original_md5sum"] = [result[1] for result in md5sum_results]
@@ -252,7 +250,6 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
 
 
     # upload files to bucket
-    output_folder = os.path.join(runner, "file_mover_delete_outputs_" + current_time)
     meta_output = f"file_mover_delete_manifest_{get_date()}.tsv"
     meta_df.to_csv(meta_output, sep="\t", index=False)
     file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=meta_output)
