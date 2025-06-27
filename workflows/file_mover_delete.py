@@ -229,7 +229,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
         print(type(int_transfer_df))
         print(int_md5sum_results)
 
-        int_md5sum_results.append(int_transfer_df)
+        int_md5sum_results.append(pd.DataFrame(int_transfer_df))
 
         # pd.concat to intermediate file
         int_out_df = pd.concat(int_md5sum_results, ignore_index=True)
