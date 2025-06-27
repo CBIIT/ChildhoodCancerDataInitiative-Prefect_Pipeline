@@ -211,7 +211,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     int_md5sum_dfs = []
     intermediate_file_name = f"{os.path.basename(obj_list_tsv_path).split('.')[0]}_intermediate_md5sum_check_{current_time}.tsv"
 
-    #ouput folder specify 
+    #output folder specify 
     output_folder = os.path.join(runner, "file_mover_delete_outputs_" + current_time)
 
     for chunk in range(0, len(first_url_list), 500):
