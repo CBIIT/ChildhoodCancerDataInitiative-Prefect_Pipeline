@@ -212,7 +212,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     first_url_list = meta_df["original_uri"].tolist()
     second_url_list = meta_df["dest_uri"].tolist()
     md5sum_results = []
-    int_md5sum_results = []
+    int_md5sum_dfs = []
     intermediate_file_name = f"{os.path.basename(obj_list_tsv_path).split('.')[0]}_intermediate_md5sum_check_{current_time}.tsv"
 
     for chunk in range(0, len(first_url_list), 500):
@@ -225,15 +225,10 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
         md5sum_results.extend(int_md5sum_results)
         int_transfer_df = int_results_recorder(meta_df, md5sum_results)
 
-        print(int_transfer_df)
-        print(type(int_transfer_df))
-        print(int_md5sum_results)
-
-        #int_md5sum_results.append(pd.DataFrame(int_transfer_df))
-        int_md5sum_results = int_md5sum_results + [int_transfer_df]
+        int_md5sum_dfs.append(int_transfer_df)
 
         # pd.concat to intermediate file
-        int_out_df = pd.concat(int_md5sum_results, ignore_index=True)
+        int_out_df = pd.concat(int_md5sum_dfs, ignore_index=True)
 
         int_out_df.to_csv(intermediate_file_name, sep="\t", index=False)
         
