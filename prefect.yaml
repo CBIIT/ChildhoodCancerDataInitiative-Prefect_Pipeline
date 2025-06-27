@@ -1833,7 +1833,7 @@ deployments:
     work_queue_name: null
     job_variables: {}
 
-- name: TEST-file-mover-v3
+- name: file-mover-v3
   version: null
   tags: [ "Production", "V3" ]
   description: null
