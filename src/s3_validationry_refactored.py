@@ -1186,6 +1186,11 @@ def validate_bucket_objs_in_manifest(
     df_file = extract_object_file_meta(
         nodes_list=file_node_list, file_object=file_object
     )
+    
+    # exclude open IDC buckets since buckets are too cumbersome to check against
+    # and contain data not in our purview 
+    df_file = df_file[~df_file["bucket"].isin(["idc-open-data"])]
+
     df_file_urls = df_file["file_url"].tolist()
     del df_file
     s3_client = set_s3_session_client()
