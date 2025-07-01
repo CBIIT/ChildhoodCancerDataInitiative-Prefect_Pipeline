@@ -1189,7 +1189,7 @@ def validate_bucket_objs_in_manifest(
     
     # exclude open IDC buckets since buckets are too cumbersome to check against
     # and contain data not in our purview 
-    df_file = df_file[~df_file["bucket"].isin(["idc-open-data"])]
+    df_file = df_file[~df_file["file_url"].str.contains("idc-open-data")].reset_index(drop=True)
 
     df_file_urls = df_file["file_url"].tolist()
     del df_file
