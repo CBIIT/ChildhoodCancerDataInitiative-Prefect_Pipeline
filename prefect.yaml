@@ -1280,7 +1280,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-1811-ccdi-data-curation-60gb-v3
+  - name: ccdi-data-curation-60gb-v3
     version: null
     tags: ["Production","V3"]
     description: null
@@ -1302,7 +1302,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1811_idc_validation
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
