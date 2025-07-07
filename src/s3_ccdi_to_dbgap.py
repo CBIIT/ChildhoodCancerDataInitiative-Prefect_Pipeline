@@ -313,30 +313,30 @@ def check_mapping(
     else:
         pass
 
-
+# Commented out due to changes in synonym handling, CCDIDC-1793
 def check_synonym(synonym_df: DataFrame) -> tuple:
     subject_synonym = False
     sample_synonym = False
-    if synonym_df.empty:
-        pass
-    else:
-        # filter rows of participant.participant_id nonempty and repository_of_synonym_id not equal to dbgap
-        subject_synonym_df = synonym_df[
-            (synonym_df["participant.participant_id"].notna())
-            & (synonym_df["repository_of_synonym_id"] != "dbGaP")
-        ]
-        if subject_synonym_df.empty:
-            pass
-        else:
-            subject_synonym = True
+    # if synonym_df.empty:
+    #     pass
+    # else:
+    #     # filter rows of participant.participant_id nonempty and repository_of_synonym_id not equal to dbgap
+    #     subject_synonym_df = synonym_df[
+    #         (synonym_df["participant.participant_id"].notna())
+    #         & (synonym_df["repository_of_synonym_id"] != "dbGaP")
+    #     ]
+    #     if subject_synonym_df.empty:
+    #         pass
+    #     else:
+    #         subject_synonym = True
 
-        sample_synonym_df = synonym_df[
-            synonym_df["repository_of_synonym_id"] == "BioSample"
-        ]
-        if sample_synonym_df.empty:
-            pass
-        else:
-            sample_synonym = True
+    #     sample_synonym_df = synonym_df[
+    #         synonym_df["repository_of_synonym_id"] == "BioSample"
+    #     ]
+    #     if sample_synonym_df.empty:
+    #         pass
+    #     else:
+    #         sample_synonym = True
     return (subject_synonym, sample_synonym)
 
 
@@ -605,7 +605,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     study_df = workbook_dict["study"]
     participant_df = workbook_dict["participant"]
     sample_df = workbook_dict["sample"]
-    # synonym_df = workbook_dict["synonym"]
+    synonym_df = workbook_dict["synonym"]
 
     # extract consent value
     study_consent = study_df["consent"][0]
@@ -628,12 +628,12 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         non_gru = True
 
     # check synonym of subject and sample in synonym tab
-    # (subject_synonym, sample_synonym) = check_synonym(synonym_df=synonym_df)
-    # if any([subject_synonym, sample_synonym]):
-    #     logger.info(f"Synonym check for subject: {subject_synonym}")
-    #     logger.info(f"Synonym check for sample: {sample_synonym}")
-    # else:
-    #     logger.info("No synonym was found for subject or sample")
+    (subject_synonym, sample_synonym) = check_synonym(synonym_df=synonym_df)
+    if any([subject_synonym, sample_synonym]):
+        logger.info(f"Synonym check for subject: {subject_synonym}")
+        logger.info(f"Synonym check for sample: {sample_synonym}")
+    else:
+        logger.info("No synonym was found for subject or sample")
 
     # dbgap submission is sample centered. Extract SSM information for first
     # subject_sample SSM df
@@ -687,7 +687,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         subject_sample_dd_df,
         sample_tumor_dd_df,
     ) = DD_dataframe().create_dd_all(
-        # subject_synonym=subject_synonym, sample_synonym=sample_synonym
+        subject_synonym=subject_synonym, sample_synonym=sample_synonym
     )
 
     # # If extra_col_count exists, add extra rows to subject_consent_dd_df
