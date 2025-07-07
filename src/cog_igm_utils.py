@@ -48,6 +48,45 @@ def manifest_reader(manifest_path: str):
 
     return manifest_df
 
+def sample_reader(manifest_path: str):
+    """Read in and parse manifest of sample-participant IDs
+
+    Args:
+        manifest_path (str): S3 path to CCDI study manifest file
+
+    Returns:
+        pd.DataFrame: DataFrame of parsed sample entries
+    """
+
+    runner_logger = get_run_logger()
+
+    file_name = os.path.basename(manifest_path)
+
+    try:
+        sample_df = pd.read_excel(
+            file_name, sheet_name="sample", engine="openpyxl"
+        )
+        # parse only COG and IGM clinical reports and return uniq file ID and s3 URL in df
+        sample_df = sample_df[sample_df.sample_tumor_status == 'Tumor'][["sample_id", "participant.participant_id"]]
+        
+        # drop all instances where there are multiple tumor samples for a participant
+        # Once IGM provides a way to link tumor samples to participants in clinical JSONs, this can be removed
+        sample_df = sample_df.drop_duplicates(subset=["participant.participant_id"], keep=False)
+        
+        # rename columns to match expected format
+        sample_df = sample_df.rename(
+            columns={
+                "sample_id": "sample_id",
+                "participant.participant_id": "subject_id",
+            }
+        )
+
+    except Exception as e:
+        runner_logger.error(f"Cannot read in manifest {file_name} due to error: {e}")
+        sys.exit(1)
+
+    return sample_df
+
 def set_s3_resource():
     """This method sets the s3_resource object to either use localstack
     for local development if the LOCALSTACK_ENDPOINT_URL variable is
@@ -262,7 +301,7 @@ def distinguish(dir_path: str, logger):
     flow_run_name="json2tsv_" + f"{get_time()}",
 )
 def cog_igm_json2tsv(
-    manifest: pd.DataFrame, parsing: str, working_path: str, output_path: str, dt: str
+    manifest: pd.DataFrame, samples: pd.DataFrame, parsing: str, working_path: str, output_path: str, dt: str
 ):
 
     # get run logger
@@ -384,6 +423,7 @@ def cog_igm_json2tsv(
                     igm_op,
                     dt,
                     results_parse,
+                    samples,
                     logger,
                 )
 
@@ -865,6 +905,7 @@ def igm_to_tsv(
     igm_op: str,
     timestamp: str,
     results_parse: bool,
+    samples: pd.DataFrame,
     logger,
 ):
     """Function to call the reading in and transformation of IGM JSON files
@@ -876,10 +917,10 @@ def igm_to_tsv(
         igm_op (str): Path to directory to output transformed IGM TSV files
         timestamp (str): Date-time of when script run
         results_parse (bool): If True, parse out results specific sections to separate form in long format TSV
+        samples (pd.DataFrame): DataFrame of sample metadata to use for trying to match percent_necrosis and percent_tumor values
 
     Returns:
         pd.DataFrame: pandas DataFrame of converted JSON data
-        pd.DataFrame: pandas DataFrame of converted JSON data from results sections to long format TSV(s)
         int: The count of JSON files successfully processed
         int: The count of JSON files unsuccessfully processed
     """
@@ -975,6 +1016,37 @@ def igm_to_tsv(
             sep="\t",
             index=False,
         )
+        
+        # parse percent_tumor and percent_necrosis from samples metadata
+        if assay_type == "igm.tumor_normal":
+            logger.info(
+                f"Attempting to parse percent_tumor and percent_necrosis from samples metadata for assay type {assay_type}."
+            )
+            if "percent_tumor" not in concatenated_df.columns:
+                concatenated_df["percent_tumor"] = ""
+            if "percent_necrosis" not in concatenated_df.columns:
+                concatenated_df["percent_necrosis"] = ""
+
+            # try to match percent_tumor and percent_necrosis from samples metadata
+            # if more than one sample for participant, skip 
+            percent_df = concatenated_df[
+                ["subject_id", "percent_tumor", "percent_necrosis"]
+            ].drop_duplicates().reset_index(drop=True)
+
+            #merge dfs
+            merged_df = pd.merge(
+                percent_df,
+                samples,
+                on="subject_id",
+                how="left",
+            )
+    
+            # save merged df to output directory
+            logger.info(
+                f"Saving merged percent_tumor and percent_necrosis data to {igm_op}/IGM_{assay_type.replace('igm.', '')}_percent_tumor_necrosis_{timestamp}.tsv"
+            )
+            merged_df.to_csv(f"{igm_op}/IGM_{assay_type.replace('igm.', '')}_percent_tumor_necrosis_{timestamp}.tsv", sep="\t", index=False)
+
         return concatenated_df, success_count, error_count
     else:
         logger.error(

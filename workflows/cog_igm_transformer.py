@@ -13,7 +13,7 @@ from typing import Literal
 from datetime import datetime
 
 # utils
-from src.cog_igm_utils import manifest_reader, cog_igm_json2tsv
+from src.cog_igm_utils import manifest_reader, sample_reader, cog_igm_json2tsv
 from src.utils import get_time, folder_ul, file_dl, get_date
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
@@ -86,6 +86,9 @@ def cog_igm_transform(
         # load in the manifest
         manifest_df = manifest_reader(manifest_path)
 
+        # load in the sample df
+        sample_df = sample_reader(manifest_path)
+
         # create working dir name
         working_dir = f"COG_IGM_Transform_working"
         working_path = f"/usr/local/data/{working_dir}"
@@ -109,7 +112,7 @@ def cog_igm_transform(
             igm_error_count,
             log_filename,
             cog_transform_log,
-        ) = cog_igm_json2tsv(manifest_df, form_parsing, working_path, output_path, dt)
+        ) = cog_igm_json2tsv(manifest_df, sample_df, form_parsing, working_path, output_path, dt)
 
         end_time = datetime.now()
         time_diff = end_time - start_time
