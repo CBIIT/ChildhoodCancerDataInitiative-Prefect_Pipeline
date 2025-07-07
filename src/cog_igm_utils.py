@@ -1038,7 +1038,7 @@ def igm_to_tsv(
                 percent_df,
                 samples,
                 on="subject_id",
-                how="left",
+                how="right",
             )
     
             # save merged df to output directory
