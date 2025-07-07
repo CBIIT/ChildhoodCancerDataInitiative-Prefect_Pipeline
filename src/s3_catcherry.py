@@ -447,8 +447,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         for node in dict_nodes:
             if "file_access" in meta_dfs[node].columns:
                 df = meta_dfs[node]
-                acl_value = f"['{dbgap_accession}.{consent_number}']"
-                authz_value = f"['/programs/{dbgap_accession}.{consent_number}']"
+                acl_value = f"['{dbgap_accession}.c{consent_number}']"
+                authz_value = f"['/programs/{dbgap_accession}.c{consent_number}']"
 
                 # for each row, determine if the ACL is properly formed and fix otherwise
                 for index, row in df.iterrows():
