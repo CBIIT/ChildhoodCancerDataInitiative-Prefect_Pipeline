@@ -479,103 +479,103 @@ class Pre_dbGaP_combine(Task):
 
         return combined_subject_consent, combined_subject_sample, combined_sample_tumor
 
+# Commented out due to changes in synonym handling, CCDIDC-1793
+# class AddSynonym:
+#     def __init__(self, synonym_df: DataFrame) -> None:
+#         self.synonym_df = synonym_df
 
-class AddSynonym:
-    def __init__(self, synonym_df: DataFrame) -> None:
-        self.synonym_df = synonym_df
+#     def slice_subject_synonym(self):
+#         # filter rows with participant.participant_id nonempty, and the repository_of_synonym_id not equal to dbgap
+#         subject_synonym_df = self.synonym_df[
+#             (self.synonym_df["participant.participant_id"].notna())
+#             & (self.synonym_df["repository_of_synonym_id"] != "dbGaP")
+#             & (self.synonym_df["repository_of_synonym_id"] != "dbgap_subject_id")
+#         ][
+#             ["participant.participant_id", "associated_id", "repository_of_synonym_id"]
+#         ].dropna(
+#             subset=["participant.participant_id"], how="all"
+#         )
+#         # print(subject_synonym_df.to_markdown())
+#         return subject_synonym_df
 
-    def slice_subject_synonym(self):
-        # filter rows with participant.participant_id nonempty, and the repository_of_synonym_id not equal to dbgap
-        subject_synonym_df = self.synonym_df[
-            (self.synonym_df["participant.participant_id"].notna())
-            & (self.synonym_df["repository_of_synonym_id"] != "dbGaP")
-            & (self.synonym_df["repository_of_synonym_id"] != "dbgap_subject_id")
-        ][
-            ["participant.participant_id", "associated_id", "repository_of_synonym_id"]
-        ].dropna(
-            subset=["participant.participant_id"], how="all"
-        )
-        # print(subject_synonym_df.to_markdown())
-        return subject_synonym_df
+#     def slice_sample_synonym(self):
+#         sample_synonym_df = self.synonym_df[
+#             self.synonym_df["repository_of_synonym_id"] == "BioSample"
+#         ][["sample.sample_id", "associated_id", "repository_of_synonym_id"]].dropna(
+#             subset=["sample.sample_id"], how="all"
+#         )
+#         # print(sample_synonym_df.to_markdown())
+#         return sample_synonym_df
 
-    def slice_sample_synonym(self):
-        sample_synonym_df = self.synonym_df[
-            self.synonym_df["repository_of_synonym_id"] == "BioSample"
-        ][["sample.sample_id", "associated_id", "repository_of_synonym_id"]].dropna(
-            subset=["sample.sample_id"], how="all"
-        )
-        # print(sample_synonym_df.to_markdown())
-        return sample_synonym_df
+#     def merge_subject_synonym(self, subject_consent_df: DataFrame) -> DataFrame:
+#         subject_synonym_df = self.slice_subject_synonym()
+#         subject_synonym_df = subject_synonym_df.rename(
+#             columns={
+#                 "participant.participant_id": "SUBJECT_ID",
+#                 "repository_of_synonym_id": "SUBJECT_SOURCE",
+#                 "associated_id": "SOURCE_SUBJECT_ID",
+#             }
+#         )
 
-    def merge_subject_synonym(self, subject_consent_df: DataFrame) -> DataFrame:
-        subject_synonym_df = self.slice_subject_synonym()
-        subject_synonym_df = subject_synonym_df.rename(
-            columns={
-                "participant.participant_id": "SUBJECT_ID",
-                "repository_of_synonym_id": "SUBJECT_SOURCE",
-                "associated_id": "SOURCE_SUBJECT_ID",
-            }
-        )
+#         # if SUBJECT_ID is not unique, determine the largest number of duplication.
+#         if subject_synonym_df["SUBJECT_ID"].duplicated().any():
+#             max_duplication = subject_synonym_df["SUBJECT_ID"].value_counts().max()
+#             # Then create a new set of SUBJECT_SOURCE and SUBJECT_SOURCE_ID columns counting up to the maximum duplication, starting from 2.
+#             # For examples, if there are 3 rows with the same SUBJECT_ID, the first column will be SUBJECT_SOURCE and SUBJECT_SOURCE_ID, followed by SUBJECT_SOURCE_2 and SUBJECT_SOURCE_ID_2, and so on.
+#             for i in range(2, max_duplication + 1):
+#                 subject_synonym_df[f"SOURCE_SUBJECT_ID_{i}"] = ""
+#                 subject_synonym_df[f"SUBJECT_SOURCE_{i}"] = ""
 
-        # if SUBJECT_ID is not unique, determine the largest number of duplication.
-        if subject_synonym_df["SUBJECT_ID"].duplicated().any():
-            max_duplication = subject_synonym_df["SUBJECT_ID"].value_counts().max()
-            # Then create a new set of SUBJECT_SOURCE and SUBJECT_SOURCE_ID columns counting up to the maximum duplication, starting from 2.
-            # For examples, if there are 3 rows with the same SUBJECT_ID, the first column will be SUBJECT_SOURCE and SUBJECT_SOURCE_ID, followed by SUBJECT_SOURCE_2 and SUBJECT_SOURCE_ID_2, and so on.
-            for i in range(2, max_duplication + 1):
-                subject_synonym_df[f"SOURCE_SUBJECT_ID_{i}"] = ""
-                subject_synonym_df[f"SUBJECT_SOURCE_{i}"] = ""
+#             # Iterate through the rows of subject_synonym_df and fill in the new columns accordingly.
+#             subject_synonym_df = subject_synonym_df.reset_index(drop=True)
+#             # For each unqiue SUBJECT_ID, find all SUBJECT_IDs that have multiple rows.
+#             for subject_id in subject_synonym_df["SUBJECT_ID"].unique():
+#                 print(f"Processing SUBJECT_ID: {subject_id}")
+#                 rows = subject_synonym_df[
+#                     subject_synonym_df["SUBJECT_ID"] == subject_id
+#                 ]
+#                 # If there are multiple rows, starting with the lowest index row, fill in the new columns up to the number of duplications.
+#                 # Drop the duplicate rows that were added onto the first occurence, keeping the first occurrence.
+#                 if len(rows) > 1:
+#                     for idx, (index, row) in enumerate(rows.iterrows()):
+#                         if idx == 0:
+#                             continue
+#                         else:
+#                             subject_synonym_df.at[
+#                                 rows.index[0], f"SOURCE_SUBJECT_ID_{idx + 1}"
+#                             ] = row["SOURCE_SUBJECT_ID"]
+#                             subject_synonym_df.at[
+#                                 rows.index[0], f"SUBJECT_SOURCE_{idx + 1}"
+#                             ] = row["SUBJECT_SOURCE"]
+#                     # Drop the duplicate rows that were added onto the first occurence, keeping the first occurrence
+#                     subject_synonym_df = subject_synonym_df.drop(rows.index[1:])
+#                 else:
+#                     continue
+#             subject_synonym_df = subject_synonym_df.reset_index(drop=True)
 
-            # Iterate through the rows of subject_synonym_df and fill in the new columns accordingly.
-            subject_synonym_df = subject_synonym_df.reset_index(drop=True)
-            # For each unqiue SUBJECT_ID, find all SUBJECT_IDs that have multiple rows.
-            for subject_id in subject_synonym_df["SUBJECT_ID"].unique():
-                print(f"Processing SUBJECT_ID: {subject_id}")
-                rows = subject_synonym_df[
-                    subject_synonym_df["SUBJECT_ID"] == subject_id
-                ]
-                # If there are multiple rows, starting with the lowest index row, fill in the new columns up to the number of duplications.
-                # Drop the duplicate rows that were added onto the first occurence, keeping the first occurrence.
-                if len(rows) > 1:
-                    for idx, (index, row) in enumerate(rows.iterrows()):
-                        if idx == 0:
-                            continue
-                        else:
-                            subject_synonym_df.at[
-                                rows.index[0], f"SOURCE_SUBJECT_ID_{idx + 1}"
-                            ] = row["SOURCE_SUBJECT_ID"]
-                            subject_synonym_df.at[
-                                rows.index[0], f"SUBJECT_SOURCE_{idx + 1}"
-                            ] = row["SUBJECT_SOURCE"]
-                    # Drop the duplicate rows that were added onto the first occurence, keeping the first occurrence
-                    subject_synonym_df = subject_synonym_df.drop(rows.index[1:])
-                else:
-                    continue
-            subject_synonym_df = subject_synonym_df.reset_index(drop=True)
+#         else:
+#             pass
 
-        else:
-            pass
+#         # left merged with subject_consent_df
+#         merged_subject_df = subject_consent_df.merge(
+#             subject_synonym_df, how="left", on="SUBJECT_ID"
+#         )
+#         return merged_subject_df
 
-        # left merged with subject_consent_df
-        merged_subject_df = subject_consent_df.merge(
-            subject_synonym_df, how="left", on="SUBJECT_ID"
-        )
-        return merged_subject_df
-
-    def merge_sample_synonym(self, sample_attribute_df: DataFrame) -> DataFrame:
-        sample_synonym_df = self.slice_sample_synonym()
-        sample_synonym_df = sample_synonym_df.rename(
-            columns={
-                "sample.sample_id": "SAMPLE_ID",
-                "repository_of_synonym_id": "SAMPLE_SOURCE",
-                "associated_id": "SOURCE_SAMPLE_ID",
-            }
-        )
-        # left merged with sample_attribute_df
-        merged_sample_df = sample_attribute_df.merge(
-            sample_synonym_df, how="left", on="SAMPLE_ID"
-        )
-        return merged_sample_df
+#     def merge_sample_synonym(self, sample_attribute_df: DataFrame) -> DataFrame:
+#         sample_synonym_df = self.slice_sample_synonym()
+#         sample_synonym_df = sample_synonym_df.rename(
+#             columns={
+#                 "sample.sample_id": "SAMPLE_ID",
+#                 "repository_of_synonym_id": "SAMPLE_SOURCE",
+#                 "associated_id": "SOURCE_SAMPLE_ID",
+#             }
+#         )
+#         # left merged with sample_attribute_df
+#         merged_sample_df = sample_attribute_df.merge(
+#             sample_synonym_df, how="left", on="SAMPLE_ID"
+#         )
+#         return merged_sample_df
 
 
 @flow(
@@ -605,7 +605,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     study_df = workbook_dict["study"]
     participant_df = workbook_dict["participant"]
     sample_df = workbook_dict["sample"]
-    synonym_df = workbook_dict["synonym"]
+    # synonym_df = workbook_dict["synonym"]
 
     # extract consent value
     study_consent = study_df["consent"][0]
@@ -628,12 +628,12 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         non_gru = True
 
     # check synonym of subject and sample in synonym tab
-    (subject_synonym, sample_synonym) = check_synonym(synonym_df=synonym_df)
-    if any([subject_synonym, sample_synonym]):
-        logger.info(f"Synonym check for subject: {subject_synonym}")
-        logger.info(f"Synonym check for sample: {sample_synonym}")
-    else:
-        logger.info("No synonym was found for subject or sample")
+    # (subject_synonym, sample_synonym) = check_synonym(synonym_df=synonym_df)
+    # if any([subject_synonym, sample_synonym]):
+    #     logger.info(f"Synonym check for subject: {subject_synonym}")
+    #     logger.info(f"Synonym check for sample: {sample_synonym}")
+    # else:
+    #     logger.info("No synonym was found for subject or sample")
 
     # dbgap submission is sample centered. Extract SSM information for first
     # subject_sample SSM df
@@ -645,23 +645,26 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         participant_samples=subject_sample,
         logger=logger,
     )
-    if subject_synonym:
-        subject_consent = AddSynonym(synonym_df=synonym_df).merge_subject_synonym(
-            subject_consent_df=subject_consent
-        )
-        # since synonyms exist, we need to check how many extra columns were added.
-        # extra_col_count is equal to the largest number column suffix number.
-        extra_col_count = 1
-        for col in subject_consent.columns:
-            if "SUBJECT_SOURCE_" in col:
-                try:
-                    col_num = int(col.split("_")[-1])
-                    if col_num > extra_col_count:
-                        extra_col_count = col_num
-                except ValueError:
-                    continue
-    else:
-        pass
+
+    # Commented out due to changes in synonym handling, CCDIDC-1793
+    # if subject_synonym:
+    #     subject_consent = AddSynonym(synonym_df=synonym_df).merge_subject_synonym(
+    #         subject_consent_df=subject_consent
+    #     )
+    #     # since synonyms exist, we need to check how many extra columns were added.
+    #     # extra_col_count is equal to the largest number column suffix number.
+    #     extra_col_count = 1
+    #     for col in subject_consent.columns:
+    #         if "SUBJECT_SOURCE_" in col:
+    #             try:
+    #                 col_num = int(col.split("_")[-1])
+    #                 if col_num > extra_col_count:
+    #                     extra_col_count = col_num
+    #             except ValueError:
+    #                 continue
+    # else:
+    #     pass
+
     # check if each participant only appears in one row
     check_participant_unique(sub_df=subject_consent, logger=logger)
 
@@ -669,12 +672,14 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     sample_tumor = extract_sa(
         sample_sheet=sample_df, participant_sample=subject_sample, logger=logger
     )
-    if sample_synonym:
-        sample_tumor = AddSynonym(synonym_df=synonym_df).merge_sample_synonym(
-            sample_attribute_df=sample_tumor
-        )
-    else:
-        pass
+
+    # Commented out due to changes in synonym handling, CCDIDC-1793
+    # if sample_synonym:
+    #     sample_tumor = AddSynonym(synonym_df=synonym_df).merge_sample_synonym(
+    #         sample_attribute_df=sample_tumor
+    #     )
+    # else:
+    #     pass
 
     # Create DD dataframes
     (
@@ -682,31 +687,31 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         subject_sample_dd_df,
         sample_tumor_dd_df,
     ) = DD_dataframe().create_dd_all(
-        subject_synonym=subject_synonym, sample_synonym=sample_synonym
+        # subject_synonym=subject_synonym, sample_synonym=sample_synonym
     )
 
-    # If extra_col_count exists, add extra rows to subject_consent_dd_df
-    # The extra rows will be SUBJECT_SOURCE_2, SOURCE_SUBJECT_ID_2, SUBJECT_SOURCE_3, SOURCE_SUBJECT_ID_3, etc.
-    # Each row should have columns: VARNAME, VARDESC, TYPE, VALUES (matching the existing DataFrame structure).
-    # The new rows should be appended to the end, with values aligned to these columns (not shifted).
-    if subject_synonym and extra_col_count > 1:
-        for i in range(2, extra_col_count + 1):
-            new_row_source = pd.DataFrame([{
-                'index':f"SUBJECT_SOURCE_{i}",
-                0:"Source repository where subjects originate",
-                1:"string",
-            }])
-            new_row_id = pd.DataFrame([{
-                'index': f"SOURCE_SUBJECT_ID_{i}",
-                0: "Subject ID used in the Source Repository",
-                1: "string",
-            }])
-            subject_consent_dd_df = pd.concat(
-                [subject_consent_dd_df, new_row_source, new_row_id],
-                ignore_index=True
-            )
-    else:
-        pass
+    # # If extra_col_count exists, add extra rows to subject_consent_dd_df
+    # # The extra rows will be SUBJECT_SOURCE_2, SOURCE_SUBJECT_ID_2, SUBJECT_SOURCE_3, SOURCE_SUBJECT_ID_3, etc.
+    # # Each row should have columns: VARNAME, VARDESC, TYPE, VALUES (matching the existing DataFrame structure).
+    # # The new rows should be appended to the end, with values aligned to these columns (not shifted).
+    # if subject_synonym and extra_col_count > 1:
+    #     for i in range(2, extra_col_count + 1):
+    #         new_row_source = pd.DataFrame([{
+    #             'index':f"SUBJECT_SOURCE_{i}",
+    #             0:"Source repository where subjects originate",
+    #             1:"string",
+    #         }])
+    #         new_row_id = pd.DataFrame([{
+    #             'index': f"SOURCE_SUBJECT_ID_{i}",
+    #             0: "Subject ID used in the Source Repository",
+    #             1: "string",
+    #         }])
+    #         subject_consent_dd_df = pd.concat(
+    #             [subject_consent_dd_df, new_row_source, new_row_id],
+    #             ignore_index=True
+    #         )
+    # else:
+    #     pass
 
     if pre_submission is not None:
         try:
