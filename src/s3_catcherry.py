@@ -363,31 +363,21 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             file=outf,
         )
 
-        catcherr_logger.info("UTF-8 fixing")
 
         non_utf_8_array = ["®", "™", "©", "–", "—"]
 
         non_utf_8_array = "|".join(non_utf_8_array)
 
-        # for each node
+        catcherr_logger.info("Checking for non-UTF-8 characters")
+
+        # check each node
         for node in dict_nodes:
             catcherr_logger.info(node)
             df = meta_dfs[node]
             # for each column
             for col in df.columns:
+                # check to see if there are any non-UTF-8 characters in the column
                 catcherr_logger.info(col)
-                # if there is a NAN value in the column, print a warning for that row
-                if df[col].isna().any():
-                    rows = np.where(df[col].isna())[0]
-                    for i in range(0, len(rows)):
-                        print(
-                            f"The property, {col}, contained a NaN value on row: {rows[i]+1}\n",
-                            file=outf,
-                        )
-                        catcherr_logger.warning(
-                            f"The property, {col}, contained a NaN value on row: {rows[i]+1}\n"
-                        )
-                # check for any of the values in the array
                 if df[col].str.contains(non_utf_8_array).any():
                     # only if they have an issue, then print out the node.
                     print(f"\n{node}\n----------", file=outf)
@@ -397,6 +387,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             f"\tWARNING: The property, {col}, contained a non-UTF-8 character on row: {rows[i]+1}\n",
                             file=outf,
                         )
+
+            # for each column in the dataframe, replace the non-UTF-8 characters with their UTF-8 equivalents
             df = df.map(
                 lambda x: (
                     x.replace("®", "(R)")
