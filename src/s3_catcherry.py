@@ -236,7 +236,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         # for each tab
         for node in dict_nodes:
-            catcherr_logger.info(node)
             print(f"\n{node}\n----------", file=outf)
             df = meta_dfs[node]
             properties = df.columns
