@@ -166,6 +166,29 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
     ##############
     #
+    # Check nodes for extra empty rows that might cause issues
+    #
+    ##############
+
+    for node in dict_nodes:
+        df = meta_dfs[node]
+        # if there is a row that does not have any values in it for the column "type", drop that row, and send a warning
+        if "type" in df.columns:
+            empty_rows = df[df["type"].isna()]
+            if not empty_rows.empty:
+                catcherr_logger.warning(
+                    f"Node {node} has empty rows that will be removed: {empty_rows.index.tolist()}"
+                )
+                print(
+                    f"Node {node} has empty rows that will be removed: {empty_rows.index.tolist()}",
+                    file=outf,
+                )
+                # drop the empty rows
+                df = df.dropna(subset=["type"])
+                meta_dfs[node] = df
+
+    ##############
+    #
     # Start Log Printout
     #
     ##############
@@ -374,10 +397,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         for node in dict_nodes:
             catcherr_logger.info(node)
             df = meta_dfs[node]
+            catcherr_logger.info(f"Checking dataframe: {node}")
             # for each column
             for col in df.columns:
                 # check to see if there are any non-UTF-8 characters in the column
-                catcherr_logger.info(col)
+                catcherr_logger.info(f"Checking column: {col}")
                 if df[col].str.contains(non_utf_8_array).any():
                     # only if they have an issue, then print out the node.
                     print(f"\n{node}\n----------", file=outf)
