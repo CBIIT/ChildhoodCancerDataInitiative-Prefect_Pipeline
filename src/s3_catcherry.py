@@ -773,7 +773,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 col for col, dt in node_df.dtypes.items() if dt == object
             ]
             for col_i in node_df_str_cols:
-                node_df[col_i] = node_df[col_i].str.replace("\u00a0", " ")
+                node_df[col_i] = node_df[col_i].str.replace("\u00A0", " ")
             meta_dfs[node] = node_df
         return meta_dfs
 
