@@ -394,7 +394,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         # check each node
         for node in dict_nodes:
-            catcherr_logger.info(node)
+            catcherr_logger.info(f"Checking node: {node}")
             df = meta_dfs[node]
             catcherr_logger.info(f"Checking dataframe: {node}")
             # for each column
