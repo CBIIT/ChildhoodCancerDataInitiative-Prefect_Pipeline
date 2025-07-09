@@ -190,7 +190,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
     ##############
     #
-    # Check nodes for any formatting regex issues, such as \n, \r, or \t
+    # Check nodes for any formatting regex issues, such as \n, \r, \t, multiple spaces or just a space as a value.
     #
     ##############
     catcherr_logger.info("Formatting each node to remove regex issues")
@@ -201,7 +201,12 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # for each column in the dataframe, replace the regex issues with empty strings
         for col in df.columns:
             catcherr_logger.info(f"Formatting column: {col}")
+            # replace \n, \r, \t with a space
             df[col] = df[col].replace(r"[\n\r\t]", " ", regex=True)
+            # replace multiple spaces with a single space
+            df[col] = df[col].replace(r" {2,}", " ", regex=True)
+            # replace only a space with an empty string
+            df[col] = df[col].replace(r"^\s*$", "", regex=True)
         meta_dfs[node] = df
 
     ##############
