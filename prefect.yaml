@@ -1399,7 +1399,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: pull-neo4j-data-8gb-ccdi-v3
+  - name: pull-neo4j-data-32gb-ccdi-v3
     version: null
     tags: ["Production","V3"]
     description: null
@@ -1409,6 +1409,7 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
+      runner: "ccdi-sandbox-export"
       uri_parameter: "uri"
       username_parameter: "username"
       password_parameter: "password"
@@ -1427,7 +1428,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
 
@@ -2262,4 +2263,4 @@ deployments:
       work_queue_name: null
       job_variables: {}  
 
-      
+

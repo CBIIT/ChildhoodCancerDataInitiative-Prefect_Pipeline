@@ -508,14 +508,18 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             file=outf,
         )
 
+        # pull consent number and dbgap accession from study node
+        # This is ASSUMING that the study is only ONE consent number.
+        consent_number = meta_dfs["study"]["consent_number"][0]
+        dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
+
         # check each node to find the acl property (it has been in study and study_admin)
         for node in dict_nodes:
             if "file_access" in meta_dfs[node].columns:
                 catcherr_logger.info(f"ACL/Authz, checking node: {node}")
                 df = meta_dfs[node]
-                dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
-                acl_value = f"['{dbgap_accession}']"
-                authz_value = f"['/programs/{dbgap_accession}']"
+                acl_value = f"['{dbgap_accession}.c{consent_number}']"
+                authz_value = f"['/programs/{dbgap_accession}.c{consent_number}']"
 
                 # for each row, determine if the ACL is properly formed and fix otherwise
                 for index, row in df.iterrows():
