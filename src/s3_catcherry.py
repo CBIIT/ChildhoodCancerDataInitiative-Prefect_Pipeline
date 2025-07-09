@@ -164,50 +164,58 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # determine nodes again
     dict_nodes = set(list(meta_dfs.keys()))
 
-    ##############
-    #
-    # Check nodes for extra empty rows that might cause issues
-    #
-    ##############
-    catcherr_logger.info("Removing rows where 'type' is NaN from each node")
 
-    for node in dict_nodes:
-        df = meta_dfs[node]
-        # if there is a row that does not have a value in the column "type", drop that row, and send a warning
-        if "type" in df.columns:
-            empty_rows = df[df["type"].isna()]
-            if not empty_rows.empty:
-                catcherr_logger.warning(
-                    f"Node {node} has empty rows that will be removed: {empty_rows.index.tolist()}"
-                )
-                print(
-                    f"Node {node} has empty rows that will be removed: {empty_rows.index.tolist()}",
-                    file=outf,
-                )
-                df = df.dropna(subset=["type"])
-                meta_dfs[node] = df
+# CCDIDC-1775
+# The following two sections are commented out as they are not currently used.
+# These could be useful in the future, so they are left here for reference.
+# These were meant to fix issues with empty rows and regex issues in the nodes.
+# They haven't fixed the issues that were encountered, so they are not currently used.
+# But these might be helpful in the future if similar issues arise.
+
+    # ##############
+    # #
+    # # Check nodes for extra empty rows that might cause issues
+    # #
+    # ##############
+    # catcherr_logger.info("Removing rows where 'type' is NaN from each node")
+
+    # for node in dict_nodes:
+    #     df = meta_dfs[node]
+    #     # if there is a row that does not have a value in the column "type", drop that row, and send a warning
+    #     if "type" in df.columns:
+    #         empty_rows = df[df["type"].isna()]
+    #         if not empty_rows.empty:
+    #             catcherr_logger.warning(
+    #                 f"Node {node} has empty rows that will be removed: {empty_rows.index.tolist()}"
+    #             )
+    #             print(
+    #                 f"Node {node} has empty rows that will be removed: {empty_rows.index.tolist()}",
+    #                 file=outf,
+    #             )
+    #             df = df.dropna(subset=["type"])
+    #             meta_dfs[node] = df
 
 
-    ##############
-    #
-    # Check nodes for any formatting regex issues, such as \n, \r, \t, multiple spaces or just a space as a value.
-    #
-    ##############
-    catcherr_logger.info("Formatting each node to remove regex issues")
+    # ##############
+    # #
+    # # Check nodes for any formatting regex issues, such as \n, \r, \t, multiple spaces or just a space as a value.
+    # #
+    # ##############
+    # catcherr_logger.info("Formatting each node to remove regex issues")
 
-    for node in dict_nodes:
-        catcherr_logger.info(f"Formatting node: {node}")
-        df = meta_dfs[node]
-        # for each column in the dataframe, replace the regex issues with empty strings
-        for col in df.columns:
-            catcherr_logger.info(f"Formatting column: {col}")
-            # replace \n, \r, \t with a space
-            df[col] = df[col].replace(r"[\n\r\t]", " ", regex=True)
-            # replace multiple spaces with a single space
-            df[col] = df[col].replace(r" {2,}", " ", regex=True)
-            # replace only a space with an empty string
-            df[col] = df[col].replace(r"^\s*$", "", regex=True)
-        meta_dfs[node] = df
+    # for node in dict_nodes:
+    #     catcherr_logger.info(f"Formatting node: {node}")
+    #     df = meta_dfs[node]
+    #     # for each column in the dataframe, replace the regex issues with empty strings
+    #     for col in df.columns:
+    #         catcherr_logger.info(f"Formatting column: {col}")
+    #         # replace \n, \r, \t with a space
+    #         df[col] = df[col].replace(r"[\n\r\t]", " ", regex=True)
+    #         # replace multiple spaces with a single space
+    #         df[col] = df[col].replace(r" {2,}", " ", regex=True)
+    #         # replace only a space with an empty string
+    #         df[col] = df[col].replace(r"^\s*$", "", regex=True)
+    #     meta_dfs[node] = df
 
     ##############
     #
