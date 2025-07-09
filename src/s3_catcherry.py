@@ -169,6 +169,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # Check nodes for extra empty rows that might cause issues
     #
     ##############
+    catcherr_logger.info("Removing rows where 'type' is NaN from each node")
 
     for node in dict_nodes:
         df = meta_dfs[node]
@@ -185,6 +186,23 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 )
                 df = df.dropna(subset=["type"])
                 meta_dfs[node] = df
+
+
+    ##############
+    #
+    # Check nodes for any formatting regex issues, such as \n, \r, or \t
+    #
+    ##############
+    catcherr_logger.info("Formatting each node to remove regex issues")
+
+    for node in dict_nodes:
+        catcherr_logger.info(f"Formatting node: {node}")
+        df = meta_dfs[node]
+        # for each column in the dataframe, replace the regex issues with empty strings
+        for col in df.columns:
+            catcherr_logger.info(f"Formatting column: {col}")
+            df[col] = df[col].replace(r"[\n\r\t]", " ", regex=True)
+        meta_dfs[node] = df
 
     ##############
     #
