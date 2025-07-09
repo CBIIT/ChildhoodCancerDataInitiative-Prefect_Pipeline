@@ -172,7 +172,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
     for node in dict_nodes:
         df = meta_dfs[node]
-        # if there is a row that does not have any values in it for the column "type", drop that row, and send a warning
+        # if there is a row that does not have a value in the column "type", drop that row, and send a warning
         if "type" in df.columns:
             empty_rows = df[df["type"].isna()]
             if not empty_rows.empty:
@@ -183,7 +183,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     f"Node {node} has empty rows that will be removed: {empty_rows.index.tolist()}",
                     file=outf,
                 )
-                # drop the empty rows
                 df = df.dropna(subset=["type"])
                 meta_dfs[node] = df
 
@@ -394,13 +393,12 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         # check each node
         for node in dict_nodes:
-            catcherr_logger.info(f"Checking node: {node}")
+            catcherr_logger.info(f"non-UTF-8, checking node: {node}")
             df = meta_dfs[node]
-            catcherr_logger.info(f"Checking dataframe: {node}")
             # for each column
             for col in df.columns:
                 # check to see if there are any non-UTF-8 characters in the column
-                catcherr_logger.info(f"Checking column: {col}")
+                catcherr_logger.info(f"non-UTF-8, checking column: {col}")
                 if df[col].str.contains(non_utf_8_array).any():
                     # only if they have an issue, then print out the node.
                     print(f"\n{node}\n----------", file=outf)
@@ -445,6 +443,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         for node in dict_nodes:
             # for a column called file_url
             if "file_url" in meta_dfs[node].columns:
+                catcherr_logger.info(f"non-html encoding, checking node: {node}")
                 df = meta_dfs[node]
                 # check for any of the values in the array
                 if df["file_url"].str.contains(non_html_array).any():
@@ -481,6 +480,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # check each node to find the acl property (it has been in study and study_admin)
         for node in dict_nodes:
             if "file_access" in meta_dfs[node].columns:
+                catcherr_logger.info(f"ACL/Authz, checking node: {node}")
                 df = meta_dfs[node]
                 dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
                 acl_value = f"['{dbgap_accession}']"
@@ -526,6 +526,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # check each node to find the acl property (it has been in study and study_admin)
         for node in dict_nodes:
             if "file_mapping_level" in meta_dfs[node].columns:
+                catcherr_logger.info(f"file mapping level, checking node: {node}")
                 df = meta_dfs[node]
 
                 # empty rows
@@ -570,6 +571,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         for node in dict_nodes:
             # for a column called file_url
             if "file_url" in meta_dfs[node].columns:
+                catcherr_logger.info(f"Fix url paths, checking node: {node}")
                 df = meta_dfs[node]
 
                 # revert HTML code changes that might exist so that it can be handled with correct AWS calls
@@ -735,6 +737,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             catcherr_logger.info(f"Checking node: {node}")
             # if file_url exists in the node
             if "file_url" in meta_dfs[node].columns:
+                catcherr_logger.info(f"GUID application, checking node: {node}")
                 df = meta_dfs[node]
                 # identify posistions without guids
                 no_guids = df["dcf_indexd_guid"].isna()
