@@ -66,6 +66,7 @@ class GetCCDIModel:
         "study_funding",
         "study_personnel",
         "publication",
+        "consent_group",
         "participant",
         "diagnosis",
         "survival",
@@ -78,7 +79,9 @@ class GetCCDIModel:
         "exposure",
         "radiology_file",
         # "follow_up",
-        "molecular_test",
+        # "molecular_test",
+        "genetic_analysis",
+        "laboratory_test"
         "sample",
         "cell_line",
         "pdx",
@@ -87,6 +90,7 @@ class GetCCDIModel:
         "methylation_array_file",
         "cytogenomic_file",
         "pathology_file",
+        "generic_file",
         # "single_cell_sequencing_file",
     ]
 
