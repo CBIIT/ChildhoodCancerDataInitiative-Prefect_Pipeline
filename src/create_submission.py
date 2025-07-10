@@ -81,7 +81,7 @@ class GetCCDIModel:
         # "follow_up",
         # "molecular_test",
         "genetic_analysis",
-        "laboratory_test"
+        "laboratory_test",
         "sample",
         "cell_line",
         "pdx",
