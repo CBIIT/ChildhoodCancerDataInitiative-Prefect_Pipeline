@@ -232,9 +232,59 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        catcherr_logger.info("Checking for unique values in each node")
+
         for node in dict_nodes:
             df = meta_dfs[node]
             df = df.drop_duplicates(ignore_index=True)
+            meta_dfs[node] = df
+
+        ##############
+        #
+        # Diagnosis clean up, remove '###(#)/# : ' from the diagnosis column
+        #
+        ##############
+
+        catcherr_logger.info("Cleaning up diagnosis column, removing '###(#)/(#) : ' if present")
+
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            if "diagnosis" in df.columns:
+                df["diagnosis"] = df["diagnosis"].replace(r"^\s*\d+(?:/\d+)?\s*:\s*", "", regex=True)
+            meta_dfs[node] = df
+
+
+        ##############
+        #
+        # Diagnosis to Diagnosis category transformation
+        #
+        ##############
+
+        # This section will use information found in the diagnosis.diagnosis property and based on the cross-reference file
+        # found on GitHub, it will create the diagnosis category values.
+
+        # directory path to the cross-reference file
+        diagnosis_mapping_path = ("docs/uniqDx2Dx_cat_2025_07_15.tsv")
+
+        # read in the cross-reference file
+        diagnosis_mapping = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
+
+        # Create a mapping dictionary
+        diagnosis_mapping = diagnosis_mapping.set_index('diagnosis')['diagnosis_category'].to_dict()
+
+        catcherr_logger.info("Transforming diagnosis to diagnosis category")
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            # for the diagnosis node
+            if "diagnosis" in df.columns:
+                # map the diagnosis column to the diagnosis_category column, based on the dataframe diagnosis_mapping,
+                # which has the same column headers found in the df object, diagnosis and diagnosis_category.
+                # Only update where diagnosis_category is null
+                df['diagnosis_category'] = df.apply(
+                    lambda row: diagnosis_mapping.get(row['diagnosis'], 'Not Reported')
+                    if pd.isna(row['diagnosis_category']) else row['diagnosis_category'],
+                    axis=1
+                )
             meta_dfs[node] = df
 
         ##############
@@ -262,6 +312,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 "morphology",
                 "primary_site",
                 "race",
+                "diagnosis_category",
             ]
 
         # for each tab
@@ -510,7 +561,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         # pull consent number and dbgap accession from study node
         # This is ASSUMING that the study is only ONE consent number.
-        consent_number = meta_dfs["study"]["consent_number"][0]
+        # THIS IS A QUICK FIX AND SHOULD BE REWORKED IN THE FUTURE.
+        # THIS WILL BREAK ON MULTI-CONSENT STUDIES.
+        consent_number = meta_dfs["consent_group"]["consent_group_suffix"][0]
         dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
 
         # check each node to find the acl property (it has been in study and study_admin)
@@ -518,8 +571,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             if "file_access" in meta_dfs[node].columns:
                 catcherr_logger.info(f"ACL/Authz, checking node: {node}")
                 df = meta_dfs[node]
-                acl_value = f"['{dbgap_accession}.c{consent_number}']"
-                authz_value = f"['/programs/{dbgap_accession}.c{consent_number}']"
+                acl_value = f"['{dbgap_accession}.{consent_number}']"
+                authz_value = f"['/programs/{dbgap_accession}.{consent_number}']"
 
                 # for each row, determine if the ACL is properly formed and fix otherwise
                 for index, row in df.iterrows():
