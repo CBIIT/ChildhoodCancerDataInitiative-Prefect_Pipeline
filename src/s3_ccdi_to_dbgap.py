@@ -1,6 +1,7 @@
 from prefect import flow, task, Task
 from typing import List, TypeVar, Dict, Tuple
 import warnings
+from prefect.cache_policies import NO_CACHE
 import sys
 import os
 from shutil import copy
@@ -29,7 +30,7 @@ def check_participant_unique(sub_df: DataFrame, logger) -> None:
         pass
 
 
-@task
+@task 
 def create_meta_json(study_id: str) -> Dict:
     dict_name = study_id + "_" + get_date()
     file_name_pattern = study_id + "_dbGaP_submission.txt"
@@ -601,14 +602,20 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         logger.error(f"Issue occurred while openning file {manifest}")
         sys.exit()
 
+
+    # DUE TO CHANGES IN CONSENT GROUP HANDLING
+    # This script will need to be reworked to handle multiple consent groups
+    # As well as labeling the correct consent group in the output files for each participant
+
     # extract study, particpant, and sample sheets
     study_df = workbook_dict["study"]
+    consent_df = workbook_dict["consent_group"]
     participant_df = workbook_dict["participant"]
     sample_df = workbook_dict["sample"]
     synonym_df = workbook_dict["synonym"]
 
     # extract consent value
-    study_consent = study_df["consent"][0]
+    study_consent = consent_df["consent_group_name"][0]
     if pd.isna(study_consent):
         study_consent = "GRU"
         logger.warning(

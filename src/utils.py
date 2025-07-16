@@ -29,6 +29,8 @@ from prefect_github import GitHubCredentials
 import hashlib
 from urllib.parse import urlparse
 from shutil import copy2
+from prefect.cache_policies import NO_CACHE
+
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -889,7 +891,7 @@ def excel_sheets_to_dict(excel_file: ExcelFile, no_names: List) -> Dict:
 
 
 @task
-def ccdi_manifest_to_dict(excel_file: ExcelFile) -> Dict:
+def ccdi_manifest_to_dict(excel_file: ExcelFile, cache_policy= NO_CACHE) -> Dict:
     """Reads a validated CDDI manifest excel and retruns
     a dictionary with sheetnames as keys and pandas
     dataframes as values
