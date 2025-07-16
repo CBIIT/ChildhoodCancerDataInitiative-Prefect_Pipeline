@@ -754,8 +754,12 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         logger=logger,
     )
 
+    # Have to change the property to pull study_id since we now have to go through consent_group to get information.
+    # A dbGaP submission will only be one study_id, so we will just take the value from the study node.
     # prepare meta json output
-    study_id = participant_df["study.study_id"][0]
+    #study_id = participant_df["study.study_id"][0]
+    study_id = study_df["study_id"][0]
+
     meta_dict = create_meta_json(study_id)
 
     # create output directory
