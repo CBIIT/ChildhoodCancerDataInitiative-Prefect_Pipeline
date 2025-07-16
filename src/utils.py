@@ -890,8 +890,8 @@ def excel_sheets_to_dict(excel_file: ExcelFile, no_names: List) -> Dict:
     return excel_dict
 
 
-@task
-def ccdi_manifest_to_dict(excel_file: ExcelFile, cache_policy= NO_CACHE) -> Dict:
+@task ( cache_policy= NO_CACHE, name="CCDI manifest to dict", log_prints=True)
+def ccdi_manifest_to_dict(excel_file: ExcelFile) -> Dict:
     """Reads a validated CDDI manifest excel and retruns
     a dictionary with sheetnames as keys and pandas
     dataframes as values
