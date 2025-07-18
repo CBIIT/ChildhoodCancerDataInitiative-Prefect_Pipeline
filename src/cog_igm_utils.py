@@ -69,10 +69,6 @@ def sample_reader(manifest_path: str):
         # parse only COG and IGM clinical reports and return uniq file ID and s3 URL in df
         sample_df = sample_df[sample_df.sample_tumor_status == 'Tumor'][["sample_id", "participant.participant_id"]]
         
-        # drop all instances where there are multiple tumor samples for a participant
-        # Once IGM provides a way to link tumor samples to participants in clinical JSONs, this can be removed
-        sample_df = sample_df.drop_duplicates(subset=["participant.participant_id"], keep=False)
-        
         # rename columns to match expected format
         sample_df = sample_df.rename(
             columns={
@@ -301,7 +297,6 @@ def distinguish(dir_path: str, logger):
     flow_run_name="json2tsv_" + f"{get_time()}",
 )
 def cog_igm_json2tsv(
-    manifest: pd.DataFrame, samples: pd.DataFrame, parsing: str, working_path: str, output_path: str, dt: str
 ):
 
     # get run logger
@@ -321,13 +316,15 @@ def cog_igm_json2tsv(
     # check for duplicate file_names
     dups = manifest[manifest["file_name"].duplicated(keep=False)]["file_name"].to_list()
     
-    # chunked downloading of JSON files 
-    chunk_size = 200
+    if not os.listdir(os.getcwd()): # check if dir empty, if so download JSONs
+        
+        # chunked downloading of JSON files 
+        chunk_size = 200
 
-    # download JSON files
-    for chunk in range(0, len(manifest), chunk_size):
-        runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest)//chunk_size+1}")
-        json_downloader(manifest[chunk:chunk+chunk_size], dups, logger)
+        # download JSON files
+        for chunk in range(0, len(manifest), chunk_size):
+            runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest)//chunk_size+1}")
+            json_downloader(manifest[chunk:chunk+chunk_size], dups, logger)
     
 
     json_dir_path = working_path
@@ -423,7 +420,7 @@ def cog_igm_json2tsv(
                     igm_op,
                     dt,
                     results_parse,
-                    samples,
+                    samples_mapping,
                     logger,
                 )
 
@@ -906,6 +903,7 @@ def igm_to_tsv(
     timestamp: str,
     results_parse: bool,
     samples: pd.DataFrame,
+    samples_mapping: pd.DataFrame,
     logger,
 ):
     """Function to call the reading in and transformation of IGM JSON files
@@ -918,6 +916,7 @@ def igm_to_tsv(
         timestamp (str): Date-time of when script run
         results_parse (bool): If True, parse out results specific sections to separate form in long format TSV
         samples (pd.DataFrame): DataFrame of sample metadata to use for trying to match percent_necrosis and percent_tumor values
+        samples_mapping (pd.DataFrame): DataFrame of sample mapping to use for trying to match percent_necrosis and percent_tumor values
 
     Returns:
         pd.DataFrame: pandas DataFrame of converted JSON data
@@ -944,7 +943,9 @@ def igm_to_tsv(
             flatten_dict1 = flatten_igm(file_2_flat)
 
             flatten_dict_df = igm_full_form_convert(flatten_dict1, logger)
-
+            
+            flatten_dict_df['form_file_name'] = filename  # add file name to DataFrame
+            
             df_list.append(flatten_dict_df)
 
             success_count += 1

@@ -11,6 +11,7 @@ import os
 import sys
 from typing import Literal
 from datetime import datetime
+import pandas as pd
 
 # utils
 from src.cog_igm_utils import manifest_reader, sample_reader, cog_igm_json2tsv
@@ -33,7 +34,7 @@ FormParsing = Literal["cog_only", "igm_only", "cog_and_igm", "data_clean_up"]
     flow_run_name="cog_igm_transform-{runner}_" + f"{get_time()}",
 )
 def cog_igm_transform(
-    bucket: str, runner: str, manifest_path: str, form_parsing: FormParsing
+    bucket: str, runner: str, manifest_path: str, sample_mapping_path: str, form_parsing: FormParsing, file_path: str = None
 ):
     """CCDI data curation pipeline
 
@@ -41,7 +42,9 @@ def cog_igm_transform(
         bucket (str): Bucket name of where the manifest is located in and the output goes to
         runner (str): Unique runner name where manifest located and where to direct outputs to
         manifest_path (str): File path of the CCDI study manifest
+        sample_mapping_path (str): File path of the sample mapping file
         form_parsing (str): Select whether to parse out form level TSVs for COG, or parse variant sections of IGM or parse both OR perform data clean up previously downloaded JSONs
+        file_path (str): optional; FULL path to the working directory where the clinical files are located, avoid redownloading files if they are already present
 
     """
 
@@ -67,33 +70,40 @@ def cog_igm_transform(
     else:
     
         # clean up previous working dir
-        runner_logger.info(
+        """runner_logger.info(
             ShellOperation(
                 commands=[
                     "rm -r /usr/local/data/COG_IGM_Transform_*",
                     "ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
                 ]
             ).run()
-        )
+        )"""
 
         # download the manifest file
         try:
             file_dl(bucket, manifest_path)
+            file_dl(bucket, sample_mapping_path)
         except Exception as e:
             runner_logger.error(f"Cannot download manifest from path {manifest_path}: {e}")
             sys.exit(1)
 
         # load in the manifest
-        manifest_df = manifest_reader(manifest_path)
+        manifest_df = manifest_reader(manifest_path) ##TODO need whole maniest not just clin reports
+        
+        #load in sample_mapping file
+        samples_mapping = pd.read_csv(sample_mapping_path, sep="\t")
 
         # load in the sample df
         sample_df = sample_reader(manifest_path)
 
         # create working dir name
-        working_dir = f"COG_IGM_Transform_working"
-        working_path = f"/usr/local/data/{working_dir}"
-        if not os.path.exists(working_path):
-            os.mkdir(working_path)
+        if file_path is not None:
+            working_dir = file_path
+        else:
+            working_dir = f"COG_IGM_Transform_working_{dt}"
+            working_path = f"/usr/local/data/{working_dir}"
+            if not os.path.exists(working_path):
+                os.mkdir(working_path)
 
         # create output dir for logs etc
         output_dir = f"COG_IGM_Transform_output_{dt}"
@@ -112,7 +122,7 @@ def cog_igm_transform(
             igm_error_count,
             log_filename,
             cog_transform_log,
-        ) = cog_igm_json2tsv(manifest_df, sample_df, form_parsing, working_path, output_path, dt)
+        ) = cog_igm_json2tsv(manifest_df, sample_df, samples_mapping, form_parsing, working_path, output_path, dt)
 
         end_time = datetime.now()
         time_diff = end_time - start_time
