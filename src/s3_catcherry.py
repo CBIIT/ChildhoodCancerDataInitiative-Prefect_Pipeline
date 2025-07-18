@@ -254,38 +254,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             meta_dfs[node] = df
 
 
-        ##############
-        #
-        # Diagnosis to Diagnosis category transformation
-        #
-        ##############
-
-        # This section will use information found in the diagnosis.diagnosis property and based on the cross-reference file
-        # found on GitHub, it will create the diagnosis category values.
-
-        # directory path to the cross-reference file
-        diagnosis_mapping_path = ("docs/uniqDx2Dx_cat_2025_07_15.tsv")
-
-        # read in the cross-reference file
-        diagnosis_mapping = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
-
-        # Create a mapping dictionary
-        diagnosis_mapping = diagnosis_mapping.set_index('diagnosis')['diagnosis_category'].to_dict()
-
-        catcherr_logger.info("Transforming diagnosis to diagnosis category")
-        for node in dict_nodes:
-            df = meta_dfs[node]
-            # for the diagnosis node
-            if "diagnosis" in df.columns:
-                # map the diagnosis column to the diagnosis_category column, based on the dataframe diagnosis_mapping,
-                # which has the same column headers found in the df object, diagnosis and diagnosis_category.
-                # Only update where diagnosis_category is null
-                df['diagnosis_category'] = df.apply(
-                    lambda row: diagnosis_mapping.get(row['diagnosis'], 'Not Reported')
-                    if pd.isna(row['diagnosis_category']) else row['diagnosis_category'],
-                    axis=1
-                )
-            meta_dfs[node] = df
 
         ##############
         #
@@ -505,6 +473,41 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             )
             meta_dfs[node] = df
 
+        ##############
+        #
+        # Diagnosis to Diagnosis category transformation
+        #
+        ##############
+
+        # This section will use information found in the diagnosis.diagnosis property and based on the cross-reference file
+        # found on GitHub, it will create the diagnosis category values.
+
+        # directory path to the cross-reference file
+        diagnosis_mapping_path = ("docs/uniqDx2Dx_cat_2025_07_15.tsv")
+
+        # read in the cross-reference file
+        diagnosis_mapping = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
+
+        # Create a mapping dictionary
+        diagnosis_mapping = diagnosis_mapping.set_index('diagnosis')['diagnosis_category'].to_dict()
+
+        catcherr_logger.info("Transforming diagnosis to diagnosis category")
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            # for the diagnosis node
+            if "diagnosis" in df.columns:
+                # map the diagnosis column to the diagnosis_category column, based on the dataframe diagnosis_mapping,
+                # which has the same column headers found in the df object, diagnosis and diagnosis_category.
+                # Only update where diagnosis_category is null
+                df['diagnosis_category'] = df.apply(
+                    lambda row: diagnosis_mapping.get(row['diagnosis'], 'Not Reported')
+                    if pd.isna(row['diagnosis_category']) else row['diagnosis_category'],
+                    axis=1
+                )
+            meta_dfs[node] = df
+        
+        
+        
         ##############
         #
         # Check and replace non-html encoded characters in URLs
