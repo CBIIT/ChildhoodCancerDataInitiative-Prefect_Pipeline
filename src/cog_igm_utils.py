@@ -327,6 +327,8 @@ def cog_igm_json2tsv(
             runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest)//chunk_size+1}")
             json_downloader(manifest[chunk:chunk+chunk_size], dups, logger)
     
+    # record to log file working path
+    logger.info(f"Working directory: {working_path}")
 
     json_dir_path = working_path
 

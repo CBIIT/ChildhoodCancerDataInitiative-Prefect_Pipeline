@@ -34,7 +34,7 @@ FormParsing = Literal["cog_only", "igm_only", "cog_and_igm", "data_clean_up"]
     flow_run_name="cog_igm_transform-{runner}_" + f"{get_time()}",
 )
 def cog_igm_transform(
-    bucket: str, runner: str, manifest_path: str, sample_mapping_path: str, form_parsing: FormParsing, file_path: str = None
+    bucket: str, runner: str, manifest_path: str, sample_mapping_path: str, form_parsing: FormParsing, file_path: str = ""
 ):
     """CCDI data curation pipeline
 
@@ -88,7 +88,7 @@ def cog_igm_transform(
             sys.exit(1)
 
         # load in the manifest
-        manifest_df = manifest_reader(manifest_path) ##TODO need whole maniest not just clin reports
+        manifest_df = manifest_reader(manifest_path) ##TODO need whole manifest not just clin reports
         
         #load in sample_mapping file
         samples_mapping = pd.read_csv(os.path.basename(sample_mapping_path), sep="\t")
@@ -97,8 +97,15 @@ def cog_igm_transform(
         sample_df = sample_reader(manifest_path)
 
         # create working dir name
-        if file_path is not None:
-            working_dir = file_path
+        if file_path != "":
+            working_path = file_path
+            if os.listdir(working_path) == 0: #check if indeed a non empty dir
+                #if empty, create a new working dir
+                working_dir = f"COG_IGM_Transform_working_{dt}"
+                working_path = f"{working_path}/{working_dir}"
+                get_run_logger().info(f"Working path: {working_path}")
+                if not os.path.exists(working_path):
+                    os.mkdir(working_path)
         else:
             working_dir = f"COG_IGM_Transform_working_{dt}"
             working_path = f"/usr/local/data/{working_dir}"
@@ -114,6 +121,9 @@ def cog_igm_transform(
 
         # change to working dir
         os.chdir(working_path)
+
+        # print to logger name of working dir
+        runner_logger.info(f"Working directory: {working_path}")
 
         # perform parsing
         (
