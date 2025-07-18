@@ -102,6 +102,7 @@ def cog_igm_transform(
         else:
             working_dir = f"COG_IGM_Transform_working_{dt}"
             working_path = f"/usr/local/data/{working_dir}"
+            get_run_logger().info(f"Working path: {working_path}")
             if not os.path.exists(working_path):
                 os.mkdir(working_path)
 

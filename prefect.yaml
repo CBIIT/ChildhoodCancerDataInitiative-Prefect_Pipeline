@@ -2146,7 +2146,9 @@ deployments:
       bucket: "ccdi-validation"
       runner: ""
       manifest_path: ""
+      sample_mapping_path: ""
       form_parsing: "cog_and_igm"
+      file_path: ""
 
 
     # pull action to overwrite from file pull action
