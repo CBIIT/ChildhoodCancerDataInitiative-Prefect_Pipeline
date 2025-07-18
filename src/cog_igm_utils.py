@@ -297,6 +297,7 @@ def distinguish(dir_path: str, logger):
     flow_run_name="json2tsv_" + f"{get_time()}",
 )
 def cog_igm_json2tsv(
+    manifest: pd.DataFrame, samples: pd.DataFrame, samples_mapping: pd.DataFrame, parsing: str, working_path: str, output_path: str, dt: str
 ):
 
     # get run logger
