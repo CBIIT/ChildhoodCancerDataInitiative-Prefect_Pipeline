@@ -316,10 +316,10 @@ def cog_igm_json2tsv(
 
     # check for duplicate file_names
     dups = manifest[manifest["file_name"].duplicated(keep=False)]["file_name"].to_list()
-    
-    if not os.listdir(os.getcwd()): # check if dir empty, if so download JSONs
-        
-        # chunked downloading of JSON files 
+
+    if not [i for i in os.listdir(os.getcwd()) if i.endswith('.json')]: # check if dir empty, if so download JSONs
+
+        # chunked downloading of JSON files
         chunk_size = 200
 
         # download JSON files
