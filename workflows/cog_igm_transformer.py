@@ -91,7 +91,7 @@ def cog_igm_transform(
         manifest_df = manifest_reader(manifest_path) ##TODO need whole maniest not just clin reports
         
         #load in sample_mapping file
-        samples_mapping = pd.read_csv(sample_mapping_path, sep="\t")
+        samples_mapping = pd.read_csv(os.path.basename(sample_mapping_path), sep="\t")
 
         # load in the sample df
         sample_df = sample_reader(manifest_path)
