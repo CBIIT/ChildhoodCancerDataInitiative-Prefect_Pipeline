@@ -282,7 +282,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 # Only update where diagnosis_category is null
                 df['diagnosis_category'] = df.apply(
                     lambda row: diagnosis_mapping.get(row['diagnosis'], 'Not Reported')
-                    if pd.isna(row['diagnosis_category']) else row['diagnosis_category'],
+                    if pd.isna(row['diagnosis_category']) or row['diagnosis_category'] == 'Not Reported' else row['diagnosis_category'],
                     axis=1
                 )
             meta_dfs[node] = df
