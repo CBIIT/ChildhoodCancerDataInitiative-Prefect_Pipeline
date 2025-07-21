@@ -34,6 +34,7 @@ class FileInput(RunInput):
 
 DropDownChoices = Literal["s3_directory", "list_of_s3_uri", "file_containing_s3_uri"]
 ConcurrencyDropDownChoices = Literal["yes","no"]
+Md5sumDropDownChoices = Literal["Run md5sum", "Don't run md5sum"]
 DataFrame = TypeVar("DataFrame")
 
 
@@ -61,7 +62,7 @@ def list_dir_content_uri(dir_path: str) -> list[str]:
     name="Calculate md5sum and size of uri list",
     log_prints=True,
 )
-def fetch_size_md5sum_with_urls(s3uri_list: list[str], if_concurrency: str) -> DataFrame:
+def fetch_size_md5sum_with_urls(s3uri_list: list[str], if_concurrency: str, Md5sumDropDownChoices: Md5sumDropDownChoices) -> DataFrame:
     """Returns a dataframe containing 3 columns of s3_uri, size, and md5sum
 
     Args:
@@ -71,10 +72,15 @@ def fetch_size_md5sum_with_urls(s3uri_list: list[str], if_concurrency: str) -> D
         DataFrame: A pandas DataFrame that contains 3 columns, s3_uri, size, and md5sum
     """    
     size_list = calculate_list_size(s3uri_list=s3uri_list)
-    if if_concurrency == "yes":
-        md5sum_list = calculate_list_md5sum(s3uri_list=s3uri_list)
+    if Md5sumDropDownChoices == "Run md5sum":
+        if if_concurrency == "yes":
+            md5sum_list = calculate_list_md5sum(s3uri_list=s3uri_list)
+        else:
+            md5sum_list = calculate_list_md5sum_consecutively(s3uri_list=s3uri_list)
+    elif Md5sumDropDownChoices == "Don't run md5sum":
+        md5sum_list = ["SKIP"] * len(s3uri_list)
     else:
-        md5sum_list = calculate_list_md5sum_consecutively(s3uri_list=s3uri_list)
+        raise ValueError(f"Invalid value for Md5sumDropDownChoices was received: {Md5sumDropDownChoices}")
     # fix uri if s3:// is missing
     s3uri_list =  ["s3://" + i if not i.startswith("s3://") else i for i in s3uri_list]
     # creates a pandas df and writes it into a tsv file
@@ -89,7 +95,7 @@ def fetch_size_md5sum_with_urls(s3uri_list: list[str], if_concurrency: str) -> D
     log_prints=True,
     flow_run_name="{runner}-" + f"{get_time()}",
 )
-def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_concurrency: ConcurrencyDropDownChoices) -> None: 
+def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_concurrency: ConcurrencyDropDownChoices, Md5sumDropDownChoices: Md5sumDropDownChoices) -> None: 
     """Pipeline that calculates objects size and md5sum
 
     Args:
@@ -97,6 +103,7 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
         runner (str):
         input_type (DropDownChoices): The type of input you can provide. Acceptable values are s3_directory, list_of_s3_uri, file_containing_s3_uri. If your list of uri is long (over 100), we recommond to put them in a file so the flow can read them through a file
         run_concurrency (ConcurrencyDropDownChoices): If you would like to run tasks concurrently
+        Md5sumDropDownChoices (Md5sumDropDownChoices): If you would like to run md5sum calculation
     """
     logger = get_run_logger()
 
@@ -175,7 +182,7 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
         result_df =  pd.DataFrame(columns=["s3_uri","size","md5sum"])
         progress = 1
         for i in uri_chunk_list:
-            i_df =  fetch_size_md5sum_with_urls(s3uri_list=i, if_concurrency=run_concurrency)
+            i_df =  fetch_size_md5sum_with_urls(s3uri_list=i, if_concurrency=run_concurrency, Md5sumDropDownChoices=Md5sumDropDownChoices)
             result_df =  pd.concat([result_df, i_df], ignore_index=True)
             logger.info(f"Progress: {progress}/{len(uri_chunk_list)}")
             # writing that result to output_file and upload to bucket. 
@@ -194,7 +201,7 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
             progress += 1
     else:
         result_df = fetch_size_md5sum_with_urls(
-            s3uri_list=uri_list, if_concurrency=run_concurrency
+            s3uri_list=uri_list, if_concurrency=run_concurrency, Md5sumDropDownChoices=Md5sumDropDownChoices
         )
         result_df.to_csv(output_file, sep="\t", index=False)
         file_ul(
