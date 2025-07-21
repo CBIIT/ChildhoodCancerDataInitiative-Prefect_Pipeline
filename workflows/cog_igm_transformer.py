@@ -98,7 +98,7 @@ def cog_igm_transform(
 
         # create working dir name
         # check if file_path is provided and contains files, if not create a new working dir
-        if file_path != "" & os.path.exists(file_path) & len(os.listdir(file_path)) != 0:
+        if file_path != "" and os.path.exists(file_path) and len(os.listdir(file_path)) != 0:
             working_path = file_path
 
         else:
