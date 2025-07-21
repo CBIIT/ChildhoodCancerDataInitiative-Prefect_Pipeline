@@ -97,15 +97,10 @@ def cog_igm_transform(
         sample_df = sample_reader(manifest_path)
 
         # create working dir name
-        if file_path != "":
+        # check if file_path is provided and contains files, if not create a new working dir
+        if file_path != "" & os.path.exists(file_path) & len(os.listdir(file_path)) != 0:
             working_path = file_path
-            if os.listdir(working_path) == 0: #check if indeed a non empty dir
-                #if empty, create a new working dir
-                working_dir = f"COG_IGM_Transform_working_{dt}"
-                working_path = f"{working_path}/{working_dir}"
-                get_run_logger().info(f"Working path: {working_path}")
-                if not os.path.exists(working_path):
-                    os.mkdir(working_path)
+
         else:
             working_dir = f"COG_IGM_Transform_working_{dt}"
             working_path = f"/usr/local/data/{working_dir}"
