@@ -423,7 +423,7 @@ def cog_igm_json2tsv(
                     igm_op,
                     dt,
                     results_parse,
-                    samples
+                    samples,
                     samples_mapping,
                     logger,
                 )
