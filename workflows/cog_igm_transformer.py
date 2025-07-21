@@ -100,7 +100,7 @@ def cog_igm_transform(
         # check if file_path is provided and contains files, if not create a new working dir
         if file_path != "" and os.path.exists(file_path) and len(os.listdir(file_path)) != 0:
             working_path = file_path
-            working_dir = working_path.split("/")[-2]
+            working_dir = working_path.split("/")[-1]
         else:
             working_dir = f"COG_IGM_Transform_working_{dt}"
             working_path = f"/usr/local/data/{working_dir}"
