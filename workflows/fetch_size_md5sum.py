@@ -78,7 +78,7 @@ def fetch_size_md5sum_with_urls(s3uri_list: list[str], if_concurrency: str, Md5s
         else:
             md5sum_list = calculate_list_md5sum_consecutively(s3uri_list=s3uri_list)
     elif Md5sumDropDownChoices == "Don't run md5sum":
-        md5sum_list = ["SKIPPED"] * len(s3uri_list)
+        md5sum_list = ["SKIP"] * len(s3uri_list)
     else:
         raise ValueError(f"Invalid value for Md5sumDropDownChoices was received: {Md5sumDropDownChoices}")
     # fix uri if s3:// is missing
