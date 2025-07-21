@@ -182,7 +182,7 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
         result_df =  pd.DataFrame(columns=["s3_uri","size","md5sum"])
         progress = 1
         for i in uri_chunk_list:
-            i_df =  fetch_size_md5sum_with_urls(s3uri_list=i, if_concurrency=run_concurrency)
+            i_df =  fetch_size_md5sum_with_urls(s3uri_list=i, if_concurrency=run_concurrency, Md5sumDropDownChoices=Md5sumDropDownChoices)
             result_df =  pd.concat([result_df, i_df], ignore_index=True)
             logger.info(f"Progress: {progress}/{len(uri_chunk_list)}")
             # writing that result to output_file and upload to bucket. 
@@ -201,7 +201,7 @@ def get_size_md5sum(bucket: str, runner: str, input_type: DropDownChoices, run_c
             progress += 1
     else:
         result_df = fetch_size_md5sum_with_urls(
-            s3uri_list=uri_list, if_concurrency=run_concurrency
+            s3uri_list=uri_list, if_concurrency=run_concurrency, Md5sumDropDownChoices=Md5sumDropDownChoices
         )
         result_df.to_csv(output_file, sep="\t", index=False)
         file_ul(
