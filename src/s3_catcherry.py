@@ -285,12 +285,14 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         # for each tab
         for node in dict_nodes:
+            catcherr_logger.info(f"TaVS, Checking node: {node}")
             print(f"\n{node}\n----------", file=outf)
             df = meta_dfs[node]
             properties = df.columns
 
             # for each property
             for property in properties:
+                catcherr_logger.info(f"TaVS, Checking property: {property}")
                 tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
                 # if the property is in the TaVs data frame
                 if len(tavs_df_prop) > 0:
