@@ -801,7 +801,7 @@ def null_n_strip(value):
         return value
 
 
-def flatten_igm(json_obj: dict, parent_key="", flatten_dict=None, parse_type=None):
+def flatten_igm(json_obj, parent_key="", flatten_dict=None, parse_type=None):
     """Recursive function to un-nest a nested dictionary for WXS and Archer Fusion
 
     Args:
@@ -813,62 +813,48 @@ def flatten_igm(json_obj: dict, parent_key="", flatten_dict=None, parse_type=Non
     Returns:
         dict: Un-nested dict/JSON
     """
-
-    # init flatten_dict
+    
     if flatten_dict is None:
         flatten_dict = {}
 
-    # if value of key: value pair is another dict obj
     if isinstance(json_obj, dict):
         for key, value in json_obj.items():
             new_key = f"{parent_key}.{key}" if parent_key else key
-            if key == "disease_associated_gene_content":
-                if parse_type == "cnv":  # preserve gene list as list to iterate thru for results parsing
-                    flatten_dict[new_key] = value
-                    continue
-                else:
-                    flatten_igm(value, new_key, flatten_dict, parse_type)
-                    continue
+
+            if key == "disease_associated_gene_content" and parse_type == "cnv":
+                flatten_dict[new_key] = value
+                continue
+
             if isinstance(value, dict):
                 flatten_igm(value, new_key, flatten_dict, parse_type)
+
             elif isinstance(value, list):
-                # If the value is a list, check if it contains dicts
-                for i, item in enumerate(value):
-                    item_key = f"{new_key}.{i}"
-                    if isinstance(item, dict):
-                        flatten_igm(item, item_key, flatten_dict, parse_type)
-                    elif isinstance(item, list):
-                        flatten_igm(item, item_key, flatten_dict, parse_type)
-                    else:
-                        flatten_dict[item_key] = null_n_strip(item)
-                # If the list is empty, set the key to empty string
-                if len(value) == 0:
+                if value:  # non-empty list
+                    for i, item in enumerate(value):
+                        item_key = f"{new_key}.{i}"
+                        if isinstance(item, (dict, list)):
+                            flatten_igm(item, item_key, flatten_dict, parse_type)
+                        else:
+                            flatten_dict[item_key] = null_n_strip(item)
+                else:  # empty list
                     flatten_dict[new_key] = ""
+
             else:
                 flatten_dict[new_key] = null_n_strip(value)
-                # Optionally, you can recurse into the value if needed, but for non-dict, non-list, it's not necessary
 
-
-    # if value of key: value pair is a list obj at the root level
     elif isinstance(json_obj, list):
-        if len(json_obj) > 0:
-            if "disease_associated_gene_content" in parent_key and parse_type == "cnv":
-                pass  # gene list preserved as list in above logic
-            else:
-                for i, item in enumerate(json_obj):
-                    item_key = f"{parent_key}.{i}" if parent_key else str(i)
-                    if isinstance(item, dict):
-                        flatten_igm(item, item_key, flatten_dict, parse_type)
-                    elif isinstance(item, list):
-                        flatten_igm(item, item_key, flatten_dict, parse_type)
-                    else:
-                        flatten_dict[item_key] = null_n_strip(item)
-        else:  # empty list variables
+        if json_obj:
+            for i, item in enumerate(json_obj):
+                item_key = f"{parent_key}.{i}" if parent_key else str(i)
+                if isinstance(item, (dict, list)):
+                    flatten_igm(item, item_key, flatten_dict, parse_type)
+                else:
+                    flatten_dict[item_key] = null_n_strip(item)
+        else:
             flatten_dict[parent_key] = ""
-    else:
-        pass
 
     return flatten_dict
+
 
 
 def igm_full_form_convert(flatten_dict: dict, logger):
