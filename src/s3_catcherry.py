@@ -341,19 +341,20 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                 # if no, then
                                 # for each unique value
                                 for unique_value in unique_values:
-                                    if unique_value not in tavs_df_prop["Term"].values:
+                                    if unique_value not in tavs_df_prop["Term"].dropna().values:
                                         print(
                                             f"\tERROR: {property} property contains a value that is not recognized: {unique_value}",
                                             file=outf,
                                         )
                                         # fix if lower cases match
                                         if (
-                                            tavs_df_prop["Term"].str.lower().values
+                                            tavs_df_prop["Term"].dropna().str.lower().values
                                             == unique_value.lower()
                                         ).any():
                                             new_value = tavs_df_prop[
                                                 (
                                                     tavs_df_prop["Term"]
+                                                    .dropna()
                                                     .str.lower()
                                                     .values
                                                     == unique_value.lower()
@@ -406,12 +407,13 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                             )
                                             # fix if lower cases match
                                             if (
-                                                tavs_df_prop["Term"].str.lower().values
+                                                tavs_df_prop["Term"].dropna().str.lower().values
                                                 == unique_value.lower()
                                             ).any():
                                                 new_value = tavs_df_prop[
                                                     (
                                                         tavs_df_prop["Term"]
+                                                        .dropna()
                                                         .str.lower()
                                                         .values
                                                         == unique_value.lower()
