@@ -1054,17 +1054,17 @@ def igm_to_tsv(
                 r"[<>]", "", regex=True
             )
             # for values with " - ", replace with midpoint of range
-            merged_df["percent_tumor"] = merged_df["percent_tumor"].str.replace(
+            merged_df["percent_tumor"] = pd.to_numeric(merged_df["percent_tumor"].str.replace(
                 r"(\d+)\s*-\s*(\d+)",
                 lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
                 regex=True
-            ).astype(int)
-            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].str.replace(
+            ), errors="coerce").astype("Int64")
+            merged_df["percent_necrosis"] = pd.to_numeric(merged_df["percent_necrosis"].str.replace(
                 r"(\d+)\s*-\s*(\d+)",
                 lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
                 regex=True
-            ).astype(int)
-    
+            ), errors="coerce").astype("Int64")
+
             # save merged df to output directory
             logger.info(
                 f"Saving merged percent_tumor and percent_necrosis data to {igm_op}/IGM_{assay_type.replace('igm.', '')}_percent_tumor_necrosis_{timestamp}.tsv"
