@@ -64,6 +64,7 @@ B lymphoblastic leukemia/lymphoma with t(9;22)(q34;q11.2); BCR-ABL1	Lymphoid leu
 B lymphoblastic leukemia/lymphoma with t(v;11q23); MLL rearranged	Lymphoid leukemias	ICD-O-3.2
 B lymphoblastic leukemia/lymphoma, BCR-ABL1-like	Lymphoid leukemias	ICD-O-3.2
 B lymphoblastic leukemia/lymphoma, NOS	Lymphoid leukemias	ICD-O-3.2
+Basal cell adenocarcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Benign cystic nephroma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Blue nevus, malignant	Nevi and melanomas	ICD-O-3.2
 Burkitt lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
@@ -207,7 +208,8 @@ Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2
 Glomus tumor, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
 Granulosa cell tumor, juvenile	Specialized gonadal neoplasms	ICD-O-3.2
 Granulosa cell tumor, malignant	Specialized gonadal neoplasms	ICD-O-3.2
-Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2Hemangioblastic meningioma	Meningiomas	ICD-O-3.2
+Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2
+Hemangioblastic meningioma	Meningiomas	ICD-O-3.2
 Hemangioblastoma	Mesenchymal, non-meningothelial tumors;Soft tissue tumors;Other	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
 Hemangioendothelioma, malignant	Blood vessel tumors	ICD-O-3.2
 Hemangioendothelioma, NOS	Blood vessel tumors	ICD-O-3.2
@@ -368,6 +370,7 @@ Oligodendroglioma, anaplastic, NOS	Gliomas	ICD-O-3.2
 Oligodendroglioma, IDH-mutant, and 1p/19q-codeleted	High-Grade Glioma;Low-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Adult-type diffuse gliomas	MCI CNS Diagnosis Category;WHO CNS5
 Oligodendroglioma, NOS	Gliomas	ICD-O-3.2
 Ossifying fibromyxoid tumor, NOS	Myxomatous neoplasms	ICD-O-3.2
+Osteoblastoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Osteosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Other	Other	MCI CNS Diagnosis Category
 Other CNS Embryonal tumors	Other CNS Embryonal tumors	MCI CNS Diagnosis Category
@@ -377,7 +380,7 @@ Pancreatic neuroendocrine tumor, nonfunctioning	Adenomas and adenocarcinomas	ICD
 Pancreatoblastoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Papillary adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma, columnar cell	Adenomas and adenocarcinomas	ICD-O-3.2
-Papillary carcinoma, encapsulated, of thyroid	Adenomas and adenocarcinomas	ICD-O-3.2
+Papillary carcinoma, encapsulated of thyroid	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma, follicular variant	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma, NOS	Squamous cell neoplasms	ICD-O-3.2
 Papillary craniopharyngioma	Craniopharyngioma;Tumors of the sellar region	MCI CNS Diagnosis Category;WHO CNS5
