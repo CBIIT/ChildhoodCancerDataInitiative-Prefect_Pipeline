@@ -1033,10 +1033,10 @@ def igm_to_tsv(
                 r"~", "", regex=True
             )
             merged_df["percent_tumor"] = merged_df["percent_tumor"].replace(
-                r"+", "",
+                "+", "",
             )
             merged_df["percent_necrosis"] = merged_df["percent_necrosis"].replace(
-                r"+", "",
+                "+", "",
             )
             merged_df["percent_tumor"] = merged_df["percent_tumor"].replace(
                 "N/A", "",
