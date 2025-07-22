@@ -398,7 +398,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     for unique_value in unique_values:
                                         if (
                                             unique_value
-                                            not in tavs_df_prop["Term"].values
+                                            not in tavs_df_prop["Term"].dropna().values
                                         ):
                                             print(
                                                 f"\tERROR: {property} property contains a value that is not recognized: {unique_value}",
