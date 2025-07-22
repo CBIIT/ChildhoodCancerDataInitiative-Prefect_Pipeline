@@ -401,6 +401,9 @@ def cog_igm_json2tsv(
         # init counts
         igm_success_count = 0
         igm_error_count = 0
+        
+        # initialize file name list storage for percent tumor necrosis
+        percent_tumor_necrosis_file_names = []
 
         # make igm output dir path
         igm_op = f"{output_path}/IGM"
@@ -416,7 +419,7 @@ def cog_igm_json2tsv(
         # for each assay type, flatten JSON files and concatenate
         for assay_type in ["igm.tumor_normal", "igm.archer_fusion", "igm.methylation"]:
             if len(json_sorted[assay_type]) > 0:
-                df_reshape, temp_success_count, temp_error_count = igm_to_tsv(
+                df_reshape, temp_success_count, temp_error_count, percent_tumor_necrosis_file_name = igm_to_tsv(
                     json_dir_path,
                     json_sorted[assay_type],
                     assay_type,
@@ -427,6 +430,9 @@ def cog_igm_json2tsv(
                     samples_mapping,
                     logger,
                 )
+                
+                # append percent_tumor_necrosis file name to list
+                percent_tumor_necrosis_file_names.append(percent_tumor_necrosis_file_name)
 
                 igm_success_count += temp_success_count
                 igm_error_count += temp_error_count
@@ -438,6 +444,11 @@ def cog_igm_json2tsv(
                 runner_logger.error(
                     "Cannot perform IGM variant results-level parsing, no valid IGM JSONs read in."
                 )
+        #TODO: parse percent_tumor_necrosis 
+        
+        #if len(percent_tumor_necrosis_file_names) > 0:
+            
+        
     else:
         igm_success_count = 0
         igm_error_count = 0
@@ -885,8 +896,7 @@ def igm_to_tsv(
     igm_op: str,
     timestamp: str,
     results_parse: bool,
-    samples: pd.DataFrame,
-    samples_mapping: pd.DataFrame,
+    manifest_path: str,
     logger,
 ):
     """Function to call the reading in and transformation of IGM JSON files
@@ -898,8 +908,7 @@ def igm_to_tsv(
         igm_op (str): Path to directory to output transformed IGM TSV files
         timestamp (str): Date-time of when script run
         results_parse (bool): If True, parse out results specific sections to separate form in long format TSV
-        samples (pd.DataFrame): DataFrame of sample metadata to use for trying to match percent_necrosis and percent_tumor values
-        samples_mapping (pd.DataFrame): DataFrame of sample mapping to use for trying to match percent_necrosis and percent_tumor values
+        manifest_path (str): Path to manifest file containing sample metadata
 
     Returns:
         pd.DataFrame: pandas DataFrame of converted JSON data
@@ -1002,76 +1011,83 @@ def igm_to_tsv(
         )
         
         # parse percent_tumor and percent_necrosis from samples metadata
-        if assay_type == "igm.tumor_normal":
-            logger.info(
-                f"Attempting to parse percent_tumor and percent_necrosis from samples metadata for assay type {assay_type}."
-            )
-            if "percent_tumor" not in concatenated_df.columns:
-                concatenated_df["percent_tumor"] = ""
-            if "percent_necrosis" not in concatenated_df.columns:
-                concatenated_df["percent_necrosis"] = ""
 
-            # try to match percent_tumor and percent_necrosis from samples metadata
-            # if more than one sample for participant, skip 
-            percent_df = concatenated_df[
-                ["subject_id", "percent_tumor", "percent_necrosis"]
-            ].drop_duplicates().reset_index(drop=True)
+        logger.info(
+            f"Attempting to parse percent_tumor and percent_necrosis from samples metadata for assay type {assay_type}."
+        )
+        if "percent_tumor" not in concatenated_df.columns:
+            concatenated_df["percent_tumor"] = ""
+        if "percent_necrosis" not in concatenated_df.columns:
+            concatenated_df["percent_necrosis"] = ""
 
-            #merge dfs
-            merged_df = pd.merge(
-                percent_df,
-                samples,
-                on="subject_id"
-            )
-            
-            # formatting
-            # replace any ~ with empty string
-            merged_df["percent_tumor"] = merged_df["percent_tumor"].replace(
-                r"~", "", regex=True
-            )
-            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].replace(
-                r"~", "", regex=True
-            )
-            merged_df["percent_tumor"] = merged_df["percent_tumor"].str.replace(
-                "+", "",
-            )
-            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].str.replace(
-                "+", "",
-            )
-            merged_df["percent_tumor"] = merged_df["percent_tumor"].replace(
-                "N/A", "",
-            )
-            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].replace(
-                "N/A", "",
-            )
-            
-            # replace any < or > with empty string
-            merged_df["percent_tumor"] = merged_df["percent_tumor"].replace(
-                r"[<>]", "", regex=True
-            )
+        # parse relevant columns
+        percent_df = concatenated_df[
+            ["subject_id", "form_file_name", "percent_tumor", "percent_necrosis"]
+        ].drop_duplicates().reset_index(drop=True)
+        
+        percent_df.columns = ['participant.participant_id', 'file_name', 'percent_tumor', 'percent_necrosis']
+        
+        # read in manifest to map samples to percent_tumor and percent_necrosis
+        clin_report_df = pd.read_excel(manifest_path, sheet_name="clinical_measure_file")[['participant.participant_id', 'sample.sample_id', 'file_name']].drop_duplicates().reset_index(drop=True)
+        
+        merge_df = percent_df.merge(
+            clin_report_df,
+            left_on="file_name",
+            right_on="file_name",
+            how="left",
+        )
 
-            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].replace(
-                r"[<>]", "", regex=True
-            )
-            # for values with " - ", replace with midpoint of range
-            merged_df["percent_tumor"] = pd.to_numeric(merged_df["percent_tumor"].str.replace(
-                r"(\d+)\s*-\s*(\d+)",
-                lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
-                regex=True
-            ), errors="coerce").astype("Int64")
-            merged_df["percent_necrosis"] = pd.to_numeric(merged_df["percent_necrosis"].str.replace(
-                r"(\d+)\s*-\s*(\d+)",
-                lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
-                regex=True
-            ), errors="coerce").astype("Int64")
+        
+        # formatting
+        # replace any ~ with empty string
+        percent_df["percent_tumor"] = percent_df["percent_tumor"].replace(
+            r"~", "", regex=True
+        )
+        percent_df["percent_necrosis"] = percent_df["percent_necrosis"].replace(
+            r"~", "", regex=True
+        )
+        percent_df["percent_tumor"] = percent_df["percent_tumor"].str.replace(
+            "+", "",
+        )
+        percent_df["percent_necrosis"] = percent_df["percent_necrosis"].str.replace(
+            "+", "",
+        )
+        percent_df["percent_tumor"] = percent_df["percent_tumor"].replace(
+            "N/A", "",
+        )
+        percent_df["percent_necrosis"] = percent_df["percent_necrosis"].replace(
+            "N/A", "",
+        )
+        
+        # replace any < or > with empty string
+        percent_df["percent_tumor"] = percent_df["percent_tumor"].replace(
+            r"[<>]", "", regex=True
+        )
 
-            # save merged df to output directory
-            logger.info(
-                f"Saving merged percent_tumor and percent_necrosis data to {igm_op}/IGM_{assay_type.replace('igm.', '')}_percent_tumor_necrosis_{timestamp}.tsv"
-            )
-            merged_df.to_csv(f"{igm_op}/IGM_{assay_type.replace('igm.', '')}_percent_tumor_necrosis_{timestamp}.tsv", sep="\t", index=False)
+        percent_df["percent_necrosis"] = percent_df["percent_necrosis"].replace(
+            r"[<>]", "", regex=True
+        )
+        # for values with " - ", replace with midpoint of range
+        percent_df["percent_tumor"] = pd.to_numeric(percent_df["percent_tumor"].str.replace(
+            r"(\d+)\s*-\s*(\d+)",
+            lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
+            regex=True
+        ), errors="coerce").astype("Int64")
+        percent_df["percent_necrosis"] = pd.to_numeric(percent_df["percent_necrosis"].str.replace(
+            r"(\d+)\s*-\s*(\d+)",
+            lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
+            regex=True
+        ), errors="coerce").astype("Int64")
 
-        return concatenated_df, success_count, error_count
+        # save merged df to output directory
+        percent_tumor_necrosis_file_name = f"{igm_op}/IGM_{assay_type.replace('igm.', '')}_percent_tumor_necrosis_{timestamp}.tsv"
+        
+        logger.info(
+            f"Saving merged percent_tumor and percent_necrosis data to {percent_tumor_necrosis_file_name}"
+        )
+        percent_df.to_csv(percent_tumor_necrosis_file_name, sep="\t", index=False)
+
+        return concatenated_df, success_count, error_count, percent_tumor_necrosis_file_name
     else:
         logger.error(
             f" No valid IGM JSON files found and/or failed to open for assay_type {assay_type}."
