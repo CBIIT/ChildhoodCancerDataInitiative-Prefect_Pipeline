@@ -1041,16 +1041,16 @@ def igm_to_tsv(
                 r"[<>]", "", regex=True
             )
             # for values with " - ", replace with midpoint of range
-            merged_df["percent_tumor"] = int(merged_df["percent_tumor"].str.replace(
+            merged_df["percent_tumor"] = merged_df["percent_tumor"].str.replace(
                 r"(\d+)\s*-\s*(\d+)",
                 lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
                 regex=True
-            ))
-            merged_df["percent_necrosis"] = int(merged_df["percent_necrosis"].str.replace(
+            ).astype(int)
+            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].str.replace(
                 r"(\d+)\s*-\s*(\d+)",
                 lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
                 regex=True
-            ))
+            ).astype(int)
     
             # save merged df to output directory
             logger.info(
