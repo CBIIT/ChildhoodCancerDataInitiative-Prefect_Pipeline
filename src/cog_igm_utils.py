@@ -1036,6 +1036,34 @@ def igm_to_tsv(
                 samples,
                 on="subject_id"
             )
+            
+            # formatting
+            # replace any ~ with empty string
+            merged_df["percent_tumor"] = merged_df["percent_tumor"].replace(
+                r"~", "", regex=True
+            )
+            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].replace(
+                r"~", "", regex=True
+            )
+            # replace any < or > with empty string
+            merged_df["percent_tumor"] = merged_df["percent_tumor"].replace(
+                r"[<>]", "", regex=True
+            )
+
+            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].replace(
+                r"[<>]", "", regex=True
+            )
+            # for values with " - ", replace with midpoint of range
+            merged_df["percent_tumor"] = merged_df["percent_tumor"].replace(
+                r"(\d+)\s*-\s*(\d+)", lambda m: str(
+                    (int(m.group(1)) + int(m.group(2))) / 2
+                ), regex=True
+            )
+            merged_df["percent_necrosis"] = merged_df["percent_necrosis"].replace(
+                r"(\d+)\s*-\s*(\d+)", lambda m: str(
+                    (int(m.group(1)) + int(m.group(2))) / 2
+                ), regex=True
+            )
     
             # save merged df to output directory
             logger.info(
