@@ -1246,9 +1246,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
   
-  - name: ccdi-data-curation-32gb-v3
+  - name: TEST-ccdi-data-curation-32gb-v3
     version: null
-    tags: ["Production","V3"]
+    tags: ["TEST", "Production","V3"]
     description: null
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
@@ -1268,7 +1268,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
+          branch: 23gb_lab_test
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"

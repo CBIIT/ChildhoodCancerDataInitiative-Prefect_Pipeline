@@ -396,6 +396,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     # if no, then
                                     # for each unique value, check it against the TaVs data frame
                                     for unique_value in unique_values:
+                                        print(unique_value, property)
                                         if (
                                             unique_value
                                             not in tavs_df_prop["Term"].values
