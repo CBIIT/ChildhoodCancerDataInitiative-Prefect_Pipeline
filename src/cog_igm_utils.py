@@ -45,8 +45,10 @@ def manifest_reader(manifest_path: str):
     except Exception as e:
         runner_logger.error(f"Cannot read in manifest {file_name} due to error: {e}")
         sys.exit(1)
+    
+    local_manifest_path = os.path.join(os.getcwd(), file_name)
 
-    return manifest_df
+    return manifest_df, local_manifest_path
 
 def sample_reader(manifest_path: str):
     """Read in and parse manifest of sample-participant IDs
@@ -297,7 +299,7 @@ def distinguish(dir_path: str, logger):
     flow_run_name="json2tsv_" + f"{get_time()}",
 )
 def cog_igm_json2tsv(
-    manifest: pd.DataFrame, samples: pd.DataFrame, samples_mapping: pd.DataFrame, parsing: str, working_path: str, output_path: str, dt: str
+    manifest: pd.DataFrame, manifest_path: str, parsing: str, working_path: str, output_path: str, dt: str
 ):
 
     # get run logger
@@ -426,8 +428,7 @@ def cog_igm_json2tsv(
                     igm_op,
                     dt,
                     results_parse,
-                    samples,
-                    samples_mapping,
+                    manifest_path,
                     logger,
                 )
                 
@@ -444,11 +445,48 @@ def cog_igm_json2tsv(
                 runner_logger.error(
                     "Cannot perform IGM variant results-level parsing, no valid IGM JSONs read in."
                 )
-        #TODO: parse percent_tumor_necrosis 
+        # parse percent_tumor_necrosis 
         
-        #if len(percent_tumor_necrosis_file_names) > 0:
+        if len(percent_tumor_necrosis_file_names) > 0:
+            df_ptn = pd.concat(pd.read_csv(i, sep="\t") for i in percent_tumor_necrosis_file_names)[["participant.participant_id", "sample.sample_id", "percent_tumor", "percent_necrosis"]].drop_duplicates().reset_index(drop=True)
             
-        
+            # check if multiple percent tumor necrosis values for samples
+            
+            df_ptn_summary = df_ptn.groupby(["participant.participant_id", "sample.sample_id"]).size().reset_index(name="count")
+            if df_ptn_summary["count"].max() > 1:
+                logger.warning(
+                    "Multiple percent tumor or necrosis values for the following samples, picking first value set:"
+                )
+                logger.warning("\n".join(df_ptn_summary[df_ptn_summary["count"] > 1].apply(lambda x: f"{x['participant.participant_id']} - {x['sample.sample_id']}", axis=1).tolist()))
+                runner_logger.warning(
+                    "Multiple percent tumor or necrosis values for the following samples, picking first value set:"
+                )
+                runner_logger.warning("\n".join(df_ptn_summary[df_ptn_summary["count"] > 1].apply(lambda x: f"{x['participant.participant_id']} - {x['sample.sample_id']}", axis=1).tolist()))
+                df_ptn_uniq = df_ptn.drop_duplicates(subset=['participant.participant_id', 'sample.sample_id'], keep='first')[["sample.sample_id", "percent_tumor", "percent_necrosis"]].reset_index(drop=True)
+                
+            else:
+                df_ptn_uniq = df_ptn[["sample.sample_id", "percent_tumor", "percent_necrosis"]]
+            
+            # open samples sheet from manifest file and replace percent_tumor and percent_necrosis values from df_ptn_uniq
+            samples_df = pd.read_excel(manifest_path, sheet_name="sample")
+            # save header order
+            header_sort = samples_df.columns.tolist()
+            # drop empty cols
+            samples_df = samples_df.drop(columns=["percent_tumor", "percent_necrosis"], errors='ignore')
+            # merge percent tumor and necrosis values 
+            samples_df = samples_df.merge(df_ptn_uniq, on=["sample.sample_id"], how="outer")
+            samples_df = samples_df[header_sort]
+            
+            # save to output path
+            with pd.ExcelWriter(
+                manifest_path, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+            ) as writer:
+                samples_df.to_excel(writer, sheet_name="sample", index=False, header=False, startrow=1)
+
+        else:
+            logger.info("No percent tumor or necrosis data to parse, skipping.")
+            runner_logger.info("No percent tumor or necrosis data to parse, skipping.")
+
     else:
         igm_success_count = 0
         igm_error_count = 0
@@ -1028,52 +1066,53 @@ def igm_to_tsv(
         percent_df.columns = ['participant.participant_id', 'file_name', 'percent_tumor', 'percent_necrosis']
         
         # read in manifest to map samples to percent_tumor and percent_necrosis
-        clin_report_df = pd.read_excel(manifest_path, sheet_name="clinical_measure_file")[['participant.participant_id', 'sample.sample_id', 'file_name']].drop_duplicates().reset_index(drop=True)
-        
+        clin_report_df = pd.read_excel(manifest_path, sheet_name="clinical_measure_file")
+
+        # filter out instances where sample_id is NaN
+        clin_report_df = clin_report_df[~clin_report_df['sample.sample_id'].isna()][['participant.participant_id', 'sample.sample_id', 'file_name']].drop_duplicates().reset_index(drop=True)
+
+        # map values to samples
         merge_df = percent_df.merge(
             clin_report_df,
-            left_on="file_name",
-            right_on="file_name",
             how="left",
         )
 
-        
         # formatting
         # replace any ~ with empty string
-        percent_df["percent_tumor"] = percent_df["percent_tumor"].replace(
+        merge_df["percent_tumor"] = merge_df["percent_tumor"].replace(
             r"~", "", regex=True
         )
-        percent_df["percent_necrosis"] = percent_df["percent_necrosis"].replace(
+        merge_df["percent_necrosis"] = merge_df["percent_necrosis"].replace(
             r"~", "", regex=True
         )
-        percent_df["percent_tumor"] = percent_df["percent_tumor"].str.replace(
+        merge_df["percent_tumor"] = merge_df["percent_tumor"].str.replace(
             "+", "",
         )
-        percent_df["percent_necrosis"] = percent_df["percent_necrosis"].str.replace(
+        merge_df["percent_necrosis"] = merge_df["percent_necrosis"].str.replace(
             "+", "",
         )
-        percent_df["percent_tumor"] = percent_df["percent_tumor"].replace(
+        merge_df["percent_tumor"] = merge_df["percent_tumor"].replace(
             "N/A", "",
         )
-        percent_df["percent_necrosis"] = percent_df["percent_necrosis"].replace(
+        merge_df["percent_necrosis"] = merge_df["percent_necrosis"].replace(
             "N/A", "",
         )
         
         # replace any < or > with empty string
-        percent_df["percent_tumor"] = percent_df["percent_tumor"].replace(
+        merge_df["percent_tumor"] = merge_df["percent_tumor"].replace(
             r"[<>]", "", regex=True
         )
 
-        percent_df["percent_necrosis"] = percent_df["percent_necrosis"].replace(
+        merge_df["percent_necrosis"] = merge_df["percent_necrosis"].replace(
             r"[<>]", "", regex=True
         )
         # for values with " - ", replace with midpoint of range
-        percent_df["percent_tumor"] = pd.to_numeric(percent_df["percent_tumor"].str.replace(
+        merge_df["percent_tumor"] = pd.to_numeric(merge_df["percent_tumor"].str.replace(
             r"(\d+)\s*-\s*(\d+)",
             lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
             regex=True
         ), errors="coerce").astype("Int64")
-        percent_df["percent_necrosis"] = pd.to_numeric(percent_df["percent_necrosis"].str.replace(
+        merge_df["percent_necrosis"] = pd.to_numeric(merge_df["percent_necrosis"].str.replace(
             r"(\d+)\s*-\s*(\d+)",
             lambda m: str((int(m.group(1)) + int(m.group(2))) / 2),
             regex=True

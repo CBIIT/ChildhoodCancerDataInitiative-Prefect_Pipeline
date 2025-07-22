@@ -87,8 +87,9 @@ def cog_igm_transform(
             runner_logger.error(f"Cannot download manifest from path {manifest_path}: {e}")
             sys.exit(1)
 
+
         # load in the manifest
-        manifest_df = manifest_reader(manifest_path) ##TODO need whole manifest not just clin reports
+        manifest_df, local_manifest_path = manifest_reader(manifest_path) 
         
         #load in sample_mapping file
         samples_mapping = pd.read_csv(os.path.basename(sample_mapping_path), sep="\t")
@@ -128,7 +129,7 @@ def cog_igm_transform(
             igm_error_count,
             log_filename,
             cog_transform_log,
-        ) = cog_igm_json2tsv(manifest_df, sample_df, samples_mapping, form_parsing, working_path, output_path, dt)
+        ) = cog_igm_json2tsv(manifest_df, local_manifest_path, form_parsing, working_path, output_path, dt)
 
         end_time = datetime.now()
         time_diff = end_time - start_time
@@ -162,6 +163,9 @@ def cog_igm_transform(
         # move log file to output dir and shutdown logging
         os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
         #os.rename(cog_transform_log, f"{output_path}/{cog_transform_log.replace(get_date(), dt)}")
+        
+        # move manifest file to output dir
+        os.rename(local_manifest_path, f"{output_path}/{os.path.basename(local_manifest_path).replace('.xlsx', '' + 'COG_IGM' + '_' + dt + '.xlsx')}")
 
         # upload output dir
         folder_ul(
