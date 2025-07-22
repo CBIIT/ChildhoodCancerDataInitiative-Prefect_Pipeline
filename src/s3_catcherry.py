@@ -397,34 +397,39 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     # for each unique value, check it against the TaVs data frame
                                     for unique_value in unique_values:
                                         print(unique_value, property)
-                                        if (
-                                            unique_value
-                                            not in tavs_df_prop["Term"].values
-                                        ):
-                                            print(
-                                                f"\tERROR: {property} property contains a value that is not recognized: {unique_value}",
-                                                file=outf,
-                                            )
-                                            # fix if lower cases match
+                                        try:
                                             if (
-                                                tavs_df_prop["Term"].str.lower().values
-                                                == unique_value.lower()
-                                            ).any():
-                                                new_value = tavs_df_prop[
-                                                    (
-                                                        tavs_df_prop["Term"]
-                                                        .str.lower()
-                                                        .values
-                                                        == unique_value.lower()
-                                                    )
-                                                ]["Term"].values[0]
-                                                df[property] = df[property].replace(
-                                                    unique_value, new_value
-                                                )
+                                                unique_value
+                                                not in tavs_df_prop["Term"].values
+                                            ):
                                                 print(
-                                                    f"\t\tThe value in {property} was changed: {unique_value} ---> {new_value}",
+                                                    f"\tERROR: {property} property contains a value that is not recognized: {unique_value}",
                                                     file=outf,
                                                 )
+                                                # fix if lower cases match
+                                                if (
+                                                    tavs_df_prop["Term"].str.lower().values
+                                                    == unique_value.lower()
+                                                ).any():
+                                                    new_value = tavs_df_prop[
+                                                        (
+                                                            tavs_df_prop["Term"]
+                                                            .str.lower()
+                                                            .values
+                                                            == unique_value.lower()
+                                                        )
+                                                    ]["Term"].values[0]
+                                                    df[property] = df[property].replace(
+                                                        unique_value, new_value
+                                                    )
+                                                    print(
+                                                        f"\t\tThe value in {property} was changed: {unique_value} ---> {new_value}",
+                                                        file=outf,
+                                                    )
+                                        except Exception as e:
+                                            get_run_logger.error(
+                                                f"\tERROR: {property} property contains a value that is not recognized: {unique_value}.\n\t\tThis is likely due to a formatting issue with the value, please check the value and try again.\n\t\tError: {e}"
+                                            )
 
         ##############
         #
