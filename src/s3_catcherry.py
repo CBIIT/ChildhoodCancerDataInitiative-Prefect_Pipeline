@@ -427,7 +427,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                                         file=outf,
                                                     )
                                         except Exception as e:
-                                            get_run_logger.error(
+                                            print(
                                                 f"\tERROR: {property} property contains a value that is not recognized: {unique_value}.\n\t\tThis is likely due to a formatting issue with the value, please check the value and try again.\n\t\tError: {e}"
                                             )
 
