@@ -1076,13 +1076,13 @@ def igm_to_tsv(
             
             #use regex to extract gene name from pertinent_negative_result
             for index, row in neg_df.iterrows():
-                try:
-                    genes = re.findall(r"[A-Z][A-Z0-9\-]{3,}(?: \(formerly\s[A-Z0-9\-]{3,}\))?", row['value'])
-                    if genes:
-                        for gene in genes:
-                            gene_df.append(list(row) + [gene])
-                except:
-                    gene_df.append(list(row) + [""])
+                #try:
+                genes = re.findall(r"[A-Z][A-Z0-9\-]{3,}(?: \(formerly\s[A-Z0-9\-]{3,}\))?", row['value'])
+                if genes:
+                    for gene in genes:
+                        gene_df.append(list(row) + [gene])
+                #except:
+                #    gene_df.append(list(row) + [""])
             
             # filter out INDETERMINATE, CNV, LOH, NOTE, CNLOH values
             gene_df = pd.DataFrame(gene_df, columns=neg_df.columns.tolist() + ["gene_name"])
