@@ -1062,7 +1062,12 @@ def igm_to_tsv(
                 value_name="value").dropna(subset=["value"])
             
             #use regex to extract gene name from pertinent_negative_result
-            neg_df["gene_name"] = neg_df["pertinent_negative_result"].str.extract(r"[A-Z0-9]{3,}")
+            for index, row in neg_df.iterrows():
+                try:
+                    neg_df.at[index, "gene_name"] = neg_df.at[index, "pertinent_negative_result"].str.extract(r"[A-Z0-9/-]{3,}")
+                except Exception as e:
+                    neg_df.at[index, "gene_name"] = ""
+                    logger.error(f"Error extracting gene name from row {index} in neg_df: {e}")
 
             # save to file
             pertinent_negatives_file_name = f"{igm_op}/IGM_{assay_type.replace('igm.', '')}_pertinent_negatives_results_{timestamp}.tsv"
