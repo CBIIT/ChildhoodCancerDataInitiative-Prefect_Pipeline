@@ -12,6 +12,7 @@ import sys
 from typing import Literal
 from datetime import datetime
 import pandas as pd
+import shutil
 
 # utils
 from src.cog_igm_utils import manifest_reader, sample_reader, cog_igm_json2tsv
@@ -163,9 +164,9 @@ def cog_igm_transform(
         # move log file to output dir and shutdown logging
         os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
         #os.rename(cog_transform_log, f"{output_path}/{cog_transform_log.replace(get_date(), dt)}")
-        
-        # move manifest file to output dir
-        os.rename(local_manifest_path, f"{output_path}/{os.path.basename(local_manifest_path).replace('.xlsx', '' + 'COG_IGM' + '_' + dt + '.xlsx')}")
+
+        # copy manifest file to output dir
+        shutil.copy(local_manifest_path, f"{output_path}/{os.path.basename(local_manifest_path).replace('.xlsx', '' + 'COG_IGM' + '_' + dt + '.xlsx')}")
 
         # upload output dir
         folder_ul(
