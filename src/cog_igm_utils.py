@@ -23,7 +23,7 @@ def replace_en_em_dash(df: pd.DataFrame) -> pd.DataFrame:
     for col in df.columns:
         if pd.api.types.is_string_dtype(df[col]):
             df[col] = df[col].str.replace("–", "-", regex=False)
-            df[col] = df[col].str.replace("—", "-", regex=False)
+            df[col] = df[col].str.replace(u'\u2014', '-')
     return df
 
 
