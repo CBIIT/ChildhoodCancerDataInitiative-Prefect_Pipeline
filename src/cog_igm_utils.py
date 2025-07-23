@@ -18,6 +18,15 @@ from prefect.task_runners import ConcurrentTaskRunner
 from prefect.cache_policies import NO_CACHE
 
 
+def replace_en_em_dash(df: pd.DataFrame) -> pd.DataFrame:
+    """Replace en and em dashes in DataFrame with hyphens"""
+    for col in df.columns:
+        if pd.api.types.is_string_dtype(df[col]):
+            df[col] = df[col].str.replace("–", "-", regex=False)
+            df[col] = df[col].str.replace("—", "-", regex=False)
+    return df
+
+
 @flow(
     name="Manifest Reader",
     log_prints=True,
@@ -1032,7 +1041,7 @@ def igm_to_tsv(
                     f"Could not parse results section from file {file_path}, please check and try again: {e}"
                 )
         for result_type in op_dict.keys():
-            pd.concat(op_dict[result_type]).to_csv(
+            replace_en_em_dash(pd.concat(op_dict[result_type])).to_csv(
                 f"{directory_path}/IGM_{assay_type.replace('igm.', '')}_{result_type}_variant_data_{timestamp}.tsv",
                 sep="\t",
                 index=False,
@@ -1040,7 +1049,7 @@ def igm_to_tsv(
 
     # concat all processed JSONs together
     if len(df_list) > 0:
-        concatenated_df = pd.concat(df_list, ignore_index=True)
+        concatenated_df = replace_en_em_dash(pd.concat(df_list, ignore_index=True))
 
         concatenated_df.to_csv(
             f"{igm_op}/IGM_{assay_type.replace('igm.', '')}_JSON_table_conversion_{timestamp}.tsv",
