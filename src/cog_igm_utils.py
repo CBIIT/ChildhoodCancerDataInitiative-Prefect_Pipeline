@@ -1048,6 +1048,26 @@ def igm_to_tsv(
             index=False,
         )
         
+        # parse pertinent_negatives_results from tumor_normal JSONs
+        if assay_type == "igm.tumor_normal":
+            # grab all columns that start with pertinent_negatives_results.summary
+            pertinent_negatives_cols = [
+                col for col in concatenated_df.columns if col.startswith("pertinent_negatives_results.summary")
+            ]
+            neg_df = concatenated_df[["subject_id", "form_file_name"] + pertinent_negatives_cols].drop_duplicates().reset_index(drop=True)
+            
+            # pivot the DataFrame to have one row per negative result
+            neg_df = neg_df.melt(id_vars=["subject_id", "form_file_name"],
+                var_name="pertinent_negative_result",
+                value_name="value").dropna(subset=["value"])
+            
+            #use regex to extract gene name from pertinent_negative_result
+            neg_df["gene_name"] = neg_df["pertinent_negative_result"].str.extract(r"[A-Z0-9]{3,}")
+
+            # save to file
+            pertinent_negatives_file_name = f"{igm_op}/IGM_{assay_type.replace('igm.', '')}_pertinent_negatives_results_{timestamp}.tsv"
+            neg_df.to_csv(pertinent_negatives_file_name, sep="\t", index=False)
+
         # parse percent_tumor and percent_necrosis from samples metadata
 
         logger.info(
@@ -1068,7 +1088,7 @@ def igm_to_tsv(
         # read in manifest to map samples to percent_tumor and percent_necrosis
         clin_report_df = pd.read_excel(manifest_path, sheet_name="clinical_measure_file")
 
-        # filter out instances where sample_id is NaN
+        # filter out instances where sample_id is NaN and keep only relevant columns
         clin_report_df = clin_report_df[~clin_report_df['sample.sample_id'].isna()][['participant.participant_id', 'sample.sample_id', 'file_name']].drop_duplicates().reset_index(drop=True)
 
         # map values to samples
@@ -1124,7 +1144,7 @@ def igm_to_tsv(
         logger.info(
             f"Saving merged percent_tumor and percent_necrosis data to {percent_tumor_necrosis_file_name}"
         )
-        percent_df.to_csv(percent_tumor_necrosis_file_name, sep="\t", index=False)
+        merge_df.to_csv(percent_tumor_necrosis_file_name, sep="\t", index=False)
 
         return concatenated_df, success_count, error_count, percent_tumor_necrosis_file_name
     else:
