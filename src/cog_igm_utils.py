@@ -474,7 +474,7 @@ def cog_igm_json2tsv(
             # drop empty cols
             samples_df = samples_df.drop(columns=["percent_tumor", "percent_necrosis"], errors='ignore')
             # merge percent tumor and necrosis values 
-            samples_df = samples_df.merge(df_ptn_uniq, on=["sample.sample_id"], how="outer")
+            samples_df = samples_df.merge(df_ptn_uniq, left_on="sample_id", right_on="sample.sample_id", how="outer")
             samples_df = samples_df[header_sort]
             
             # save to output path
