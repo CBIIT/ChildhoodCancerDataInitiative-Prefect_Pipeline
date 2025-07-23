@@ -166,7 +166,7 @@ def cog_igm_transform(
         #os.rename(cog_transform_log, f"{output_path}/{cog_transform_log.replace(get_date(), dt)}")
 
         # copy manifest file to output dir
-        shutil.copy(local_manifest_path, f"{output_path}/{os.path.basename(local_manifest_path).replace('.xlsx', '' + 'COG_IGM' + '_' + dt + '.xlsx')}")
+        shutil.copy(local_manifest_path, f"{output_path}/{os.path.basename(local_manifest_path).replace('.xlsx', '' + '_COG_IGM' + '_' + dt + '.xlsx')}")
 
         # upload output dir
         folder_ul(

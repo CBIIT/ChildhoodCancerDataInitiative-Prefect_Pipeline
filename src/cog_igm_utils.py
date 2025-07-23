@@ -463,7 +463,7 @@ def cog_igm_json2tsv(
                 )
                 runner_logger.warning("\n".join(df_ptn_summary[df_ptn_summary["count"] > 1].apply(lambda x: f"{x['participant.participant_id']} - {x['sample.sample_id']}", axis=1).tolist()))
                 df_ptn_uniq = df_ptn.drop_duplicates(subset=['participant.participant_id', 'sample.sample_id'], keep='first')[["sample.sample_id", "percent_tumor", "percent_necrosis"]].reset_index(drop=True)
-                
+                    
             else:
                 df_ptn_uniq = df_ptn[["sample.sample_id", "percent_tumor", "percent_necrosis"]]
             
@@ -474,7 +474,7 @@ def cog_igm_json2tsv(
             # drop empty cols
             samples_df = samples_df.drop(columns=["percent_tumor", "percent_necrosis"], errors='ignore')
             # merge percent tumor and necrosis values 
-            samples_df = samples_df.merge(df_ptn_uniq, left_on="sample_id", right_on="sample.sample_id", how="outer")
+            samples_df = samples_df.merge(df_ptn_uniq, left_on="sample_id", right_on="sample.sample_id", how="left").fillna("")
             samples_df = samples_df[header_sort]
             
             # save to output path
@@ -1010,7 +1010,6 @@ def igm_to_tsv(
                 "amended_somatic_results",
                 "germline_cnv_results",
                 "germline_results",
-                "pertinent_negatives_results",
                 "somatic_cnv_results",
                 "somatic_results",
             ]
@@ -1054,24 +1053,34 @@ def igm_to_tsv(
             pertinent_negatives_cols = [
                 col for col in concatenated_df.columns if col.startswith("pertinent_negatives_results.summary")
             ]
-            neg_df = concatenated_df[["subject_id", "form_file_name"] + pertinent_negatives_cols].drop_duplicates().reset_index(drop=True)
-            
+            neg_df = concatenated_df[["subject_id", "form_file_name"] + pertinent_negatives_cols].drop_duplicates().fillna("").reset_index(drop=True)
+    
+    
             # pivot the DataFrame to have one row per negative result
             neg_df = neg_df.melt(id_vars=["subject_id", "form_file_name"],
                 var_name="pertinent_negative_result",
                 value_name="value").dropna(subset=["value"])
             
+            # init gene df list
+            gene_df = []
+            
             #use regex to extract gene name from pertinent_negative_result
             for index, row in neg_df.iterrows():
                 try:
-                    neg_df.at[index, "gene_name"] = neg_df.at[index, "pertinent_negative_result"].str.extract(r"[A-Z0-9/-]{3,}")
-                except Exception as e:
-                    neg_df.at[index, "gene_name"] = ""
-                    logger.error(f"Error extracting gene name from row {index} in neg_df: {e}")
-
+                    genes = re.findall(r"[A-Z][A-Z0-9\-]{3,}(?: \(formerly\s[A-Z0-9\-]{3,}\))?", row['value'])
+                    if genes:
+                        for gene in genes:
+                            gene_df.append(list(row) + [gene])
+                except:
+                    gene_df.append(list(row) + [""])
+            
+            # filter out INDETERMINATE, CNV, LOH, NOTE, CNLOH values
+            gene_df = pd.DataFrame(gene_df, columns=neg_df.columns.tolist() + ["gene_name"])
+            gene_df = gene_df[~gene_df["gene_name"].isin(["INDETERMINATE", "CNV", "LOH", "NOTE", "CNLOH"])].drop_duplicates().reset_index(drop=True)
+        
             # save to file
             pertinent_negatives_file_name = f"{igm_op}/IGM_{assay_type.replace('igm.', '')}_pertinent_negatives_results_{timestamp}.tsv"
-            neg_df.to_csv(pertinent_negatives_file_name, sep="\t", index=False)
+            gene_df.to_csv(pertinent_negatives_file_name, sep="\t", index=False)
 
         # parse percent_tumor and percent_necrosis from samples metadata
 
