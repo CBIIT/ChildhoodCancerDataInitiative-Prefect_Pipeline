@@ -1,9 +1,9 @@
-import os
+from typing import Tuple
 import io
 import datetime
 from pytz import timezone
 import boto3
-import pandas as pd
+import pandas as pd 
 from prefect import task, flow, get_run_logger
 from botocore.exceptions import ClientError
 
@@ -35,16 +35,15 @@ def get_object(bucket: str, key: str) -> pd.DataFrame:
         df = pd.read_csv(io.StringIO(body), sep=separator)
         return df
     except ClientError as e:
-        raise Exception(f"Failed to download DataFrame from S3: {e}")
+        raise RuntimeError(f"Failed to download DataFrame from S3: {e}") from e
 
 
 @task
 def compare_dataframes(
     df1: pd.DataFrame, df2: pd.DataFrame, join_column1: str, join_column2: str
-):
+) -> Tuple[pd.Series, pd.Series, pd.Series]:
     """Compare two DataFrames based on specified join columns."""
-    # Perform the merge to find common rows
-    merged_df = pd.merge(
+    merged_df: pd.DataFrame = pd.merge(
         df1,
         df2,
         left_on=join_column1,
@@ -70,13 +69,13 @@ def upload_dataframe(df: pd.DataFrame, bucket: str, key: str) -> str:
         if response["ResponseMetadata"]["HTTPStatusCode"] == 200:
             return f"s3://{bucket}/{key}"
     except ClientError as e:
-        raise Exception(f"Failed to upload DataFrame to S3: {e}")
+        raise RuntimeError(f"Failed to upload DataFrame to S3: {e}") from e
 
 
 @flow(
     name="S3 DataFrame Comparison Flow",
     log_prints=True,
-    flow_run_name=f"{runner}_{DATESTAMP}",
+    flow_run_name="{runner}_" + f"{DATESTAMP}",
 )
 def compare_dataframes_runner(
     bucket: str,
@@ -89,10 +88,10 @@ def compare_dataframes_runner(
     """Runner function to compare two dataframes from files in a specified S3 bucket."""
 
     logger = get_run_logger()
-    logger.info(f"Retrieving file {file_path_1} from the {bucket} bucket.")
+    logger.info("Retrieving file %s from the %s bucket.", file_path_1, bucket)
     df1 = get_object(bucket, file_path_1)
 
-    logger.info(f"Retrieving file {file_path_2} from the {bucket} bucket.")
+    logger.info("Retrieving file %s from the %s bucket.", file_path_2, bucket)
     df2 = get_object(bucket, file_path_2)
 
     logger.info("Comparing dataframes...")
@@ -101,19 +100,18 @@ def compare_dataframes_runner(
     )
 
     logger.info("Uploading comparison results to S3...")
-    base_path = f"{runner}/{OUTPUT_DIR}"
-    both_present_path = f"{base_path}/both_present_{DATESTAMP}.tsv"
-    only_in_df1_path = f"{base_path}/only_in_df1_{DATESTAMP}.tsv"
-    only_in_df2_path = f"{base_path}/only_in_df2_{DATESTAMP}.tsv"
+    both_present_path = f"{runner}/{OUTPUT_DIR}/both_present_{DATESTAMP}.tsv"
+    only_in_df1_path = f"{runner}/{OUTPUT_DIR}/only_in_df1_{DATESTAMP}.tsv"
+    only_in_df2_path = f"{runner}/{OUTPUT_DIR}/only_in_df2_{DATESTAMP}.tsv"
 
     upload_both_present = upload_dataframe(both_present, bucket, both_present_path)
-    logger.info(f"Both present DataFrame uploaded to: {upload_both_present}")
+    logger.info("Both present DataFrame uploaded to: %s", upload_both_present)
 
     upload_only_in_df1 = upload_dataframe(only_in_df1, bucket, only_in_df1_path)
-    logger.info(f"Only in DF1 DataFrame uploaded to: {upload_only_in_df1}")
+    logger.info("Only in DF1 DataFrame uploaded to: %s", upload_only_in_df1)
 
     upload_only_in_df2 = upload_dataframe(only_in_df2, bucket, only_in_df2_path)
-    logger.info(f"Only in DF2 DataFrame uploaded to: {upload_only_in_df2}")
+    logger.info("Only in DF2 DataFrame uploaded to: %s", upload_only_in_df2)
 
     return {
         "both_present": upload_both_present,
