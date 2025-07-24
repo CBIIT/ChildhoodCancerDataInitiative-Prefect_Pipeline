@@ -24,8 +24,9 @@ def replace_en_em_dash(df: pd.DataFrame) -> pd.DataFrame:
         if pd.api.types.is_string_dtype(df[col]):
             df[col] = df[col].str.replace("–", "-", regex=False)
             df[col] = df[col].str.replace("—", "-", regex=False)
-            df[col] = df[col].str.replace(u'\u2014', '-')
+            df[col] = df[col].str.replace('\u2014', '-', regex=False)
             df[col] = df[col].str.replace(" —", " -", regex=False)
+            df[col] = df[col].str.replace("–", "-", regex=False)
     return df
 
 
@@ -1079,7 +1080,7 @@ def igm_to_tsv(
             #use regex to extract gene name from pertinent_negative_result
             for index, row in neg_df.iterrows():
                 #try:
-                genes = re.findall(r"[A-Z][A-Z0-9\-]{3,}(?: \(formerly\s[A-Z0-9\-]{3,}\))?", row['value'])
+                genes = re.findall(r"[A-Z][A-Z0-9\-]{2,}(?: \(formerly\s[A-Z0-9\-]{3,}\))?", row['value'])
                 if genes:
                     for gene in genes:
                         gene_df.append(list(row) + [gene])
