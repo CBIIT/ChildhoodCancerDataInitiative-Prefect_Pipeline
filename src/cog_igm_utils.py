@@ -458,8 +458,25 @@ def cog_igm_json2tsv(
                 runner_logger.error(
                     "Cannot perform IGM variant results-level parsing, no valid IGM JSONs read in."
                 )
-        # parse percent_tumor_necrosis 
         
+        # For UChi: create concatenated mega JSON of all IGM JSON files
+        # by appending the read in JSON files to one another
+        # and not reading into a DataFrame
+        
+        
+        if igm_success_count > 0:
+            for assay_type in ["igm.tumor_normal", "igm.archer_fusion", "igm.methylation"]:
+                mega_json = []
+                for filename in json_sorted[assay_type]:
+                    mega_json.append(json.loads(
+                        open(f"{json_dir_path}/{filename}", "r").read()
+                    ))
+                igm_json_file_name = f"{igm_op}/MEGA_IGM_JSON_{assay_type}_{dt}.json"
+                with open(igm_json_file_name, "w") as f:
+                    json.dump(mega_json, f, indent=4)
+
+        # parse percent_tumor_necrosis
+
         if len(percent_tumor_necrosis_file_names) > 0:
             df_ptn = pd.concat(pd.read_csv(i, sep="\t") for i in percent_tumor_necrosis_file_names)[["participant.participant_id", "sample.sample_id", "percent_tumor", "percent_necrosis"]].drop_duplicates().reset_index(drop=True)
             
