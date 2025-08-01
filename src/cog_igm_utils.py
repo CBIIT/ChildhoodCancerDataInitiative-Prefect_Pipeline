@@ -1090,8 +1090,7 @@ def igm_to_tsv(
         concatenated_df = concatenated_df.merge(
             clin_report_df,
             how="left",
-            left_on="form_file_name",
-            right_on="form_file_name",
+            on=["subject_id", "form_file_name"],
         )
 
         #reorder columns to have subject_id, sample.sample_id and form_file_name first
