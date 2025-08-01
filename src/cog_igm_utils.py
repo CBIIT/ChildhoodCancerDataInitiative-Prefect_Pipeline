@@ -1070,6 +1070,33 @@ def igm_to_tsv(
     # concat all processed JSONs together
     if len(df_list) > 0:
         concatenated_df = replace_en_em_dash(pd.concat(df_list, ignore_index=True))
+        
+        #read in file_name and sample.sample_id from manifest sheet clinical_measure_file
+        clin_report_df = pd.read_excel(manifest_path, sheet_name="clinical_measure_file")
+        
+        # filter out instances where sample_id is NaN and keep only relevant columns
+        clin_report_df = clin_report_df[~clin_report_df['sample.sample_id'].isna()][['participant.participant_id', 'sample.sample_id', 'file_name']].drop_duplicates().reset_index(drop=True)
+        
+        # rename columns in clin_report_df to match expected output
+        clin_report_df.rename(
+            columns={
+                "participant.participant_id": "subject_id",
+                "file_name": "form_file_name",
+            },
+            inplace=True
+        )
+        
+        # merge concatenated_df with clin_report_df to add subject_id and form_file_name
+        concatenated_df = concatenated_df.merge(
+            clin_report_df,
+            how="left",
+            left_on="form_file_name",
+            right_on="file_name",
+        ).drop(columns=["file_name"]).fillna("")
+        
+        #reorder columns to have subject_id, sample.sample_id and form_file_name first
+        column_order = ["subject_id", "sample.sample_id", "form_file_name"] + [col for col in concatenated_df.columns if col not in ["subject_id", "sample.sample_id", "form_file_name"]]
+        concatenated_df = concatenated_df[column_order]
 
         concatenated_df.to_csv(
             f"{igm_op}/IGM_{assay_type.replace('igm.', '')}_JSON_table_conversion_{timestamp}.tsv",
