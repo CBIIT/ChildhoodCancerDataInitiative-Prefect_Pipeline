@@ -1091,9 +1091,9 @@ def igm_to_tsv(
             clin_report_df,
             how="left",
             left_on="form_file_name",
-            right_on="file_name",
-        ).drop(columns=["file_name"]).fillna("")
-        
+            right_on="form_file_name",
+        )
+
         #reorder columns to have subject_id, sample.sample_id and form_file_name first
         column_order = ["subject_id", "sample.sample_id", "form_file_name"] + [col for col in concatenated_df.columns if col not in ["subject_id", "sample.sample_id", "form_file_name"]]
         concatenated_df = concatenated_df[column_order]
