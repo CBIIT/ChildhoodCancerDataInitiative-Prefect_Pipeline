@@ -1109,11 +1109,11 @@ def igm_to_tsv(
             pertinent_negatives_cols = [
                 col for col in concatenated_df.columns if col.startswith("pertinent_negatives_results.summary")
             ]
-            neg_df = concatenated_df[["subject_id", "form_file_name"] + pertinent_negatives_cols].drop_duplicates().fillna("").reset_index(drop=True)
-    
-    
+            neg_df = concatenated_df[["subject_id", "sample.sample_id", "form_file_name"] + pertinent_negatives_cols].drop_duplicates().fillna("").reset_index(drop=True)
+
+
             # pivot the DataFrame to have one row per negative result
-            neg_df = neg_df.melt(id_vars=["subject_id", "form_file_name"],
+            neg_df = neg_df.melt(id_vars=["subject_id", "sample.sample_id", "form_file_name"],
                 var_name="pertinent_negative_result",
                 value_name="value").dropna(subset=["value"])
             
