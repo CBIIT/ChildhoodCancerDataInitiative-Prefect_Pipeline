@@ -1,7 +1,7 @@
 import csv
 import datetime
 from io import StringIO
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -44,10 +44,10 @@ class Config(BaseModel):
         description="The name of the S3 Bucket where CHOP data was transferred to",
     )
 
-    nci_bucket_suffix: str = Field(
+    nci_bucket_suffix: Optional[str] = Field(
         title="NCI Data Bucket Suffix",
         description="The suffix of the S3 bucket where CHOP data was transferred to",
-        default="nci",
+        default=None,
     )
 
     status_map: List[Dict[str, Dict[str, bool]]] = Field(
@@ -144,17 +144,27 @@ def parse_manifest_url(
 
 @task(name="Validate Manifest Bucket Name")
 def validate_manifest_bucket_name(
-    manifest: List[Dict[str, Any]], nci_data_bucket: str, nci_data_bucket_suffix: str
+    manifest: List[Dict[str, Any]], nci_data_bucket: str, nci_data_bucket_suffix: Optional[str]
 ) -> List[Dict[str, Any]]:
-    """Validate that the bucket name parsed from the URL column matches the expected NCI data bucket."""
+    """Validate the bucket name parsed from the URL column matches the expected NCI data bucket."""
     response: List[Dict[str, Any]] = []
-    for row in manifest:
-        if f'{row["chop_bucket"]}-{nci_data_bucket_suffix}' == nci_data_bucket:
-            row["manifest_bucket_matches_expected"] = True
-        else:
-            row["manifest_bucket_matches_expected"] = False
-        response.append(row)
-    return response
+
+    if not nci_data_bucket_suffix:
+        for row in manifest: 
+            if row["chop_bucket"] == nci_data_bucket:
+                row["manifest_bucket_matches_expected"] = True
+            else:
+                row["manifest_bucket_matches_expected"] = False
+            response.append(row)
+        return response
+    else:
+        for row in manifest:
+            if f'{row["chop_bucket"]}-{nci_data_bucket_suffix}' == nci_data_bucket:
+                row["manifest_bucket_matches_expected"] = True
+            else:
+                row["manifest_bucket_matches_expected"] = False
+            response.append(row)
+        return response
 
 
 @task(name="Parse Object Status")
