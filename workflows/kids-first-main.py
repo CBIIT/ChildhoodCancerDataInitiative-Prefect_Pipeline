@@ -144,13 +144,15 @@ def parse_manifest_url(
 
 @task(name="Validate Manifest Bucket Name")
 def validate_manifest_bucket_name(
-    manifest: List[Dict[str, Any]], nci_data_bucket: str, nci_data_bucket_suffix: Optional[str]
+    manifest: List[Dict[str, Any]],
+    nci_data_bucket: str,
+    nci_data_bucket_suffix: Optional[str],
 ) -> List[Dict[str, Any]]:
     """Validate the bucket name parsed from the URL column matches the expected NCI data bucket."""
     response: List[Dict[str, Any]] = []
 
     if not nci_data_bucket_suffix:
-        for row in manifest: 
+        for row in manifest:
             if row["chop_bucket"] == nci_data_bucket:
                 row["manifest_bucket_matches_expected"] = True
             else:
@@ -278,11 +280,15 @@ def tag_objects(
             else:
                 row["tagged"] = False
         except ClientError as e:
-            logger.error("Error tagging object %s: %s", row["chop_key"], e)
+            logger.error(
+                "Error tagging object %s in the %s bucket: %s",
+                row["chop_key"],
+                nci_data_bucket,
+                e,
+            )
             row["tagged"] = False
 
         response.append(row)
-
     return response
 
 
