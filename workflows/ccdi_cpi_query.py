@@ -150,8 +150,8 @@ def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id:
     # pull unique participants and study_id from the CCDI manifest
     # read in the XLSX CCDI manifest file
     logger.info("Pulling unique participants from CCDI manifest")
-    study_id = pd.read_excel(filepath=filepath, sheet_name="study")
-    participant_list = pd.read_excel(filepath=filepath, sheet_name="participant")
+    study_id = pd.read_excel(filepath, sheet_name="study")
+    participant_list = pd.read_excel(filepath, sheet_name="participant")
 
     study_id = study_id[study_id["study_id"].notna()]
     participant_list = participant_list[participant_list["participant_id"].notna()]
