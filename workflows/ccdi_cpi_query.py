@@ -153,8 +153,13 @@ def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id:
     study_id = pd.read_excel(filepath, sheet_name="study")
     participant_list = pd.read_excel(filepath, sheet_name="participant")
 
-    study_id = study_id[study_id["study_id"].notna()]
+    study_id = study_id["study_id"].notna().unique().tolist()[0]
+    if len(study_id) == 0:
+        raise ValueError("No study_id found in the manifest file.")
+    logger.info(f"Found {study_id} study_id in the manifest file")
+
     participant_list = participant_list[participant_list["participant_id"].notna()]
+    logger.info(f"Found {len(participant_list)} participants in the manifest file")
 
     id_df = participant_list
     id_df['study_id'] = study_id
