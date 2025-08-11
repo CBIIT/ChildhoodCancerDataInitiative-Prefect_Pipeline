@@ -1,22 +1,21 @@
 from prefect import flow, task, get_run_logger
 import os
 import sys
-
-
-parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(parent_dir)
 from src.neo4j_data_tools import pull_uniq_studies, export_to_csv_per_node_per_study, pull_data_per_node_per_study, cypher_query_parameters
-from neo4j import GraphDatabase
-from src.utils import get_time, file_ul, get_secret, list_to_chunks, folder_ul
+#from neo4j import GraphDatabase
+from src.utils import get_time, file_ul, get_secret, list_to_chunks, folder_ul, file_dl
 import pandas as pd
 import requests
 import json
 
+parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(parent_dir)
 
-cypher_query_particiapnt_per_study = """
-MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
-RETURN startNode.{node_label}_id as {node_label}_id
-"""
+
+# cypher_query_particiapnt_per_study = """
+# MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
+# RETURN startNode.{node_label}_id as {node_label}_id
+# """
 
 API_DOMAIN = "https://participantindex.ccdi.cancer.gov"
 API_GET_DOMAINS = "/v1/domains"
@@ -87,113 +86,6 @@ def get_cpi_request(api_extension: str, access_token: str, request_body: str) ->
     else:
         raise Exception(f"API request failed: {response.status_code} - {response.text}")
 
-
-@flow(name="loop through all studies for participant ID pull", log_prints=True)
-def pull_participant_id_loop(study_list: list, driver, out_dir: str, logger) -> None:
-    """Loop through all studies for participant ID pull
-
-    Args:
-        study_list (list): A list of study accessions
-        driver (_type_): graph database driver
-        out_dir (str): output csv directory
-        logger (_type_): logger instance
-    """    
-    if not os.path.exists(out_dir):
-        os.makedirs(out_dir)
-    else:
-        pass
-
-    logger.info(f"Pulling participant_id from Node participant for study list {*study_list,}")
-    future = pull_data_per_node_per_study.map(
-        driver=driver,
-        data_to_csv=export_to_csv_per_node_per_study,
-        study_name=study_list,
-        node_label="participant",
-        query_str=cypher_query_particiapnt_per_study,
-        output_dir=out_dir,
-    )
-    future.result()
-    return None
-
-@flow(name="Combines participant ids from all studies into a single tsv", log_prints=True)
-def consolidate_all_participant_id(folderpath: str, output_name: str) -> None:
-    """Read through csv files in the a folder and combines participant ids into a single file
-
-    Args:
-        folderpath (str): folder path that contains csv file of participant ids per study per file
-        output_name: a tsv file that contains all the 
-    """    
-    csv_list = [os.path.join(folderpath, filename) for filename in os.listdir(folderpath) if filename.endswith("csv")]
-    combined_df = pd.DataFrame(columns=["study_id","participant_id"])
-    for csv in csv_list:
-        study_accession = csv.split("/")[1].split("_")[0]
-        csv_df =  pd.read_csv(csv, header=0)
-        csv_df["study_id"]=study_accession
-        combined_df = pd.concat([combined_df, csv_df], ignore_index=True)
-        del csv_df
-    combined_df.to_csv(output_name, sep="\t", index=False)
-    return None
-
-
-@flow(name="Participant ID pull per study", log_prints=True)
-def pull_participants_in_db(bucket: str, upload_folder: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
-    """Pulls all participant ID from neo4j sandbox DB
-
-    Args:
-        bucket (str): bucket of where outputs upload to
-        upload_folder (str): unique runner name
-        uri_parameter (str): db uri parameter
-        username_parameter (str): db username parameter
-        password_parameter (str): db password parameter
-    """    
-    logger = get_run_logger()
-    logger.info("Getting uri, username and password parameter from AWS")
-    # get uri, username, and password value
-    uri, username, password = cypher_query_parameters(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-        logger=logger,
-    )
-
-    # driver instance
-    logger.info("Creating GraphDatabase driver using uri, username, and password")
-    driver = GraphDatabase.driver(uri, auth=(username, password))
-
-    # pulll study list
-    study_list = pull_uniq_studies(driver=driver)
-    logger.info(f"Study list: {study_list}")
-
-    output_dir = "participant_id_per_study"
-    pull_participant_id_loop(
-        study_list=study_list,
-        driver=driver,
-        out_dir=output_dir,
-        logger=logger
-    )
-    logger.info("All participant_id per study pulled")
-
-    # combines all participant id into a single tsv file
-    participant_filename = "sandbox_participant_id_" + get_time() + ".tsv"
-    consolidate_all_participant_id(
-        folderpath=output_dir,
-        output_name=participant_filename,
-    )
-
-
-    logger.info(
-        f"Uploading participant_id file sandbox_participant_id.tsv to the bucket {bucket} at {upload_folder}"
-    )
-    file_ul(
-        bucket=bucket,
-        output_folder=upload_folder,
-        sub_folder="",
-        newfile=participant_filename,
-    )
-    logger.info(f"All participant_id uploaded to the bucket {bucket} at {upload_folder}")
-    # remove the local file
-    return participant_filename
-
 @flow(name="Get all domain information", log_prints=True)
 def get_all_domain_info(client_id: str, client_secret: str, token_url: str) -> str:
     """Get all domain information from CPI API
@@ -235,6 +127,7 @@ def reformat_domain_dict(filepath: str) -> dict:
         return_dict[domain_name] = domain
     return return_dict
 
+
 @flow(name="Fetch associated ids for participants", log_prints=True)
 def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id: str, client_secret: str, token_url: str) -> str:
     """Read a tsv and get associatd id from different domains and returns a file per study
@@ -250,9 +143,23 @@ def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id:
     Returns:
         str: filepath of the output file
     """
+    logger = get_run_logger()
+
     domain_dict = reformat_domain_dict(filepath=domain_file)
 
-    id_df = pd.read_csv(filepath, sep="\t")
+    # pull unique participants and study_id from the CCDI manifest
+    # read in the XLSX CCDI manifest file
+    logger.info("Pulling unique participants from CCDI manifest")
+    study_id = pd.read_excel(filepath=filepath, sheet_name="study")
+    participant_list = pd.read_excel(filepath=filepath, sheet_name="participant")
+
+    study_id = study_id[study_id["study_id"].notna()]
+    participant_list = participant_list[participant_list["participant_id"].notna()]
+
+    id_df = participant_list
+    id_df['study_id'] = study_id
+
+    #id_df = pd.read_csv(filepath, sep="\t")
     uniq_studies = list(id_df["study_id"].unique())
 
     for study in uniq_studies:
@@ -334,30 +241,10 @@ def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id:
                             )
                     else:
                         pass
-                        # records_to_write.append(
-                        #    {
-                        #        "study_id": study,
-                        #        "participant_id": id,
-                        #        "associated_id": None,
-                        #        "domain_name": None,
-                        #        "domain_description": None,
-                        #        "domain_category": None,
-                        #        "data_location": None,
-                        #    }
-                        # )
+                    
                 else:
                     pass
-                    # records_to_write.append(
-                    #    {
-                    #        "study_id": study,
-                    #        "participant_id": id,
-                    #        "associated_id": None,
-                    #        "domain_name": None,
-                    #        "domain_description": None,
-                    #        "domain_category": None,
-                    #        "data_location": None,
-                    #    }
-                    # )
+                
             # append the dataframe to exisitng file
             if len(records_to_write) > 0:
                 study_df = pd.read_csv(study_filepath, sep="\t")
@@ -372,12 +259,13 @@ def get_associated_ids(filepath: str, out_dir: str, domain_file: str, client_id:
 
 
 @flow(name="Get Associated Domains of CCDI Participants", log_prints=True)
-def get_associated_domains_ids(bucket: str, runner: str, uri_parameter: str, username_parameter: str, password_parameter: str) -> None:
+def get_ccdi_cpi_ids(bucket: str, runner: str, uri_parameter: str, file_path: str, username_parameter: str, password_parameter: str) -> None:
     """Get Associated id(s) of all CCDI participants in sandbox DB using CPI API
 
     Args:
         bucket (str): bucket of where outputs upload to
         runner (str): unique runner name
+        file_path (str): file path for participant data
         uri_parameter (str): db uri parameter
         username_parameter (str): db username parameter
         password_parameter (str): db password parameter
@@ -387,17 +275,9 @@ def get_associated_domains_ids(bucket: str, runner: str, uri_parameter: str, use
 
     upload_folder = runner.strip("/") + "/cpi_api_return_" + get_time()
 
-    # pull participant id from neo4j sandbox DB
-    participant_filename = pull_participants_in_db(
-        bucket=bucket,
-        upload_folder=upload_folder,
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-    )
-    logger.info("All participant_id pulled from neo4j sandbox DB")
-    logger.info(f"Uploaded sandbox pulled participant_id file to the bucket {bucket} at {upload_folder}")
-   
+    file_dl(bucket=bucket, filename=file_path)
+    filename = os.path.basename(file_path)
+    logger.info(f"Downloaded file {filename}")
     
     # get secrets from AWS secret manager
     client_id = get_secret(secret_name_path="ccdi/nonprod/inventory/cpi_api_creds", secret_key_name="client_id")
@@ -420,14 +300,14 @@ def get_associated_domains_ids(bucket: str, runner: str, uri_parameter: str, use
     else:
         pass
     get_associated_ids(
-        filepath=participant_filename,
+        filepath=filename,
         out_dir=out_dir,
         domain_file=domain_file,
         client_id=client_id,
         client_secret=secret,
         token_url=access_token_url,
     )
-    logger.info(f"Fetched asscociated ids for all participants in the tsv {participant_filename}")
+    #logger.info(f"Fetched asscociated ids for all participants in the tsv {participant_filename}")
     folder_ul(local_folder=out_dir, bucket=bucket, destination=upload_folder, sub_folder="")
     logger.info(f"Uploaded associated ids for all participants to the bucket {bucket} folder path {upload_folder}")
 
