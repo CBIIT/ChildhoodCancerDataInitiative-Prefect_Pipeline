@@ -2268,7 +2268,7 @@ deployments:
     version: null
     tags: ["TEST", "V3", "CPI", "SVB", "CCDIDC-1896"]
     description: "Fetch associated ids of all CCDI participants given a CCDI Manifest"
-    entrypoint: workflows/cpi_api_query.py:get_ccdi_cpi_ids
+    entrypoint: workflows/ccdi_cpi_query.py:get_ccdi_cpi_ids
     schedule: null
     
     # flow-specific parameters
