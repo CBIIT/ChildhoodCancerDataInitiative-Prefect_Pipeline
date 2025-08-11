@@ -2264,9 +2264,9 @@ deployments:
       job_variables: {}  
 
 
-  - name: TEST-ccdi-cpi-query-v3
+  - name: ccdi-cpi-query-v3
     version: null
-    tags: ["TEST", "V3", "CPI", "SVB", "CCDIDC-1896"]
+    tags: ["Production", "V3", "CPI", "CCDI"]
     description: "Fetch associated ids of all CCDI participants given a CCDI Manifest"
     entrypoint: workflows/ccdi_cpi_query.py:get_ccdi_cpi_ids
     schedule: null
@@ -2283,7 +2283,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1896-CPI_CCDI_Manifest
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
