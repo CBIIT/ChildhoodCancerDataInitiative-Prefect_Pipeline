@@ -3,6 +3,7 @@ Abdominal fibromatosis	Fibromatous neoplasms	ICD-O-3.2
 Acinar cell carcinoma	Acinar cell neoplasms	ICD-O-3.2
 Acute erythroid leukemia	Myeloid leukemias	ICD-O-3.2
 Acute leukemia, NOS	Leukemias, NOS	ICD-O-3.2
+Acute lymphoblastic leukemia, NOS	Leukemias	ICD-O-3.2
 Acute megakaryoblastic leukemia	Myeloid leukemias	ICD-O-3.2
 Acute monocytic leukemia	Myeloid leukemias	ICD-O-3.2
 Acute myeloid leukemia (megakaryoblastic) with t(1;22)(p13;q13); RBM15-MKL1	Myeloid leukemias	ICD-O-3.2
@@ -17,13 +18,15 @@ Acute myeloid leukemia, NOS	Myeloid leukemias	ICD-O-3.2
 Acute myeloid leukemia, t(8;21)(q22;q22)	Myeloid leukemias	ICD-O-3.2
 Acute myelomonocytic leukemia, NOS	Myeloid leukemias	ICD-O-3.2
 Acute promyelocytic leukemia, t(15;17)(q22;q11-12)	Myeloid leukemias	ICD-O-3.2
-Adamantinomatous craniopharyngioma	Craniopharyngioma;Tumors of the sellar region	MCI CNS Diagnosis Category;WHO CNS5
 Adamantinoma of long bones	Miscellaneous bone tumors	ICD-O-3.2
+Adamantinoma of long bones	Miscellaneous bone tumors	ICD-O-3.2
+Adamantinomatous craniopharyngioma	Craniopharyngioma;Tumors of the sellar region	MCI CNS Diagnosis Category;WHO CNS5
 Adenocarcinoma in adenomatous polyposis coli	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma in situ in adenomatous polyp	Adenomas and adenocarcinomas	ICD-O-3.2
-Adenocarcinoma, intestinal type	Adenomas and adenocarcinomas	ICD-O-3.2
+Adenocarcinoma in situ in tubulovillous adenoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma with mixed subtypes	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma with neuroendocrine differentiation	Complex epithelial neoplasms	ICD-O-3.2
+Adenocarcinoma, intestinal type	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma, metastatic, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenoid cystic carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -39,12 +42,14 @@ Anaplastic large cell lymphoma (ALK+/ALK-)	Other;Hematolymphoid tumors;Lymphomas
 Anaplastic large cell lymphoma, ALK positive	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Anaplastic large cell lymphoma, T-cell and Null-cell type	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Angiocentric glioma	Low-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Pediatric-type diffuse low-grade gliomas;Gliomas	MCI CNS Diagnosis CategoryWHO CNS5;ICD-O-3.2
+Angiocentric immunoproliferative lesion	Immunoproliferative diseases	ICD-O-3.2
 Angioimmunoblastic T-cell lymphoma	Mature T- and NK-cell lymphomas	ICD-O-3.2
 Angiomatoid fibrous histiocytoma	Fibromatous neoplasms	ICD-O-3.2
 Angiomyofibroblastoma	Fibromatous neoplasms	ICD-O-3.2
 Angiomyosarcoma	Myomatous neoplasms	ICD-O-3.2
 Astroblastoma	Gliomas	ICD-O-3.2
 Astroblastoma, MN1-altered	High-Grade Glioma;Low-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Circumscribed astrocytic gliomas	MCI CNS Diagnosis Category;WHO CNS5
+Astrocytoma, anaplastic	Gliomas	ICD-O-3.2
 Astrocytoma, anaplastic, NOS	Gliomas	ICD-O-3.2
 Astrocytoma, benign	Gliomas	ICD-O-3.2
 Astrocytoma, IDH-mutant	High-Grade Glioma;Low-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Adult-type diffuse gliomas	MCI CNS Diagnosis Category;WHO CNS5
@@ -55,6 +60,7 @@ ATRT-TYR	Atypical teratoid/rhabdoid tumor	MCI CNS Diagnosis Category
 ATRT, NOS or NEC	Atypical teratoid/rhabdoid tumor	MCI CNS Diagnosis Category
 Atypical choroid plexus papilloma	Choroid Plexus tumors;Choroid plexus tumors;Gliomas	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
 Atypical meningioma	Meningiomas	ICD-O-3.2
+Atypical Meningioma	Nerve sheath tumors	ICD-O-3.2
 Atypical teratoid/rhabdoid tumor	Atypical Teratoid/Rhabdoid Tumor;Embryonal tumors;Other CNS embryonal tumors;Neuroepitheliomatous neoplasms	WHO CNS5;ICD-O-3.2;MCI CNS Diagnosis Category
 B lymphoblastic leukemia/lymphoma with hyperdiploidy	Lymphoid leukemias	ICD-O-3.2
 B lymphoblastic leukemia/lymphoma with hypodiploidy (Hypodiploid ALL)	Lymphoid leukemias	ICD-O-3.2
@@ -65,9 +71,12 @@ B lymphoblastic leukemia/lymphoma with t(v;11q23); MLL rearranged	Lymphoid leuke
 B lymphoblastic leukemia/lymphoma, BCR-ABL1-like	Lymphoid leukemias	ICD-O-3.2
 B lymphoblastic leukemia/lymphoma, NOS	Lymphoid leukemias	ICD-O-3.2
 Basal cell adenocarcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
+Basal cell adenocarcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
+Basal cell carcinoma, NOS	Basal cell neoplasms	ICD-O-3.2
 Benign cystic nephroma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Blue nevus, malignant	Nevi and melanomas	ICD-O-3.2
 Burkitt lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
+Calcifying nested stromal-epithelial tumor	Complex mixed and stromal neoplasms	ICD-O-3.2
 Carcinoid tumor of uncertain malignant potential	Adenomas and adenocarcinomas	ICD-O-3.2
 Carcinoma ex pleomorphic adenoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Carcinoma in situ, NOS	Epithelial neoplasms, NOS	ICD-O-3.2
@@ -76,6 +85,7 @@ Carcinoma, metastatic, NOS	Epithelial neoplasms, NOS	ICD-O-3.2
 Carcinoma, NOS	Epithelial neoplasms, NOS	ICD-O-3.2
 Carcinoma, undifferentiated, NOS	Epithelial neoplasms, NOS	ICD-O-3.2
 Carcinomatosis	Epithelial neoplasms, NOS	ICD-O-3.2
+Carotid body paraganglioma	Paragangliomas and glomus tumors	ICD-O-3.2
 Cavernous hemangioma	Blood vessel tumors	ICD-O-3.2
 Central neurocytoma	Glioneuronal and neuronal tumors;Gliomas, glioneuronal tumors, and neuronal tumors;Neuroepitheliomatous neoplasms	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
 Central osteosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
@@ -85,6 +95,7 @@ Cholangiocarcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Chondroblastic osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Chondroblastoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Chondroid chordoma	Miscellaneous tumors	ICD-O-3.2
+Chondromyxoid fibroma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Chondrosarcoma	CNS Sarcoma;Mesenchymal, non-meningothelial tumors;Chondro-osseous tumors	MCI CNS Diagnosis Category;WHO CNS5
 Chondrosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Chordoid glioma	Low-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Circumscribed astrocytic gliomas	MCI CNS Diagnosis Category;WHO CNS5
@@ -103,6 +114,7 @@ Chronic myelogenous leukemia, BCR/ABL positive	Myeloid leukemias	ICD-O-3.2
 Chronic myeloid leukemia, NOS	Myeloid leukemias	ICD-O-3.2
 CIC-rearranged sarcoma	CNS Sarcoma;Mesenchymal, non-meningothelial tumors;Uncertain differentiation	MCI CNS Diagnosis Category;WHO CNS5
 Clear cell adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
+Clear cell adenoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Clear cell meningioma	Meningiomas	ICD-O-3.2
 Clear cell sarcoma of kidney	Complex mixed and stromal neoplasms	ICD-O-3.2
 Clear cell sarcoma, NOS	Synovial-like neoplasms	ICD-O-3.2
@@ -118,6 +130,7 @@ CNS sarcoma	CNS Sarcoma	MCI CNS Diagnosis Category
 CNS Sarcoma, NOS or NEC	CNS Sarcoma	MCI CNS Diagnosis Category
 CNS tumor with BCOR internal tandem duplication	High-Grade Glioma;Other CNS Embryonal tumors;Embryonal tumors;Other CNS embryonal tumors	MCI CNS Diagnosis Category;WHO CNS5
 Composite Hodgkin and non-Hodgkin lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
+Congenital melanocytic nevus, NOS	Nevi and melanomas	ICD-O-3.2
 Craniopharyngioma	Craniopharyngioma	MCI CNS Diagnosis Category
 Craniopharyngioma, adamantinomatous	Miscellaneous tumors	ICD-O-3.2
 Craniopharyngioma, NOS	Miscellaneous tumors	ICD-O-3.2
@@ -126,12 +139,15 @@ Cribriform carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Cribriform neuroepithelial tumor	Other CNS Embryonal tumors;Embryonal tumors;Other CNS embryonal tumors	MCI CNS Diagnosis Category;WHO CNS5
 Cutaneous T-cell lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Dedifferentiated liposarcoma	Lipomatous neoplasms	ICD-O-3.2
+Dedifferentiated liposarcoma	Lipomatous neoplasms	ICD-O-3.2
 Dermatofibrosarcoma protuberans, fibrosarcomatous	Fibromatous neoplasms	ICD-O-3.2
 Dermatofibrosarcoma protuberans, NOS	Fibromatous neoplasms	ICD-O-3.2
+Dermatofibrosarcoma, NOS	Fibromatous neoplasms	ICD-O-3.2
 Dermoid cyst, NOS	Germ cell neoplasms	ICD-O-3.2
 Desmoplastic fibroma	Fibromatous neoplasms	ICD-O-3.2
 Desmoplastic infantile astrocytoma	Gliomas	ICD-O-3.2
 Desmoplastic infantile ganglioglioma / desmoplastic infantile astrocytoma	Glioneuronal and neuronal tumors;Gliomas, glioneuronal tumors, and neuronal tumors	MCI CNS Diagnosis Category;WHO CNS5
+Desmoplastic melanoma, malignant	Nevi and melanomas	ICD-O-3.2
 Desmoplastic melanoma, NOS	Nevi and melanomas	ICD-O-3.2
 Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant	Pineal tumors;Other	MCI CNS Diagnosis Category;WHO CNS5
 Desmoplastic nodular medulloblastoma	Gliomas	ICD-O-3.2
@@ -147,6 +163,7 @@ Diffuse midline glioma, H3 K27M-mutant	Gliomas	ICD-O-3.2
 Diffuse pediatric-type high-grade glioma, H3-wildtype and IDH-wildtype	High-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Pediatric-type diffuse high-grade gliomas	MCI CNS Diagnosis Category;WHO CNS5
 Ductal carcinoma in situ, solid type	Adenomas and adenocarcinomas	ICD-O-3.2
 Dysembryoplastic neuroepithelial tumor	Glioneuronal and neuronal tumors;Gliomas, glioneuronal tumors, and neuronal tumors;Gliomas	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
+Dysgerminoma	Germ cell neoplasms	ICD-O-3.2
 Dysplastic cerebellar gangliocytoma (Lhermitte-Duclos disease)	Glioneuronal and neuronal tumors;Gliomas, glioneuronal tumors, and neuronal tumors	MCI CNS Diagnosis Category;WHO CNS5
 Embryonal carcinoma	Germ cell tumors	WHO CNS5
 Embryonal carcinoma, NOS	Germ cell neoplasms	ICD-O-3.2
@@ -157,6 +174,7 @@ Embryonal tumor with multilayered rosettes with C19MC alteration	Gliomas	ICD-O-3
 Embryonal tumor with multilayered rosettes, C19MC altered	Other CNS Embryonal tumors	MCI CNS Diagnosis Category
 Embryonal tumor with multilayered rosettes, NOS	Other CNS Embryonal tumors	MCI CNS Diagnosis Category
 Endometrioid adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
+Endovascular papillary angioendothelioma	Blood vessel tumors	ICD-O-3.2
 Ependymoma	Ependymoma	MCI CNS Diagnosis Category
 Ependymoma, anaplastic	Gliomas	ICD-O-3.2
 Ependymoma, NOS	Gliomas	ICD-O-3.2
@@ -165,6 +183,7 @@ Epithelial tumor, benign	Epithelial neoplasms, NOS	ICD-O-3.2
 Epithelial-myoepithelial carcinoma	Complex epithelial neoplasms	ICD-O-3.2
 Epithelioid hemangioendothelioma, NOS	Blood vessel tumors	ICD-O-3.2
 Epithelioid mesothelioma, malignant	Mesothelial neoplasms	ICD-O-3.2
+Epithelioid sarcoma	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Epithelioid sarcoma, NOS	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Erdheim-Chester disease	Hematolymphoid tumors;Histiocytic tumors;Other	MCI CNS Diagnosis Category;WHO CNS5
 Ewing sarcoma	CNS Sarcoma;Mesenchymal, non-meningothelial tumors;Uncertain differentiation;Miscellaneous bone tumors;Miscellaneous tumors	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
@@ -172,6 +191,7 @@ Extraventricular neurocytoma	Glioneuronal and neuronal tumors;Gliomas, glioneuro
 Fibrillary astrocytoma	Gliomas	ICD-O-3.2
 Fibroblastic osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Fibroma, NOS	Fibromatous neoplasms	ICD-O-3.2
+Fibromyxosarcoma	Fibromatous neoplasms	ICD-O-3.2
 Fibrosarcoma, NOS	Fibromatous neoplasms	ICD-O-3.2
 Fibrous meningioma	Meningiomas	ICD-O-3.2
 Follicular adenocarcinoma, well differentiated	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -187,6 +207,7 @@ Ganglioglioma, benign	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Ganglioglioma, NOS	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Ganglioneuroblastoma	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Ganglioneuroma	Neuroepitheliomatous neoplasms	ICD-O-3.2
+Gastrointestinal stromal sarcoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Gastrointestinal stromal tumor	Complex mixed and stromal neoplasms	ICD-O-3.2
 Gastrointestinal stromal tumor, benign	Complex mixed and stromal neoplasms	ICD-O-3.2
 Gastrointestinal stromal tumor, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
@@ -205,10 +226,12 @@ Glioneuronal and neuronal tumors	Glioneuronal and neuronal tumors	MCI CNS Diagno
 Glioneuronal and neuronal tumors, NOS or NEC	Glioneuronal and neuronal tumors	MCI CNS Diagnosis Category
 Gliosarcoma	Gliomas	ICD-O-3.2
 Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2
+Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2
 Glomus tumor, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
+Granular cell tumor, NOS	Granular cell tumors and alveolar soft part sarcomas	ICD-O-3.2
+Granulosa cell tumor, adult type	Specialized gonadal neoplasms	ICD-O-3.2
 Granulosa cell tumor, juvenile	Specialized gonadal neoplasms	ICD-O-3.2
 Granulosa cell tumor, malignant	Specialized gonadal neoplasms	ICD-O-3.2
-Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2
 Hemangioblastic meningioma	Meningiomas	ICD-O-3.2
 Hemangioblastoma	Mesenchymal, non-meningothelial tumors;Soft tissue tumors;Other	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
 Hemangioendothelioma, malignant	Blood vessel tumors	ICD-O-3.2
@@ -221,15 +244,16 @@ Hepatocellular carcinoma, fibrolamellar	Adenomas and adenocarcinomas	ICD-O-3.2
 Hepatocellular carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Hepatosplenic T-cell lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 HHV8 positive diffuse large B-cell lymphoma	Plasma cell neoplasms	ICD-O-3.2
+High grade surface osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 High-grade astrocytoma with piloid features	High-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Circumscribed astrocytic gliomas	MCI CNS Diagnosis Category;WHO CNS5
 High-grade glioma	High-Grade Glioma	MCI CNS Diagnosis Category
 High-grade glioma, NOS or NEC	High-Grade Glioma	MCI CNS Diagnosis Category
-High grade surface osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Histiocytic sarcoma	CNS Sarcoma;Hematolymphoid tumors;Histiocytic tumors	MCI CNS Diagnosis Category;WHO CNS5
 Histiocytoma, NOS	Fibromatous neoplasms	ICD-O-3.2
 Hodgkin lymphoma, nodular sclerosis, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Hodgkin lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Hybrid nerve sheath tumor	Cranial and paraspinal nerve tumors	WHO CNS5
+Hypernephroid tumor	Adenomas and adenocarcinomas	ICD-O-3.2
 Immature teratoma	Germ cell tumors	WHO CNS5
 Immunodeficiency-associated CNS lymphoma	Hematolymphoid tumors;Lymphomas;Other	MCI CNS Diagnosis Category;WHO CNS5
 Infant-type hemispheric glioma	High-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Pediatric-type diffuse high-grade gliomas	MCI CNS Diagnosis Category;WHO CNS5
@@ -257,8 +281,10 @@ Leukemia, NOS	Leukemias, NOS	ICD-O-3.2
 Leydig cell tumor, benign	Specialized gonadal neoplasms	ICD-O-3.2
 Leydig cell tumor, NOS	Specialized gonadal neoplasms	ICD-O-3.2
 Lipoblastomatosis	Lipomatous neoplasms	ICD-O-3.2
+Lipofibromatosis	Lipomatous neoplasms	ICD-O-3.2
 Liposarcoma, NOS	Lipomatous neoplasms	ICD-O-3.2
 Lobular carcinoma in situ, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
+Lobular carcinoma in situ, NOS	Ductal and lobular neoplasms	ICD-O-3.2
 Lobular carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Low cumulative sun damage melanoma	Nevi and melanomas	ICD-O-3.2
 Low-Grade Glioma	Low-Grade Glioma	MCI CNS Diagnosis Category
@@ -268,25 +294,31 @@ Lymphoepithelial carcinoma	Squamous cell neoplasms	ICD-O-3.2
 Lymphoid leukemia, NOS	Lymphoid leukemias	ICD-O-3.2
 Lymphomatoid granulomatosis	Hematolymphoid tumors;Lymphomas;Other	MCI CNS Diagnosis Category;WHO CNS5
 Lymphoproliferative disorder, NOS	Other hematological neoplasms	ICD-O-3.2
+Malignant eccrine spiradenoma	Adnexal and skin appendage neoplasms	ICD-O-3.2
 Malignant histiocytosis	Neoplasms of histiocytes and accessory lymphoid cells	ICD-O-3.2
 Malignant lymphoma, non-Hodgkin, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Malignant lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Malignant melanoma arising in giant congenital nevus	Nevi and melanomas	ICD-O-3.2
+Malignant melanoma in giant pigmented nevus	Nevi and melanomas	ICD-O-3.2
 Malignant melanoma, NOS	Nevi and melanomas	ICD-O-3.2
 Malignant melanotic nerve sheath tumor	Cranial and paraspinal nerve tumors	WHO CNS5
 Malignant peripheral nerve sheath tumor	Cranial and paraspinal nerve tumors	WHO CNS5
 Malignant peripheral nerve sheath tumor with rhabdomyoblastic differentiation	Nerve sheath tumors	ICD-O-3.2
 Malignant peripheral nerve sheath tumor, NOS	Nerve sheath tumors	ICD-O-3.2
+Malignant rhabdoid tumor	Complex mixed and stromal neoplasms	ICD-O-3.2
 Malignant tumor, clear cell type	Neoplasms, NOS	ICD-O-3.2
 Malignant tumor, small cell type	Neoplasms, NOS	ICD-O-3.2
 Malignant tumor, spindle cell type	Neoplasms, NOS	ICD-O-3.2
 MALT lymphoma of the dura	Hematolymphoid tumors;Lymphomas;Other	MCI CNS Diagnosis Category;WHO CNS5
 Marginal zone B-cell lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Mast cell leukemia	Mast cell neoplasms	ICD-O-3.2
+Mature T- and NK-cell lymphomas	Mature T- and NK-cell lymphomas	ICD-O-3.2
+Mature T-cell lymphoma, NOS	Mature T- and NK-cell lymphomas	ICD-O-3.2
 Mature T-cell lymphoma, NOS	Mature T- and NK-cell lymphomas	ICD-O-3.2
 Mature teratoma	Germ cell tumors	WHO CNS5
 Mediastinal large B-cell lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Medullary carcinoma, NOS	Ductal and lobular neoplasms	ICD-O-3.2
+Medullary thyroid carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Medulloblastoma	Medulloblastoma;Gliomas	MCI CNS Diagnosis Category;ICD-O-3.2
 Medulloblastoma, Group 3	Medulloblastoma	MCI CNS Diagnosis Category
 Medulloblastoma, Group 4	Medulloblastoma	MCI CNS Diagnosis Category
@@ -313,20 +345,24 @@ Meningiomatosis, NOS	Meningiomas	ICD-O-3.2
 Meningothelial meningioma	Meningiomas	ICD-O-3.2
 Merkel cell carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Mesenchymal chondrosarcoma	CNS Sarcoma;Mesenchymal, non-meningothelial tumors;Chondro-osseous tumors;Osseous and chondromatous neoplasms	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
+Mesenchymoma, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
 Mesoblastic nephroma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Mesothelioma, biphasic, malignant	Mesothelial neoplasms	ICD-O-3.2
 Metastases to the brain and spinal cord parenchyma	Metastases to the CNS	WHO CNS5
 Metastases to the meninges	Metastases to the CNS	WHO CNS5
 Metastatic signet ring cell carcinoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Mixed germ cell tumor	Germ cell tumors;Germ cell neoplasms	WHO CNS5;ICD-O-3.2
+Mixed glioma	Gliomas	ICD-O-3.2
 Mixed phenotype acute leukemia with t(v;11q23); MLL rearranged	Leukemias, NOS	ICD-O-3.2
 Mixed phenotype acute leukemia, B/myeloid, NOS	Leukemias, NOS	ICD-O-3.2
 Mixed phenotype acute leukemia, T/myeloid, NOS	Leukemias, NOS	ICD-O-3.2
 Mixed type rhabdomyosarcoma	Myomatous neoplasms	ICD-O-3.2
 Mucinous adenocarcinoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
+Mucinous adenoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
+Mucinous cystadenocarcinoma, NOS	Cystic, mucinous and serous neoplasms	ICD-O-3.2
+Mucinous cystic tumor of borderline malignancy	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Mucoepidermoid carcinoma	Mucoepidermoid neoplasms	ICD-O-3.2
 Multinodular and vacuolating neuronal tumor		
-Myoepithelioma, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
 Mycosis fungoides	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Myelodysplastic syndrome with excess blasts	Myelodysplastic syndromes	ICD-O-3.2
 Myelodysplastic syndrome with multilineage dysplasia	Myelodysplastic syndromes	ICD-O-3.2
@@ -337,6 +373,8 @@ Myeloid leukemia, NOS	Myeloid leukemias	ICD-O-3.2
 Myeloid sarcoma	Myeloid leukemias	ICD-O-3.2
 Myeloproliferative neoplasm, unclassifiable	Other hematological neoplasms	ICD-O-3.2
 Myoepithelial carcinoma	Complex mixed and stromal neoplasms	ICD-O-3.2
+Myoepithelioma, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
+Myofibroblastic sarcoma	Fibromatous neoplasms	ICD-O-3.2
 Myofibroblastic tumor, NOS	Fibromatous neoplasms	ICD-O-3.2
 Myofibroma	Fibromatous neoplasms	ICD-O-3.2
 Myofibromatosis	Fibromatous neoplasms	ICD-O-3.2
@@ -345,12 +383,15 @@ Myxoid chondrosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Myxoid glioneuronal tumor	Glioneuronal and neuronal tumors;Gliomas, glioneuronal tumors, and neuronal tumors	MCI CNS Diagnosis Category;WHO CNS5
 Myxoid liposarcoma	Lipomatous neoplasms	ICD-O-3.2
 Myxopapillary ependymoma	Ependymoma;Gliomas, glioneuronal tumors, and neuronal tumors;Ependymal tumors;Gliomas	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
+Myxosarcoma	Myxomatous neoplasms	ICD-O-3.2
 Neoplasm, benign	Neoplasms, NOS	ICD-O-3.2
 Neoplasm, malignant	Neoplasms, NOS	ICD-O-3.2
 Neoplasm, malignant, uncertain whether primary or metastatic	Neoplasms, NOS	ICD-O-3.2
 Neoplasm, metastatic	Neoplasms, NOS	ICD-O-3.2
 Neoplasm, uncertain whether benign or malignant	Neoplasms, NOS	ICD-O-3.2
+Neoplasm, uncertain whether benign or malignant#Neoplasm, NOS	Neoplasms, NOS	ICD-O-3.2
 Nephroblastoma, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
+Neurilemoma, NOS	Nerve sheath tumors	ICD-O-3.2
 Neuroblastoma, NOS	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Neuroendocrine carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Neuroendocrine tumor, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -361,14 +402,19 @@ Neurofibromatosis, NOS	Nerve sheath tumors	ICD-O-3.2
 Neuroma, NOS	Nerve sheath tumors	ICD-O-3.2
 NK/T-cell lymphoma, nasal and nasal type	Mature T- and NK-cell lymphomas	ICD-O-3.2
 Nodular melanoma	Nevi and melanomas	ICD-O-3.2
+Non-invasive follicular thyroid neoplasm with papillary-like nuclear features (NIFTP)	Adenomas and adenocarcinomas	ICD-O-3.2
+Not Reported	Nor Reported	Nor Reported
 Nuclear protein in testis (NUT)-associated carcinoma	Epithelial neoplasms, NOS	ICD-O-3.2
 Odontogenic Carcinosarcoma	Odontogenic tumors	ICD-O-3.2
+Odontogenic tumor, malignant	Odontogenic tumors	ICD-O-3.2
 Olfactory neuroblastoma	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Olfactory neurocytoma	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Oligoastrocytoma, NOS	Gliomas	ICD-O-3.2
+Oligodendroglioma, anaplastic	Gliomas	ICD-O-3.2
 Oligodendroglioma, anaplastic, NOS	Gliomas	ICD-O-3.2
 Oligodendroglioma, IDH-mutant, and 1p/19q-codeleted	High-Grade Glioma;Low-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Adult-type diffuse gliomas	MCI CNS Diagnosis Category;WHO CNS5
 Oligodendroglioma, NOS	Gliomas	ICD-O-3.2
+Ossifying fibromyxoid tumor	Myxomatous neoplasms	ICD-O-3.2
 Ossifying fibromyxoid tumor, NOS	Myxomatous neoplasms	ICD-O-3.2
 Osteoblastoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Osteosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
@@ -381,9 +427,11 @@ Pancreatoblastoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Papillary adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma, columnar cell	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma, encapsulated of thyroid	Adenomas and adenocarcinomas	ICD-O-3.2
+Papillary carcinoma, encapsulated, of thyroid	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma, follicular variant	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma, NOS	Squamous cell neoplasms	ICD-O-3.2
 Papillary craniopharyngioma	Craniopharyngioma;Tumors of the sellar region	MCI CNS Diagnosis Category;WHO CNS5
+Papillary ependymoma	Gliomas	ICD-O-3.2
 Papillary ependymoma	Gliomas	ICD-O-3.2
 Papillary glioneuronal tumor	Glioneuronal and neuronal tumors;Gliomas, glioneuronal tumors, and neuronal tumors;Neuroepitheliomatous neoplasms	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
 Papillary intralymphatic angioendothelioma	Blood vessel tumors	ICD-O-3.2
@@ -397,8 +445,13 @@ Paraganglioma, NOS	Paragangliomas and glomus tumors	ICD-O-3.2
 Parosteal osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Perineurioma	Cranial and paraspinal nerve tumors	WHO CNS5
 Periosteal osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
+Peripheral neuroectodermal tumor	Miscellaneous tumors	ICD-O-3.2
+Perivascular epithelioid tumor, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
+Pheochromocytoma, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
 Pheochromocytoma, NOS	Paragangliomas and glomus tumors	ICD-O-3.2
+Phyllodes tumor, benign	Fibroepithelial neoplasms	ICD-O-3.2
 Pigmented dermatofibrosarcoma protuberans	Fibromatous neoplasms	ICD-O-3.2
+Pigmented nevus, NOS	Nevi and melanomas	ICD-O-3.2
 Pilocytic astrocytoma	Low-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Circumscribed astrocytic gliomas;Gliomas	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
 Pilomyxoid astrocytoma	Gliomas	ICD-O-3.2
 Pineal parenchymal tumor of intermediate differentiation	Pineal tumors;Other	MCI CNS Diagnosis Category;WHO CNS5
@@ -430,6 +483,8 @@ Primary cutaneous CD30 positive T-cell lymphoproliferative disorder	Hodgkin and 
 Primary cutaneous follicle center lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Primary diffuse large B-cell lymphoma of the CNS	Hematolymphoid tumors;Lymphomas;Other	MCI CNS Diagnosis Category;WHO CNS5
 Primary intracranial sarcoma, DICER1-mutant	CNS Sarcoma;Mesenchymal, non-meningothelial tumors;Uncertain differentiation	MCI CNS Diagnosis Category;WHO CNS5
+Primitive neuroectodermal tumor, NOS	Gliomas	ICD-O-3.2
+Prolactinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Proliferative dermal lesion in congenital nevus	Nevi and melanomas	ICD-O-3.2
 Renal cell carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Retinoblastoma, diffuse	Neuroepitheliomatous neoplasms	ICD-O-3.2
@@ -440,6 +495,7 @@ Rhabdomyosarcoma	CNS Sarcoma;Mesenchymal, non-meningothelial tumors;Skeletal mus
 Rhabdomyosarcoma, NOS	Myomatous neoplasms	ICD-O-3.2
 Rosai-Dorfman disease	Hematolymphoid tumors;Histiocytic tumors;Other	MCI CNS Diagnosis Category;WHO CNS5
 Rosette-forming glioneuronal tumor	Glioneuronal and neuronal tumors;Gliomas, glioneuronal tumors, and neuronal tumors	MCI CNS Diagnosis Category;WHO CNS5
+Sarcoma with BCOR genetic alterations	Miscellaneous tumors	ICD-O-3.2
 Sarcoma, NOS	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Schwannoma	Cranial and paraspinal nerve tumors	WHO CNS5
 Schwannoma, NOS	Nerve sheath tumors	ICD-O-3.2
@@ -457,15 +513,20 @@ Sex cord-gonadal stromal tumor, incompletely differentiated	Specialized gonadal 
 Sex cord-gonadal stromal tumor, mixed forms	Specialized gonadal neoplasms	ICD-O-3.2
 Sex cord-gonadal stromal tumor, NOS	Specialized gonadal neoplasms	ICD-O-3.2
 Signet ring cell carcinoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
+Skin appendage adenoma	Adnexal and skin appendage neoplasms	ICD-O-3.2
+Small cell carcinoma, intermediate cell	Epithelial neoplasms, NOS	ICD-O-3.2
 Small cell carcinoma, NOS	Epithelial neoplasms, NOS	ICD-O-3.2
 Small cell osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Small cell sarcoma	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Smooth muscle tumor of uncertain malignant potential	Myomatous neoplasms	ICD-O-3.2
 Soft tissue tumor, benign	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
+Solid pseudopapillary carcinoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Solid pseudopapillary neoplasm of pancreas	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Solid pseudopapillary tumor of ovary	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Solitary fibrous tumor	Mesenchymal, non-meningothelial tumors;Soft tissue tumors;Other	MCI CNS Diagnosis Category;WHO CNS5
+Solitary fibrous tumor, malignant	Fibromatous neoplasms	ICD-O-3.2
 Solitary fibrous tumor, NOS	Fibromatous neoplasms	ICD-O-3.2
+Solitary fibrous tumor/Hemangiopericytoma, grade 1	Fibromatous neoplasms	ICD-O-3.2
 Spinal ependymoma	Gliomas, glioneuronal tumors, and neuronal tumors;Ependymal tumors	WHO CNS5
 Spinal ependymoma, MYCN-amplified	Ependymoma;Gliomas, glioneuronal tumors, and neuronal tumors;Ependymal tumors	MCI CNS Diagnosis Category;WHO CNS5
 Spinal ependymoma, NOS or NEC	Ependymoma	MCI CNS Diagnosis Category
@@ -477,9 +538,11 @@ Squamous cell carcinoma, large cell, nonkeratinizing, NOS	Squamous cell neoplasm
 Squamous cell carcinoma, metastatic, NOS	Squamous cell neoplasms	ICD-O-3.2
 Squamous cell carcinoma, NOS	Squamous cell neoplasms	ICD-O-3.2
 Squamous cell carcinoma, small cell, nonkeratinizing	Squamous cell neoplasms	ICD-O-3.2
+Stromal tumor, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
 Subcutaneous panniculitis-like T-cell lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Subependymal giant cell astrocytoma	Low-Grade Glioma;Gliomas, glioneuronal tumors, and neuronal tumors;Circumscribed astrocytic gliomas;Gliomas	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
 Subependymoma	Ependymoma;Gliomas, glioneuronal tumors, and neuronal tumors;Ependymal tumors;Gliomas	MCI CNS Diagnosis Category;WHO CNS5;ICD-O-3.2
+Superficial spreading melanoma	Nevi and melanomas	ICD-O-3.2
 Supratentorial ependymoma	Gliomas, glioneuronal tumors, and neuronal tumors;Ependymal tumors	WHO CNS5
 Supratentorial ependymoma, NOS or NEC	Ependymoma	MCI CNS Diagnosis Category
 Supratentorial ependymoma, YAP1 fusion-positive	Ependymoma;Gliomas, glioneuronal tumors, and neuronal tumors;Ependymal tumors	MCI CNS Diagnosis Category;WHO CNS5
@@ -494,9 +557,13 @@ T-cell/histiocyte rich large B-cell lymphoma	Hodgkin and non-Hodgkin lymphomas	I
 Telangiectatic osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Tenosynovial giant cell tumor, NOS	Giant cell tumors	ICD-O-3.2
 Teratocarcinoma	Germ cell neoplasms	ICD-O-3.2
+Teratoma with malignant transformation	Germ cell neoplasms	ICD-O-3.2
 Teratoma with somatic-type malignancy	Germ cell tumors	WHO CNS5
+Teratoma, benign	Germ cell neoplasms	ICD-O-3.2
 Teratoma, malignant, NOS	Germ cell neoplasms	ICD-O-3.2
 Teratoma, NOS	Germ cell neoplasms	ICD-O-3.2
+Thecoma, luteinized	Specialized gonadal neoplasms	ICD-O-3.2
+Therapy-related myelodysplastic syndrome, NOS	Myelodysplastic syndromes	ICD-O-3.2
 Therapy-related myeloid neoplasm	Myeloid leukemias	ICD-O-3.2
 Thymic carcinoma, NOS	Thymic epithelial neoplasms	ICD-O-3.2
 Thymoma, NOS	Thymic epithelial neoplasms	ICD-O-3.2
