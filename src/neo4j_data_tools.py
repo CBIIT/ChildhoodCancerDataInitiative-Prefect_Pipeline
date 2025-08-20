@@ -114,7 +114,7 @@ RETURN DISTINCT study_id, study_name
     # Querty to obtain the study PI
     stats_get_pi_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..2]-(n:study_personnel {{personnel_type: "PI"}})
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..3]-(n:study_personnel {{personnel_type: "PI"}})
 WITH labels(n) AS NodeType, COLLECT(n.personnel_name) AS Value
 RETURN
     NodeType,
@@ -125,7 +125,7 @@ RETURN
     # Querty to obtain the study institution based on PI
     stats_get_institution_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..2]-(n:study_personnel {{personnel_type: "PI"}})
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..3]-(n:study_personnel {{personnel_type: "PI"}})
 WITH labels(n) AS NodeType, COLLECT(n.institution) AS Value
 RETURN
     NodeType,
@@ -136,7 +136,7 @@ RETURN
     # Querty to obtain prescence of clinical data in study
     stats_get_study_clinical: str = (
         """
-OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:clinical_measure_file)
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:clinical_measure_file)
 WITH
     CASE 
         WHEN n IS NOT NULL THEN 'Yes'
@@ -155,7 +155,7 @@ RETURN DISTINCT
     # Querty to obtain prescence of pathology data in study
     stats_get_study_pathology: str = (
         """
-OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:pathology_file)
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:pathology_file)
 WITH
     CASE 
         WHEN n IS NOT NULL THEN 'Yes'
@@ -174,7 +174,7 @@ RETURN DISTINCT
     # Querty to obtain prescence of radiology data in study
     stats_get_study_radiology: str = (
         """
-OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:radiology_file)
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:radiology_file)
 WITH
     CASE 
         WHEN n IS NOT NULL THEN 'Yes'
@@ -193,7 +193,7 @@ RETURN DISTINCT
     # Querty to obtain prescence of methylation_array data in study
     stats_get_study_methylation_array: str = (
         """
-OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:methylation_array_file)
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:methylation_array_file)
 WITH
     CASE 
         WHEN n IS NOT NULL THEN 'Yes'
@@ -212,7 +212,7 @@ RETURN DISTINCT
     # Querty to obtain prescence of cytogenomic data in study
     stats_get_study_cytogenomic: str = (
         """
-OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:cytogenomic_file)
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:cytogenomic_file)
 WITH
     CASE 
         WHEN n IS NOT NULL THEN 'Yes'
@@ -232,7 +232,7 @@ RETURN DISTINCT
     stats_get_study_file_count: str = (
         """
 WITH ['study_level_file'] AS NodeType
-OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n)
+OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 WHERE n.file_size IS NOT NULL
 WITH count(n) as Value, NodeType
 RETURN DISTINCT
@@ -245,7 +245,7 @@ RETURN DISTINCT
     stats_get_study_file_size: str = (
         """
 WITH ['study_level'] AS NodeType
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n)
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 WHERE n.file_size IS NOT NULL AND n.file_url IS NOT NULL
 WITH n.file_url AS FileURL, 
     COLLECT(DISTINCT n.file_size) AS FileSizes,
@@ -259,7 +259,7 @@ RETURN SUM(TotalFileSize) AS Value, NodeType
     stats_get_study_buckets: str = (
         """
 WITH ['study'] as NodeType
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..5]-(n)
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 WHERE n.file_url IS NOT NULL
 WITH n.file_url AS fileUrl, NodeType
 WITH COLLECT(DISTINCT substring(fileUrl, 0, apoc.text.indexOf(fileUrl, "/", 5) + 1)) AS Value, NodeType
@@ -276,7 +276,7 @@ RETURN
     # Query for study nodes
     stats_get_study_nodes: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n)
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 UNWIND labels(n) AS NodeLabel
 RETURN DISTINCT NodeLabel
 """
@@ -285,7 +285,7 @@ RETURN DISTINCT NodeLabel
     # Query to get all records per study in the database, with escaped curly braces
     stats_get_study_node_counts: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 RETURN labels(n) AS NodeType, COUNT(n) AS Value
 """
     )
@@ -293,7 +293,7 @@ RETURN labels(n) AS NodeType, COUNT(n) AS Value
     # Query to get file size
     stats_get_study_node_file_size: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.md5sum IS NOT NULL
 WITH n.md5sum AS md5, n.file_size AS fileSize, labels(n) as NodeType
 WITH md5, NodeType, MIN(fileSize) AS uniqueFileSize
@@ -306,7 +306,7 @@ RETURN
     # Query to get library strategies
     stats_get_study_library_strategy: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
 WITH study, COLLECT(DISTINCT n.library_strategy) AS Value, labels(n) as NodeType   
 RETURN NodeType, Value
@@ -316,7 +316,7 @@ RETURN NodeType, Value
     # Get file count by sequencing file library strategy
     stats_get_study_library_strategy_count: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
 WITH [n.library_strategy] AS NodeType, COUNT(n) AS Value
 RETURN NodeType, Value
@@ -326,7 +326,7 @@ RETURN NodeType, Value
     # Get file count by sequencing file library strategy
     stats_get_study_library_strategy_size: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..4]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
 WITH [n.library_strategy] AS NodeType, sum(n.file_size) AS Value
 RETURN NodeType, Value
