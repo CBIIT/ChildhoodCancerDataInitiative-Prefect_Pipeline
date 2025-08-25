@@ -507,7 +507,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     df_mutation = df_mutation.drop(columns=agent_columns_to_combine)
 
     # Step 5: Rename suffix pattern to agent name
-    """chemo_agent_rename = {
+    chemo_agent_rename = {
         "AGT_ADM_NM_A01": "13-cis- retinoic acid (13cRA, Isotretinoin, Accutane)",
         "AGT_ADM_NM_A02": "Bevacizumab (Avastin)",
         "AGT_ADM_NM_A03": "Bleomycin (Blenoxane, BLEO)",
@@ -585,7 +585,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     logger.info("Row count after agent operations: %d", len(df_mutation))
 
     # Step 8, temove the old agent columns
-    df_mutation = df_mutation.drop(columns=agent_cols)"""
+    df_mutation = df_mutation.drop(columns=agent_cols)
 
 
     # Clean ups
@@ -679,7 +679,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         #"response",
         #"treatment_id",
         #"treatment",
-        #"agent",
+        "agent",
         "registry_stage_code",
     ]
 
