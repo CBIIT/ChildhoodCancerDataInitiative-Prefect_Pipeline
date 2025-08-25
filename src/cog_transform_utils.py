@@ -445,30 +445,30 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     df_mutation = df_mutation.drop(columns=cns_diagnosis_columns)
 
     # Create Treatment
-    treatment_cols = [
+    """treatment_cols = [
         "Chemotherapy;Immunotherapy",
         "Radiation Therapy, NOS",
         "Stem Cell Transplant",
         "Surgical Procedure",
         "Cellular Therapy",
         "Other",
-    ]
+    ]"""
 
     # Replace "checked" with the column name in the specified columns
-    for col in treatment_cols:
+    """for col in treatment_cols:
         df_mutation[col] = df_mutation[col].apply(
             lambda x: col if x == "checked" else np.nan
-        )
+        )"""
 
     # Combine the specified columns into one, separated by `;`
-    df_mutation["treatment"] = df_mutation[treatment_cols].fillna("").agg(";".join, axis=1)
+    #df_mutation["treatment"] = df_mutation[treatment_cols].fillna("").agg(";".join, axis=1)
 
     # Clean up by removing any trailing/leading `;` and ensuring only non-empty values are concatenated
-    df_mutation["treatment"] = (
+    """df_mutation["treatment"] = (
         df_mutation["treatment"].str.replace(r";+", ";", regex=True).str.strip(";")
-    )
+    )"""
 
-    logger.info("Row count after treatment operations: %d", len(df_mutation))
+    #logger.info("Row count after treatment operations: %d", len(df_mutation))
 
     #format race enum cases
     for index, row in df_mutation.iterrows():
@@ -478,7 +478,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         df_mutation.loc[index, "race"] = case_fix + ";" + eth
 
     # Remove the old treatment columns
-    df_mutation = df_mutation.drop(columns=treatment_cols)
+    #df_mutation = df_mutation.drop(columns=treatment_cols)
 
 
     # Create Agent
