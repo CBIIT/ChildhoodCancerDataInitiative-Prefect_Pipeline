@@ -366,7 +366,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     logger.info("Performing concatenation operations:")
     logger.info("  Creating 'race' by concatenating DEMOGRAPHY.DM_CRACE and DEMOGRAPHY.DM_ETHNIC with ';'")
     logger.info("  Creating 'diagnosis_id' by concatenating participant_id and COG_UPR_DX.PTDT_IDP with '_'")
-    #logger.info("  Creating 'follow_up_id' by concatenating participant_id and FOLLOW_UP.REP_EVAL_PD_TP with '_'")
+    l#ogger.info("  Creating 'follow_up_id' by concatenating participant_id and FOLLOW_UP.REP_EVAL_PD_TP with '_'")
     logger.info("  Creating 'primary_site' by concatenating COG_UPR_DX.TOPO_ICDO and COG_UPR_DX.TOPO_TEXT with ' : '")
     logger.info("  Updating 'CNS_category' by concatenating CNS_category and CNS_category_other with ';'")
 
