@@ -260,20 +260,20 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "COG_UPR_DX.REG_STAGE_CODE_TEXT",
         "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT",
         "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS",
-        "FOLLOW_UP.REP_EVAL_PD_TP",
-        "FOLLOW_UP.PT_FU_END_DT",
-        "FOLLOW_UP.PT_VST",
-        "FOLLOW_UP.COMP_RESP_CONF_IND_3",
-        "FOLLOW_UP.DZ_EXM_REP_IND_2",
-        "FOLLOW_UP.PT_INF_CU_FU_COL_IND",
+        #"FOLLOW_UP.REP_EVAL_PD_TP",
+        #"FOLLOW_UP.PT_FU_END_DT",
+        #"FOLLOW_UP.PT_VST",
+        #"FOLLOW_UP.COMP_RESP_CONF_IND_3",
+        #"FOLLOW_UP.DZ_EXM_REP_IND_2",
+        #"FOLLOW_UP.PT_INF_CU_FU_COL_IND",
     ]
 
     # columns we want in our mutation df that require certain patterns
-    pattern_columns_followup = [
+    """pattern_columns_followup = [
         col
         for col in df_reshape.columns
         if col.startswith("FOLLOW_UP.FSTLNTXINIDXADMCAT_A")
-    ]
+    ]"""
     pattern_columns_agent = [
         col for col in df_reshape.columns if col.__contains__("AGT_ADM_NM_A")
     ]
@@ -287,7 +287,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         direct_columns
         + pattern_columns_agent
         + pattern_columns_diagdetail
-        + pattern_columns_followup
+        #+ pattern_columns_followup
     )
     selected_columns = list(set(selected_columns))
 
@@ -300,12 +300,12 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     logger.info("Row count after selecting columns: %d", len(df_mutation))
 
     # Replace items in "FOLLOW_UP" columns if the corresponding item in "FOLLOW_UP.PT_INF_CU_FU_COL_IND" is 'No'
-    logger.info("Replacing items in FOLLOW_UP columns where FOLLOW_UP.PT_INF_CU_FU_COL_IND is 'No'")
-    follow_up_columns = [col for col in df_mutation.columns if col.startswith("FOLLOW_UP")]
-    df_mutation.loc[df_mutation["FOLLOW_UP.PT_INF_CU_FU_COL_IND"] == "No", follow_up_columns] = ""
+    #logger.info("Replacing items in FOLLOW_UP columns where FOLLOW_UP.PT_INF_CU_FU_COL_IND is 'No'")
+    #follow_up_columns = [col for col in df_mutation.columns if col.startswith("FOLLOW_UP")]
+    #df_mutation.loc[df_mutation["FOLLOW_UP.PT_INF_CU_FU_COL_IND"] == "No", follow_up_columns] = ""
 
     # Check for follow-ups not in sequential order
-    logger.info("Checking for sequential order of follow-ups")
+    """logger.info("Checking for sequential order of follow-ups")
     for upi, group in df_mutation.groupby("upi"):
         group = group.sort_values(by="FOLLOW_UP.REP_EVAL_PD_TP", ascending=True)
         previous_date = None
@@ -323,7 +323,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
                 )
 
     logger.info("Row count after check for follow-ups not in sequential order: %d", len(df_mutation))
-
+"""
     # Rename columns that do not have value changes
     df_mutation = df_mutation.rename(
         columns={
@@ -333,15 +333,15 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
             "COG_UPR_DX.MORPHO_ICDO" : "icd_o_code",
             "FINAL_DIAGNOSIS.PRIMDXDSCAT": "primary_diagnosis_disease_group",
             "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
-            "FOLLOW_UP.PT_VST": "vital_status",
+            #"FOLLOW_UP.PT_VST": "vital_status",
             "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT": "CNS_category",
             "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS": "CNS_category_other",
-            "FOLLOW_UP.FSTLNTXINIDXADMCAT_A1": "Chemotherapy;Immunotherapy",
-            "FOLLOW_UP.FSTLNTXINIDXADMCAT_A2": "Radiation Therapy, NOS",
-            "FOLLOW_UP.FSTLNTXINIDXADMCAT_A3": "Stem Cell Transplant",
-            "FOLLOW_UP.FSTLNTXINIDXADMCAT_A4": "Surgical Procedure",
-            "FOLLOW_UP.FSTLNTXINIDXADMCAT_A5": "Cellular Therapy",
-            "FOLLOW_UP.FSTLNTXINIDXADMCAT_A6": "Other",
+            #"FOLLOW_UP.FSTLNTXINIDXADMCAT_A1": "Chemotherapy;Immunotherapy",
+            #"FOLLOW_UP.FSTLNTXINIDXADMCAT_A2": "Radiation Therapy, NOS",
+            #"FOLLOW_UP.FSTLNTXINIDXADMCAT_A3": "Stem Cell Transplant",
+            #"FOLLOW_UP.FSTLNTXINIDXADMCAT_A4": "Surgical Procedure",
+            #"FOLLOW_UP.FSTLNTXINIDXADMCAT_A5": "Cellular Therapy",
+            #"FOLLOW_UP.FSTLNTXINIDXADMCAT_A6": "Other",
         }
     )
 
@@ -354,7 +354,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "COG_UPR_DX.MORPHO_ICDO": "icd_o_code",
         "FINAL_DIAGNOSIS.PRIMDXDSCAT": "primary_diagnosis_disease_group",
         "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
-        "FOLLOW_UP.PT_VST": "vital_status",
+        #"FOLLOW_UP.PT_VST": "vital_status",
         "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT": "CNS_category",
         "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS": "CNS_category_other",
     }.items():
@@ -366,7 +366,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     logger.info("Performing concatenation operations:")
     logger.info("  Creating 'race' by concatenating DEMOGRAPHY.DM_CRACE and DEMOGRAPHY.DM_ETHNIC with ';'")
     logger.info("  Creating 'diagnosis_id' by concatenating participant_id and COG_UPR_DX.PTDT_IDP with '_'")
-    logger.info("  Creating 'follow_up_id' by concatenating participant_id and FOLLOW_UP.REP_EVAL_PD_TP with '_'")
+    l#ogger.info("  Creating 'follow_up_id' by concatenating participant_id and FOLLOW_UP.REP_EVAL_PD_TP with '_'")
     logger.info("  Creating 'primary_site' by concatenating COG_UPR_DX.TOPO_ICDO and COG_UPR_DX.TOPO_TEXT with ' : '")
     logger.info("  Updating 'CNS_category' by concatenating CNS_category and CNS_category_other with ';'")
 
@@ -377,9 +377,9 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     df_mutation = clean_column_underscore_concat(
         df_mutation, "diagnosis_id", "participant_id", "COG_UPR_DX.PTDT_IDP"
     )
-    df_mutation = clean_column_underscore_concat(
+    """df_mutation = clean_column_underscore_concat(
         df_mutation, "follow_up_id", "participant_id", "FOLLOW_UP.REP_EVAL_PD_TP"
-    )
+    )"""
     df_mutation = clean_column_space_colon_concat(
         df_mutation, "primary_site", "COG_UPR_DX.TOPO_ICDO", "COG_UPR_DX.TOPO_TEXT"
     )
@@ -393,40 +393,40 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     # Log calculation operations
     logger.info("Performing calculation operations:")
     logger.info("  Calculating 'age_at_diagnosis' as the sum of DEMOGRAPHY.DM_BRTHDAT and COG_UPR_DX.DATE_DIA")
-    logger.info("  Calculating 'age_at_follow_up' as the sum of DEMOGRAPHY.DM_BRTHDAT and FOLLOW_UP.PT_FU_END_DT")
+    #logger.info("  Calculating 'age_at_follow_up' as the sum of DEMOGRAPHY.DM_BRTHDAT and FOLLOW_UP.PT_FU_END_DT")
 
     # EQUATIONS
 
     df_mutation['DEMOGRAPHY.DM_BRTHDAT'] = pd.to_numeric(df_mutation['DEMOGRAPHY.DM_BRTHDAT'], errors='coerce')
     df_mutation['COG_UPR_DX.DATE_DIA'] = pd.to_numeric(df_mutation['COG_UPR_DX.DATE_DIA'], errors='coerce')
-    df_mutation['FOLLOW_UP.PT_FU_END_DT'] = pd.to_numeric(df_mutation['FOLLOW_UP.PT_FU_END_DT'], errors='coerce')
+    #df_mutation['FOLLOW_UP.PT_FU_END_DT'] = pd.to_numeric(df_mutation['FOLLOW_UP.PT_FU_END_DT'], errors='coerce')
 
     df_mutation["age_at_diagnosis"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["COG_UPR_DX.DATE_DIA"])
-    df_mutation["age_at_follow_up"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["FOLLOW_UP.PT_FU_END_DT"])
+    #df_mutation["age_at_follow_up"] = abs(df_mutation["DEMOGRAPHY.DM_BRTHDAT"]) + abs(df_mutation["FOLLOW_UP.PT_FU_END_DT"])
 
     logger.info("Row count after calculation operations: %d", len(df_mutation))
 
     # Log conditional operations
     logger.info("Performing conditional operations:")
-    logger.info("  Creating 'response' based on FOLLOW_UP.COMP_RESP_CONF_IND_3 and FOLLOW_UP.DZ_EXM_REP_IND_2")
+    #logger.info("  Creating 'response' based on FOLLOW_UP.COMP_RESP_CONF_IND_3 and FOLLOW_UP.DZ_EXM_REP_IND_2")
     logger.info("  Creating 'CNS_diagnosis' by combining CNS_DIAGNOSIS_DETAIL columns with ';'")
 
     # CONDITIONAL
 
     # Create Response
     # Define the conditions
-    conditions_response = [
+    """conditions_response = [
         (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Yes"),
         (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")
         & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "Yes"),
         (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")
         & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "No"),
         (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Unknown"),
-    ]
+    ]"""
     # Define the corresponding choices for each condition
     choices_response = ["Complete Remission", "Unknown", "Not Reported", "Unknown"]
     # Apply the conditions and choices to create the 'response' column
-    df_mutation["response"] = np.select(conditions_response, choices_response, default="")
+    #df_mutation["response"] = np.select(conditions_response, choices_response, default="")
 
     logger.info("Row count after conditional operations: %d", len(df_mutation))
     # Create CNS diagnosis
@@ -592,38 +592,38 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     # set age values to int types
     df_mutation["age_at_diagnosis"] = df_mutation["age_at_diagnosis"].fillna("").astype(str).str.replace(".0", "")
-    df_mutation["age_at_follow_up"] = df_mutation["age_at_follow_up"].fillna("").astype(str).str.replace(".0", "")
+    #df_mutation["age_at_follow_up"] = df_mutation["age_at_follow_up"].fillna("").astype(str).str.replace(".0", "")
 
     # Use regex to remove (C##.#) from diagnosis
     df_mutation["diagnosis"] = df_mutation["diagnosis"].str.replace(
         r" \([A-Z0-9._]+\)", "", regex=True
     )
 
-    logger.info("Formatting follow_up_id, treatment_id and treatment_response_id columns")
-    logger.info("  Remove 'follow_up_ids' for rows that don't actually have follow-up data")
-    logger.info("  Reformat follow_up_ids by replacing spaces with '_' and removing parentheses")
+    #logger.info("Formatting follow_up_id, treatment_id and treatment_response_id columns")
+    #logger.info("  Remove 'follow_up_ids' for rows that don't actually have follow-up data")
+    #logger.info("  Reformat follow_up_ids by replacing spaces with '_' and removing parentheses")
     logger.info("  Generate treatment_id by combining follow_up_id with '_treatment' for rows with treatment data")
     logger.info("  Generate treatment_response_id by combining follow_up_id with '_response' for rows with response data")
 
     # remove "follow_up_ids" for row that don't actually have follow-up data
-    df_mutation["follow_up_id"] = np.where(
+    """df_mutation["follow_up_id"] = np.where(
         df_mutation["follow_up_id"].str.contains("Follow-up", case=False, na=False),
         df_mutation["follow_up_id"],
         "",
-    )
+    )"""
 
     #format follow_up_ids
-    df_mutation["follow_up_id"] = df_mutation["follow_up_id"].str.replace(" ", "_").str.replace("(", "").str.replace(")", "")
+    #df_mutation["follow_up_id"] = df_mutation["follow_up_id"].str.replace(" ", "_").str.replace("(", "").str.replace(")", "")
 
     #generate treatment_id
-    df_mutation = clean_column_underscore_simple_concat(
+    """df_mutation = clean_column_underscore_simple_concat(
         df_mutation, "treatment_id", "follow_up_id", "treatment", "treatment"
-    )
-    
+    )"""
+
     #generate treatment_response_id
-    df_mutation = clean_column_underscore_simple_concat(
+    """df_mutation = clean_column_underscore_simple_concat(
         df_mutation, "treatment_response_id", "follow_up_id", "response", "response"
-    )
+    )"""
 
     # Check and update diagnosis_id column
     logger.info("  Validating and updating 'diagnosis_id' column")
@@ -644,11 +644,11 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
             "CNS_category_other",
             "DEMOGRAPHY.DM_BRTHDAT",
             "COG_UPR_DX.DATE_DIA",
-            "FOLLOW_UP.COMP_RESP_CONF_IND_3",
-            "FOLLOW_UP.DZ_EXM_REP_IND_2",
-            "FOLLOW_UP.REP_EVAL_PD_TP",
-            "FOLLOW_UP.PT_FU_END_DT",
-            "FOLLOW_UP.PT_INF_CU_FU_COL_IND",
+            #"FOLLOW_UP.COMP_RESP_CONF_IND_3",
+            #"FOLLOW_UP.DZ_EXM_REP_IND_2",
+            #"FOLLOW_UP.REP_EVAL_PD_TP",
+            #"FOLLOW_UP.PT_FU_END_DT",
+            #"FOLLOW_UP.PT_INF_CU_FU_COL_IND",
         ]
     )
 
@@ -672,13 +672,13 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "age_at_diagnosis",
         "primary_site",
         "primary_diagnosis_disease_group",
-        "follow_up_id",
-        "age_at_follow_up",
-        "vital_status",
-        "treatment_response_id",
-        "response",
-        "treatment_id",
-        "treatment",
+        #"follow_up_id",
+        #"age_at_follow_up",
+        #"vital_status",
+        #"treatment_response_id",
+        #"response",
+        #"treatment_id",
+        #"treatment",
         "agent",
         "registry_stage_code",
     ]
