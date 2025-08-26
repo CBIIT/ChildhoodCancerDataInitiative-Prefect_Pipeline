@@ -1609,7 +1609,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
         if len(link_multiple_row) > 0:
             print_str = (
                 print_str
-                + f"\tWARNING: The entry on row {*link_multiple_row,} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n"
+                + f"\t###########\n\t# ERROR: The entry on row {*link_multiple_row,} contains multiple links. While multiple links can occur, they are often not needed or best practice.\n\t###########\n"
             )
         else:
             pass
