@@ -1,7 +1,6 @@
 # Reads harmonized JSON files and produces TSV files
 
 import csv
-import hashlib
 import inflect
 import json
 import re
@@ -248,7 +247,9 @@ def make_uuid(node_type, study_id, row, foreign_ids):
         str(row[foreign_id]) for foreign_id in foreign_ids
     ]) if foreign_ids else ''
 
-    if node_type == 'participant':
+    if node_type == 'consent_group':
+        row_str = row['consent_group_id']
+    elif node_type == 'participant':
         row_str = row['participant_id']
     elif node_type == 'reference_file':
         row_str = row['reference_file_url']
