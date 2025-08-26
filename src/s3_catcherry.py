@@ -441,8 +441,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         non_utf_8_array = ["®", "™", "©", "–", "—"]
 
-        non_utf_8_array = "|".join(non_utf_8_array)
-
         catcherr_logger.info("Checking for non-UTF-8 characters")
 
         # check each node
@@ -453,10 +451,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             for col in df.columns:
                 # check to see if there are any non-UTF-8 characters in the column
                 catcherr_logger.info(f"non-UTF-8, checking column: {col}")
-                if df[col].str.contains(non_utf_8_array).any():
+                if df[col].isin(non_utf_8_array).any():
                     # only if they have an issue, then print out the node.
                     print(f"\n{node}\n----------", file=outf)
-                    rows = np.where(df[col].str.contains(non_utf_8_array))[0]
+                    rows = np.where(df[col].isin(non_utf_8_array))[0]
                     for i in range(0, len(rows)):
                         print(
                             f"\tWARNING: The property, {col}, contained a non-UTF-8 character on row: {rows[i]+1}\n",
