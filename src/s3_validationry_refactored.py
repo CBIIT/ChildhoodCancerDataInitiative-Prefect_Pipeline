@@ -755,7 +755,7 @@ def validate_age_one_sheet(node_name: str, file_object):
                 # if the value isn't NA
                 if pd.notna(value):
                     # then see if it greater than 90 in days
-                    if abs(int(value)) > less_than_90:
+                    if abs(int(float(value))) > less_than_90:
                         # when it is, append to the list, create a warning flag
                         error_rows.append(index + 2)
                         WARN_FLAG = True
