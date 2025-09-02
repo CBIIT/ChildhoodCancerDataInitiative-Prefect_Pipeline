@@ -2294,3 +2294,35 @@ deployments:
       name: ccdi-curation-8gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-ccdi-cog_igm-transform-V3_2
+    version: null
+    tags: ["TEST", "MCI", "V3"]
+    description: null
+    entrypoint: workflows/cog_igm_transformer.py:cog_igm_transform
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: ""
+      manifest_path: ""
+      form_parsing: "cog_and_igm"
+      file_path: ""
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.deployments.steps.git_clone:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: CCDIDC-1355_COG-Transformation-Script_V3_2
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements_V3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
