@@ -111,7 +111,7 @@ def sample_mapper(manifest_path: str):
     clin_tab = clin_tab.merge(seq_tab, on=['participant.participant_id', 'assay'], how='left')
 
     # print out num rows where data_category does not contain 'COG'
-    print(f"IGM row count: {clin_tab[~clin_tab['data_category'].str.contains('COG', na=False)].shape[0]}")
+    print(f"IGM row count with no sample.sample_id: {clin_tab[~clin_tab['data_category'].str.contains('COG', na=False)].shape[0]}")
 
     # check for duplicates  in file_name
     if clin_tab.duplicated(subset=['file_name']).any():
@@ -605,6 +605,11 @@ def cog_igm_json2tsv(
             
             # open samples sheet from manifest file and replace percent_tumor and percent_necrosis values from df_ptn_uniq
             samples_df = pd.read_excel(manifest_path, sheet_name="sample")
+
+            # convert both sample_id cols to string
+            samples_df["sample_id"] = samples_df["sample_id"].astype(str)
+            df_ptn_uniq["sample.sample_id"] = df_ptn_uniq["sample.sample_id"].astype(str)
+
             # save header order
             header_sort = samples_df.columns.tolist()
             # drop empty cols
