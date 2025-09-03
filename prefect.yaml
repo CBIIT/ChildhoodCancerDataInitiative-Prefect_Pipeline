@@ -2297,7 +2297,7 @@ deployments:
 
   - name: TEST-ccdi-cog_igm-transform-V3
     version: null
-    tags: ["TEST, "MCI", "V3"]
+    tags: ["TEST", "MCI", "V3"]
     description: null
     entrypoint: workflows/cog_igm_transformer.py:cog_igm_transform
     schedule: null
