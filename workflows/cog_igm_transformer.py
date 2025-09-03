@@ -15,7 +15,7 @@ import pandas as pd
 import shutil
 
 # utils
-from src.cog_igm_utils import manifest_reader, sample_reader, cog_igm_json2tsv
+from src.cog_igm_utils import manifest_reader, cog_igm_json2tsv
 from src.utils import get_time, folder_ul, file_dl, get_date
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
@@ -89,9 +89,6 @@ def cog_igm_transform(
 
         # load in the manifest
         manifest_df, local_manifest_path = manifest_reader(manifest_path) 
-        
-        # load in the sample df
-        sample_df = sample_reader(manifest_path)
 
         # create working dir name
         # check if file_path is provided and contains files, if not create a new working dir

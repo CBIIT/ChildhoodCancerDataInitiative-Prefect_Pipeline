@@ -30,6 +30,144 @@ def replace_en_em_dash(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
+@task(
+    name="Sample mapping", 
+    log_prints=True,
+    retries=3,
+    retry_delay_seconds=1,  
+)
+def sample_mapper(manifest_path: str):
+    """Map samples to IGM clin reports from associated assay file's matched samples.
+
+    Args:
+        manifest_path (str): Path to the manifest file.
+
+    Returns:
+        None
+    """
+    seq_tab = pd.read_excel(manifest_path, sheet_name='sequencing_file')
+    
+    seq_tab = seq_tab[seq_tab.file_type == 'pdf']
+
+    seq_tab = seq_tab[['sample.sample_id', 'library_strategy']]
+
+    # rename file name column to source_pdf
+    seq_tab = seq_tab.rename(columns={'library_strategy': 'assay'})
+
+    # replace 'Archer Fusion' with archer_fusion and WXS with tumor_normal
+    seq_tab['assay'] = seq_tab['assay'].replace({'Archer Fusion': 'archer_fusion', 'WXS': 'tumor_normal'})
+    
+    # grab meth data
+    meth_tab = pd.read_excel(manifest_path, sheet_name='methylation_array_file')
+
+    meth_tab = meth_tab[meth_tab.file_type == 'pdf'][['sample.sample_id', 'data_category']]
+
+    # replace 'Methylation Analysis' with 'methylation'
+    meth_tab['data_category'] = meth_tab['data_category'].replace({'Methylation Analysis': 'methylation'})
+
+    # rename data_category column to assay
+    meth_tab = meth_tab.rename(columns={'data_category': 'assay'})
+
+    # concat meth_tab with seq_tab
+    seq_tab = pd.concat([seq_tab, meth_tab], ignore_index=True)
+    
+    # drop dups from amended reports/addn normal samples
+    seq_tab = seq_tab.drop_duplicates()
+
+    sample_tab = pd.read_excel(manifest_path, sheet_name='sample')
+
+    sample_tab = sample_tab[['participant.participant_id', 'sample_id']]
+
+    # merge seq_tab with sample_tab
+    seq_tab = seq_tab.merge(sample_tab, left_on='sample.sample_id', right_on='sample_id', how='left')
+
+    # read in clinical_measure_file
+    clin_tab = pd.read_excel(manifest_path, sheet_name='clinical_measure_file')
+    
+    # if all of sample.sample_id col is empty, drop the column
+    if clin_tab['sample.sample_id'].isna().all():
+        clin_tab = clin_tab.drop(columns=['sample.sample_id'])
+        clin_tab_filled = pd.DataFrame()
+
+    else:
+        # assign clin tab with sample data already populated to clin_tab_filled
+        clin_tab_filled = clin_tab[~clin_tab['sample.sample_id'].isna()]
+        
+        # assign clin tab rows with no sample data to clin_tab and drop sample.sample_id
+        clin_tab = clin_tab[clin_tab['sample.sample_id'].isna()]
+        clin_tab = clin_tab.drop(columns=['sample.sample_id'])
+
+    for index, row in clin_tab.iterrows():
+        if 'archer_fusion' in row['file_name']:
+            clin_tab.at[index, 'assay'] = 'archer_fusion'
+        elif 'methylation' in row['file_name']:
+            clin_tab.at[index, 'assay'] = 'methylation'
+        elif 'tumor_normal' in row['file_name']:
+            clin_tab.at[index, 'assay'] = 'tumor_normal'
+        else: # tumor normal
+            clin_tab.at[index, 'assay'] = ''
+
+    # merge clin_tab with seq_tab on participant.participant_id and sample.sample_id
+    clin_tab = clin_tab.merge(seq_tab, on=['participant.participant_id', 'assay'], how='left')
+
+    # print out num rows where data_category does not contain 'COG'
+    print(f"IGM row count: {clin_tab[~clin_tab['data_category'].str.contains('COG', na=False)].shape[0]}")
+
+    # check for duplicates  in file_name
+    if clin_tab.duplicated(subset=['file_name']).any():
+        print("Duplicates found in file_name column")
+    
+        # print duplicates if found
+        print(clin_tab[clin_tab.duplicated(subset=['file_name'], keep=False)])
+
+        #for file_name dupes in clin_df, check if sample in sample.sample_id is in file_name; if not, set sample.sample_id to null
+        for index, row in clin_tab[clin_tab.duplicated(subset=['file_name'], keep=False)].iterrows():
+            if row['sample.sample_id'] not in row['file_name']:
+                clin_tab.at[index, 'sample.sample_id'] = pd.NA
+                clin_tab.at[index, 'sample_id'] = pd.NA
+
+        # drop duplicates from clin_tab
+        clin_tab = clin_tab.drop_duplicates().reset_index().drop(columns=['index'])
+
+
+    # check for files with data category != COG and sample.sample_id is null
+    for index, row in clin_tab[~clin_tab['data_category'].str.contains('COG', na=False) & clin_tab['sample.sample_id'].isna()].iterrows():
+
+        # extract sample.sample_id from file name with regex '0[0-9A-Z]{5}'
+        match = re.search(r'0[0-9A-Z]{5}', row['file_name'])
+        if match:
+            clin_tab.at[index, 'sample.sample_id'] = match.group(0)
+
+    # print out number of rows where sample.sample_id is not null
+    print(f"Count of rows where sample.sample_id is not null: {clin_tab[clin_tab['sample.sample_id'].notna()].shape[0]}")
+
+    # drop assay and sample_id
+    clin_tab = clin_tab.drop(columns=['assay', 'sample_id'])
+
+    # make sample.sample_id fourth col from left
+    cols = list(clin_tab.columns)
+    cols.insert(3, cols.pop(cols.index('sample.sample_id')))
+    clin_tab = clin_tab[cols]
+
+    # drop duplicates
+    clin_tab = clin_tab.drop_duplicates().reset_index().drop(columns=['index'])
+
+    # concat with clin_tab_filled
+    if not clin_tab_filled.empty:
+        clin_tab = pd.concat([clin_tab, clin_tab_filled], ignore_index=True)
+
+    # write to TSV
+    clin_tab.to_csv("clinical_tab.tsv", sep="\t", index=False)
+    
+    # save to output path
+    with pd.ExcelWriter(
+        manifest_path, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+    ) as writer:
+        clin_tab.to_excel(writer, sheet_name="clinical_measure_file", index=False, header=False, startrow=1)
+        
+    return None
+
+
 @flow(
     name="Manifest Reader",
     log_prints=True,
@@ -48,6 +186,9 @@ def manifest_reader(manifest_path: str):
     runner_logger = get_run_logger()
 
     file_name = os.path.basename(manifest_path)
+    
+    # perform sample mapping for clin files
+    sample_mapper(manifest_path)
 
     try:
         manifest_df = pd.read_excel(
@@ -63,40 +204,6 @@ def manifest_reader(manifest_path: str):
 
     return manifest_df, local_manifest_path
 
-def sample_reader(manifest_path: str):
-    """Read in and parse manifest of sample-participant IDs
-
-    Args:
-        manifest_path (str): S3 path to CCDI study manifest file
-
-    Returns:
-        pd.DataFrame: DataFrame of parsed sample entries
-    """
-
-    runner_logger = get_run_logger()
-
-    file_name = os.path.basename(manifest_path)
-
-    try:
-        sample_df = pd.read_excel(
-            file_name, sheet_name="sample", engine="openpyxl"
-        )
-        # parse only COG and IGM clinical reports and return uniq file ID and s3 URL in df
-        sample_df = sample_df[sample_df.sample_tumor_status == 'Tumor'][["sample_id", "participant.participant_id"]]
-        
-        # rename columns to match expected format
-        sample_df = sample_df.rename(
-            columns={
-                "sample_id": "sample_id",
-                "participant.participant_id": "subject_id",
-            }
-        )
-
-    except Exception as e:
-        runner_logger.error(f"Cannot read in manifest {file_name} due to error: {e}")
-        sys.exit(1)
-
-    return sample_df
 
 def set_s3_resource():
     """This method sets the s3_resource object to either use localstack
@@ -459,11 +566,11 @@ def cog_igm_json2tsv(
                     "Cannot perform IGM variant results-level parsing, no valid IGM JSONs read in."
                 )
         
+        # ------- MEGA CONCAT JSONs for reference ------------
+        
         # For UChi: create concatenated mega JSON of all IGM JSON files
         # by appending the read in JSON files to one another
         # and not reading into a DataFrame
-        
-        
         if igm_success_count > 0:
             for assay_type in ["igm.tumor_normal", "igm.archer_fusion", "igm.methylation"]:
                 mega_json = []
@@ -475,8 +582,7 @@ def cog_igm_json2tsv(
                 with open(igm_json_file_name, "w") as f:
                     json.dump(mega_json, f, indent=4)
 
-        # parse percent_tumor_necrosis
-
+        # ------- parse percent_tumor and percent_necrosis ------------
         if len(percent_tumor_necrosis_file_names) > 0:
             df_ptn = pd.concat(pd.read_csv(i, sep="\t") for i in percent_tumor_necrosis_file_names)[["participant.participant_id", "sample.sample_id", "percent_tumor", "percent_necrosis"]].drop_duplicates().reset_index(drop=True)
             
@@ -982,6 +1088,7 @@ def igm_to_tsv(
         pd.DataFrame: pandas DataFrame of converted JSON data
         int: The count of JSON files successfully processed
         int: The count of JSON files unsuccessfully processed
+        str: percent_tumor_necrosis_file_name for parsed values for percent_necrosis and percent_tumor
     """
 
     runner_logger = get_run_logger()
