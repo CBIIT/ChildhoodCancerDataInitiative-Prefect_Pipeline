@@ -1399,9 +1399,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-pull-neo4j-data-32gb-ccdi-v3
+  - name: pull-neo4j-data-32gb-ccdi-v3
     version: null
-    tags: ["TEST", "Production","V3"]
+    tags: ["Production","V3"]
     description: null
     entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
     schedule: null
@@ -1420,7 +1420,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1895_neo_pull
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
