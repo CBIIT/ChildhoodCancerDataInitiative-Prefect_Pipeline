@@ -1099,6 +1099,7 @@ def query_db_to_csv(
     uri_parameter: str,
     username_parameter: str,
     password_parameter: str,
+    study_id: str = None
 ) -> str:
     """It export one csv file for each unique node.
     Each csv file (per node) contains all the info of the node across all studies
@@ -1128,14 +1129,18 @@ def query_db_to_csv(
     logger.info("Fetching all unique nodes in DB")
     unique_nodes = pull_uniq_nodes(driver=driver)
     logger.info("Fetching all unique studies in DB")
-    unqiue_studies = pull_uniq_studies(driver=driver)
+    if study_id:
+        unique_studies = [study_id]
+    else:
+        unique_studies = pull_uniq_studies(driver=driver)
+    print(f"unique_studies: {unique_studies}")
     logger.info(f"Nodes list: {*unique_nodes,}")
-    logger.info(f"Studies list: {*unqiue_studies,}")
+    logger.info(f"Studies list: {*unique_studies,}")
 
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
     pull_nodes_loop(
-        study_list=unqiue_studies,
+        study_list=unique_studies,
         node_list=unique_nodes,
         driver=driver,
         out_dir=output_dir,
