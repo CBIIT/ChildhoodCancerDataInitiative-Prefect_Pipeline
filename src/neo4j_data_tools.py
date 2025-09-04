@@ -458,14 +458,29 @@ def export_uniq_values_node_property(
 
 @task(name="Pull node data", task_run_name="pull_node_data_{node_label}")
 def pull_data_per_node(
-    driver, data_to_csv, node_label: str, query_str: str, output_dir: str
+    driver, data_to_csv, node_label: str, query_str: str, output_dir: str, study_id: str = None
 ) -> None:
-    """Exports DB data by a given node"""
+    """Exports DB data by a given node. If study_id is provided, only pulls data for that study."""
     session = driver.session()
     try:
-        session.execute_read(
-            data_to_csv, node_label, query_str.format(node_label=node_label), output_dir
-        )
+        if study_id and node_label == "study":
+            cypher = (
+                f"MATCH (startNode:study) WHERE startNode.study_id = '{study_id}' "
+                "WITH startNode, properties(startNode) AS props "
+                "UNWIND keys(props) AS propertyName "
+                "RETURN startNode.id AS startNodeId, "
+                "labels(startNode) AS startNodeLabels, "
+                "propertyName AS startNodePropertyName, "
+                "startNode[propertyName] AS startNodePropertyValue, "
+                "startNode.study_id as dbgap_accession "
+            )
+            session.execute_read(
+                data_to_csv, node_label, cypher, output_dir
+            )
+        else:
+            session.execute_read(
+                data_to_csv, node_label, query_str.format(node_label=node_label), output_dir
+            )
     except:
         traceback.print_exc()
         raise
@@ -625,8 +640,8 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
 
 
 @flow
-def pull_study_node(driver, out_dir: str) -> None:
-    """Pulls data for study node from a neo4j DB"""
+def pull_study_node(driver, out_dir: str, study_id: str = None) -> None:
+    """Pulls data for study node from a neo4j DB. If study_id is provided, only pulls data for that study."""
     cypher_phrase = Neo4jCypherQuery.study_cypher_query
     pull_data_per_node(
         driver=driver,
@@ -634,6 +649,7 @@ def pull_study_node(driver, out_dir: str) -> None:
         node_label="study",
         query_str=cypher_phrase,
         output_dir=out_dir,
+        study_id=study_id,
     )
     return None
 
@@ -1152,7 +1168,7 @@ def query_db_to_csv(
 
     # Obtain study node data
     logger.info("Pulling data from study node")
-    pull_study_node(driver=driver, out_dir=output_dir)
+    pull_study_node(driver=driver, out_dir=output_dir, study_id=study_id)
 
     # close the driver
     logger.info("Closing GraphDatabase driver")
