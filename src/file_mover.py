@@ -21,7 +21,7 @@ import pandas as pd
 import json
 from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
-from prefect.cache_policies import NO_CACHE
+# from prefect.cache_policies import NO_CACHE
 from typing import TypeVar
 import ast
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -238,7 +238,7 @@ def copy_file_by_size(
     retries=3,
     retry_delay_seconds=1,
     log_prints=True,
-    cache_policy=NO_CACHE,
+    # cache_policy=NO_CACHE,
 )
 def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concurrency_tag) -> str:
     """Copy objects between two locations defined by copy_parameter
@@ -314,7 +314,7 @@ def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concu
     retries=3,
     retry_delay_seconds=1,
     log_prints=True,
-    cache_policy=NO_CACHE,
+    # cache_policy=NO_CACHE,
 )
 def compare_md5sum_task(first_url: str, second_url: str, s3_client, logger, concurrency_tag) -> tuple:
     """Compares the md5sum of two objects

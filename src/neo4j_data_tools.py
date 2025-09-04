@@ -11,7 +11,7 @@ from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.task_runners import ConcurrentTaskRunner
 from prefect.task_runners import ThreadPoolTaskRunner
-from prefect.cache_policies import NO_CACHE
+# from prefect.cache_policies import NO_CACHE
 from neo4j import GraphDatabase
 import pandas as pd
 import numpy as np
@@ -477,7 +477,7 @@ def pull_data_per_node(
 @task(
     name="Pull node data per study",
     task_run_name="pull_node_data_{node_label}_{study_name}",
-    cache_policy=NO_CACHE,
+    # cache_policy=NO_CACHE,
     tags=["pull-db-tag"],
 )
 def pull_data_per_node_per_study(
@@ -639,7 +639,7 @@ def pull_study_node(driver, out_dir: str) -> None:
 
 
 @task(
-    cache_policy=NO_CACHE,
+    # cache_policy=NO_CACHE,
     name="Pull unique nodes from neo4j DB",
 )
 def pull_uniq_nodes(driver) -> List:
@@ -657,7 +657,7 @@ def pull_uniq_nodes(driver) -> List:
 
 
 @task(
-    cache_policy=NO_CACHE,
+    # cache_policy=NO_CACHE,
     name= "Pull unique study ids from neo4j DB",
 )
 def pull_uniq_studies(driver) -> List:
@@ -701,7 +701,7 @@ def export_node_counts_a_study(tx, study_id: str, output_dir: str) -> None:
 @task(
     name="Pull counts per node a study",
     task_run_name="pull_counts_per_node_study_{study_id}",
-    cache_policy=NO_CACHE,
+    # cache_policy=NO_CACHE,
 )
 def pull_all_nodes_a_study(
     driver, export_to_csv, study_id: str, output_dir: str
@@ -749,7 +749,7 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     name="Pull ids a node a study",
     task_run_name="pull_ids_{node}_{study_id}",
     tags=["db-query-tag"],
-    cache_policy=NO_CACHE,
+    # cache_policy=NO_CACHE,
 )
 def pull_ids_node_study(
     driver, export_ids_csv, study_id: str, node: str, output_dir: str

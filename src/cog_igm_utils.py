@@ -15,7 +15,7 @@ from src.cog_transform_utils import cog_transformer
 import boto3
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
-from prefect.cache_policies import NO_CACHE
+# from prefect.cache_policies import NO_CACHE
 
 
 def replace_en_em_dash(df: pd.DataFrame) -> pd.DataFrame:
@@ -229,7 +229,7 @@ def set_s3_resource():
     tags=["json-downloader-tag"],
     retries=3,
     retry_delay_seconds=1,
-    cache_policy=NO_CACHE,  
+    # cache_policy=NO_CACHE,  
 )
 def file_dl(dl_parameter: dict, dups, logger, runner_logger):
     """File download using bucket name and filename

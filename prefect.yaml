@@ -341,9 +341,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: pull-neo4j-data-16gb-c3dc
+  - name: TEST-pull-neo4j-data-16gb-c3dc
     version: null
-    tags: ["Production","V2"]
+    tags: ["TEST", "Production","V2"]
     description: null
     entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
     schedule: null
@@ -358,18 +358,18 @@ deployments:
 
     # pull action to overwrite from file pull action
     pull:
-      - prefect.projects.steps.git_clone_project:
+      - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.projects.steps.pip_install_requirements:
+          branch: fix_c3dc_neo4j_pull_v2
+      - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-c3dc-16gb
+      name: ccdi-c3dc-16gb-prefect-2.20.3-python3.9
       work_queue_name: null
       job_variables: {}
 
