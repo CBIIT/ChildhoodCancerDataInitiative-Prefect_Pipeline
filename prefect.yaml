@@ -1413,7 +1413,7 @@ deployments:
       uri_parameter: "uri"
       username_parameter: "username"
       password_parameter: "password"
-    
+      study_id: ""
 
     # pull action to overwrite from file pull action
     pull:
