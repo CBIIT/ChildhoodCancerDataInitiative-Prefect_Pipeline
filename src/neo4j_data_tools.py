@@ -575,7 +575,7 @@ def pull_nodes_loop(
             query_str=cypher_phrase,
             output_dir=per_study_per_node_out_dir,
         )
-    future.result()
+    #future.result()
     return None
 
 
