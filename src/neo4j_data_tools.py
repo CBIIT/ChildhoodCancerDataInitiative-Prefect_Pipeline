@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.task_runners import ConcurrentTaskRunner
-from prefect.task_runners import ThreadPoolTaskRunner
+# from prefect.task_runners import ThreadPoolTaskRunner
 # from prefect.cache_policies import NO_CACHE
 from neo4j import GraphDatabase
 import pandas as pd
@@ -550,7 +550,8 @@ def pull_uniqvalue_property_loop(node_property: DataFrame, driver, logger) -> st
     return out_dir
 
 
-@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+# @flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+@flow(log_prints=True)
 def pull_nodes_loop(
     study_list: list, node_list: list, driver, out_dir: str, logger
 ) -> None:
@@ -828,7 +829,8 @@ def compare_id_input_db(
     return comparison_df
 
 
-@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+# @flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+@flow(log_prints=True)
 def pull_node_ids_all_studies_write(
     driver, studies_dataframe: DataFrame, logger
 ) -> str:
@@ -886,7 +888,8 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
     return ids_dict
 
 
-@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+# @flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+@flow(log_prints=True)
 def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     """Returns temp folder which contains counts all nodes(except study node)
     of all studies in a DB
