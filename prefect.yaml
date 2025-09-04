@@ -363,7 +363,7 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: fix_c3dc_neo4j_pull_v2
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements.txt
+          requirements_file: requirements_wo_prefect.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
