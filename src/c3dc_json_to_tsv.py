@@ -248,7 +248,9 @@ def make_uuid(node_type, study_id, row, foreign_ids):
         str(row[foreign_id]) for foreign_id in foreign_ids
     ]) if foreign_ids else ''
 
-    if node_type == 'participant':
+    if node_type == 'consent_group':
+        row_str = row['consent_group_id']
+    elif node_type == 'participant':
         row_str = row['participant_id']
     elif node_type == 'reference_file':
         row_str = row['reference_file_url']
@@ -260,12 +262,12 @@ def make_uuid(node_type, study_id, row, foreign_ids):
         row_str = ''.join([
             str(row[prop]) for prop in identifying_props
         ]) if identifying_props else ''
+        row_str = ''.join(row_str + foreign_str)
 
     uuid_name = ''.join([
         node_type,
         study_id,
-        row_str,
-        foreign_str
+        row_str
     ])
 
     return str(uuid.uuid5(uuid.NAMESPACE_URL, uuid_name))
