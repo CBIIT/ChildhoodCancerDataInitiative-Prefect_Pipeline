@@ -1085,7 +1085,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "c3dc-curation"
     
     # pull action to overwrite from file pull action
     pull:
