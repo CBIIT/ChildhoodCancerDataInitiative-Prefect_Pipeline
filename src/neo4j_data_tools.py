@@ -1,3 +1,4 @@
+import itertools
 from src.utils import (
     get_date,
     file_dl,
@@ -557,17 +558,30 @@ def pull_nodes_loop(
     print(per_study_per_node_out_dir)
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
-    for study in study_list:
-        for node_label in node_list:
-            logger.info(f"Pulling from Node {node_label}")
-            pull_data_per_node_per_study.submit(
-                driver=driver,
-                data_to_csv=export_to_csv_per_node_per_study,
-                study_name=study,
-                node_label=node_label,
-                query_str=cypher_phrase,
-                output_dir=per_study_per_node_out_dir,
-            )
+    # for study in study_list:
+    #     for node_label in node_list:
+    #         logger.info(f"Pulling from Node {node_label}")
+    #         pull_data_per_node_per_study.submit(
+    #             driver=driver,
+    #             data_to_csv=export_to_csv_per_node_per_study,
+    #             study_name=study,
+    #             node_label=node_label,
+    #             query_str=cypher_phrase,
+    #             output_dir=per_study_per_node_out_dir,
+    #         )
+    study_node_pair = list(itertools.product(study_list, node_list))
+
+    logger.info("start pulling data per node per study")
+
+    future = pull_data_per_node_per_study.map(
+        driver=driver,
+        data_to_csv=export_to_csv_per_node_per_study,
+        study_name=[x for x, y in study_node_pair],
+        node_label=[y for x, y in study_node_pair],
+        query_str=cypher_phrase,
+        output_dir=per_study_per_node_out_dir,
+    )
+    future.result()
     return None
 
 
@@ -836,13 +850,14 @@ def pull_node_ids_all_studies_write(
     for i in range(len(node_chunks)):
         # print(f"study_id_list: {*study_id_chunks[i],}")
         # print(f"node_list: {*node_chunks[i],}")
-        pull_ids_node_study.map(
+        future = pull_ids_node_study.map(
             driver,
             export_node_ids_a_study,
             study_id_chunks[i],
             node_chunks[i],
             temp_folder_name,
         )
+        future.result()
 
     return temp_folder_name
 
@@ -881,14 +896,15 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     temp_folder_name = f"db_node_entry_counts_all_studies_{random.choice(range(1000))}"
     os.mkdir(temp_folder_name)
     logger.info("Start pulling entry counts per node per study")
-    for study in study_list:
-        logger.info(f"Pulling entry counts per node for study {study}")
-        pull_all_nodes_a_study.submit(
-            driver=driver,
-            export_to_csv=export_node_counts_a_study,
-            study_id=study,
-            output_dir=temp_folder_name,
-        )
+
+    logger.info(f"Pulling entry counts per node for using study list: {*study_list,}")
+    future = pull_all_nodes_a_study.map(
+        driver=driver,
+        export_to_csv=export_node_counts_a_study,
+        study_id=study_list,
+        output_dir=temp_folder_name,
+    )
+    future.result()
 
     return temp_folder_name
 
