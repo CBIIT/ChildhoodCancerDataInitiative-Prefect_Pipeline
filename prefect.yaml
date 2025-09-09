@@ -1079,9 +1079,9 @@ deployments:
       job_variables: {}
 
 
-  - name: TEST-C3DC-validate-neo4j-data
+  - name: C3DC-validate-neo4j-data
     version: null
-    tags: ["TEST", "C3DC", "DEV", "V3", ]
+    tags: ["Production", "C3DC", "DEV", "V3", ]
     description: null
     entrypoint: workflows/validate_neo4j_data.py:validate_neo4j_data
     schedule: null
