@@ -29,4 +29,4 @@ tzdata==2025.2
 urllib3==1.26.20
 wonderwords==2.2.0
 zipp==3.21.0
-inflect==6.0.4
+inflect==7.5.0
