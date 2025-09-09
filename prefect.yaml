@@ -1089,11 +1089,11 @@ deployments:
     
     # pull action to overwrite from file pull action
     pull:
-    - prefect.projects.steps.git_clone_project:
+    - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: C3DC-1455_new_harmonization_pipeline
-    - prefect.projects.steps.pip_install_requirements:
+    - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_V3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
