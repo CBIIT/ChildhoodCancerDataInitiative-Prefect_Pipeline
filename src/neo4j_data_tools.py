@@ -999,6 +999,7 @@ def validate_DB_with_input_tsvs(
         studies_dataframe=ingested_studies_dataframe[["study_id", "node"]],
         logger=logger,
     )
+    print(db_id_list_all_studies)
 
     logger.info("Start comparing db pulled id with ids in tsv files")
     comparison_df = compare_id_input_db(
