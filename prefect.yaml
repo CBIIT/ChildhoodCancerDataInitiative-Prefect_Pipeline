@@ -2385,7 +2385,7 @@ deployments:
 
   - name: TEST-template-exampler-ccdi-dcc-v3
     version: null
-    tags: ["Production","V3"]
+    tags: ["TEST","SVB","V3"]
     description: null
     entrypoint: workflows/Template_Exampler_ccdi_dcc.py:run_template_exampler
     schedule: null
