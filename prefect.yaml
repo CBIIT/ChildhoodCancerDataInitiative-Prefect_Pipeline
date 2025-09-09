@@ -1048,9 +1048,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-c3dc-transformation-pipeline
+  - name: C3DC-transformation-pipeline
     version: null
-    tags: [ "TEST" ]
+    tags: [ "Production" ]
     description: null
     entrypoint: workflows/c3dc_harmonization_flow.py:c3dc_summary_transformation_flow
     schedule: null
@@ -1073,5 +1073,33 @@ deployments:
     # infra-specific fields
     work_pool:
       name: ccdi-curation-32gb
+      work_queue_name: null
+      job_variables: {}
+
+  - name: TEST-C3DC-transformation-pipeline
+    version: null
+    tags: [ "TEST", "C3DC", "V3" ]
+    description: null
+    entrypoint: workflows/c3dc_harmonization_flow.py:c3dc_summary_transformation_flow
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+    
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.projects.steps.git_clone_project:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: C3DC-1455_new_harmonization_pipeline
+    - prefect.projects.steps.pip_install_requirements:
+        requirements_file: requirements_V3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-c3dc-16gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
