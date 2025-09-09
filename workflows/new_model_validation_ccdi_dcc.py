@@ -5,7 +5,7 @@ import traceback
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from model_to_submission import create_submission_manifest
-from src.template_exampler import make_template_example
+from src.template_exampler_ccdi_dcc import make_template_example
 from src.s3_validationry_refactored import ValidationRy_new
 from src.utils import get_date, get_time, file_ul
 from prefect import flow, get_run_logger
