@@ -371,7 +371,7 @@ def make_template_exampler_md(
     else:
         pass
 
-    markdown_report = f"""# CCDI Template Updater Workflow Summary
+    markdown_report = f"""# CCDI-DCC Template Updater Workflow Summary
 
 ### Source Bucket
 
@@ -385,13 +385,13 @@ def make_template_exampler_md(
 
 {output_folder}
 
-### CCDI Manifest Template
+### CCDI-DCC Manifest Template
 
 - File: {os.path.basename(manifest_template[0])}
 
 - Version: {manifest_version}
 
-### CCDI Template Exampler Output
+### CCDI-DCC Template Exampler Output
 
 - File: {os.path.basename(exampler[0])}
 
@@ -432,7 +432,7 @@ def make_template_example(manifest_path: str, entry_num: int) -> tuple:
 
     # Populate the df of each node with fake data
     fake_data_generater = GetFakeValue()
-    logger.info("Start generating example file using ccdi manifes template")
+    logger.info("Start generating example file using ccdi-dcc manifest template")
     populated_dfs = populate_exampler(
         file_path=output_path,
         fake_data_generater=fake_data_generater,

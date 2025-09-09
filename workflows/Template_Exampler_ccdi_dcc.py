@@ -6,7 +6,7 @@ import sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.template_exampler_ccdi_dcc import make_template_example, make_template_exampler_md
-from src.utils import CCDI_Tags, get_time, get_date, file_ul
+from src.utils import CCDI_DCC_Tags, get_time, get_date, file_ul
 
 
 @flow(
@@ -35,7 +35,7 @@ def run_template_exampler(
 
     # Check if manifest version is provided,
     # download the specified version if yes, and download the latest version if no
-    ccdi_tag = CCDI_Tags()
+    ccdi_tag = CCDI_DCC_Tags()
     if ccdi_manifest_version != "default_to_latest":
         check_tag = ccdi_tag.if_tag_exists(
             tag=ccdi_manifest_version, logger=runner_logger
