@@ -1,10 +1,10 @@
 bento-mdf==0.10.0
 boto3==1.37.32
 botocore==1.37.32
-deepdiff==8.0.1
+deepdiff==8.6.1
 graphql-core==3.2.6
 greenlet==3.1.1
-h2==4.2.0
+h2==4.3.0
 hpack==4.1.0
 hyperframe==6.1.0
 importlib_metadata==8.6.1
@@ -26,6 +26,6 @@ six==1.17.0
 tabulate==0.9.0
 typing_extensions==4.13.2
 tzdata==2025.2
-urllib3==1.26.20
+urllib3==2.5.0
 wonderwords==2.2.0
 zipp==3.21.0
