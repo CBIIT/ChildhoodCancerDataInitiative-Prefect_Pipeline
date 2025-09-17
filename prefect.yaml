@@ -2329,7 +2329,7 @@ deployments:
 
   - name: TEST-ccdi-data-curation-8gb-v3
     version: null
-    tags: ["TEST","SVB","V3"]
+    tags: ["TEST","SVB","CCDIDC-1971","V3"]
     description: null
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
