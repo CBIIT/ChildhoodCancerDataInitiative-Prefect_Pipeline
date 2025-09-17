@@ -695,22 +695,37 @@ def validate_regex(
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
     date_regex = [
-        "(0?[1-9]|1[0-2])[-\\/.](0?[1-9]|[12][0-9]|3[01])[-\\/.](19[0-9]{2}|2[0-9]{3}|[0-9]{2})",
-        "(19[0-9]{2}|2[0-9]{3})[-\\/.](0?[1-9]|1[0-2])[-\\/.](0?[1-9]|[12][0-9]|3[01])",
-        "(0?[1-9]|[12][0-9]|3[01])[\\/](19[0-9]{2}|2[0-9]{3})",
-        "(0?[1-9]|[12][0-9])[\\/]([0-9]{2})",
-        "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[0-9]{2}",
-        "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])19[0-9]{2}",
-        "(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])2[0-9]{3}",
-        "19[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])",
-        "2[0-9]{3}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])",
+            # Numeric formats (day/month/year or month/day/year)
+            r"\b\d{2}/\d{2}/\d{4}\b",       # 01/01/2020
+            r"\b\d{1,2}/\d{1,2}/\d{4}\b",   # 1/1/2020
+            r"\b\d{2}-\d{2}-\d{4}\b",       # 01-01-2020
+            r"\b\d{1,2}-\d{1,2}-\d{4}\b",   # 1-1-2020
+            r"\b\d{4}/\d{2}/\d{2}\b",       # 2020/01/01
+            r"\b\d{4}-\d{2}-\d{2}\b",       # 2020-01-01
+        
+            # Compact numeric formats
+            r"\b\d{8}\b",                   # 20200101
+        
+            # Alphanumeric short month
+            r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{4}\b",   # 1Jan2020, 01 Jan 2020
+            r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{4}\b", # Jan 1, 2020 / Jan 1 2020
+        
+            # Alphanumeric full month
+            r"\b\d{1,2}[ ]?[A-Za-z]+[ ]?\d{4}\b",     # 1 January 2020
+            r"\b[A-Za-z]+[ ]?\d{1,2},?[ ]?\d{4}\b",   # January 1, 2020
+        
+            # Variants with apostrophes or 2-digit years
+            r"\b\d{1,2}/\d{1,2}/\d{2}\b",   # 01/01/20
+            r"\b\d{1,2}-\d{1,2}-\d{2}\b",   # 01-01-20
+            r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{2}\b",  # 1Jan20
+            r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{2}\b" # Jan 1 20
     ]
     # Problematic regex
     # A month name or abbreviation and a 1, 2, or 4-digit number, in either order, separated by some non-letter, non-number characters or not separated, e.g., "JAN '93", "FEB64", "May 3rd" (but not "May be 14").
     # ```'[a-zA-Z]{3}[\ ]?([0-9]|[0-9]{2}|[0-9]{4})[a-zA-Z]{0,2}'```
-    socsec_regex = ["[0-9]{3}[-][0-9]{2}[-][0-9]{4}"]
-    phone_regex = ["[(]?[0-9]{3}[-)\ ][0-9]{3}[-][0-9]{4}"]
-    zip_regex = ["(^[0-9]{5}$)|(^[0-9]{9}$)|(^[0-9]{5}-[0-9]{4}$)"]
+    socsec_regex = [r"\b\d{3}-\d{2}-\d{4}\b"] # US Social Security Number 123-45-6789
+    phone_regex = [r"\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"] # US Phone number (123) 456-7890, 123-456-7890, 123.456.7890, +1 123-456-7890
+    zip_regex = [r"\b\d{5}(?:-\d{4})?\b"] # US Zip code 12345 or 12345-6789
     all_regex = date_regex + socsec_regex + phone_regex + zip_regex
 
     validate_str_future = validate_regex_one_sheet.map(
