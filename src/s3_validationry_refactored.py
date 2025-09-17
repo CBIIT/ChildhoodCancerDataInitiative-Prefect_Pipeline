@@ -618,6 +618,9 @@ def validate_regex_one_sheet(
     # pull out a data frame that only applies to string values
     string_df = dict_df[dict_df["Type"].str.lower().str.contains("string")]
 
+    # Fix the string_df to remove any properties that are specifically "id" or "dcf_indexd_guid" as these are random/semi-random strings that are created and would never have a date placed in them.
+    string_df = string_df[~string_df["Property"].isin(["id", "dcf_indexd_guid"])]
+
     node_df = file_object.read_sheet_na(sheetname=node_name)
     string_node = string_df[string_df["Node"].isin([node_name])]
     string_props = string_node["Property"].values
