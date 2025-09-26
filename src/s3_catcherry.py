@@ -270,9 +270,29 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         for node in dict_nodes:
             df = meta_dfs[node]
             if "anatomic_site" in df.columns:
-                df["anatomic_site"] = df["anatomic_site"].replace(
-                    r"^\s*C\d{1,3}(?:\.\d{1,2})?\s*:\s*", "", regex=True
-                )
+                # we have to go row by row to handle each value as some have multiple values separated by ;
+                for index, row in df.iterrows():
+                    anatomic_site_value = row["anatomic_site"]
+                    if pd.notna(anatomic_site_value):
+                        if ";" in anatomic_site_value:
+                            anatomic_site_list = anatomic_site_value.split(";")
+                            new_anatomic_site_list = []
+                            for anatomic_site in anatomic_site_list:
+                                new_anatomic_site = re.sub(
+                                    r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
+                                    "",
+                                    anatomic_site,
+                                )
+                                new_anatomic_site_list.append(new_anatomic_site)
+                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
+                            df.at[index, "anatomic_site"] = new_anatomic_site_value
+                        else:
+                            new_anatomic_site = re.sub(
+                                r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
+                                "",
+                                anatomic_site_value,
+                            )
+                            df.at[index, "anatomic_site"] = new_anatomic_site
             meta_dfs[node] = df
         # read in the anatomic_site_mapping_uberon.tsv file
         anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
@@ -292,16 +312,25 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             if "anatomic_site" in df.columns:
                 # use the mapping dictionary to fill in the new anatomic_site values based on the old anatomic_site values compared to the uberon_text column.
                 # If there is no match, then leave the value as is.
-                df["anatomic_site"] = df.apply(
-                    lambda row: (
-                        anatomic_site_dict.get(
-                            row["anatomic_site"], row["anatomic_site"]
-                        )
-                        if pd.notna(row["anatomic_site"])
-                        else row["anatomic_site"]
-                    ),
-                    axis=1,
-                )
+                # We have to go row by row to handle each value as some have multiple values separated by ;
+                for index, row in df.iterrows():
+                    anatomic_site_value = row["anatomic_site"]
+                    if pd.notna(anatomic_site_value):
+                        if ";" in anatomic_site_value:
+                            anatomic_site_list = anatomic_site_value.split(";")
+                            new_anatomic_site_list = []
+                            for anatomic_site in anatomic_site_list:
+                                new_anatomic_site = anatomic_site_dict.get(
+                                    anatomic_site, anatomic_site
+                                )
+                                new_anatomic_site_list.append(new_anatomic_site)
+                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
+                            df.at[index, "anatomic_site"] = new_anatomic_site_value
+                        else:
+                            new_anatomic_site = anatomic_site_dict.get(
+                                anatomic_site_value, anatomic_site_value
+                            )
+                            df.at[index, "anatomic_site"] = new_anatomic_site
             meta_dfs[node] = df
 
         ##############
