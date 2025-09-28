@@ -48,8 +48,6 @@ def general_parser(workbook: str, sheet: str, prop_name: str, prop_encoding: str
         'Data Element Value'
         ] = 'No'
 
-
-
     return summary
 
 @task(name=f"age_parsing_{get_time()}")
