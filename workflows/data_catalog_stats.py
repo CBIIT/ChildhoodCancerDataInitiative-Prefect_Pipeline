@@ -191,10 +191,10 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     """Generates summary statistics from a data catalog excel workbook.
     
     Args:
-        bucket (str): Bucket name of where the manifest is located in and the output goes to
-        workbook_path (str): Path to excel workbook of study to generate counts for.
-        phs (str): dbbGaP phs identifier to use in output file names.
-        upload_path (str): Path in bucket to upload output file to. 
+        bucket (str): Bucket name of where the manifest is located in and the output goes to, i.e. ccdi-validation.
+        workbook_path (str): Path to excel workbook of study to generate counts for, e.g. bullenca/test_data_catalog.xlsx.
+        phs (str): dbGaP phs identifier to use in output file names, e.g. phs000178.
+        upload_path (str): Path in bucket to upload output file to, e.g. bullenca/data_catalog_counts.
     
     """
 
