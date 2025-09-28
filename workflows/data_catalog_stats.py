@@ -232,6 +232,7 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     sample_general_summaries = [
         ['sample', 'anatomic_site', 'Sample Tumor Site'],
         ['sample', 'tumor_classification', 'Sample Tumor Classification'],
+        ['sample', 'sample_tumor_status', 'Sample Tumor Status'],
     ]
 
     # list of summaries to generate as instructions to total_counts
