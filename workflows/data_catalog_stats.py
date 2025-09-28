@@ -39,13 +39,17 @@ def general_parser(workbook: str, sheet: str, prop_name: str, prop_encoding: str
     summary = summary[['Data Element', prop_name, 'Statistic Type', 'count']]
     summary = summary.rename(columns={prop_name: 'Data Element Value', 'count': 'Statistic Value'})
     
-    for index, row in summary.iterrows():
-        if row['Data Element'] == 'Sample Is Normal' and row['Data Element Value'] == 'Normal':
-            # drop row from dataframe summary
-            summary = summary.drop(index)
-        elif row['Data Element'] == 'Sample Is Tumor' and row['Data Element Value'] == 'Tumor':
-            # Data Element Value is reassign to No
-            summary.loc[index, 'Data Element Value'] = 'No'
+    # Drop rows where condition matches
+    summary = summary[~((summary['Data Element'] == 'Sample Is Normal') & (summary['Data Element Value'] == 'Normal'))]
+
+    # Replace values where condition matches
+    summary.loc[
+        (summary['Data Element'] == 'Sample Is Tumor') & (summary['Data Element Value'] == 'Tumor'),
+        'Data Element Value'
+        ] = 'No'
+
+
+
     return summary
 
 @task(name=f"age_parsing_{get_time()}")
