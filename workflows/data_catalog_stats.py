@@ -45,7 +45,7 @@ def general_parser(workbook: str, sheet: str, prop_name: str, prop_encoding: str
             summary = summary.drop(index)
         elif row['Data Element'] == 'Sample Is Tumor' and row['Data Element Value'] == 'Tumor':
             # Data Element Value is reassign to No
-            summary.at[index, 'Data Element Value'] = 'No'
+            summary.loc[index, 'Data Element Value'] = 'No'
     return summary
 
 @task(name=f"age_parsing_{get_time()}")
