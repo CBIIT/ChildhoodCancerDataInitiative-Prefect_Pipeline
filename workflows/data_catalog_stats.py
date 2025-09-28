@@ -44,7 +44,7 @@ def general_parser(workbook: str, sheet: str, prop_name: str, prop_encoding: str
 
     # Replace values where condition matches
     summary.loc[
-        (summary['Data Element'] == 'Sample Is Tumor') & (summary['Data Element Value'] == 'Tumor'),
+        (summary['Data Element'] == 'Sample Is Normal') & (summary['Data Element Value'] == 'Tumor'),
         'Data Element Value'
         ] = 'No'
 
