@@ -315,7 +315,7 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     ]
 
     df['Data Element'] = pd.Categorical(df['Data Element'], categories=custom_order, ordered=True)  
-    df = df.sort_values(['Data Element']).reset_index(drop=True)
+    df = df.sort_values(['Data Element', 'Data Element Value'], ascending=[True, True]).reset_index(drop=True)
 
     runner_logger.info(f">>> Saving to excel and uploading to bucket {bucket} at path {upload_path}")
 
