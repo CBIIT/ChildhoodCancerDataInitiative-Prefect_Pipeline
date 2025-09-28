@@ -182,7 +182,7 @@ def total_file_size(workbook: str, file_sheets: list) -> pd.DataFrame:
         if 'file_size' in temp.columns:
             total_size += temp['file_size'].sum()
 
-    size_df = pd.DataFrame({'Data Element': ['Total File Size (Tb)'], 'Data Element Value': [pd.NA], 'Statistic Type': ['Exact Value'], 'Statistic Value': [total_size / (1000 ** 4)]})
+    size_df = pd.DataFrame({'Data Element': ['Total File Size (Tb)', 'Total File Size (Gb)'], 'Data Element Value': [pd.NA, pd.NA], 'Statistic Type': ['Exact Value', 'Exact Value'], 'Statistic Value': [total_size / (1000 ** 4), total_size / (1000 ** 3)]})
 
     return size_df
 
