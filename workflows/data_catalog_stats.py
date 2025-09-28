@@ -297,6 +297,25 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     # Convert to int where Statistic Type is 'Count'
     df.loc[df['Statistic Type'] == 'Count', 'Statistic Value'] = \
         df.loc[df['Statistic Type'] == 'Count', 'Statistic Value'].astype('Int64')
+    
+    custom_order = ["dbGaP Study Identifier",
+        "Case ID",
+        "Case Sex",
+        "Case Race",
+        "Case Age at Diagnosis",
+        "Case Disease Diagnosis",
+        "Sample ID",
+        "Sample Tumor Site",
+        "Sample Tumor Classification",
+        "Sample Assay Method",
+        "Available File Types",
+        "Total File Count",
+        "Total File Size (Tb)",
+        "Total File Size (Gb)"
+    ]
+
+    df['Data Element'] = pd.Categorical(df['Data Element'], categories=custom_order, ordered=True)  
+    df = df.sort_values(['Data Element']).reset_index(drop=True)
 
     runner_logger.info(f">>> Saving to excel and uploading to bucket {bucket} at path {upload_path}")
 
