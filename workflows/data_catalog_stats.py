@@ -223,13 +223,16 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     summary_dfs.append(phs_df)
 
     # list of summaries to generate as instructions to general_parser
-    general_summaries = [
+    case_general_summaries = [
         ['participant', 'sex_at_birth', 'Case Sex'], 
         ['participant', 'race', 'Case Race'],
         ['diagnosis', 'diagnosis', 'Case Disease Diagnosis'],
+        ]
+    
+    sample_general_summaries = [
         ['sample', 'anatomic_site', 'Sample Tumor Site'],
         ['sample', 'tumor_classification', 'Sample Tumor Classification'],
-        ]
+    ]
 
     # list of summaries to generate as instructions to total_counts
     total_summaries = [
@@ -247,14 +250,18 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     for sheet, prop in total_summaries:
         runner_logger.info(f">>> Processing total counts for sheet: {sheet}, property: {prop}")
         summary_dfs.append(total_counts(workbook, sheet, prop))
-    
-    for sheet, prop, encoding in general_summaries:
+
+    for sheet, prop, encoding in case_general_summaries:
         runner_logger.info(f">>> Processing general summary for sheet: {sheet}, property: {prop}, encoding: {encoding}")
         summary_dfs.append(general_parser(workbook, sheet, prop, encoding))
         
     # append age at diagnosis summary
     runner_logger.info(f">>> Processing age at diagnosis summary")
     summary_dfs.append(age_at_diagnosis_parser(workbook, 'diagnosis'))
+    
+    for sheet, prop, encoding in sample_general_summaries:
+        runner_logger.info(f">>> Processing general summary for sheet: {sheet}, property: {prop}, encoding: {encoding}")
+        summary_dfs.append(general_parser(workbook, sheet, prop, encoding))
 
     for sheet, prop, encoding in sample_level_counts_summaries:
         runner_logger.info(f">>> Processing sample level counts for sheet: {sheet}, property: {prop}, encoding: {encoding}")
@@ -297,25 +304,6 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     # Convert to int where Statistic Type is 'Count'
     df.loc[df['Statistic Type'] == 'Count', 'Statistic Value'] = \
         df.loc[df['Statistic Type'] == 'Count', 'Statistic Value'].astype('Int64')
-    
-    custom_order = ["dbGaP Study Identifier",
-        "Case ID",
-        "Case Sex",
-        "Case Race",
-        "Case Age at Diagnosis",
-        "Case Disease Diagnosis",
-        "Sample ID",
-        "Sample Tumor Site",
-        "Sample Tumor Classification",
-        "Sample Assay Method",
-        "Available File Types",
-        "Total File Count",
-        "Total File Size (Tb)",
-        "Total File Size (Gb)"
-    ]
-
-    df['Data Element'] = pd.Categorical(df['Data Element'], categories=custom_order, ordered=True)  
-    df = df.sort_values(['Data Element', 'Data Element Value'], ascending=[True, True]).reset_index(drop=True)
 
     runner_logger.info(f">>> Saving to excel and uploading to bucket {bucket} at path {upload_path}")
 
