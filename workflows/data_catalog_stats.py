@@ -19,7 +19,7 @@ def title_case_except_and_or(s):
         ])
     else:
         return s
-@task(name=f"parsing_{sheet}_{get_time()}")
+@task(name=f"parsing_{get_time()}")
 def general_parser(workbook: str, sheet: str, prop_name: str, prop_encoding: str) -> pd.DataFrame:
     """Parses a specific sheet in the workbook and returns a summary dataframe.
 
@@ -82,7 +82,7 @@ def age_at_diagnosis_parser(workbook: str, sheet: str) -> pd.DataFrame:
 
     return age_df
 
-@task(name=f"total_counts_{sheet}_{get_time()}")
+@task(name=f"total_counts_{get_time()}")
 def total_counts(workbook: str, sheet: str, prop_encoding: str) -> pd.DataFrame:
     """Parses a specific sheet in the workbook and returns a total counts dataframe.
 
@@ -105,7 +105,7 @@ def total_counts(workbook: str, sheet: str, prop_encoding: str) -> pd.DataFrame:
     total_df = total_df[['Data Element', 'Data Element Value', 'Statistic Type', 'Statistic Value']]
     return total_df
 
-@task(name=f"sample_level_counts_{sheet}_{get_time()}")
+@task(name=f"sample_level_counts_{get_time()}")
 def sample_level_counts(workbook: str, sheet: str, prop_name: str, prop_encoding: str) -> pd.DataFrame:
     """Parses a specific sheet in the workbook and returns a sample level counts dataframe.
 
@@ -132,8 +132,8 @@ def sample_level_counts(workbook: str, sheet: str, prop_name: str, prop_encoding
     summary = summary[['Data Element', prop_name, 'Statistic Type', 'count']]
     summary = summary.rename(columns={prop_name: 'Data Element Value', 'count': 'Statistic Value'})
     return summary
-    
-@task(name=f"file_counts_{sheet}_{get_time()}")
+
+@task(name=f"file_counts_{get_time()}")
 def file_counts(workbook: str, file_sheets: list) -> pd.DataFrame:
     """Parses file sheets in the workbook and returns a file counts dataframe.
 
