@@ -38,6 +38,14 @@ def general_parser(workbook: str, sheet: str, prop_name: str, prop_encoding: str
     summary['Statistic Type'] = 'Count'
     summary = summary[['Data Element', prop_name, 'Statistic Type', 'count']]
     summary = summary.rename(columns={prop_name: 'Data Element Value', 'count': 'Statistic Value'})
+    
+    for index, row in summary.iterrows():
+        if row['Data Element'] == 'Sample Is Normal' and row['Data Element Value'] == 'Normal':
+            # drop row from dataframe summary
+            summary = summary.drop(index)
+        elif row['Data Element'] == 'Sample Is Tumor' and row['Data Element Value'] == 'Tumor':
+            # Data Element Value is reassign to No
+            summary.at[index, 'Data Element Value'] = 'No'
     return summary
 
 @task(name=f"age_parsing_{get_time()}")
@@ -232,7 +240,7 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     sample_general_summaries = [
         ['sample', 'anatomic_site', 'Sample Tumor Site'],
         ['sample', 'tumor_classification', 'Sample Tumor Classification'],
-        ['sample', 'sample_tumor_status', 'Sample Tumor Status'],
+        ['sample', 'sample_tumor_status', 'Sample Is Normal'],
     ]
 
     # list of summaries to generate as instructions to total_counts
