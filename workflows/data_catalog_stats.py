@@ -301,7 +301,7 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     runner_logger.info(f">>> Saving to excel and uploading to bucket {bucket} at path {upload_path}")
 
     # save to excel file
-    output_file_name = phs+"_data_catalog_summary.xlsx"
+    output_file_name = phs+f"_data_catalog_summary_{get_time()}.xlsx"
     df.to_excel(output_file_name, index=False)
     
     # upload file to bucket
