@@ -1948,7 +1948,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     # validate proband status if family data is present
     if "family_relationship" in nodes_to_validate:
         validation_logger.info("Checking proband status in family data")
-        validate_proband_status(file_path, output_file)
+        validate_proband_in_family(file_path, output_file)
     else:
         validation_logger.info("No family data found. Skipping proband status check.")
 
