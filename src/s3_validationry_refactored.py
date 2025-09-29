@@ -828,6 +828,67 @@ def validate_age(node_list: list[str], file_path: str, output_file: str):
         outf.write(return_str)
     return None
 
+# determine if there is a proband relationship in the family_relationship tab and if so, ensure that there is only one proband per family_id
+@flow(name="Validate Proband in Family", log_prints=True)
+def validate_proband_in_family(file_path: str, output_file: str):
+    section_title = (
+        "\n\n"
+        + header_str("Proband in Family Check")
+        + "\nThis section will check the Family Relationships tab to ensure that there are probands, and there is only one per family_id:\n----------\n"
+    )
+    # create file_object and template_object
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    family_df = file_object.read_sheet_na(sheetname="family_relationship")
+    print_str = "\n\tfamily relationship\n\t----------\n\t"
+    check_list = []
+    for family_id in family_df["family_id"].dropna().unique():
+        family_dict = {}
+        family_dict["family_id"] = family_id
+        family_subset = family_df[family_df["family_id"] == family_id]
+        if "proband" in family_subset["relationship"].str.lower().tolist():
+            if (
+                len(
+                    family_subset[
+                        family_subset["relationship"].str.lower() == "proband"
+                    ]
+                )
+                > 1
+            ):
+                family_dict["check"] = "ERROR"
+                bad_positions = (
+                    family_subset[
+                        family_subset["relationship"].str.lower() == "proband"
+                    ].index
+                    + 2
+                ).tolist()
+                pos_print = ",".join([str(i) for i in bad_positions])
+                family_dict["error row"] = pos_print
+            else:
+                family_dict["check"] = "PASS"
+                family_dict["error row"] = ""
+        else:
+            family_dict["check"] = "ERROR"
+            family_dict["error row"] = "no proband"
+        check_list.append(family_dict)
+    check_df = pd.DataFrame.from_records(check_list)
+    if check_df.shape[0] > 0:
+        check_df["error row"] = check_df["error row"].str.wrap(30)
+        check_df["family_id"] = check_df["family_id"].str.wrap(25)
+    else:
+        pass
+
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
+    return_str = section_title + print_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
 
 @task(
     name="Validate unique key of one sheet",
@@ -1884,6 +1945,13 @@ def ValidationRy_new(file_path: str, template_path: str):
     # validate age
     validation_logger.info("Checking age_at PII")
     validate_age(nodes_to_validate, file_path, output_file)
+
+    # validate proband status if family data is present
+    if "family_relationship" in nodes_to_validate:
+        validation_logger.info("Checking proband status in family data")
+        validate_proband_in_family(file_path, output_file)
+    else:
+        validation_logger.info("No family data found. Skipping proband status check.")
 
     # validate unique keys
     validation_logger.info("Checking unique keys")
