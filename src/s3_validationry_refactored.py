@@ -839,7 +839,7 @@ def validate_proband_in_family(file_path: str, output_file: str):
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
     family_df = file_object.read_sheet_na(sheetname="family_relationship")
-    print_str = "\n\tFamily Relationships\n\t----------\n\t"
+    print_str = "\n\tfamily relationship\n\t----------\n\t"
     check_list = []
     for family_id in family_df["family_id"].dropna().unique():
         family_dict = {}
