@@ -258,6 +258,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
+        # CCDIDC-2037
         # Anatomic_site clean up, remove the C-codes if they exist 'c##.# : ' from the anatomic_site column.
         # Then we will use the anatomic_site_term column to fill in a new value based on the uberon_text column in the
         # anatomic_site_mapping_uberon.tsv file found in the docs folder.
