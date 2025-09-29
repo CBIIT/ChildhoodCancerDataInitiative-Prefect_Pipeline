@@ -845,11 +845,11 @@ def validate_proband_in_family(file_path: str, output_file: str):
         family_dict = {}
         family_dict["family_id"] = family_id
         family_subset = family_df[family_df["family_id"] == family_id]
-        if "Proband" in family_subset["relationship"]:
+        if "proband" in family_subset["relationship"].str.lower().tolist():
             if (
                 len(
                     family_subset[
-                        family_subset["relationship"] == "Proband"
+                        family_subset["relationship"].str.lower() == "proband"
                     ]
                 )
                 > 1
@@ -857,7 +857,7 @@ def validate_proband_in_family(file_path: str, output_file: str):
                 family_dict["check"] = "ERROR"
                 bad_positions = (
                     family_subset[
-                        family_subset["relationship"] == "Proband"
+                        family_subset["relationship"].str.lower() == "proband"
                     ].index
                     + 2
                 ).tolist()
