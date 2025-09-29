@@ -884,8 +884,9 @@ def validate_proband_in_family(file_path: str, output_file: str):
         )
         + "\n"
     )
+    return_str = section_title + print_str
     with open(output_file, "a+") as outf:
-        outf.write(print_str)
+        outf.write(return_str)
     return None
 
 
