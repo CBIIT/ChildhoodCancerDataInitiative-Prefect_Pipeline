@@ -44,7 +44,7 @@ def cog_igm_transform(
         runner (str): Unique runner name where manifest located and where to direct outputs to
         manifest_path (str): File path of the CCDI study manifest
         form_parsing (str): Select whether to parse out form level TSVs for COG, or parse variant sections of IGM or parse both OR perform data clean up previously downloaded JSONs
-        file_path (str): optional; FULL path to the working directory where the clinical files are located, avoid redownloading files if they are already present
+        file_path (str): optional; FULL path to the working directory where the clinical files are located, avoid redownloading files if they are already present, e.g. /usr/local/data/COG_IGM_Transform_working_20251006_T132846
 
     """
 

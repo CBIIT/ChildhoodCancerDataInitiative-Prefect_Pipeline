@@ -259,12 +259,12 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "FINAL_DIAGNOSIS.PRIMDXDSCAT",
         "COG_UPR_DX.REG_STAGE_CODE_TEXT",
         "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT",
-        "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS",
         "FOLLOW_UP.REP_EVAL_PD_TP",
         "FOLLOW_UP.PT_FU_END_DT",
         "FOLLOW_UP.PT_VST",
         "FOLLOW_UP.COMP_RESP_CONF_IND_3",
         "FOLLOW_UP.DZ_EXM_REP_IND_2",
+        "FOLLOW_UP.DZ_REL_PROG_IND3",
         "FOLLOW_UP.PT_INF_CU_FU_COL_IND",
     ]
 
@@ -312,7 +312,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         for index, row in group.iterrows():
             try:
                 current_date = row["FOLLOW_UP.PT_FU_END_DT"]
-                if previous_date is not None and current_date < previous_date:
+                if previous_date is not None and int(current_date) < int(previous_date):
                     logger.error(
                         f"Logic error for participant_id {upi}: FOLLOW_UP.PT_FU_END_DT {current_date} is less than the preceding FOLLOW_UP.PT_FU_END_DT {previous_date}."
                     )
@@ -335,7 +335,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
             "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
             "FOLLOW_UP.PT_VST": "vital_status",
             "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT": "CNS_category",
-            "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS": "CNS_category_other",
             "FOLLOW_UP.FSTLNTXINIDXADMCAT_A1": "Chemotherapy;Immunotherapy",
             "FOLLOW_UP.FSTLNTXINIDXADMCAT_A2": "Radiation Therapy, NOS",
             "FOLLOW_UP.FSTLNTXINIDXADMCAT_A3": "Stem Cell Transplant",
@@ -356,7 +355,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
         "FOLLOW_UP.PT_VST": "vital_status",
         "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT": "CNS_category",
-        "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS": "CNS_category_other",
     }.items():
         logger.info(f"  {old_col} -> {new_col}")
 
@@ -368,7 +366,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     logger.info("  Creating 'diagnosis_id' by concatenating participant_id and COG_UPR_DX.PTDT_IDP with '_'")
     logger.info("  Creating 'follow_up_id' by concatenating participant_id and FOLLOW_UP.REP_EVAL_PD_TP with '_'")
     logger.info("  Creating 'primary_site' by concatenating COG_UPR_DX.TOPO_ICDO and COG_UPR_DX.TOPO_TEXT with ' : '")
-    logger.info("  Updating 'CNS_category' by concatenating CNS_category and CNS_category_other with ';'")
 
     # CONCATENATIONS
     df_mutation = clean_column_semicolon_concat(
@@ -382,10 +379,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     )
     df_mutation = clean_column_space_colon_concat(
         df_mutation, "primary_site", "COG_UPR_DX.TOPO_ICDO", "COG_UPR_DX.TOPO_TEXT"
-    )
-
-    df_mutation = clean_column_semicolon_concat(
-        df_mutation, "CNS_category", "CNS_category", "CNS_category_other"
     )
 
     logger.info("Row count after concatenation operations: %d", len(df_mutation))
@@ -416,15 +409,18 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     # Create Response
     # Define the conditions
     conditions_response = [
-        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Yes"),
-        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")
-        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "Yes"),
-        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")
-        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "No"),
-        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Unknown"),
+        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Yes"), # complete remission is Yes
+        ((df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Unknown") # yes reporting but status is not known
+        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "Yes")
+        & (df_mutation["FOLLOW_UP.DZ_REL_PROG_IND3"] != "Yes")),
+        ((df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No") # no reporting and no complete remission
+        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "No")),
+        ((df_mutation["FOLLOW_UP.DZ_REL_PROG_IND3"] == "Yes") # progressive disease is Yes, complete remission is No
+        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "Yes")
+        & (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")),
     ]
     # Define the corresponding choices for each condition
-    choices_response = ["Complete Remission", "Unknown", "Not Reported", "Unknown"]
+    choices_response = ["Complete Remission", "Unknown", "Not Reported",  "Progressive Disease"]
     # Apply the conditions and choices to create the 'response' column
     df_mutation["response"] = np.select(conditions_response, choices_response, default="")
 
@@ -641,7 +637,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
             "COG_UPR_DX.PTDT_IDP",
             "COG_UPR_DX.TOPO_ICDO",
             "COG_UPR_DX.TOPO_TEXT",
-            "CNS_category_other",
             "DEMOGRAPHY.DM_BRTHDAT",
             "COG_UPR_DX.DATE_DIA",
             "FOLLOW_UP.COMP_RESP_CONF_IND_3",
@@ -654,7 +649,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     # Log dropped columns
     logger.info("Dropped columns:")
-    logger.info("  DEMOGRAPHY.DM_CRACE, DEMOGRAPHY.DM_ETHNIC, COG_UPR_DX.PTDT_IDP, COG_UPR_DX.TOPO_ICDO, COG_UPR_DX.TOPO_TEXT, CNS_category_other, DEMOGRAPHY.DM_BRTHDAT, COG_UPR_DX.DATE_DIA, FOLLOW_UP.COMP_RESP_CONF_IND_3, FOLLOW_UP.DZ_EXM_REP_IND_2, FOLLOW_UP.REP_EVAL_PD_TP, FOLLOW_UP.PT_FU_END_DT")
+    logger.info("  DEMOGRAPHY.DM_CRACE, DEMOGRAPHY.DM_ETHNIC, COG_UPR_DX.PTDT_IDP, COG_UPR_DX.TOPO_ICDO, COG_UPR_DX.TOPO_TEXT, DEMOGRAPHY.DM_BRTHDAT, COG_UPR_DX.DATE_DIA, FOLLOW_UP.COMP_RESP_CONF_IND_3, FOLLOW_UP.DZ_EXM_REP_IND_2, FOLLOW_UP.DZ_REL_PROG_IND3, FOLLOW_UP.REP_EVAL_PD_TP, FOLLOW_UP.PT_FU_END_DT")
 
     df_mutation = df_mutation.drop_duplicates()
 
@@ -691,6 +686,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     # Log final column order
     logger.info(f"Final column order: {final_order}")
+    
+    
 
     # save to file
     df_mutation[final_order].to_csv(f"{output_dir}/COG_CCDI_submission_{dt}.tsv", sep="\t", index=False)
