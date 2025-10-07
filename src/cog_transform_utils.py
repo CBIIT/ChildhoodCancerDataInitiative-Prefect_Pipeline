@@ -264,6 +264,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "FOLLOW_UP.PT_VST",
         "FOLLOW_UP.COMP_RESP_CONF_IND_3",
         "FOLLOW_UP.DZ_EXM_REP_IND_2",
+        "FOLLOW_UP.DZ_REL_PROG_IND3",
         "FOLLOW_UP.PT_INF_CU_FU_COL_IND",
     ]
 
