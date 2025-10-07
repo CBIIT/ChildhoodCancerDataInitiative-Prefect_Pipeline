@@ -259,7 +259,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "FINAL_DIAGNOSIS.PRIMDXDSCAT",
         "COG_UPR_DX.REG_STAGE_CODE_TEXT",
         "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT",
-        "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS",
         "FOLLOW_UP.REP_EVAL_PD_TP",
         "FOLLOW_UP.PT_FU_END_DT",
         "FOLLOW_UP.PT_VST",
@@ -335,7 +334,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
             "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
             "FOLLOW_UP.PT_VST": "vital_status",
             "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT": "CNS_category",
-            "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS": "CNS_category_other",
             "FOLLOW_UP.FSTLNTXINIDXADMCAT_A1": "Chemotherapy;Immunotherapy",
             "FOLLOW_UP.FSTLNTXINIDXADMCAT_A2": "Radiation Therapy, NOS",
             "FOLLOW_UP.FSTLNTXINIDXADMCAT_A3": "Stem Cell Transplant",
@@ -356,7 +354,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         "COG_UPR_DX.REG_STAGE_CODE_TEXT": "registry_stage_code",
         "FOLLOW_UP.PT_VST": "vital_status",
         "CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT": "CNS_category",
-        "CNS_DIAGNOSIS_DETAIL.SUPPTU_QVAL_TUTUDX_OTHS": "CNS_category_other",
     }.items():
         logger.info(f"  {old_col} -> {new_col}")
 
