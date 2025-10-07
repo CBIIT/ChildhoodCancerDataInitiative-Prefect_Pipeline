@@ -311,7 +311,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
         for index, row in group.iterrows():
             try:
                 current_date = row["FOLLOW_UP.PT_FU_END_DT"]
-                if previous_date is not None and current_date < previous_date:
+                if previous_date is not None and int(current_date) < int(previous_date):
                     logger.error(
                         f"Logic error for participant_id {upi}: FOLLOW_UP.PT_FU_END_DT {current_date} is less than the preceding FOLLOW_UP.PT_FU_END_DT {previous_date}."
                     )
