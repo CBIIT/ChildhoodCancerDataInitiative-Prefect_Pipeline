@@ -365,7 +365,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     logger.info("  Creating 'diagnosis_id' by concatenating participant_id and COG_UPR_DX.PTDT_IDP with '_'")
     logger.info("  Creating 'follow_up_id' by concatenating participant_id and FOLLOW_UP.REP_EVAL_PD_TP with '_'")
     logger.info("  Creating 'primary_site' by concatenating COG_UPR_DX.TOPO_ICDO and COG_UPR_DX.TOPO_TEXT with ' : '")
-    logger.info("  Updating 'CNS_category' by concatenating CNS_category and CNS_category_other with ';'")
 
     # CONCATENATIONS
     df_mutation = clean_column_semicolon_concat(
@@ -379,10 +378,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     )
     df_mutation = clean_column_space_colon_concat(
         df_mutation, "primary_site", "COG_UPR_DX.TOPO_ICDO", "COG_UPR_DX.TOPO_TEXT"
-    )
-
-    df_mutation = clean_column_semicolon_concat(
-        df_mutation, "CNS_category", "CNS_category", "CNS_category_other"
     )
 
     logger.info("Row count after concatenation operations: %d", len(df_mutation))
@@ -638,7 +633,6 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
             "COG_UPR_DX.PTDT_IDP",
             "COG_UPR_DX.TOPO_ICDO",
             "COG_UPR_DX.TOPO_TEXT",
-            "CNS_category_other",
             "DEMOGRAPHY.DM_BRTHDAT",
             "COG_UPR_DX.DATE_DIA",
             "FOLLOW_UP.COMP_RESP_CONF_IND_3",
@@ -651,7 +645,7 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     # Log dropped columns
     logger.info("Dropped columns:")
-    logger.info("  DEMOGRAPHY.DM_CRACE, DEMOGRAPHY.DM_ETHNIC, COG_UPR_DX.PTDT_IDP, COG_UPR_DX.TOPO_ICDO, COG_UPR_DX.TOPO_TEXT, CNS_category_other, DEMOGRAPHY.DM_BRTHDAT, COG_UPR_DX.DATE_DIA, FOLLOW_UP.COMP_RESP_CONF_IND_3, FOLLOW_UP.DZ_EXM_REP_IND_2, FOLLOW_UP.REP_EVAL_PD_TP, FOLLOW_UP.PT_FU_END_DT")
+    logger.info("  DEMOGRAPHY.DM_CRACE, DEMOGRAPHY.DM_ETHNIC, COG_UPR_DX.PTDT_IDP, COG_UPR_DX.TOPO_ICDO, COG_UPR_DX.TOPO_TEXT, DEMOGRAPHY.DM_BRTHDAT, COG_UPR_DX.DATE_DIA, FOLLOW_UP.COMP_RESP_CONF_IND_3, FOLLOW_UP.DZ_EXM_REP_IND_2, FOLLOW_UP.REP_EVAL_PD_TP, FOLLOW_UP.PT_FU_END_DT")
 
     df_mutation = df_mutation.drop_duplicates()
 
