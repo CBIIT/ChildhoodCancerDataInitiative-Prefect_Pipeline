@@ -408,15 +408,18 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
     # Create Response
     # Define the conditions
     conditions_response = [
-        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Yes"),
-        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")
-        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "Yes"),
-        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")
-        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "No"),
-        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Unknown"),
+        (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Yes"), # complete remission is Yes
+        ((df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "Unknown") # yes reporting but status is not known
+        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "Yes")
+        & (df_mutation["FOLLOW_UP.DZ_REL_PROG_IND3"] != "Yes")),
+        ((df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No") # no reporting and no complete remission
+        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "No")),
+        ((df_mutation["FOLLOW_UP.DZ_REL_PROG_IND3"] == "Yes") # progressive disease is Yes, complete remission is No
+        & (df_mutation["FOLLOW_UP.DZ_EXM_REP_IND_2"] == "Yes")
+        & (df_mutation["FOLLOW_UP.COMP_RESP_CONF_IND_3"] == "No")),
     ]
     # Define the corresponding choices for each condition
-    choices_response = ["Complete Remission", "Unknown", "Not Reported", "Unknown"]
+    choices_response = ["Complete Remission", "Unknown", "Not Reported",  "Progressive Disease"]
     # Apply the conditions and choices to create the 'response' column
     df_mutation["response"] = np.select(conditions_response, choices_response, default="")
 
@@ -682,6 +685,8 @@ def cog_transformer(df_reshape_file_name: str, output_dir: str):  # Remove logge
 
     # Log final column order
     logger.info(f"Final column order: {final_order}")
+    
+    
 
     # save to file
     df_mutation[final_order].to_csv(f"{output_dir}/COG_CCDI_submission_{dt}.tsv", sep="\t", index=False)
