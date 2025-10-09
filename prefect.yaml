@@ -2326,4 +2326,35 @@ deployments:
       name: ccdi-curation-16gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
+      
+  - name: ccdi-data-catalog-counts
+    version: null
+    tags: ["V3"]
+    description: null
+    entrypoint: workflows/data_catalog_stats.py:data_catalog_stats
+    schedule: null
 
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      workbook_path: ""
+      phs: "phs002790"
+      upload_path: ""
+    
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.deployments.steps.git_clone:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: main
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements_V3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
