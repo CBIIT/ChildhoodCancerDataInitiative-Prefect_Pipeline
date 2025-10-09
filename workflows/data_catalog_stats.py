@@ -32,7 +32,13 @@ def general_parser(workbook: str, sheet: str, prop_name: str, prop_encoding: str
     Returns:
         pd.DataFrame: Summary dataframe.
     """
-    df = pd.read_excel(workbook, sheet_name=sheet)
+    df = pd.read_excel(workbook, sheet_name=sheet).fillna('')
+    
+    # special handling for case-level dx
+    if sheet == 'diagnosis':
+        # filter out sample-level dx
+        df = df[df['participant.participant_id'] != '']
+    
     summary = df.groupby(prop_name).size().reset_index(name='count')
     summary['Data Element'] = prop_encoding
     summary['Statistic Type'] = 'Count'
@@ -236,11 +242,12 @@ def data_catalog_stats(bucket: str, workbook_path: str, phs: str, upload_path: s
     case_general_summaries = [
         ['participant', 'sex_at_birth', 'Case Sex'], 
         ['participant', 'race', 'Case Race'],
+        ['diagnosis', 'anatomic_site', 'Case Tumor Site'],
         ['diagnosis', 'diagnosis', 'Case Disease Diagnosis'],
         ]
     
     sample_general_summaries = [
-        ['sample', 'anatomic_site', 'Sample Tumor Site'],
+        ['sample', 'anatomic_site', 'Sample Anatomic Site'],
         ['sample', 'tumor_classification', 'Sample Tumor Classification'],
         ['sample', 'sample_tumor_status', 'Sample Is Normal'],
     ]
