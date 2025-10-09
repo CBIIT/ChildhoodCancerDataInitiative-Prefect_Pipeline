@@ -38,7 +38,12 @@ def general_parser(workbook: str, sheet: str, prop_name: str, prop_encoding: str
     if sheet == 'diagnosis':
         # filter out sample-level dx
         df = df[df['participant.participant_id'] != '']
-    
+        
+    # special handling for case-level race values
+    if sheet == 'participant' and prop_name == 'race':
+        df['race'] = df['race'].str.replace(';+(Not Reported|Unknown)', '', regex=True)
+        df['race'] = df['race'].str.replace('(Not Reported|Unknown);+', '', regex=True)
+
     summary = df.groupby(prop_name).size().reset_index(name='count')
     summary['Data Element'] = prop_encoding
     summary['Statistic Type'] = 'Count'
