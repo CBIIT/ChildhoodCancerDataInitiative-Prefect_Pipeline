@@ -258,81 +258,81 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
-        # CCDIDC-2037
+        # CCDIDC-2037 TO BE USED WITH CCDI-DCC MODEL ONLY
         # Anatomic_site clean up, remove the C-codes if they exist 'c##.# : ' from the anatomic_site column.
         # Then we will use the anatomic_site_term column to fill in a new value based on the uberon_text column in the
         # anatomic_site_mapping_uberon.tsv file found in the docs folder.
         # This can be deprecated once submitters are using the new template
         #
         ##############
-        catcherr_logger.info(
-            "Cleaning up anatomic_site column, removing 'C##.# : ' if present"
-        )
-        for node in dict_nodes:
-            df = meta_dfs[node]
-            if "anatomic_site" in df.columns:
-                # we have to go row by row to handle each value as some have multiple values separated by ;
-                for index, row in df.iterrows():
-                    anatomic_site_value = row["anatomic_site"]
-                    if pd.notna(anatomic_site_value):
-                        if ";" in anatomic_site_value:
-                            anatomic_site_list = anatomic_site_value.split(";")
-                            new_anatomic_site_list = []
-                            for anatomic_site in anatomic_site_list:
-                                new_anatomic_site = re.sub(
-                                    r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
-                                    "",
-                                    anatomic_site,
-                                )
-                                new_anatomic_site_list.append(new_anatomic_site)
-                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
-                            df.at[index, "anatomic_site"] = new_anatomic_site_value
-                        else:
-                            new_anatomic_site = re.sub(
-                                r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
-                                "",
-                                anatomic_site_value,
-                            )
-                            df.at[index, "anatomic_site"] = new_anatomic_site
-            meta_dfs[node] = df
-        # read in the anatomic_site_mapping_uberon.tsv file
-        anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
-        anatomic_site_mapping = pd.read_csv(
-            anatomic_site_mapping_path, sep="\t", dtype=str
-        )
-        # create a mapping dictionary
-        anatomic_site_dict = anatomic_site_mapping.set_index("uberon_text")[
-            "anatomic_site_term"
-        ].to_dict()
-        catcherr_logger.info(
-            "Filling in anatomic_site values based on uberon_text column"
-        )
-
-        for node in dict_nodes:
-            df = meta_dfs[node]
-            if "anatomic_site" in df.columns:
-                # use the mapping dictionary to fill in the new anatomic_site values based on the old anatomic_site values compared to the uberon_text column.
-                # If there is no match, then leave the value as is.
-                # We have to go row by row to handle each value as some have multiple values separated by ;
-                for index, row in df.iterrows():
-                    anatomic_site_value = row["anatomic_site"]
-                    if pd.notna(anatomic_site_value):
-                        if ";" in anatomic_site_value:
-                            anatomic_site_list = anatomic_site_value.split(";")
-                            new_anatomic_site_list = []
-                            for anatomic_site in anatomic_site_list:
-                                new_anatomic_site = anatomic_site_dict.get(
-                                    anatomic_site, anatomic_site
-                                )
-                                new_anatomic_site_list.append(new_anatomic_site)
-                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
-                            df.at[index, "anatomic_site"] = new_anatomic_site_value
-                        else:
-                            new_anatomic_site = anatomic_site_dict.get(
-                                anatomic_site_value, anatomic_site_value
-                            )
-                            df.at[index, "anatomic_site"] = new_anatomic_site
-            meta_dfs[node] = df
+#        catcherr_logger.info(
+#            "Cleaning up anatomic_site column, removing 'C##.# : ' if present"
+#        )
+#        for node in dict_nodes:
+#            df = meta_dfs[node]
+#           if "anatomic_site" in df.columns:
+#                # we have to go row by row to handle each value as some have multiple values separated by ;
+#                for index, row in df.iterrows():
+#                    anatomic_site_value = row["anatomic_site"]
+#                    if pd.notna(anatomic_site_value):
+#                        if ";" in anatomic_site_value:
+#                            anatomic_site_list = anatomic_site_value.split(";")
+#                            new_anatomic_site_list = []
+#                            for anatomic_site in anatomic_site_list:
+#                                new_anatomic_site = re.sub(
+#                                    r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
+#                                    "",
+#                                    anatomic_site,
+#                                )
+#                                new_anatomic_site_list.append(new_anatomic_site)
+#                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
+#                            df.at[index, "anatomic_site"] = new_anatomic_site_value
+#                        else:
+#                           new_anatomic_site = re.sub(
+#                                r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
+#                                "",
+#                                anatomic_site_value,
+#                            )
+#                           df.at[index, "anatomic_site"] = new_anatomic_site
+#            meta_dfs[node] = df
+#        # read in the anatomic_site_mapping_uberon.tsv file
+#        anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
+#        anatomic_site_mapping = pd.read_csv(
+#            anatomic_site_mapping_path, sep="\t", dtype=str
+#        )
+#        # create a mapping dictionary
+#        anatomic_site_dict = anatomic_site_mapping.set_index("uberon_text")[
+#            "anatomic_site_term"
+#        ].to_dict()
+#        catcherr_logger.info(
+#            "Filling in anatomic_site values based on uberon_text column"
+#        )
+#
+#        for node in dict_nodes:
+#            df = meta_dfs[node]
+#            if "anatomic_site" in df.columns:
+#                # use the mapping dictionary to fill in the new anatomic_site values based on the old anatomic_site values compared to the uberon_text column.
+#                # If there is no match, then leave the value as is.
+#                # We have to go row by row to handle each value as some have multiple values separated by ;
+#                for index, row in df.iterrows():
+#                    anatomic_site_value = row["anatomic_site"]
+#                    if pd.notna(anatomic_site_value):
+#                        if ";" in anatomic_site_value:
+#                            anatomic_site_list = anatomic_site_value.split(";")
+#                            new_anatomic_site_list = []
+#                            for anatomic_site in anatomic_site_list:
+#                                new_anatomic_site = anatomic_site_dict.get(
+#                                    anatomic_site, anatomic_site
+#                                )
+#                                new_anatomic_site_list.append(new_anatomic_site)
+#                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
+#                            df.at[index, "anatomic_site"] = new_anatomic_site_value
+#                        else:
+#                            new_anatomic_site = anatomic_site_dict.get(
+#                                anatomic_site_value, anatomic_site_value
+#                            )
+#                            df.at[index, "anatomic_site"] = new_anatomic_site
+#            meta_dfs[node] = df
 
         ##############
         #
