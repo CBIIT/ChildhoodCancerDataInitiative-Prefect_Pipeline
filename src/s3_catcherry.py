@@ -270,7 +270,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 #        )
 #        for node in dict_nodes:
 #            df = meta_dfs[node]
-#           if "anatomic_site" in df.columns:
+#            if "anatomic_site" in df.columns:
 #                # we have to go row by row to handle each value as some have multiple values separated by ;
 #                for index, row in df.iterrows():
 #                    anatomic_site_value = row["anatomic_site"]
