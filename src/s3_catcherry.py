@@ -288,12 +288,12 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 #                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
 #                            df.at[index, "anatomic_site"] = new_anatomic_site_value
 #                        else:
-#                           new_anatomic_site = re.sub(
+#                            new_anatomic_site = re.sub(
 #                                r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
 #                                "",
 #                                anatomic_site_value,
 #                            )
-#                           df.at[index, "anatomic_site"] = new_anatomic_site
+#                            df.at[index, "anatomic_site"] = new_anatomic_site
 #            meta_dfs[node] = df
 #        # read in the anatomic_site_mapping_uberon.tsv file
 #        anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
