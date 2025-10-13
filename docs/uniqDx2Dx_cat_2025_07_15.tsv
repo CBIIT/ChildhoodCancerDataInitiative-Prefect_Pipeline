@@ -170,6 +170,7 @@ Embryonal tumor with multilayered rosettes	Embryonal tumors;Other CNS embryonal 
 Embryonal tumor with multilayered rosettes with C19MC alteration	Gliomas	ICD-O-3.2
 Embryonal tumor with multilayered rosettes, C19MC altered	Other CNS Embryonal tumors	MCI CNS Diagnosis Category
 Embryonal tumor with multilayered rosettes, NOS	Other CNS Embryonal tumors	MCI CNS Diagnosis Category
+Encapsulated papillary carcinoma	Ductal and lobular neoplasms	ICD-O-3.2
 Endometrioid adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Endovascular papillary angioendothelioma	Blood vessel tumors	ICD-O-3.2
 Ependymoma, anaplastic	Gliomas	ICD-O-3.2
@@ -569,3 +570,4 @@ Unknown, to be completed later	Unknown	ICD-O-3.2
 Vipoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Yolk sac tumor	Germ cell tumors	WHO CNS5
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
+
