@@ -572,7 +572,7 @@ def pull_nodes_loop(
     """Loops through a list of node labels and pulls data from a neo4j DB"""
     cypher_phrase = Neo4jCypherQuery.main_cypher_query_per_study_node
     per_study_per_node_out_dir = os.path.join(
-        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study"
+        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
     )
     print(per_study_per_node_out_dir)
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
@@ -605,7 +605,7 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
     # so each node can have one csv file
     print("Below is the list of query results per study per node:")
     folder_dir = os.path.join(
-        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study"
+        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
     )
     print(os.listdir(folder_dir))
     files_list = [os.path.join(folder_dir, i) for i in os.listdir(folder_dir)]
@@ -614,28 +614,49 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
         node_label_phrase = "_" + node_label + "_output.csv"
         node_file_list = [i for i in files_list if node_label_phrase in i]
         print(f"files belongs to node {node_label}: {*node_file_list,}")
-        node_df = pd.DataFrame(
-            columns=[
-                "startNodeId",
-                "startNodeLabels",
-                "startNodePropertyName",
-                "startNodePropertyValue",
-                "linkedNodeId",
-                "linkedNodeLabels",
-                "dbgap_accession",
-            ]
-        )
-        for j in node_file_list:
-            j_df = pd.read_csv(j)
-            print(j_df.columns)
-            print(j_df.head())
-            if j_df.shape[0] == 0:
-                pass
-            else:
-                node_df = pd.concat([node_df, j_df], ignore_index=True)
+        columns_list = [
+            "startNodeId",
+            "startNodeLabels",
+            "startNodePropertyName",
+            "startNodePropertyValue",
+            "linkedNodeId",
+            "linkedNodeLabels",
+            "dbgap_accession",
+        ]
+        # node_df = pd.DataFrame(
+        #    columns=[
+        #        "startNodeId",
+        #        "startNodeLabels",
+        #        "startNodePropertyName",
+        #        "startNodePropertyValue",
+        #        "linkedNodeId",
+        #        "linkedNodeLabels",
+        #        "dbgap_accession",
+        #    ]
+        # )
+        # for j in node_file_list:
+        #    j_df = pd.read_csv(j)
+        #    # print(j_df.columns)
+        #    # print(j_df.head())
+        #    if j_df.shape[0] == 0:
+        #        pass
+        #    else:
+        #        node_df = pd.concat([node_df, j_df], ignore_index=True)
+        # node_df_filename = node_label + "_output.csv"
+        # node_df_dir = os.path.join(out_dir, node_df_filename)
+        # node_df.to_csv(node_df_dir, index=False)
         node_df_filename = node_label + "_output.csv"
         node_df_dir = os.path.join(out_dir, node_df_filename)
-        node_df.to_csv(node_df_dir, index=False)
+        for j in node_file_list:
+            for chunk in pd.read_csv(j, chunksize=100000):
+                if chunk.shape[0] == 0:
+                    pass
+                else:
+                    chunk = chunk[columns_list]
+                    if not os.path.isfile(node_df_dir):
+                        chunk.to_csv(node_df_dir, index=False, header=True)
+                    else:
+                        chunk.to_csv(node_df_dir, mode="a", header=False, index=False)
     return None
 
 
