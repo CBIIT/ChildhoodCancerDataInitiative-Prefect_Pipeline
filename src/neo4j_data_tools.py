@@ -623,28 +623,7 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
             "linkedNodeLabels",
             "dbgap_accession",
         ]
-        # node_df = pd.DataFrame(
-        #    columns=[
-        #        "startNodeId",
-        #        "startNodeLabels",
-        #        "startNodePropertyName",
-        #        "startNodePropertyValue",
-        #        "linkedNodeId",
-        #        "linkedNodeLabels",
-        #        "dbgap_accession",
-        #    ]
-        # )
-        # for j in node_file_list:
-        #    j_df = pd.read_csv(j)
-        #    # print(j_df.columns)
-        #    # print(j_df.head())
-        #    if j_df.shape[0] == 0:
-        #        pass
-        #    else:
-        #        node_df = pd.concat([node_df, j_df], ignore_index=True)
-        # node_df_filename = node_label + "_output.csv"
-        # node_df_dir = os.path.join(out_dir, node_df_filename)
-        # node_df.to_csv(node_df_dir, index=False)
+
         node_df_filename = node_label + "_output.csv"
         node_df_dir = os.path.join(out_dir, node_df_filename)
         for j in node_file_list:
@@ -1177,11 +1156,9 @@ def query_db_to_csv(
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
     
-    # for testing purpose, only test diagnosis node
     pull_nodes_loop(
         study_list=unique_studies,
-        #node_list=unique_nodes,
-        node_list=["diagnosis"],
+        node_list=unique_nodes,
         driver=driver,
         out_dir=output_dir,
         logger=logger,
