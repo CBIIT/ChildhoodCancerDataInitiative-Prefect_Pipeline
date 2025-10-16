@@ -1181,7 +1181,7 @@ def query_db_to_csv(
     pull_nodes_loop(
         study_list=unique_studies,
         #node_list=unique_nodes,
-        node_list=["Diagnosis"],
+        node_list=["diagnosis"],
         driver=driver,
         out_dir=output_dir,
         logger=logger,
