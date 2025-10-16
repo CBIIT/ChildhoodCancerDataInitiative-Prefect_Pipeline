@@ -1176,9 +1176,12 @@ def query_db_to_csv(
 
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
+    
+    # for testing purpose, only test diagnosis node
     pull_nodes_loop(
         study_list=unique_studies,
-        node_list=unique_nodes,
+        #node_list=unique_nodes,
+        node_list=["Diagnosis"],
         driver=driver,
         out_dir=output_dir,
         logger=logger,
