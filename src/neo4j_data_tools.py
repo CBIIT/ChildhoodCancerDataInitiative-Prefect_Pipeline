@@ -25,6 +25,7 @@ import traceback
 from botocore.exceptions import ClientError
 import random
 import itertools
+import gc
 
 
 DataFrame = TypeVar("DataFrame")
@@ -596,19 +597,11 @@ def pull_nodes_loop(
 @flow(log_prints=True)
 def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
     """Look at csv query result files and combine the results from the same node together
-    
-    Memory optimizations:
-    - Uses generators instead of loading all file paths into memory
-    - Processes files immediately and releases chunk memory
-    - Optimizes DataFrame data types to reduce memory usage
-    - Uses efficient string operations and avoids unnecessary object creation
 
     Args:
         folder_dir (str): folder that contains query result csv per node per study
         node_list (list[str]): unique node list
-    """
-    import gc  # For explicit garbage collection
-    
+    """    
     # look at the out_dir and concatenate files for the same node,
     # so each node can have one csv file
     print("Below is the list of query results per study per node:")
