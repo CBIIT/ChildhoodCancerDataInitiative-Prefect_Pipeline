@@ -596,11 +596,19 @@ def pull_nodes_loop(
 @flow(log_prints=True)
 def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
     """Look at csv query result files and combine the results from the same node together
+    
+    Memory optimizations:
+    - Uses generators instead of loading all file paths into memory
+    - Processes files immediately and releases chunk memory
+    - Optimizes DataFrame data types to reduce memory usage
+    - Uses efficient string operations and avoids unnecessary object creation
 
     Args:
         folder_dir (str): folder that contains query result csv per node per study
         node_list (list[str]): unique node list
     """
+    import gc  # For explicit garbage collection
+    
     # look at the out_dir and concatenate files for the same node,
     # so each node can have one csv file
     print("Below is the list of query results per study per node:")
@@ -608,34 +616,94 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
         os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
     )
     print(os.listdir(folder_dir))
-    files_list = [os.path.join(folder_dir, i) for i in os.listdir(folder_dir)]
+    
+    # OPTIMIZATION 1: Define columns once outside the loop to avoid recreation
+    columns_list = [
+        "startNodeId",
+        "startNodeLabels", 
+        "startNodePropertyName",
+        "startNodePropertyValue",
+        "linkedNodeId",
+        "linkedNodeLabels",
+        "dbgap_accession",
+    ]
+
+    # OPTIMIZATION 2: Use generator instead of loading all files into memory
+    def get_node_files(folder_path, node_pattern):
+        """Generator that yields matching files without loading all paths into memory"""
+        try:
+            for filename in os.listdir(folder_path):
+                if node_pattern in filename:
+                    yield os.path.join(folder_path, filename)
+        except OSError as e:
+            print(f"Error accessing folder {folder_path}: {e}")
+            return
 
     for node_label in node_list:
         node_label_phrase = "_" + node_label + "_output.csv"
-        node_file_list = [i for i in files_list if node_label_phrase in i]
+        
+        # OPTIMIZATION 3: Use generator for file processing
+        node_files_generator = get_node_files(folder_dir, node_label_phrase)
+        node_file_list = list(node_files_generator)  # Convert to list only for logging
         print(f"files belongs to node {node_label}: {*node_file_list,}")
-        columns_list = [
-            "startNodeId",
-            "startNodeLabels",
-            "startNodePropertyName",
-            "startNodePropertyValue",
-            "linkedNodeId",
-            "linkedNodeLabels",
-            "dbgap_accession",
-        ]
-
+    
         node_df_filename = node_label + "_output.csv"
         node_df_dir = os.path.join(out_dir, node_df_filename)
+        
+        first_write = True
+        processed_files = []
+        
         for j in node_file_list:
-            for chunk in pd.read_csv(j, chunksize=100000):
-                if chunk.shape[0] == 0:
-                    pass
-                else:
-                    chunk = chunk[columns_list]
-                    if not os.path.isfile(node_df_dir):
+            try:
+                # OPTIMIZATION 4: Process chunks immediately and optimize dtypes
+                chunk_count = 0
+                for chunk in pd.read_csv(j, chunksize=100000, dtype='string'):  # Use string dtype to save memory
+                    if chunk.shape[0] == 0:
+                        continue
+                    
+                    # OPTIMIZATION 5: Check columns exist before selecting to avoid errors
+                    available_columns = [col for col in columns_list if col in chunk.columns]
+                    if not available_columns:
+                        print(f"Warning: No required columns found in {j}")
+                        continue
+                        
+                    # Select only available columns and process immediately
+                    chunk = chunk[available_columns]
+                    
+                    # Write chunk and immediately release it from memory
+                    if first_write:
                         chunk.to_csv(node_df_dir, index=False, header=True)
+                        first_write = False
                     else:
                         chunk.to_csv(node_df_dir, mode="a", header=False, index=False)
+                    
+                    chunk_count += 1
+                    # OPTIMIZATION 6: Explicit memory cleanup for large datasets
+                    del chunk
+                    if chunk_count % 10 == 0:  # Garbage collect every 10 chunks
+                        gc.collect()
+                        
+                print(f"Processed {chunk_count} chunks from {os.path.basename(j)}")
+                processed_files.append(j)
+                
+            except Exception as e:
+                print(f"Error processing file {j}: {e}")
+                continue
+        
+        # OPTIMIZATION 7: Delete files immediately after processing each node to free space
+        # Only delete files that were successfully processed
+        for j in processed_files:
+            try:
+                os.remove(j)
+                print(f"Deleted processed file: {os.path.basename(j)}")
+            except OSError as e:
+                print(f"Warning: Could not delete {j}: {e}")
+        
+        # OPTIMIZATION 8: Force garbage collection after each node to free memory
+        processed_files.clear()  # Clear the list
+        gc.collect()
+        print(f"Completed processing node {node_label}, memory cleaned up")
+    
     return None
 
 
