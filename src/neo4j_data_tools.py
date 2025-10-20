@@ -107,8 +107,8 @@ class StatsNeo4jCypherQuery:
     stats_get_unique_study_query: str = (
         """
 MATCH (s:study)
-WITH s.study_id as study_id, s.study_name as study_name
-RETURN DISTINCT study_id, study_name
+WITH s.study_id as study_id, s.study_name as study_name, s.size_of_data_being_uploaded as estimated_size, s.curation_status as curation_status
+RETURN DISTINCT study_id, study_name, estimated_size, curation_status
 """
     )
 
