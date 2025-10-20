@@ -107,10 +107,30 @@ class StatsNeo4jCypherQuery:
     stats_get_unique_study_query: str = (
         """
 MATCH (s:study)
-WITH s.study_id as study_id, s.study_name as study_name, s.size_of_data_being_uploaded as estimated_size, s.curation_status as curation_status
-RETURN DISTINCT study_id, study_name, estimated_size, curation_status
+WITH s.study_id as study_id, s.study_name as study_name
+RETURN DISTINCT study_id, study_name
 """
     )
+
+    # query to obtain the study estimated size
+    stats_get_est_size_query: str = (
+        """
+MATCH (s:study)
+WITH s.study_id as study_id, s.size_of_data_being_uploaded as estimated_size
+RETURN DISTINCT study_id, estimated_size
+"""
+    )
+    
+    # query to obtain the study curation status
+    stats_get_curation_status_query: str = (
+        """
+MATCH (s:study)
+WITH s.study_id as study_id, s.curation_status as curation_status
+RETURN DISTINCT study_id, curation_status
+"""
+    )
+
+
 
     # Querty to obtain the study PI
     stats_get_pi_query: str = (
