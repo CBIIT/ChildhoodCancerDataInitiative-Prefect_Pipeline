@@ -115,7 +115,7 @@ Clear cell sarcoma of kidney	Complex mixed and stromal neoplasms	ICD-O-3.2
 Clear cell sarcoma, NOS	Synovial-like neoplasms	ICD-O-3.2
 CNS embryonal tumor with rhabdoid features	Neuroepitheliomatous neoplasms	ICD-O-3.2
 CNS embryonal tumor, NOS or NEC	Other CNS Embryonal tumors;Gliomas	WHO CNS5;ICD-O-3.2
-CNS Germ Cell Tumor	CNS Germ Cell Tumors	WHO CNS5
+CNS germ cell tumor, NOS or NEC	CNS Germ Cell Tumors	WHO CNS5
 CNS Germinoma	CNS Germ Cell Tumors	WHO CNS5
 CNS mature teratoma	Germ cell tumors	WHO CNS5
 CNS neuroblastoma, FOXR2-activated	Other CNS Embryonal tumors	WHO CNS5
@@ -541,3 +541,4 @@ Undifferentiated sarcoma	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Unknown	Unknown	Other
 Vipoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
+
