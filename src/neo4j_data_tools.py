@@ -115,18 +115,20 @@ RETURN DISTINCT study_id, study_name
     # query to obtain the study estimated size
     stats_get_est_size_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})
-WITH labels(n) AS NodeType, COLLECT(n.size_of_data_being_uploaded) AS Value
-RETURN DISTINCT NodeType, Value
+MATCH (s:study)
+WHERE s.study_id = "{study_id}"
+WITH labels(s) AS NodeType, COLLECT(s.size_of_data_being_uploaded) AS Value
+RETURN NodeType, Value
 """
     )
     
     # query to obtain the study curation status
     stats_get_curation_status_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})
-WITH labels(n) AS NodeType, COLLECT(n.curation_status) AS Value
-RETURN DISTINCT NodeType, Value
+MATCH (s:study)
+WHERE s.study_id = "{study_id}"
+WITH labels(s) AS NodeType, COLLECT(s.curation_status) AS Value
+RETURN NodeType, Value
 """
     )
 
