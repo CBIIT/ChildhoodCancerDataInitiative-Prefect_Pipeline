@@ -74,5 +74,7 @@ def pull_neo4j_data(
     )
 
     logger.info("Workflow of pulling data from Neo4j db is Finished")
+    
+    full_output_path = f"s3://{bucket}/{bucket_folder}/{export_folder}"
 
-    return None
+    return full_output_path
