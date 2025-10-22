@@ -1290,6 +1290,7 @@ deployments:
       bucket: "ccdi-validation"
       runner: ""
       study_id: "phs002790"
+      ccdi_template_tag: "3.1.0"
     
 
     # pull action to overwrite from file pull action
