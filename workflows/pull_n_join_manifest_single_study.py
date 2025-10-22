@@ -27,7 +27,7 @@ def pull_n_join_manifest_single_study(
     logger = get_run_logger()
     logger.info(f"Pulling joined DB for study {study_id} from bucket {bucket} using runner {runner}")
 
-    op_folder = pull_neo4j_data_flow(
+    op_folder = pull_neo4j_data(
         bucket=bucket,
         runner=runner,
         study_id=study_id,
