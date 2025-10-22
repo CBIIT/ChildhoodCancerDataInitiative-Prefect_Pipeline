@@ -8,9 +8,9 @@ from workflows.db_tsv_to_manifest import join_tsv_to_manifest
 
 
 @flow(
-    name="Pull Neo4j data",
+    name="Pull Neo4j data and join to manifest for single study",
     log_prints=True,
-    flow_run_name="pull-neo4j-{runner}-" + f"{get_time()}",
+    flow_run_name="pull-neo4j-join-tsvs-{runner}-" + f"{get_time()}",
 )
 def pull_n_join_manifest_single_study(
     bucket: str,
@@ -46,12 +46,5 @@ def pull_n_join_manifest_single_study(
         tsv_folder_path=op_folder_path,
         ccdi_template_tag=ccdi_template_tag
     )
-
-if __name__ == "__main__":
-
-    pull_n_join_manifest_single_study(
-        bucket="your-bucket-name",
-        runner="your-runner-name",
-        study_id="your-study-id",
-    )
     
+    return None
