@@ -36,7 +36,7 @@ def pull_n_join_manifest_single_study(
         study_id=study_id,
     )
     
-    op_folder_path = f"{op_folder}/{study_id}"
+    op_folder_path = f"{op_folder}/{study_id}".replace("/./","/")
 
     logger.info(f"Pulled data stored at {op_folder_path}")
     
@@ -54,3 +54,4 @@ if __name__ == "__main__":
         runner="your-runner-name",
         study_id="your-study-id",
     )
+    
