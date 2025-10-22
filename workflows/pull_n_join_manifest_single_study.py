@@ -36,7 +36,7 @@ def pull_n_join_manifest_single_study(
         study_id=study_id,
     )
     
-    op_folder_path = f"{op_folder}/{study_id}".replace("s3://"+bucket+"/", "")
+    op_folder_path = f"{op_folder}/{study_id}".replace("s3://"+bucket+"/", "").replace("/./", "/")
 
     logger.info(f"Pulled data stored at {op_folder_path}")
     
