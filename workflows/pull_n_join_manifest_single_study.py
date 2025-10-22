@@ -1,9 +1,16 @@
+from src.utils import get_time
 from prefect import flow, task, get_run_logger
 import os
 import sys
 
 from workflows.pull_neo4j_data import pull_neo4j_data_flow
 
+
+@flow(
+    name="Pull Neo4j data",
+    log_prints=True,
+    flow_run_name="pull-neo4j-{runner}-" + f"{get_time()}",
+)
 def pull_n_join_manifest_single_study(
     bucket: str,
     runner: str,
@@ -20,11 +27,13 @@ def pull_n_join_manifest_single_study(
     logger = get_run_logger()
     logger.info(f"Pulling joined DB for study {study_id} from bucket {bucket} using runner {runner}")
 
-    pull_neo4j_data_flow(
+    op_folder = pull_neo4j_data_flow(
         bucket=bucket,
         runner=runner,
         study_id=study_id,
     )
+    
+    logger.info(f"Pulled data stored at {op_folder}")
 
 if __name__ == "__main__":
 
