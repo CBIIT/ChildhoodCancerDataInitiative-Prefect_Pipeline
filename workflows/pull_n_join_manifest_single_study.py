@@ -3,7 +3,7 @@ from prefect import flow, task, get_run_logger
 import os
 import sys
 
-from workflows.pull_neo4j_data import pull_neo4j_data_flow
+from workflows.pull_neo4j_data import pull_neo4j_data
 
 
 @flow(
