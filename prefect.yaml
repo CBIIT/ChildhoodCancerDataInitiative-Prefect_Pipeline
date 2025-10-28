@@ -1322,9 +1322,9 @@ deployments:
       bucket: "ccdi-validation"
       runner: ""
       file_path: "directory/path/to/file.cypherl"
-      uri: "uri_memgraph"
-      username: "username_memgraph"
-      password: "password_memgraph"
+      uri_parameter: "uri_memgraph"
+      username_parameter: "username_memgraph"
+      password_parameter: "password_memgraph"
       mode: "export"
       chunk_size: 1000
 
