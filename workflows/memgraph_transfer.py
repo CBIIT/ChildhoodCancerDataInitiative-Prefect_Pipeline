@@ -46,7 +46,7 @@ def memgraph_export_import_flow(
         output_file = f"memgraph_dump_{get_time()}.cypherl"
         export_memgraph(uri, username, password, output_file, chunk_size)
         # upload the cypherl file
-        file_ul(bucket= bucket, runner= runner, newfile= output_file)
+        file_ul(bucket= bucket, output_folder= runner, newfile= output_file)
         logger.info(f"Export completed: {output_file}")
 
     elif mode == "import":
