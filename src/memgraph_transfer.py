@@ -38,7 +38,7 @@ def export_memgraph(uri: str, username: str, password: str, output_file: str, ch
         if buffer:
             f.write(";\n".join(buffer) + ";\n")
 
-        logger.info(f"✅ Export complete — total queries exported: {total}")
+        logger.info(f"Export complete — total queries exported: {total}")
 
     driver.close()
     logger.info("Memgraph connection closed.")
@@ -59,7 +59,7 @@ def _run_chunk(session, queries: List[str], logger) -> bool:
         tx.commit()
         return True
     except Exception as e:
-        logger.error(f"❌ Error executing query chunk: {e}")
+        logger.error(f"Error executing query chunk: {e}")
         tx.rollback()
         return False
 
@@ -108,4 +108,4 @@ def import_memgraph(uri: str, username: str, password: str, input_file: str, chu
             executed += 1
 
     driver.close()
-    logger.info(f"✅ Import complete — total query chunks executed: {executed}")
+    logger.info(f"Import complete — total query chunks executed: {executed}")

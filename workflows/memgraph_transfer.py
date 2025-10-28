@@ -23,7 +23,7 @@ def memgraph_export_import_flow(
     uri_parameter: str,
     username_parameter: str,
     password_parameter: str,
-    mode: Literal["export", "import"] = "export",  # 👈 dropdown choice
+    mode: Literal["export", "import"] = "export",  # dropdown choice
     chunk_size: int = 1000,
 ):
     """
@@ -31,7 +31,7 @@ def memgraph_export_import_flow(
     'mode' determines whether to export or import.
     """
     logger = get_run_logger()
-    logger.info(f"🚀 Starting Memgraph {mode.upper()} flow")
+    logger.info(f"Starting Memgraph {mode.upper()} flow")
 
     # get uri, username, and password parameter values
     uri, username, password = cypher_query_parameters(
@@ -47,7 +47,7 @@ def memgraph_export_import_flow(
         export_memgraph(uri, username, password, output_file, chunk_size)
         # upload the cypherl file
         file_ul(bucket, runner, output_file)
-        logger.info(f"✅ Export completed: {output_file}")
+        logger.info(f"Export completed: {output_file}")
 
     elif mode == "import":
         # download the cypherl file
@@ -55,12 +55,12 @@ def memgraph_export_import_flow(
         file_name = os.path.basename(file_path)
         logger.info(f"Running import with chunk size {chunk_size}")
         import_memgraph(uri, username, password, file_name, chunk_size)
-        logger.info("✅ Import completed successfully")
+        logger.info("Import completed successfully")
 
     else:
-        logger.error(f"❌ Invalid mode: {mode}. Must be 'export' or 'import'.")
+        logger.error(f"Invalid mode: {mode}. Must be 'export' or 'import'.")
 
-    logger.info("Flow completed successfully ✅")
+    logger.info("Flow completed successfully")
 
 
 # ------------------------------------------------------------------
