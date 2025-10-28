@@ -13,7 +13,7 @@ from src.utils import (
 # ------------------------------------------------------------------
 # PREFECT FLOW: EXPORT OR IMPORT MODE
 # ------------------------------------------------------------------
-@flow(name="Memgraph Export/Import Flow", 
+@flow(name="Memgraph Export and Import Flow", 
     log_prints=True,
     flow_run_name="{runner}_" + f"{get_time()}",)
 def memgraph_export_import_flow(
