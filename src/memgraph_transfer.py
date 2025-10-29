@@ -2,6 +2,7 @@ from typing import List, Any, Iterable
 from neo4j import GraphDatabase
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
+import re
 
 
 # ------------------------------------------------------------------
@@ -19,67 +20,73 @@ def export_memgraph(
     driver = GraphDatabase.driver(uri, auth=(username, password))
     logger.info("Connected to Memgraph.")
 
-    def _extract_query_from_record(record: Any) -> Iterable[str]:
-        """
-        Given a neo4j.Record (or other mapping/tuple), attempt to return one or more
-        Cypher statements (as strings). Some drivers return single-column records,
-        sometimes the key is 'query', other times it's the sole column value.
-        Also handle cases where a record's value contains multiple statements
-        separated by semicolons or newlines.
-        """
-        # Try common access patterns
-        try:
-            # If mapping-like and has 'query' key
-            if hasattr(record, "get") and ("query" in record.keys()):
-                value = record["query"]
-            else:
-                # If record behaves like a mapping with exactly one column
-                keys = list(record.keys()) if hasattr(record, "keys") else []
-                if len(keys) == 1:
-                    value = record[keys[0]]
-                else:
-                    # Fall back to values() (list) or to str(record)
-                    vals = list(record.values()) if hasattr(record, "values") else []
-                    if vals:
-                        value = vals[0]
-                    else:
-                        value = str(record)
-        except Exception:
-            # Absolute fallback
-            value = str(record)
+def _extract_query_from_record(record: Any) -> Iterable[str]:
+    """
+    Extract one or more valid Cypher statements from a record, safely handling
+    semicolons that appear inside string literals or map values.
+    """
 
-        # If the value is None, return empty
-        if value is None:
-            return []
-
-        # If the driver returned bytes, decode
-        if isinstance(value, (bytes, bytearray)):
-            try:
-                value = value.decode("utf-8")
-            except Exception:
-                value = str(value)
-
-        # Normalize to string
-        value = str(value).strip()
-
-        # If empty after stripping, skip
-        if not value:
-            return []
-
-        # Often the dump might be one long string with multiple statements separated by semicolons/newlines.
-        # Split conservatively by semicolon, but keep semicolons consistent.
-        statements = []
-        # If there are semicolons, split on ';' and reconstruct statements
-        if ";" in value:
-            parts = [p.strip() for p in value.split(";")]
-            for p in parts:
-                if p:
-                    statements.append(p)  # do not include trailing semicolon here
+    # ---- Step 1: Get the record value ----
+    try:
+        if hasattr(record, "get") and ("query" in record.keys()):
+            value = record["query"]
         else:
-            # No semicolon — treat the whole value as one statement (may already be single CREATE)
-            statements.append(value)
+            keys = list(record.keys()) if hasattr(record, "keys") else []
+            if len(keys) == 1:
+                value = record[keys[0]]
+            else:
+                vals = list(record.values()) if hasattr(record, "values") else []
+                value = vals[0] if vals else str(record)
+    except Exception:
+        value = str(record)
 
-        return statements
+    if value is None:
+        return []
+
+    if isinstance(value, (bytes, bytearray)):
+        try:
+            value = value.decode("utf-8")
+        except Exception:
+            value = str(value)
+
+    value = str(value).strip()
+    if not value:
+        return []
+
+    # ---- Step 2: Split only on real statement-ending semicolons ----
+    # We’ll use a regex to find semicolons that:
+    #   - are not inside quotes, and
+    #   - are followed by optional whitespace and a newline or end of string.
+    #
+    # Regex explanation:
+    # (?:(?:(?<!\\)['"]).*?(?<!\\)['"])  → safely skip quoted strings
+    # ;(?=\s*(?:\n|$))                   → semicolon at end of statement
+    pattern = re.compile(
+        r"""(
+            (?:[^'";]+|'(?:\\'|[^'])*'|"(?:\\"|[^"])*")*     # match normal content or quoted text
+        )
+        ;
+        (?=\s*(?:\n|$))                                       # semicolon before newline or end
+        """,
+        re.VERBOSE,
+    )
+
+    # Find all statement-like chunks
+    statements = []
+    last_end = 0
+    for match in pattern.finditer(value):
+        stmt = match.group(1).strip()
+        if stmt:
+            statements.append(stmt)
+        last_end = match.end()
+
+    # Add trailing statement if any leftover text exists
+    if last_end < len(value):
+        tail = value[last_end:].strip()
+        if tail:
+            statements.append(tail)
+
+    return statements
 
     with driver.session() as session, open(output_file, "w", encoding="utf-8") as f:
         logger.info("Running DUMP DATABASE to export CypherL statements...")
