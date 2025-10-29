@@ -1,28 +1,34 @@
 from typing import List
 from neo4j import GraphDatabase
 from prefect import task, get_run_logger
+from prefect.cache_policies import NO_CACHE
+
 
 # ------------------------------------------------------------------
 # TASK: EXPORT DATABASE
 # ------------------------------------------------------------------
-@task
-def export_memgraph(uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000) -> None:
+@task(cache_policy=NO_CACHE, name="export_memgraph")
+def export_memgraph(
+    uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
+) -> None:
     """
     Exports a Memgraph database in CypherL format to a file using DUMP DATABASE,
     writing in chunks for large databases.
     """
     logger = get_run_logger()
     driver = GraphDatabase.driver(uri, auth=(username, password))
-    logger.info(f"Connected to Memgraph at {uri}")
+    logger.info(f"Connected to Memgraph.")
 
     with driver.session() as session, open(output_file, "w", encoding="utf-8") as f:
         logger.info(f"Starting export with chunk size {chunk_size}")
+        # Execute DUMP DATABASE to create lines of cypherl queries to recreate the database.
         result = session.run("DUMP DATABASE;")
 
         buffer = []
         total = 0
 
         for record in result:
+            logger.debug(f"Exporting record: {record}")
             query = record.get("query")
             if not query:
                 continue
@@ -47,7 +53,7 @@ def export_memgraph(uri: str, username: str, password: str, output_file: str, ch
 # ------------------------------------------------------------------
 # INTERNAL TASK: RUN QUERY CHUNKS
 # ------------------------------------------------------------------
-@task
+@task(cache_policy=NO_CACHE, name="_run_chunk")
 def _run_chunk(session, queries: List[str], logger) -> bool:
     """
     Executes a chunk of queries safely with rollback on failure.
@@ -67,8 +73,10 @@ def _run_chunk(session, queries: List[str], logger) -> bool:
 # ------------------------------------------------------------------
 # TASK: IMPORT DATABASE
 # ------------------------------------------------------------------
-@task
-def import_memgraph(uri: str, username: str, password: str, input_file: str, chunk_size: int = 500) -> None:
+@task(cache_policy=NO_CACHE, name="import_memgraph")
+def import_memgraph(
+    uri: str, username: str, password: str, input_file: str, chunk_size: int = 500
+) -> None:
     """
     Imports CypherL dump into Memgraph in batches for large-scale uploads.
     """
@@ -96,7 +104,9 @@ def import_memgraph(uri: str, username: str, password: str, input_file: str, chu
                 total += 1
 
                 if total % chunk_size == 0:
-                    success = _run_chunk.fn(session, [query], logger)  # call internal task directly
+                    success = _run_chunk.fn(
+                        session, [query], logger
+                    )  # call internal task directly
                     if success:
                         executed += 1
                         logger.info(f"Executed {executed} query chunks so far...")

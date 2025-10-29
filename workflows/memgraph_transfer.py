@@ -1,5 +1,5 @@
 from prefect import flow, get_run_logger
-from src.memgraph_transfer import export_memgraph, import_memgraph 
+from src.memgraph_transfer import export_memgraph, import_memgraph
 from src.neo4j_data_tools import cypher_query_parameters
 from typing import Literal
 import os
@@ -13,9 +13,11 @@ from src.utils import (
 # ------------------------------------------------------------------
 # PREFECT FLOW: EXPORT OR IMPORT MODE
 # ------------------------------------------------------------------
-@flow(name="Memgraph Export and Import Flow", 
+@flow(
+    name="Memgraph Export and Import Flow",
     log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",)
+    flow_run_name="{runner}_" + f"{get_time()}",
+)
 def memgraph_export_import_flow(
     bucket: str,
     runner: str,
@@ -46,7 +48,7 @@ def memgraph_export_import_flow(
         output_file = f"memgraph_dump_{get_time()}.cypherl"
         export_memgraph(uri, username, password, output_file, chunk_size)
         # upload the cypherl file
-        file_ul(bucket= bucket, output_folder= runner, newfile= output_file)
+        file_ul(bucket=bucket, output_folder=runner, newfile=output_file)
         logger.info(f"Export completed: {output_file}")
 
     elif mode == "import":
@@ -72,7 +74,7 @@ if __name__ == "__main__":
         uri="bolt://000.0.0.1:8000",
         username="memgraph",
         password="memgraph",
-        mode="export",       # or "import"
+        mode="export",  # or "import"
         file_path="memgraph_dump.cypherl",
         chunk_size=1000,
     )
