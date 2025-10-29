@@ -1,4 +1,4 @@
-from typing import List, Any, Iterable
+from typing import Any
 from neo4j import GraphDatabase
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
@@ -75,21 +75,19 @@ def export_memgraph(
 # ------------------------------------------------------------------
 # INTERNAL TASK: RUN QUERY CHUNKS
 # ------------------------------------------------------------------
-@task(cache_policy=NO_CACHE, name="_run_chunk")
-def _run_chunk(session, queries: List[str], logger) -> bool:
-    """
-    Executes a chunk of queries safely with rollback on failure.
-    """
-    tx = session.begin_transaction()
-    try:
-        for q in queries:
-            tx.run(q)
-        tx.commit()
-        return True
-    except Exception as e:
-        logger.error(f"Error executing query chunk: {e}")
-        tx.rollback()
-        return False
+def _execute_batch(session, queries, logger):
+    """Executes a batch of Cypher queries safely and logs errors individually."""
+    success_count = 0
+
+    for q in queries:
+        try:
+            session.run(q)
+            success_count += 1
+        except Exception as e:
+            logger.warning(f"Failed query: {q[:120]}... Error: {e}")
+
+    logger.info(f"Executed batch of {len(queries)} queries ({success_count} succeeded).")
+    return success_count
 
 
 # ------------------------------------------------------------------
@@ -97,47 +95,54 @@ def _run_chunk(session, queries: List[str], logger) -> bool:
 # ------------------------------------------------------------------
 @task(cache_policy=NO_CACHE, name="import_memgraph")
 def import_memgraph(
-    uri: str, username: str, password: str, input_file: str, chunk_size: int = 500
+    uri: str,
+    username: str,
+    password: str,
+    input_file: str,
+    chunk_size: int = 500
 ) -> None:
     """
-    Imports CypherL dump into Memgraph in batches for large-scale uploads.
+    Imports a CypherL dump into Memgraph in batches.
+    Each line in the file is assumed to be a complete Cypher statement.
     """
     logger = get_run_logger()
+    logger.info(f"Connecting to Memgraph.")
     driver = GraphDatabase.driver(uri, auth=(username, password))
-    logger.info(f"Connected to Memgraph at {uri}")
-    logger.info(f"Starting import with chunk size {chunk_size}")
 
-    with driver.session() as session, open(input_file, "r", encoding="utf-8") as f:
-        buffer = []
-        total = 0
-        executed = 0
+    total_lines = 0
+    executed = 0
+    errors = 0
 
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue
+    try:
+        with driver.session() as session, open(input_file, "r", encoding="utf-8") as f:
+            batch = []
 
-            buffer.append(line)
+            for line in f:
+                query = line.strip()
+                if not query:
+                    continue  # skip empty lines
 
-            # When a query ends (semicolon)
-            if line.endswith(";"):
-                query = " ".join(buffer).rstrip(";")
-                buffer.clear()
-                total += 1
+                batch.append(query)
+                total_lines += 1
 
-                if total % chunk_size == 0:
-                    success = _run_chunk.fn(
-                        session, [query], logger
-                    )  # call internal task directly
-                    if success:
-                        executed += 1
-                        logger.info(f"Executed {executed} query chunks so far...")
+                if len(batch) >= chunk_size:
+                    executed += _execute_batch(session, batch, logger)
+                    batch = []
 
-        # Final flush
-        if buffer:
-            query = " ".join(buffer).rstrip(";")
-            _run_chunk.fn(session, [query], logger)
-            executed += 1
+                    if total_lines % (chunk_size * 10) == 0:
+                        logger.info(f"Processed {total_lines} queries so far...")
 
-    driver.close()
-    logger.info(f"Import complete — total query chunks executed: {executed}")
+            # Final flush
+            if batch:
+                executed += _execute_batch(session, batch, logger)
+
+    except Exception as e:
+        logger.error(f"Fatal error during import: {e}")
+        raise
+    finally:
+        driver.close()
+        logger.info(
+            f"Import complete — total lines read: {total_lines}, total executed: {executed}, total errors: {errors}"
+        )
+
+
