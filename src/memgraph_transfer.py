@@ -2,7 +2,7 @@ from typing import List, Any, Iterable
 from neo4j import GraphDatabase
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
-import re
+
 
 
 # ------------------------------------------------------------------
@@ -13,80 +13,31 @@ def export_memgraph(
     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
 ) -> None:
     """
-    Export Memgraph using DUMP DATABASE; robustly extracts the returned CypherL statements
-    and writes them to `output_file` in chunks to avoid memory blow-up.
+    Export a Memgraph database to a CypherL (.cypher) file using DUMP DATABASE.
+    Each record is assumed to contain a complete Cypher statement.
+    Writes to disk in chunks for large-scale databases.
     """
     logger = get_run_logger()
     driver = GraphDatabase.driver(uri, auth=(username, password))
-    logger.info("Connected to Memgraph.")
+    logger.info(f"Connected to Memgraph at {uri}")
 
-def _extract_query_from_record(record: Any) -> Iterable[str]:
-    """
-    Extract one or more valid Cypher statements from a record, safely handling
-    semicolons that appear inside string literals or map values.
-    """
-
-    # ---- Step 1: Get the record value ----
-    try:
-        if hasattr(record, "get") and ("query" in record.keys()):
-            value = record["query"]
-        else:
+    def _extract_query_from_record(record: Any) -> str:
+        """
+        Safely extract the query text from a record.
+        Assumes each record contains one complete Cypher query line.
+        """
+        try:
+            if hasattr(record, "get") and "query" in record.keys():
+                return record["query"]
             keys = list(record.keys()) if hasattr(record, "keys") else []
             if len(keys) == 1:
-                value = record[keys[0]]
-            else:
-                vals = list(record.values()) if hasattr(record, "values") else []
-                value = vals[0] if vals else str(record)
-    except Exception:
-        value = str(record)
-
-    if value is None:
-        return []
-
-    if isinstance(value, (bytes, bytearray)):
-        try:
-            value = value.decode("utf-8")
+                return record[keys[0]]
+            vals = list(record.values()) if hasattr(record, "values") else []
+            if vals:
+                return vals[0]
         except Exception:
-            value = str(value)
-
-    value = str(value).strip()
-    if not value:
-        return []
-
-    # ---- Step 2: Split only on real statement-ending semicolons ----
-    # We’ll use a regex to find semicolons that:
-    #   - are not inside quotes, and
-    #   - are followed by optional whitespace and a newline or end of string.
-    #
-    # Regex explanation:
-    # (?:(?:(?<!\\)['"]).*?(?<!\\)['"])  → safely skip quoted strings
-    # ;(?=\s*(?:\n|$))                   → semicolon at end of statement
-    pattern = re.compile(
-        r"""(
-            (?:[^'";]+|'(?:\\'|[^'])*'|"(?:\\"|[^"])*")*     # match normal content or quoted text
-        )
-        ;
-        (?=\s*(?:\n|$))                                       # semicolon before newline or end
-        """,
-        re.VERBOSE,
-    )
-
-    # Find all statement-like chunks
-    statements = []
-    last_end = 0
-    for match in pattern.finditer(value):
-        stmt = match.group(1).strip()
-        if stmt:
-            statements.append(stmt)
-        last_end = match.end()
-
-    # Add trailing statement if any leftover text exists
-    if last_end < len(value):
-        tail = value[last_end:].strip()
-        if tail:
-            statements.append(tail)
-
-    return statements
+            pass
+        return str(record)
 
     with driver.session() as session, open(output_file, "w", encoding="utf-8") as f:
         logger.info("Running DUMP DATABASE to export CypherL statements...")
@@ -96,25 +47,23 @@ def _extract_query_from_record(record: Any) -> Iterable[str]:
         total_statements = 0
 
         for record in result:
-            # Extract one or more statements from the record
-            statements = _extract_query_from_record(record)
+            query = _extract_query_from_record(record)
+            if not query:
+                continue
 
-            for stmt in statements:
-                # stmt is a statement WITHOUT trailing semicolon (by our extractor)
-                buffer.append(stmt)
-                total_statements += 1
+            # Keep the query as-is — do not strip or split
+            buffer.append(query.strip())
+            total_statements += 1
 
-                # When buffer reaches chunk_size, write them out
-                if len(buffer) >= chunk_size:
-                    # Join with semicolon + newline and add final semicolon/newline
-                    f.write(";\n".join(buffer) + ";\n")
-                    f.flush()
-                    buffer.clear()
-                    logger.info(f"Exported {total_statements} statements so far...")
+            if len(buffer) >= chunk_size:
+                f.write("\n".join(buffer) + "\n")
+                f.flush()
+                buffer.clear()
+                logger.info(f"Exported {total_statements} statements so far...")
 
-        # Flush any remaining statements
+        # Write any remaining statements
         if buffer:
-            f.write(";\n".join(buffer) + ";\n")
+            f.write("\n".join(buffer) + "\n")
             f.flush()
 
         logger.info(f"Export complete. Total statements exported: {total_statements}")
