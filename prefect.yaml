@@ -1327,6 +1327,7 @@ deployments:
       password_parameter: "password_memgraph"
       mode: "export"
       chunk_size: 1000
+      wipe_db: false
 
     # pull action to overwrite from file pull action
     pull:
