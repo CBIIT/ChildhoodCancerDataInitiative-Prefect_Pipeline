@@ -33,16 +33,16 @@ def memgraph_export_import_flow(
     Prefect flow for exporting or importing a Memgraph database.
     'mode' determines whether to export or import.
 
-    Parameters:
-    - bucket: Working cloud storage bucket name.
-    - runner: Identifier for the runner executing the flow.
-    - file_path: Path to the CypherL file for import/export.
-    - uri_parameter: AWS Parameter name for Memgraph URI.
-    - username_parameter: AWS Parameter name for Memgraph username.
-    - password_parameter: AWS Parameter name for Memgraph password.
-    - mode: "export" to export the database, "import" to import.
-    - chunk_size: Number of statements to process per batch.
-    - wipe_db: If True during import, wipes the existing database before importing.
+    Args:
+        bucket: Working cloud storage bucket name.
+        runner: Identifier for the runner executing the flow.
+        file_path: Path to the CypherL file for import/export.
+        uri_parameter: AWS Parameter name for Memgraph URI.
+        username_parameter: AWS Parameter name for Memgraph username.
+        password_parameter: AWS Parameter name for Memgraph password.
+        mode: "export" to export the database, "import" to import.
+        chunk_size: Number of statements to process per batch.
+        wipe_db: If True during import, wipes the existing database before importing.
     """
     logger = get_run_logger()
     logger.info(f"Starting Memgraph {mode.upper()} flow")
