@@ -89,6 +89,18 @@ def _execute_batch(session, queries, logger):
     logger.info(f"Executed batch of {len(queries)} queries ({success_count} succeeded).")
     return success_count
 
+# ------------------------------------------------------------------
+# INTERNAL TASK: WIPE DATABASE
+# ------------------------------------------------------------------
+def _wipe_database(session, logger):
+    """Deletes all nodes and relationships from the database."""
+    logger.warning("Wiping Memgraph database: deleting all nodes and relationships...")
+    try:
+        session.run("MATCH (n) DETACH DELETE n;")
+        logger.info("Database wipe complete. All nodes and relationships removed.")
+    except Exception as e:
+        logger.error(f"Error wiping database: {e}")
+        raise
 
 # ------------------------------------------------------------------
 # TASK: IMPORT DATABASE
@@ -99,11 +111,13 @@ def import_memgraph(
     username: str,
     password: str,
     input_file: str,
-    chunk_size: int = 500
+    chunk_size: int = 500,
+    wipe_db: bool = False
 ) -> None:
     """
     Imports a CypherL dump into Memgraph in batches.
     Each line in the file is assumed to be a complete Cypher statement.
+    If wipe_db=True, the existing database contents are deleted first.
     """
     logger = get_run_logger()
     logger.info(f"Connecting to Memgraph.")
@@ -114,27 +128,34 @@ def import_memgraph(
     errors = 0
 
     try:
-        with driver.session() as session, open(input_file, "r", encoding="utf-8") as f:
-            batch = []
+        with driver.session() as session:
+            # Wipe DB if flag is set
+            if wipe_db:
+                _wipe_database(session, logger)
 
-            for line in f:
-                query = line.strip()
-                if not query:
-                    continue  # skip empty lines
+            # Start import
+            logger.info(f"Starting import with chunk size {chunk_size}")
+            with open(input_file, "r", encoding="utf-8") as f:
+                batch = []
 
-                batch.append(query)
-                total_lines += 1
+                for line in f:
+                    query = line.strip()
+                    if not query:
+                        continue  # skip empty lines
 
-                if len(batch) >= chunk_size:
+                    batch.append(query)
+                    total_lines += 1
+
+                    if len(batch) >= chunk_size:
+                        executed += _execute_batch(session, batch, logger)
+                        batch = []
+
+                        if total_lines % (chunk_size * 10) == 0:
+                            logger.info(f"Processed {total_lines} queries so far...")
+
+                # Final flush
+                if batch:
                     executed += _execute_batch(session, batch, logger)
-                    batch = []
-
-                    if total_lines % (chunk_size * 10) == 0:
-                        logger.info(f"Processed {total_lines} queries so far...")
-
-            # Final flush
-            if batch:
-                executed += _execute_batch(session, batch, logger)
 
     except Exception as e:
         logger.error(f"Fatal error during import: {e}")
