@@ -1312,7 +1312,7 @@ deployments:
 
   - name: memgraph_transfer
     version: null
-    tags: ["TEST", "SVB","DATATEAM-195", "V3"]
+    tags: ["Production", "V3"]
     description: null
     entrypoint: workflows/memgraph_transfer.py:memgraph_export_import_flow
     schedule: null
@@ -1334,7 +1334,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: DATATEAM-195_Export_Memgraph
+        branch: main
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_V3.txt
         directory: "{{ clone-step.directory }}"
