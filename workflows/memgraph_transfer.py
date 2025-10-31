@@ -35,8 +35,8 @@ def memgraph_export_import_flow(
 
     Args:
         bucket: Working cloud storage bucket name.
-        runner: Identifier for the runner executing the flow.
-        file_path: Path to the CypherL file for import/export.
+        runner: Identifier for the runner executing the flow and output file path.
+        file_path: Path to the CypherL file for import.
         uri_parameter: AWS Parameter name for Memgraph URI.
         username_parameter: AWS Parameter name for Memgraph username.
         password_parameter: AWS Parameter name for Memgraph password.
