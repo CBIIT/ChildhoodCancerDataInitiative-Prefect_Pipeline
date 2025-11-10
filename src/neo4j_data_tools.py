@@ -31,6 +31,16 @@ import gc
 DataFrame = TypeVar("DataFrame")
 
 
+def get_available_space() -> str:
+    """Get the available space on the disk."""
+    pages = os.sysconf("SC_PHYS_PAGES")
+    page_size = os.sysconf("SC_PAGE_SIZE")
+    total = pages * page_size
+    avail_pages = os.sysconf("SC_AVPHYS_PAGES")
+    available = avail_pages * page_size
+    return f"Total: {total / (1024 ** 3):.2f}, Available: {available / (1024 ** 3):.2f}"
+
+
 @dataclass
 class Neo4jCypherQuery:
     """Dataclass for Cypher Query"""
@@ -456,6 +466,8 @@ def export_to_csv_per_node_per_study(
         # Write data rows
         for record in result:
             csv_writer.writerow(record.values())
+    # garbage collect
+    gc.collect()
     return None
 
 
@@ -613,6 +625,7 @@ def pull_nodes_loop(
             output_dir=per_study_per_node_out_dir,
         )
     future.result()
+    gc.collect()
     return None
 
 
@@ -655,6 +668,7 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
             return
 
     for node_label in node_list:
+        print(get_available_space())
         node_label_phrase = "_" + node_label + "_output.csv"
         
         # OPTIMIZATION 3: Use generator for file processing
@@ -703,7 +717,7 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
                 
             except Exception as e:
                 print(f"Error processing file {j}: {e}")
-                continue
+                raise e
         
         # OPTIMIZATION 7: Delete files immediately after processing each node to free space
         # Only delete files that were successfully processed
@@ -1239,6 +1253,8 @@ def query_db_to_csv(
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
     
+    # redefine unqiue_nodes, only testing one node
+    unique_nodes=["sequencing_file"]
     pull_nodes_loop(
         study_list=unique_studies,
         node_list=unique_nodes,
@@ -1248,6 +1264,7 @@ def query_db_to_csv(
     )
 
     # combine all csv of same node into single file
+    
     combine_node_csv_all_studies(out_dir=output_dir, node_list=unique_nodes)
 
     # Obtain study node data
