@@ -1254,10 +1254,10 @@ def query_db_to_csv(
     logger.info("Pulling data by each node")
     
     # redefine unqiue_nodes, only testing one node
-    unique_nodes=["sequencing_file"]
+    overwrite_nodes=["sequencing_file"]
     pull_nodes_loop(
         study_list=unique_studies,
-        node_list=unique_nodes,
+        node_list=overwrite_nodes,
         driver=driver,
         out_dir=output_dir,
         logger=logger,
