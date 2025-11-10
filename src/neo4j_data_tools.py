@@ -703,7 +703,7 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
                 
             except Exception as e:
                 print(f"Error processing file {j}: {e}")
-                continue
+                raise e
         
         # OPTIMIZATION 7: Delete files immediately after processing each node to free space
         # Only delete files that were successfully processed
