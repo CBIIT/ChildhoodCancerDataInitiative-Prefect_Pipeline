@@ -1254,29 +1254,16 @@ def query_db_to_csv(
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
 
-    # pull all the nodes except for sequencing_file node
-    non_sequencing_file_nodes = [node for node in unique_nodes if node != "sequencing_file"]
+    # pull all the nodes for each study
     pull_nodes_loop(
         study_list=unique_studies,
-        node_list=non_sequencing_file_nodes,
+        node_list=unique_nodes,
         driver=driver,
         out_dir=output_dir,
         logger=logger,
     )
     # combine step will delete per study per node csv files, which saves space
-    combine_node_csv_all_studies(out_dir=output_dir, node_list=non_sequencing_file_nodes)
-
-    # pull sequencing_file node per study per node(sequencing_file)
-    seq_file_node=["sequencing_file"]
-    pull_nodes_loop(
-        study_list=unique_studies,
-        node_list=seq_file_node,
-        driver=driver,
-        out_dir=output_dir,
-        logger=logger,
-    )
-    # combine all csv of sequencing_file node into single file
-    combine_node_csv_all_studies(out_dir=output_dir, node_list=seq_file_node)
+    combine_node_csv_all_studies(out_dir=output_dir, node_list=unique_nodes)
 
     # Obtain study node data
     logger.info("Pulling data from study node")
