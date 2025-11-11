@@ -499,20 +499,19 @@ def pull_data_per_node(
     session = driver.session()
     try:
         if study_id_list and node_label == "study":
-            for study_id in study_id_list:
-                cypher = (
-                    f"MATCH (startNode:study) WHERE startNode.study_id = '{study_id}' "
-                    "WITH startNode, properties(startNode) AS props "
-                    "UNWIND keys(props) AS propertyName "
-                    "RETURN startNode.id AS startNodeId, "
-                    "labels(startNode) AS startNodeLabels, "
-                    "propertyName AS startNodePropertyName, "
-                    "startNode[propertyName] AS startNodePropertyValue, "
-                    "startNode.study_id as dbgap_accession "
-                )
-                session.execute_read(
-                    data_to_csv, node_label, cypher, output_dir
-                )
+            cypher = (
+                f"MATCH (startNode:study) WHERE startNode.study_id IN {study_id_list} "
+                "WITH startNode, properties(startNode) AS props "
+                "UNWIND keys(props) AS propertyName "
+                "RETURN startNode.id AS startNodeId, "
+                "labels(startNode) AS startNodeLabels, "
+                "propertyName AS startNodePropertyName, "
+                "startNode[propertyName] AS startNodePropertyValue, "
+                "startNode.study_id as dbgap_accession "
+            )
+            session.execute_read(
+                data_to_csv, node_label, cypher, output_dir
+            )
         else:
             session.execute_read(
                 data_to_csv, node_label, query_str.format(node_label=node_label), output_dir
