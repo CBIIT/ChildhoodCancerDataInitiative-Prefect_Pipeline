@@ -1350,7 +1350,7 @@ deployments:
     version: null
     tags: ["Production","V3"]
     description: null
-    entrypoint: workflows/hello_world.py:hello_world
+    entrypoint: workflows/hello_world.py:hello_flow
     schedule: null
 
     # flow-specific parameters

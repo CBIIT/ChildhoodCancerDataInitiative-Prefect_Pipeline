@@ -4,8 +4,7 @@ from prefect import flow, task
 def greeting(name):
     print(f"Hello {name}!")
 
-@flow(log_prints = True)
-
+@flow(name="hello_flow", log_prints=True)
 def hello_flow(name: str = "World"):
     """
 A simple script that prints "Hello" followed by a user-specified name.
