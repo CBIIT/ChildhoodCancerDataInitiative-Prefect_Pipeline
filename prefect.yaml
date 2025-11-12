@@ -1355,7 +1355,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      name: "world"
 
     # pull action to overwrite from file pull action
     pull:
