@@ -1345,3 +1345,31 @@ deployments:
       name: ccdi-curation-32gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
+
+  - name: hello-world-v3
+    version: null
+    tags: ["Production","V3"]
+    description: null
+    entrypoint: workflows/hello_world.py:hello_world
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: add_hello_world
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
