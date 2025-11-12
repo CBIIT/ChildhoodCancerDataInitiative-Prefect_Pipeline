@@ -5,7 +5,7 @@ def greeting(name):
     print(f"Hello {name}!")
 
 @flow(name="hello_flow", log_prints=True)
-def hello_flow(name: str = "World"):
+def hello_flow(name: str):
     """
 A simple script that prints "Hello" followed by a user-specified name.
 Args:
