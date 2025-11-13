@@ -1,6 +1,7 @@
 from prefect import flow, task, get_run_logger
 import os
 import sys
+from typing import Union
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -19,7 +20,7 @@ def pull_neo4j_data(
     uri_parameter: str = "uri",
     username_parameter: str = "username",
     password_parameter: str = "password",
-    study_id_list: list[str] | None = None
+    study_id_list: Union[list[str], None] = None
 ):
     """Pipeline that pulls ingested studies from a Neo4j database. Default pulls all studies unless a single study phs ID provided. 
 
