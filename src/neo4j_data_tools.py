@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 import csv
 import os
-from typing import TypeVar, Dict, List
+from typing import TypeVar, Dict, List, Union
 import boto3
 import json
 import tempfile
@@ -493,7 +493,12 @@ def export_uniq_values_node_property(
 
 @task(name="Pull node data", task_run_name="pull_node_data_{node_label}")
 def pull_data_per_node(
-    driver, data_to_csv, node_label: str, query_str: str, output_dir: str, study_id_list: list[str] | None = None
+    driver,
+    data_to_csv,
+    node_label: str,
+    query_str: str,
+    output_dir: str,
+    study_id_list: Union[list[str], None] = None,
 ) -> None:
     """Exports DB data by a given node. If study_id_list is provided, only pulls data for those studies."""
     session = driver.session()
@@ -737,7 +742,9 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
 
 
 @flow
-def pull_study_node(driver, out_dir: str, study_id_list: list[str] | None = None) -> None:
+def pull_study_node(
+    driver, out_dir: str, study_id_list: Union[list[str], None] = None
+) -> None:
     """Pulls data for study node from a neo4j DB. If study_id_list is provided, only pulls data for those studies."""
     cypher_phrase = Neo4jCypherQuery.study_cypher_query
     pull_data_per_node(
@@ -1212,7 +1219,7 @@ def query_db_to_csv(
     uri_parameter: str,
     username_parameter: str,
     password_parameter: str,
-    study_id_list: list[str]|None = None
+    study_id_list: Union[list[str], None] = None,
 ) -> str:
     """It export one csv file for each unique node.
     Each csv file (per node) contains all the info of the node across all studies
