@@ -314,7 +314,7 @@ deployments:
 
   - name: pull-neo4j-data-16gb-c3dc-v3
     version: null
-    tags: ["Production","V3"]
+    tags: ["Production","C3DC", "DEV", "V3"]
     description: null
     entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
     schedule: null
@@ -1349,7 +1349,6 @@ deployments:
       uri_parameter: "uri"
       username_parameter: "username"
       password_parameter: "password"
-      study_id: ""
 
     # pull action to overwrite from file pull action
     pull:
