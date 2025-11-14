@@ -107,8 +107,14 @@ def diff_sandbox_dev_neo4j(bucket: str, runner: str, database_1: DropDownChoices
         username=db2_username,
         password=db2_password,
     )
-
-
+    col_rename = {
+        "Curation": "sandbox_DB_count",
+        "QA": "qa_DB_count",
+        "Dev": "dev_DB_count",
+    }
+    # rename DB_count column into [Database]_DB_count
+    count_db1.rename(columns={"DB_count": col_rename[database_1]}, inplace=True)
+    count_db2.rename(columns={"DB_count": col_rename[database_2]}, inplace=True)
 
     # set up logic to choose which DB to compare
     if database_1 == "Curation":
