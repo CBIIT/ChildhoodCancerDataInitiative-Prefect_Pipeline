@@ -9,7 +9,6 @@ sys.path.append(parent_dir)
 from src.utils import get_secret, get_date, get_time, file_ul
 from src.neo4j_data_tools import counts_DB_all_nodes_all_studies_w_secrets
 
-
 DropDownChoices1 = Literal["Curation", "QA", "Dev"]
 DropDownChoices2 = Literal["Curation", "QA", "Dev"]
 
@@ -54,47 +53,6 @@ def diff_sandbox_dev_neo4j(bucket: str, runner: str, database_1: DropDownChoices
     db2_username = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name=credentials[database_2]["username_key"])
     db2_password = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name=credentials[database_2]["password_key"])
 
-    ## sandbox secrets
-    #sandbox_ip = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="sandbox_ip")
-    #sandbox_username = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="sandbox_username")
-    #sandbox_password = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="sandbox_password")
-#
-    ## dev secrets
-    #dev_ip = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="dev_ip")
-    #dev_username = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="dev_username") 
-    #dev_password = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="dev_password") 
-#
-    ## QA secrets
-    #qa_ip = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="qa_ip")
-    #qa_username = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="qa_username") 
-    #qa_password = get_secret(secret_name_path="ccdi/nonprod/inventory/neo4j-db-creds", secret_key_name="qa_password") 
-
-
-    ## retrieve counts for all nodes in all studies for all DBs
-    #counts_sandbox = counts_DB_all_nodes_all_studies_w_secrets(
-    #    uri=sandbox_ip,
-    #    username=sandbox_username,
-    #    password=sandbox_password,
-    #)
-    #counts_sandbox.rename(columns={"DB_count": "sandbox_DB_count"}, inplace=True)
-    #logger.info("Retrieved counts for sandbox DB")
-#
-    #counts_dev = counts_DB_all_nodes_all_studies_w_secrets(
-    #    uri=dev_ip,
-    #    username=dev_username,
-    #    password=dev_password,
-    #)
-    #counts_dev.rename(columns={"DB_count": "dev_DB_count"}, inplace=True)
-    #logger.info("Retrieved counts for DEV DB")
-#
-    #counts_qa = counts_DB_all_nodes_all_studies_w_secrets(
-    #    uri=qa_ip,
-    #    username=qa_username,
-    #    password=qa_password,
-    #)
-    #counts_qa.rename(columns={"DB_count": "qa_DB_count"}, inplace=True)
-    #logger.info("Retrieved counts for QA DB")
-
     logger.info(f"Retrieved counts for DB1 {database_1}")
     count_db1 = counts_DB_all_nodes_all_studies_w_secrets(
         uri=db1_ip,
@@ -107,12 +65,13 @@ def diff_sandbox_dev_neo4j(bucket: str, runner: str, database_1: DropDownChoices
         username=db2_username,
         password=db2_password,
     )
+    # rename DB_count column into [Database]_DB_count
     col_rename = {
         "Curation": "sandbox_DB_count",
         "QA": "qa_DB_count",
         "Dev": "dev_DB_count",
     }
-    # rename DB_count column into [Database]_DB_count
+    
     count_db1.rename(columns={"DB_count": col_rename[database_1]}, inplace=True)
     count_db2.rename(columns={"DB_count": col_rename[database_2]}, inplace=True)
 
@@ -137,7 +96,6 @@ def diff_sandbox_dev_neo4j(bucket: str, runner: str, database_1: DropDownChoices
     elif database_2 == "Dev":
         suffix_2 = "_dev"
         column_2 = "dev_DB_count"
-
 
     # merge two dataframes
     combined_df = count_db1.merge(count_db2, on=["study_id", "node"], how="outer", suffixes=(suffix_1, suffix_2))
