@@ -312,48 +312,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: pull-neo4j-data-60gb-ccdi-v3
-    version: null
-    tags: ["Production","V3", "CCDI"]
-    description: null
-    entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
-      runner: "ccdi-sandbox-export"
-      uri_parameter: "uri"
-      username_parameter: "username"
-      password_parameter: "password"
-      study_id: ""
-
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.run_shell_script:
-          script: |
-            git fetch --unshallow
-            git checkout 20018ff5fa17a50101690f4d0711b4ba83675b8d
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-curation-60gb-prefect-3.2.14-python3.9
-      work_queue_name: null
-      job_variables: {}
-
   - name: pull-neo4j-data-16gb-c3dc-v3
     version: null
-    tags: ["Production","V3"]
+    tags: ["Production","C3DC", "DEV", "V3"]
     description: null
     entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
     schedule: null
@@ -1275,5 +1236,133 @@ deployments:
     # infra-specific fields
     work_pool:
       name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
+
+  - name: pull_n_join_manifest_single_study
+    version: null
+    tags: ["Production", "V3"]
+    description: null
+    entrypoint: workflows/pull_n_join_manifest_single_study.py:pull_n_join_manifest_single_study
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: ""
+      study_id: "phs002790"
+      ccdi_template_tag: "3.1.0"
+    
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.deployments.steps.git_clone:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: main
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements_V3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
+
+  - name: memgraph_transfer
+    version: null
+    tags: ["Production", "V3"]
+    description: null
+    entrypoint: workflows/memgraph_transfer.py:memgraph_export_import_flow
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: ""
+      file_path: "directory/path/to/file.cypherl"
+      uri_parameter: "uri_memgraph"
+      username_parameter: "username_memgraph"
+      password_parameter: "password_memgraph"
+      mode: "export"
+      chunk_size: 1000
+      wipe_db: false
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.deployments.steps.git_clone:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: main
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements_V3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
+
+  - name: hello-world-v3
+    version: null
+    tags: ["Production","V3"]
+    description: null
+    entrypoint: workflows/hello_world.py:hello_flow
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      name: "world"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
+
+  - name: pull-neo4j-data-120gb-ccdi-v3
+    version: null
+    tags: ["Production","V3", "CCDI", "Sandbox"]
+    description: null
+    entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "ccdi-sandbox-export"
+      uri_parameter: "uri"
+      username_parameter: "username"
+      password_parameter: "password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-120gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}

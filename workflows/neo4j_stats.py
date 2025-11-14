@@ -58,6 +58,22 @@ def pull_neo4j_stats(
         "PI",
     )
 
+    curation_status_df = stats_pull_graph_data_study(
+        uri,
+        username,
+        password,
+        StatsNeo4jCypherQuery.stats_get_curation_status_query,
+        "curation_status",
+    )
+
+    est_size_df = stats_pull_graph_data_study(
+        uri,
+        username,
+        password,
+        StatsNeo4jCypherQuery.stats_get_est_size_query,
+        "estimated_size",
+    )
+
     institution_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -176,6 +192,8 @@ def pull_neo4j_stats(
     build_df = pd.concat(
         [
             pi_df,
+            curation_status_df,
+            est_size_df,
             institution_df,
             bucket_df,
             study_size_df,

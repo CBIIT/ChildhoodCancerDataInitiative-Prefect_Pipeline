@@ -1,6 +1,7 @@
 from prefect import flow, task, get_run_logger
 import os
 import sys
+from typing import Union
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -19,7 +20,7 @@ def pull_neo4j_data(
     uri_parameter: str = "uri",
     username_parameter: str = "username",
     password_parameter: str = "password",
-    study_id: str = None
+    study_id_list: Union[list[str], None] = None
 ):
     """Pipeline that pulls ingested studies from a Neo4j database. Default pulls all studies unless a single study phs ID provided. 
 
@@ -29,7 +30,7 @@ def pull_neo4j_data(
         uri_parameter (str, optional): uri parameter. Defaults to "uri".
         username_parameter (str, optional): username parameter. Defaults to "username".
         password_parameter (str, optional): password parameter. Defaults to "password".
-        study_id (str, optional): Study ID to pull data for single study pull.
+        study_id_list (list[str], optional): List of Study IDs to pull data for multiple study pulls.
     """    
     logger = get_run_logger()
 
@@ -44,7 +45,7 @@ def pull_neo4j_data(
         uri_parameter=uri_parameter,
         username_parameter=username_parameter,
         password_parameter=password_parameter,
-        study_id=study_id
+        study_id_list=study_id_list
     )
 
     # upload db pulled data csv files to the bucket
@@ -74,5 +75,7 @@ def pull_neo4j_data(
     )
 
     logger.info("Workflow of pulling data from Neo4j db is Finished")
+    
+    full_output_path = f"s3://{bucket}/{bucket_folder}/{export_folder}"
 
-    return None
+    return full_output_path
