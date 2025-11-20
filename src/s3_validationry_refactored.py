@@ -706,8 +706,8 @@ def validate_regex(
             r"\b\d{4}/\d{2}/\d{2}\b",       # 2020/01/01
             r"\b\d{4}-\d{2}-\d{2}\b",       # 2020-01-01
         
-            # Compact numeric formats
-            r"\b\d{8}\b",                   # 20200101
+            # Compact numeric formats (turned off due to high false positive rate)
+            #r"\b\d{8}\b",                   # 20200101
         
             # Alphanumeric short month
             r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{4}\b",   # 1Jan2020, 01 Jan 2020
@@ -1210,6 +1210,63 @@ def check_file_basename(file_df: DataFrame) -> str:
         print_str = print_str + "\tINFO: all file names were found in their file_url.\n"
     return print_str
 
+def check_file_extension_type_match(file_df : DataFrame) -> str:
+    """Checks if the file_name extension matches the file type value"""
+    WARN_FLAG = True
+    print_str = ""
+    extension_type_mismatch = []
+    for index, row in file_df.iterrows():
+        file_name = row["file_name"]
+        file_type = row["file_type"]
+        # extract file extension with no leading period and in lower case
+        file_extension = os.path.splitext(file_name)[1].lower().lstrip(".")
+        # infer file type from file extension
+        if "nii" in file_extension.lower() or "nii.gz" in file_extension.lower():
+            inferred_type = "nii"
+        elif "vcf" in file_extension.lower() or "vcf.gz" in file_extension.lower():
+            inferred_type = "vcf"
+        elif "fastq" in file_extension.lower() or "fq" in file_extension.lower() or "fastq.gz" in file_extension.lower():
+            inferred_type = "fastq"
+        elif "" in file_extension.lower():
+            inferred_type = "txt"
+        else:
+            inferred_type = file_extension
+
+        if file_type != inferred_type:
+            extension_type_mismatch.append(
+                {
+                    "node": row["node"],
+                    "file_name": file_name,
+                    "file_extension": file_extension,
+                    "inferred_type": inferred_type,
+                }
+            )
+
+    if len(extension_type_mismatch) > 0:
+        if WARN_FLAG:
+            WARN_FLAG = False
+            print_str = (
+                print_str
+                + f"\tWARNING: There are files that have a file_name extension that does not match the inferred file type from the url:\n"
+            )
+            mismatch_df = pd.DataFrame.from_records(extension_type_mismatch)
+            mismatch_df["file_name"] = mismatch_df["file_name"].str.wrap(40)
+            print_str = (
+                print_str
+                + "\n\t"
+                + mismatch_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+                    "\n", "\n\t"
+                )
+                + "\n\n"
+            )
+        else:
+            pass
+    else:
+        print_str = (
+            print_str
+            + "\tINFO: all file name extensions matched their inferred file types from the url.\n"
+        )
+    return print_str
 
 def count_buckets(df_file: DataFrame) -> list:
     df_file["bucket"] = df_file["file_url"].str.split("/").str[2]
@@ -1346,7 +1403,7 @@ def validate_file_metadata(
     node_list: list[str], file_path: str, template_path: str, output_file: str
 ):
     """Validate if manifest file objs have none zero file size, correct md5sum regex
-    and if file name matches to s3 uri
+    if file name matches to s3 uri and the file extension matches the file_type
     """
     section_title = (
         "\n\n"
@@ -1374,6 +1431,9 @@ def validate_file_metadata(
 
     # check for file basename in url
     return_str = return_str + check_file_basename(file_df=df_file)
+
+    #check for file extension matching to file_type
+    return_str = return_str + check_file_extension_type_match(file_df=df_file)
 
     # print the return_str to output_file
     with open(output_file, "a+") as outf:
