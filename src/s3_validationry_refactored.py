@@ -1220,19 +1220,22 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         file_type = row["file_type"]
         # extract file extension with no leading period and in lower case
         file_extension = os.path.splitext(file_name)[1].lower().lstrip(".")
+
+        #if you pull out a .gz extension
+        if file_extension == "gz":
+            # handle .nii.gz and .vcf.gz and .fastq.gz cases
+            file_extension = os.path.splitext(os.path.splitext(file_name)[0])[1].lower().lstrip(".") + ".gz"
+
         # infer file type from file extension
-        if "nii" in file_extension.lower() or "nii.gz" in file_extension.lower():
-            inferred_type = "nii"
-        elif "vcf" in file_extension.lower() or "vcf.gz" in file_extension.lower():
-            inferred_type = "vcf"
-        elif "fastq" in file_extension.lower() or "fq" in file_extension.lower() or "fastq.gz" in file_extension.lower():
-            inferred_type = "fastq"
+        if "gz" in file_extension.lower():
+            #the inferred type is based on the extension before .gz
+            inferred_type = file_extension[:-3]
         elif "" in file_extension.lower():
             inferred_type = "txt"
         else:
             inferred_type = file_extension
 
-        if file_type != inferred_type:
+        if file_type.lower() != inferred_type.lower():
             extension_type_mismatch.append(
                 {
                     "node": row["node"],
