@@ -1192,7 +1192,7 @@ def check_file_basename(file_df: DataFrame) -> str:
             WARN_FLAG = False
             print_str = (
                 print_str
-                + f"\tWARNING: There are files that have a file_name that does not match the file name in the url:\n"
+                + f"\tERROR: There are files that have a file_name that does not match the file name in the url:\n"
             )
             print_df = filename_not_match[["node", "file_name", "file_url"]]
             print_df["file_name"] = print_df["file_name"].str.wrap(40)
@@ -1251,7 +1251,7 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
             WARN_FLAG = False
             print_str = (
                 print_str
-                + f"\tWARNING: There are files that have a file_name extension that does not match the inferred file type from the file_name:\n"
+                + f"\tERROR: There are files that have a file_type that does not match the inferred type file extension based on the file_name:\n"
             )
             mismatch_df = pd.DataFrame.from_records(extension_type_mismatch)
             mismatch_df["file_name"] = mismatch_df["file_name"].str.wrap(40)
