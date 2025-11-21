@@ -1094,6 +1094,7 @@ def extract_object_file_meta(nodes_list: list[str], file_object):
         "file_id",
         "file_name",
         "file_size",
+        "file_type",
         "md5sum",
         "file_url",
         "node",
