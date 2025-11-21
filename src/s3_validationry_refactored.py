@@ -1251,7 +1251,7 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
             WARN_FLAG = False
             print_str = (
                 print_str
-                + f"\tWARNING: There are files that have a file_name extension that does not match the inferred file type from the url:\n"
+                + f"\tWARNING: There are files that have a file_name extension that does not match the inferred file type from the file_name:\n"
             )
             mismatch_df = pd.DataFrame.from_records(extension_type_mismatch)
             mismatch_df["file_name"] = mismatch_df["file_name"].str.wrap(40)
@@ -1268,7 +1268,7 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
     else:
         print_str = (
             print_str
-            + "\tINFO: all file name extensions matched their inferred file types from the url.\n"
+            + "\tINFO: all file name extensions matched their inferred file types from the file_name.\n"
         )
     return print_str
 
