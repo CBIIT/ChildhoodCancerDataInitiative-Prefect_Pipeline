@@ -1241,7 +1241,7 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
                 {
                     "node": row["node"],
                     "file_name": file_name,
-                    "file_extension": file_extension,
+                    "file_type": file_type,
                     "inferred_type": inferred_type,
                 }
             )
