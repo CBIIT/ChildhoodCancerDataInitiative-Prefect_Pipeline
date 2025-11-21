@@ -1231,7 +1231,7 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         if "gz" in file_extension.lower():
             #the inferred type is based on the extension before .gz
             inferred_type = file_extension[:-3]
-        elif "" in file_extension.lower():
+        elif len(file_extension) == 0:
             inferred_type = "txt"
         else:
             inferred_type = file_extension
