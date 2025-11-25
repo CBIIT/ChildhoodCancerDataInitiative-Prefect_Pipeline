@@ -1233,6 +1233,12 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
             inferred_type = file_extension[:-3]
         elif len(file_extension) == 0:
             inferred_type = "txt"
+        elif "dcm" == file_extension:
+            inferred_type = "dicom"
+        elif "fq" == file_extension:
+            inferred_type = "fastq"
+        elif "fa" == file_extension:
+            inferred_type = "fasta"
         else:
             inferred_type = file_extension
 
