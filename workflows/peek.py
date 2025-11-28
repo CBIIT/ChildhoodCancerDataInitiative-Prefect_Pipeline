@@ -24,9 +24,9 @@ def file_mover_simple(bucket: str, file_path: str, runner: str, dest_bucket: str
     """    
     # create a logging object
     runner_logger = get_run_logger()
-    s3 = boto3.client('s3')
-    buckets = s3.list_buckets()
-    canid = buckets['Owner']['ID']
+    s3 = boto3.resource('s3')
+    bucket = s3.Bucket(bucket)
+    canid = bucket.Acl().owner['ID']
     runner_logger.info(f"Your MC is {canid}.")
     # download the file
     file_dl(bucket, file_path)
