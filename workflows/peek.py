@@ -12,7 +12,7 @@ from src.utils import get_time, file_dl, file_ul
     log_prints=True,
     flow_run_name="file-mover-simple-{runner}-" + f"{get_time()}",
 )
-def file_mover_simple(bucket: str, file_path: str, runner: str = "maj", dest_bucket: str) -> None:
+def file_mover_simple(bucket: str, file_path: str, runner: str, dest_bucket: str) -> None:
     """Pipeline that moves a file object from one bucket to another.
 
     Args:

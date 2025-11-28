@@ -37,6 +37,7 @@ deployments:
     parameters:
       bucket: "ccdi-validation"
       file_path: "Model_Mapping_Maker/3.1.0_CCDI_to_10.0.0_GC/model_mapping_maker_20250916_T122007/ccdi-model_3.1.0_cds-model_10.0.0-GC_Release_MAPPING_20250916.tsv"
+      runner: "maj"
       dest_bucket: "maj-util"
 
     # pull action to overwrite from file pull action
