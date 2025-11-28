@@ -30,7 +30,7 @@ def file_mover_simple(bucket: str, file_path: str, runner: str, dest_bucket: str
     runner_logger.info(f"Downloaded manifest from bucket {bucket} at {file_path}")
 
     filename = os.path.basename(file_path)
-     = os.path.basename(file_path)
+
     # upload files to bucket
     output_folder = os.path.join(runner, "file_mover_simple_outputs_" + get_time())
     file_ul(
