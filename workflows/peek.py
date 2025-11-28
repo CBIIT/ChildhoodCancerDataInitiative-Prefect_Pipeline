@@ -24,9 +24,10 @@ def file_mover_simple(bucket: str, file_path: str, runner: str, dest_bucket: str
     """    
     # create a logging object
     runner_logger = get_run_logger()
-    sts = boto3.client('sts')
-    identity = sts.get_caller_identity()
-    runner_logger.info(f"Your MC is {identity['Arn']}, {identity['Account']}.")
+    s3 = boto3.client('s3')
+    buckets = s3.list_buckets()
+    canid = buckets['Owner']['ID']
+    runner_logger.info(f"Your MC is {canid}.")
     # download the file
     file_dl(bucket, file_path)
     runner_logger.info(f"Downloaded file from bucket {bucket} at {file_path}")
