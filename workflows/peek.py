@@ -26,14 +26,14 @@ def file_mover_simple(bucket: str, file_path: str, runner: str, dest_bucket: str
 
     # download the file
     file_dl(bucket, file_path)
-    runner_logger.info(f"Downloaded manifest from bucket {bucket} at {file_path}")
+    runner_logger.info(f"Downloaded file from bucket {bucket} at {file_path}")
 
     filename = os.path.basename(file_path)
 
     # upload files to bucket
     output_folder = os.path.join(runner, "file_mover_simple_outputs_" + get_time())
     file_ul(
-        bucket=bucket,
+        bucket=dest_bucket,
         output_folder=output_folder,
         sub_folder="",
         newfile=filename
