@@ -26,6 +26,36 @@ pull:
 
 # the deployments section allows you to provide configuration for deploying flows
 deployments:
+  - name: ccdi-to-gc-mapping-file-v3
+    version: null
+    tags: ["Production","V3"]
+    description: null
+    entrypoint: workflows/peek.py:file_mover_simple
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "Model_Mapping_Maker/3.1.0_CCDI_to_10.0.0_GC/model_mapping_maker_20250916_T122007/ccdi-model_3.1.0_cds-model_10.0.0-GC_Release_MAPPING_20250916.tsv"
+      dest_bucket: "maj-util"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: peek-at-mapping-files
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-60gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
+
   # base metadata
 
   - name: bucket-reader-2gb-v3
