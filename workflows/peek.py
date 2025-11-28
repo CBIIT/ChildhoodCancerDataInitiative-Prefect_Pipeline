@@ -12,7 +12,7 @@ from src.utils import get_time, file_dl, file_ul
     log_prints=True,
     flow_run_name="file-mover-simple-{runner}-" + f"{get_time()}",
 )
-def file_mover_simple(bucket: str, file_path: str, runner: str, dest_bucket: str) -> None:
+def file_mover_simple(bucket: str, file_path: str, runner: str = "maj", dest_bucket: str) -> None:
     """Pipeline that moves a file object from one bucket to another.
 
     Args:
@@ -39,7 +39,7 @@ def file_mover_simple(bucket: str, file_path: str, runner: str, dest_bucket: str
         newfile=filename
     )
     runner_logger.info(
-        f"Uploaded {summary_table} to bucket {bucket} folder {output_folder}"
+        f"Uploaded {filename} to bucket {bucket} folder {output_folder}"
     )
     runner_logger.info(f"File mover simple workflow has FINISHED! File can be found at {output_folder}")
 
