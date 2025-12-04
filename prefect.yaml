@@ -1392,7 +1392,13 @@ deployments:
         requirements_file: requirements_V3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
-
+    - prefect.deployments.steps.run_shell_script:
+        id: install-json2tsv-step
+        stream_output: True
+        script: |
+          git clone https://github.com/CBIIT/ChildhoodCancerDataInitiative-MCI_JSON2TSV.git
+          cd ChildhoodCancerDataInitiative-MCI_JSON2TSV
+          pip install -r requirements.txt
     # infra-specific fields
     work_pool:
       name: ccdi-curation-16gb-prefect-3.2.14-python3.9
