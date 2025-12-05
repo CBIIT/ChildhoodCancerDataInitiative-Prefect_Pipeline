@@ -61,6 +61,7 @@ class ManifestStyle:
 class GetCCDIModel:
     node_preferred_order = [
         "study",
+        "study_status",
         "study_admin",
         "study_arm",
         "study_funding",
