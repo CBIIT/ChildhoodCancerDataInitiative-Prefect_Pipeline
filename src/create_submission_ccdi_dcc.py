@@ -223,7 +223,7 @@ class GetCCDIModel:
         # get if key
         if prop_obj.is_key:
             prop_if_key = prop_obj.is_key
-        elif prop_name == "id":
+        elif prop_name == "guid":
             prop_if_key = False
         else:
             prop_if_key = np.nan
@@ -529,8 +529,8 @@ class ManifestSheet:
         # format required and nonrequired property cell
         row_number = 1
         for row in dataframe_to_rows(dict_df, index=False, header=True):
-            # if prop is id, file_url, dcf_indexd_guid, authz, or acl
-            if row[0] in ["id", "file_url", "dcf_indexd_guid", "authz", "acl"]:
+            # if prop is guid, file_url, dcf_indexd_guid, authz, or acl
+            if row[0] in ["guid", "file_url", "dcf_indexd_guid", "authz", "acl"]:
                 sheet_dictionary["A" + str(row_number)].font = (
                     ManifestStyle.meta_index_font
                 )
@@ -775,10 +775,10 @@ class ManifestSheet:
             parent_nodes_extended = []
             parent_nodes_index = []
 
-        node_props = [i for i in model_node[node] if i != "id"]
+        node_props = [i for i in model_node[node] if i != "guid"]
         node_props = self._sort_prop_order(node_name=node, prop_list=node_props)
         node_sheet_header = (
-            ["type"] + parent_nodes_extended + node_props + ["id"] + parent_nodes_index
+            ["type"] + parent_nodes_extended + node_props + ["guid"] + parent_nodes_index
         )
         # add node_sheet_header as metadata sheet header
         ws_node.append(node_sheet_header)
@@ -827,7 +827,7 @@ class ManifestSheet:
             else:
                 ws_node[cell_h_col].font = ManifestStyle.nonrequired_font
         # index props
-        for k in range(len(["id"] + parent_nodes_index)):
+        for k in range(len(["guid"] + parent_nodes_index)):
             k_col_name = get_column_letter(
                 k + 1 + len(["type"] + parent_nodes_extended + node_props)
             )
