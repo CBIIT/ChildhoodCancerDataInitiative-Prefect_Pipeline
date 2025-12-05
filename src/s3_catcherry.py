@@ -164,13 +164,12 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     # determine nodes again
     dict_nodes = set(list(meta_dfs.keys()))
 
-
-# CCDIDC-1775
-# The following two sections are commented out as they are not currently used.
-# These could be useful in the future, so they are left here for reference.
-# These were meant to fix issues with empty rows and regex issues in the nodes.
-# They haven't fixed the issues that were encountered, so they are not currently used.
-# But these might be helpful in the future if similar issues arise.
+    # CCDIDC-1775
+    # The following two sections are commented out as they are not currently used.
+    # These could be useful in the future, so they are left here for reference.
+    # These were meant to fix issues with empty rows and regex issues in the nodes.
+    # They haven't fixed the issues that were encountered, so they are not currently used.
+    # But these might be helpful in the future if similar issues arise.
 
     # ##############
     # #
@@ -194,7 +193,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
     #             )
     #             df = df.dropna(subset=["type"])
     #             meta_dfs[node] = df
-
 
     # ##############
     # #
@@ -242,18 +240,99 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         ##############
         #
         # Diagnosis clean up, remove '###(#)/# : ' from the diagnosis column
+        # This can be deprecated once submitters are using the new template
         #
         ##############
 
-        catcherr_logger.info("Cleaning up diagnosis column, removing '###(#)/(#) : ' if present")
+        catcherr_logger.info(
+            "Cleaning up diagnosis column, removing '###(#)/(#) : ' if present"
+        )
 
         for node in dict_nodes:
             df = meta_dfs[node]
             if "diagnosis" in df.columns:
-                df["diagnosis"] = df["diagnosis"].replace(r"^\s*\d+(?:/\d+)?\s*:\s*", "", regex=True)
+                df["diagnosis"] = df["diagnosis"].replace(
+                    r"^\s*\d+(?:/\d+)?\s*:\s*", "", regex=True
+                )
             meta_dfs[node] = df
 
-
+        ##############
+        #
+        # CCDIDC-2037 TO BE USED WITH CCDI-DCC MODEL ONLY
+        # Anatomic_site clean up, remove the C-codes if they exist 'c##.# : ' from the anatomic_site column.
+        # Then we will use the anatomic_site_term column to fill in a new value based on the uberon_text column in the
+        # anatomic_site_mapping_uberon.tsv file found in the docs folder.
+        # This can be deprecated once submitters are using the new template
+        #
+        ##############
+#        catcherr_logger.info(
+#            "Cleaning up anatomic_site column, removing 'C##.# : ' if present"
+#        )
+#        for node in dict_nodes:
+#            df = meta_dfs[node]
+#            if "anatomic_site" in df.columns:
+#                # we have to go row by row to handle each value as some have multiple values separated by ;
+#                for index, row in df.iterrows():
+#                    anatomic_site_value = row["anatomic_site"]
+#                    if pd.notna(anatomic_site_value):
+#                        if ";" in anatomic_site_value:
+#                            anatomic_site_list = anatomic_site_value.split(";")
+#                            new_anatomic_site_list = []
+#                            for anatomic_site in anatomic_site_list:
+#                                new_anatomic_site = re.sub(
+#                                    r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
+#                                    "",
+#                                    anatomic_site,
+#                                )
+#                                new_anatomic_site_list.append(new_anatomic_site)
+#                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
+#                            df.at[index, "anatomic_site"] = new_anatomic_site_value
+#                        else:
+#                            new_anatomic_site = re.sub(
+#                                r"^\s*[cC]\d{1,2}(?:\.\d)?\s*:\s*",
+#                                "",
+#                                anatomic_site_value,
+#                            )
+#                            df.at[index, "anatomic_site"] = new_anatomic_site
+#            meta_dfs[node] = df
+#        # read in the anatomic_site_mapping_uberon.tsv file
+#        anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
+#        anatomic_site_mapping = pd.read_csv(
+#            anatomic_site_mapping_path, sep="\t", dtype=str
+#        )
+#        # create a mapping dictionary
+#        anatomic_site_dict = anatomic_site_mapping.set_index("uberon_text")[
+#            "anatomic_site_term"
+#        ].to_dict()
+#        catcherr_logger.info(
+#            "Filling in anatomic_site values based on uberon_text column"
+#        )
+#
+#        for node in dict_nodes:
+#            df = meta_dfs[node]
+#            if "anatomic_site" in df.columns:
+#                # use the mapping dictionary to fill in the new anatomic_site values based on the old anatomic_site values compared to the uberon_text column.
+#                # If there is no match, then leave the value as is.
+#                # We have to go row by row to handle each value as some have multiple values separated by ;
+#                for index, row in df.iterrows():
+#                    anatomic_site_value = row["anatomic_site"]
+#                    if pd.notna(anatomic_site_value):
+#                        if ";" in anatomic_site_value:
+#                            anatomic_site_list = anatomic_site_value.split(";")
+#                            new_anatomic_site_list = []
+#                            for anatomic_site in anatomic_site_list:
+#                                new_anatomic_site = anatomic_site_dict.get(
+#                                    anatomic_site, anatomic_site
+#                                )
+#                                new_anatomic_site_list.append(new_anatomic_site)
+#                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
+#                            df.at[index, "anatomic_site"] = new_anatomic_site_value
+#                        else:
+#                            new_anatomic_site = anatomic_site_dict.get(
+#                                anatomic_site_value, anatomic_site_value
+#                            )
+#                            df.at[index, "anatomic_site"] = new_anatomic_site
+#            meta_dfs[node] = df
 
         ##############
         #
@@ -341,14 +420,20 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                 # if no, then
                                 # for each unique value
                                 for unique_value in unique_values:
-                                    if unique_value not in tavs_df_prop["Term"].dropna().values:
+                                    if (
+                                        unique_value
+                                        not in tavs_df_prop["Term"].dropna().values
+                                    ):
                                         print(
                                             f"\tERROR: {property} property contains a value that is not recognized: {unique_value}",
                                             file=outf,
                                         )
                                         # fix if lower cases match
                                         if (
-                                            tavs_df_prop["Term"].dropna().str.lower().values
+                                            tavs_df_prop["Term"]
+                                            .dropna()
+                                            .str.lower()
+                                            .values
                                             == unique_value.lower()
                                         ).any():
                                             new_value = tavs_df_prop[
@@ -407,7 +492,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                             )
                                             # fix if lower cases match
                                             if (
-                                                tavs_df_prop["Term"].dropna().str.lower().values
+                                                tavs_df_prop["Term"]
+                                                .dropna()
+                                                .str.lower()
+                                                .values
                                                 == unique_value.lower()
                                             ).any():
                                                 new_value = tavs_df_prop[
@@ -437,7 +525,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             "\nCertain characters (®, ™, ©) do not handle being transformed into certain file types, due to this, the following characters were changed.\n----------",
             file=outf,
         )
-
 
         non_utf_8_array = ["®", "™", "©", "–", "—"]
 
@@ -485,13 +572,15 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # found on GitHub, it will create the diagnosis category values.
 
         # directory path to the cross-reference file
-        diagnosis_mapping_path = ("docs/uniqDx2Dx_cat_2025_07_15.tsv")
+        diagnosis_mapping_path = "docs/uniqDx2Dx_cat_2025_07_15.tsv"
 
         # read in the cross-reference file
         diagnosis_mapping = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
 
         # Create a mapping dictionary
-        diagnosis_mapping = diagnosis_mapping.set_index('diagnosis')['diagnosis_category'].to_dict()
+        diagnosis_mapping = diagnosis_mapping.set_index("diagnosis")[
+            "diagnosis_category"
+        ].to_dict()
 
         catcherr_logger.info("Transforming diagnosis to diagnosis category")
         for node in dict_nodes:
@@ -501,15 +590,16 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 # map the diagnosis column to the diagnosis_category column, based on the dataframe diagnosis_mapping,
                 # which has the same column headers found in the df object, diagnosis and diagnosis_category.
                 # Only update where diagnosis_category is null
-                df['diagnosis_category'] = df.apply(
-                    lambda row: diagnosis_mapping.get(row['diagnosis'], 'Not Reported')
-                    if pd.isna(row['diagnosis_category']) else row['diagnosis_category'],
-                    axis=1
+                df["diagnosis_category"] = df.apply(
+                    lambda row: (
+                        diagnosis_mapping.get(row["diagnosis"], "Not Reported")
+                        if pd.isna(row["diagnosis_category"])
+                        else row["diagnosis_category"]
+                    ),
+                    axis=1,
                 )
             meta_dfs[node] = df
-        
-        
-        
+
         ##############
         #
         # Check and replace non-html encoded characters in URLs
@@ -885,7 +975,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 col for col, dt in node_df.dtypes.items() if dt == object
             ]
             for col_i in node_df_str_cols:
-                node_df[col_i] = node_df[col_i].str.replace("\u00A0", " ")
+                node_df[col_i] = node_df[col_i].str.replace("\u00a0", " ")
             meta_dfs[node] = node_df
         return meta_dfs
 

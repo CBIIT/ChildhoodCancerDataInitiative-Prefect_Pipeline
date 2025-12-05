@@ -17,7 +17,7 @@ import pandas as pd
 import numpy as np
 import csv
 import os
-from typing import TypeVar, Dict, List
+from typing import TypeVar, Dict, List, Union
 import boto3
 import json
 import tempfile
@@ -25,9 +25,20 @@ import traceback
 from botocore.exceptions import ClientError
 import random
 import itertools
+import gc
 
 
 DataFrame = TypeVar("DataFrame")
+
+
+def get_available_space() -> str:
+    """Get the available space on the disk."""
+    pages = os.sysconf("SC_PHYS_PAGES")
+    page_size = os.sysconf("SC_PAGE_SIZE")
+    total = pages * page_size
+    avail_pages = os.sysconf("SC_AVPHYS_PAGES")
+    available = avail_pages * page_size
+    return f"Total: {total / (1024 ** 3):.2f}, Available: {available / (1024 ** 3):.2f}"
 
 
 @dataclass
@@ -110,6 +121,28 @@ WITH s.study_id as study_id, s.study_name as study_name
 RETURN DISTINCT study_id, study_name
 """
     )
+
+    # query to obtain the study estimated size
+    stats_get_est_size_query: str = (
+        """
+MATCH (s:study)
+WHERE s.study_id = "{study_id}"
+WITH labels(s) AS NodeType, COLLECT(s.size_of_data_being_uploaded) AS Value
+RETURN NodeType, Value
+"""
+    )
+    
+    # query to obtain the study curation status
+    stats_get_curation_status_query: str = (
+        """
+MATCH (s:study)
+WHERE s.study_id = "{study_id}"
+WITH labels(s) AS NodeType, COLLECT(s.curation_status) AS Value
+RETURN NodeType, Value
+"""
+    )
+
+
 
     # Querty to obtain the study PI
     stats_get_pi_query: str = (
@@ -433,6 +466,8 @@ def export_to_csv_per_node_per_study(
         # Write data rows
         for record in result:
             csv_writer.writerow(record.values())
+    # garbage collect
+    gc.collect()
     return None
 
 
@@ -458,14 +493,19 @@ def export_uniq_values_node_property(
 
 @task(name="Pull node data", task_run_name="pull_node_data_{node_label}")
 def pull_data_per_node(
-    driver, data_to_csv, node_label: str, query_str: str, output_dir: str, study_id: str = None
+    driver,
+    data_to_csv,
+    node_label: str,
+    query_str: str,
+    output_dir: str,
+    study_id_list: Union[list[str], None] = None,
 ) -> None:
-    """Exports DB data by a given node. If study_id is provided, only pulls data for that study."""
+    """Exports DB data by a given node. If study_id_list is provided, only pulls data for those studies."""
     session = driver.session()
     try:
-        if study_id and node_label == "study":
+        if study_id_list and node_label == "study":
             cypher = (
-                f"MATCH (startNode:study) WHERE startNode.study_id = '{study_id}' "
+                f"MATCH (startNode:study) WHERE startNode.study_id IN {study_id_list} "
                 "WITH startNode, properties(startNode) AS props "
                 "UNWIND keys(props) AS propertyName "
                 "RETURN startNode.id AS startNodeId, "
@@ -572,7 +612,7 @@ def pull_nodes_loop(
     """Loops through a list of node labels and pulls data from a neo4j DB"""
     cypher_phrase = Neo4jCypherQuery.main_cypher_query_per_study_node
     per_study_per_node_out_dir = os.path.join(
-        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study"
+        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
     )
     print(per_study_per_node_out_dir)
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
@@ -590,6 +630,7 @@ def pull_nodes_loop(
             output_dir=per_study_per_node_out_dir,
         )
     future.result()
+    gc.collect()
     return None
 
 
@@ -600,48 +641,111 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
     Args:
         folder_dir (str): folder that contains query result csv per node per study
         node_list (list[str]): unique node list
-    """
+    """    
     # look at the out_dir and concatenate files for the same node,
     # so each node can have one csv file
     print("Below is the list of query results per study per node:")
     folder_dir = os.path.join(
-        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_study"
+        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
     )
     print(os.listdir(folder_dir))
-    files_list = [os.path.join(folder_dir, i) for i in os.listdir(folder_dir)]
+    
+    # OPTIMIZATION 1: Define columns once outside the loop to avoid recreation
+    columns_list = [
+        "startNodeId",
+        "startNodeLabels", 
+        "startNodePropertyName",
+        "startNodePropertyValue",
+        "linkedNodeId",
+        "linkedNodeLabels",
+        "dbgap_accession",
+    ]
+
+    # OPTIMIZATION 2: Use generator instead of loading all files into memory
+    def get_node_files(folder_path, node_pattern):
+        """Generator that yields matching files without loading all paths into memory"""
+        try:
+            for filename in os.listdir(folder_path):
+                if node_pattern in filename:
+                    yield os.path.join(folder_path, filename)
+        except OSError as e:
+            print(f"Error accessing folder {folder_path}: {e}")
+            return
 
     for node_label in node_list:
+        print(get_available_space())
         node_label_phrase = "_" + node_label + "_output.csv"
-        node_file_list = [i for i in files_list if node_label_phrase in i]
+        
+        # OPTIMIZATION 3: Use generator for file processing
+        node_files_generator = get_node_files(folder_dir, node_label_phrase)
+        node_file_list = list(node_files_generator)  # Convert to list only for logging
         print(f"files belongs to node {node_label}: {*node_file_list,}")
-        node_df = pd.DataFrame(
-            columns=[
-                "startNodeId",
-                "startNodeLabels",
-                "startNodePropertyName",
-                "startNodePropertyValue",
-                "linkedNodeId",
-                "linkedNodeLabels",
-                "dbgap_accession",
-            ]
-        )
-        for j in node_file_list:
-            j_df = pd.read_csv(j)
-            print(j_df.columns)
-            print(j_df.head())
-            if j_df.shape[0] == 0:
-                pass
-            else:
-                node_df = pd.concat([node_df, j_df], ignore_index=True)
+    
         node_df_filename = node_label + "_output.csv"
         node_df_dir = os.path.join(out_dir, node_df_filename)
-        node_df.to_csv(node_df_dir, index=False)
+        
+        first_write = True
+        processed_files = []
+        
+        for j in node_file_list:
+            try:
+                # OPTIMIZATION 4: Process chunks immediately and optimize dtypes
+                chunk_count = 0
+                for chunk in pd.read_csv(j, chunksize=100000, dtype='string'):  # Use string dtype to save memory
+                    if chunk.shape[0] == 0:
+                        continue
+                    
+                    # OPTIMIZATION 5: Check columns exist before selecting to avoid errors
+                    available_columns = [col for col in columns_list if col in chunk.columns]
+                    if not available_columns:
+                        print(f"Warning: No required columns found in {j}")
+                        continue
+                        
+                    # Select only available columns and process immediately
+                    chunk = chunk[available_columns]
+                    
+                    # Write chunk and immediately release it from memory
+                    if first_write:
+                        chunk.to_csv(node_df_dir, index=False, header=True)
+                        first_write = False
+                    else:
+                        chunk.to_csv(node_df_dir, mode="a", header=False, index=False)
+                    
+                    chunk_count += 1
+                    # OPTIMIZATION 6: Explicit memory cleanup for large datasets
+                    del chunk
+                    if chunk_count % 10 == 0:  # Garbage collect every 10 chunks
+                        gc.collect()
+                        
+                print(f"Processed {chunk_count} chunks from {os.path.basename(j)}")
+                processed_files.append(j)
+                
+            except Exception as e:
+                print(f"Error processing file {j}: {e}")
+                raise e
+        
+        # OPTIMIZATION 7: Delete files immediately after processing each node to free space
+        # Only delete files that were successfully processed
+        for j in processed_files:
+            try:
+                os.remove(j)
+                print(f"Deleted processed file: {os.path.basename(j)}")
+            except OSError as e:
+                print(f"Warning: Could not delete {j}: {e}")
+        
+        # OPTIMIZATION 8: Force garbage collection after each node to free memory
+        processed_files.clear()  # Clear the list
+        gc.collect()
+        print(f"Completed processing node {node_label}, memory cleaned up")
+    
     return None
 
 
 @flow
-def pull_study_node(driver, out_dir: str, study_id: str = None) -> None:
-    """Pulls data for study node from a neo4j DB. If study_id is provided, only pulls data for that study."""
+def pull_study_node(
+    driver, out_dir: str, study_id_list: Union[list[str], None] = None
+) -> None:
+    """Pulls data for study node from a neo4j DB. If study_id_list is provided, only pulls data for those studies."""
     cypher_phrase = Neo4jCypherQuery.study_cypher_query
     pull_data_per_node(
         driver=driver,
@@ -649,7 +753,7 @@ def pull_study_node(driver, out_dir: str, study_id: str = None) -> None:
         node_label="study",
         query_str=cypher_phrase,
         output_dir=out_dir,
-        study_id=study_id,
+        study_id_list=study_id_list,
     )
     return None
 
@@ -1115,7 +1219,7 @@ def query_db_to_csv(
     uri_parameter: str,
     username_parameter: str,
     password_parameter: str,
-    study_id: str = None
+    study_id_list: Union[list[str], None] = None,
 ) -> str:
     """It export one csv file for each unique node.
     Each csv file (per node) contains all the info of the node across all studies
@@ -1145,8 +1249,8 @@ def query_db_to_csv(
     logger.info("Fetching all unique nodes in DB")
     unique_nodes = pull_uniq_nodes(driver=driver)
     logger.info("Fetching all unique studies in DB")
-    if study_id:
-        unique_studies = [study_id]
+    if study_id_list:
+        unique_studies = study_id_list
     else:
         unique_studies = pull_uniq_studies(driver=driver)
     print(f"unique_studies: {unique_studies}")
@@ -1155,6 +1259,8 @@ def query_db_to_csv(
 
     # Iterate through each unique node and export data
     logger.info("Pulling data by each node")
+
+    # pull all the nodes for each study
     pull_nodes_loop(
         study_list=unique_studies,
         node_list=unique_nodes,
@@ -1162,13 +1268,12 @@ def query_db_to_csv(
         out_dir=output_dir,
         logger=logger,
     )
-
-    # combine all csv of same node into single file
+    # combine step will delete per study per node csv files, which saves space
     combine_node_csv_all_studies(out_dir=output_dir, node_list=unique_nodes)
 
     # Obtain study node data
     logger.info("Pulling data from study node")
-    pull_study_node(driver=driver, out_dir=output_dir, study_id=study_id)
+    pull_study_node(driver=driver, out_dir=output_dir, study_id_list=study_id_list)
 
     # close the driver
     logger.info("Closing GraphDatabase driver")
