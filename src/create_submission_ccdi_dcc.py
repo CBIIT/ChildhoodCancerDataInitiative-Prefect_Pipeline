@@ -769,7 +769,7 @@ class ManifestSheet:
         if node != "study":
             parent_nodes = parent_node_dict[node]
             parent_nodes_extended = [i + "." + i + "_id" for i in parent_nodes]
-            parent_nodes_index = [i + ".id" for i in parent_nodes]
+            parent_nodes_index = [i + ".guid" for i in parent_nodes]
         else:
             parent_nodes = []
             parent_nodes_extended = []
