@@ -1239,9 +1239,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-pull_n_join_manifest_single_study
+  - name: pull_n_join_manifest_single_study
     version: null
-    tags: ["TEST", "V3"]
+    tags: ["Production", "V3"]
     description: null
     entrypoint: workflows/pull_n_join_manifest_single_study.py:pull_n_join_manifest_single_study
     schedule: null
@@ -1259,7 +1259,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: CCDIDC-2170_pull_n_join
+        branch: main
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_V3.txt
         directory: "{{ clone-step.directory }}"
