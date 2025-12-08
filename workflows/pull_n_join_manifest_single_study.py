@@ -33,7 +33,7 @@ def pull_n_join_manifest_single_study(
     op_folder = pull_neo4j_data(
         bucket=bucket,
         runner=runner,
-        study_id=study_id,
+        study_id=[study_id],
     )
     
     op_folder_path = f"{op_folder}/{study_id}".replace("s3://"+bucket+"/", "").replace("/./", "/")
