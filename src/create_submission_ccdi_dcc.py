@@ -53,7 +53,7 @@ class GetDCCModel:
 
     def _list_nodes(self) -> list:
         """Returns a list of nodes of a model"""
-        nodes = list(self.dcc_model.nodes)
+        nodes = list(self.model.nodes)
         return nodes
 
     def _list_node_props(self, node_name: str) -> list:
