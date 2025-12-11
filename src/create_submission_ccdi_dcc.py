@@ -11,7 +11,6 @@ from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl import Workbook
 from typing import Any, TypeVar, Dict, List
-from openpyxl.styles import PatternFill, Font
 from src.utils import get_github_token
 from bento_mdf import MDFReader
 from src.create_submission import ManifestStyle
