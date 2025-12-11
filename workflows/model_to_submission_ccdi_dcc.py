@@ -4,16 +4,16 @@ import traceback
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.create_submission_ccdi_dcc import ModelEndpoint, GetCCDIModel, ManifestSheet
+from src.create_submission_ccdi_dcc import ModelEndpoint, GetDCCModel, ManifestSheet
 from src.utils import file_ul, get_time, dl_file_from_url
 from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
 
 
 @flow(
-    name="Model to Submission",
+    name="DCC Model to Submission",
     log_prints=True,
-    flow_run_name="model-to-submission-{runner}-" + f"{get_time()}",
+    flow_run_name="dcc-model-to-submission-{runner}-" + f"{get_time()}",
 )
 def create_submission_manifest(bucket: str, runner: str, release_title: str) -> None:
     """Pipeline that creates a CCDI-DCC manifest using the model files in GitHub repo main branch
@@ -29,7 +29,11 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # download ccdi-dcc-model.yml
     try:
-        model_file = dl_file_from_url(ModelEndpoint.model_file)
+        # model_file = dl_file_from_url(ModelEndpoint.model_file)
+        # try with a release tag url first
+        model_file = dl_file_from_url(
+            "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/ccdi-dcc-model.yml"
+        )
     except ConnectionError as e:
         runner_logger.error(f"Failed to download ccdi-dcc-model.yml due to ConnectionError: {e}")
         raise
@@ -40,7 +44,11 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # download ccdi-dcc-model-props.yml
     try:
-        prop_file = dl_file_from_url(ModelEndpoint.prop_file)
+        # try with a release tag url first
+        # prop_file = dl_file_from_url(ModelEndpoint.prop_file)
+        prop_file = dl_file_from_url(
+            "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/ccdi-dcc-model-props.yml"
+        )
     except ConnectionError as e:
         runner_logger.error(f"Failed to download ccdi-dcc-model-props.yml due to ConnectionError: {e}")
         raise
@@ -51,7 +59,11 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # download terms.yml
     try:
-        term_file = dl_file_from_url(ModelEndpoint.term_file)
+        # try with a released tag url first
+        # term_file = dl_file_from_url(ModelEndpoint.term_file)
+        term_file = dl_file_from_url(
+            "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/terms.yml"
+        )
     except ConnectionError as e:
         runner_logger.error(f"Failed to download terms.yml due to ConnectionError: {e}")
         raise
@@ -64,7 +76,7 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
         f"Downloaded models files: {model_file}, {prop_file}, {term_file}"
     )
 
-    getmodel = GetCCDIModel(
+    getmodel = GetDCCModel(
         model_file=model_file, prop_file=prop_file, term_file=term_file
     )
 

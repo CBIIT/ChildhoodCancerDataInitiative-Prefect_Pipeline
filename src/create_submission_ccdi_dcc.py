@@ -13,7 +13,8 @@ from openpyxl import Workbook
 from typing import Any, TypeVar, Dict, List
 from openpyxl.styles import PatternFill, Font
 from src.utils import get_github_token
-from bento_mdf.mdf import MDF
+from bento_mdf import MDFReader
+from src.create_submission import ManifestStyle
 import bento_meta
 
 
@@ -23,7 +24,7 @@ ExcelWorkbook = TypeVar("ExcelWorkbook")
 
 
 @dataclass
-class ModelEndpoint:
+class DCCModelEndpoint:
     """Class for keeping track of model file endpoints"""
 
     model_file: str = (
@@ -37,87 +38,28 @@ class ModelEndpoint:
     )
 
 
-@dataclass
-class ManifestStyle:
-    """Class for keeping track of style inventory"""
-
-    # Metadata sheet style
-    meta_linking_font: Any = Font(bold=True)
-    meta_linking_pattern: Any = PatternFill(fill_type="solid", fgColor="DCD0FF")
-    meta_index_font: Any = Font(bold=True)
-    meta_index_pattern: Any = PatternFill(fill_type="solid", fgColor="DEFFF7")
-    # Dictionary sheet style
-    dict_header_pattern: Any = PatternFill(fill_type="solid", fgColor="000000")
-    dict_header_font: Any = Font(bold=False, color="ffffff")
-    # required prop style
-    required_pattern: Any = PatternFill(fill_type="solid", fgColor="FFF2CC")
-    required_font: Any = Font(bold=True)
-    nonrequired_font: Any = Font(color="595959")
-    # terms sheet pattern
-    term_pattern_A: Any = PatternFill(fill_type="solid", fgColor="EEDDDC")
-    term_pattern_B: Any = PatternFill(fill_type="solid", fgColor="DEE6F0")
-
-
-class GetCCDIModel:
-    node_preferred_order = [
-        "study",
-        "study_status",
-        "study_admin",
-        "study_arm",
-        "study_funding",
-        "study_personnel",
-        "publication",
-        "consent_group",
-        "participant",
-        "diagnosis",
-        "survival",
-        "treatment_chemotherapy",
-        "treatment_radiation",
-        "treatment_surgery",
-        "treatment_other",
-        "treatment_response",
-        "synonym",
-        "family_relationship",
-        # "therapeutic_procedure",
-        "medical_history",
-        "exposure",
-        "radiology_file",
-        # "follow_up",
-        # "molecular_test",
-        "genetic_analysis",
-        "laboratory_test",
-        "sample",
-        "cell_line",
-        "pdx",
-        "sequencing_file",
-        "clinical_measure_file",
-        "methylation_array_file",
-        "cytogenomic_file",
-        "pathology_file",
-        "generic_file",
-        # "single_cell_sequencing_file",
-    ]
+class GetDCCModel:
 
     def __init__(self, model_file: str, prop_file: str, term_file: str) -> None:
         self.model_file = model_file
         self.prop_file = prop_file
         self.term_file = term_file
-        self.ccdi_model =  self._read_model()
+        self.model =  self._read_model()
 
     # fixed
     def _read_model(self):
-        ccdi_main = MDF(self.model_file, self.prop_file, handle="ccdi")
-        ccdi_model = ccdi_main.model
-        return ccdi_model
+        mdf = MDFReader(self.model_file, self.prop_file, handle="dcc")
+        model = mdf.model
+        return model
 
     def _list_nodes(self) -> list:
         """Returns a list of nodes of a model"""
-        ccdi_nodes = [x for x in self.ccdi_model.nodes]
-        return ccdi_nodes
+        nodes = list(self.dcc_model.nodes)
+        return nodes
 
     def _list_node_props(self, node_name: str) -> list:
         """Returns a list of prop names of a given node"""
-        node_props = [x for x in self.ccdi_model.nodes[node_name].props]
+        node_props = list(self.model.nodes[node_name].props)
         return node_props
 
     def _read_term(self) -> dict:
@@ -128,7 +70,7 @@ class GetCCDIModel:
     # fixed
     def get_version(self) -> str:
         """Returns version value of data model"""
-        version = self.ccdi_model.version
+        version = self.model.version
         return version
 
     def get_model_nodes(self) -> dict:
@@ -139,12 +81,7 @@ class GetCCDIModel:
             node_props = self._list_node_props(node_name=node)
             return_dict[node] = node_props
         return return_dict
-    
 
-    # fixed
-    # [x.dst.handle for x in ccdi_model.edges_by_src(ccdi_model.nodes["sample"])]
-    # another way
-    # [x.dst.handle for x in ccdi_model.edges_out(ccdi_model.nodes["sample"])]
     def get_parent_nodes(self) -> dict:
         """Gets parent nodes list of each node
         {
@@ -153,14 +90,11 @@ class GetCCDIModel:
         }
         """
         node_list = self._list_nodes()
-        ccdi_model = self.ccdi_model
         return_dict = {}
         for node in node_list:
-            parent_nodes_to_node = [
-                x.dst.handle for x in ccdi_model.edges_out(ccdi_model.nodes[node])
-            ]
-            return_dict[node] = parent_nodes_to_node
-
+            edges_list = self.model.edges_by_src(self.model.nodes[node])
+            parent_node_list = [e.triplet[2] for e in edges_list]
+            return_dict[node] = parent_node_list
         return return_dict
 
     # fixed
@@ -281,12 +215,71 @@ class GetCCDIModel:
 
     def _get_sorted_node_list(self, node_list: list) -> list:
         """Sort the order of nodes and prioritize the
-        preferred node order (self.node_preferred_order)
+        preferred node order
         """
-        node_sort_list = self.node_preferred_order + [
-            i for i in node_list if i not in self.node_preferred_order
+        node_list = self._list_nodes()
+        # find root node
+        root_node = None
+        for i in node_list:
+            if len(self.model.edges_by_src(self.model.nodes[i])) == 0:
+                root_node = i
+                break
+            else:
+                pass
+        sorted_nodes = [root_node]
+        # find nodes start with study_
+        for i in node_list:
+            if i.startswith("study_"):
+                sorted_nodes.append(i)
+        # add preferred order of potential nodes:
+        preferred_nodes = [
+            "publication",
+            "consent_group",
+            "participant",
+            "diagnosis",
+            "survival",
+            "treatment_chemotherapy",
+            "treatment_radiation",
+            "treatment_surgery",
+            "treatment_other",
+            "treatment_response",
+            "synonym",
+            "family_relationship",
+            "medical_history",
+            "exposure",
+            "radiology_file",
+            "genetic_analysis",
+            "laboratory_test",
+            "sample",
+            "cell_line",
+            "pdx",
+            "sequencing_file",
+            "clinical_measure_file",
+            "methylation_array_file",
+            "cytogenomic_file",
+            "pathology_file",
+            "generic_file",
         ]
-        return node_sort_list
+        to_append = []
+        for i in preferred_nodes:
+            if i in node_list and i not in sorted_nodes:
+                to_append.append(i)
+            else:
+                pass
+        sorted_nodes.extend(to_append)
+        # add remaining nodes
+        for i in node_list:
+            if i not in sorted_nodes:
+                sorted_nodes.append(i)
+            else:
+                pass
+        try:
+            assert set(sorted_nodes) == set(node_list)
+            assert len(sorted_nodes) == len(node_list)
+        except AssertionError:
+            raise ValueError(f"Set of sorted node list doesn't match node list from model\nsorted node list: {*sorted_nodes,}\nnode list in model: {*node_list,}")
+        print(f"sorted node list: {*sorted_nodes,}")
+        return sorted_nodes
 
     def get_prop_dict_df(self) -> DataFrame:
         """Returns a dataframe that is ready to be loaded as "Dictionary" sheet"""
@@ -352,7 +345,7 @@ class GetCCDIModel:
                 prop_return_df = pd.concat(
                     [prop_return_df, pd.DataFrame(prop_append_line)], ignore_index=True
                 )
-        # sort the df based on node_preferred_order
+        # sort the df based on node order
         node_sort_list = self._get_sorted_node_list(node_list=self._list_nodes())
         prop_return_df.sort_values(
             by=["Node"],
