@@ -145,7 +145,7 @@ class GetDCCModel:
 
         The features of props are now accessed through bento-mdf model object from now on(09/30/2024)
         """
-        prop_obj = self.ccdi_model.nodes[node_name].props[prop_name]
+        prop_obj = self.model.nodes[node_name].props[prop_name]
 
         # get_attr_dict of a prop
         prop_attr_dict = prop_obj.get_attr_dict()
@@ -161,7 +161,7 @@ class GetDCCModel:
         else:
             prop_if_key = np.nan
 
-        # in CCDI, every prop has a req key, which is not the case in other projects
+        # every node has a req key, which is not the case in other projects
         prop_required = prop_obj.is_required
 
         # get cde code
@@ -356,7 +356,7 @@ class GetDCCModel:
     # fixed
     def get_terms_df(self) -> DataFrame:
         """Returns a dataframe that can be used for Terms and Value sets sheet"""
-        ccdi_model = self.ccdi_model
+        dcc_model = self.model
 
         # term_dict contains CDE verson info
         term_dict = self._read_term()["Terms"]
@@ -371,7 +371,7 @@ class GetDCCModel:
 
         prop_name_list = []
         # read through each prop item
-        for node_prop, node_prop_meta in ccdi_model.props.items():
+        for node_prop, node_prop_meta in dcc_model.props.items():
             prop_name = node_prop[1]
             # if prop_name hasn't appeared in prop_name_list
             if prop_name not in prop_name_list:
