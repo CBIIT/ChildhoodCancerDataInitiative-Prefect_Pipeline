@@ -29,11 +29,11 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # download ccdi-dcc-model.yml
     try:
-        # model_file = dl_file_from_url(ModelEndpoint.model_file)
-        # try with a release tag url first
-        model_file = dl_file_from_url(
-            "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/ccdi-dcc-model.yml"
-        )
+        model_file = dl_file_from_url(DCCModelEndpoint.model_file)
+        ## try with a release tag url first
+        #model_file = dl_file_from_url(
+        #    "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/ccdi-dcc-model.yml"
+        #)
     except ConnectionError as e:
         runner_logger.error(f"Failed to download ccdi-dcc-model.yml due to ConnectionError: {e}")
         raise
@@ -44,11 +44,12 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # download ccdi-dcc-model-props.yml
     try:
-        # try with a release tag url first
-        # prop_file = dl_file_from_url(ModelEndpoint.prop_file)
-        prop_file = dl_file_from_url(
-            "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/ccdi-dcc-model-props.yml"
-        )
+        
+        prop_file = dl_file_from_url(DCCModelEndpoint.prop_file)
+        ## try with a release tag url first
+        #prop_file = dl_file_from_url(
+        #    "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/ccdi-dcc-model-props.yml"
+        #)
     except ConnectionError as e:
         runner_logger.error(f"Failed to download ccdi-dcc-model-props.yml due to ConnectionError: {e}")
         raise
@@ -59,11 +60,12 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # download terms.yml
     try:
-        # try with a released tag url first
-        # term_file = dl_file_from_url(ModelEndpoint.term_file)
-        term_file = dl_file_from_url(
-            "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/terms.yml"
-        )
+        
+        term_file = dl_file_from_url(DCCModelEndpoint.term_file)
+        ## try with a released tag url first
+        #term_file = dl_file_from_url(
+        #    "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/terms.yml"
+        #)
     except ConnectionError as e:
         runner_logger.error(f"Failed to download terms.yml due to ConnectionError: {e}")
         raise
