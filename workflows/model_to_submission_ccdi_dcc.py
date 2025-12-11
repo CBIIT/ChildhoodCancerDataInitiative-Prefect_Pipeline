@@ -4,7 +4,7 @@ import traceback
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.create_submission_ccdi_dcc import ModelEndpoint, GetDCCModel, ManifestSheet
+from src.create_submission_ccdi_dcc import DCCModelEndpoint, GetDCCModel, ManifestSheet
 from src.utils import file_ul, get_time, dl_file_from_url
 from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
