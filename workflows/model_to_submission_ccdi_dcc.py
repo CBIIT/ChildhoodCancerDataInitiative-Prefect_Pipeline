@@ -1,14 +1,83 @@
 import os
 import sys
 import traceback
+import logging
+import io
+import yaml
+from collections import Counter
+import requests
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.create_submission_ccdi_dcc import DCCModelEndpoint, GetDCCModel, ManifestSheet
 from src.utils import file_ul, get_time, dl_file_from_url
-from prefect import flow, get_run_logger
+from prefect import flow, task, get_run_logger
 from requests.exceptions import ConnectionError
 
+
+@task(name="examine mdf load errors", log_prints=True)
+def examine_enum_load_errors(log_contents: str, logger: get_run_logger) -> list[str]:
+    """Examine the log contents from MDFReader to find any enum file load errors
+
+    Args:
+        log_contents (str): The log contents captured from GetDCCModel which creates MDF model instance during initialization
+
+    Returns:
+        list[str]: A list of enum file names that failed to load
+    """
+    error_enum_files = []
+    for line in log_contents.splitlines():
+        # this only catches enum loading from reference file
+        if line.startswith("Error loading enum from url"):
+            file_url = line.strip("Error loading enum from url").strip(
+                "'"
+            )  # extract file url
+            error_enum_files.append(file_url)
+            logger.error("Error loading enum from url: " + file_url)
+        elif line.startswith("Error"):
+            logger.error(line)
+    return error_enum_files
+
+@task(name="check enum duplicates", log_prints=True)
+def check_enum_duplicates(enum_url_list: list[str])->None:
+    """Check of list of url for enum yaml and find any duplicates
+
+    Args:
+        enum_url_list (list[str]): a list of enum yaml urls to check for duplicates
+    """
+    for i in enum_url_list:
+        try:
+            response = requests.get(i)
+            response.raise_for_status()
+            yaml_text = response.text
+
+            # parse yaml
+            data = yaml.safe_load(yaml_text)
+            if "PropDefinitions" not in data:
+                print("Missing 'PropDefinitions' key in YAML data")
+            else:
+                prop_definitions = data["PropDefinitions"]
+                if not isinstance(prop_definitions, dict):
+                    print("Value under 'PropDefinitions' is not a dictionary")
+                else:
+                    prop_keys = list(prop_definitions.keys())
+                    for key in prop_keys:
+                        if not isinstance(prop_definitions[key], list):
+                            print(f"Value for key '{key}' is not a list")
+                        else:
+                            counter = Counter(prop_definitions[key])
+                            for item, count in counter.items():
+                                if count > 1:
+                                    print(f"Duplicate item '{item}' found {count} times under key '{key}'")
+                                else:
+                                    pass
+        except requests.RequestException as re:
+            print(f"Error fetching URL {i}: {re}")
+        except yaml.YAMLError as e:
+            print(f"Failed to parse YAML for URL {i}: {e}")
+
+    return None
+                         
 
 @flow(
     name="DCC Model to Submission",
@@ -31,9 +100,9 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
     try:
         model_file = dl_file_from_url(DCCModelEndpoint.model_file)
         ## try with a release tag url first
-        #model_file = dl_file_from_url(
+        # model_file = dl_file_from_url(
         #    "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/ccdi-dcc-model.yml"
-        #)
+        # )
     except ConnectionError as e:
         runner_logger.error(f"Failed to download ccdi-dcc-model.yml due to ConnectionError: {e}")
         raise
@@ -44,12 +113,12 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # download ccdi-dcc-model-props.yml
     try:
-        
+
         prop_file = dl_file_from_url(DCCModelEndpoint.prop_file)
         ## try with a release tag url first
-        #prop_file = dl_file_from_url(
+        # prop_file = dl_file_from_url(
         #    "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/ccdi-dcc-model-props.yml"
-        #)
+        # )
     except ConnectionError as e:
         runner_logger.error(f"Failed to download ccdi-dcc-model-props.yml due to ConnectionError: {e}")
         raise
@@ -60,12 +129,12 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
 
     # download terms.yml
     try:
-        
+
         term_file = dl_file_from_url(DCCModelEndpoint.term_file)
         ## try with a released tag url first
-        #term_file = dl_file_from_url(
+        # term_file = dl_file_from_url(
         #    "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/refs/tags/0.0.2/model-desc/terms.yml"
-        #)
+        # )
     except ConnectionError as e:
         runner_logger.error(f"Failed to download terms.yml due to ConnectionError: {e}")
         raise
@@ -78,9 +147,34 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
         f"Downloaded models files: {model_file}, {prop_file}, {term_file}"
     )
 
-    getmodel = GetDCCModel(
-        model_file=model_file, prop_file=prop_file, term_file=term_file
-    )
+    # need to catpture the logging output from MDFReader
+    log_stream = io.StringIO()
+    handler = logging.StreamHandler(log_stream)
+    handler.setLevel(logging.DEBUG)
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    try:
+        getmodel = GetDCCModel(
+            model_file=model_file, prop_file=prop_file, term_file=term_file
+        )
+    finally:
+        logger.removeHandler(handler)
+        log_contents = log_stream.getvalue()
+        runner_logger.info(f"MDFReader log output:\n{log_contents}")
+        log_stream.close()
+    
+    # examine if any yaml enum file loaded failed
+    error_enum_urls = examine_enum_load_errors(log_contents=log_contents, logger=runner_logger)
+    if len(error_enum_urls) > 0:
+        runner_logger.error(
+            f"The following enum files failed to load, please check the URLs or the files themselves: {*error_enum_urls,}"
+        )
+        runner_logger.warning("Checking duplicates in the errored enum files...")
+        # check enum duplicates among the error enum files
+        check_enum_duplicates(enum_url_list=error_enum_urls)
+        raise RuntimeError("Enum file loading errors detected, see logs for details.")
+    else:
+        pass
 
     # get model version
     try:
