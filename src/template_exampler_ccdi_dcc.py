@@ -21,7 +21,8 @@ def columns_to_populate(full_col_list: List) -> List:
     """Removes linking properties and indexing properties from column list"""
     # remove the "type" property
     full_col_list.remove("type")
-    full_col_list.remove("id")
+    # full_col_list.remove("id")
+    full_col_list.remove("guid")
     newlist = [i for i in full_col_list if "." not in i]
     return newlist
 
