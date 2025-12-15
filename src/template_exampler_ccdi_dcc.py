@@ -161,6 +161,10 @@ def populate_exampler(
     # limiting entry number for study, study_admin, study_arms, study_funding, study_personnel, and publications
     # 1 entry for study
     populated_dfs["study"] = populated_dfs["study"].head(1)
+    # 1 entry for study_status
+    populated_dfs["study_status"] = populated_dfs["study_status"].head(1)
+    # 2 entry for consent_group
+    populated_dfs["consent_group"] = populated_dfs["consent_group"].head(2)
     # 1 entry for study_admin
     populated_dfs["study_admin"] = populated_dfs["study_admin"].head(1)
     # 3 entries for study_arm
