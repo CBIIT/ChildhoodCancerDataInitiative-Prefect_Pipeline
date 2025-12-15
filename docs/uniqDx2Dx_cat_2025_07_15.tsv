@@ -1,10 +1,11 @@
 diagnosis	diagnosis_category	source
 Abdominal fibromatosis	Fibromatous neoplasms	ICD-O-3.2
-Acinar cell carcinoma	Acinar cell neoplasms; Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Acinar cell carcinoma	Acinar cell neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute erythroid leukemia	Myeloid leukemias	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute leukemia, NOS	Leukemias, NOS	ICD-O-3.2
 Acute Leukemias of Ambiguous Lineage	Other Heme Tumors	WHO5 Pediatric Tumor
 Acute lymphoblastic leukemia, NOS	Leukemias, Lymphoblastic Leukemia	ICD-O-3.2;WHO5 Pediatric Tumor
+Acute Lymphoblastic Leukemia/Lymphoma, NOS	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 Acute megakaryoblastic leukemia	Myeloid leukemias	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute monocytic leukemia	Myeloid leukemias	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute Myeloid Leukemia	Myeloid Leukemia	WHO5 Pediatric Tumor
@@ -61,40 +62,43 @@ Adenocarcinoma, intestinal type	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma, metastatic, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma, NEC	Other Solid Tumors	WHO5 Pediatric Tumor
 Adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
-Adenoid cystic carcinoma	Adenomas and adenocarcinomas, Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
-Adenoma, NOS	Adenomas and adenocarcinomas, Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Adenoid cystic carcinoma	Adenomas and adenocarcinomas;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Adenoma, NOS	Adenomas and adenocarcinomas;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Adenomatoid Odontogenic Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Adenosarcoma	Complex mixed and stromal neoplasms	ICD-O-3.2
+Adrenal Cortical Adenoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Adrenal cortical adenoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Adrenal cortical carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
+Adrenal Cortical Tumor, Uncertain Malignant Potential	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
+Adrenal Cortical Tumors, NOS	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Adrenocortical Adenoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Adrenocortical Carcinoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Adrenocortical Tumor, NOS	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Adrenocortical Tumor, Uncertain Malignant Potential	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Adult-type Diffuse Gliomas	High-grade Gliomas	WHO5 Pediatric Tumor
 Aggressive fibromatosis	Fibromatous neoplasms	ICD-O-3.2
-Alveolar rhabdomyosarcoma	Myomatous neoplasms, Rhabdomyosarcoma	ICD-O-3.2;WHO5 Pediatric Tumor
-Alveolar soft part sarcoma	Granular cell tumors and alveolar soft part sarcomas, Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Alveolar rhabdomyosarcoma	Myomatous neoplasms;Rhabdomyosarcoma	ICD-O-3.2;WHO5 Pediatric Tumor
+Alveolar soft part sarcoma	Granular cell tumors and alveolar soft part sarcomas;Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Ameloblastoma, NOS	Odontogenic tumors	ICD-O-3.2
 Anaplastic Large Cell Lymphoma	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
 Anaplastic large cell lymphoma, ALK positive	Hodgkin and non-Hodgkin lymphomas;Non-Hodgkin Lymphoma	ICD-O-3.2;WHO5 Pediatric Tumor
 Anaplastic large cell lymphoma, T-cell and Null-cell type	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Aneurysmal Bone Cyst	Other Solid Tumors	WHO5 Pediatric Tumor
-Angiocentric glioma	Gliomas; Low-grade Glioma	ICD-O-3.2;WHO5 Pediatric Tumor
+Angiocentric glioma	Gliomas; Low-grade Gliomas	ICD-O-3.2;WHO5 Pediatric Tumor
 Angiocentric immunoproliferative lesion	Immunoproliferative diseases	ICD-O-3.2
 Angioimmunoblastic T-cell lymphoma	Mature T- and NK-cell lymphomas	ICD-O-3.2
-Angiomatoid fibrous histiocytoma	Fibromatous neoplasms; Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Angiomatoid fibrous histiocytoma	Fibromatous neoplasms;Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Angiomyofibroblastoma	Fibromatous neoplasms	ICD-O-3.2
 Angiomyolipoma	Renal Tumors	WHO5 Pediatric Tumor
 Angiomyosarcoma	Myomatous neoplasms	ICD-O-3.2
 Angiomyxoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Angiosarcoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Astroblastoma	Gliomas	ICD-O-3.2
-Astroblastoma, MN1-altered	High-Grade Glioma;Low-grade Glioma	WHO5 Pediatric Tumor
+Astroblastoma, MN1-altered	Low-grade Gliomas	WHO5 Pediatric Tumor
 Astrocytoma, anaplastic	Gliomas	ICD-O-3.2
 Astrocytoma, anaplastic, NOS	Gliomas	ICD-O-3.2
 Astrocytoma, benign	Gliomas	ICD-O-3.2
-Astrocytoma, IDH-mutant	High-Grade Glioma;Low-grade Glioma	WHO5 Pediatric Tumor
+Astrocytoma, IDH-mutant	High-grade Gliomas;Low-grade Gliomas	WHO5 Pediatric Tumor
 Astrocytoma, NOS	Gliomas	ICD-O-3.2
 ATRT-MYC	Atypical teratoid/rhabdoid tumor	WHO CNS5
 ATRT-SHH	Atypical teratoid/rhabdoid tumor	WHO CNS5
@@ -104,7 +108,6 @@ Atypical choroid plexus papilloma	Gliomas;Choroid Plexus tumors	ICD-O-3.2;WHO CN
 Atypical Dendritic Cell Tumor	Other Heme Tumors	WHO5 Pediatric Tumor
 Atypical meningioma	Meningiomas	ICD-O-3.2
 Atypical teratoid/rhabdoid tumor	Neuroepitheliomatous neoplasms	ICD-O-3.2
-Atypical Teratoid/Rhabdoid Tumors	Atypical Teratoid/Rhabdoid Tumors	WHO5 Pediatric Tumor
 B lymphoblastic leukemia/lymphoma with hyperdiploidy	Lymphoid leukemias	ICD-O-3.2
 B lymphoblastic leukemia/lymphoma with hypodiploidy (Hypodiploid ALL)	Lymphoid leukemias	ICD-O-3.2
 B lymphoblastic leukemia/lymphoma with t(1;19)(q23;p13.3); E2A-PBX1 (TCF3-PBX1)	Lymphoid leukemias	ICD-O-3.2
@@ -137,16 +140,38 @@ B-Cell Acute Lymphoblastic Leukemia, NOS	Lymphoblastic Leukemia	WHO5 Pediatric T
 B-Cell Acute Lymphoblastic Leukemia, NUTM1 rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 B-Cell Acute Lymphoblastic Leukemia, PAX5 alteration	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 B-Cell Acute Lymphoblastic Leukemia, PAX5 P80R	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-B-Cell Acute Lymphoblastic Leukemia, TCF3-HLF	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 B-Cell Acute Lymphoblastic Leukemia, TCF3-PBX1	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 B-Cell Acute Lymphoblastic Leukemia, ZEB2 alteration and CEBPE rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 B-Cell Acute Lymphoblastic Leukemia, ZNF384 rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 B-Cell Acute Lymphoblastic Leukemia, ZNF384 rearrangement like	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with BCR::ABL1 Fusion	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with BCR::ABL1-like Features	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with CRLF2 Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with DUX4 Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with ETV6::RUNX1 Fusion	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with ETV6::RUNX1-like Features	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with HLF Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with Hyperdiploidy	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with Hypodiploidy	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with iAMP21	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with IGH::CEBPD Fusion	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with IKZF1 N159Y Mutation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with KMT2A Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with KMT2A Rearrangement-like Features	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with MEF2D Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with MYC Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with Near Haploidy	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with NUTM1 Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with PAX5 Alteration	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with PAX5 P80R Mutation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with TCF3::PBX1 Fusion	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with ZEB2 Alteration and CEBPE Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with ZNF384 Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma with ZNF384 Rearrangement-like Features	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma, NEC	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+B-Cell Acute Lymphoblastic Leukemia/Lymphoma, NOS	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 B-Cell Lymphoblastic Leukemia	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 B-Cell Lymphoblastic Lymphoma, BCR-ABL1 like	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
-B-Cell Lymphoblastic Lymphoma, NEC	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
-B-Cell Lymphoblastic Lymphoma, NOS	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
-B-Cell Lymphoblastic Lymphoma, TCF3-HLF	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
 B-Cell Lymphoblastic Lymphoma, TCF3-PBX1	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
 Basal cell adenocarcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Basal Cell Carcinoma	Other Solid Tumors	WHO5 Pediatric Tumor
@@ -158,6 +183,7 @@ Blood Cancer of Unknown Primary	Other Heme Tumors	WHO5 Pediatric Tumor
 Blue nevus, malignant	Nevi and melanomas	ICD-O-3.2
 Brain Tumor, NEC	Other Brain Tumors	WHO5 Pediatric Tumor
 Brain Tumor, NOS	Other Brain Tumors	WHO5 Pediatric Tumor
+Burkitt Lymphoma	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
 Burkitt lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas;Non-Hodgkin Lymphoma	ICD-O-3.2;WHO5 Pediatric Tumor
 Calcifying nested stromal-epithelial tumor	Complex mixed and stromal neoplasms	ICD-O-3.2
 Capillary hemangioma	Blood vessel tumors	ICD-O-3.2
@@ -186,7 +212,7 @@ Chondromesenchymal Hamartoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Chondromyxoid fibroma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Chondrosarcoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Chondrosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
-Chordoid glioma	Low-grade Glioma	WHO CNS5
+Chordoid glioma	Low-grade Gliomas	WHO CNS5
 Chordoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Chordoma, NOS	Miscellaneous tumors	ICD-O-3.2
 Choriocarcinoma	Germ cell tumors	WHO5 Pediatric Tumor
@@ -203,7 +229,7 @@ Chronic myelogenous leukemia, BCR/ABL positive	Myeloid leukemias	ICD-O-3.2
 Chronic Myeloid Leukemia	Other Heme Tumors	WHO5 Pediatric Tumor
 Chronic myeloid leukemia, NOS	Myeloid leukemias	ICD-O-3.2
 Chronic Neutrophilic Leukemia	Other Heme Tumors	WHO5 Pediatric Tumor
-CIC-rearranged sarcoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
+CIC-rearranged sarcoma	Soft Tissue Tumors;CNS Sarcomas	WHO5 Pediatric Tumor
 Circumscribed Astrocytic Gliomas	Low-grade Gliomas	WHO5 Pediatric Tumor
 Circumscribed Astrocytic Gliomas, NOS	Low-grade Gliomas	WHO5 Pediatric Tumor
 Classical Hodgkin Lymphoma	Hodgkin Lymphoma	WHO5 Pediatric Tumor
@@ -216,21 +242,22 @@ Clear cell sarcoma of kidney	Complex mixed and stromal neoplasms;Renal Tumors	IC
 Clear cell sarcoma, NOS	Synovial-like neoplasms	ICD-O-3.2
 CNS CIC-rearranged Sarcoma	CNS Sarcomas	WHO5 Pediatric Tumor
 CNS embryonal tumor with rhabdoid features	Neuroepitheliomatous neoplasms	ICD-O-3.2
-CNS embryonal tumor, NOS or NEC	Gliomas;Other CNS Embryonal tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+CNS Embryonal Tumor, NEC/NOS	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
+CNS embryonal tumor, NOS	Gliomas	ICD-O-3.2;WHO5 Pediatric Tumor
 CNS germ cell tumor, NOS or NEC	CNS Germ Cell Tumors	WHO CNS5
 CNS Germinoma	CNS Germ Cell Tumors	WHO CNS5
 CNS mature teratoma	Germ cell tumors	WHO CNS5
 CNS neuroblastoma, FOXR2-activated	Other CNS Embryonal tumors	WHO5 Pediatric Tumor
 CNS Non-Germinomatous Germ Cell Tumor	CNS Germ Cell Tumors	WHO CNS5
-CNS Sarcoma, NOS or NEC	CNS Sarcoma	WHO CNS5
+CNS Sarcoma, NOS or NEC	CNS Sarcomas	WHO CNS5
 CNS Soft Tissue Tumors	CNS Sarcomas	WHO5 Pediatric Tumor
-CNS tumor with BCOR internal tandem duplication	High-Grade Glioma;Other CNS Embryonal tumors	WHO CNS5
+CNS tumor with BCOR internal tandem duplication	High-grade Gliomas;Other CNS Embryonal tumors	WHO CNS5
 CNS Tumors of Uncertain Differentiation	CNS Sarcomas	WHO5 Pediatric Tumor
 CNS Tumors with BCOR Internal Tandem Duplication	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 Composite Hodgkin and non-Hodgkin lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Congenital melanocytic nevus, NOS	Nevi and melanomas;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Congenital Mesoblastic Nephroma	Renal Tumors	WHO5 Pediatric Tumor
-Cranial and Paraspinal Nerve Tumors, NOS	Other Brain Tumors	
+Cranial and Paraspinal Nerve Tumors, NOS	Other Brain Tumors	WHO5 Pediatric Tumor
 Craniopharyngioma, adamantinomatous	Miscellaneous tumors	ICD-O-3.2
 Craniopharyngioma, NOS	Miscellaneous tumors;Craniopharyngioma	ICD-O-3.2;WHO5 Pediatric Tumor
 Cribriform carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -240,6 +267,7 @@ Cutaneous T-cell lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Dedifferentiated liposarcoma	Lipomatous neoplasms	ICD-O-3.2
 Dermal Nerve Sheath Myxoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Dermatofibroma, NOS	Fibromatous neoplasms	ICD-O-3.2
+Dermatofibrosarcoma Protuberans	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Dermatofibrosarcoma protuberans, fibrosarcomatous	Fibromatous neoplasms;Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Dermatofibrosarcoma protuberans, NOS	Fibromatous neoplasms;Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Dermatofibrosarcoma, NOS	Fibromatous neoplasms	ICD-O-3.2
@@ -285,7 +313,7 @@ Encapsulated papillary carcinoma	Ductal and lobular neoplasms	ICD-O-3.2
 Endometrioid adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Endometrioid adenoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Endovascular papillary angioendothelioma	Blood vessel tumors	ICD-O-3.2
-Eosinophilia, NOS	Other Heme Tumors	
+Eosinophilia, NOS	Other Heme Tumors	WHO5 Pediatric Tumor
 Eosinophilic Solid and Cystic Renal Cell Carcinoma	Renal Tumors	WHO5 Pediatric Tumor
 Ependymal Tumors	Ependymoma	WHO5 Pediatric Tumor
 Ependymal Tumors, NEC	Ependymoma	WHO5 Pediatric Tumor
@@ -358,7 +386,6 @@ Glioma, malignant	Gliomas	ICD-O-3.2
 Gliomas, Glioneuronal Tumors, and Neuronal Tumors, NEC	Other Gliomas	WHO5 Pediatric Tumor
 Gliomas, Glioneuronal Tumors, and Neuronal Tumors, NOS	Other Gliomas	WHO5 Pediatric Tumor
 Gliomatosis cerebri	Gliomas	ICD-O-3.2
-Glioneuronal and Neuronal Tumors	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
 Glioneuronal and Neuronal Tumors, NEC	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
 Glioneuronal and Neuronal Tumors, NOS	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
 Glioneuronal and neuronal tumors, NOS or NEC	Glioneuronal and neuronal tumors	WHO CNS5
@@ -373,7 +400,7 @@ Granulosa cell tumor, malignant	Specialized gonadal neoplasms	ICD-O-3.2
 Gynandroblastoma	Specialized gonadal neoplasms	ICD-O-3.2
 Head and Neck, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
 Hemangioblastic meningioma	Meningiomas	ICD-O-3.2
-Hemangioblastoma	Blood vessel tumors;Other CNS	ICD-O-3.2;WHO CNS5
+Hemangioblastoma	Blood vessel tumors;Other CNS;Other Brain Tumors	ICD-O-3.2;WHO CNS5
 Hemangioendothelioma, malignant	Blood vessel tumors	ICD-O-3.2
 Hemangioendothelioma, NOS	Blood vessel tumors	ICD-O-3.2
 Hemangioma, NOS	Blood vessel tumors	ICD-O-3.2
@@ -388,10 +415,10 @@ Hepatosplenic T-cell lymphoma	Hodgkin and non-Hodgkin lymphomas;Non-Hodgkin Lymp
 HHV8 positive diffuse large B-cell lymphoma	Plasma cell neoplasms	ICD-O-3.2
 High Grade Sarcoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 High grade surface osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
-High-grade astrocytoma with piloid features	High-Grade Glioma	WHO CNS5
+High-grade astrocytoma with piloid features	High-grade Gliomas	WHO CNS5
 High-Grade B-Cell Lymphoma, NOS	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
-High-grade glioma, NOS or NEC	High-Grade Glioma	WHO CNS5
-Histiocytic sarcoma	CNS Sarcoma	WHO CNS5
+High-grade glioma, NOS or NEC	High-grade Gliomas;Low-grade Gliomas	WHO CNS5
+Histiocytic sarcoma	CNS Sarcomas	WHO CNS5
 Histiocytoma, NOS	Fibromatous neoplasms	ICD-O-3.2
 Hodgkin Lymphoma	Hodgkin Lymphoma	WHO5 Pediatric Tumor
 Hodgkin lymphoma, nodular sclerosis, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
@@ -408,7 +435,7 @@ Infiltrating duct carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Infiltrating duct mixed with other types of carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Infiltrating ductular carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Inflammatory Myofibroblastic Tumor	Soft Tissue Tumors	WHO5 Pediatric Tumor
-Intracranial mesenchymal tumor, FET-CREB fusion-positive	CNS Sarcoma	WHO CNS5
+Intracranial mesenchymal tumor, FET-CREB fusion-positive	CNS Sarcomas	WHO CNS5
 Intracranial Mesenchymal Tumors, FET::CREB Fusion-positive	CNS Sarcomas	WHO5 Pediatric Tumor
 Intraductal carcinoma and lobular carcinoma in situ	Adenomas and adenocarcinomas	ICD-O-3.2
 Intraductal carcinoma, noninfiltrating, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -461,6 +488,7 @@ Malignant melanoma arising in giant congenital nevus	Nevi and melanomas	ICD-O-3.
 Malignant melanoma in giant pigmented nevus	Nevi and melanomas	ICD-O-3.2
 Malignant melanoma, NOS	Nevi and melanomas	ICD-O-3.2
 Malignant melanotic nerve sheath tumor	Other CNS	WHO CNS5
+Malignant Mixed Germ Cell Tumor	Germ Cell Tumors	WHO5 Pediatric Tumor
 Malignant Peripheral Nerve Sheath Tumor	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Malignant peripheral nerve sheath tumor with rhabdomyoblastic differentiation	Nerve sheath tumors	ICD-O-3.2
 Malignant peripheral nerve sheath tumor, NOS	Nerve sheath tumors	ICD-O-3.2
@@ -472,17 +500,17 @@ MALT lymphoma of the dura	Other CNS	WHO CNS5
 Marginal zone B-cell lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Mast cell leukemia	Mast cell neoplasms	ICD-O-3.2
 Mature B-Cell Neoplasms	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
-Mature T- and NK-cell lymphomas	Mature T- and NK-cell lymphomas	ICD-O-3.2
 Mature T-cell lymphoma, NOS	Mature T- and NK-cell lymphomas	ICD-O-3.2
 Mature Teratoma	Germ Cell Tumors	WHO5 Pediatric Tumor
 Mediastinal large B-cell lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Medullary carcinoma, NOS	Ductal and lobular neoplasms	ICD-O-3.2
 Medullary thyroid carcinoma	Adenomas and adenocarcinomas;Endocrine and Neuroendocrine Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Medulloblastoma	Medulloblastoma	WHO5 Pediatric Tumor
-Medulloblastoma, Group 3	Medulloblastoma	WHO CNS5
-Medulloblastoma, Group 4	Medulloblastoma	WHO CNS5
+Medulloblastoma, Group 3	Gliomas;Medulloblastoma	ICD-O-3.2;WHO CNS5
+Medulloblastoma, Group 4	Gliomas;Medulloblastoma	ICD-O-3.2;WHO CNS5
+Medulloblastoma, NEC	Medulloblastoma	WHO5 Pediatric Tumor
 Medulloblastoma, non-WNT/non-SHH	Gliomas;Medulloblastoma	ICD-O-3.2;WHO5 Pediatric Tumor
-Medulloblastoma, NOS or NEC	Gliomas;Medulloblastoma	ICD-O-3.2;WHO5 Pediatric Tumor
+Medulloblastoma, NOS	Gliomas;Medulloblastoma	ICD-O-3.2;WHO5 Pediatric Tumor
 Medulloblastoma, SHH activated, NOS	Gliomas	ICD-O-3.2
 Medulloblastoma, SHH-activated and TP53-mutant	Gliomas;Medulloblastoma	ICD-O-3.2;WHO5 Pediatric Tumor
 Medulloblastoma, SHH-activated and TP53-wildtype	Medulloblastoma	WHO5 Pediatric Tumor
@@ -507,6 +535,7 @@ Meningothelial meningioma	Meningiomas	ICD-O-3.2
 Merkel cell carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Mesenchymal chondrosarcoma	Osseous and chondromatous neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Mesenchymal Tumor, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
+Mesenchymal, non-meningothelial Tumors Involving the CNS, NEC	Other Brain Tumors	WHO5 Pediatric Tumor
 Mesenchymal, non-meningothelial Tumors Involving the CNS, NOS	Other Brain Tumors	WHO5 Pediatric Tumor
 Mesenchymoma, malignant	Complex mixed and stromal neoplasms	ICD-O-3.2
 Mesenchymoma, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
@@ -554,6 +583,7 @@ Myofibroblastic sarcoma	Fibromatous neoplasms	ICD-O-3.2
 Myofibroblastic Sarcoma, NOS	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Myofibroblastic tumor, NOS	Fibromatous neoplasms	ICD-O-3.2
 Myofibroma	Fibromatous neoplasms	ICD-O-3.2
+Myofibroma and myopericytoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Myofibromatosis	Fibromatous neoplasms	ICD-O-3.2
 Myopericytoma, Including Myofibroma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Myositis Ossificans and Fibro-osseous Pseudotumor of Digits	Soft Tissue Tumors	WHO5 Pediatric Tumor
@@ -586,6 +616,7 @@ Neurofibroma, NOS	Nerve sheath tumors	ICD-O-3.2
 Neurofibromatosis, NOS	Nerve sheath tumors	ICD-O-3.2
 Neuroma, NOS	Nerve sheath tumors	ICD-O-3.2
 Neuromuscular Choristoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
+Neurothekeoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 NK/T-cell lymphoma, nasal and nasal type	Mature T- and NK-cell lymphomas	ICD-O-3.2
 Nodular Lymphocyte Predominant Hodgkin Lymphoma	Hodgkin Lymphoma	WHO5 Pediatric Tumor
 Nodular melanoma	Nevi and melanomas;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
@@ -606,7 +637,7 @@ Oligoastrocytoma, NOS	Gliomas	ICD-O-3.2
 Oligodendroglioma, anaplastic	Gliomas	ICD-O-3.2
 Oligodendroglioma, anaplastic, NOS	Gliomas	ICD-O-3.2
 Oligodendroglioma, IDH-mutant and 1p/19q-codeleted	High-grade Gliomas	WHO5 Pediatric Tumor
-Oligodendroglioma, IDH-mutant, and 1p/19q-codeleted	High-Grade Glioma;Low-grade Glioma	WHO CNS5
+Oligodendroglioma, IDH-mutant, and 1p/19q-codeleted	High-grade Gliomas;Low-grade Gliomas	WHO CNS5
 Oligodendroglioma, NOS	Gliomas	ICD-O-3.2
 Oncocytic Adenoma of the Thyroid Gland	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Oncocytoma of the Kidney	Renal Tumors	WHO5 Pediatric Tumor
@@ -617,8 +648,7 @@ Osteoblastoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Osteoid Osteoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Osteosarcoma	Osteosarcoma	WHO5 Pediatric Tumor
 Osteosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
-Other CNS Embryonal Tumors	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
-Other low-grade B-cell lymphomas of the CNS	Other CNS	WHO CNS5
+Other Hematologic Malignancy	Other Heme Tumors	WHO5 Pediatric Tumor
 Pancreatic neuroendocrine tumor, nonfunctioning	Adenomas and adenocarcinomas	ICD-O-3.2
 Pancreatoblastoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Papillary adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -636,11 +666,14 @@ Papillary Renal Cell Carcinoma	Renal Tumors	WHO5 Pediatric Tumor
 Papillary Thyroid Carcinoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Papillary tumor of pineal region	Gliomas;Other Brain Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Papillary urothelial carcinoma, non-invasive	Transitional cell papillomas and carcinomas	ICD-O-3.2
+Paraganglioma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Paraganglioma, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
 Paraganglioma, NOS	Paragangliomas and glomus tumors;Other CNS	ICD-O-3.2;WHO5 Pediatric Tumor
 Parosteal osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Pediatric Cystic Nephroma	Renal Tumors	WHO5 Pediatric Tumor
+Pediatric-type Diffuse High-grade Gliomas, NEC	High-grade Gliomas	WHO5 Pediatric Tumor
 Pediatric-type Diffuse High-grade Gliomas, NOS	High-grade Gliomas	WHO5 Pediatric Tumor
+Pediatric-type Diffuse Low-grade Gliomas, NEC	Low-grade Gliomas	WHO5 Pediatric Tumor
 Pediatric-type Diffuse Low-grade Gliomas, NOS	Low-grade Gliomas	WHO5 Pediatric Tumor
 Perineurioma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Periosteal osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
@@ -670,13 +703,15 @@ Pleomorphic Adenoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Pleomorphic liposarcoma	Lipomatous neoplasms	ICD-O-3.2
 Pleomorphic Rhabdomyosarcoma	Rhabdomyosarcoma	WHO5 Pediatric Tumor
 Pleomorphic rhabdomyosarcoma, adult type	Myomatous neoplasms	ICD-O-3.2
+Pleomorphic Xanthoastrocytoma	High-grade Gliomas;Low-grade Gliomas	WHO5 Pediatric Tumor
 Pleomorphic xanthoastrocytoma, NOS	Gliomas;High-grade Gliomas;Low-grade Gliomas	ICD-O-3.2;WHO5 Pediatric Tumor
 Pleuropulmonary blastoma	Complex mixed and stromal neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Plexiform fibrohistiocytic tumor	Fibromatous neoplasms	ICD-O-3.2
 Plexiform neurofibroma	Nerve sheath tumors	ICD-O-3.2
-Polymorphic Post-Transplant Lymphoproliferative Disorder	Lymphoproliferative Diseases	WHO5 Pediatric Tumor
+Polymorphic Posttransplant Lymphoproliferative Disorder	Lymphoproliferative Diseases	WHO5 Pediatric Tumor
 Polymorphous low-grade neuroepithelial tumor of the young	Low-grade Gliomas	WHO5 Pediatric Tumor
 Poorly Differentiated Thyroid Tumor	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
+Posterior Fossa Ependymoma	Ependymoma	WHO5 Pediatric Tumor
 Posterior fossa ependymoma, NOS or NEC	Ependymoma	WHO5 Pediatric Tumor
 Posterior Fossa Group A (PFA) Ependymoma	Ependymoma	WHO5 Pediatric Tumor
 Posterior Fossa Group B (PFB) Ependymoma	Ependymoma	WHO5 Pediatric Tumor
@@ -703,12 +738,13 @@ Retinoblastoma, diffuse	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Retinoblastoma, NOS	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Rhabdoid tumor, NOS	Complex mixed and stromal neoplasms;Rhabdoid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Rhabdomyoma, NOS	Myomatous neoplasms	ICD-O-3.2
-Rhabdomyosarcoma	CNS Sarcoma	WHO CNS5
+Rhabdomyosarcoma	CNS Sarcomas	WHO CNS5
 Rhabdomyosarcoma, NEC	Rhabdomyosarcoma	WHO5 Pediatric Tumor
 Rhabdomyosarcoma, NOS	Myomatous neoplasms;Rhabdomyosarcoma	ICD-O-3.2;WHO5 Pediatric Tumor
 Rosai-Dorfman disease	Other Heme Tumors	WHO5 Pediatric Tumor
 Rosette-forming glioneuronal tumor	Glioneuronal and neuronal tumors	WHO CNS5
 Rosette-forming Glioneuronal Tumors	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
+Round cell sarcoma with EWSR1::non-ETS fusions	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Salivary Gland Anlage Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Sarcoma with BCOR genetic alterations	Miscellaneous tumors;Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Sarcoma, NEC	Soft Tissue Tumors	WHO5 Pediatric Tumor
@@ -721,6 +757,7 @@ Sclerosing stromal tumor	Specialized gonadal neoplasms;Other Solid Tumors	ICD-O-
 Sclerotic fibroma	Fibromatous neoplasms	ICD-O-3.2
 Sebaceous Carcinoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Secretory carcinoma	Ductal and lobular neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Seminoma	Germ Cell Tumors	WHO5 Pediatric Tumor
 Seminoma, NOS	Germ cell neoplasms	ICD-O-3.2
 Serous borderline tumor, NOS	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Serous carcinoma, NOS	Cystic, mucinous and serous neoplasms	ICD-O-3.2
@@ -789,24 +826,20 @@ Synovial sarcoma, biphasic	Synovial-like neoplasms	ICD-O-3.2
 Synovial sarcoma, NOS	Synovial-like neoplasms	ICD-O-3.2
 Synovial sarcoma, spindle cell	Synovial-like neoplasms	ICD-O-3.2
 T lymphoblastic leukemia/lymphoma	Lymphoid leukemias	ICD-O-3.2
-T-Cell Acute Lymphoblastic Leukemia, BCL11B rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, HOXA activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, LMO2 activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, LYL1 activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, NEC	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, NKX2 activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, NOS	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, SPI1 rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, TAL1 activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, TAL2 activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, TLX1 activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
-T-Cell Acute Lymphoblastic Leukemia, TLX3 activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with BCL11B Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with HOXA Activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with LMO1/2 Activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with NKX2 Activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with SPI1 Rearrangement	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with TAL1 Activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with TAL2 Activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with TLX1 Activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma with TLX3 Activation	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma, NEC	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
+T-Cell Acute Lymphoblastic Leukemia/Lymphoma, NOS	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 T-Cell Lymphoblastic Leukemia	Lymphoblastic Leukemia	WHO5 Pediatric Tumor
 T-Cell Lymphoblastic Lymphoma, LMO1 rearrangement	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
-T-Cell Lymphoblastic Lymphoma, NEC	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
-T-Cell Lymphoblastic Lymphoma, NKX2 rearrangement	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
 T-Cell Lymphoblastic Lymphoma, NOS	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
-T-Cell Lymphoblastic Lymphoma, TAL1 rearrangement	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
 T-cell/histiocyte rich large B-cell lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Telangiectatic osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Tenosynovial Giant Cell Tumor	Soft Tissue Tumors	WHO5 Pediatric Tumor
@@ -840,6 +873,5 @@ Undifferentiated sarcoma	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Unknown	Unknown	Other
 Vipoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
+Yolk Sac Tumor	Germ Cell Tumors	WHO5 Pediatric Tumor
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
-
-
