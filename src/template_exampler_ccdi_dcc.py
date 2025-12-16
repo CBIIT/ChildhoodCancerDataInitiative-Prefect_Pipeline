@@ -198,6 +198,11 @@ def create_linkage(populated_dfs: Dict) -> Dict:
             for k in linking_cols:
                 if k == "study.study_id":
                     key_df.loc[:, "study.study_id"] = study_id
+                elif k == "consent_group.consent_group_id":
+                    consent_id_list = populated_dfs["consent_group"]["consent_group_id"].tolist()
+                    key_df_len = len(key_df["type"].tolist())
+                    consent_group_id_linkage = random.choices(consent_id_list, k=key_df_len)
+                    key_df[k] = consent_group_id_linkage
                 else:
                     sheet_name, sheet_name_id = k.split(".")
                     key_df[k] = populated_dfs[sheet_name][sheet_name_id]
