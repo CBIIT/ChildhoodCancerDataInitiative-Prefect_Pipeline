@@ -1367,9 +1367,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-model-to-submission-ccdi-dcc-v3
+  - name: model-to-submission-ccdi-dcc-v3
     version: null
-    tags: ["TEST","SVB", "Qiong","V3"]
+    tags: ["DCC","Prod","V3", "Python3.13"]
     description: null
     entrypoint: workflows/model_to_submission_ccdi_dcc.py:create_submission_manifest
     schedule: null
@@ -1383,7 +1383,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1998_dcc_model_to_submission
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
@@ -1395,11 +1395,11 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-new-model-validation-ccdi-dcc-v3
+  - name: new-model-validation-ccdi-dcc-v3
     version: null
-    tags: ["TEST","SVB","V3"]
+    tags: ["DCC","Prod","V3", "Python3.13"]
     description: null
-    entrypoint: workflows/new_model_validation_ccdi_dcc.py:validate_new_model
+    entrypoint: workflows/new_model_validation_ccdi_dcc.py:validate_new_dcc_model
     schedule: null
 
     # flow-specific parameters
@@ -1411,23 +1411,23 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1998_CCDI-DCC_model_submission_2
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-curation-16gb-future-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-template-exampler-ccdi-dcc-v3
+  - name: template-exampler-ccdi-dcc-v3
     version: null
-    tags: ["TEST","SVB","V3"]
+    tags: ["DCC","Prod","V3","Python3.13"]
     description: null
-    entrypoint: workflows/Template_Exampler_ccdi_dcc.py:run_template_exampler
+    entrypoint: workflows/Template_Exampler_ccdi_dcc.py:run_template_exampler_dcc
     schedule: null
 
     # flow-specific parameters
@@ -1440,14 +1440,14 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-1998_CCDI-DCC_model_submission_2
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-curation-16gb-future-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
