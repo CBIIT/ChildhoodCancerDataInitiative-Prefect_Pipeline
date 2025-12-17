@@ -1388,7 +1388,6 @@ deployments:
         id: clone-json2tsv-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-MCI_JSON2TSV.git
         branch: main
-        requirements_file: requirements.txt
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements.txt
         directory: "{{ clone-json2tsv-step.directory }}"
