@@ -1367,9 +1367,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: ccdi-cog_igm-transform-V3_v2
+  - name: TEST-ccdi-cog_igm-transform-V3_v2
     version: null
-    tags: ["MCI", "V3"]
+    tags: ["TEST", "MCI", "V3"]
     description: null
     entrypoint: workflows/cog_igm_transformer_v2.py:cog_igm_transform
     schedule: null
@@ -1385,20 +1385,23 @@ deployments:
     # pull action to overwrite from file pull action
     pull:
     - prefect.deployments.steps.git_clone:
+        id: clone-json2tsv-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-MCI_JSON2TSV.git
+        branch: main
+        requirements_file: requirements.txt
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements.txt
+        directory: "{{ clone-json2tsv-step.directory }}"
+        stream_output: False
+    - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: CCDIDC-1950_json2tsv_v2
+        include_submodules: True
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_V3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
-    - prefect.deployments.steps.run_shell_script:
-        id: install-json2tsv-step
-        stream_output: True
-        script: |
-          git clone https://github.com/CBIIT/ChildhoodCancerDataInitiative-MCI_JSON2TSV.git
-          cd ChildhoodCancerDataInitiative-MCI_JSON2TSV
-          pip install -r requirements.txt
     # infra-specific fields
     work_pool:
       name: ccdi-curation-16gb-prefect-3.2.14-python3.9

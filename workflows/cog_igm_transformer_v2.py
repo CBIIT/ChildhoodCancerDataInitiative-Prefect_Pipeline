@@ -68,3 +68,25 @@ def cog_igm_transform(
         )
         runner_logger.info(">>> Data clean up completed, exiting workflow ....")
         return None
+    
+    if form_parsing not in FormParsing:
+        raise ValueError(f"form_parsing must be one of {FormParsing}, got {form_parsing} instead.")
+    
+    # download the manifest file
+    try:
+        file_dl(bucket, manifest_path)
+    except Exception as e:
+        runner_logger.error(f"Cannot download manifest from path {manifest_path}: {e}")
+        sys.exit(1)
+    
+    # load in the manifest
+    #manifest_df, local_manifest_path = manifest_reader(manifest_path)
+    
+    # show directory structure for debugging
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                "ls -l .",  # show data directory contents
+            ]
+        ).run()
+    )
