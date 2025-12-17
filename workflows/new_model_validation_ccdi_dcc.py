@@ -17,7 +17,7 @@ from requests.exceptions import ConnectionError
     log_prints=True,
     flow_run_name="new-model-validation-{runner}-" + f"{get_time()}",
 )
-def validate_new_model(
+def validate_new_dcc_model(
     bucket: str,
     runner: str,
     release_title: str
