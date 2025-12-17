@@ -56,6 +56,9 @@ def cog_igm_transform(
     dt = get_time()
 
     runner_logger.info(">>> Running cog_igm_transformer.py ....")
+    
+    if form_parsing not in ["cog_only", "igm_only", "cog_and_igm", "data_clean_up"]:
+        raise ValueError(f"form_parsing must be one of {FormParsing}, got {form_parsing} instead.")
 
     if form_parsing == 'data_clean_up':
         runner_logger.info(
@@ -68,9 +71,6 @@ def cog_igm_transform(
         )
         runner_logger.info(">>> Data clean up completed, exiting workflow ....")
         return None
-    
-    if form_parsing not in FormParsing:
-        raise ValueError(f"form_parsing must be one of {FormParsing}, got {form_parsing} instead.")
     
     # download the manifest file
     try:
