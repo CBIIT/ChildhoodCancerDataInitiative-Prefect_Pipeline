@@ -86,7 +86,23 @@ def cog_igm_transform(
     runner_logger.info(
         ShellOperation(
             commands=[
-                "ls -l ..",  # show data directory contents
+                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-main ./json2tsv",  # show data directory contents
+            ]
+        ).run()
+    )
+    
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                "ls -l .",  # show data directory contents
+            ]
+        ).run()
+    )
+    
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                "ls -l ./json2tsv",  # show data directory contents
             ]
         ).run()
     )
