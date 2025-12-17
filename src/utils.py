@@ -141,6 +141,92 @@ class CCDI_Tags(Task):
             )
             return None
 
+class CCDI_DCC_Tags(Task):
+    """Class that fetches available releases, checks if a release exists,
+    and download ccdi-dcc manifest of a certain release
+    """
+
+    def __init__(self) -> None:
+        self.tags_api = "https://api.github.com/repos/CBIIT/ccdi-dcc-model/tags"
+
+    def get_tags(self) -> List[Dict]:
+        github_token = get_github_token()
+        headers = {"Authorization": "token " + github_token}
+        api_re = requests.get(self.tags_api, headers=headers)
+        tags_list = api_re.json()
+        return tags_list
+
+    def get_tags_only(self) -> List:
+        tags_list = self.get_tags()
+        tags = [i["name"] for i in tags_list]
+        return tags
+
+    def if_tag_exists(self, tag: str, logger):
+        tags = self.get_tags_only()
+        if tag in tags:
+            logger.info(
+                f"Version {tag} is found among the released versions of ccdi-model GitHub repo"
+            )
+            return True
+        else:
+            return False
+
+    def get_tag_element(self, tag: str):
+        tags_list = self.get_tags()
+        tag_element = [i for i in tags_list if i["name"] == tag][0]
+        return tag_element
+
+    def download_tag_manifest(self, tag: str, logger) -> None:
+        check_tag = self.if_tag_exists(tag=tag, logger=logger)
+        if check_tag:
+            tag_element = self.get_tag_element(tag=tag)
+            tag_zipurl = tag_element["zipball_url"]
+            http_response = urlopen(tag_zipurl)
+            zipfile = ZipFile(BytesIO(http_response.read()))
+            # create a temp dir to download the zipfile
+            tempdirobj = tempfile.TemporaryDirectory(suffix="_github_dl")
+            tempdir = tempdirobj.name
+            zipfile.extractall(path=tempdir)
+            # manifest folder list files
+            manifests_folder_path = os.path.join(
+                tempdirobj.name, os.listdir(tempdirobj.name)[0], "metadata-manifest"
+            )
+            try:
+                manifest_file_list = os.listdir(manifests_folder_path)
+                manifest_tag_match = [
+                    i for i in manifest_file_list if i.endswith(tag + ".xlsx")
+                ]
+                if len(manifest_tag_match) == 0:
+                    logger.error(
+                        f"No CCDI-DCC manifest file ends with v{tag}.xlsx under matadata-manifest folder"
+                    )
+                    return None
+                elif len(manifest_tag_match) >= 1:
+                    if len(manifest_tag_match) > 1:
+                        logger.warning(
+                            f"More than one manifest file ends with v{tag}.xlsx.\n{*manifest_tag_match,}\nThe workflow defaults to first item {manifest_tag_match[0]}"
+                        )
+                    else:
+                        pass
+                    copy(
+                        os.path.join(manifests_folder_path, manifest_tag_match[0]),
+                        manifest_tag_match[0],
+                    )
+                    return manifest_tag_match[0]
+            except FileNotFoundError as e:
+                logger.error(e)
+                return None
+            except:
+                logger.error(
+                    f"Error in finding manifest .xlsx file, please download the zipfile and investigate. {tag_zipurl}"
+                )
+                return None
+        else:
+            available_tags = self.get_tags_only()
+            logger.error(
+                f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
+            )
+            return None
 
 def get_ccdi_latest_release() -> str:
     latest_url = GithubAPTendpoint.ccdi_model_recent_release
