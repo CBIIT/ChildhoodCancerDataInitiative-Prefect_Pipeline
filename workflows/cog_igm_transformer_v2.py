@@ -15,8 +15,8 @@ import pandas as pd
 import shutil
 
 # utils
-from src.cog_igm_utils import manifest_reader, cog_igm_json2tsv
-from src.utils import get_time, folder_ul, file_dl, get_date
+from src.cog_igm_utils import manifest_reader
+from src.utils import get_time, folder_ul, file_dl, get_date, get_logger
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
 
@@ -50,12 +50,35 @@ def cog_igm_transform(
 
     # create a logging object
     runner_logger = get_run_logger()
+    
+    # create logger for log file
+    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
+    logger = get_logger("COG_IGM_JSON2TSV", "info")
+
+    logger.info(f"Logs beginning at {get_time()}")
 
     start_time = datetime.now()
 
     dt = get_time()
 
     runner_logger.info(">>> Running cog_igm_transformer.py ....")
+    
+    # move json2tsv contents to current working directory
+    ShellOperation(
+            commands=[
+                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-main ./json2tsv",  # show data directory contents
+            ]
+        ).run()
+    
+    # confirm json2tsv directory moved and contents
+    runner_logger.info(
+        ShellOperation(
+            commands=[
+                "ls -l .",
+                "ls -l ./json2tsv"  # show data directory contents
+            ]
+        ).run()
+    )
     
     if form_parsing not in ["cog_only", "igm_only", "cog_and_igm", "data_clean_up"]:
         raise ValueError(f"form_parsing must be one of {FormParsing}, got {form_parsing} instead.")
@@ -79,30 +102,33 @@ def cog_igm_transform(
         runner_logger.error(f"Cannot download manifest from path {manifest_path}: {e}")
         sys.exit(1)
     
+    
+    # create working dir name
+    # check if file_path is provided and contains files, if not create a new working dir
+    if file_path != "" and os.path.exists(file_path) and len(os.listdir(file_path)) != 0:
+        working_path = file_path
+        working_dir = working_path.split("/")[-1]
+    else:
+        working_dir = f"COG_IGM_Transform_working_{dt}"
+        working_path = f"/usr/local/data/{working_dir}"
+        get_run_logger().info(f"Working path: {working_path}")
+        if not os.path.exists(working_path):
+            os.mkdir(working_path)
+
+    # create output dir for logs etc
+    output_dir = f"COG_IGM_Transform_output_{dt}"
+    output_path = f"/usr/local/data/{working_dir}/{output_dir}"
+    if not os.path.exists(output_path):
+        os.mkdir(output_path)
+
+    # change to working dir
+    os.chdir(working_path)
+
+    # print to logger name of working dir
+    runner_logger.info(f"Working directory: {working_path}")
+    
     # load in the manifest
-    #manifest_df, local_manifest_path = manifest_reader(manifest_path)
-    
-    # show directory structure for debugging
-    runner_logger.info(
-        ShellOperation(
-            commands=[
-                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-main ./json2tsv",  # show data directory contents
-            ]
-        ).run()
-    )
-    
-    runner_logger.info(
-        ShellOperation(
-            commands=[
-                "ls -l .",  # show data directory contents
-            ]
-        ).run()
-    )
-    
-    runner_logger.info(
-        ShellOperation(
-            commands=[
-                "ls -l ./json2tsv",  # show data directory contents
-            ]
-        ).run()
-    )
+    manifest_df, local_manifest_path = manifest_reader(manifest_path)
+
+    # TODO download files and handle dupes with renaming
+
