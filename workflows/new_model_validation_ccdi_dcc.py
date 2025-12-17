@@ -13,9 +13,9 @@ from requests.exceptions import ConnectionError
 
 
 @flow(
-    name="New Model Validation",
+    name="New DCC Model Validation",
     log_prints=True,
-    flow_run_name="new-model-validation-{runner}-" + f"{get_time()}",
+    flow_run_name="new-dcc-model-validation-{runner}-" + f"{get_time()}",
 )
 def validate_new_dcc_model(
     bucket: str,
