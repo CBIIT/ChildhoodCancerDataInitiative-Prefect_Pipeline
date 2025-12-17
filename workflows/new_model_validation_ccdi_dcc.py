@@ -7,7 +7,7 @@ sys.path.append(parent_dir)
 from model_to_submission_ccdi_dcc import create_submission_manifest
 from src.template_exampler_ccdi_dcc import make_template_example
 from src.s3_validationry_refactored import ValidationRy_new
-from src.utils import get_date, get_time, file_ul
+from src.utils import get_date, get_time, file_ul, file_dl
 from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
 
@@ -109,6 +109,65 @@ def validate_new_model(
         runner_logger.error(
             f"Validation step FAILED"
         )
+
+    runner_logger.info(
+        f"Workflow new model validation has FINISHED. All outputs can be found in bucket {bucket} at {new_model_validation_out}"
+    )
+    return None
+
+
+@flow(
+    name="New DCC Model Validation Test",
+    log_prints=True,
+    flow_run_name="new-dcc-model-validation-test-{runner}-" + f"{get_time()}",
+)
+def validate_new_dcc_model_test(bucket: str, runner: str, manifest_template_file_path: str, template_exampler_file_path: str) -> None:
+    """Pipeline that runs validation
+
+    Args:
+        bucket (str): Bucket name that output goes to
+        runner (str): Unique runner name
+        manifest_template_file_path: str, file path of ccdi dcc manifest in the given bucket
+        template_exampler_file_path: str,: file path of ccdi dcc manifest in the given bucket
+    """
+    # create a logging object
+    runner_logger = get_run_logger()
+
+    # get date and time
+    todaydate = get_date()
+    currenttime = get_time()
+
+    new_model_validation_out = os.path.join(
+        runner, "new_model_validation_" + currenttime
+    )
+
+    # download the manifest exampler file from the given bucket
+    file_dl(bucket=bucket, filename=template_exampler_file_path)
+    exampler_file = os.path.basename(template_exampler_file_path)
+
+    # download the manifest template file from the given bucket
+    file_dl(bucket=bucket, filename=manifest_template_file_path)
+    template_file = os.path.basename(manifest_template_file_path)
+
+    # run validationRy workflow
+    validation_output_folder = os.path.join(
+        new_model_validation_out, "validation_output_" + currenttime
+    )
+    try:
+        validation_out_file = ValidationRy_new(
+            file_path=exampler_file, template_path=template_file
+        )
+        file_ul(
+            bucket=bucket,
+            output_folder=validation_output_folder,
+            sub_folder="",
+            newfile=validation_out_file,
+        )
+        runner_logger.info(
+            f"Validation report was generated and uploaded to bucket {bucket} at {validation_output_folder}"
+        )
+    except:
+        runner_logger.error(f"Validation step FAILED")
 
     runner_logger.info(
         f"Workflow new model validation has FINISHED. All outputs can be found in bucket {bucket} at {new_model_validation_out}"

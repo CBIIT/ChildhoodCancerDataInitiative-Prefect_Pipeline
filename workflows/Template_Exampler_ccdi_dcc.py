@@ -20,7 +20,7 @@ def run_template_exampler_dcc(
     number_of_entries: int,
     dcc_manifest_version: str = "default_to_latest",
 ) -> None:
-    """Pipelinei that generates simulated data for CCDI-DCC manifest
+    """Pipeline that generates simulated data for CCDI-DCC manifest
 
     Args:
         bucket (str): Bucket name of where the output goes to
@@ -128,7 +128,7 @@ def run_template_exampler_dcc_test(
     number_of_entries: int,
     dcc_manifest_path: str,
 ) -> None:
-    """Pipelinei that generates simulated data for CCDI-DCC manifest
+    """Pipeline that generates simulated data for CCDI-DCC manifest
 
     Args:
         bucket (str): Bucket name of where the output goes to
