@@ -86,7 +86,7 @@ def cog_igm_transform(
     runner_logger.info(
         ShellOperation(
             commands=[
-                "ls -l .",  # show data directory contents
+                "ls -l ..",  # show data directory contents
             ]
         ).run()
     )
