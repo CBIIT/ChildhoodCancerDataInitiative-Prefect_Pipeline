@@ -101,7 +101,7 @@ def cog_igm_transform(
         ShellOperation(
             commands=[
                 "ls -l .",
-                "ls -l ./json2tsv"  # show data directory contents
+                #"ls -l ./json2tsv"  # show data directory contents
             ]
         ).run()
     )
