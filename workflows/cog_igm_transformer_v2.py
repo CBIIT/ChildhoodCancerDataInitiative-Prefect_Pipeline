@@ -50,7 +50,7 @@ def json2tsv_flow(
 
     json2tsv(
         json_dir_path=json_dir_path,
-        ouput_path=output_path,
+        output_path=output_path,
     )
 
 @flow(
