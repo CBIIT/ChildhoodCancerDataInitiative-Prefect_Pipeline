@@ -188,7 +188,7 @@ def manifest_reader(manifest_path: str):
     file_name = os.path.basename(manifest_path)
     
     # perform sample mapping for clin files
-    sample_mapper(file_name)
+    #sample_mapper(file_name) ##TESTING ONLY
 
     try:
         manifest_df = pd.read_excel(
