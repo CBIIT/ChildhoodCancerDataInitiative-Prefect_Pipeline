@@ -81,7 +81,7 @@ def cog_igm_transform(
     
     # logging config
     logging.basicConfig(
-        filename="COG_IGM_JSON2TSV_" + get_date() + ".log"
+        filename="COG_IGM_JSON2TSV_" + get_date() + ".log",
         encoding="utf-8",
         filemode="w",
         level=logging.INFO,
