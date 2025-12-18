@@ -43,7 +43,10 @@ def json2tsv_flow(
         json_dir_path (str): Path to directory containing JSON files
         ouput_path (str): Path to output directory for TSVs
     """
-    from json2tsv.src.MCI_JSON2TSV import json2tsv
+    from json2tsv.MCI_JSON2TSV import json2tsv
+    #import json2tsv.cog_utils
+    #import json2tsv.igm_utils
+    #import cog_igm_integration
 
     json2tsv(
         json_dir_path=json_dir_path,
@@ -89,7 +92,7 @@ def cog_igm_transform(
     # move json2tsv contents to current working directory
     ShellOperation(
             commands=[
-                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-main ./json2tsv",  # show data directory contents
+                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-main/src ./json2tsv",  # show data directory contents
             ]
         ).run()
     
