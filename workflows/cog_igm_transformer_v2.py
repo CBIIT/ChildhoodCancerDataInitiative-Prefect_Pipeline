@@ -35,7 +35,7 @@ FormParsing = Literal["cog_only", "igm_only", "cog_and_igm", "data_clean_up"]
 )
 def json2tsv_flow(
     json_dir_path: str,
-    ouput_path: str,
+    output_path: str,
 ):
     """Run the json2tsv parsing functions
 
@@ -50,7 +50,7 @@ def json2tsv_flow(
 
     json2tsv(
         json_dir_path=json_dir_path,
-        ouput_path=ouput_path,
+        ouput_path=output_path,
     )
 
 @flow(
