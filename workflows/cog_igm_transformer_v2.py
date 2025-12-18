@@ -28,6 +28,27 @@ from prefect_shell import ShellOperation
 
 FormParsing = Literal["cog_only", "igm_only", "cog_and_igm", "data_clean_up"]
 
+@flow(
+    name="COG IGM JSON Transform JSON2TSV v2 Helper Flow",
+    log_prints=True,
+    flow_run_name="json2tsv_flow-" + f"{get_time()}",
+)
+def json2tsv_flow(
+    json_dir_path: str,
+    ouput_path: str,
+):
+    """Run the json2tsv parsing functions
+
+    Args:
+        json_dir_path (str): Path to directory containing JSON files
+        ouput_path (str): Path to output directory for TSVs
+    """
+    from json2tsv.src.MCI_JSON2TSV import json2tsv
+
+    json2tsv(
+        json_dir_path=json_dir_path,
+        ouput_path=ouput_path,
+    )
 
 @flow(
     name="COG IGM JSON Transform JSON2TSV v2",
@@ -62,6 +83,8 @@ def cog_igm_transform(
     dt = get_time()
 
     runner_logger.info(">>> Running cog_igm_transformer.py ....")
+    
+    running_dir = os.getcwd()
     
     # move json2tsv contents to current working directory
     ShellOperation(
@@ -142,3 +165,28 @@ def cog_igm_transform(
         for chunk in range(0, len(manifest_df), chunk_size):
             runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest_df)//chunk_size+1}")
             json_downloader(manifest_df[chunk:chunk+chunk_size], dups, logger)
+    
+    # chdir back to running dir
+    os.chdir(running_dir)
+    
+    # run json2tsv parsing
+    json2tsv_flow(
+        json_dir_path=working_path,
+        ouput_path=output_path,
+    )
+    
+    # move log file to output dir and shutdown logging
+    os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
+    #os.rename(cog_transform_log, f"{output_path}/{cog_transform_log.replace(get_date(), dt)}")
+
+    # copy manifest file to output dir
+    shutil.copy(local_manifest_path, f"{output_path}/{os.path.basename(local_manifest_path).replace('.xlsx', '' + '_COG_IGM' + '_' + dt + '.xlsx')}")
+
+    
+    # upload output dir
+    folder_ul(
+        local_folder=f"{output_dir}",
+        bucket=bucket,
+        destination=runner + "/",
+        sub_folder="",
+    )
