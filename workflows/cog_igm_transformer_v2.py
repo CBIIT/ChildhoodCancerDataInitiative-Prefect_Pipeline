@@ -95,13 +95,6 @@ def cog_igm_transform(
         runner_logger.info(">>> Data clean up completed, exiting workflow ....")
         return None
     
-    # download the manifest file
-    try:
-        file_dl(bucket, manifest_path)
-    except Exception as e:
-        runner_logger.error(f"Cannot download manifest from path {manifest_path}: {e}")
-        sys.exit(1)
-    
     
     # create working dir name
     # check if file_path is provided and contains files, if not create a new working dir
@@ -123,6 +116,13 @@ def cog_igm_transform(
 
     # change to working dir
     os.chdir(working_path)
+    
+    # download the manifest file
+    try:
+        file_dl(bucket, manifest_path)
+    except Exception as e:
+        runner_logger.error(f"Cannot download manifest from path {manifest_path}: {e}")
+        sys.exit(1)
 
     # print to logger name of working dir
     runner_logger.info(f"Working directory: {working_path}")
