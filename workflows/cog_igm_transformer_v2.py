@@ -13,10 +13,11 @@ from typing import Literal
 from datetime import datetime
 import pandas as pd
 import shutil
+import logging
 
 # utils
 from src.cog_igm_utils import manifest_reader, json_downloader
-from src.utils import get_time, folder_ul, file_dl, get_date, get_logger
+from src.utils import get_time, folder_ul, file_dl, get_date
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
 
@@ -76,8 +77,16 @@ def cog_igm_transform(
     runner_logger = get_run_logger()
     
     # create logger for log file
-    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
-    logger = get_logger("COG_IGM_JSON2TSV", "info")
+    logger = logging.getLogger("COG_IGM_JSON2TSV", "info")
+    
+    # logging config
+    logging.basicConfig(
+        filename="COG_IGM_JSON2TSV_" + get_date() + ".log"
+        encoding="utf-8",
+        filemode="w",
+        level=logging.INFO,
+        format=">>> %(name)s - %(asctime)s - %(levelname)s - %(message)s\n",
+    )
 
     logger.info(f"Logs beginning at {get_time()}")
 
