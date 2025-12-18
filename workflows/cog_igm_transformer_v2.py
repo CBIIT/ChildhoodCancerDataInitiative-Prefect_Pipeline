@@ -15,7 +15,7 @@ import pandas as pd
 import shutil
 
 # utils
-from src.cog_igm_utils import manifest_reader
+from src.cog_igm_utils import manifest_reader, json_downloader
 from src.utils import get_time, folder_ul, file_dl, get_date, get_logger
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
@@ -131,4 +131,14 @@ def cog_igm_transform(
     manifest_df, local_manifest_path = manifest_reader(manifest_path)
 
     # TODO download files and handle dupes with renaming
+    # check for duplicate file_names
+    dups = manifest_df[manifest_df["file_name"].duplicated(keep=False)]["file_name"].to_list()
+    if not [i for i in os.listdir(os.getcwd()) if i.endswith('.json')]: # check if dir empty, if so download JSONs
 
+        # chunked downloading of JSON files
+        chunk_size = 200
+
+        # download JSON files
+        for chunk in range(0, len(manifest_df), chunk_size):
+            runner_logger.info(f"Downloading JSON chunk {chunk//chunk_size+1} of {len(manifest_df)//chunk_size+1}")
+            json_downloader(manifest_df[chunk:chunk+chunk_size], dups, logger)
