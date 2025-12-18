@@ -154,7 +154,7 @@ def cog_igm_transform(
     runner_logger.info(f"Working directory: {working_path}")
     
     # load in the manifest
-    manifest_df, local_manifest_path = manifest_reader(manifest_path)
+    manifest_df, local_manifest_path = manifest_reader(manifest_path, form_parsing)
 
     # TODO download files and handle dupes with renaming
     # check for duplicate file_names
@@ -175,7 +175,7 @@ def cog_igm_transform(
     # run json2tsv parsing
     json2tsv_flow(
         json_dir_path=working_path,
-        ouput_path=output_path,
+        output_path=output_path,
     )
     
     # move log file to output dir and shutdown logging

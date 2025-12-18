@@ -173,7 +173,7 @@ def sample_mapper(manifest_path: str):
     log_prints=True,
     flow_run_name="manifest_reader_" + f"{get_time()}",
 )
-def manifest_reader(manifest_path: str):
+def manifest_reader(manifest_path: str, form_parsing: str):
     """Read in and parse manifest of JSONs to transform
 
     Args:
@@ -194,8 +194,16 @@ def manifest_reader(manifest_path: str):
         manifest_df = pd.read_excel(
             file_name, sheet_name="clinical_measure_file", engine="openpyxl"
         )
-        # parse only COG and IGM clinical reports and return uniq file ID and s3 URL in df
-        manifest_df = manifest_df[["clinical_measure_file_id", "file_name", "file_size", "file_url"]]
+        
+        if form_parsing == 'cog_only':
+            # parse only COG clinical reports and return uniq file ID and s3 URL in df
+            manifest_df = manifest_df[manifest_df['data_category'].str.contains('COG', na=False)][["clinical_measure_file_id", "file_name", "file_size", "file_url"]]
+        elif form_parsing == 'igm_only':
+            # parse only IGM clinical reports and return uniq file ID and s3 URL in df
+            manifest_df = manifest_df[~manifest_df['data_category'].str.contains('COG', na=False)][["clinical_measure_file_id", "file_name", "file_size", "file_url"]]
+        else: # both cog and igm
+            # parse both COG and IGM clinical reports and return uniq file ID and s3 URL in df
+            manifest_df = manifest_df[["clinical_measure_file_id", "file_name", "file_size", "file_url"]]
     except Exception as e:
         runner_logger.error(f"Cannot read in manifest {file_name} due to error: {e}")
         sys.exit(1)
