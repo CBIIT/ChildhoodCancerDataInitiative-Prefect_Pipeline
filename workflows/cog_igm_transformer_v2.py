@@ -76,6 +76,8 @@ def cog_igm_transform(
     # create a logging object
     runner_logger = get_run_logger()
     
+    print(logging.getLogger().handlers)
+    
     # create logger for log file
     logger = logging.getLogger("COG_IGM_JSON2TSV")
     
