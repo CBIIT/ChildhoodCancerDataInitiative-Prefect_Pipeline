@@ -20,6 +20,7 @@ from src.cog_igm_utils import manifest_reader, json_downloader
 from src.utils import get_time, folder_ul, file_dl, get_date
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
+from prefect.logging.handlers import PrefectConsoleHandler
 
 ##############
 #
@@ -80,18 +81,28 @@ def cog_igm_transform(
     
     # create logger for log file
     logger = logging.getLogger("COG_IGM_JSON2TSV")
+    logger.setLevel(logging.INFO)
     
     log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
+    file_handler = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
     
     # logging config
-    logging.basicConfig(
+    """logging.basicConfig(
         filename="COG_IGM_JSON2TSV_" + get_date() + ".log",
         encoding="utf-8",
         filemode="w",
         level=logging.INFO,
         format=">>> %(name)s - %(asctime)s - %(levelname)s - %(message)s\n",
         force=True,
+    )"""
+    
+    formatter = logging.Formatter(
+    ">>> %(name)s - %(asctime)s - %(levelname)s - %(message)s"
     )
+    file_handler.setFormatter(formatter)
+    
+    logger.addHandler(PrefectConsoleHandler())
+    logger.addHandler(file_handler)
 
     logger.info(f"Logs beginning at {get_time()}")
 
