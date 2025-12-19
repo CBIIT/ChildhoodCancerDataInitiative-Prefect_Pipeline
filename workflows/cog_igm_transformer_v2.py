@@ -202,7 +202,7 @@ def cog_igm_transform(
     
     # upload output dir
     folder_ul(
-        local_folder=f"{output_dir}",
+        local_folder=f"{output_path}",
         bucket=bucket,
         destination=runner + "/",
         sub_folder="",
