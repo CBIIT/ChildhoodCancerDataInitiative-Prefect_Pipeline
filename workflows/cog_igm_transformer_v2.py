@@ -184,10 +184,10 @@ def cog_igm_transform(
     os.chdir(running_dir)
     
     # run json2tsv parsing
-    json2tsv_flow(
-        json_dir_path=working_path,
-        output_path=output_path,
-    )
+    #json2tsv_flow(
+    #    json_dir_path=working_path,
+    #    output_path=output_path,
+    #)
     
     # move log file to output dir and shutdown logging
     os.rename(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
