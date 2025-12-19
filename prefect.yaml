@@ -1387,7 +1387,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-json2tsv-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-MCI_JSON2TSV.git
-        branch: main
+        branch: logging_force
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git

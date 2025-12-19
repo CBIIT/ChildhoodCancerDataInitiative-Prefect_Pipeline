@@ -106,7 +106,7 @@ def cog_igm_transform(
     # move json2tsv contents to current working directory
     ShellOperation(
             commands=[
-                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-main/src/* ./",  # show data directory contents
+                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-logging_force/src/* ./",  # show data directory contents
             ]
         ).run()
     
