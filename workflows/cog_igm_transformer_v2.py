@@ -79,6 +79,8 @@ def cog_igm_transform(
     # create logger for log file
     logger = logging.getLogger("COG_IGM_JSON2TSV")
     
+    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
+    
     # logging config
     logging.basicConfig(
         filename="COG_IGM_JSON2TSV_" + get_date() + ".log",
