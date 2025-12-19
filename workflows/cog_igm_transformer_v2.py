@@ -90,6 +90,7 @@ def cog_igm_transform(
         filemode="w",
         level=logging.INFO,
         format=">>> %(name)s - %(asctime)s - %(levelname)s - %(message)s\n",
+        force=True,
     )
 
     logger.info(f"Logs beginning at {get_time()}")
