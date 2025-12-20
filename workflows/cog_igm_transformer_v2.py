@@ -14,13 +14,13 @@ from datetime import datetime
 import pandas as pd
 import shutil
 import logging
+from pathlib import Path
 
 # utils
 from src.cog_igm_utils import manifest_reader, json_downloader
-from src.utils import get_time, folder_ul, file_dl, get_date
+from src.utils import get_time, folder_ul, file_dl, get_date, get_logger
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
-from prefect.logging.handlers import PrefectConsoleHandler
 
 ##############
 #
@@ -38,6 +38,7 @@ FormParsing = Literal["cog_only", "igm_only", "cog_and_igm", "data_clean_up"]
 def json2tsv_flow(
     json_dir_path: str,
     output_path: str,
+    logger: logging.Logger,
 ):
     """Run the json2tsv parsing functions
 
@@ -46,13 +47,11 @@ def json2tsv_flow(
         ouput_path (str): Path to output directory for TSVs
     """
     from MCI_JSON2TSV import json2tsv
-    #import json2tsv.cog_utils
-    #import json2tsv.igm_utils
-    #import cog_igm_integration
 
     json2tsv(
         json_dir_path=json_dir_path,
         output_path=output_path,
+        logger=logger,
     )
 
 @flow(
@@ -73,51 +72,37 @@ def cog_igm_transform(
         file_path (str): optional; FULL path to the working directory where the clinical files are located, avoid redownloading files if they are already present, e.g. /usr/local/data/COG_IGM_Transform_working_20251006_T132846
 
     """
+    
+    dt = get_time()
 
-    # create a logging object
-    runner_logger = get_run_logger()
+    #log_filename = f"COG_IGM_JSON2TSV_{dt}.log"
+    #logger = get_logger("COG_IGM_JSON2TSV", "info")
     
-    print(logging.getLogger().handlers)
-    
-    # create logger for log file
+    log_filename = f"COG_IGM_JSON2TSV_{dt}.log"
     logger = logging.getLogger("COG_IGM_JSON2TSV")
     logger.setLevel(logging.INFO)
-    
-    log_filename = "COG_IGM_JSON2TSV_" + get_date() + ".log"
-    file_handler = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
-    
-    # logging config
-    """logging.basicConfig(
-        filename="COG_IGM_JSON2TSV_" + get_date() + ".log",
-        encoding="utf-8",
-        filemode="w",
-        level=logging.INFO,
-        format=">>> %(name)s - %(asctime)s - %(levelname)s - %(message)s\n",
-        force=True,
-    )"""
-    
-    formatter = logging.Formatter(
-    ">>> %(name)s - %(asctime)s - %(levelname)s - %(message)s"
-    )
-    file_handler.setFormatter(formatter)
-    
-    logger.addHandler(PrefectConsoleHandler())
+    # set the file handler
+    file_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+    file_handler = logging.FileHandler(log_filename, mode="w")
+    file_handler.setFormatter(logging.Formatter(file_FORMAT, "%H:%M:%S"))
+    file_handler.setLevel(logging.INFO)
     logger.addHandler(file_handler)
 
     logger.info(f"Logs beginning at {get_time()}")
 
     start_time = datetime.now()
-
-    dt = get_time()
-
+    
+    # create a logging object
+    runner_logger = get_run_logger()
     runner_logger.info(">>> Running cog_igm_transformer.py ....")
+    logger.info(">>> Running cog_igm_transformer.py ....")
     
     running_dir = os.getcwd()
     
     # move json2tsv contents to current working directory
     ShellOperation(
             commands=[
-                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-logging_force/src/* ./",  # show data directory contents
+                "mv ../ChildhoodCancerDataInitiative-MCI_JSON2TSV-prefect_internal/src/* ./",  # show data directory contents
             ]
         ).run()
     
@@ -177,6 +162,7 @@ def cog_igm_transform(
 
     # print to logger name of working dir
     runner_logger.info(f"Working directory: {working_path}")
+    logger.info(f"Working directory: {working_path}")
     
     # load in the manifest
     manifest_df, local_manifest_path = manifest_reader(manifest_path, form_parsing)
@@ -201,9 +187,16 @@ def cog_igm_transform(
     json2tsv_flow(
         json_dir_path=working_path,
         output_path=output_path,
+        logger=logger,
     )
     
+    end_time = datetime.now()
+    time_diff = end_time - start_time
+    runner_logger.info(f"\n\t>>> Time to Completion: {time_diff}")
+    logger.info(f"Time to Completion: {time_diff}")
+    
     # move log file to output dir and shutdown logging
+    logging.shutdown()
     shutil.move(log_filename, f"{output_path}/{log_filename.replace(get_date(), dt)}")
     #os.rename(cog_transform_log, f"{output_path}/{cog_transform_log.replace(get_date(), dt)}")
 
