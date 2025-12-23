@@ -10,8 +10,8 @@ from src.liftover_generic import liftover_to_tsv
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from src.commons.datamodel import GetDataModel
 
-FromAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc", "unknown"]
-ToAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc"]
+FromAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc", "ctdc", "ccdi_dcc", "unknown"]
+ToAcrynomDropDown = Literal["ccdi", "cds", "c3dc", "icdc", "ctdc", "ccdi_dcc"]
 
 
 @task(name="extract lift to tag in mapping file", log_prints=True)
