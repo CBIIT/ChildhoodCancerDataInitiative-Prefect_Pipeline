@@ -161,8 +161,10 @@ Brain Tumor, NOS	Other Brain Tumors	WHO5 Pediatric Tumor
 Burkitt lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas;Non-Hodgkin Lymphoma	ICD-O-3.2;WHO5 Pediatric Tumor
 Calcifying nested stromal-epithelial tumor	Complex mixed and stromal neoplasms	ICD-O-3.2
 Capillary hemangioma	Blood vessel tumors	ICD-O-3.2
+Carcinoid tumor, NOS (except of appendix M/8240/1)	Adenomas and adenocarcinomas	ICD-O-3.2
 Carcinoid tumor of uncertain malignant potential	Adenomas and adenocarcinomas	ICD-O-3.2
 Carcinoma ex pleomorphic adenoma	Complex mixed and stromal neoplasms	ICD-O-3.2
+Carcinoma in pleomorphic adenoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Carcinoma in situ, NOS	Epithelial neoplasms, NOS	ICD-O-3.2
 Carcinoma, anaplastic, NOS	Epithelial neoplasms, NOS	ICD-O-3.2
 Carcinoma, diffuse type	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -294,6 +296,7 @@ Ependymoma, anaplastic	Gliomas	ICD-O-3.2
 Ependymoma, NOS	Gliomas	ICD-O-3.2
 Epithelial tumor, benign	Epithelial neoplasms, NOS	ICD-O-3.2
 Epithelial-myoepithelial carcinoma	Complex epithelial neoplasms	ICD-O-3.2
+Epithelial/myoepithelial carcinoma	Complex epithelial neoplasms	ICD-O-3.2
 Epitheliod Neoplasm, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
 Epithelioid and spindle cell nevus	Nevi and melanomas	ICD-O-3.2
 Epithelioid Angiomyolipoma	Renal Tumors	WHO5 Pediatric Tumor
@@ -317,8 +320,10 @@ Fibrous Hamartoma of Infancy	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Fibrous meningioma	Meningiomas	ICD-O-3.2
 Fibrous Umbilical Polyp	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Focal Nodular Hyperplasia	Other Solid Tumors	WHO5 Pediatric Tumor
+Follicular adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Follicular adenocarcinoma, trabecular	Adenomas and adenocarcinomas	ICD-O-3.2
 Follicular adenocarcinoma, well differentiated	Adenomas and adenocarcinomas	ICD-O-3.2
+Follicular adenoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Follicular adenoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Follicular carcinoma, minimally invasive	Adenomas and adenocarcinomas	ICD-O-3.2
 Follicular carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -335,6 +340,7 @@ Ganglioglioma, NOS	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Ganglioneuroblastoma	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Ganglioneuroblastoma, intermixed	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Ganglioneuroma	Neuroepitheliomatous neoplasms;Endocrine and Neuroendocrine Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Gastrinoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Gastrinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Gastrointestinal stromal sarcoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Gastrointestinal stromal tumor	Complex mixed and stromal neoplasms	ICD-O-3.2
@@ -412,6 +418,7 @@ Intracranial mesenchymal tumor, FET-CREB fusion-positive	CNS Sarcoma	WHO CNS5
 Intracranial Mesenchymal Tumors, FET::CREB Fusion-positive	CNS Sarcomas	WHO5 Pediatric Tumor
 Intraductal carcinoma and lobular carcinoma in situ	Adenomas and adenocarcinomas	ICD-O-3.2
 Intraductal carcinoma, noninfiltrating, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
+Intraductal papillary/mucinous carcinoma, invasive	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Intraductal papillary mucinous neoplasm with an associated invasive carcinoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Intrathyroidal Thymic Carcinoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Intravascular large B-cell lymphoma	Other CNS	WHO CNS5
@@ -457,6 +464,7 @@ Malignant eccrine spiradenoma	Adnexal and skin appendage neoplasms	ICD-O-3.2
 Malignant histiocytosis	Neoplasms of histiocytes and accessory lymphoid cells	ICD-O-3.2
 Malignant lymphoma, non-Hodgkin, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Malignant lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
+Malignant melanoma, NOS (except juvenile melanoma M/8770/0)	Nevi and melanomas	ICD-O-3.2
 Malignant melanoma arising in giant congenital nevus	Nevi and melanomas	ICD-O-3.2
 Malignant melanoma in giant pigmented nevus	Nevi and melanomas	ICD-O-3.2
 Malignant melanoma, NOS	Nevi and melanomas	ICD-O-3.2
@@ -725,15 +733,24 @@ Seminoma, NOS	Germ cell neoplasms	ICD-O-3.2
 Serous borderline tumor, NOS	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Serous carcinoma, NOS	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Serous Cystadenoma	Other Solid Tumors	WHO5 Pediatric Tumor
+Serous cystadenoma, borderline malignancy	Cystic, mucinous and serous neoplasms	ICD-O-3.2
+Serous papillary cystic tumor of borderline malignancy	Cystic, mucinous and serous neoplasms	ICD-O-3.2
+Serous surface papillary tumor of borderline malignancy	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Sertoli cell tumor, NOS	Specialized gonadal neoplasms	ICD-O-3.2
 Sertoli-Leydig Cell Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Sertoli-Leydig cell tumor of intermediate differentiation, NOS	Specialized gonadal neoplasms	ICD-O-3.2
 Sertoli-Leydig cell tumor, intermediate differentiation, with heterologous elements	Specialized gonadal neoplasms	ICD-O-3.2
 Sertoli-Leydig cell tumor, poorly differentiated	Specialized gonadal neoplasms	ICD-O-3.2
 Sertoli-Leydig cell tumor, poorly differentiated, with heterologous elements	Specialized gonadal neoplasms	ICD-O-3.2
+Sertoli/Leydig cell tumor of intermediate differentiation	Specialized gonadal neoplasms	ICD-O-3.2
+Sertoli/Leydig cell tumor, intermediate differentiation, with heterologous elements	Specialized gonadal neoplasms	ICD-O-3.2
+Sertoli/Leydig cell tumor, poorly differentiated	Specialized gonadal neoplasms	ICD-O-3.2
+Sertoli/Leydig cell tumor, poorly differentiated, with heterologous elements	Specialized gonadal neoplasms	ICD-O-3.2
 Sex cord-gonadal stromal tumor, incompletely differentiated	Specialized gonadal neoplasms	ICD-O-3.2
 Sex cord-gonadal stromal tumor, mixed forms	Specialized gonadal neoplasms	ICD-O-3.2
 Sex cord-gonadal stromal tumor, NOS	Specialized gonadal neoplasms	ICD-O-3.2
+Sex cord/gonadal stromal tumor, mixed forms	Specialized gonadal neoplasms	ICD-O-3.2
+Sex cord/gonadal stromal tumor, NOS	Specialized gonadal neoplasms	ICD-O-3.2
 Sex Cord-stromal Tumor, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
 Sialoblastoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Signet ring cell carcinoma	Cystic, mucinous and serous neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
@@ -751,6 +768,7 @@ Solid Cancer of Unknown Primary	Other Solid Tumors	WHO5 Pediatric Tumor
 Solid pseudopapillary carcinoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Solid pseudopapillary neoplasm of pancreas	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Solid Pseudopapillary Neoplasm of the Pancreas	Other Solid Tumors	WHO5 Pediatric Tumor
+Solid pseudopapillary tumor	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Solid pseudopapillary tumor of ovary	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Solid Tumor, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
 Solitary fibrous tumor	Soft Tissue Tumors	WHO5 Pediatric Tumor
@@ -821,6 +839,7 @@ Therapy-related myelodysplastic syndrome, NOS	Myelodysplastic syndromes	ICD-O-3.
 Therapy-related myeloid neoplasm	Myeloid leukemias	ICD-O-3.2
 Thymic carcinoma, NOS	Thymic epithelial neoplasms	ICD-O-3.2
 Thymoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
+Thymoma, malignant, NOS	Thymic epithelial neoplasms	ICD-O-3.2
 Thymoma, NOS	Thymic epithelial neoplasms	ICD-O-3.2
 Thyroid Follicular Nodular Disease	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Thyroid Hyperplastic Nodule	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
@@ -839,6 +858,7 @@ Undifferentiated Round Cell Sarcoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Undifferentiated sarcoma	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Unknown	Unknown	Other
 Vipoma	Adenomas and adenocarcinomas	ICD-O-3.2
+Vipoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
 
