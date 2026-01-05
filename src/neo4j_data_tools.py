@@ -1324,7 +1324,6 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     It also removes quotes from column names and value
     """
     df_long = pd.read_csv(file_path)
-    print(df_long.head(10))
 
     # Pivot the DataFrame to wide format
     df_wide = df_long.pivot(
@@ -1479,7 +1478,8 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
     # check if a file has more than one line
     def has_contents(path):
         with open(path, 'rb') as f:
-            return bool(f.readline())      # first line
+            f.readline()  # skip header
+            return bool(f.readline())      # if it has another line other than header, return True
             
     ## writing tsv files
     #for file_path in csv_list:
