@@ -1318,12 +1318,13 @@ def list_type_files(file_dir: str, file_type: str) -> list:
     return matched_files
 
 
-#@task(log_prints=True)
+# @task(log_prints=True)
 def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     """Pivot the long df to wider df
     It also removes quotes from column names and value
     """
     df_long = pd.read_csv(file_path)
+    print(df_long.head(10))
 
     # Pivot the DataFrame to wide format
     df_wide = df_long.pivot(
@@ -1384,7 +1385,7 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     return df_wide
 
 
-#@task(log_prints=True)
+# @task(log_prints=True)
 def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
     """Setup links in wide df"""
     print("setup links in wide df")
@@ -1413,13 +1414,12 @@ def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
     return df_wide
 
 
-#@task
+# @task
 def write_wider_df_all(wider_df: DataFrame, output_dir: str, logger) -> None:
     """writes tsv files per study per node to a study folder under output_dir
     """
     # get node label
     node_label = wider_df["type"].unique().tolist()[0]
-    logger.info(f"Writing node {node_label} tsv files for all studies")
 
     # export folder
     os.makedirs(output_dir, exist_ok=True)
@@ -1446,6 +1446,7 @@ def write_wider_df_all(wider_df: DataFrame, output_dir: str, logger) -> None:
 
     # there should only be one study value in the wider_df
     study = wider_df["study"].unique().tolist()[0]
+    logger.info(f"Writing node {node_label} tsv files for study {study}")
     wider_df.drop(columns=["study"], inplace=True)
     # create the output directory if not exist
     study_folder = os.path.join(output_dir, study)
