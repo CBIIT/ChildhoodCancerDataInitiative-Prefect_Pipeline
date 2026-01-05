@@ -30,7 +30,7 @@ def pull_neo4j_data(
         uri_parameter (str, optional): uri parameter. Defaults to "uri".
         username_parameter (str, optional): username parameter. Defaults to "username".
         password_parameter (str, optional): password parameter. Defaults to "password".
-        study_id_list (list[str], optional): List of Study IDs to pull data for multiple study pulls.
+        study_id_list (list[str], optional): List of Study IDs to pull data for multiple study pulls. If None, the pipeline pulls all the studies. Defaults to None.
     """    
     logger = get_run_logger()
 
@@ -48,22 +48,20 @@ def pull_neo4j_data(
         study_id_list=study_id_list
     )
 
-    # upload db pulled data csv files to the bucket
-    logger.info(
-        f"Uploading folder of {db_data_folder} to the bucket {bucket} at {bucket_folder}"
-    )
-    folder_ul(
-        local_folder=db_data_folder,
-        bucket=bucket,
-        destination=bucket_folder,
-        sub_folder="",
-    )
+    # # upload db pulled data csv files to the bucket
+    # logger.info(
+    #     f"Uploading folder of {db_data_folder} to the bucket {bucket} at {bucket_folder}"
+    # )
+    # folder_ul(
+    #     local_folder=db_data_folder,
+    #     bucket=bucket,
+    #     destination=bucket_folder,
+    #     sub_folder="",
+    # )
 
     # converting data pulled from DB (csv files) to tsv files
     logger.info("Starting to convert DB pulled csv to tsv files")
-    export_folder = convert_csv_to_tsv(
-        db_pulled_outdir="./pulled_db_csv", output_dir="./"
-    )
+    export_folder = convert_csv_to_tsv(db_pulled_outdir=db_data_folder, output_dir="./")
 
     # upload converted tsv files to the bucket
     logger.info(f"Uploading folder of {export_folder} to the bucket {bucket} at {bucket_folder}")
@@ -75,7 +73,7 @@ def pull_neo4j_data(
     )
 
     logger.info("Workflow of pulling data from Neo4j db is Finished")
-    
+
     full_output_path = f"s3://{bucket}/{bucket_folder}/{export_folder}"
 
     return full_output_path
