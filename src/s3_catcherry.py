@@ -572,7 +572,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # found on GitHub, it will create the diagnosis category values.
 
         # directory path to the cross-reference file
-        diagnosis_mapping_path = "docs/uniqDx2Dx_cat_2025_07_15.tsv"
+        diagnosis_mapping_path = "docs/uniqDx2Dx_cat.tsv"
 
         # read in the cross-reference file
         diagnosis_mapping = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
