@@ -229,6 +229,7 @@ CNS Soft Tissue Tumors	CNS Sarcomas	WHO5 Pediatric Tumor
 CNS tumor with BCOR internal tandem duplication	High-Grade Glioma;Other CNS Embryonal tumors	WHO CNS5
 CNS Tumors of Uncertain Differentiation	CNS Sarcomas	WHO5 Pediatric Tumor
 CNS Tumors with BCOR Internal Tandem Duplication	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
+Colorectal Carcinoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Composite Hodgkin and non-Hodgkin lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Congenital melanocytic nevus, NOS	Nevi and melanomas;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Congenital Mesoblastic Nephroma	Renal Tumors	WHO5 Pediatric Tumor
@@ -343,6 +344,7 @@ Ganglioneuroma	Neuroepitheliomatous neoplasms;Endocrine and Neuroendocrine Tumor
 Gastrinoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Gastrinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Gastrointestinal stromal sarcoma	Complex mixed and stromal neoplasms	ICD-O-3.2
+Gastrointestinal Stromal Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Gastrointestinal stromal tumor	Complex mixed and stromal neoplasms	ICD-O-3.2
 Gastrointestinal stromal tumor, benign	Complex mixed and stromal neoplasms	ICD-O-3.2
 Gastrointestinal stromal tumor, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
@@ -371,6 +373,7 @@ Glioneuronal and neuronal tumors, NOS or NEC	Glioneuronal and neuronal tumors	WH
 Gliosarcoma	Gliomas	ICD-O-3.2
 Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2
 Glomus tumor, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
+Gonadal Stromal Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Granular cell tumor, malignant	Granular cell tumors and alveolar soft part sarcomas	ICD-O-3.2
 Granular cell tumor, NOS	Granular cell tumors and alveolar soft part sarcomas	ICD-O-3.2
 Granulosa cell tumor, adult type	Specialized gonadal neoplasms	ICD-O-3.2
@@ -587,6 +590,7 @@ Neurilemoma, NOS	Nerve sheath tumors	ICD-O-3.2
 Neuroblastoma	Neuroblastoma	WHO5 Pediatric Tumor
 Neuroblastoma, NOS	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Neuroendocrine carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
+Neuroendocrine Tumor	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Neuroendocrine tumor, NOS	Adenomas and adenocarcinomas;Endocrine and Neuroendocrine Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Neuroepithelioma, NOS	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Neurofibroma	Soft Tissue Tumors	WHO5 Pediatric Tumor
@@ -628,7 +632,7 @@ Osteosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Other CNS Embryonal Tumors	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 Other low-grade B-cell lymphomas of the CNS	Other CNS	WHO CNS5
 Pancreatic neuroendocrine tumor, nonfunctioning	Adenomas and adenocarcinomas	ICD-O-3.2
-Pancreatoblastoma	Complex mixed and stromal neoplasms	ICD-O-3.2
+Pancreatoblastoma	Complex mixed and stromal neoplasm;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Papillary adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma in situ	Squamous cell neoplasms	ICD-O-3.2
 Papillary carcinoma, columnar cell	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -841,6 +845,7 @@ Thymic carcinoma, NOS	Thymic epithelial neoplasms	ICD-O-3.2
 Thymoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Thymoma, malignant, NOS	Thymic epithelial neoplasms	ICD-O-3.2
 Thymoma, NOS	Thymic epithelial neoplasms	ICD-O-3.2
+Thyroid Carcinoma 	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Thyroid Follicular Nodular Disease	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Thyroid Hyperplastic Nodule	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Thyroid, NOS	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
@@ -861,6 +866,3 @@ Vipoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Vipoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
-
-
-
