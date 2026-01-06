@@ -762,15 +762,6 @@ def pull_study_node(
     )
     future.result()
     gc.collect()
-
-    # pull_data_per_node(
-    #     driver=driver,
-    #     data_to_csv=export_to_csv_per_node_per_study,
-    #     node_label="study",
-    #     query_str=cypher_phrase,
-    #     output_dir=out_dir,
-    #     study_id_list=study_id_list,
-    # )
     return None
 
 
