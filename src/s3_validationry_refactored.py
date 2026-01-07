@@ -1223,12 +1223,12 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         file_extension = os.path.splitext(file_name)[1].lower().lstrip(".")
 
         # create tbi and bai flag exceptions
-        if "tbi" in file_extension:
+        if ".tbi" in file_extension:
             tbi_flag = True
         else:
             tbi_flag = False
         
-        if "bai" in file_extension:
+        if ".bai" in file_extension:
             bai_flag = True
         else:
             bai_flag = False
@@ -1245,7 +1245,11 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
             inferred_type = file_extension
         
         # handle common file extensions exceptions where there are different extensions for the same file type
-        if len(file_extension) == 0:
+        if tbi_flag:
+            inferred_type = "tbi"
+        elif bai_flag:
+            inferred_type = "bai"
+        elif len(file_extension) == 0:
             inferred_type = "txt"
         elif len(file_extension) > 6:
             inferred_type = 'txt'
@@ -1257,10 +1261,6 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
             inferred_type = "fasta"
         elif "nii" == file_extension:
             inferred_type = "nifti"
-        elif tbi_flag:
-            inferred_type = "tbi"
-        elif bai_flag:
-            inferred_type = "bai"
         else:
             inferred_type = file_extension
 
