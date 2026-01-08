@@ -1261,6 +1261,8 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
             inferred_type = "fasta"
         elif "nii" == file_extension:
             inferred_type = "nifti"
+        elif 'tab' == file_extension:
+            inferred_type = 'tsv'
         else:
             inferred_type = file_extension
 
