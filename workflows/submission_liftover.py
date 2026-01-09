@@ -275,7 +275,7 @@ def submission_liftover_ccdi_to_dcc(
 
     # download DCC manifest from Github repository
     logger.info("Downloading DCC manifest template...")
-    dcc_manifest_template = CCDI_DCC_Tags().download_tag_manifest(tag=lift_to_tag)
+    dcc_manifest_template = CCDI_DCC_Tags().download_tag_manifest(tag=lift_to_tag, logger=logger)
 
     # read output tsv files and start copy content into DCC manifest template
     logger.info("Reading generic liftover output tsv files and populate DCC manifest template...")
