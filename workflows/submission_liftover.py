@@ -301,13 +301,14 @@ def submission_liftover_ccdi_to_dcc(
         # filling in the non-empty columns from tsv_df to template_tsv_df
         for col in cols_not_empty:
             template_tsv_df[col] = tsv_df[col]
+        print(template_tsv_df.head())
 
         # write template_tsv_df back to the DCC manifest template
         with pd.ExcelWriter(
             dcc_manifest_template,
             mode="a",
             engine="openpyxl",
-            if_sheet_exists="overlay",
+            if_sheet_exists="replace",
         ) as writer:
             template_tsv_df.to_excel(
                 writer, sheet_name=tsv_type, index=False, header=False, startrow=1
