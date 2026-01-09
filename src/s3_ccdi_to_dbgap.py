@@ -206,13 +206,19 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
 
 @task
 def extract_sc(
-    participant_sheet: DataFrame, participant_samples: DataFrame, logger
+    participant_sheet: DataFrame, participant_samples: DataFrame, consent_map: dict, logger
 ) -> DataFrame:
     """Extract subject consent df and only keep subjects that have sample"""
-    subject_consent = participant_sheet[["participant_id", "sex_at_birth"]].rename(
+
+    # extract participant, sex, and consent columns
+    subject_consent = participant_sheet[["participant_id", "sex_at_birth", "consent_group.consent_group_id"]]
+    subject_consent = subject_consent.rename(
         columns={"participant_id": "SUBJECT_ID", "sex_at_birth": "SEX"}
     )
-    subject_consent["CONSENT"] = "1"
+    # convert consent group id (an alphanumeric) to consent group number (an integer)
+    subject_consent["CONSENT"] = subject_consent["consent_group.consent_group_id"].map(consent_map)
+    subject_consent = subject_consent.drop(columns=["consent_group.consent_group_id"])
+
     subject_consent["SEX"][subject_consent["SEX"].str.contains("Female")] = "2"
     subject_consent["SEX"][subject_consent["SEX"].str.contains("Male")] = "1"
     subject_consent["SEX"][~subject_consent["SEX"].str.contains("1|2")] = "UNK"
@@ -342,14 +348,24 @@ def check_synonym(synonym_df: DataFrame) -> tuple:
 
 
 class DD_dataframe(Task):
-    def __init__(self) -> None:
+    """
+    A class to help create dataframes and store the needed information 
+    for dbGaP-compliant Data Dictionary (DD) files.
+    """
+
+    def __init__(self, consent_values=None) -> None:
+        
+        # set GRU as default consent value
+        if consent_values is None:
+            consent_values = ["1=General Research Use (GRU)"]
+
         self.subject_consent_dd = {
             "VARNAME": ["VARDESC", "TYPE", "VALUES"],
             "SUBJECT_ID": ["Subject ID", "string"],
             "CONSENT": [
                 "Consent group as determined by DAC",
                 "encoded value",
-                "1=General Research Use (GRU)",
+                *consent_values
             ],
             "SEX": [
                 "Biological sex",
@@ -365,7 +381,7 @@ class DD_dataframe(Task):
             "CONSENT": [
                 "Consent group as determined by DAC",
                 "encoded value",
-                "1=General Research Use (GRU)",
+                *consent_values
             ],
             "SEX": [
                 "Biological sex",
@@ -602,11 +618,6 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         logger.error(f"Issue occurred while openning file {manifest}")
         sys.exit()
 
-
-    # DUE TO CHANGES IN CONSENT GROUP HANDLING
-    # This script will need to be reworked to handle multiple consent groups
-    # As well as labeling the correct consent group in the output files for each participant
-
     # extract study, particpant, and sample sheets
     study_df = workbook_dict["study"]
     consent_df = workbook_dict["consent_group"]
@@ -614,25 +625,45 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     sample_df = workbook_dict["sample"]
     synonym_df = workbook_dict["synonym"]
 
-    # extract consent value
-    study_consent = consent_df["consent_group_name"][0]
-    if pd.isna(study_consent):
-        study_consent = "GRU"
-        logger.warning(
-            "No CONSENT value found in CCDI study manifest. All Consent is assumed to be GRU"
-        )
-        # Study is GRU, flag non-GRU as False
-        non_gru = False
-    elif study_consent == "GRU":
-        logger.info(f"Consent {study_consent} was found in CCDI study manifest")
-        # Study is GRU, flag non-GRU as False
-        non_gru = False
+    # create consent map dict to match consent id -> consent number
+    # e.g. {"phs000000_GRU": "1", "phs000000_IRB": "2", "phs000000_HMB": "3"}
+
+    required_cols = {"consent_group_id", "consent_group_number", "consent_group_name"}
+    
+    if required_cols.issubset(consent_df.columns):
+        consent_map = dict(zip(consent_df['consent_group_id'], consent_df['consent_group_number']))
+    
+        # create the legend for what numbers correspond to what codes 
+        # e.g. "1=GRU" "2=IRB" "3=HMB"
+        consent_values_list = []
+        for _, row in consent_df.iterrows():
+            number = row['consent_group_number']
+            name = row['consent_group_name']
+            consent_values_list.append(f"{number}={name}")
+        logger.info(f"Generated Consent Definitions: {consent_values_list}")
+
     else:
-        logger.error(
-            f"Consent {study_consent} was found in CCDI study manifest. Please fix the encoded value for CONSENT in SC_DD.xlsx before submission."
-        )
-        # create a non-GRU boolean flag to trigger the directory creation later
-        non_gru = True
+        logger.error("consent_group information missing from consent sheet")
+        sys.exit()
+
+    # this has been commented out/reworked to handle multiple consent groups
+    #if pd.isna(study_consent):
+    #    study_consent = "GRU"
+    #    logger.warning(
+    #        "No CONSENT value found in CCDI study manifest. All Consent is assumed to be GRU"
+    #    )
+    #    # Study is GRU, flag non-GRU as False
+    #    non_gru = False
+    #elif study_consent == "GRU":
+    #    logger.info(f"Consent {study_consent} was found in CCDI study manifest")
+    #    # Study is GRU, flag non-GRU as False
+    #    non_gru = False
+    #else:
+    #    logger.error(
+    #        f"The following study consent codes were found in CCDI study manifest, which contain non-GRU value(s): {study_consent} Please review/fix the encoded value for CONSENT in SC_DD.xlsx before submission."
+    #    )
+    #    # create a non-GRU boolean flag to trigger the directory creation later
+    #    non_gru = True
 
     # check synonym of subject and sample in synonym tab
     (subject_synonym, sample_synonym) = check_synonym(synonym_df=synonym_df)
@@ -650,6 +681,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     subject_consent = extract_sc(
         participant_sheet=participant_df,
         participant_samples=subject_sample,
+        consent_map=consent_map,
         logger=logger,
     )
 
@@ -688,12 +720,12 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     # else:
     #     pass
 
-    # Create DD dataframes
+    # create DD_dataframes and pass consent values to it 
     (
         subject_consent_dd_df,
         subject_sample_dd_df,
         sample_tumor_dd_df,
-    ) = DD_dataframe().create_dd_all(
+    ) = DD_dataframe(consent_values=consent_values_list).create_dd_all(
         subject_synonym=subject_synonym, sample_synonym=sample_synonym
     )
 
@@ -771,15 +803,15 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger.info(f"Created an output folder if not exist at {output_dir_path}")
 
     # create flag directory for non-GRU consent
-    if non_gru:
-        non_gru_dir_path = os.path.join(output_dir_path, "!!!NON-GRU_STUDY!!!")
-        Path(non_gru_dir_path).mkdir(parents=True, exist_ok=True)
-        # make a file in the non_gru directory
-        with open(os.path.join(non_gru_dir_path, "!!!NON-GRU_STUDY!!!.txt"), "w") as f:
-            f.write(f"This is a Non-GRU Study. It is {study_consent}.")
-        logger.warning(
-            f"This is a Non-GRU Study. Created an output folder if not exist at {non_gru_dir_path}"
-        )
+    #if non_gru:
+    #    non_gru_dir_path = os.path.join(output_dir_path, "!!!NON-GRU_STUDY!!!")
+    #    Path(non_gru_dir_path).mkdir(parents=True, exist_ok=True)
+    #    # make a file in the non_gru directory
+    #    with open(os.path.join(non_gru_dir_path, "!!!NON-GRU_STUDY!!!.txt"), "w") as f:
+    #        f.write(f"This is a Non-GRU Study. It is {study_consent}.")
+    #    logger.warning(
+    #        f"This is a Non-GRU Study. Created an output folder if not exist at {non_gru_dir_path}"
+    #    )
 
     # write dd files
     subject_consent_dd_df.to_excel(
