@@ -746,8 +746,8 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     if "authz" in df_join_all.columns:
         index_df["authz"] = df_join_all["authz"]
     else:
-        authz = df_join_all["acl"].dropna().unique().tolist()[0]
-        authz = "['/programs/" + authz[2:]
+        add_programs_prefix = lambda x: f"['/programs/{x[2:]}" if pd.notna(x) else x
+        authz = df_join_all["acl"].apply(add_programs_prefix)
         index_df["authz"] = authz
 
     simple_add("url", "file_url")
