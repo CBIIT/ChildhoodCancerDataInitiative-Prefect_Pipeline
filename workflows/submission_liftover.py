@@ -247,8 +247,8 @@ def submission_liftover_ccdi_to_dcc(
     lift_to_tag: str = "1.0.0",
 ) -> None:
     """CCDI to DCC liftover ONLY.
-    A specialized liftover pipeline that liftover a CCDI template manifest to a DCC template manifest. 
-    This pipeline is an extension of generic liftover pipeline which handles CCDI to DCC liftover.
+    A liftover pipeline that liftover a CCDI template manifest to a DCC template manifest. 
+    This pipeline is an extension of the generic liftover pipeline which handles CCDI to DCC liftover.
     Args:
         bucket (str): bucket name
         runner (str): unique runner identifier
