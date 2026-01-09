@@ -241,9 +241,9 @@ def submission_liftover_ccdi_to_dcc(
     runner: str,
     submission_path: str,
     liftover_mapping_filepath: str,
-    lift_from_acronym: int = "ccdi",
+    lift_from_acronym: str = "ccdi",
     lift_from_tag: str = "3.1.0",
-    lift_to_acronym: int = "ccdi_dcc",
+    lift_to_acronym: str = "ccdi_dcc",
     lift_to_tag: str = "1.0.0",
 ) -> None:
     """CCDI to DCC liftover ONLY.
