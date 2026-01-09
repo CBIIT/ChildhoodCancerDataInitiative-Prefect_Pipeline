@@ -1242,7 +1242,7 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         if "gz" in file_extension.lower():
             #the inferred type is based on the extension before .gz
             file_extension = file_extension[:-3]
-            inferred_type = file_extension
+            inferred_type = file_extension.lower()
         
         # handle common file extensions exceptions where there are different extensions for the same file type
         if tbi_flag:
@@ -1264,9 +1264,9 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         elif 'tab' == file_extension:
             inferred_type = ['tsv', 'txt']
         else:
-            inferred_type = file_extension
+            inferred_type = file_extension.lower()
 
-        if file_type.lower() not in inferred_type.lower():
+        if file_type.lower() not in inferred_type:
             extension_type_mismatch.append(
                 {
                     "node": row["node"],
