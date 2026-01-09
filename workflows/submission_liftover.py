@@ -3,7 +3,7 @@ import os
 from typing import Literal
 import pandas as pd
 import sys
-from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_time, CheckCCDI
+from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_time, CheckCCDI, CCDI_DCC_Tags
 from src.manifest_liftover import liftover_tags
 from src.liftover_generic import liftover_to_tsv
 
@@ -232,4 +232,100 @@ def submission_liftover(
     )
     logger.info("Liftover pipeline completed successfully.")
 
+    return upload_path, liftover_output
+
+
+@flow(name="Generic liftover from CCDI to DCC", log_prints=True)
+def submission_liftover_ccdi_to_dcc(
+    bucket: str,
+    runner: str,
+    submission_path: str,
+    liftover_mapping_filepath: str,
+    lift_from_acronym: int = "ccdi",
+    lift_from_tag: str = "3.1.0",
+    lift_to_acronym: int = "ccdi_dcc",
+    lift_to_tag: str = "1.0.0",
+) -> None:
+    """CCDI to DCC liftover ONLY.
+    A specialized liftover pipeline that liftover a CCDI template manifest to a DCC template manifest. 
+    This pipeline is an extension of generic liftover pipeline which handles CCDI to DCC liftover.
+    Args:
+        bucket (str): bucket name
+        runner (str): unique runner identifier
+        submission_path (str): folder path contains a set of tsv files under bucket, e.g. "submissions/submission_tsv_files/" OR file path of CCDI metadata manifest (The lift_from_acrynom must be CCDI in this case)
+        liftover_mapping_filepath (str): Mapping file path under bucket, e.g., "mapping_files/ccdi_2.1.0_to_cds_6.0.2_mapping.tsv"
+        lift_from_acronym (AcrynomDropDown): lift from acronym. This deployment is designed to liftover from CCDI only.
+        lift_from_tag (str): tag of lift from. Default to 3.1.0
+        lift_to_acronym (AcrynomDropDown): lift to acronym. This deployment is designed to liftover to CCDI-DCC only.
+        lift_to_tag (str): tag of lift to. Default to 1.0.0
+    """
+    logger = get_run_logger()
+
+    # run the generic liftover pipeline
+    logger.info("Starting generic liftover pipeline...")
+    upload_path, output_tsv_folder = submission_liftover(
+        bucket=bucket,
+        submission_path=submission_path,
+        lift_from_acronym=lift_from_acronym,
+        lift_from_tag=lift_from_tag,
+        lift_to_acronym=lift_to_acronym,
+        lift_to_tag=lift_to_tag,
+        liftover_mapping_filepath=liftover_mapping_filepath,
+        runner=runner)
+
+    # download DCC manifest from Github repository
+    logger.info("Downloading DCC manifest template...")
+    dcc_manifest_template = CCDI_DCC_Tags().download_tag_manifest(tag=lift_to_tag)
+
+    # read output tsv files and start copy content into DCC manifest template
+    logger.info("Reading generic liftover output tsv files and populate DCC manifest template...")
+    tsv_file_list = [os.path.join(output_tsv_folder, f) for f in os.listdir(output_tsv_folder) if f.endswith(".tsv")]
+    for tsv in tsv_file_list:
+        tsv_df = pd.read_csv(
+            tsv,
+            sep="\t",
+            quotechar='"',
+            doublequote=True,
+            escapechar="\\",  # add escape char to handle special characters
+            keep_default_na=False,
+            na_values=[""],
+        )
+        # we only expect one type per tsv file
+        tsv_type = tsv_df["type"].dropna().unique().tolist()[0]
+        logger.info(f"Populating sheet {tsv_type} in DCC manifest template...")
+        cols_not_empty = tsv_df.columns[tsv_df.notna().any()].tolist()
+
+        # read the sheet with sheetname==type from the DCC manifest template
+        # the template_tsv_df should be empty
+        template_tsv_df = CheckCCDI(dcc_manifest_template).read_sheet_na(sheetname=tsv_type)
+        # filling in the non-empty columns from tsv_df to template_tsv_df
+        for col in cols_not_empty:
+            template_tsv_df[col] = tsv_df[col]
+
+        # write template_tsv_df back to the DCC manifest template
+        with pd.ExcelWriter(
+            dcc_manifest_template,
+            mode="a",
+            engine="openpyxl",
+            if_sheet_exists="overlay",
+        ) as writer:
+            template_tsv_df.to_excel(
+                writer, sheet_name=tsv_type, index=False, header=False, startrow=1
+            )
+        logger.info(f"Finished populating sheet {tsv_type} in DCC manifest template.")
+
+    # Rename the final DCC manifest tempalte file
+    dcc_manifest_populated =  dcc_manifest_template.replace(".xlsx", f"_populated_{get_time()}.xlsx")
+    os.rename(dcc_manifest_template, dcc_manifest_populated)
+    # upload the populated DCC manifest to the bucket
+    file_ul(
+        bucket=bucket,
+        output_folder=upload_path,
+        sub_folder="",
+        newfile=dcc_manifest_populated,
+    )
+    logger.info(
+        f"Uploaded populated DCC manifest file {dcc_manifest_populated} to bucket {bucket} at {upload_path}"
+    )
+    logger.info("CCDI to DCC liftover pipeline completed successfully.")
     return None
