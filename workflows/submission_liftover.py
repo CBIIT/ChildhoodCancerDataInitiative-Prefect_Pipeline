@@ -298,6 +298,7 @@ def submission_liftover_ccdi_to_dcc(
         # read the sheet with sheetname==type from the DCC manifest template
         # the template_tsv_df should be empty
         template_tsv_df = CheckCCDI(dcc_manifest_template).read_sheet_na(sheetname=tsv_type)
+        template_tsv_df = pd.DataFrame(columns=template_tsv_df.columns) # create an emoty df using only the column names
         # filling in the non-empty columns from tsv_df to template_tsv_df
         for col in cols_not_empty:
             template_tsv_df[col] = tsv_df[col]
@@ -308,7 +309,7 @@ def submission_liftover_ccdi_to_dcc(
             dcc_manifest_template,
             mode="a",
             engine="openpyxl",
-            if_sheet_exists="replace",
+            if_sheet_exists="overlay",
         ) as writer:
             template_tsv_df.to_excel(
                 writer, sheet_name=tsv_type, index=False, header=False, startrow=1
