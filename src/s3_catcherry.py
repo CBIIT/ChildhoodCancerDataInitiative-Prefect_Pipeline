@@ -654,23 +654,111 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             file=outf,
         )
 
-        # pull consent number and dbgap accession from study node
-        # This is ASSUMING that the study is only ONE consent number.
-        # THIS IS A QUICK FIX AND SHOULD BE REWORKED IN THE FUTURE.
-        # THIS WILL BREAK ON MULTI-CONSENT STUDIES.
-        consent_number = meta_dfs["consent_group"]["consent_group_suffix"][0]
+        # create look up tables 
+        catcherr_logger.info("Creating lookup tables for consent tracing")
+        sample_df = meta_dfs["sample"].set_index("sample_id")
+        participant_df = meta_dfs["participant"].set_index("participant_id")
+        consent_group_df = meta_dfs["consent_group"].set_index("consent_group_id")
+        
+        # LOOK UP FUNCTION
+        def lookup_consent(node_df, node_file_id, catcherr_logger):
+            """
+            Traces a sample id through the participant and consent sheets
+            to retrieve the final consent_group_suffix.
+            """
+            # look up the participant ID --> consent group ID --> consent group suffix
+            try:
+                # look up the sample ID and participant ID
+                if "sample.sample_id" in node_df.columns:
+                    sample_id = node_df.loc[node_file_id, "sample.sample_id"]
+                    participant_id = sample_df.loc[sample_id, "participant.participant_id"]
+                    if pd.isna(participant_id): # in case of pdx/cell line 
+                        participant_id = deep_search(sample_id) 
+                
+                elif "participant.participant_id" in node_df.columns: # in case of radiology files
+                    participant_id = node_df.loc[node_file_id, "participant.participant_id"]
+                
+                # look up the consent group ID and suffix
+                consent_group_id = participant_df.loc[participant_id, "consent_group.consent_group_id"]
+                consent_suffix = consent_group_df.loc[consent_group_id, "consent_group_suffix"]
+            
+            except Exception as e:
+                catcherr_logger.error(f"Error looking up consent code for file_id {node_file_id}: {e}")
+                consent_suffix = None
+
+            return consent_suffix
+        
+        # DEEP SEARCH HELPER-LOOP FUNCTION
+        def deep_search(start_sample_id, max_attempts = 10):
+            """
+            traces a sample id through a chain of pdx/cell_line links until the final participant_id is found.
+            """
+            try:
+                # prepare search variables (participant will be na)
+                sample_id = start_sample_id
+                participant_id = sample_df.loc[sample_id, "participant.participant_id"]
+                attempts = 0
+
+                # prepare lookup tables, abort if neither df is available
+                if "pdx" in meta_dfs: 
+                    pdx_df = meta_dfs["pdx"].set_index("pdx_id")
+                if "cell_line" in meta_dfs: 
+                    cell_line_df = meta_dfs["cell_line"].set_index("cell_line_id")
+                if not ("pdx" in meta_dfs or "cell_line" in meta_dfs):
+                    return None
+
+                # loop several times until participant id is found
+                # for unusual cases with circuitous traces
+                # (e.g. file -> sample -> cell_line -> sample -> PDX -> sample -> patient)
+                while pd.isna(participant_id) and attempts < max_attempts:
+                    attempts += 1
+                    
+                    # choose pdx or cell_line node to search in
+                    if "pdx.pdx_id" in sample_df.columns and pd.notna(sample_df.loc[sample_id, "pdx.pdx_id"]): 
+                        search_key = sample_df.loc[sample_id, "pdx.pdx_id"]
+                        search_node_df = pdx_df
+                        search_node_col = "pdx_id"
+                        
+                    elif "cell_line.cell_line_id" in sample_df.columns and pd.notna(sample_df.loc[sample_id, "cell_line.cell_line_id"]): 
+                        search_key = sample_df.loc[sample_id, "cell_line.cell_line_id"]
+                        search_node_df = cell_line_df
+                        search_node_col = "cell_line_id"
+                    
+                    # abort if neither pdx nor cell line is found
+                    else:
+                        return None
+                    
+                    # trace celline or pdx to the next sample id
+                    new_sample_id = search_node_df.loc[search_key, "sample.sample_id"]
+                            
+                    # repeat loop with new sample id
+                    sample_id = new_sample_id
+                    
+                    # or stop loop if participant id is found
+                    participant_id = sample_df.loc[sample_id, "participant.participant_id"]
+
+            except Exception as e:
+                print(f"Error in deep_search for participant for sample_id:{start_sample_id}: {e}")
+                return None
+
+            # return the participant id
+            return participant_id
+
+        # MAIN ACL/AUTHZ GENERATOR BLOCK
+        # pull dbgap_accession from study node
         dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
 
-        # check each node to find the acl property (it has been in study and study_admin)
-        for node in dict_nodes:
+        # iterate through each node and update acl/authz values
+        for node in dict_nodes: 
             if "file_access" in meta_dfs[node].columns:
-                catcherr_logger.info(f"ACL/Authz, checking node: {node}")
+                print(f"ACL/Authz, checking node: {node}")
                 df = meta_dfs[node]
-                acl_value = f"['{dbgap_accession}.{consent_number}']"
-                authz_value = f"['/programs/{dbgap_accession}.{consent_number}']"
+                lookup_df = df.set_index(f"{node}_id", drop=False)  # keep a lookup copy with id column
+                file_id_col = f"{node}_id"
 
                 # for each row, determine if the ACL is properly formed and fix otherwise
                 for index, row in df.iterrows():
+                    node_file_id = row[file_id_col]
                     file_access_value = df.at[index, "file_access"]
 
                     if file_access_value == "Open":
@@ -678,13 +766,22 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         df.at[index, "authz"] = "['/open']"
 
                     elif file_access_value == "Controlled":
+                        # get consent number
+                        consent_number = lookup_consent(lookup_df, node_file_id, catcherr_logger=catcherr_logger)
+                        if consent_number is None:
+                            catcherr_logger.error(f"Could not determine consent for {node_file_id}; skipping ACL/Authz update.")
+                            continue
+
+                        # construct acl and authz values based on consent number
+                        acl_value = f"['{dbgap_accession}.{consent_number}']"
+                        authz_value = f"['/programs/{dbgap_accession}.{consent_number}']"
                         df.at[index, "acl"] = acl_value
                         df.at[index, "authz"] = authz_value
 
                     else:
                         print(
-                            f"\tERROR: The value for file_access is missing for {node} node at row {index +1}.\n",
-                            file=outf,
+                            f"\tERROR: The value for file_access is missing for {node} node at row {index + 1}.\n",
+                            file=outf, 
                         )
 
                 meta_dfs[node] = df
