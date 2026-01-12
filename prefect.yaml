@@ -1458,9 +1458,9 @@ deployments:
 # TEMPORARY TEST DEPLOYMENT FOR MULTI-CONSENT FEATURE
   # This will be deleted before PR merge (Step 7)
   
-  - name: ccdi-data-curation-2gb-v3-multi-consent-test
+  - name: TEST-ccdi-data-curation-2gb-v3-multi-consent
     version: null
-    tags: ["TEST", "Multi-Consent", "V3"]
+    tags: ["TEST", "Multi", "Consent", "Multi-Consent", "V3", "JIRA-2138"]
     description: "Testing multi-consent updates in catcherr, validation, index, and dbGaP scripts"
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
