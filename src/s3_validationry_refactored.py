@@ -881,11 +881,12 @@ def validate_proband_in_family(file_path: str, output_file: str):
                 family_dict["error row"] = "no proband"
             check_list.append(family_dict)
         check_df = pd.DataFrame.from_records(check_list)
-        if check_df.shape[0] > 0:
-            check_df["error row"] = check_df["error row"].str.wrap(30)
-            check_df["family_id"] = check_df["family_id"].str.wrap(25)
-        else:
-            pass
+        
+    if check_df.shape[0] > 0:
+        check_df["error row"] = check_df["error row"].str.wrap(30)
+        check_df["family_id"] = check_df["family_id"].str.wrap(25)
+    else:
+        pass
 
     print_str = (
         print_str
