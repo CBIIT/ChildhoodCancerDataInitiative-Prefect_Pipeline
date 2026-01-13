@@ -835,7 +835,8 @@ def validate_proband_in_family(file_path: str, output_file: str):
         "\n\n"
         + header_str("Proband in Family Check")
         + "\nThis section will check the Family Relationships tab to ensure that there are probands, and there is only one per family_id."
-        + "\nIf you have the family_id of 'MISSING', please be aware that this indicates missing data in the required family_id column.\n----------\n"
+        + "\nIf you have the family_id of 'MISSING', please be aware that this indicates missing data in the required relationship column."
+        + "\n\tPlease ensure that all relationship values are filled in and run validation again.\n----------\n"
     )
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
