@@ -853,6 +853,31 @@ def validate_proband_in_family(file_path: str, output_file: str):
             family_dict["error row"] = pos_print
             check_list.append(family_dict)
             continue
+        # error handling when multiple probands are found
+        elif (
+            len(
+                family_subset[
+                    family_subset["relationship"].str.lower() == "proband"
+                ]
+            )
+            > 1
+        ):
+            family_dict["check"] = "ERROR"
+            bad_positions = (
+                family_subset[
+                    family_subset["relationship"].str.lower() == "proband"
+                ].index
+                + 2
+            ).tolist()
+            pos_print = ",".join([str(i) for i in bad_positions])
+            family_dict["error row"] = pos_print
+        # Check for no proband present but other relationships exist
+        elif (
+            "proband" not in family_subset["relationship"].str.lower().tolist()
+            and len(family_subset["relationship"].dropna()) > 0
+        ):
+            family_dict["check"] = "ERROR"
+            family_dict["error row"] = "no proband"
         # check for proband presence and uniqueness
         elif "proband" in family_subset["relationship"].str.lower().tolist():
             if (
