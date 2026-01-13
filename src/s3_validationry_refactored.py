@@ -845,7 +845,16 @@ def validate_proband_in_family(file_path: str, output_file: str):
         family_dict = {}
         family_dict["family_id"] = family_id
         family_subset = family_df[family_df["family_id"] == family_id]
-        if "proband" in family_subset["relationship"].str.lower().tolist():
+        # error handling if no relationship value is given
+        if family_subset["relationship"].isna().all():
+            family_dict["check"] = "ERROR"
+            bad_positions = (family_subset.index + 2).tolist()
+            pos_print = ",".join([str(i) for i in bad_positions])
+            family_dict["error row"] = pos_print
+            check_list.append(family_dict)
+            continue
+        # check for proband presence and uniqueness
+        elif "proband" in family_subset["relationship"].str.lower().tolist():
             if (
                 len(
                     family_subset[
