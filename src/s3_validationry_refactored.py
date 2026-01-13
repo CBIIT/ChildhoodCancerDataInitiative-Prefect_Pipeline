@@ -834,7 +834,8 @@ def validate_proband_in_family(file_path: str, output_file: str):
     section_title = (
         "\n\n"
         + header_str("Proband in Family Check")
-        + "\nThis section will check the Family Relationships tab to ensure that there are probands, and there is only one per family_id:\n----------\n"
+        + "\nThis section will check the Family Relationships tab to ensure that there are probands, and there is only one per family_id."
+        + "\nIf you have the family_id of 'MISSING', please be aware that this indicates missing data in the required family_id column.\n----------\n"
     )
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
@@ -844,7 +845,7 @@ def validate_proband_in_family(file_path: str, output_file: str):
     #if there are any relationship values that are empty, then error
     if family_df["relationship"].isna().any():
         family_dict = {}
-        family_dict["family_id"] = "all"
+        family_dict["family_id"] = "MISSING"
         family_dict["check"] = "ERROR"
         bad_positions = (family_df[family_df["relationship"].isna()].index + 2).tolist()
         pos_print = ",".join([str(i) for i in bad_positions])
