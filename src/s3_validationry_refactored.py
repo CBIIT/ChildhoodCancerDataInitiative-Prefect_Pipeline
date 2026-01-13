@@ -1222,6 +1222,17 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         # extract file extension with no leading period and in lower case
         file_extension = os.path.splitext(file_name)[1].lower().lstrip(".")
 
+        # create tbi and bai flag exceptions
+        if ".tbi" in file_extension:
+            tbi_flag = True
+        else:
+            tbi_flag = False
+        
+        if ".bai" in file_extension:
+            bai_flag = True
+        else:
+            bai_flag = False
+
         #if you pull out a .gz extension
         if file_extension == "gz":
             # handle .nii.gz and .vcf.gz and .fastq.gz cases
@@ -1230,19 +1241,32 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         # infer file type from file extension
         if "gz" in file_extension.lower():
             #the inferred type is based on the extension before .gz
-            inferred_type = file_extension[:-3]
+            file_extension = file_extension[:-3]
+            inferred_type = file_extension.lower()
+        
+        # handle common file extensions exceptions where there are different extensions for the same file type
+        if tbi_flag:
+            inferred_type = "tbi"
+        elif bai_flag:
+            inferred_type = "bai"
         elif len(file_extension) == 0:
-            inferred_type = "txt"
+            inferred_type = ["txt", "tsv"]  # if there is no extension, likely a text or tsv file
+        elif len(file_extension) > 6:
+            inferred_type = ["txt", "tsv"]  # if the extension is longer than 6 characters, likely not a standard extension
         elif "dcm" == file_extension:
             inferred_type = "dicom"
         elif "fq" == file_extension:
             inferred_type = "fastq"
         elif "fa" == file_extension:
             inferred_type = "fasta"
+        elif "nii" == file_extension:
+            inferred_type = "nifti"
+        elif 'tab' == file_extension:
+            inferred_type = ['tsv', 'txt']
         else:
-            inferred_type = file_extension
+            inferred_type = file_extension.lower()
 
-        if file_type.lower() != inferred_type.lower():
+        if file_type.lower() not in inferred_type:
             extension_type_mismatch.append(
                 {
                     "node": row["node"],
