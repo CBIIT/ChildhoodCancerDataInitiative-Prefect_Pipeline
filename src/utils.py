@@ -533,7 +533,7 @@ def ccdi_wf_inputs_ul(
 
 @flow(
     name="Upload ccdi workflow outputs",
-    flow_run_name="upload_workflow_outputs_{wf_step}",
+    flow_run_name="upload_workflow_outputs_{sub_folder}",
 )
 def ccdi_wf_outputs_ul(
     bucket: str,
