@@ -2155,7 +2155,7 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # validate acl/authz values
     validation_logger.info("Checking for acl/authz format errors")
-    validate_acl_authz(nodes_to_validate, file_path, output_file)
+    validate_acl_authz(file_path, output_file, nodes_to_validate)
 
     validation_logger.info(
         f"Process Complete. The output file can be found here: {output_file}"
