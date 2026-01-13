@@ -841,75 +841,51 @@ def validate_proband_in_family(file_path: str, output_file: str):
     family_df = file_object.read_sheet_na(sheetname="family_relationship")
     print_str = "\n\tfamily relationship\n\t----------\n\t"
     check_list = []
-    for family_id in family_df["family_id"].dropna().unique():
+    #if there are any relationship values that are empty, then error
+    if family_df["relationship"].isna().any():
         family_dict = {}
-        family_dict["family_id"] = family_id
-        family_subset = family_df[family_df["family_id"] == family_id]
-        # error handling if no relationship value is given
-        if family_subset["relationship"].isna().all():
-            family_dict["check"] = "ERROR"
-            bad_positions = (family_subset.index + 2).tolist()
-            pos_print = ",".join([str(i) for i in bad_positions])
-            family_dict["error row"] = pos_print
-            check_list.append(family_dict)
-            continue
-        # error handling when multiple probands are found
-        elif (
-            len(
-                family_subset[
-                    family_subset["relationship"].str.lower() == "proband"
-                ]
-            )
-            > 1
-        ):
-            family_dict["check"] = "ERROR"
-            bad_positions = (
-                family_subset[
-                    family_subset["relationship"].str.lower() == "proband"
-                ].index
-                + 2
-            ).tolist()
-            pos_print = ",".join([str(i) for i in bad_positions])
-            family_dict["error row"] = pos_print
-        # Check for no proband present but other relationships exist
-        elif (
-            "proband" not in family_subset["relationship"].str.lower().tolist()
-            and len(family_subset["relationship"].dropna()) > 0
-        ):
-            family_dict["check"] = "ERROR"
-            family_dict["error row"] = "no proband"
-        # check for proband presence and uniqueness
-        elif "proband" in family_subset["relationship"].str.lower().tolist():
-            if (
-                len(
-                    family_subset[
-                        family_subset["relationship"].str.lower() == "proband"
-                    ]
-                )
-                > 1
-            ):
-                family_dict["check"] = "ERROR"
-                bad_positions = (
-                    family_subset[
-                        family_subset["relationship"].str.lower() == "proband"
-                    ].index
-                    + 2
-                ).tolist()
-                pos_print = ",".join([str(i) for i in bad_positions])
-                family_dict["error row"] = pos_print
-            else:
-                family_dict["check"] = "PASS"
-                family_dict["error row"] = ""
-        else:
-            family_dict["check"] = "ERROR"
-            family_dict["error row"] = "no proband"
+        family_dict["family_id"] = "all"
+        family_dict["check"] = "ERROR"
+        bad_positions = (family_df[family_df["relationship"].isna()].index + 2).tolist()
+        pos_print = ",".join([str(i) for i in bad_positions])
+        family_dict["error row"] = pos_print
         check_list.append(family_dict)
-    check_df = pd.DataFrame.from_records(check_list)
-    if check_df.shape[0] > 0:
-        check_df["error row"] = check_df["error row"].str.wrap(30)
-        check_df["family_id"] = check_df["family_id"].str.wrap(25)
     else:
-        pass
+        for family_id in family_df["family_id"].dropna().unique():
+            family_dict = {}
+            family_dict["family_id"] = family_id
+            family_subset = family_df[family_df["family_id"] == family_id]
+            if "proband" in family_subset["relationship"].str.lower().tolist():
+                if (
+                    len(
+                        family_subset[
+                            family_subset["relationship"].str.lower() == "proband"
+                        ]
+                    )
+                    > 1
+                ):
+                    family_dict["check"] = "ERROR"
+                    bad_positions = (
+                        family_subset[
+                            family_subset["relationship"].str.lower() == "proband"
+                        ].index
+                        + 2
+                    ).tolist()
+                    pos_print = ",".join([str(i) for i in bad_positions])
+                    family_dict["error row"] = pos_print
+                else:
+                    family_dict["check"] = "PASS"
+                    family_dict["error row"] = ""
+            else:
+                family_dict["check"] = "ERROR"
+                family_dict["error row"] = "no proband"
+            check_list.append(family_dict)
+        check_df = pd.DataFrame.from_records(check_list)
+        if check_df.shape[0] > 0:
+            check_df["error row"] = check_df["error row"].str.wrap(30)
+            check_df["family_id"] = check_df["family_id"].str.wrap(25)
+        else:
+            pass
 
     print_str = (
         print_str
