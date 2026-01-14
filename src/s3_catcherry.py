@@ -678,6 +678,15 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 elif "participant.participant_id" in node_df.columns: # in case of radiology files
                     participant_id = node_df.loc[node_file_id, "participant.participant_id"]
                 
+                elif "study.study_id" in node_df.columns: # in case of study-level files (e.g. in generic or clinical files)
+                    num_consent_groups = len(consent_group_df)
+                    if num_consent_groups == 1:
+                        consent_suffix = consent_group_df.iloc[0]["consent_group_suffix"]
+                        return consent_suffix
+                    else:
+                        catcherr_logger.error(f"Multiple consent groups present; cannot determine consent suffix for study-level file.")
+                        return None
+                    
                 # look up the consent group ID and suffix
                 consent_group_id = participant_df.loc[participant_id, "consent_group.consent_group_id"]
                 consent_suffix = consent_group_df.loc[consent_group_id, "consent_group_suffix"]
@@ -687,7 +696,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 consent_suffix = None
 
             return consent_suffix
-        
+
         # DEEP SEARCH HELPER-LOOP FUNCTION
         def deep_search(start_sample_id, max_attempts = 10):
             """
@@ -768,7 +777,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     elif file_access_value == "Controlled":
                         # get consent number
                         consent_number = lookup_consent(lookup_df, node_file_id, catcherr_logger=catcherr_logger)
-                        if consent_number is None:
+                        consent_missing = pd.isna(consent_number) or str(consent_number).strip() == ""
+                        if consent_missing:
                             catcherr_logger.error(f"Could not determine consent for {node_file_id}; skipping ACL/Authz update.")
                             continue
 
