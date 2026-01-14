@@ -86,10 +86,10 @@ def tabBreakeRy_dcc(manifest: str) -> tuple:
         # To ensure unique ids across multiple studies,
         # we are pre-appending the study_id onto all key_ids and
         # their linkages.
-        logger.info("Generating uuid values for key and linkage columns")
+        logger.info("Generating guid values for key and linkage columns")
         for column in df.columns:
             if column in keys:
-                df["uuid"] = df[column].apply(
+                df["guid"] = df[column].apply(
                     lambda x: get_dcc_uuid(x=x, study_id=project_id, node_name=node)
                 )
             elif column[-5:] != ".guid" and "." in column:
