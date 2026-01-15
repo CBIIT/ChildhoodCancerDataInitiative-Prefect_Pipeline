@@ -666,19 +666,24 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             Traces a sample id through the participant and consent sheets
             to retrieve the final consent_group_suffix.
             """
-            # look up the participant ID --> consent group ID --> consent group suffix
             try:
-                # look up the sample ID and participant ID
-                if "sample.sample_id" in node_df.columns:
+                # look up file ID --> sample ID --> participant ID
+                participant_id = None
+                if "sample.sample_id" in node_df.columns and pd.notna(node_df.loc[node_file_id, "sample.sample_id"]):
                     sample_id = node_df.loc[node_file_id, "sample.sample_id"]
-                    participant_id = sample_df.loc[sample_id, "participant.participant_id"]
-                    if pd.isna(participant_id): # in case of pdx/cell line 
-                        participant_id = deep_search(sample_id) 
-                
-                elif "participant.participant_id" in node_df.columns: # in case of radiology files
+                    if sample_id in sample_df.index:
+                        participant_id = sample_df.loc[sample_id, "participant.participant_id"]
+                    
+                        # in case of pdx/cell line detour (file ID --> sample ID --> pdx ID --> sample ID --> participant ID)
+                        if pd.isna(participant_id): 
+                            participant_id = deep_search(sample_id) 
+
+                # in case of radiology files (file ID --> participant ID)
+                elif "participant.participant_id" in node_df.columns and pd.notna(node_df.loc[node_file_id, "participant.participant_id"]): 
                     participant_id = node_df.loc[node_file_id, "participant.participant_id"]
-                
-                elif "study.study_id" in node_df.columns: # in case of study-level files (e.g. in generic or clinical files)
+                    
+                # in case of study-level files in generic / clinical files (file ID --> study ID --> consent)
+                elif "study.study_id" in node_df.columns and pd.notna(node_df.loc[node_file_id, "study.study_id"]):
                     num_consent_groups = len(consent_group_df)
                     if num_consent_groups == 1:
                         consent_suffix = consent_group_df.iloc[0]["consent_group_suffix"]
@@ -687,9 +692,12 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         catcherr_logger.error(f"Multiple consent groups present; cannot determine consent suffix for study-level file.")
                         return None
                     
-                # look up the consent group ID and suffix
-                consent_group_id = participant_df.loc[participant_id, "consent_group.consent_group_id"]
-                consent_suffix = consent_group_df.loc[consent_group_id, "consent_group_suffix"]
+                # trace the participant ID --> the consent group ID --> suffix
+                consent_suffix = None
+                if pd.notna(participant_id) and participant_id in participant_df.index:
+                    consent_group_id = participant_df.loc[participant_id, "consent_group.consent_group_id"]
+                    if pd.notna(consent_group_id) and consent_group_id in consent_group_df.index:
+                        consent_suffix = consent_group_df.loc[consent_group_id, "consent_group_suffix"]
             
             except Exception as e:
                 catcherr_logger.error(f"Error looking up consent code for file_id {node_file_id}: {e}")
