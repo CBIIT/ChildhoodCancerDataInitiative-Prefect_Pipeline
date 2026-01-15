@@ -225,7 +225,7 @@ def runner(
     if catcherr_out_file is not None:
 
         # run ValidationRy
-        runner_logger.info("Running ValidationRy flow").
+        runner_logger.info("Running ValidationRy flow")
         try:
             validation_out_file = ValidationRy_new(catcherr_out_file, input_template)
         except:
