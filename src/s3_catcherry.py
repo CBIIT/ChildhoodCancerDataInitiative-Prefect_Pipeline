@@ -667,7 +667,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             to retrieve the final consent_group_suffix.
             """
             try:
-                # look up file ID --> sample ID --> participant ID
+                # default look up (file ID --> sample ID --> participant ID)
                 participant_id = None
                 if "sample.sample_id" in node_df.columns and pd.notna(node_df.loc[node_file_id, "sample.sample_id"]):
                     sample_id = node_df.loc[node_file_id, "sample.sample_id"]
@@ -685,14 +685,17 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 # in case of study-level files in generic / clinical files (file ID --> study ID --> consent)
                 elif "study.study_id" in node_df.columns and pd.notna(node_df.loc[node_file_id, "study.study_id"]):
                     num_consent_groups = len(consent_group_df)
-                    if num_consent_groups == 1:
+                    if num_consent_groups > 1:
+                        consent_suffix = consent_group_df["consent_group_suffix"].to_list()
+                        return consent_suffix
+                    elif num_consent_groups == 1:
                         consent_suffix = consent_group_df.iloc[0]["consent_group_suffix"]
                         return consent_suffix
                     else:
-                        catcherr_logger.error(f"Multiple consent groups present; cannot determine consent suffix for study-level file.")
+                        catcherr_logger.error(f"No consent groups present; cannot determine consent suffix for study-level file.")
                         return None
                     
-                # trace the participant ID --> the consent group ID --> suffix
+                # resume default look up, trace the participant ID --> the consent group ID --> suffix
                 consent_suffix = None
                 if pd.notna(participant_id) and participant_id in participant_df.index:
                     consent_group_id = participant_df.loc[participant_id, "consent_group.consent_group_id"]
@@ -705,7 +708,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
             return consent_suffix
 
-        # DEEP SEARCH HELPER-LOOP FUNCTION
+        # DEEP SEARCH HELPER LOOP FUNCTION
         def deep_search(start_sample_id, max_attempts = 10):
             """
             traces a sample id through a chain of pdx/cell_line links until the final participant_id is found.
@@ -761,11 +764,12 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             # return the participant id
             return participant_id
 
+
         # MAIN ACL/AUTHZ GENERATOR BLOCK
         # pull dbgap_accession from study node
         dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
 
-        # iterate through each node and update acl/authz values
+        # iterate through each node
         for node in dict_nodes: 
             if "file_access" in meta_dfs[node].columns:
                 print(f"ACL/Authz, checking node: {node}")
@@ -773,7 +777,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 lookup_df = df.set_index(f"{node}_id", drop=False)  # keep a lookup copy with id column
                 file_id_col = f"{node}_id"
 
-                # for each row, determine if the ACL is properly formed and fix otherwise
+                # for each row in node, assign an acl/authz value
                 for index, row in df.iterrows():
                     node_file_id = row[file_id_col]
                     file_access_value = df.at[index, "file_access"]
@@ -785,14 +789,33 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     elif file_access_value == "Controlled":
                         # get consent number
                         consent_number = lookup_consent(lookup_df, node_file_id, catcherr_logger=catcherr_logger)
-                        consent_missing = pd.isna(consent_number) or str(consent_number).strip() == ""
+
+                        # abort if consent number is missing
+                        if not isinstance(consent_number, list): # single consent per file (most cases)
+                            consent_missing = pd.isna(consent_number) or str(consent_number).strip() == ""
+                        else: # multiple consents per file (study-level files)
+                            consent_missing = len(consent_number) == 0 or any(pd.isna(cn) or str(cn).strip() == "" for cn in consent_number)
                         if consent_missing:
                             catcherr_logger.error(f"Could not determine consent for {node_file_id}; skipping ACL/Authz update.")
                             continue
 
+                        # helper functions to format the acl/authz
+                        def format_acl(suffix):
+                            return f"'{dbgap_accession}.{suffix}'"
+                        def format_authz(suffix):
+                            return f"'/programs/{dbgap_accession}.{suffix}'"
+                        
                         # construct acl and authz values based on consent number
-                        acl_value = f"['{dbgap_accession}.{consent_number}']"
-                        authz_value = f"['/programs/{dbgap_accession}.{consent_number}']"
+                        if isinstance(consent_number, list):
+                            acl = [format_acl(cn) for cn in consent_number]
+                            authz = [format_authz(cn) for cn in consent_number]
+                            acl_value = "[" + ", ".join(acl) + "]"
+                            authz_value = "[" + ", ".join(authz) + "]"
+                        else:
+                            acl_value = f"[{format_acl(consent_number)}]"
+                            authz_value = f"[{format_authz(consent_number)}]"
+                        
+                        # assign acl and authz values
                         df.at[index, "acl"] = acl_value
                         df.at[index, "authz"] = authz_value
 
