@@ -1964,9 +1964,9 @@ def validate_acl_authz_single_sheet(node_name: str, file_object) -> str:
         "error value": ""
     }
     
-    # regex pattern for acl/authz of files with controlled access
-    acl_regex = r"^\[\'phs\d{6,}\.c\d+\'\]$"
-    authz_regex = r"^\[\'/programs/phs\d{6,}\.c\d+\'\]$"
+    # regex pattern for acl/authz of files with controlled access (works on lists)
+    acl_regex = r"^\[\'phs\d{6,}\.c\d+\'(?:\s*,\s*\'phs\d{6,}\.c\d+\')*\]$"
+    authz_regex = r"^\[\'/programs/phs\d{6,}\.c\d+\'(?:\s*,\s*\'/programs/phs\d{6,}\.c\d+\')*\]$"
 
     # for each row, determine if the acl/authz is properly formatted
     # if not, record the row number in acl_authz_error_rows
