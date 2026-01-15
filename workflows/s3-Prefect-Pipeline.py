@@ -218,14 +218,14 @@ def runner(
         output_folder=output_folder,
         output_path=catcherr_out_file,
         output_log=catcherr_out_log,
-        wf_step="CatchERR",
+        #wf_step="CatchERR",
         sub_folder="1_CatchERR_output",
     )
 
     if catcherr_out_file is not None:
 
         # run ValidationRy
-        runner_logger.info("Running ValidationRy flow")
+        runner_logger.info("Running ValidationRy flow").
         try:
             validation_out_file = ValidationRy_new(catcherr_out_file, input_template)
         except:
@@ -237,7 +237,7 @@ def runner(
             output_folder=output_folder,
             output_path=validation_out_file,
             output_log=None,
-            wf_step="ValidationRy",
+            #wf_step="ValidationRy",
             sub_folder="2_ValidationRy_output",
         )
 
@@ -261,7 +261,7 @@ def runner(
             output_folder=output_folder,
             output_path=sra_out_file,
             output_log=sra_out_log,
-            wf_step="CCDI-to-SRA",
+            #wf_step="CCDI-to-SRA",
             sub_folder="3_SRA_submisison_output",
         )
 
@@ -284,7 +284,7 @@ def runner(
             output_folder=output_folder,
             output_path=dbgap_output_folder,
             output_log=dbgap_out_log,
-            wf_step="CCDI-to-dbGaP",
+            #wf_step="CCDI-to-dbGaP",
             sub_folder="4_dbGaP_submisison_output",
         )
 
@@ -303,7 +303,7 @@ def runner(
             output_folder=output_folder,
             output_path=dcf_index_file,
             output_log=dcf_index_log,
-            wf_step="CCDI-to-DCF-Index",
+            #wf_step="CCDI-to-DCF-Index",
             sub_folder="5_DCF_index_output"
         )
 
@@ -325,7 +325,7 @@ def runner(
             output_folder=output_folder,
             output_path=tabbreaker_output_folder,
             output_log=tabbreaker_out_log,
-            wf_step="CCDI-to-TabBreaker",
+            #wf_step="CCDI-to-TabBreaker",
             sub_folder="6_TabBreaker_output",
         )
 
