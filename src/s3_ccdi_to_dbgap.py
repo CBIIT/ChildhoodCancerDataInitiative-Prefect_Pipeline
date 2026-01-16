@@ -628,16 +628,19 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     # create consent map dict to match consent id -> consent number
     # e.g. {"phs000000_GRU": "1", "phs000000_IRB": "2", "phs000000_HMB": "3"}
 
-    required_cols = {"consent_group_id", "consent_group_number", "consent_group_name"}
+    required_cols = {"consent_group_id", "consent_group_name", "consent_group_suffix"}
     
     if required_cols.issubset(consent_df.columns):
-        consent_map = dict(zip(consent_df['consent_group_id'], consent_df['consent_group_number']))
+        consent_map = dict(zip(
+            consent_df['consent_group_id'], 
+            consent_df['consent_group_suffix'].str.replace('c', '', regex=False)
+        ))
     
         # create the legend for what numbers correspond to what codes 
         # e.g. "1=GRU" "2=IRB" "3=HMB"
         consent_values_list = []
         for _, row in consent_df.iterrows():
-            number = row['consent_group_number']
+            number = row['consent_group_suffix'].replace('c', '')
             name = row['consent_group_name']
             consent_values_list.append(f"{number}={name}")
         logger.info(f"Generated Consent Definitions: {consent_values_list}")
