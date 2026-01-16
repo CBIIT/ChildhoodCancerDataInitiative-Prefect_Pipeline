@@ -1997,6 +1997,144 @@ def validate_key_id(
     return None
 
 
+@task(
+    name="Validate acl and authz of one sheet",
+    log_prints=True,
+    task_run_name="Validate acl and authz format of node {node_name}",
+)
+def validate_acl_authz_single_sheet(node_name: str, file_object) -> str:
+    """Performs acl/authz validation and returns a single-row chart per sheet"""
+    print_str = f"\n\t{node_name}:\n\t----------\n\t"
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+
+    # prepare dictionary to hold property check results (e.g. ERROR/PASS)
+    property_dict = {
+        "node": node_name, 
+        "property": "acl/authz values",
+        "check": "PASS",
+        "error value": ""
+    }
+    
+    # regex pattern for acl/authz of files with controlled access (works on lists)
+    acl_regex = r"^\[\'phs\d{6,}\.c\d+\'(?:\s*,\s*\'phs\d{6,}\.c\d+\')*\]$"
+    authz_regex = r"^\[\'/programs/phs\d{6,}\.c\d+\'(?:\s*,\s*\'/programs/phs\d{6,}\.c\d+\')*\]$"
+
+    # for each row, determine if the acl/authz is properly formatted
+    # if not, record the row number in acl_authz_error_rows
+    troubled_acl_authz_values = []
+    for index, row in node_df.iterrows():
+
+        # get file access value (e.g. Controlled/Open)
+        file_access_value = str(row.get("file_access", "")).strip().capitalize()
+        acl_value = str(row.get("acl", ""))
+        authz_value = str(row.get("authz", ""))
+        
+        # check "Controlled" files acl/authz match the expected format
+        if file_access_value == "Controlled":
+            if not re.match(acl_regex, acl_value):
+                troubled_acl_authz_values.append(acl_value)
+            if not re.match(authz_regex, authz_value):
+                troubled_acl_authz_values.append(authz_value)
+
+        # check "Open" files acl/authz match the expected format
+        elif file_access_value == "Open":
+            if acl_value != "['*']":
+                troubled_acl_authz_values.append(acl_value)
+            if authz_value != "['/open']":
+                troubled_acl_authz_values.append(authz_value)
+
+    # update the dictionary if errors were found
+    if troubled_acl_authz_values:
+        # filter the unique values and list them
+        unique_troubles = list(set(troubled_acl_authz_values))
+        property_dict["check"] = "ERROR\nregex mismatch"
+        property_dict["error value"] = ",".join(unique_troubles)
+    else:
+        pass
+    
+    # create/format dataframe from property dictionary
+    check_df = pd.DataFrame.from_records([property_dict])
+    check_df["error value"] = check_df["error value"].astype(str).str.wrap(30)
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
+    
+    return print_str
+
+
+@flow(name="Validate acl and authz", log_prints=True)
+def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -> None:
+    """Performs acl/authz validation between nodes of entire manifest file"""
+    section_title = (
+        "\n\n"
+        + header_str("ACL/AUTHZ Regex Check")
+        + "\nIf there are unexpected or missing values in the acl/authz property between nodes, they will be reported below:\n----------\n"
+    )
+
+    # prepare the list of sheets with acl/authz values to check
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    filtered_list = []
+    for node_name in node_list:
+        node_df = file_object.read_sheet_na(sheetname=node_name)
+        if "file_access" in node_df.columns:
+            filtered_list.append(node_name)
+    node_list = filtered_list
+
+    if not node_list:
+        acl_authz_validate_str = "No sheets with acl/authz values found for validation."
+    
+    #send each node for acl/authz validation
+    else:
+        acl_authz_validate_future = validate_acl_authz_single_sheet.map(
+            node_list, file_object
+        )
+        acl_authz_validate_str = "".join([i.result() for i in acl_authz_validate_future])
+    
+    # print results to output file
+    return_str = section_title + acl_authz_validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
+
+@flow(name="Validate acl and authz", log_prints=True)
+def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -> None:
+    """Performs acl/authz validation between nodes of entire manifest file"""
+    section_title = (
+        "\n\n"
+        + header_str("ACL/AUTHZ Regex Check")
+        + "\nIf there are unexpected or missing values in the acl/authz property between nodes, they will be reported below:\n----------\n"
+    )
+
+    # prepare the list of sheets with acl/authz values to check
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    filtered_list = []
+    for node_name in node_list:
+        node_df = file_object.read_sheet_na(sheetname=node_name)
+        if "file_access" in node_df.columns:
+            filtered_list.append(node_name)
+    node_list = filtered_list
+
+    if not node_list:
+        acl_authz_validate_str = "No sheets with acl/authz values found for validation."
+    
+    #send each node for acl/authz validation
+    else:
+        acl_authz_validate_future = validate_acl_authz_single_sheet.map(
+            node_list, file_object
+        )
+        acl_authz_validate_str = "".join([i.result() for i in acl_authz_validate_future])
+    
+    # print results to output file
+    return_str = section_title + acl_authz_validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
 @flow(
     name="CCDI_ValidationRy_refactor",
     log_prints=True,
@@ -2129,6 +2267,10 @@ def ValidationRy_new(file_path: str, template_path: str):
         node_list=nodes_to_validate,
         output_file=output_file,
     )
+
+    # validate acl/authz values
+    validation_logger.info("Checking for acl/authz format errors")
+    validate_acl_authz(file_path, output_file, nodes_to_validate)
 
     validation_logger.info(
         f"Process Complete. The output file can be found here: {output_file}"

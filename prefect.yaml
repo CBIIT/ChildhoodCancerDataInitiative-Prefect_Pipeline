@@ -1367,6 +1367,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
+
   - name: model-to-submission-ccdi-dcc-v3
     version: null
     tags: ["DCC","Prod","V3", "Python3.13"]
@@ -1452,42 +1453,16 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: liftover-generic-CCDI-DCC
+####################################
+# TEMPORARY DCC TEST DEPLOYMENT FOR MULTI-CONSENT FEATURE
+  # This will be deleted before PR merge 
+  - name: TEST-dcc-data-curation-2gb-v3-multi-consent
     version: null
-    tags: [ "Production", "V3", "CCDI", "DCC" ]
-    description: null
-    entrypoint: workflows/submission_liftover.py:submission_liftover_ccdi_to_dcc
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
-
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-          include_submodules: True
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
-      work_queue_name: null
-      job_variables: {}
-
-  - name: dcc-data-curation-16gb-v3
-    version: null
-    tags: ["Production", "DCC", "V3"]
-    description: null
+    tags: ["TEST", "DCC", "V3", "Multi-Consent", "Multi", "Consent","JIRA-2138"]
+    description: "Testing multi-consent updates with DDC manifests"
     entrypoint: workflows/s3-Prefect-Pipeline-dcc.py:runner_dcc
     schedule: null
-
+    
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
@@ -1498,36 +1473,39 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
+          branch: feature/multi-consent-update 
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
-      work_queue_name: null
-      job_variables: {}
-
-  - name: dcc-data-curation-SRA-16gb-v3
+      
+####################################
+# TEMPORARY CCDI TEST DEPLOYMENT FOR MULTI-CONSENT FEATURE
+  # This will be deleted before PR merge 
+  
+  - name: TEST-ccdi-data-curation-2gb-v3-multi-consent
     version: null
-    tags: ["Production", "DCC", "SRA", "V3"]
-    description: null
-    entrypoint: workflows/s3-Prefect-Pipeline-dcc.py:runner_dcc_w_SRA
+    tags: ["TEST", "Multi", "Consent", "Multi-Consent", "V3", "JIRA-2138"]
+    description: "Testing multi-consent updates in catcherr, validation, index, and dbGaP scripts"
+    entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
 
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
-      template_tag: "1.0.0"
-      
+      file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
+      #runner: "your_uniq_id"
+      #optional parmaeters below, uncomment if needed
+      #output_folder: "output_folder_name"
+      #template_path: "inputs/CCDI_Submission_Template_v1.7.1.xlsx"
+      #sra_template_path: "inputs/phsXXXXXX.xlsx"
+
     # pull action to overwrite from file pull action
     pull:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
+          branch: feature/multi-consent-update
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
@@ -1535,6 +1513,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
+####################################

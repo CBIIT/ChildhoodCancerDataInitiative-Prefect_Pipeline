@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import ast
 from datetime import date
 import warnings
 from src.utils import get_logger, get_date, get_time
@@ -734,23 +735,40 @@ def CCDI_to_IndexeRy(manifest_path: str) -> tuple:
     def simple_add(index_prop, ccdi_prop):
         if ccdi_prop in df_join_all:
             index_df[index_prop] = df_join_all[ccdi_prop]
-
         return
-
+    
     # add the subset of columns needed for DCF indexing
     simple_add("guid", "dcf_indexd_guid")
     simple_add("md5", "md5sum")
     simple_add("size", "file_size")
     simple_add("acl", "acl")
+    simple_add("url", "file_url")
 
+    # function to convert acl to authz, if needed
+    def generate_authz_value(raw_acl_value):
+        """
+        converts a acl string into the corresponding authz value.
+        generally the authz is the acl value prefixed with /programs/.
+        """
+        try:
+            if pd.isna(raw_acl_value) or str(raw_acl_value).strip() == "":
+                logger.error(f"Error: Missing ACL value; skipping row.")
+                return ""
+            elif raw_acl_value == "['*']":
+                return "['/open']"
+            else:
+                    acl_value = ast.literal_eval(raw_acl_value)
+                    authz = [f"/programs/{item}" for item in acl_value]
+                    return str(authz)
+        except Exception as e:
+            logger.error(f"Error: Failed to parse acl string: {raw_acl_value}. Exception: {e}")
+            return None
+    
+    # generate authz from acl if authz is not present
     if "authz" in df_join_all.columns:
         index_df["authz"] = df_join_all["authz"]
     else:
-        authz = df_join_all["acl"].dropna().unique().tolist()[0]
-        authz = "['/programs/" + authz[2:]
-        index_df["authz"] = authz
-
-    simple_add("url", "file_url")
+        index_df["authz"] = df_join_all["acl"].apply(generate_authz_value)
 
     # add information for CGC
     # study information
