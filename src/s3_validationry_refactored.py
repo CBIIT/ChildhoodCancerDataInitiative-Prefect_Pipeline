@@ -698,37 +698,35 @@ def validate_regex(
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
     date_regex = [
-            # Numeric formats (day/month/year or month/day/year)
-            r"\b\d{2}/\d{2}/\d{4}\b",       # 01/01/2020
-            r"\b\d{1,2}/\d{1,2}/\d{4}\b",   # 1/1/2020
-            r"\b\d{2}-\d{2}-\d{4}\b",       # 01-01-2020
-            r"\b\d{1,2}-\d{1,2}-\d{4}\b",   # 1-1-2020
-            r"\b\d{4}/\d{2}/\d{2}\b",       # 2020/01/01
-            r"\b\d{4}-\d{2}-\d{2}\b",       # 2020-01-01
-        
-            # Compact numeric formats (turned off due to high false positive rate)
-            #r"\b\d{8}\b",                   # 20200101
-        
-            # Alphanumeric short month
-            r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{4}\b",   # 1Jan2020, 01 Jan 2020
-            r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{4}\b", # Jan 1, 2020 / Jan 1 2020
-        
-            # Alphanumeric full month
-            r"\b\d{1,2}[ ]?[A-Za-z]+[ ]?\d{4}\b",     # 1 January 2020
-            r"\b[A-Za-z]+[ ]?\d{1,2},?[ ]?\d{4}\b",   # January 1, 2020
-        
-            # Variants with apostrophes or 2-digit years
-            r"\b\d{1,2}/\d{1,2}/\d{2}\b",   # 01/01/20
-            r"\b\d{1,2}-\d{1,2}-\d{2}\b",   # 01-01-20
-            r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{2}\b",  # 1Jan20
-            r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{2}\b" # Jan 1 20
+        # Numeric formats (day/month/year or month/day/year)
+        r"\b\d{2}/\d{2}/\d{4}\b",  # 01/01/2020
+        r"\b\d{1,2}/\d{1,2}/\d{4}\b",  # 1/1/2020
+        r"\b\d{2}-\d{2}-\d{4}\b",  # 01-01-2020
+        r"\b\d{1,2}-\d{1,2}-\d{4}\b",  # 1-1-2020
+        r"\b\d{4}/\d{2}/\d{2}\b",  # 2020/01/01
+        r"\b\d{4}-\d{2}-\d{2}\b",  # 2020-01-01
+        # Compact numeric formats (turned off due to high false positive rate)
+        # r"\b\d{8}\b",                   # 20200101
+        # Alphanumeric short month
+        r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{4}\b",  # 1Jan2020, 01 Jan 2020
+        r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{4}\b",  # Jan 1, 2020 / Jan 1 2020
+        # Alphanumeric full month
+        r"\b\d{1,2}[ ]?[A-Za-z]+[ ]?\d{4}\b",  # 1 January 2020
+        r"\b[A-Za-z]+[ ]?\d{1,2},?[ ]?\d{4}\b",  # January 1, 2020
+        # Variants with apostrophes or 2-digit years
+        r"\b\d{1,2}/\d{1,2}/\d{2}\b",  # 01/01/20
+        r"\b\d{1,2}-\d{1,2}-\d{2}\b",  # 01-01-20
+        r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{2}\b",  # 1Jan20
+        r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{2}\b",  # Jan 1 20
     ]
     # Problematic regex
     # A month name or abbreviation and a 1, 2, or 4-digit number, in either order, separated by some non-letter, non-number characters or not separated, e.g., "JAN '93", "FEB64", "May 3rd" (but not "May be 14").
     # ```'[a-zA-Z]{3}[\ ]?([0-9]|[0-9]{2}|[0-9]{4})[a-zA-Z]{0,2}'```
-    socsec_regex = [r"\b\d{3}-\d{2}-\d{4}\b"] # US Social Security Number 123-45-6789
-    phone_regex = [r"\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"] # US Phone number (123) 456-7890, 123-456-7890, 123.456.7890, +1 123-456-7890
-    zip_regex = [r"\b\d{5}(?:-\d{4})?\b"] # US Zip code 12345 or 12345-6789
+    socsec_regex = [r"\b\d{3}-\d{2}-\d{4}\b"]  # US Social Security Number 123-45-6789
+    phone_regex = [
+        r"\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"
+    ]  # US Phone number (123) 456-7890, 123-456-7890, 123.456.7890, +1 123-456-7890
+    zip_regex = [r"\b\d{5}(?:-\d{4})?\b"]  # US Zip code 12345 or 12345-6789
     all_regex = date_regex + socsec_regex + phone_regex + zip_regex
 
     validate_str_future = validate_regex_one_sheet.map(
@@ -828,49 +826,64 @@ def validate_age(node_list: list[str], file_path: str, output_file: str):
         outf.write(return_str)
     return None
 
+
 # determine if there is a proband relationship in the family_relationship tab and if so, ensure that there is only one proband per family_id
 @flow(name="Validate Proband in Family", log_prints=True)
 def validate_proband_in_family(file_path: str, output_file: str):
     section_title = (
         "\n\n"
         + header_str("Proband in Family Check")
-        + "\nThis section will check the Family Relationships tab to ensure that there are probands, and there is only one per family_id:\n----------\n"
+        + "\nThis section will check the Family Relationships tab to ensure that there are probands, and there is only one per family_id."
+        + "\nIf you have the family_id of 'MISSING', please be aware that this indicates missing data in the required relationship column."
+        + "\n\tPlease ensure that all relationship values are filled in and run validation again.\n----------\n"
     )
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
     family_df = file_object.read_sheet_na(sheetname="family_relationship")
     print_str = "\n\tfamily relationship\n\t----------\n\t"
     check_list = []
-    for family_id in family_df["family_id"].dropna().unique():
+    # if there are any relationship values that are empty, then error
+    if family_df["relationship"].isna().any():
         family_dict = {}
-        family_dict["family_id"] = family_id
-        family_subset = family_df[family_df["family_id"] == family_id]
-        if "proband" in family_subset["relationship"].str.lower().tolist():
-            if (
-                len(
-                    family_subset[
-                        family_subset["relationship"].str.lower() == "proband"
-                    ]
-                )
-                > 1
-            ):
-                family_dict["check"] = "ERROR"
-                bad_positions = (
-                    family_subset[
-                        family_subset["relationship"].str.lower() == "proband"
-                    ].index
-                    + 2
-                ).tolist()
-                pos_print = ",".join([str(i) for i in bad_positions])
-                family_dict["error row"] = pos_print
-            else:
-                family_dict["check"] = "PASS"
-                family_dict["error row"] = ""
-        else:
-            family_dict["check"] = "ERROR"
-            family_dict["error row"] = "no proband"
+        family_dict["family_id"] = "MISSING"
+        family_dict["check"] = "ERROR"
+        bad_positions = (family_df[family_df["relationship"].isna()].index + 2).tolist()
+        pos_print = ",".join([str(i) for i in bad_positions])
+        family_dict["error row"] = pos_print
         check_list.append(family_dict)
-    check_df = pd.DataFrame.from_records(check_list)
+        check_df = pd.DataFrame.from_records(check_list)
+    else:
+        for family_id in family_df["family_id"].dropna().unique():
+            family_dict = {}
+            family_dict["family_id"] = family_id
+            family_subset = family_df[family_df["family_id"] == family_id]
+            if "proband" in family_subset["relationship"].str.lower().tolist():
+                if (
+                    len(
+                        family_subset[
+                            family_subset["relationship"].str.lower() == "proband"
+                        ]
+                    )
+                    > 1
+                ):
+                    family_dict["check"] = "ERROR"
+                    bad_positions = (
+                        family_subset[
+                            family_subset["relationship"].str.lower() == "proband"
+                        ].index
+                        + 2
+                    ).tolist()
+                    pos_print = ",".join([str(i) for i in bad_positions])
+                    family_dict["error row"] = pos_print
+                else:
+                    family_dict["check"] = "PASS"
+                    family_dict["error row"] = ""
+            else:
+                family_dict["check"] = "ERROR"
+                family_dict["error row"] = "no proband"
+            check_list.append(family_dict)
+        check_df = pd.DataFrame.from_records(check_list)
+
     if check_df.shape[0] > 0:
         check_df["error row"] = check_df["error row"].str.wrap(30)
         check_df["family_id"] = check_df["family_id"].str.wrap(25)
@@ -1211,7 +1224,8 @@ def check_file_basename(file_df: DataFrame) -> str:
         print_str = print_str + "\tINFO: all file names were found in their file_url.\n"
     return print_str
 
-def check_file_extension_type_match(file_df : DataFrame) -> str:
+
+def check_file_extension_type_match(file_df: DataFrame) -> str:
     """Checks if the file_name extension matches the file type value"""
     WARN_FLAG = True
     print_str = ""
@@ -1222,27 +1236,60 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         # extract file extension with no leading period and in lower case
         file_extension = os.path.splitext(file_name)[1].lower().lstrip(".")
 
-        #if you pull out a .gz extension
+        # create tbi and bai flag exceptions
+        if ".tbi" in file_extension:
+            tbi_flag = True
+        else:
+            tbi_flag = False
+
+        if ".bai" in file_extension:
+            bai_flag = True
+        else:
+            bai_flag = False
+
+        # if you pull out a .gz extension
         if file_extension == "gz":
             # handle .nii.gz and .vcf.gz and .fastq.gz cases
-            file_extension = os.path.splitext(os.path.splitext(file_name)[0])[1].lower().lstrip(".") + ".gz"
+            file_extension = (
+                os.path.splitext(os.path.splitext(file_name)[0])[1].lower().lstrip(".")
+                + ".gz"
+            )
 
         # infer file type from file extension
         if "gz" in file_extension.lower():
-            #the inferred type is based on the extension before .gz
-            inferred_type = file_extension[:-3]
+            # the inferred type is based on the extension before .gz
+            file_extension = file_extension[:-3]
+            inferred_type = file_extension.lower()
+
+        # handle common file extensions exceptions where there are different extensions for the same file type
+        if tbi_flag:
+            inferred_type = "tbi"
+        elif bai_flag:
+            inferred_type = "bai"
         elif len(file_extension) == 0:
-            inferred_type = "txt"
+            inferred_type = [
+                "txt",
+                "tsv",
+            ]  # if there is no extension, likely a text or tsv file
+        elif len(file_extension) > 6:
+            inferred_type = [
+                "txt",
+                "tsv",
+            ]  # if the extension is longer than 6 characters, likely not a standard extension
         elif "dcm" == file_extension:
             inferred_type = "dicom"
         elif "fq" == file_extension:
             inferred_type = "fastq"
         elif "fa" == file_extension:
             inferred_type = "fasta"
+        elif "nii" == file_extension:
+            inferred_type = "nifti"
+        elif "tab" == file_extension:
+            inferred_type = ["tsv", "txt"]
         else:
-            inferred_type = file_extension
+            inferred_type = file_extension.lower()
 
-        if file_type.lower() != inferred_type.lower():
+        if file_type.lower() not in inferred_type:
             extension_type_mismatch.append(
                 {
                     "node": row["node"],
@@ -1277,6 +1324,7 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
             + "\tINFO: all file name extensions matched their inferred file types from the file_name.\n"
         )
     return print_str
+
 
 def count_buckets(df_file: DataFrame) -> list:
     df_file["bucket"] = df_file["file_url"].str.split("/").str[2]
@@ -1332,15 +1380,16 @@ def validate_bucket_objs_in_manifest(
     df_file = extract_object_file_meta(
         nodes_list=file_node_list, file_object=file_object
     )
-    
+
     # exclude open IDC buckets since buckets are too cumbersome to check against
-    # and contain data not in our purview 
-    df_file = df_file[~df_file["file_url"].str.contains("idc-open-data", regex=False)].reset_index(drop=True)
-    
+    # and contain data not in our purview
+    df_file = df_file[
+        ~df_file["file_url"].str.contains("idc-open-data", regex=False)
+    ].reset_index(drop=True)
+
     readable_buckets = [
         bucket for bucket in readable_buckets if bucket not in ["idc-open-data"]
     ]
-    
 
     df_file_urls = df_file["file_url"].tolist()
     del df_file
@@ -1442,7 +1491,7 @@ def validate_file_metadata(
     # check for file basename in url
     return_str = return_str + check_file_basename(file_df=df_file)
 
-    #check for file extension matching to file_type
+    # check for file extension matching to file_type
     return_str = return_str + check_file_extension_type_match(file_df=df_file)
 
     # print the return_str to output_file
@@ -1458,7 +1507,7 @@ def validate_unique_guid_str(node_list: list[str], file_object) -> str:
 
     Args:
         file_object (_type_): CheckCCDI object
-        node_list (list[str]): list of node names. 
+        node_list (list[str]): list of node names.
 
     Returns:
         str: report str
@@ -1486,11 +1535,13 @@ def validate_unique_guid_str(node_list: list[str], file_object) -> str:
     )
     if error_guid_df.shape[0] == 0:
         return_str = (
-            return_str + f"\tPASS: Every unique indexd guid is assigned for only one url.\n"
+            return_str
+            + f"\tPASS: Every unique indexd guid is assigned for only one url.\n"
         )
     else:
         return_str = (
-            return_str + "\n\tERROR: Found guid(s) that was assigned to more than one url."
+            return_str
+            + "\n\tERROR: Found guid(s) that was assigned to more than one url."
         )
         return_str = (
             return_str

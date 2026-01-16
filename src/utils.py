@@ -30,7 +30,7 @@ import hashlib
 from urllib.parse import urlparse
 from shutil import copy2
 from prefect.cache_policies import NO_CACHE
-
+from typing import Union
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -73,6 +73,13 @@ class CCDI_Tags(Task):
         tags_list = self.get_tags()
         tags = [i["name"] for i in tags_list]
         return tags
+    
+    def get_latest_tag(self) -> str:
+        tags = self.get_tags_only()
+        if len(tags) > 0:
+            return tags[0]
+        else:
+            return None
 
     def if_tag_exists(self, tag: str, logger):
         tags = self.get_tags_only()
@@ -89,7 +96,7 @@ class CCDI_Tags(Task):
         tag_element = [i for i in tags_list if i["name"] == tag][0]
         return tag_element
 
-    def download_tag_manifest(self, tag: str, logger) -> None:
+    def download_tag_manifest(self, tag: str, logger) -> Union[str, None]:
         check_tag = self.if_tag_exists(tag=tag, logger=logger)
         if check_tag:
             tag_element = self.get_tag_element(tag=tag)
@@ -140,6 +147,14 @@ class CCDI_Tags(Task):
                 f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
             )
             return None
+    
+    def download_latest_tag_manifest(self, logger) -> Union[str, None]:
+        latest_tag = self.get_latest_tag()
+        if latest_tag is not None:
+            return self.download_tag_manifest(tag=latest_tag, logger=logger)
+        else:
+            logger.error("No tags found in ccdi-model GitHub repo")
+            return None
 
 class CCDI_DCC_Tags(Task):
     """Class that fetches available releases, checks if a release exists,
@@ -171,12 +186,19 @@ class CCDI_DCC_Tags(Task):
         else:
             return False
 
+    def get_latest_tag(self) -> str:
+        tags = self.get_tags_only()
+        if len(tags) > 0:
+            return tags[0]
+        else:
+            return None
+
     def get_tag_element(self, tag: str):
         tags_list = self.get_tags()
         tag_element = [i for i in tags_list if i["name"] == tag][0]
         return tag_element
 
-    def download_tag_manifest(self, tag: str, logger) -> None:
+    def download_tag_manifest(self, tag: str, logger) -> Union[str, None]:
         check_tag = self.if_tag_exists(tag=tag, logger=logger)
         if check_tag:
             tag_element = self.get_tag_element(tag=tag)
@@ -226,6 +248,14 @@ class CCDI_DCC_Tags(Task):
             logger.error(
                 f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
             )
+            return None
+    
+    def download_latest_tag_manifest(self, logger) -> Union[str, None]:
+        latest_tag = self.get_latest_tag()
+        if latest_tag is not None:
+            return self.download_tag_manifest(tag=latest_tag, logger=logger)
+        else:
+            logger.error("No tags found in ccdi-model GitHub repo")
             return None
 
 def get_ccdi_latest_release() -> str:
@@ -474,7 +504,7 @@ def ccdi_wf_inputs_ul(
     output_folder: str,
     ccdi_manifest: str,
     ccdi_template: str,
-    sra_template: str,
+    sra_template: Union[str, None] = None,
 ):
     """Upload inputs of CCDI data curation workflow into designated bucket"""
     # upload input files
@@ -490,22 +520,24 @@ def ccdi_wf_inputs_ul(
         sub_folder="workflow_inputs",
         newfile=ccdi_template,
     )
-    file_ul(
-        bucket,
-        output_folder=output_folder,
-        sub_folder="workflow_inputs",
-        newfile=sra_template,
-    )
+    if sra_template is not None:
+        file_ul(
+            bucket,
+            output_folder=output_folder,
+            sub_folder="workflow_inputs",
+            newfile=sra_template,
+        )
+    else:
+        pass
 
 
 @flow(
     name="Upload ccdi workflow outputs",
-    flow_run_name="upload_workflow_outputs_{wf_step}",
+    flow_run_name="upload_workflow_outputs_{sub_folder}",
 )
 def ccdi_wf_outputs_ul(
     bucket: str,
     output_folder: str,
-    wf_step: str,
     sub_folder: str,
     output_path: typing.Optional[str] = None,
     output_log: typing.Optional[str] = None,
