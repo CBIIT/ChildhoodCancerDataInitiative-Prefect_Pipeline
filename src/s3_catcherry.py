@@ -301,8 +301,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             anatomic_site_mapping_path, sep="\t", dtype=str
         )
         # create a mapping dictionary
-        anatomic_site_dict = anatomic_site_mapping.set_index("uberon_text")[
-            "anatomic_site_term"
+        anatomic_site_dict = anatomic_site_mapping.set_index("anatomic_site_term")[
+            "uberon_text"
         ].to_dict()
         catcherr_logger.info(
             "Filling in anatomic_site values based on uberon_text column"
