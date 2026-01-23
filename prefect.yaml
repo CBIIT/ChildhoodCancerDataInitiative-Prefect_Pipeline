@@ -79,13 +79,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.run_shell_script:
-          script: |
-            git fetch --unshallow
-            git checkout 0afc0cad96ae214126a196aaaa6823f56d545891
-          directory: "{{ clone-step.directory }}"
-          stream_output: true
+          branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
@@ -119,13 +113,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.run_shell_script:
-          script: |
-            git fetch --unshallow
-            git checkout 0afc0cad96ae214126a196aaaa6823f56d545891
-          directory: "{{ clone-step.directory }}"
-          stream_output: true
+          branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
@@ -159,13 +147,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.run_shell_script:
-          script: |
-            git fetch --unshallow
-            git checkout 0afc0cad96ae214126a196aaaa6823f56d545891
-          directory: "{{ clone-step.directory }}"
-          stream_output: true
+          branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
@@ -199,13 +181,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.run_shell_script:
-          script: |
-            git fetch --unshallow
-            git checkout 0afc0cad96ae214126a196aaaa6823f56d545891
-          directory: "{{ clone-step.directory }}"
-          stream_output: true
+          branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
@@ -239,13 +215,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.run_shell_script:
-          script: |
-            git fetch --unshallow
-            git checkout 0afc0cad96ae214126a196aaaa6823f56d545891
-          directory: "{{ clone-step.directory }}"
-          stream_output: true
+          branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
