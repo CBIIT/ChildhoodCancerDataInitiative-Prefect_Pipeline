@@ -656,9 +656,15 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         # create look up tables 
         catcherr_logger.info("Creating lookup tables for consent tracing")
-        sample_df = meta_dfs["sample"].set_index("sample_id")
-        participant_df = meta_dfs["participant"].set_index("participant_id")
         consent_group_df = meta_dfs["consent_group"].set_index("consent_group_id")
+        participant_df = meta_dfs["participant"].set_index("participant_id")
+
+        if "sample" in meta_dfs:
+            sample_df = meta_dfs["sample"].set_index("sample_id")
+            no_samples = False
+        else:
+            catcherr_logger.info("No samples present in manifest - lookups will be skipped")
+            no_samples = True
         
         # LOOK UP FUNCTION
         def lookup_consent(node_df, node_file_id, catcherr_logger):
@@ -787,6 +793,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         df.at[index, "authz"] = "['/open']"
 
                     elif file_access_value == "Controlled":
+                        # skip if no samples present
+                        if no_samples:
+                            catcherr_logger.info(f"Skipping ACL/Authz update for {node_file_id} - no samples in manifest for consent lookup")
+                            continue 
+                        
                         # get consent number
                         consent_number = lookup_consent(lookup_df, node_file_id, catcherr_logger=catcherr_logger)
 
