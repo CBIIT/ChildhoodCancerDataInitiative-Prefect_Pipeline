@@ -3,7 +3,7 @@ Abdominal fibromatosis	Fibromatous neoplasms	ICD-O-3.2
 Acinar cell carcinoma	Acinar cell neoplasms; Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute erythroid leukemia	Myeloid leukemias	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute leukemia, NOS	Leukemias, NOS	ICD-O-3.2
-Acute Leukemias of Ambiguous Lineage	Other Heme Tumors	WHO5 Pediatric Tumor
+Acute Leukemias of Ambiguous Lineage	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Acute lymphoblastic leukemia, NOS	Leukemias, Lymphoblastic Leukemia	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute megakaryoblastic leukemia	Myeloid leukemias	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute monocytic leukemia	Myeloid leukemias	ICD-O-3.2;WHO5 Pediatric Tumor
@@ -47,8 +47,8 @@ Acute myelomonocytic leukemia, NOS	Myeloid leukemias	ICD-O-3.2
 Acute Promyelocytic Leukemia	Myeloid Leukemia	WHO5 Pediatric Tumor
 Acute Promyelocytic Leukemia with PML::RARA fusion	Myeloid Leukemia	WHO5 Pediatric Tumor
 Acute promyelocytic leukemia, t(15;17)(q22;q11-12)	Myeloid leukemias	ICD-O-3.2
-Acute Undifferentiated Leukemia	Other Heme Tumors	WHO5 Pediatric Tumor
-Acute Undifferentiated Leukemia, KMT2A rearrangement	Other Heme Tumors	WHO5 Pediatric Tumor
+Acute Undifferentiated Leukemia	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
+Acute Undifferentiated Leukemia, KMT2A rearrangement	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Adamantinoma of long bones	Miscellaneous bone tumors	ICD-O-3.2
 Adamantinomatous craniopharyngioma	Craniopharyngioma	WHO5 Pediatric Tumor
 Adenocarcinoma	Other Solid Tumors	WHO5 Pediatric Tumor
@@ -101,7 +101,7 @@ ATRT-SHH	Atypical teratoid/rhabdoid tumor	WHO CNS5
 ATRT-TYR	Atypical teratoid/rhabdoid tumor	WHO CNS5
 ATRT, NOS or NEC	Atypical teratoid/rhabdoid tumor	WHO CNS5
 Atypical choroid plexus papilloma	Gliomas;Choroid Plexus Tumors	ICD-O-3.2;WHO CNS5
-Atypical Dendritic Cell Tumor	Other Heme Tumors	WHO5 Pediatric Tumor
+Atypical Dendritic Cell Tumor	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Atypical meningioma	Meningiomas	ICD-O-3.2
 Atypical teratoid/rhabdoid tumor	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Atypical Teratoid/Rhabdoid Tumors	Atypical Teratoid/Rhabdoid Tumors	WHO5 Pediatric Tumor
@@ -154,7 +154,7 @@ Basal cell carcinoma, NOS	Basal cell neoplasms	ICD-O-3.2
 Benign cystic nephroma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Benign fibrous histiocytoma, NOS	Fibromatous neoplasms	ICD-O-3.2
 Bizarre Parosteal Osteochondromatous Proliferation	Other Solid Tumors	WHO5 Pediatric Tumor
-Blood Cancer of Unknown Primary	Other Heme Tumors	WHO5 Pediatric Tumor
+Blood Cancer of Unknown Primary	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Blue nevus, malignant	Nevi and melanomas	ICD-O-3.2
 Brain Tumor, NEC	Other Brain Tumors	WHO5 Pediatric Tumor
 Brain Tumor, NOS	Other Brain Tumors	WHO5 Pediatric Tumor
@@ -202,9 +202,9 @@ Choroid Plexus Tumors, NOS	Choroid Plexus Tumors	WHO5 Pediatric Tumor
 Chromophobe Renal Cell Carcinoma	Renal Tumors	WHO5 Pediatric Tumor
 Chronic eosinophilic leukemia	Myeloproliferative neoplasms	ICD-O-3.2
 Chronic myelogenous leukemia, BCR/ABL positive	Myeloid leukemias	ICD-O-3.2
-Chronic Myeloid Leukemia	Other Heme Tumors	WHO5 Pediatric Tumor
+Chronic Myeloid Leukemia	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Chronic myeloid leukemia, NOS	Myeloid leukemias	ICD-O-3.2
-Chronic Neutrophilic Leukemia	Other Heme Tumors	WHO5 Pediatric Tumor
+Chronic Neutrophilic Leukemia	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 CIC-rearranged sarcoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Circumscribed Astrocytic Gliomas	Low-grade Gliomas	WHO5 Pediatric Tumor
 Circumscribed Astrocytic Gliomas, NOS	Low-grade Gliomas	WHO5 Pediatric Tumor
@@ -288,7 +288,7 @@ Encapsulated papillary carcinoma	Ductal and lobular neoplasms	ICD-O-3.2
 Endometrioid adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Endometrioid adenoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Endovascular papillary angioendothelioma	Blood vessel tumors	ICD-O-3.2
-Eosinophilia, NOS	Other Heme Tumors	
+Eosinophilia, NOS	Other Hematopoietic Tumors	
 Eosinophilic Solid and Cystic Renal Cell Carcinoma	Renal Tumors	WHO5 Pediatric Tumor
 Ependymal Tumors	Ependymoma	WHO5 Pediatric Tumor
 Ependymal Tumors, NEC	Ependymoma	WHO5 Pediatric Tumor
@@ -349,7 +349,7 @@ Gastrointestinal stromal tumor	Complex mixed and stromal neoplasms	ICD-O-3.2
 Gastrointestinal stromal tumor, benign	Complex mixed and stromal neoplasms	ICD-O-3.2
 Gastrointestinal stromal tumor, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
 General Bone Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
-General Leukemia	Other Heme Tumors	WHO5 Pediatric Tumor
+General Leukemia	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Genital rhabdomyoma	Myomatous neoplasms	ICD-O-3.2
 Germ cell tumor, nonseminomatous	Germ cell neoplasms	ICD-O-3.2
 Germ Cell Tumor, NOS	Germ Cell Tumors	WHO5 Pediatric Tumor
@@ -387,7 +387,7 @@ Hemangioendothelioma, malignant	Blood vessel tumors	ICD-O-3.2
 Hemangioendothelioma, NOS	Blood vessel tumors	ICD-O-3.2
 Hemangioma, NOS	Blood vessel tumors	ICD-O-3.2
 Hemangiosarcoma	Blood vessel tumors	ICD-O-3.2
-Hematologic Malignancy, NOS	Other Heme Tumors	WHO5 Pediatric Tumor
+Hematologic Malignancy, NOS	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Hepatoblastoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Hepatoblastoma, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
 Hepatocellular Carcinoma	Other Solid Tumors	WHO5 Pediatric Tumor
@@ -426,14 +426,14 @@ Intraductal papillary mucinous neoplasm with an associated invasive carcinoma	Cy
 Intrathyroidal Thymic Carcinoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Intravascular large B-cell lymphoma	Other CNS	WHO CNS5
 Juvenile Granulosa Cell Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
-Juvenile Myelomonocytic Leukemia	Other Heme Tumors	WHO5 Pediatric Tumor
+Juvenile Myelomonocytic Leukemia	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Juvenile myelomonocytic leukemia, NOS	Other leukemias	ICD-O-3.2
 Juvenile xanthogranuloma	Renal Tumors	WHO5 Pediatric Tumor
 Juxtagliomerular Cell Tumor	Renal Tumors	WHO5 Pediatric Tumor
 Kaposiform Hemangioendothelioma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Kidney Tumor, NOS	Renal Tumors	WHO5 Pediatric Tumor
 Lactotroph adenoma	Adenomas and adenocarcinomas	ICD-O-3.2
-Langerhans cell histiocytosis	Other Heme Tumors	WHO5 Pediatric Tumor
+Langerhans cell histiocytosis	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Langerhans cell histiocytosis, disseminated	Other CNS	WHO CNS5
 Langerhans cell histiocytosis, NOS	Neoplasms of histiocytes and accessory lymphoid cells	ICD-O-3.2
 Large cell medulloblastoma	Gliomas	ICD-O-3.2
@@ -529,8 +529,8 @@ Metastatic Tumor, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
 Mixed germ cell tumor	Germ cell neoplasms;Germ Cell Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Mixed glioma	Gliomas	ICD-O-3.2
 Mixed phenotype acute leukemia with t(v;11q23); MLL rearranged	Leukemias, NOS	ICD-O-3.2
-Mixed phenotype acute leukemia, B/myeloid, NOS	Leukemias, NOS;Other Heme Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
-Mixed phenotype acute leukemia, T/myeloid, NOS	Leukemias, NOS;Other Heme Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Mixed phenotype acute leukemia, B/myeloid, NOS	Leukemias, NOS;Other Hematopoietic Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Mixed phenotype acute leukemia, T/myeloid, NOS	Leukemias, NOS;Other Hematopoietic Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Mixed type rhabdomyosarcoma	Myomatous neoplasms	ICD-O-3.2
 Monomorphic Posttransplant Lymphoproliferative Disorder	Lymphoproliferative Diseases	WHO5 Pediatric Tumor
 Mucinous adenocarcinoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
@@ -547,17 +547,17 @@ Myelodysplastic syndrome with excess blasts	Myelodysplastic syndromes	ICD-O-3.2
 Myelodysplastic syndrome with multilineage dysplasia	Myelodysplastic syndromes	ICD-O-3.2
 Myelodysplastic syndrome with single lineage dysplasia	Myelodysplastic syndromes	ICD-O-3.2
 Myelodysplastic syndrome, NOS	Myelodysplastic syndromes	ICD-O-3.2
-Myelodysplastic Syndromes	Other Heme Tumors	WHO5 Pediatric Tumor
+Myelodysplastic Syndromes	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Myeloid leukemia associated with Down syndrome	Myeloid leukemias	ICD-O-3.2
 Myeloid Leukemia of Down Syndrome	Myeloid Leukemia	WHO5 Pediatric Tumor
 Myeloid leukemia, NOS	Myeloid leukemias	ICD-O-3.2
 Myeloid Neoplasm, NOS	Myeloid Leukemia	WHO5 Pediatric Tumor
 Myeloid Neoplasms Associated with Germline Predisposition	Myeloid Leukemia	WHO5 Pediatric Tumor
-Myeloid sarcoma	Myeloid leukemias;Other Heme Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Myeloid sarcoma	Myeloid leukemias;Other Hematopoietic Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Myeloproliferative neoplasm, unclassifiable	Other hematological neoplasms	ICD-O-3.2
-Myeloproliferative Neoplasms	Other Heme Tumors	WHO5 Pediatric Tumor
-Myeloproliferative Neoplasms, NEC	Other Heme Tumors	WHO5 Pediatric Tumor
-Myeloproliferative Neoplasms, NOS	Other Heme Tumors	WHO5 Pediatric Tumor
+Myeloproliferative Neoplasms	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
+Myeloproliferative Neoplasms, NEC	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
+Myeloproliferative Neoplasms, NOS	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Myoepithelial carcinoma	Complex mixed and stromal neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Myoepithelioma, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
 Myofibroblastic Neoplasm, NOS	Soft Tissue Tumors	WHO5 Pediatric Tumor
@@ -718,7 +718,7 @@ Rhabdomyoma, NOS	Myomatous neoplasms	ICD-O-3.2
 Rhabdomyosarcoma	CNS Sarcoma	WHO CNS5
 Rhabdomyosarcoma, NEC	Rhabdomyosarcoma	WHO5 Pediatric Tumor
 Rhabdomyosarcoma, NOS	Myomatous neoplasms;Rhabdomyosarcoma	ICD-O-3.2;WHO5 Pediatric Tumor
-Rosai-Dorfman disease	Other Heme Tumors	WHO5 Pediatric Tumor
+Rosai-Dorfman disease	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Rosette-forming glioneuronal tumor	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
 Rosette-forming Glioneuronal Tumors	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
 Salivary Gland Anlage Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
@@ -867,6 +867,7 @@ Vipoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
 
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
+
 
 
 
