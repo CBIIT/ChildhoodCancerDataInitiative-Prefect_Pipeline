@@ -61,8 +61,8 @@ Adenocarcinoma, intestinal type	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma, metastatic, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Adenocarcinoma, NEC	Other Solid Tumors	WHO5 Pediatric Tumor
 Adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
-Adenoid cystic carcinoma	Adenomas and adenocarcinomas, Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
-Adenoma, NOS	Adenomas and adenocarcinomas, Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Adenoid cystic carcinoma	Adenomas and adenocarcinomas;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Adenoma, NOS	Adenomas and adenocarcinomas;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Adenomatoid Odontogenic Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Adenosarcoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Adrenal cortical adenoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -867,4 +867,5 @@ Vipoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
 
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
+
 
