@@ -191,7 +191,7 @@ Chondrosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Chordoid glioma	Low-grade Glioma	WHO CNS5
 Chordoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Chordoma, NOS	Miscellaneous tumors	ICD-O-3.2
-Choriocarcinoma	Germ cell tumors	WHO5 Pediatric Tumor
+Choriocarcinoma	Germ Cell tumors	WHO5 Pediatric Tumor
 Choriocarcinoma combined with other germ cell elements	Trophoblastic neoplasms	ICD-O-3.2
 Choriocarcinoma, NOS	Trophoblastic neoplasms	ICD-O-3.2
 Choroid plexus carcinoma	Gliomas;Choroid Plexus Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
@@ -221,7 +221,7 @@ CNS embryonal tumor with rhabdoid features	Neuroepitheliomatous neoplasms	ICD-O-
 CNS embryonal tumor, NOS or NEC	Gliomas;Other CNS Embryonal tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 CNS germ cell tumor, NOS or NEC	CNS Germ Cell Tumors	WHO CNS5
 CNS Germinoma	CNS Germ Cell Tumors	WHO CNS5
-CNS mature teratoma	Germ cell tumors	WHO CNS5
+CNS mature teratoma	Germ Cell tumors	WHO CNS5
 CNS neuroblastoma, FOXR2-activated	Other CNS Embryonal tumors	WHO5 Pediatric Tumor
 CNS Non-Germinomatous Germ Cell Tumor	CNS Germ Cell Tumors	WHO CNS5
 CNS Sarcoma, NOS or NEC	CNS Sarcoma	WHO CNS5
@@ -867,6 +867,7 @@ Vipoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
 
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
+
 
 
 
