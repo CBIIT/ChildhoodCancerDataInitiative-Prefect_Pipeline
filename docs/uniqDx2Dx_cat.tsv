@@ -100,7 +100,7 @@ ATRT-MYC	Atypical teratoid/rhabdoid tumor	WHO CNS5
 ATRT-SHH	Atypical teratoid/rhabdoid tumor	WHO CNS5
 ATRT-TYR	Atypical teratoid/rhabdoid tumor	WHO CNS5
 ATRT, NOS or NEC	Atypical teratoid/rhabdoid tumor	WHO CNS5
-Atypical choroid plexus papilloma	Gliomas;Choroid Plexus tumors	ICD-O-3.2;WHO CNS5
+Atypical choroid plexus papilloma	Gliomas;Choroid Plexus Tumors	ICD-O-3.2;WHO CNS5
 Atypical Dendritic Cell Tumor	Other Heme Tumors	WHO5 Pediatric Tumor
 Atypical meningioma	Meningiomas	ICD-O-3.2
 Atypical teratoid/rhabdoid tumor	Neuroepitheliomatous neoplasms	ICD-O-3.2
@@ -194,10 +194,10 @@ Chordoma, NOS	Miscellaneous tumors	ICD-O-3.2
 Choriocarcinoma	Germ cell tumors	WHO5 Pediatric Tumor
 Choriocarcinoma combined with other germ cell elements	Trophoblastic neoplasms	ICD-O-3.2
 Choriocarcinoma, NOS	Trophoblastic neoplasms	ICD-O-3.2
-Choroid plexus carcinoma	Gliomas;Choroid Plexus tumors	ICD-O-3.2;WHO5 Pediatric Tumor
-Choroid plexus papilloma	Choroid Plexus tumors	WHO5 Pediatric Tumor
+Choroid plexus carcinoma	Gliomas;Choroid Plexus Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Choroid plexus papilloma	Choroid Plexus Tumors	WHO5 Pediatric Tumor
 Choroid plexus papilloma, NOS	Gliomas	ICD-O-3.2
-Choroid plexus tumor	Choroid Plexus tumors	WHO CNS5
+Choroid plexus tumor	Choroid Plexus Tumors	WHO CNS5
 Choroid Plexus Tumors, NOS	Choroid Plexus Tumors	WHO5 Pediatric Tumor
 Chromophobe Renal Cell Carcinoma	Renal Tumors	WHO5 Pediatric Tumor
 Chronic eosinophilic leukemia	Myeloproliferative neoplasms	ICD-O-3.2
@@ -867,6 +867,7 @@ Vipoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
 
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
+
 
 
 
