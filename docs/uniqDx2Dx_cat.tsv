@@ -74,7 +74,7 @@ Adrenocortical Tumor, Uncertain Malignant Potential	Endocrine and Neuroendocrine
 Adult-type Diffuse Gliomas	High-Grade Gliomas	WHO5 Pediatric Tumor
 Aggressive fibromatosis	Fibromatous neoplasms	ICD-O-3.2
 Alveolar rhabdomyosarcoma	Myomatous neoplasms, Rhabdomyosarcoma	ICD-O-3.2;WHO5 Pediatric Tumor
-Alveolar soft part sarcoma	Granular cell tumors and alveolar soft part sarcomas, Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Alveolar soft part sarcoma	Granular cell tumors and alveolar soft part sarcomas;Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Ameloblastoma, NOS	Odontogenic tumors	ICD-O-3.2
 Anaplastic Large Cell Lymphoma	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
 Anaplastic large cell lymphoma, ALK positive	Hodgkin and non-Hodgkin lymphomas;Non-Hodgkin Lymphoma	ICD-O-3.2;WHO5 Pediatric Tumor
@@ -867,5 +867,6 @@ Vipoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
 
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
+
 
 
