@@ -369,7 +369,7 @@ Gliomatosis cerebri	Gliomas	ICD-O-3.2
 Glioneuronal and Neuronal Tumors	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
 Glioneuronal and Neuronal Tumors, NEC	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
 Glioneuronal and Neuronal Tumors, NOS	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
-Glioneuronal and neuronal tumors, NOS or NEC	Glioneuronal and neuronal tumors	WHO CNS5
+Glioneuronal and neuronal tumors, NOS or NEC	Glioneuronal and Neuronal Tumors	WHO CNS5
 Gliosarcoma	Gliomas	ICD-O-3.2
 Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2
 Glomus tumor, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
@@ -865,4 +865,5 @@ Unknown	Unknown	Other
 Vipoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Vipoma, malignant	Adenomas and adenocarcinomas	ICD-O-3.2
 Wilms Tumor	Renal Tumors	WHO5 Pediatric Tumor
+
 Yolk sac tumor, NOS	Germ cell neoplasms	ICD-O-3.2
