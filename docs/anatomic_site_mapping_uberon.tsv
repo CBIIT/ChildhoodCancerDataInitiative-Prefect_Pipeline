@@ -20,6 +20,7 @@ Arm, NOS	C76.4	arm	UBERON_0001460
 Ascending colon	C18.2	ascending colon	UBERON_0001156
 Autonomic nervous system, NOS	C47.9	autonomic nervous system	UBERON_0002410
 Axillary tail of breast	C50.6	axillary tail of breast	UBERON_0035289
+Back, NOS	C76.7	dorsal thoracic segment of trunk	UBERON_0008231
 Base of tongue, NOS	C01.9	posterior part of tongue	UBERON_0010033
 Bile duct, NOS	C24.0	bile duct	UBERON_0002394
 Biliary tract, NOS	C24.9	biliary tree	UBERON_0001173
@@ -167,7 +168,7 @@ Mouth, NOS	C06.9	oral cavity	UBERON_0000167
 Mucosa of lip, NOS	C00.5	mucosa of lip	UBERON_0036294
 Mucosa of lower lip	C00.4	mucosa of lower lip	UBERON_0005032
 Mucosa of upper lip	C00.3	mucosa of upper lip	UBERON_0005031
-Muscle, NOS	C49.9	connective tissue	UBERON_0002384
+Muscle, NOS	C49.9	muscle tissue	UBERON_0002385
 Myometrium	C54.2	myometrium	UBERON_0001296
 Nasal cavity	C30.0	nasal cavity	UBERON_0001707
 Nasopharynx, NOS	C11.9	nasopharynx	UBERON_0001728
@@ -196,10 +197,10 @@ Pelvic bones, sacrum, coccyx and associated joints	C41.4	pelvic girdle region	UB
 Pelvic lymph nodes	C77.5	pelvic lymph node	UBERON_0015876
 Pelvis, NOS	C76.3	pelvic complex	UBERON_0010709
 Penis, NOS	C60.9	penis	UBERON_0000989
-Perineum, NOS	C76.3	pelvic region of trunk	UBERON_0002355
+Perineum, NOS	C76.3	perineum	UBERON_0002356
 Peripheral nerves and autonomic nervous system of head, face, and neck	C47.0	neck nerve	UBERON_0003430
 Peritoneal Fluid		peritoneal fluid	UBERON_0001268
-Peritoneum, NOS	C48.2	peritoneum	UBERON_0002358
+Perineum, NOS	C76.3	perineum	UBERON_0002356
 Pharynx, NOS	C14.0	pharynx	UBERON_0006562
 Pineal gland	C75.3	pineal body	UBERON_0001905
 Pituitary gland	C75.1	pituitary gland	UBERON_0000007
