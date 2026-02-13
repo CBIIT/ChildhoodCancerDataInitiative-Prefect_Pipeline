@@ -1551,6 +1551,7 @@ deployments:
     parameters:
       secret_name_path: "test-secret-path"
       secret_key_name: "test-secret"
+      account: "aws_account_id"
       
     # pull action to overwrite from file pull action
     pull:
