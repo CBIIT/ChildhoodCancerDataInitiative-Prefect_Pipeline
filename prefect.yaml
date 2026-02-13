@@ -1539,3 +1539,32 @@ deployments:
       name: ccdi-curation-16gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-secret-test-ccdi-dcc-v3
+    version: null
+    tags: ["TEST", "SVB", "CCDIDC-2287", "V3"]
+    description: null
+    entrypoint: workflows/secret_test.py:secret_pipeline
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      secret_name: "test-secret"
+      region_name: "us-east-1"
+      
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-2287-Test-secrets
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
