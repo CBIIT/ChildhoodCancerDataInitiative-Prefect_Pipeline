@@ -1,5 +1,5 @@
 from prefect import flow, task
-from utils import get_secret
+from src.utils import get_secret
 
 
 @task
