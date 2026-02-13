@@ -1,6 +1,7 @@
 from prefect import flow, task
 import boto3
 from botocore.exceptions import ClientError
+import json
 
 @task(name="ccdi get secret from secrets manager")
 def get_secret(secret_name_path: str, secret_key_name: str, account: str):
