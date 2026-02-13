@@ -1549,8 +1549,8 @@ deployments:
 
     # flow-specific parameters
     parameters:
+      secret_name_path: "test-secret-path"
       secret_name: "test-secret"
-      region_name: "us-east-1"
       
     # pull action to overwrite from file pull action
     pull:
