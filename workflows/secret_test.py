@@ -4,7 +4,7 @@ import boto3
 from botocore.exceptions import ClientError
 
 
-@flow(name="TEST Secret Retrieval Pipeline")
+@flow(name="TEST Secret Retrieval Pipeline", log_prints=True)
 def secret_pipeline(secret_name_path: str, secret_key_name: str) -> None:
     """
     Prefect pipeline that retrieves and prints a secret.
