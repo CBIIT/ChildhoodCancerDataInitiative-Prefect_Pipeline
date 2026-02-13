@@ -13,6 +13,6 @@ def secret_pipeline(secret_name: str, region_name: str) -> None:
         secret_name: Name of the secret to retrieve
         region_name: AWS region where the secret is stored
     """
-    secret_value = get_secret(secret_name, region_name)
+    secret_value = get_secret(secret_name=secret_name, region_name=region_name)
     print(f"Secret value: {secret_value}")
 
