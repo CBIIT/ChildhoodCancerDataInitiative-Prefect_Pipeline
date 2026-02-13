@@ -5,14 +5,14 @@ from botocore.exceptions import ClientError
 
 
 @flow(name="TEST Secret Retrieval Pipeline")
-def secret_pipeline(secret_name_path: str, secret_name: str) -> None:
+def secret_pipeline(secret_name_path: str, secret_key_name: str) -> None:
     """
     Prefect pipeline that retrieves and prints a secret.
     
     Args:
         secret_name_path: Path to the secret to retrieve
-        secret_name: Name of the secret to retrieve
+        secret_key_name: Name of the key within the secret to retrieve
     """
-    secret_value = get_secret(secret_name_path=secret_name_path, secret_name=secret_name)
+    secret_value = get_secret(secret_name_path, secret_key_name)
     print(f"Secret value: {secret_value}")
 
