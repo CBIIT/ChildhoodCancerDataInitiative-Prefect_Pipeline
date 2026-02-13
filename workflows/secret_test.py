@@ -14,5 +14,5 @@ def secret_pipeline(secret_name_path: str, secret_key_name: str) -> None:
         secret_key_name: Name of the key within the secret to retrieve
     """
     secret_value = get_secret(secret_name_path, secret_key_name)
-    print(f"Secret value: {secret_value}")
+    print(f"###########Secret value: {secret_value}############")
 
