@@ -3,7 +3,7 @@ import boto3
 from botocore.exceptions import ClientError
 import json
 
-@task(name="ccdi get secret from secrets manager")
+@task(name="ccdi get secret from secrets manager", log_prints=True)
 def get_secret(secret_name_path: str, secret_key_name: str, account: str):
     """Retrieve a secret hash from AWS Secrets Manager
 
@@ -16,6 +16,7 @@ def get_secret(secret_name_path: str, secret_key_name: str, account: str):
     """
     region_name = "us-east-1"
     secret_name_path = f"arn:aws:secretsmanager:{region_name}:{account}:secret:{secret_name_path}"
+    print(f"Retrieving secret from path: {secret_name_path} with key: {secret_key_name}")
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
