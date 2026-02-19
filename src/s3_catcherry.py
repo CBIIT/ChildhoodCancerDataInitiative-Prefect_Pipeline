@@ -653,18 +653,19 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             "\nThe following section will check the file_access values, and create derived values for acl and authz.\n----------",
             file=outf,
         )
-
-        # create look up tables 
+        
+        # LOOKUP TABLES
+        # confirm required dataframes(df) are present and create look up tables for consent tracing
+        # if not, log that lookups will be skipped and set a variable "missing_df" to skip lookups
         catcherr_logger.info("Creating lookup tables for consent tracing")
-        consent_group_df = meta_dfs["consent_group"].set_index("consent_group_id")
-        participant_df = meta_dfs["participant"].set_index("participant_id")
-
-        if "sample" in meta_dfs:
+        if "consent_group" in meta_dfs and "participant" in meta_dfs and "sample" in meta_dfs:
+            consent_group_df = meta_dfs["consent_group"].set_index("consent_group_id")
+            participant_df = meta_dfs["participant"].set_index("participant_id")
             sample_df = meta_dfs["sample"].set_index("sample_id")
-            no_samples = False
+            missing_df = False
         else:
-            catcherr_logger.info("No samples present in manifest - lookups will be skipped")
-            no_samples = True
+            catcherr_logger.info("No participants or samples present in manifest - lookups will be skipped")
+            missing_df = True
         
         # LOOK UP FUNCTION
         def lookup_consent(node_df, node_file_id, catcherr_logger):
@@ -793,9 +794,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         df.at[index, "authz"] = "['/open']"
 
                     elif file_access_value == "Controlled":
-                        # skip if no samples present
-                        if no_samples:
-                            catcherr_logger.info(f"Skipping ACL/Authz update for {node_file_id} - no samples in manifest for consent lookup")
+                        # skip if lookup dataframe missing
+                        if missing_df:
+                            catcherr_logger.info(f"Skipping ACL/Authz update for {node_file_id} - no samples or participants in manifest for consent lookup")
                             continue 
                         
                         # get consent number
