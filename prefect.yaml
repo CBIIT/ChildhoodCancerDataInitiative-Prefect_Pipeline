@@ -1540,9 +1540,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-secret-test-ccdi-dcc-v3
+  - name: secret-test-ccdi-dcc-v3
     version: null
-    tags: ["TEST", "SVB", "CCDIDC-2287", "V3"]
+    tags: ["PROD", "DCC", "CENTRAL WORKERS", "V3"]
     description: null
     entrypoint: workflows/secret_test.py:secret_pipeline
     schedule: null
@@ -1558,7 +1558,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2287-Test-secrets
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
