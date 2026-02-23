@@ -41,5 +41,5 @@ def secret_pipeline(secret_name_path: str, secret_key_name: str, account: str) -
         account: AWS account identifier
     """
     secret_value = get_secret(secret_name_path, secret_key_name, account)
-    print(f"###########Secret value: {secret_value}############")
+    print(f"########### Secret value: {secret_value} ############")
 
