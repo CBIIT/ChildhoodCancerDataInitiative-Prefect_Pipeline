@@ -1527,7 +1527,7 @@ def get_secret(secret_name_path: str, secret_key_name: str):
 
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
 
-@task(name="ccdi get secret from secrets manager in an external account from the centralized account", log_prints=True)
+@task(name="get secret from secrets manager in an external account", log_prints=True)
 def get_secret_centralized_worker(secret_name_path: str, secret_key_name: str, account: str):
     """Retrieve a secret hash from AWS Secrets Manager
 
