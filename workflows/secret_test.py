@@ -16,7 +16,6 @@ def get_secret(secret_name_path: str, secret_key_name: str, account: str):
     """
     region_name = "us-east-1"
     secret_name_path = f"arn:aws:secretsmanager:{region_name}:{account}:secret:{secret_name_path}"
-    print(f"Retrieving secret from path: {secret_name_path} with key: {secret_key_name}")
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
@@ -41,5 +40,9 @@ def secret_pipeline(secret_name_path: str, secret_key_name: str, account: str) -
         account: AWS account identifier
     """
     secret_value = get_secret(secret_name_path, secret_key_name, account)
-    print(f"########### Secret value: {secret_value} ############")
+    # test if secret value is a string and has length greater than 0
+    if isinstance(secret_value, str) and len(secret_value) > 0:
+        print("We successfully retrieved the secret value!")
+    else:
+        print("Failed to retrieve a valid secret value.")
 
