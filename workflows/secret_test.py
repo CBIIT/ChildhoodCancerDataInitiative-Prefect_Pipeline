@@ -42,7 +42,7 @@ def secret_pipeline(secret_name_path: str, secret_key_name: str, account: str) -
     secret_value = get_secret(secret_name_path, secret_key_name, account)
     # test if secret value is a string and has length greater than 0
     if isinstance(secret_value, str) and len(secret_value) > 0:
-        print("We successfully retrieved the secret value!")
+        print("$$$$$$$$$ We successfully retrieved the secret value! $$$$$$$$$")
     else:
         print("Failed to retrieve a valid secret value.")
 
