@@ -2,7 +2,7 @@ from prefect import flow, task
 import boto3
 from botocore.exceptions import ClientError
 import json
-from utils import get_secret_centralized_worker
+from src.utils import get_secret_centralized_worker
 
 @flow(name="TEST Secret Retrieval Pipeline", log_prints=True)
 def secret_pipeline(secret_name_path: str, secret_key_name: str, account: str) -> None:
