@@ -1549,8 +1549,8 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      secret_name_path: "test-secret-path"
-      secret_key_name: "test-secret"
+      secret_name_path: "secret-name-path"
+      secret_key_name: "secret-key-name"
       account: "aws_account_id"
       
     # pull action to overwrite from file pull action
