@@ -188,7 +188,8 @@ def manifest_reader(manifest_path: str, form_parsing: str):
     file_name = os.path.basename(manifest_path)
     
     # perform sample mapping for clin files
-    sample_mapper(file_name)
+    if form_parsing in ['igm_only', 'cog_and_igm']:
+        sample_mapper(file_name)
 
     try:
         manifest_df = pd.read_excel(
