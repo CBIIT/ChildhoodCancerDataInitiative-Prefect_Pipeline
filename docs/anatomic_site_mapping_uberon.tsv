@@ -150,6 +150,7 @@ Lip, NOS	C00.9	lip	UBERON_0001833
 Liver	C22.0	liver	UBERON_0002107
 Long bones of lower limb and associated joints	C40.2	skeleton of pelvic complex	UBERON_0012476
 Long bones of upper limb, scapula and associated joints	C40.0	skeleton of pectoral complex	UBERON_0012475
+lower extremity	N/A	hindlimb	UBERON_0002103
 Lower gum	C03.1	gingiva of lower jaw	UBERON_0011602
 Lower limb, NOS	C76.5	hindlimb	UBERON_0002103
 Lower lobe, lung	C34.3	lower lobe of lung	UBERON_0008949
