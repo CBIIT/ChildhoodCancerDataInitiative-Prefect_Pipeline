@@ -65,7 +65,12 @@ Cloacogenic zone	C21.2	transitional glandular epithelium of anorectum	UBERON_841
 Colon, NOS	C18.9	colon	UBERON_0001155
 Commissure of lip	C00.6	labial commissure	UBERON_1000011
 Conjunctiva	C69.0	conjunctiva	UBERON_0001811
-Connective, subcutaneous and other soft tissues of thorax	C49.3	chest connective tissue	UBERON_0003572
+Connective, subcutaneous and other soft tissues of head, face, and neck	C49.0	head connective tissue	UBERON_0003566
+Connective, subcutaneous and other soft tissues of upper limb and shoulder	C49.1	shoulder connective tissue	UBERON_0003579
+Connective, subcutaneous and other soft tissues of lower limb and hip	C49.2	hip connective tissue	UBERON_0003576
+Connective, subcutaneous and other soft tissues of thorax	C49.3	thoracic cavity connective tissue	UBERON_0003593
+Connective, subcutaneous and other soft tissues of trunk, NOS	C49.6	trunk connective tissue	UBERON_0003586
+Connective, subcutaneous and other soft tissues, NOS	C49.9	connective tissue	UBERON_0002384
 Cornea, NOS	C69.1	cornea	UBERON_0000964
 Corpus uteri	C54.9	body of uterus	UBERON_0009853
 Cortex of adrenal gland	C74.0	adrenal cortex	UBERON_0001235
@@ -77,6 +82,7 @@ Diaphragm	C49.3	diaphragm	UBERON_0001103
 Dome of bladder	C67.1	dome of urinary bladder	UBERON_8600049
 Dorsal surface of tongue, NOS	C02.0	dorsum of tongue	UBERON_0009471
 Duodenum	C17.0	duodenum	UBERON_0002114
+Elbow, region	N/A	elbow	UBERON_0001461
 Endocervix	C53.0	endocervix	UBERON_0000458
 Endocrine gland, NOS	C75.9	endocrine gland	UBERON_0002368
 Endometrium	C54.1	endometrium	UBERON_0001295
@@ -116,6 +122,8 @@ Hematopoietic system, NOS	C42.4	hematopoietic system	UBERON_0002390
 Hepatic flexure of colon	C18.3	hepatic flexure of colon	UBERON_0022277
 Hypopharynx, NOS	C13.9	hypopharynx	UBERON_0001051
 Ileum	C17.2	ileum	UBERON_0002116
+Infratemporal Fossa	N/A	infratemporal fossa	UBERON_0013422
+Infratemporal fossa (PM)	N/A	infratemporal fossa	UBERON_0013422
 Inguinal region, NOS	C76.3	inguinal part of abdomen	UBERON_0008337
 Intestinal tract, NOS	C26.0	intestine	UBERON_0000160
 Intra-abdominal lymph nodes	C77.2	abdominal lymph node	UBERON_0002507
@@ -125,6 +133,7 @@ Islets of Langerhans	C25.4	islet of Langerhans	UBERON_0000006
 Isthmus uteri	C54.0	isthmus	UBERON_4300180
 Jejunum	C17.1	jejunum	UBERON_0002115
 Kidney, NOS	C64.9	kidney	UBERON_0002113
+Knee	N/A	knee	UBERON_0001465
 Labium majus	C51.0	labium majora	UBERON_0004085
 Labium minus	C51.1	labium minora	UBERON_0004014
 Lacrimal gland	C69.5	lacrimal gland	UBERON_0001817
@@ -147,7 +156,9 @@ Lower lobe, lung	C34.3	lower lobe of lung	UBERON_0008949
 Lower third of esophagus	C15.5	lower esophagus	UBERON_0013473
 Lower-inner quadrant of breast	C50.3	lower inner quadrant of breast	UBERON_0035477
 Lower-outer quadrant of breast	C50.5	lower outer quadrant of breast	UBERON_0035365
+Lumbosacral tumor	N/A	lumbar region of vertebral column	UBERON_0006074
 Lung, NOS	C34.9	lung	UBERON_0002048
+Lung & other sites	N/A	lung	UBERON_0002048
 Lymph node, NOS	C77.9	lymph node	UBERON_0000029
 Lymph nodes of axilla or arm	C77.3	axillary lymph node	UBERON_0001097
 Lymph nodes of head, face and neck	C77.0	craniocervical lymph node	UBERON_0038849
@@ -172,6 +183,7 @@ Muscle, NOS	C49.9	muscle tissue	UBERON_0002385
 Myometrium	C54.2	myometrium	UBERON_0001296
 Nasal cavity	C30.0	nasal cavity	UBERON_0001707
 Nasopharynx, NOS	C11.9	nasopharynx	UBERON_0001728
+Neck	N/A	neck	UBERON_0000974
 Nervous system, NOS	C72.9	nervous system	UBERON_0001016
 Nipple	C50.0	nipple	UBERON_0002030
 Occipital lobe	C71.4	occipital lobe	UBERON_0002021
@@ -189,6 +201,9 @@ Palate, NOS	C05.9	primitive palate	UBERON_0012316
 Pancreas, NOS	C25.9	pancreas	UBERON_0001264
 Pancreatic duct	C25.3	pancreatic duct	UBERON_0007329
 Parametrium	C57.3	parametrium	UBERON_0010391
+Parapharyngeal Area	N/A	parapharyngeal space	UBERON_0035618
+Parapharyngeal area (PM)	N/A	parapharyngeal space	UBERON_0035618
+Paraspinal	N/A	paraspinal region	UBERON_8480060
 Parathyroid gland	C75.0	parathyroid gland	UBERON_0001132
 Paraurethral gland	C68.1	minor vestibular gland	UBERON_0000461
 Parietal lobe	C71.3	parietal lobe	UBERON_0001872
@@ -226,6 +241,8 @@ Retina	C69.2	retina	UBERON_0000966
 Retromolar area	C06.2	retromolar triangle	UBERON_0012376
 Retroperitoneum	C48.0	retroperitoneal space	UBERON_0003693
 Rib, sternum, clavicle and associated joints	C41.3	thoracic rib cage	UBERON_0003252
+Right anterolateral knee	N/A	knee	UBERON_0001465
+Right ear canal	N/A	inner ear canal	UBERON_0003950
 Round ligament	C57.2	round ligament of uterus	UBERON_0006589
 Saliva		saliva	UBERON_0001836
 Salivary gland, NOS	C08.9	major salivary gland	UBERON_0001829
@@ -262,7 +279,8 @@ Supraglottis	C32.1	supraglottic part of larynx	UBERON_0036263
 Tail of pancreas	C25.2	tail of pancreas	UBERON_0001151
 Temporal lobe	C71.2	temporal lobe	UBERON_0001871
 Testis, NOS	C62.9	testis	UBERON_0000473
-Thigh, NOS	C76.5	leg	UBERON_0000978
+Thalamus 	N/A	thalamic complex	UBERON_0010225
+Thigh	N/A	femur	UBERON_0000981
 Thoracic esophagus	C15.1	thoracic part of esophagus	UBERON_0035216
 Thorax, NOS	C76.1	insect thorax	UBERON_6000015
 Throat	C14.0	throat	UBERON_0000341
@@ -276,10 +294,11 @@ Tonsillar pillar	C09.1	tonsillar pillar	UBERON_0036274
 Trachea	C33.9	trachea	UBERON_0003126
 Transverse colon	C18.4	transverse colon	UBERON_0001157
 Trigone of bladder	C67.0	trigone of urinary bladder	UBERON_0001257
+trunk (includes chest wall and back)	N/A	trunk	UBERON_0002100
 Umbilicus, NOS	C44.5	umbilicus	UBERON_0007118
 Undescended testis	C62.0	Sertoli cell barrier	UBERON_0036185
 Upper gum	C03.0	gingiva of upper jaw	UBERON_0011601
-Upper limb, NOS	C76.4	arm	UBERON_0001460
+Upper limb, NOS	C76.4	forelimb	UBERON_0002102
 Upper lobe, lung	C34.1	upper lobe of lung	UBERON_0008948
 Upper respiratory tract, NOS	C39.0	respiratory system	UBERON_0001004
 Upper third of esophagus	C15.3	upper esophagus	UBERON_0013472
