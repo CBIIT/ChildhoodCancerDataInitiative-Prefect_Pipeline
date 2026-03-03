@@ -1528,18 +1528,18 @@ def get_secret(secret_name_path: str, secret_key_name: str):
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
 
 @task(name="get secret from secrets manager in an external account", log_prints=True)
-def get_secret_centralized_worker(secret_name_path: str, secret_key_name: str, account: str):
+def get_secret_centralized_worker(secret_path_name: str, secret_key_name: str, account: str):
     """Retrieve a secret hash from AWS Secrets Manager
 
     Args:
-        secret_name_path (str): Secrets name path, i.e. ccdi/storage/inventory/token
+        secret_path_name (str): Secrets name path, i.e. ccdi/storage/inventory/token
         secret_key_name (str): Secret key name associated with hash/token
         account (str): AWS account identifier
     Returns:
         str: Secret hash/token
     """
     region_name = "us-east-1"
-    secret_name_path = f"arn:aws:secretsmanager:{region_name}:{account}:secret:{secret_name_path}"
+    secret_name_path = f"arn:aws:secretsmanager:{region_name}:{account}:secret:{secret_path_name}"
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)

@@ -47,36 +47,36 @@ def db_diff(
 
     # pull from first db
     db1_ip = get_secret_centralized_worker(
-        account_id=database_1_account_id,
-        secret_path=database_1_secret_path,
-        secret_key=database_1_secret_key_ip,
+        secret_path_name=database_1_secret_path,
+        secret_key_name=database_1_secret_key_ip,
+        account=database_1_account_id,
     )
     db1_username = get_secret_centralized_worker(
-        account_id=database_1_account_id,
-        secret_path=database_1_secret_path,
-        secret_key=database_1_secret_key_username,
+        secret_path_name=database_1_secret_path,
+        secret_key_name=database_1_secret_key_username,
+        account=database_1_account_id,
     )
     db1_password = get_secret_centralized_worker(
-        account_id=database_1_account_id,
-        secret_path=database_1_secret_path,
-        secret_key=database_1_secret_key_password,
+        secret_path_name=database_1_secret_path,
+        secret_key_name=database_1_secret_key_password,
+        account=database_1_account_id,
     )
 
     # pull from second db
     db2_ip = get_secret_centralized_worker(
-        account_id=database_2_account_id,
-        secret_path=database_2_secret_path,
-        secret_key=database_2_secret_key_ip,
+        secret_path_name=database_2_secret_path,
+        secret_key_name=database_2_secret_key_ip,
+        account=database_2_account_id,
     )
     db2_username = get_secret_centralized_worker(
-        account_id=database_2_account_id,
-        secret_path=database_2_secret_path,
-        secret_key=database_2_secret_key_username,
+        secret_path_name=database_2_secret_path,
+        secret_key_name=database_2_secret_key_username,
+        account=database_2_account_id,
     )
     db2_password = get_secret_centralized_worker(
-        account_id=database_2_account_id,
-        secret_path=database_2_secret_path,
-        secret_key=database_2_secret_key_password,
+        secret_path_name=database_2_secret_path,
+        secret_key_name=database_2_secret_key_password,
+        account=database_2_account_id,
     )
 
     logger.info(f"Retrieved counts for DB1")
@@ -98,7 +98,7 @@ def db_diff(
 
     # merge two dataframes
     combined_df = count_db1.merge(
-        count_db2, on=["study_id", "node"], how="outer", suffixes=("database_1_count", "database_2_count")
+        count_db2, on=["study_id", "node"], how="outer", suffixes=("_database_1_count", "_database_2_count")
     )
     combined_df.fillna(0, inplace=True)
     combined_df["count_diff"] = combined_df["database_1_count"] - combined_df["database_2_count"]
