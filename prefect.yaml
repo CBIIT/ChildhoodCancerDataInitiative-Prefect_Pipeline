@@ -1569,3 +1569,42 @@ deployments:
       name: ccdi-dcc-2gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
+
+  - name: dcc-db_diff-v3
+    version: null
+    tags: ["Production","DCC","Centralized Worker","V3"]
+    description: null
+    entrypoint: workflows/db_diff_central_worker.py:db_diff
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "your_uniq_id"
+      database_1_account_id: "aws_account_id_1"
+      database_1_secret_path: "ccdi/nonprod/inventory/neo4j-db-creds"
+      database_1_secret_key_ip: "sandbox_ip"
+      database_1_secret_key_username: "sandbox_username"
+      database_1_secret_key_password: "sandbox_password"
+      database_2_account_id: "aws_account_id_2"
+      database_2_secret_path: "ccdi/nonprod/inventory/neo4j-db-creds"
+      database_2_secret_key_ip: "dev_ip"
+      database_2_secret_key_username: "dev_username"
+      database_2_secret_key_password: "dev_password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-16gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
