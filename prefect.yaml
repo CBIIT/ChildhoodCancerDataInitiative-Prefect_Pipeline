@@ -1609,7 +1609,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: dcc-file-remover-16gb-v3
+  - name: dcc-entry-remover-16gb-v3
     version: null
     tags: ["TEST","SVB","CCDIDC-2342", "DCC", "V3", "Centralized Worker"]
     description: null
