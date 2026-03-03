@@ -1572,7 +1572,7 @@ deployments:
 
   - name: dcc-db_diff-v3
     version: null
-    tags: ["TEST","Centralized Worker","V3"]
+    tags: ["Production","DCC","Centralized Worker","V3"]
     description: null
     entrypoint: workflows/db_diff_central_worker.py:db_diff
     schedule: null
@@ -1597,7 +1597,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2183_DB-Diff-Central-Worker
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
