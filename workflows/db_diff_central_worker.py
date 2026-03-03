@@ -8,7 +8,7 @@ from src.neo4j_data_tools import counts_DB_all_nodes_all_studies_w_secrets
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
-@flow(name="Get diff between sandbox and dev neo4j/memgraph instances", log_prints=True)
+@flow(name="Get diff between sandbox and dev neo4j or memgraph instances", log_prints=True)
 def db_diff(
     bucket: str,
     runner: str,
