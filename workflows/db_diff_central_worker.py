@@ -8,7 +8,7 @@ from src.neo4j_data_tools import counts_DB_all_nodes_all_studies_w_secrets
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 
-@flow(name="Get diff between sandbox and dev neo4j instances", log_prints=True)
+@flow(name="Get diff between sandbox and dev neo4j/memgraph instances", log_prints=True)
 def db_diff(
     bucket: str,
     runner: str,
@@ -23,7 +23,7 @@ def db_diff(
     database_2_secret_key_username: str,
     database_2_secret_key_password: str,
 ) -> None:
-    '''This flow will pull credentials for two neo4j db instances, get counts of all nodes in each db, and then output a tsv file with the counts and differences in counts between the two dbs. The output file will be saved to a specified bucket.
+    '''This flow will pull credentials for two neo4j/memgraph db instances, get counts of all nodes in each db, and then output a tsv file with the counts and differences in counts between the two dbs. The output file will be saved to a specified bucket.
     Args:
         bucket (str): the bucket to save the output file to
         runner (str): the name of the runner executing the flow, used for naming output folder
