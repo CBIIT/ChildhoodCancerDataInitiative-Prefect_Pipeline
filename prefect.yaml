@@ -1619,9 +1619,9 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
-      runner: ""
-      file_path: "s3://bucket-name/path/to/file"
-      entry_removal_file_path: "s3://bucket-name/path/to/entry_removal_file"
+      runner: "runner_id"
+      file_path: "path/to/file"
+      entry_removal_file_path: "path/to/entry_removal_file"
       
     # pull action to overwrite from file pull action
     pull:
