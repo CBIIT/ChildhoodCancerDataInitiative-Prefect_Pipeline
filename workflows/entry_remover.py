@@ -7,6 +7,7 @@ Remove specified entries (and any linked “child” entries) from a CCDI metada
 
 import os
 import datetime
+import warnings
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
