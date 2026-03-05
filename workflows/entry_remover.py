@@ -191,5 +191,5 @@ def entry_remover(bucket:str,runner:str,file_path: str, entry_removal_file_path:
 
     out_xlsx, log_txt = main(file=file_path, entry=entry_removal_file_path)
 
-    file_ul (newfile=out_xlsx, bucket=bucket, output_folder=output_folder)
-    file_ul (newfile=log_txt, bucket=bucket, output_folder=output_folder)
+    file_ul (newfile=out_xlsx, bucket=bucket, output_folder=output_folder, subfolder="")
+    file_ul (newfile=log_txt, bucket=bucket, output_folder=output_folder, subfolder="")
