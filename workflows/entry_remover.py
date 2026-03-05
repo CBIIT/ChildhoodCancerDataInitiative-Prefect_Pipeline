@@ -6,8 +6,6 @@ Remove specified entries (and any linked “child” entries) from a CCDI metada
 """
 
 import os
-import datetime
-import warnings
 import pandas as pd
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
@@ -43,65 +41,22 @@ def main(file: str, entry: str):
 
     logger.info("Reading CCDI Manifest file")
 
-    def read_xlsx(file_path: str, sheet: str):
-        # Read in excel file
-        warnings.simplefilter(action="ignore", category=UserWarning)
-        df = pd.read_excel(
-            file_path,
-            sheet,
-            dtype="string",
-            keep_default_na=False,
-            na_values=[
-                "",
-                "#N/A",
-                "#N/A N/A",
-                "#NA",
-                "-1.#IND",
-                "-1.#QNAN",
-                "-NaN",
-                "-nan",
-                "1.#IND",
-                "1.#QNAN",
-                "<NA>",
-                "N/A",
-                "NA",
-                "NULL",
-                "NaN",
-                "n/a",
-                "nan",
-                "null",
-            ],
-        )
-
-        # Remove leading and trailing whitespace from all cells
-        df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-
-        return df
-
-    # create workbook
-    xlsx_model = pd.ExcelFile(manifest_path)
-
-    # create dictionary for dfs
-    model_dfs = {}
-
-    # read in dfs and apply to dictionary
-    for sheet_name in xlsx_model.sheet_names:
-        model_dfs[sheet_name] = read_xlsx(xlsx_model, sheet_name)
-
-    # Read in data
-    logger.info("Reading CCDI manifest file")
-
     # create workbook
     xlsx_data = pd.ExcelFile(manifest_path)
 
     # create dictionary for dfs
     meta_dfs = {}
 
-    # read in dfs and apply to dictionary
-    for sheet_name in xlsx_data.sheet_names:
-        meta_dfs[sheet_name] = read_xlsx(xlsx_data, sheet_name)
-    # close xlsx_data object
-    xlsx_data.close()
+    # 1) Read in the manifest and create dfs for each tab in the manifest
+    for sheet in xlsx_data.sheet_names:
+        meta_dfs[sheet] = pd.read_excel(
+            manifest_path,
+            sheet_name=sheet,
+            dtype=str,
+            na_values=["NA","na","N/A","n/a"],
+            keep_default_na=False,
+            engine="openpyxl"
+        )
 
     # remove model tabs from the meta_dfs
     del meta_dfs["README and INSTRUCTIONS"]
