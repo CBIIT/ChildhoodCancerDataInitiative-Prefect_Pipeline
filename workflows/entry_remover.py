@@ -217,7 +217,7 @@ def main(file: str, template: str, entry: str):
 
 
 @flow(name="CCDI Manifest Entry Remover", flow_run_name="{runner}_" + f"{get_time()}")
-def entry_remover(bucket:str,runner:str,file_path: str, entry_removal_file:str)-> None:
+def entry_remover(bucket:str,runner:str,file_path: str, entry_removal_file_path:str)-> None:
 
     logger = get_run_logger()
 
@@ -228,10 +228,10 @@ def entry_remover(bucket:str,runner:str,file_path: str, entry_removal_file:str)-
     file_path = os.path.basename(file_path)
 
     # download tsv of entries to remove
-    file_dl(filename=entry_removal_file, bucket=bucket)
-    entry_removal_file = os.path.basename(entry_removal_file)
+    file_dl(filename=entry_removal_file_path, bucket=bucket)
+    entry_removal_file = os.path.basename(entry_removal_file_path)
 
-    out_xlsx, log_txt = main(file=file_path, entry=entry_removal_file)
+    out_xlsx, log_txt = main(file=file_path, entry=entry_removal_file_path)
 
     file_ul (filename=out_xlsx, bucket=bucket, dest_folder=output_folder)
     file_ul (filename=log_txt, bucket=bucket, dest_folder=output_folder)
