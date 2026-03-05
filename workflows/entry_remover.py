@@ -12,7 +12,7 @@ from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from prefect import get_run_logger, task, flow
 from yaml import warnings
-from src.utils import file_dl, dl_ccdi_template, get_time, file_ul
+from src.utils import file_dl, get_time, file_ul
 
 @task(name="Drop empty rows/columns")
 def drop_empty(df, axis):
@@ -22,7 +22,7 @@ def drop_empty(df, axis):
     return df.dropna(how="all", axis=axis)
 
 @flow(name="Remover")
-def main(file: str, template: str, entry: str):
+def main(file: str, entry: str):
 
     logger = get_run_logger()
     # Absolute paths & output names
@@ -40,7 +40,7 @@ def main(file: str, template: str, entry: str):
     #
     ##############
 
-    logger.info("Reading CCDI template file")
+    logger.info("Reading CCDI Manifest file")
 
     def read_xlsx(file_path: str, sheet: str):
         # Read in excel file
@@ -224,12 +224,14 @@ def entry_remover(bucket:str,runner:str,file_path: str, entry_removal_file_path:
     output_folder = runner + "/entry_remover_" + get_time()
 
     # download manifest
+    logger.info(f"Downloading manifest from {file_path} in bucket {bucket}")
     file_dl(filename=file_path, bucket=bucket)
     file_path = os.path.basename(file_path)
 
     # download tsv of entries to remove
+    logger.info(f"Downloading entry removal file from {entry_removal_file_path} in bucket {bucket}")
     file_dl(filename=entry_removal_file_path, bucket=bucket)
-    entry_removal_file = os.path.basename(entry_removal_file_path)
+    entry_removal_file_path = os.path.basename(entry_removal_file_path)
 
     out_xlsx, log_txt = main(file=file_path, entry=entry_removal_file_path)
 
