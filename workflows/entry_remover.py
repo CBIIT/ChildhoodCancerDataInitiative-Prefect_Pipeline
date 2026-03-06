@@ -244,9 +244,9 @@ def entry_remover(
     output_folder = runner + "/entry_remover_" + get_time()
 
     if file_path == "path/to/file":
-        file_path = None
+        file_path = False
     if directory_path == "path/to/directory":
-        directory_path = None
+        directory_path = False
 
     logger.info(f"The following input files will be used: \n{file_path}, \n{directory_path}, \n{entry_removal_file_path}")
 
@@ -255,14 +255,14 @@ def entry_remover(
         logger.info(f"Downloading manifest from {file_path} in bucket {bucket}")
         file_dl(filename=file_path, bucket=bucket)
         file_path = os.path.basename(file_path)
-        directory_path = None
+        directory_path = False
 
     if directory_path:
         # download manifest directory
         logger.info(f"Downloading directory from {directory_path} in bucket {bucket}")
         folder_dl(bucket=bucket, remote_folder=directory_path)
         directory_path = os.path.basename(directory_path)
-        file_path = None
+        file_path = False
 
     if entry_removal_file_path:
         # download tsv of entries to remove
