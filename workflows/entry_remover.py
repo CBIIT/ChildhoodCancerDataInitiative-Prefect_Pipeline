@@ -247,6 +247,8 @@ def entry_remover(
     if directory_path == "path/to/directory":
         directory_path = None
 
+    logger.info(f"The following input files will be used: \n{file_path}, \n{directory_path}, \n{entry_removal_file_path}")
+
     if file_path:
         # download manifest
         logger.info(f"Downloading manifest from {file_path} in bucket {bucket}")
