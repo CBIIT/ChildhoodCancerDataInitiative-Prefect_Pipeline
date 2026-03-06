@@ -32,9 +32,9 @@ def main(file: str, entry: str):
 
     base = os.path.splitext(os.path.basename(manifest_path))[0]
     today = get_time()
-    out_xlsx = f"{base}_EntRemove{today}.xlsx"
-    out_delete_xlsx = f"{base}_EntRemove{today}_deleted.xlsx"
-    log_txt = f"{base}_EntRemove{today}_log.txt"
+    out_xlsx = f"{base}_EntRemove_{today}.xlsx"
+    out_delete_xlsx = f"{base}_EntRemove_{today}_deleted.xlsx"
+    log_txt = f"{base}_EntRemove_{today}_log.txt"
 
     ##############
     #
