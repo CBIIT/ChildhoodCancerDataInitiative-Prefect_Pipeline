@@ -83,41 +83,16 @@ def main(file: str, entry: str):
     # determine nodes again
     node_list = set(list(meta_dfs.keys()))
 
-    # 2) Load each node sheet
-    NA_bank = ["NA", "na", "N/A", "n/a"]
-    workbook_list = {}
-    for node in node_list:
-        try:
-            df = pd.read_excel(
-                manifest_path,
-                sheet_name=node,
-                dtype=str,
-                na_values=NA_bank,
-                keep_default_na=False,
-                engine="openpyxl",
-            )
-        except ValueError:
-            continue
-
-        # --- FIXED here: separate df2 assignment steps ---
-        df2 = drop_empty(df, axis=1)  # drop empty cols
-        df2 = drop_empty(df2, axis=0)  # drop empty rows
-
-        # require ≥1 “real” column (not just linking cols like “foo.bar_id”)
-        real_cols = [c for c in df2.columns if "." not in c]
-        if len(df2) > 0 and real_cols:
-            workbook_list[node] = df.copy()
-
-    if not workbook_list:
-        raise RuntimeError("No valid node sheets found in manifest.")
+    # create a blank copy of the meta_dfs to save deleted entries to, and to modify for output
+    meta_dfs_delete = {node: pd.DataFrame(columns=df.columns) for node, df in meta_dfs.items()}
 
     # 3) Read entries to remove
     entries_df = pd.read_csv(entry_path, sep="\t", header=None, names=["X1"], dtype=str)
     pending = entries_df["X1"].dropna().tolist()
 
-    deleted = {node: [] for node in workbook_list.keys()}
+    deleted = {node: [] for node in meta_dfs.keys()}
 
-    # 4) Iterative removal + logging
+    # 4) Iterative removal + logging    
     with open(log_txt, "w") as log:
         log.write("Entries to remove (and discovered children):\n")
         log.write("\n".join(pending) + "\n\n")
@@ -125,7 +100,7 @@ def main(file: str, entry: str):
         while pending:
             curr = pending.pop(0)
             log.write(f"Removing: {curr}\n")
-            for node, df in workbook_list.items():
+            for node, df in meta_dfs.items():
                 node_id_col = f"{node}_id"
                 # direct hits
                 if node_id_col in df.columns:
@@ -154,7 +129,7 @@ def main(file: str, entry: str):
 
     # 5) Write out with openpyxl in-place with modified data of things kept (not removed). This ensures we keep any formatting, formulas, etc. that may be present in the original manifest.
     wb = load_workbook(manifest_path)
-    for node, df in workbook_list.items():
+    for node, df in meta_dfs.items():
         if node in wb.sheetnames:
             ws = wb[node]
             ws.delete_rows(1, ws.max_row)
