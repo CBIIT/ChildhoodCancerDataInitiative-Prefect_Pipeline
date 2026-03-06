@@ -228,6 +228,12 @@ def entry_remover(
 
     output_folder = runner + "/entry_remover_" + get_time()
 
+
+    if file_path == "path/to/file":
+        file_path = None
+    if directory_path == "path/to/directory":
+        directory_path = None
+
     if file_path:
     # download manifest
         logger.info(f"Downloading manifest from {file_path} in bucket {bucket}")
