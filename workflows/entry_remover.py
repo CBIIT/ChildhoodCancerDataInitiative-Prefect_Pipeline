@@ -26,6 +26,7 @@ from src.utils import file_dl, get_time, file_ul, folder_ul, folder_dl
 def main(file, directory, entry):
 
     logger = get_run_logger()
+    logger.info("Starting entry removal process")
 
     entry_path = entry
 
