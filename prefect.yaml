@@ -1611,7 +1611,7 @@ deployments:
 
   - name: dcc-entry-remover-16gb-v3
     version: null
-    tags: ["TEST","SVB","CCDIDC-2342", "DCC", "V3", "Centralized Worker"]
+    tags: ["Production", "DCC", "V3", "Centralized Worker"]
     description: null
     entrypoint: workflows/entry_remover.py:entry_remover
     schedule: null
@@ -1628,7 +1628,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2342_EntryRemoveR_v2
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_V3.txt
           directory: "{{ clone-step.directory }}"
