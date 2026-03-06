@@ -33,6 +33,7 @@ def main(file: str, entry: str):
     base = os.path.splitext(os.path.basename(manifest_path))[0]
     today = get_time()
     out_xlsx = f"{base}_EntRemove{today}.xlsx"
+    out_delete_xlsx = f"{base}_EntRemove{today}_deleted.xlsx"
     log_txt = f"{base}_EntRemove{today}_log.txt"
 
     ##############
@@ -108,6 +109,10 @@ def main(file: str, entry: str):
                     if hits:
                         deleted[node].append(curr)
                         log.write(f"  - {curr} dropped from {node}.{node_id_col}\n")
+                        # remove from meta_dfs and add to meta_dfs_delete
+                        meta_dfs_delete[node] = pd.concat(
+                            [meta_dfs_delete[node], df.loc[hits]]
+                        )
                         df.drop(index=hits, inplace=True)
 
                 # discover child entries
@@ -143,9 +148,15 @@ def main(file: str, entry: str):
         wb.create_sheet(title="Sheet1")
     wb.save(out_xlsx)
 
-    print(f"\n✅ Done. Log written to {log_txt}\n   Cleaned workbook: {out_xlsx}\n")
+    # also write out the deleted entries for reference
+    with pd.ExcelWriter(out_delete_xlsx, engine="openpyxl") as writer:
+        for node, df in meta_dfs_delete.items():
+            if not df.empty:
+                df.to_excel(writer, sheet_name=node, index=False)
 
-    return out_xlsx, log_txt
+    print(f"\n✅ Done. Log written to {log_txt}\n   Cleaned workbook: {out_xlsx}\n   Deleted entries workbook: {out_delete_xlsx}\n")
+
+    return out_xlsx, log_txt, out_delete_xlsx
 
 
 @flow(name="CCDI Manifest Entry Remover", flow_run_name="{runner}_" + f"{get_time()}")
@@ -169,7 +180,8 @@ def entry_remover(
     file_dl(filename=entry_removal_file_path, bucket=bucket)
     entry_removal_file_path = os.path.basename(entry_removal_file_path)
 
-    out_xlsx, log_txt = main(file=file_path, entry=entry_removal_file_path)
+    out_xlsx, log_txt, out_delete_xlsx = main(file=file_path, entry=entry_removal_file_path)
 
     file_ul(newfile=out_xlsx, bucket=bucket, output_folder=output_folder, sub_folder="")
     file_ul(newfile=log_txt, bucket=bucket, output_folder=output_folder, sub_folder="")
+    file_ul(newfile=out_delete_xlsx, bucket=bucket, output_folder=output_folder, sub_folder="")
