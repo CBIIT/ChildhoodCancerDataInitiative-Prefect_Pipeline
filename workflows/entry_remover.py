@@ -27,11 +27,12 @@ def main(file, directory, entry):
 
     logger = get_run_logger()
 
+    entry_path = entry
+
     if file:
         logger.info(f"Using manifest file: {file}")
         # Absolute paths & output names
         manifest_path = file
-        entry_path = entry
 
         base = os.path.splitext(os.path.basename(manifest_path))[0]
         today = get_time()
@@ -97,8 +98,7 @@ def main(file, directory, entry):
         logger.info(f"Using manifest directory: {directory}")
         # Absolute paths & output names
         manifest_path = directory
-        entry_path = entry
-
+        
         base = os.path.basename(manifest_path)
         today = get_time()
         out_folder = f"{base}_EntRemove_{today}"
