@@ -13,6 +13,7 @@ from prefect import get_run_logger, task, flow
 from yaml import warnings
 from src.utils import file_dl, get_time, file_ul
 
+
 @task(name="Drop empty rows/columns")
 def drop_empty(df, axis):
     """
@@ -20,18 +21,19 @@ def drop_empty(df, axis):
     """
     return df.dropna(how="all", axis=axis)
 
+
 @flow(name="Remover")
 def main(file: str, entry: str):
 
     logger = get_run_logger()
     # Absolute paths & output names
     manifest_path = file
-    entry_path    = entry
+    entry_path = entry
 
-    base       = os.path.splitext(os.path.basename(manifest_path))[0]
-    today      = get_time()
-    out_xlsx   = f"{base}_EntRemove{today}.xlsx"
-    log_txt    = f"{base}_EntRemove{today}_log.txt"
+    base = os.path.splitext(os.path.basename(manifest_path))[0]
+    today = get_time()
+    out_xlsx = f"{base}_EntRemove{today}.xlsx"
+    log_txt = f"{base}_EntRemove{today}_log.txt"
 
     ##############
     #
@@ -53,9 +55,9 @@ def main(file: str, entry: str):
             manifest_path,
             sheet_name=sheet,
             dtype=str,
-            na_values=["NA","na","N/A","n/a"],
+            na_values=["NA", "na", "N/A", "n/a"],
             keep_default_na=False,
-            engine="openpyxl"
+            engine="openpyxl",
         )
 
     # remove model tabs from the meta_dfs
@@ -81,9 +83,8 @@ def main(file: str, entry: str):
     # determine nodes again
     node_list = set(list(meta_dfs.keys()))
 
-
     # 2) Load each node sheet
-    NA_bank = ["NA","na","N/A","n/a"]
+    NA_bank = ["NA", "na", "N/A", "n/a"]
     workbook_list = {}
     for node in node_list:
         try:
@@ -93,7 +94,7 @@ def main(file: str, entry: str):
                 dtype=str,
                 na_values=NA_bank,
                 keep_default_na=False,
-                engine="openpyxl"
+                engine="openpyxl",
             )
         except ValueError:
             continue
@@ -111,8 +112,8 @@ def main(file: str, entry: str):
         raise RuntimeError("No valid node sheets found in manifest.")
 
     # 3) Read entries to remove
-    entries_df = pd.read_csv(entry_path, sep="\t", header=None, names=['X1'], dtype=str)
-    pending    = entries_df['X1'].dropna().tolist()
+    entries_df = pd.read_csv(entry_path, sep="\t", header=None, names=["X1"], dtype=str)
+    pending = entries_df["X1"].dropna().tolist()
 
     deleted = {node: [] for node in workbook_list.keys()}
 
@@ -142,7 +143,9 @@ def main(file: str, entry: str):
                         child = row[f"{node}_id"]
                         if child not in deleted[node] and child not in pending:
                             pending.append(child)
-                            log.write(f"    => discovered child {child} in {node}.{lc}\n")
+                            log.write(
+                                f"    => discovered child {child} in {node}.{lc}\n"
+                            )
 
         # summary
         log.write("\nSummary of deletions by sheet:\n")
@@ -170,10 +173,10 @@ def main(file: str, entry: str):
     return out_xlsx, log_txt
 
 
-
-
 @flow(name="CCDI Manifest Entry Remover", flow_run_name="{runner}_" + f"{get_time()}")
-def entry_remover(bucket:str,runner:str,file_path: str, entry_removal_file_path:str)-> None:
+def entry_remover(
+    bucket: str, runner: str, file_path: str, entry_removal_file_path: str
+) -> None:
 
     logger = get_run_logger()
 
@@ -185,11 +188,13 @@ def entry_remover(bucket:str,runner:str,file_path: str, entry_removal_file_path:
     file_path = os.path.basename(file_path)
 
     # download tsv of entries to remove
-    logger.info(f"Downloading entry removal file from {entry_removal_file_path} in bucket {bucket}")
+    logger.info(
+        f"Downloading entry removal file from {entry_removal_file_path} in bucket {bucket}"
+    )
     file_dl(filename=entry_removal_file_path, bucket=bucket)
     entry_removal_file_path = os.path.basename(entry_removal_file_path)
 
     out_xlsx, log_txt = main(file=file_path, entry=entry_removal_file_path)
 
-    file_ul (newfile=out_xlsx, bucket=bucket, output_folder=output_folder, sub_folder="")
-    file_ul (newfile=log_txt, bucket=bucket, output_folder=output_folder, sub_folder="")
+    file_ul(newfile=out_xlsx, bucket=bucket, output_folder=output_folder, sub_folder="")
+    file_ul(newfile=log_txt, bucket=bucket, output_folder=output_folder, sub_folder="")
