@@ -14,12 +14,12 @@ from yaml import warnings
 from src.utils import file_dl, get_time, file_ul, folder_ul, folder_dl
 
 
-@task(name="Drop empty rows/columns")
-def drop_empty(df, axis):
-    """
-    Remove rows (axis=0) or columns (axis=1) that are entirely NA/blank.
-    """
-    return df.dropna(how="all", axis=axis)
+# @task(name="Drop empty rows/columns")
+# def drop_empty(df, axis):
+#     """
+#     Remove rows (axis=0) or columns (axis=1) that are entirely NA/blank.
+#     """
+#     return df.dropna(how="all", axis=axis)
 
 
 @flow(name="Remover")
@@ -89,8 +89,10 @@ def main(file, directory, entry):
         # node_list = set(list(meta_dfs.keys()))
 
         # create a blank copy of the meta_dfs to save deleted entries to, and to modify for output
-        meta_dfs_delete = {node: pd.DataFrame(columns=df.columns) for node, df in meta_dfs.items()}
-    
+        meta_dfs_delete = {
+            node: pd.DataFrame(columns=df.columns) for node, df in meta_dfs.items()
+        }
+
     if directory:
         logger.info(f"Using manifest directory: {directory}")
         # Absolute paths & output names
@@ -127,12 +129,13 @@ def main(file, directory, entry):
                 )
 
     # 3) Read entries to remove
+    logger.info(f"Reading entries to remove from {entry_path}")
     entries_df = pd.read_csv(entry_path, sep="\t", header=None, names=["X1"], dtype=str)
     pending = entries_df["X1"].dropna().tolist()
 
     deleted = {node: [] for node in meta_dfs.keys()}
 
-    # 4) Iterative removal + logging    
+    # 4) Iterative removal + logging
     with open(log_txt, "w") as log:
         log.write("Entries to remove (and discovered children):\n")
         log.write("\n".join(pending) + "\n\n")
@@ -189,10 +192,14 @@ def main(file, directory, entry):
             wb.create_sheet(title="Sheet1")
         wb.save(out_xlsx)
 
-        print(f"\n✅ Done. Log written to {log_txt}\n   Cleaned workbook: {out_xlsx}\n   Deleted entries workbook: {out_delete_xlsx}\n")
+        print(
+            f"\n✅ Done. Log written to {log_txt}\n   Cleaned workbook: {out_xlsx}\n   Deleted entries workbook: {out_delete_xlsx}\n"
+        )
 
     if directory:
-        logger.info(f"Writing cleaned manifest to {out_folder} directory with individual TSVs for each node")
+        logger.info(
+            f"Writing cleaned manifest to {out_folder} directory with individual TSVs for each node"
+        )
         os.makedirs(out_folder, exist_ok=True)
         for node, df in meta_dfs.items():
             out_tsv_path = os.path.join(out_folder, f"{node}{base_out_tsv}")
@@ -204,30 +211,35 @@ def main(file, directory, entry):
             if not df.empty:
                 df.to_excel(writer, sheet_name=node, index=False)
 
-        print(f"\n✅ Done. Log written to {log_txt}\n   Cleaned TSVs: {out_folder}\n   Deleted entries workbook: {out_delete_xlsx}\n")
+        print(
+            f"\n✅ Done. Log written to {log_txt}\n   Cleaned TSVs: {out_folder}\n   Deleted entries workbook: {out_delete_xlsx}\n"
+        )
 
     return out_xlsx, log_txt, out_delete_xlsx, out_folder
 
 
 @flow(name="CCDI Manifest Entry Remover", flow_run_name="{runner}_" + f"{get_time()}")
 def entry_remover(
-    bucket: str, runner: str, file_path: str, directory_path: str, entry_removal_file_path: str
+    bucket: str,
+    runner: str,
+    file_path: str,
+    directory_path: str,
+    entry_removal_file_path: str,
 ) -> None:
-    '''
+    """
     Prefect flow to remove specified entries from a CCDI manifest, given either as a single Excel file or a directory of TSVs. The entries to remove are provided in a separate TSV file. The flow handles downloading the necessary files from cloud storage, performing the entry removal, and uploading the results back to cloud storage.
-    
+
     Parameters:
     - bucket: The cloud storage bucket where the input files are located and where the output should be uploaded.
     - runner: A string identifier for the runner of the flow, used in naming output folders/files.
     - file_path: The path to the manifest file in the bucket (if using a single Excel file input).
     - directory_path: The path to the manifest directory in the bucket (if using a directory of TSVs input).
     - entry_removal_file_path: The path to the TSV file in the bucket that lists the entries to remove.
-    '''
+    """
 
     logger = get_run_logger()
 
     output_folder = runner + "/entry_remover_" + get_time()
-
 
     if file_path == "path/to/file":
         file_path = None
@@ -235,21 +247,21 @@ def entry_remover(
         directory_path = None
 
     if file_path:
-    # download manifest
+        # download manifest
         logger.info(f"Downloading manifest from {file_path} in bucket {bucket}")
         file_dl(filename=file_path, bucket=bucket)
         file_path = os.path.basename(file_path)
         directory_path = None
 
     if directory_path:
-    # download manifest directory
+        # download manifest directory
         logger.info(f"Downloading directory from {directory_path} in bucket {bucket}")
-        folder_dl(bucket=bucket, remote_folder= directory_path)
+        folder_dl(bucket=bucket, remote_folder=directory_path)
         directory_path = os.path.basename(directory_path)
         file_path = None
 
     if entry_removal_file_path:
-    # download tsv of entries to remove
+        # download tsv of entries to remove
         logger.info(
             f"Downloading entry removal file from {entry_removal_file_path} in bucket {bucket}"
         )
@@ -259,13 +271,29 @@ def entry_remover(
         logger.warning("No entry removal file provided. Exiting.")
         return
 
-    out_xlsx, log_txt, out_delete_xlsx, out_folder = main(file=file_path, directory=directory_path, entry=entry_removal_file_path)
+    out_xlsx, log_txt, out_delete_xlsx, out_folder = main(
+        file=file_path, directory=directory_path, entry=entry_removal_file_path
+    )
 
     if out_xlsx:
-        file_ul(newfile=out_xlsx, bucket=bucket, output_folder=output_folder, sub_folder="")
+        file_ul(
+            newfile=out_xlsx, bucket=bucket, output_folder=output_folder, sub_folder=""
+        )
     if log_txt:
-        file_ul(newfile=log_txt, bucket=bucket, output_folder=output_folder, sub_folder="")
+        file_ul(
+            newfile=log_txt, bucket=bucket, output_folder=output_folder, sub_folder=""
+        )
     if out_delete_xlsx:
-        file_ul(newfile=out_delete_xlsx, bucket=bucket, output_folder=output_folder, sub_folder="")
+        file_ul(
+            newfile=out_delete_xlsx,
+            bucket=bucket,
+            output_folder=output_folder,
+            sub_folder="",
+        )
     if out_folder:
-        folder_ul(local_folder=out_folder, bucket=bucket, destination=output_folder, sub_folder="")
+        folder_ul(
+            local_folder=out_folder,
+            bucket=bucket,
+            destination=output_folder,
+            sub_folder="",
+        )
