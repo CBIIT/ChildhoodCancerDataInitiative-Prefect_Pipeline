@@ -91,11 +91,6 @@ def main(file, directory, entry):
         # # determine nodes again
         # node_list = set(list(meta_dfs.keys()))
 
-        # create a blank copy of the meta_dfs to save deleted entries to, and to modify for output
-        meta_dfs_delete = {
-            node: pd.DataFrame(columns=df.columns) for node, df in meta_dfs.items()
-        }
-
     if directory:
         logger.info(f"Using manifest directory: {directory}")
         # Absolute paths & output names
@@ -136,6 +131,11 @@ def main(file, directory, entry):
     pending = entries_df["X1"].dropna().tolist()
 
     deleted = {node: [] for node in meta_dfs.keys()}
+
+    # create a blank copy of the meta_dfs to save deleted entries to, and to modify for output
+    meta_dfs_delete = {
+        node: pd.DataFrame(columns=df.columns) for node, df in meta_dfs.items()
+    }
 
     # 4) Iterative removal + logging
     with open(log_txt, "w") as log:
