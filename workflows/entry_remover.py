@@ -27,6 +27,8 @@ def main(file, directory, entry):
 
     logger = get_run_logger()
     logger.info("Starting entry removal process")
+    logger.info(f"The following input files will be used: \n{file}, \n{directory}, \n{entry}")
+
 
     entry_path = entry
 
