@@ -258,12 +258,14 @@ def entry_remover(
         logger.info(f"Downloading manifest from {file_path} in bucket {bucket}")
         file_dl(filename=file_path, bucket=bucket)
         file_path = os.path.basename(file_path)
+        directory_path = False  # ensure directory_path is False if file_path is provided
 
     if directory_path:
         # download manifest directory
         logger.info(f"Downloading directory from {directory_path} in bucket {bucket}")
         folder_dl(bucket=bucket, remote_folder=directory_path)
-        directory_path = os.path.basename(directory_path)
+        directory_path = os.path.basename(os.path.normpath(directory_path))
+        file_path = False  # ensure file_path is False if directory_path is provided
 
     if entry_removal_file_path:
         # download tsv of entries to remove
