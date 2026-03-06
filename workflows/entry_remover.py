@@ -247,6 +247,9 @@ def entry_remover(
         file_path = False
     if directory_path == "path/to/directory":
         directory_path = False
+    if file_path and directory_path:
+        logger.warning("Both file_path and directory_path provided. Defaulting to file_path.")
+        directory_path = False
 
     logger.info(f"The following input files will be used: \n{file_path}, \n{directory_path}, \n{entry_removal_file_path}")
 
