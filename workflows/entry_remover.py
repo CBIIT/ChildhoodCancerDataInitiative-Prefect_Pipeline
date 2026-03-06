@@ -149,7 +149,7 @@ def main(file: str, entry: str):
         for node, items in deleted.items():
             log.write(f" {node}: {items}\n")
 
-    # 5) Write out with openpyxl in-place
+    # 5) Write out with openpyxl in-place with modified data of things kept (not removed). This ensures we keep any formatting, formulas, etc. that may be present in the original manifest.
     wb = load_workbook(manifest_path)
     for node, df in workbook_list.items():
         if node in wb.sheetnames:
