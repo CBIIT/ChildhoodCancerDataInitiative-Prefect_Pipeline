@@ -23,7 +23,7 @@ def drop_empty(df, axis):
 
 
 @flow(name="Remover")
-def main(file: str, directory: str, entry: str):
+def main(file, directory, entry):
 
     logger = get_run_logger()
 
