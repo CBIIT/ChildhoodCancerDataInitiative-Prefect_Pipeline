@@ -12,6 +12,7 @@ from openpyxl.utils.dataframe import dataframe_to_rows
 from prefect import get_run_logger, task, flow
 from yaml import warnings
 from src.utils import file_dl, get_time, file_ul, folder_ul, folder_dl
+from collections import defaultdict
 
 
 # @task(name="Drop empty rows/columns")
@@ -141,6 +142,9 @@ def main(file, directory, entry):
         log.write("Entries to remove (and discovered children):\n")
         log.write("\n".join(pending) + "\n\n")
 
+        # Create a list of all pairwise node links based on the current pending and the child entry it discovers.
+        relation_pairs = []
+
         while pending:
             curr = pending.pop(0)
             hit = False
@@ -168,6 +172,7 @@ def main(file, directory, entry):
                         child = row[f"{node}_id"]
                         if child not in deleted[node] and child not in pending:
                             pending.append(child)
+                            relation_pairs.append((curr, child))
                             log.write(
                                 f"    => discovered child {child} in {node}.{lc}\n"
                             )
@@ -178,6 +183,39 @@ def main(file, directory, entry):
         log.write("\nSummary of deletions by sheet:\n")
         for node, items in deleted.items():
             log.write(f" {node}: {items}\n")
+
+        log.write("\nAll parent-child relationships discovered during removal:\n")
+        # Build adjacency list
+        graph = defaultdict(list)
+
+        for a, b in relation_pairs:
+            if b is not None:
+                graph[a].append(b)
+            else:
+                graph[a] = graph[a]
+
+        # Find roots (nodes that never appear as children)
+        children = {b for _, b in relation_pairs if b is not None}
+        roots = [a for a,_ in relation_pairs if a not in children]
+
+        # DFS to build chains
+        def build_paths(node, path):
+            if node not in graph or len(graph[node]) == 0:
+                return [path]
+            
+            paths = []
+            for child in graph[node]:
+                paths.extend(build_paths(child, path + [child]))
+            return paths
+
+        # Generate all paths
+        all_paths = []
+        for r in roots:
+            all_paths.extend(build_paths(r, [r]))
+
+        # Print
+        for p in all_paths:
+            log.write(" <- ".join(p) + "\n")
 
     # 5) Write out with openpyxl in-place with modified data of things kept (not removed). This ensures we keep any formatting, formulas, etc. that may be present in the original manifest.
     if file:
