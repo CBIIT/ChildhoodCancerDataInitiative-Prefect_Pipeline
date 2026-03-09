@@ -1652,6 +1652,7 @@ deployments:
       bucket: "ccdi-validation"
       runner: "runner_id"
       file_path: "path/to/file"
+      directory_path: "path/to/directory"
       entry_removal_file_path: "path/to/entry_removal_file"
       
     # pull action to overwrite from file pull action
