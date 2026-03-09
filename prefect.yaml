@@ -1671,34 +1671,3 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-dcc-entry-remover-16gb-v3
-    version: null
-    tags: ["TEST","CCDIDC-2358_updates","SVB", "DCC", "V3", "Centralized Worker"]
-    description: null
-    entrypoint: workflows/entry_remover.py:entry_remover
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
-      runner: "runner_id"
-      file_path: "path/to/file"
-      directory_path: "path/to/directory"
-      entry_removal_file_path: "path/to/entry_removal_file"
-      
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2358_EntryRemoveR_v2_updates
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-16gb-prefect-3.2.14-python3.9
-      work_queue_name: null
-      job_variables: {}
