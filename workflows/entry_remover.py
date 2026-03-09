@@ -143,6 +143,7 @@ def main(file, directory, entry):
 
         while pending:
             curr = pending.pop(0)
+            hit = False
             log.write(f"Removing: {curr}\n")
             for node, df in meta_dfs.items():
                 node_id_col = f"{node}_id"
@@ -157,6 +158,7 @@ def main(file, directory, entry):
                             [meta_dfs_delete[node], df.loc[hits]]
                         )
                         df.drop(index=hits, inplace=True)
+                        hit = True
 
                 # discover child entries
                 link_cols = [c for c in df.columns if "." in c and c.endswith("_id")]
@@ -169,6 +171,8 @@ def main(file, directory, entry):
                             log.write(
                                 f"    => discovered child {child} in {node}.{lc}\n"
                             )
+            if not hit:
+                log.write(f"  - {curr} not found in any node_id column\n")
 
         # summary
         log.write("\nSummary of deletions by sheet:\n")
