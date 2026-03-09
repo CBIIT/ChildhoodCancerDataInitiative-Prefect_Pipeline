@@ -27,7 +27,6 @@ def main(file, directory, entry):
 
     logger = get_run_logger()
     logger.info("Starting entry removal process")
-    logger.info(f"The following input files will be used: \n{file}, \n{directory}, \n{entry}")
 
     entry_path = entry
 
@@ -251,7 +250,7 @@ def entry_remover(
         logger.warning("Both file_path and directory_path provided. Defaulting to file_path.")
         directory_path = False
 
-    logger.info(f"The following input files will be used: \n{file_path}, \n{directory_path}, \n{entry_removal_file_path}")
+    logger.info(f"The following input files will be used: \nfile_path: {file_path}, \ndirectory_path: {directory_path}, \nentry_removal_file_path: {entry_removal_file_path}")
 
     if file_path:
         # download manifest
