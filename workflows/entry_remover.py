@@ -275,8 +275,8 @@ def entry_remover(
     Parameters:
     - bucket: The cloud storage bucket where the input files are located and where the output should be uploaded.
     - runner: A string identifier for the runner of the flow, used in naming output folders/files.
-    - file_path: The path to the manifest file in the bucket (if using a single Excel file input).
-    - directory_path: The path to the manifest directory in the bucket (if using a directory of TSVs input).
+    - file_path: The path to the manifest file in the bucket (if using a single Excel file input, leave directory_path as is).
+    - directory_path: The path to the manifest directory in the bucket (if using a directory of TSVs input, leave file_path as is).
     - entry_removal_file_path: The path to the TSV file in the bucket that lists the entries to remove.
     """
 
