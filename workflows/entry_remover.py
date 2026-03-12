@@ -270,6 +270,7 @@ def main(file, directory, entry):
         print(
             f"\n✅ Done. Log written to {log_txt}\n   No entries were removed, so no output files were written.\n"
         )
+        out_delete_xlsx = None
 
     return out_xlsx, log_txt, out_delete_xlsx, out_folder
 
