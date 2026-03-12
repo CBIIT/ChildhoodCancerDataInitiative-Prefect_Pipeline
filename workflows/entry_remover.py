@@ -142,6 +142,8 @@ def main(file, directory, entry):
         log.write("Entries to remove (and discovered children):\n")
         log.write("\n".join(pending) + "\n\n")
 
+        # Create a flag to track if any entry was found and removed
+        remove_found = False
         # Create a list of all pairwise node links based on the current pending and the child entry it discovers.
         relation_pairs = []
 
@@ -163,6 +165,7 @@ def main(file, directory, entry):
                         )
                         df.drop(index=hits, inplace=True)
                         hit = True
+                        remove_found = True
 
                 # discover child entries
                 link_cols = [c for c in df.columns if "." in c and c.endswith("_id")]
@@ -178,6 +181,9 @@ def main(file, directory, entry):
                             )
             if not hit:
                 log.write(f"  - {curr} not found in any node_id column\n")
+
+        if not remove_found:
+            log.write("No entries were found and removed.\n")
 
         # summary
         log.write("\nSummary of deletions by sheet:\n")
@@ -218,45 +224,55 @@ def main(file, directory, entry):
             log.write(" <- ".join(p) + "\n")
 
     # 5) Write out with openpyxl in-place with modified data of things kept (not removed). This ensures we keep any formatting, formulas, etc. that may be present in the original manifest.
-    if file:
-        logger.info(f"Writing cleaned manifest to {out_xlsx}")
-        wb = load_workbook(manifest_path)
-        for node, df in meta_dfs.items():
-            if node in wb.sheetnames:
-                ws = wb[node]
-                ws.delete_rows(1, ws.max_row)
-            else:
-                ws = wb.create_sheet(title=node)
-            for r in dataframe_to_rows(df, index=False, header=True):
-                ws.append(r)
+    # Check if the remove_found flag is True before attempting to write the output file. If no entries were removed, we can skip writing the output file and just log that no changes were made.
+    if remove_found:
+        if file:
+            logger.info(f"Writing cleaned manifest to {out_xlsx}")
+            wb = load_workbook(manifest_path)
+            for node, df in meta_dfs.items():
+                if node in wb.sheetnames:
+                    ws = wb[node]
+                    ws.delete_rows(1, ws.max_row)
+                else:
+                    ws = wb.create_sheet(title=node)
+                for r in dataframe_to_rows(df, index=False, header=True):
+                    ws.append(r)
 
-        # ensure at least one sheet visible
-        if not wb.sheetnames:
-            wb.create_sheet(title="Sheet1")
-        wb.save(out_xlsx)
+            # ensure at least one sheet visible
+            if not wb.sheetnames:
+                wb.create_sheet(title="Sheet1")
+            wb.save(out_xlsx)
 
+            print(
+                f"\n✅ Done. Log written to {log_txt}\n   Cleaned workbook: {out_xlsx}\n   Deleted entries workbook: {out_delete_xlsx}\n"
+            )
+
+        if directory:
+            logger.info(
+                f"Writing cleaned manifest to {out_folder} directory with individual TSVs for each node"
+            )
+            os.makedirs(out_folder, exist_ok=True)
+            for node, df in meta_dfs.items():
+                out_tsv_path = os.path.join(out_folder, f"{node}{base_out_tsv}")
+                df.to_csv(out_tsv_path, sep="\t", index=False)
+
+        # also write out the deleted entries for reference
+        with pd.ExcelWriter(out_delete_xlsx, engine="openpyxl") as writer:
+            for node, df in meta_dfs_delete.items():
+                if not df.empty:
+                    df.to_excel(writer, sheet_name=node, index=False)
+
+            print(
+                f"\n✅ Done. Log written to {log_txt}\n   Cleaned TSVs: {out_folder}\n   Deleted entries workbook: {out_delete_xlsx}\n"
+            )
+    else:
+        logger.info("No entries were found and removed. No output files will be written.")
         print(
-            f"\n✅ Done. Log written to {log_txt}\n   Cleaned workbook: {out_xlsx}\n   Deleted entries workbook: {out_delete_xlsx}\n"
+            f"\n✅ Done. Log written to {log_txt}\n   No entries were removed, so no output files were written.\n"
         )
-
-    if directory:
-        logger.info(
-            f"Writing cleaned manifest to {out_folder} directory with individual TSVs for each node"
-        )
-        os.makedirs(out_folder, exist_ok=True)
-        for node, df in meta_dfs.items():
-            out_tsv_path = os.path.join(out_folder, f"{node}{base_out_tsv}")
-            df.to_csv(out_tsv_path, sep="\t", index=False)
-
-    # also write out the deleted entries for reference
-    with pd.ExcelWriter(out_delete_xlsx, engine="openpyxl") as writer:
-        for node, df in meta_dfs_delete.items():
-            if not df.empty:
-                df.to_excel(writer, sheet_name=node, index=False)
-
-        print(
-            f"\n✅ Done. Log written to {log_txt}\n   Cleaned TSVs: {out_folder}\n   Deleted entries workbook: {out_delete_xlsx}\n"
-        )
+        out_delete_xlsx = None
+        out_xlsx = None
+        out_folder = None
 
     return out_xlsx, log_txt, out_delete_xlsx, out_folder
 
