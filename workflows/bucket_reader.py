@@ -29,7 +29,7 @@ def reader(buckets: list[str], runner: str, write_out: bool, bucket: str) -> Non
 
     Args:
         buckets (list[str]): A list of bucket name/path, e.g., ["my-first-bucket", "my-second-bucket/subdir"]. Click "Add item" to add more list item.
-        runner (str): Unique runner name to identify the workflow run, e.g., your name or team name. It will be used in flow_run_name and markdown output file name. Please avoid using special characters in the runner name, e.g., "_", "-", ".", " ", etc., as they will be replaced with "-" in the output file name.
+        runner (str): Unique runner name to identify the workflow run, e.g., your name or team name. It will be used in flow_run_name and markdown output file name. 
         write_out (bool): Whether to write out the bucket content summary in a markdown file.
         bucket (str): The bucket name/path to write the output markdown file. 
     """
