@@ -30,7 +30,7 @@ deployments:
 
   - name: bucket-reader-2gb-v3
     version: null
-    tags: ["Production","V3"]
+    tags: ["Production","V3","DCC","Centralized Worker"]
     description: null
     entrypoint: workflows/bucket_reader.py:reader
     schedule: null
