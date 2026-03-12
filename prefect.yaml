@@ -1672,3 +1672,32 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
+  - name: TEST-bucket-reader-2gb-v3
+    version: null
+    tags: ["TEST","V3", "SVB", "Centralized Worker","CCDIDC-2359"]
+    description: null
+    entrypoint: workflows/bucket_reader.py:reader
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      runner: "your_uniq_id"
+      bucket: "ccdi-validation"
+      write_out: false
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-2359-Bucket-reader-out-file
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_V3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-16gb-prefect-3.2.14-python3.9
+      work_queue_name: null
+      job_variables: {}
