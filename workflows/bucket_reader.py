@@ -80,7 +80,7 @@ def reader(buckets: list[str], runner: str, write_out: bool, bucket: str) -> Non
                 f.write(md_str)
             runner_logger.info(f"Markdown output written to {output_file}")
 
-        file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
+            file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
 
 
     else:
