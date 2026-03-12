@@ -271,6 +271,8 @@ def main(file, directory, entry):
             f"\n✅ Done. Log written to {log_txt}\n   No entries were removed, so no output files were written.\n"
         )
         out_delete_xlsx = None
+        out_xlsx = None
+        out_folder = None
 
     return out_xlsx, log_txt, out_delete_xlsx, out_folder
 
