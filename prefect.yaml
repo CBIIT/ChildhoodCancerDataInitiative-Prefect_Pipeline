@@ -39,7 +39,7 @@ deployments:
     parameters:
       runner: "your_uniq_id"
       write_out: false
-      bucket: "ccdi-validation"
+      bucket_write_out: "ccdi-validation"
 
     # pull action to overwrite from file pull action
     pull:

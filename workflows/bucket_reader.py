@@ -24,7 +24,7 @@ import traceback
     log_prints=True,
     flow_run_name="bucket-reader-{runner}-" + f"{get_time()}",
 )
-def reader(buckets: list[str], runner: str, write_out: bool, bucket: str) -> None:
+def reader(buckets: list[str], runner: str, write_out: bool, bucket_write_out: str) -> None:
     """Pipeline that reads contents of a list of bucket names/paths
 
     Args:
@@ -80,7 +80,7 @@ def reader(buckets: list[str], runner: str, write_out: bool, bucket: str) -> Non
                 f.write(md_str)
             runner_logger.info(f"Markdown output written to {output_file}")
 
-            file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
+            file_ul(bucket=bucket_write_out, output_folder=runner, sub_folder="", newfile=output_file)
 
 
     else:
