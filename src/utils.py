@@ -278,11 +278,15 @@ class CCDI_DCC_Tags(Task):
             props_yml = os.path.join(
                 tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model-props.yml"
             )
+            logger.info(
+                f"list files under {os.listdir(tempdirobj.name)[0]}: {os.listdir(os.path.join(tempdirobj.name,os.listdir(tempdirobj.name)[0]))}"
+            )
             logger.info("prop file path in temp dir: " + props_yml)
             logger.info("prop file name: " + os.path.basename(props_yml))
-            copy(model_yml, os.path.basename(model_yml))
-            copy(props_yml, os.path.basename(props_yml))
-            return os.path.basename(model_yml), os.path.basename(props_yml)
+            # copy(model_yml, os.path.basename(model_yml))
+            # copy(props_yml, os.path.basename(props_yml))
+            # return os.path.basename(model_yml), os.path.basename(props_yml)
+            return model_yml, props_yml
         else:
             available_tags = self.get_tags_only()
             logger.error(
