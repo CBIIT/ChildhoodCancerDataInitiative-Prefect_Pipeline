@@ -6,7 +6,14 @@ import sys
 import numpy as np
 import warnings
 import re
-from src.utils import set_s3_session_client, get_time, get_date, CheckCCDI
+from src.utils import (
+    set_s3_session_client,
+    get_time,
+    get_date,
+    CheckCCDI,
+    CCDI_DCC_Tags,
+)
+from bento_mdf import MDFReader
 from src.file_mover import parse_file_url
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
@@ -247,6 +254,28 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
     return None
 
 
+def get_enum_array(model_instance: "MDFReader.model") -> list[str]:
+    enum_arrays = []
+    for node in model_instance.nodes:
+        node_instance = model_instance.nodes[node]
+        for prop in node_instance.props:
+            if isinstance(node_instance.props[prop].values, list):
+                enum_arrays.append(prop)
+            else:
+                pass
+    return enum_arrays
+
+def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[str]:
+    enum_string_props = []
+    for node in model_instance.nodes:
+        node_instance = model_instance.nodes[node]
+        for prop in node_instance.props:
+            if isinstance(node_instance.props[prop].values, list) and node_instance.props[prop].is_strict:
+                enum_string_props.append(prop)
+            else:
+                pass
+    return enum_string_props
+
 @task(
     name="Validate terms and value sets of one sheet",
     log_prints=True,
@@ -255,37 +284,46 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
 def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
-    template_object,
-):
+    model_instance: "MDFReader.model",
+) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     print_str = f"\n\t{node_name}\n\t----------\n\t"
 
-    # create tavs_df and dict_df
-    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    tavs_df = template_object.read_sheet_na(sheetname="Terms and Value Sets")
-    tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
+    ## create tavs_df and dict_df
+    # dict_df = template_object.read_sheet_na(sheetname="Dictionary")
+    # tavs_df = template_object.read_sheet_na(sheetname="Terms and Value Sets")
+    # tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
 
     # create an enum property list
     # For newer versions of the submission template, obtain the arrays from the Dictionary tab
-    if any(dict_df["Type"].str.contains("array")):
-        enum_arrays = dict_df[dict_df["Type"].str.contains("array")][
-            "Property"
-        ].tolist()
-    else:
-        enum_arrays = [
-            "therapeutic_agents",
-            "treatment_type",
-            "study_data_types",
-            "morphology",
-            "primary_site",
-            "race",
-        ]
+    # if any(dict_df["Type"].str.contains("array")):
+    #    enum_arrays = dict_df[dict_df["Type"].str.contains("array")][
+    #        "Property"
+    #    ].tolist()
+    # else:
+    #    enum_arrays = [
+    #        "therapeutic_agents",
+    #        "treatment_type",
+    #        "study_data_types",
+    #        "morphology",
+    #        "primary_site",
+    #        "race",
+    #    ]
+
+    enum_arrays = get_enum_array(model_instance)
+    enum_string_props = get_enum_string_property_array(model_instance)
 
     check_list = []
     for property in properties:
         WARN_FLAG = True
-        tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
+        tavs_df_prop = pd.DataFrame({"Value Set Name": [], "Term": []})
+        if property in enum_arrays:
+            permissible_terms = model_instance.nodes[node_name].props[property].values
+            tavs_df_prop["Term"] = permissible_terms
+            tavs_df_prop["Value Set Name"] = property
+        else:
+            pass
 
         # if the property is in the TaVs data frame
         if len(tavs_df_prop) > 0:
@@ -347,12 +385,8 @@ def validate_terms_value_sets_one_sheet(
                         if WARN_FLAG:
                             WARN_FLAG = False
                             # test to see if string;enum
-                            enum_strings = dict_df[
-                                (dict_df["Type"].str.contains("string"))
-                                & (dict_df["Type"].str.contains("enum"))
-                            ]["Property"].tolist()
                             # if the enum is an string;enum
-                            if property in enum_strings:
+                            if property in enum_string_props:
                                 property_dict["check"] = "WARNING\nfree strings allowed"
                             else:
                                 property_dict["check"] = "ERROR\nunrecognized value"
@@ -386,12 +420,8 @@ def validate_terms_value_sets_one_sheet(
                             if WARN_FLAG:
                                 WARN_FLAG = False
                                 # test to see if string;enum
-                                enum_strings = dict_df[
-                                    (dict_df["Type"].str.contains("string"))
-                                    & (dict_df["Type"].str.contains("enum"))
-                                ]["Property"].tolist()
                                 # if the enum is an string;enum
-                                if property in enum_strings:
+                                if property in enum_string_props:
                                     property_dict["check"] = (
                                         "WARNING\nfree strings allowed"
                                     )
@@ -443,7 +473,7 @@ def validate_terms_value_sets_one_sheet(
 )
 def validate_terms_value_sets(
     file_path: str,
-    template_path: str,
+    model_instance: "MDFReader.model",
     node_list: list[str],
     output_file: str,
 ) -> None:
@@ -452,10 +482,10 @@ def validate_terms_value_sets(
         + header_str("Terms and Value Sets Check")
         + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\nIf the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
     )
-    template_object = CheckCCDI(ccdi_manifest=template_path)
+    
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
-        node_list, file_object, template_object
+        node_list, file_object, model_instance
     )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
@@ -2155,9 +2185,10 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # Extract sheet df of template "Dictionary" and "Terms and Value Sets" sheets
     template_file = CheckCCDI(ccdi_manifest=template_path)
+    template_version = template_file.get_version()
     dict_df = template_file.read_sheet_na(sheetname="Dictionary")
-    tavs_df = template_file.read_sheet_na(sheetname="Terms and Value Sets")
-    tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
+    #tavs_df = template_file.read_sheet_na(sheetname="Terms and Value Sets")
+    #tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
 
     # crete a list of all properties and a list of required properties
     # all_properties = set(dict_df["Property"]) # this variable not used in original script
@@ -2189,7 +2220,12 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # validate terms and value sets
     validation_logger.info("Checking term and value sets")
-    validate_terms_value_sets(file_path, template_path, nodes_to_validate, output_file)
+    # download model files
+    dcc_tag = CCDI_DCC_Tags()
+    dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=template_version, logger=validation_logger)
+    dcc_mdf = MDFReader(dcc_model_yml, dcc_props_yml, handle="ccdi_dcc")
+    dcc_model = dcc_mdf.model
+    validate_terms_value_sets(file_path, dcc_model, nodes_to_validate, output_file)
 
     # validate integer and numeric vlaues
     validation_logger.info("Checking integer and numeric values")

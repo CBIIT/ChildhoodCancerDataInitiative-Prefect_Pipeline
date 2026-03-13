@@ -249,7 +249,7 @@ class CCDI_DCC_Tags(Task):
                 f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
             )
             return None
-    
+
     def download_latest_tag_manifest(self, logger) -> Union[str, None]:
         latest_tag = self.get_latest_tag()
         if latest_tag is not None:
@@ -257,6 +257,34 @@ class CCDI_DCC_Tags(Task):
         else:
             logger.error("No tags found in ccdi-model GitHub repo")
             return None
+
+    def download_model_files(self, tag: str, logger) -> Tuple[str, str]:
+        check_tag = self.if_tag_exists(tag=tag, logger=logger)
+        if check_tag:
+            tag_element = self.get_tag_element(tag=tag)
+            tag_zipurl = tag_element["zipball_url"]
+            http_response = urlopen(tag_zipurl)
+            zipfile = ZipFile(BytesIO(http_response.read()))
+            # create a temp dir to download the zipfile
+            tempdirobj = tempfile.TemporaryDirectory(suffix="_github_dl")
+            tempdir = tempdirobj.name
+            zipfile.extractall(path=tempdir)
+            # model file
+            model_yml = os.path.join(
+                tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model.yml"
+            )
+            props_yml = os.path.join(
+                tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model-props.yml"
+            )
+            copy(model_yml, os.path.basename(model_yml))
+            copy(props_yml, os.path.basename(props_yml))
+            return os.path.basename(model_yml), os.path.basename(props_yml)
+        else:
+            available_tags = self.get_tags_only()
+            logger.error(
+                f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
+            )
+            return None, None
 
 def get_ccdi_latest_release() -> str:
     latest_url = GithubAPTendpoint.ccdi_model_recent_release
@@ -1551,7 +1579,6 @@ def get_secret_centralized_worker(secret_path_name: str, secret_key_name: str, a
         raise e
 
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
-
 
 
 def sanitize_return(err_string: str, remove_value_list: list):
