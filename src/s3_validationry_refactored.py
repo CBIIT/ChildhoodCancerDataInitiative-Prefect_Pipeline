@@ -18,6 +18,7 @@ from src.file_mover import parse_file_url
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
 from typing import TypeVar
+from importlib.metadata import version
 
 
 DataFrame = TypeVar("DataFrame")
@@ -2230,6 +2231,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=template_version, logger=validation_logger)
     print(dcc_model_yml, dcc_props_yml)
     print(os.listdir("."))
+    print(version("bento-mdf"))
     dcc_mdf = MDFReader(dcc_model_yml, dcc_props_yml, handle="ccdi_dcc")
     print("created dcc mdf instance")
     dcc_model = dcc_mdf.model
