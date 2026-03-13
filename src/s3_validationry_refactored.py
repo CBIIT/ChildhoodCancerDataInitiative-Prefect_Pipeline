@@ -484,10 +484,15 @@ def validate_terms_value_sets(
     )
     
     file_object = CheckCCDI(ccdi_manifest=file_path)
-    validate_str_future = validate_terms_value_sets_one_sheet.map(
-        node_list, file_object, model_instance
-    )
-    validate_str = "".join([i.result() for i in validate_str_future])
+    validate_str_list = []
+    for node in node_list:
+        print("processing node: " + node)
+        validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, model_instance))
+    validate_str = "".join(validate_str_list)
+    #validate_str_future = validate_terms_value_sets_one_sheet.map(
+    #    node_list, file_object, model_instance
+    #)
+    #validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
@@ -2225,7 +2230,9 @@ def ValidationRy_new(file_path: str, template_path: str):
     dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=template_version, logger=validation_logger)
     print(dcc_model_yml, dcc_props_yml)
     dcc_mdf = MDFReader(dcc_model_yml, dcc_props_yml, handle="ccdi_dcc")
+    print("created dcc mdf instance")
     dcc_model = dcc_mdf.model
+    print("created dcc model instance")
     validate_terms_value_sets(file_path, dcc_model, nodes_to_validate, output_file)
 
     # validate integer and numeric vlaues
