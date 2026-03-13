@@ -2223,6 +2223,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     # download model files
     dcc_tag = CCDI_DCC_Tags()
     dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=template_version, logger=validation_logger)
+    print(dcc_model_yml, dcc_props_yml)
     dcc_mdf = MDFReader(dcc_model_yml, dcc_props_yml, handle="ccdi_dcc")
     dcc_model = dcc_mdf.model
     validate_terms_value_sets(file_path, dcc_model, nodes_to_validate, output_file)

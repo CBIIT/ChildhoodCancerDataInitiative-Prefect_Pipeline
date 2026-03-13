@@ -273,9 +273,13 @@ class CCDI_DCC_Tags(Task):
             model_yml = os.path.join(
                 tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model.yml"
             )
+            logger.info("model file path in temp dir: " + model_yml)
+            logger.info("model file name: " + os.path.basename(model_yml))
             props_yml = os.path.join(
                 tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model-props.yml"
             )
+            logger.info("prop file path in temp dir: " + props_yml)
+            logger.info("prop file name: " + os.path.basename(props_yml))
             copy(model_yml, os.path.basename(model_yml))
             copy(props_yml, os.path.basename(props_yml))
             return os.path.basename(model_yml), os.path.basename(props_yml)
