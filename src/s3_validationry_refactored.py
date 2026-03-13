@@ -2229,6 +2229,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     dcc_tag = CCDI_DCC_Tags()
     dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=template_version, logger=validation_logger)
     print(dcc_model_yml, dcc_props_yml)
+    print(os.listdir("."))
     dcc_mdf = MDFReader(dcc_model_yml, dcc_props_yml, handle="ccdi_dcc")
     print("created dcc mdf instance")
     dcc_model = dcc_mdf.model
