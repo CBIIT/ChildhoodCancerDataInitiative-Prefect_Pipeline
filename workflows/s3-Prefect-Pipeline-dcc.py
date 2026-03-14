@@ -38,6 +38,8 @@ from src.utils import (
     ccdi_to_dcf_index,
     CCDI_DCC_Tags,
 )
+sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
+from workflow.validate_submission import download_model_files
 
 
 @flow(
@@ -182,8 +184,10 @@ def runner_dcc(
         # run ValidationRy
         runner_logger.info("Running ValidationRy flow")
         try:
-            dcc_tag = CCDI_DCC_Tags()
-            dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=manifest_version, logger=runner_logger)
+
+            dcc_model_yml, dcc_props_yml = download_model_files(
+                commons_acronym="ccdi_dcc", tag=manifest_version
+            )
             print(dcc_model_yml, dcc_props_yml)
             print(os.listdir("."))
             print(version("bento-mdf"))
