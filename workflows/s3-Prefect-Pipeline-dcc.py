@@ -42,6 +42,22 @@ sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from workflow.validate_submission import download_model_files
 
 
+class ModelParser:
+    """A higher level wrapper of MDFReader class from bento-mdf that offers direct and easy access to model features"""
+
+    def __init__(self, model_file: str, props_file: str, handle: str | None = None):
+        """Create a class of ModelParser
+
+        Args:
+            model_file (str): file path to the model yaml file
+            props_file (str): file path to the properties yaml file
+            handle (str | None, optional): model name assigned. Defaults to None.
+        """
+        self.model_file = model_file
+        self.props_file = props_file
+        self.model = MDFReader(self.model_file, self.props_file, handle=handle).model
+
+
 @flow(
     name="S3 Prefect Pipeline for DCC",
     log_prints=True,
@@ -197,10 +213,10 @@ def runner_dcc(
             print(os.listdir("."))
             print(version("bento-mdf"))
             print(version("bento-meta"))
-            ccdi_model = MDFReader(ccdi_model_yml, ccdi_props_yml, handle="ccdi").model
-            print("created ccdi model instance")
-            dcc_model = MDFReader(dcc_model_yml, dcc_props_yml, handle="dcc").model
-            print("created dcc model instance")
+            ccdi_model = ModelParser(ccdi_model_yml, ccdi_props_yml, handle="ccdi").model
+            print("created ccdi model from ModelParser instance")
+            dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
+            print("created dcc model from ModelParser instance")
             validation_out_file = ValidationRy_new(catcherr_out_file, input_template, dcc_model)
         except Exception as e:
             validation_out_file = None
