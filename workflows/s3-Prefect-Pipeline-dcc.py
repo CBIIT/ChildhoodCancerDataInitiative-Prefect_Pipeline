@@ -213,11 +213,11 @@ def runner_dcc(
             print(os.listdir("."))
             print(version("bento-mdf"))
             print(version("bento-meta"))
-            ccdi_model = ModelParser(ccdi_model_yml, ccdi_props_yml, handle="ccdi").model
-            print("created ccdi model from ModelParser instance")
-            dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
-            print("created dcc model from ModelParser instance")
-            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, dcc_model)
+            #ccdi_model = ModelParser(ccdi_model_yml, ccdi_props_yml, handle="ccdi").model
+            print(f"created ccdi model files downloaded: {ccdi_model_yml}, {ccdi_props_yml}")
+            #dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
+            print(f"created dcc model files downloaded: {dcc_model_yml}, {dcc_props_yml}")
+            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, dcc_model_yml, dcc_props_yml)
         except Exception as e:
             validation_out_file = None
             raise e # stop flow at here if Validation fails
