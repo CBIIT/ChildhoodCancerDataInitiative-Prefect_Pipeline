@@ -189,6 +189,8 @@ def runner_dcc(
                 commons_acronym="ccdi_dcc", tag=manifest_version
             )
             print(dcc_model_yml, dcc_props_yml)
+            with open(dcc_model_yml) as f:
+                print(f.read())
             print(os.listdir("."))
             print(version("bento-mdf"))
             dcc_model = MDFReader(dcc_model_yml, dcc_props_yml, handle="dcc").model
