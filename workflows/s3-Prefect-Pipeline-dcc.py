@@ -10,6 +10,7 @@ from prefect import flow, get_run_logger
 import os
 import sys
 from datetime import date
+from bento_mdf import MDFReader
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -180,9 +181,17 @@ def runner_dcc(
         # run ValidationRy
         runner_logger.info("Running ValidationRy flow")
         try:
-            validation_out_file = ValidationRy_new(catcherr_out_file, input_template)
-        except:
+            dcc_tag = CCDI_DCC_Tags()
+            dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=manifest_version, logger=runner_logger)
+            print(dcc_model_yml, dcc_props_yml)
+            print(os.listdir("."))
+            print(sys.version("bento-mdf"))
+            dcc_model = MDFReader(dcc_model_yml, dcc_props_yml, handle="dcc").model
+            print("created dcc model instance")
+            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, dcc_model)
+        except Exception as e:
             validation_out_file = None
+            raise e # stop flow at here if Validation fails
         # upload ValidationRy output
         runner_logger.info(f"Uploading outputs of ValidationRy to bucket {bucket}")
         ccdi_wf_outputs_ul(

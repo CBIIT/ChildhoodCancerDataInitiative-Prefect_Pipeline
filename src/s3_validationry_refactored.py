@@ -2176,7 +2176,7 @@ def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -
     log_prints=True,
     flow_run_name="CCDI_ValidationRy_refactor" + f"{get_time()}",
 )
-def ValidationRy_new(file_path: str, template_path: str):
+def ValidationRy_new(file_path: str, template_path: str, model_instance: "MDFReader.model"):
     validation_logger = get_run_logger()
 
     todays_date = get_date()
@@ -2226,17 +2226,17 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # validate terms and value sets
     validation_logger.info("Checking term and value sets")
-    # download model files
-    dcc_tag = CCDI_DCC_Tags()
-    dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=template_version, logger=validation_logger)
-    print(dcc_model_yml, dcc_props_yml)
-    print(os.listdir("."))
-    print(version("bento-mdf"))
-    dcc_mdf = MDFReader(dcc_model_yml, dcc_props_yml, handle="ccdi_dcc")
-    print("created dcc mdf instance")
-    dcc_model = dcc_mdf.model
-    print("created dcc model instance")
-    validate_terms_value_sets(file_path, dcc_model, nodes_to_validate, output_file)
+    ## download model files
+    #dcc_tag = CCDI_DCC_Tags()
+    #dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=template_version, logger=validation_logger)
+    #print(dcc_model_yml, dcc_props_yml)
+    #print(os.listdir("."))
+    #print(version("bento-mdf"))
+    #dcc_mdf = MDFReader(dcc_model_yml, dcc_props_yml, handle="ccdi_dcc")
+    #print("created dcc mdf instance")
+    #dcc_model = dcc_mdf.model
+    #print("created dcc model instance")
+    validate_terms_value_sets(file_path, model_instance, nodes_to_validate, output_file)
 
     # validate integer and numeric vlaues
     validation_logger.info("Checking integer and numeric values")
