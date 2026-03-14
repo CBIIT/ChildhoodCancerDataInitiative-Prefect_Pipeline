@@ -11,6 +11,7 @@ import os
 import sys
 from datetime import date
 from bento_mdf import MDFReader
+from importlib.metadata import version
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -185,7 +186,7 @@ def runner_dcc(
             dcc_model_yml, dcc_props_yml = dcc_tag.download_model_files(tag=manifest_version, logger=runner_logger)
             print(dcc_model_yml, dcc_props_yml)
             print(os.listdir("."))
-            print(sys.version("bento-mdf"))
+            print(version("bento-mdf"))
             dcc_model = MDFReader(dcc_model_yml, dcc_props_yml, handle="dcc").model
             print("created dcc model instance")
             validation_out_file = ValidationRy_new(catcherr_out_file, input_template, dcc_model)
