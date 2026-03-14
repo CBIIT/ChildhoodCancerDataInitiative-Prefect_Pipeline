@@ -293,11 +293,11 @@ def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[st
                 pass
     return enum_string_props
 
-@task(
-    name="Validate terms and value sets of one sheet",
-    log_prints=True,
-    task_run_name="Validate terms and value sets of node {node_name}",
-)
+#@task(
+#    name="Validate terms and value sets of one sheet",
+#    log_prints=True,
+#    task_run_name="Validate terms and value sets of node {node_name}",
+#)
 def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
@@ -483,11 +483,11 @@ def validate_terms_value_sets_one_sheet(
     return print_str
 
 
-@flow(
-    name="Validate terms and value sets",
-    log_prints=True,
-    task_runner=ConcurrentTaskRunner(),
-)
+#@flow(
+#    name="Validate terms and value sets",
+#    log_prints=True,
+#    task_runner=ConcurrentTaskRunner(),
+#)
 def validate_terms_value_sets(
     file_path: str,
     model_instance: "MDFReader.model",
@@ -2192,7 +2192,7 @@ def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -
     log_prints=True,
     flow_run_name="CCDI_ValidationRy_refactor" + f"{get_time()}",
 )
-def ValidationRy_new(file_path: str, template_path: str, model_yaml: str, model_props_yaml: str) -> None:
+def ValidationRy_new(file_path: str, template_path: str, model_instance: "MDFReader.model") -> None:
     validation_logger = get_run_logger()
 
     todays_date = get_date()
@@ -2243,11 +2243,12 @@ def ValidationRy_new(file_path: str, template_path: str, model_yaml: str, model_
     # validate terms and value sets
     validation_logger.info("Checking term and value sets")
     # create model parser
-    dcc_model_parser = ModelParser(model_file=model_yaml, props_file=model_props_yaml, handle="ccdi_dcc")
-    validation_logger.info("Model parser created successfully")
-    dcc_model = dcc_model_parser.model
-    validation_logger.info("Model parser model created successfully")
-    validate_terms_value_sets(file_path, dcc_model, nodes_to_validate, output_file)
+    #dcc_model_parser = ModelParser(model_file=model_yaml, props_file=model_props_yaml, handle="ccdi_dcc")
+    #validation_logger.info("Model parser created successfully")
+    #dcc_model = dcc_model_parser.model
+    #validation_logger.info("Model parser model created successfully")
+    validate_terms_value_sets(file_path, model_instance, nodes_to_validate, output_file)
+    validation_logger.info("Term and value set validation completed successfully")
 
     # validate integer and numeric vlaues
     validation_logger.info("Checking integer and numeric values")

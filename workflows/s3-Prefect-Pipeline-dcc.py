@@ -219,7 +219,7 @@ def runner_dcc(
             print("dcc_model created")
             for node in dcc_model.nodes:
                 print(node)
-            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, dcc_model_yml, dcc_props_yml)
+            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, model_instance=dcc_model)
         except Exception as e:
             validation_out_file = None
             raise e # stop flow at here if Validation fails
