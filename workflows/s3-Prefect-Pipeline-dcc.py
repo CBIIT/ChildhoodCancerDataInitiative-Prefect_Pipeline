@@ -189,10 +189,16 @@ def runner_dcc(
                 commons_acronym="ccdi_dcc", tag=manifest_version
             )
             print(dcc_model_yml, dcc_props_yml)
-            with open(dcc_model_yml) as f:
-                print(f.read())
+            #with open(dcc_model_yml) as f:
+            #    print(f.read())
+            ccdi_model_yml, ccdi_props_yml = download_model_files(
+                commons_acronym="ccdi", tag="3.1.0"
+            )
             print(os.listdir("."))
             print(version("bento-mdf"))
+            print(version("bento-meta"))
+            ccdi_model = MDFReader(ccdi_model_yml, ccdi_props_yml, handle="ccdi").model
+            print("created ccdi model instance")
             dcc_model = MDFReader(dcc_model_yml, dcc_props_yml, handle="dcc").model
             print("created dcc model instance")
             validation_out_file = ValidationRy_new(catcherr_out_file, input_template, dcc_model)
