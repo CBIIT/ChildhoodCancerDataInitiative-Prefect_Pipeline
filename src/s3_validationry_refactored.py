@@ -271,27 +271,7 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
     return None
 
 
-def get_enum_array(model_instance: "MDFReader.model") -> list[str]:
-    enum_arrays = []
-    for node in model_instance.nodes:
-        node_instance = model_instance.nodes[node]
-        for prop in node_instance.props:
-            if isinstance(node_instance.props[prop].values, list):
-                enum_arrays.append(prop)
-            else:
-                pass
-    return enum_arrays
 
-def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[str]:
-    enum_string_props = []
-    for node in model_instance.nodes:
-        node_instance = model_instance.nodes[node]
-        for prop in node_instance.props:
-            if isinstance(node_instance.props[prop].values, list) and node_instance.props[prop].is_strict:
-                enum_string_props.append(prop)
-            else:
-                pass
-    return enum_string_props
 
 #@task(
 #    name="Validate terms and value sets of one sheet",
@@ -301,7 +281,8 @@ def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[st
 def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
-    model_instance: "MDFReader.model",
+    enum_props_dict: dict[str, list[str]],
+    enum_strict_props: list[str],
 ) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
@@ -328,15 +309,15 @@ def validate_terms_value_sets_one_sheet(
     #        "race",
     #    ]
 
-    enum_arrays = get_enum_array(model_instance)
-    enum_string_props = get_enum_string_property_array(model_instance)
+    enum_arrays = list(enum_props_dict.keys())
+    enum_string_props = enum_strict_props
 
     check_list = []
     for property in properties:
         WARN_FLAG = True
         tavs_df_prop = pd.DataFrame({"Value Set Name": [], "Term": []})
         if property in enum_arrays:
-            permissible_terms = model_instance.nodes[node_name].props[property].values
+            permissible_terms = enum_props_dict[property]
             tavs_df_prop["Term"] = permissible_terms
             tavs_df_prop["Value Set Name"] = property
         else:
@@ -490,7 +471,8 @@ def validate_terms_value_sets_one_sheet(
 #)
 def validate_terms_value_sets(
     file_path: str,
-    model_instance: "MDFReader.model",
+    enum_props_dict: dict[str, list[str]],
+    enum_strict_props: list[str],
     node_list: list[str],
     output_file: str,
 ) -> None:
@@ -504,7 +486,7 @@ def validate_terms_value_sets(
     validate_str_list = []
     for node in node_list:
         print("processing node: " + node)
-        validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, model_instance))
+        validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, enum_props_dict, enum_strict_props))
     validate_str = "".join(validate_str_list)
     #validate_str_future = validate_terms_value_sets_one_sheet.map(
     #    node_list, file_object, model_instance
@@ -2192,7 +2174,7 @@ def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -
     log_prints=True,
     flow_run_name="CCDI_ValidationRy_refactor" + f"{get_time()}",
 )
-def ValidationRy_new(file_path: str, template_path: str, model_instance: "MDFReader.model") -> None:
+def ValidationRy_new(file_path: str, template_path: str, enum_props_dict: dict[str, list[str]], enum_strict_props: list[str]) -> None:
     validation_logger = get_run_logger()
 
     todays_date = get_date()
@@ -2247,7 +2229,7 @@ def ValidationRy_new(file_path: str, template_path: str, model_instance: "MDFRea
     #validation_logger.info("Model parser created successfully")
     #dcc_model = dcc_model_parser.model
     #validation_logger.info("Model parser model created successfully")
-    validate_terms_value_sets(file_path, model_instance, nodes_to_validate, output_file)
+    validate_terms_value_sets(file_path, enum_props_dict, enum_strict_props, nodes_to_validate, output_file)
     validation_logger.info("Term and value set validation completed successfully")
 
     # validate integer and numeric vlaues

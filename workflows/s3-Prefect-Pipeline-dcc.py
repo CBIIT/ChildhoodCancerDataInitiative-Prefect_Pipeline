@@ -58,6 +58,32 @@ class ModelParser:
         self.model = MDFReader(self.model_file, self.props_file, handle=handle).model
 
 
+def get_enum_props_dict(model_instance: "MDFReader.model") -> dict[str, list[str]]:
+    enum_props_dict = {}
+    for node in model_instance.nodes:
+        node_instance = model_instance.nodes[node]
+        for prop in node_instance.props:
+            if isinstance(node_instance.props[prop].values, list):
+                enum_props_dict[prop] = node_instance.props[prop].values
+            else:
+                pass
+    return enum_props_dict
+
+def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[str]:
+    enum_string_props = []
+    for node in model_instance.nodes:
+        node_instance = model_instance.nodes[node]
+        for prop in node_instance.props:
+            if (
+                isinstance(node_instance.props[prop].values, list)
+                and node_instance.props[prop].is_strict
+            ):
+                enum_string_props.append(prop)
+            else:
+                pass
+    return enum_string_props
+
+
 @flow(
     name="S3 Prefect Pipeline for DCC",
     log_prints=True,
@@ -205,21 +231,16 @@ def runner_dcc(
                 commons_acronym="ccdi_dcc", tag=manifest_version
             )
             print(dcc_model_yml, dcc_props_yml)
-            #with open(dcc_model_yml) as f:
-            #    print(f.read())
-            ccdi_model_yml, ccdi_props_yml = download_model_files(
-                commons_acronym="ccdi", tag="3.1.0"
-            )
             print(os.listdir("."))
             print(version("bento-mdf"))
             print(version("bento-meta"))
-            ccdi_model = ModelParser(ccdi_model_yml, ccdi_props_yml, handle="ccdi").model
-            print("ccdi_model created")
             dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
             print("dcc_model created")
             for node in dcc_model.nodes:
                 print(node)
-            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, model_instance=dcc_model)
+            enum_props_dict = get_enum_props_dict(dcc_model)
+            enum_strict_props = get_enum_string_property_array(dcc_model)
+            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, enum_props_dict, enum_strict_props)
         except Exception as e:
             validation_out_file = None
             raise e # stop flow at here if Validation fails
