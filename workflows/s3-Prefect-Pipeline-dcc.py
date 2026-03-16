@@ -59,6 +59,14 @@ class ModelParser:
 
 
 def get_enum_props_dict(model_instance: "MDFReader.model") -> dict[str, list[str]]:
+    """Generate a dictionary of porperties, which has property name as key, and a list of permissible values (PV) as value
+
+    Args:
+        model_instance (MDFReader.model): MDFReader.model instance
+
+    Returns:
+        dict[str, list[str]]: _description_
+    """
     enum_props_dict = {}
     for node in model_instance.nodes:
         node_instance = model_instance.nodes[node]
@@ -70,6 +78,14 @@ def get_enum_props_dict(model_instance: "MDFReader.model") -> dict[str, list[str
     return enum_props_dict
 
 def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[str]:
+    """Generate a list of property names, which is stricted to its Permissible Values (PV) list
+
+    Args:
+        model_instance (MDFReader.model): MDFReader.model instance
+
+    Returns:
+        list[str]: _description_
+    """
     enum_string_props = []
     for node in model_instance.nodes:
         node_instance = model_instance.nodes[node]
@@ -83,6 +99,26 @@ def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[st
                 pass
     return enum_string_props
 
+def get_rel_from_mdf(model_instance: "MDFReader.model") -> str:
+    rel_dict_list = []
+    for node in model_instance.nodes:
+        try:
+            edges_list_node = model_instance.edges_by_src(model_instance.nodes[node])
+            if len(edges_list_node) > 0:
+                for edge in edges_list_node:
+                    edge_dict = {}
+                    parent_node_type =  edge.triplet[2]
+                    edge_multi = edge.multiplicity
+                    edge_dict["src"] = node
+                    edge_dict["dst"] = parent_node_type
+                    edge_dict["multiplicity"] = edge_multi
+                    rel_dict_list.append(edge_dict)
+            else:
+                # study node in dcc doesn't have any outgoing edge
+                pass
+        except KeyError as e:
+            raise KeyError(f"Node {node} is not found in the model")     
+    return rel_dict_list
 
 @flow(
     name="S3 Prefect Pipeline for DCC",
@@ -231,16 +267,12 @@ def runner_dcc(
                 commons_acronym="ccdi_dcc", tag=manifest_version
             )
             print(dcc_model_yml, dcc_props_yml)
-            print(os.listdir("."))
-            print(version("bento-mdf"))
-            print(version("bento-meta"))
             dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
             print("dcc_model created")
-            for node in dcc_model.nodes:
-                print(node)
             enum_props_dict = get_enum_props_dict(dcc_model)
             enum_strict_props = get_enum_string_property_array(dcc_model)
-            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, enum_props_dict, enum_strict_props)
+            model_rel_list = get_rel_from_mdf(dcc_model)
+            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, enum_props_dict, enum_strict_props, model_rel_dict)
         except Exception as e:
             validation_out_file = None
             raise e # stop flow at here if Validation fails
