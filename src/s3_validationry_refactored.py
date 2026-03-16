@@ -469,7 +469,7 @@ def validate_terms_value_sets(
     #    validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, enum_props_dict, enum_strict_props))
     #validate_str = "".join(validate_str_list)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
-        node_list, file_object, enum_props_dict, unmapped(enum_strict_props)
+        node_list, file_object, unmapped(enum_props_dict), unmapped(enum_strict_props)
     )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
