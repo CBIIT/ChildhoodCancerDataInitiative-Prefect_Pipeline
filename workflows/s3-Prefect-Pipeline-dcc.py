@@ -65,7 +65,7 @@ def get_enum_props_dict(model_instance: "MDFReader.model") -> dict[str, list[str
         model_instance (MDFReader.model): MDFReader.model instance
 
     Returns:
-        dict[str, list[str]]: _description_
+        dict[str, list[str]]: a dictionary of porperties, which has property name as key, and a list of permissible values (PV) as value
     """
     enum_props_dict = {}
     for node in model_instance.nodes:
@@ -84,7 +84,7 @@ def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[st
         model_instance (MDFReader.model): MDFReader.model instance
 
     Returns:
-        list[str]: _description_
+        list[str]: a list of property names, which are stricted to its own PV list
     """
     enum_string_props = []
     for node in model_instance.nodes:
@@ -100,6 +100,17 @@ def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[st
     return enum_string_props
 
 def get_rel_from_mdf(model_instance: "MDFReader.model") -> str:
+    """Generate a list of dictionaries describing every rel in the model
+
+    Args:
+        model_instance (MDFReader.model): _description_
+
+    Raises:
+        KeyError: if the node is not found in the model
+
+    Returns:
+        list[dict]: A list of dictionaries describing every rel in the model
+    """
     rel_dict_list = []
     for node in model_instance.nodes:
         try:
@@ -268,11 +279,10 @@ def runner_dcc(
             )
             print(dcc_model_yml, dcc_props_yml)
             dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
-            print("dcc_model created")
+            print("dcc mdf model created")
             enum_props_dict = get_enum_props_dict(dcc_model)
             enum_strict_props = get_enum_string_property_array(dcc_model)
             model_rel_list = get_rel_from_mdf(dcc_model)
-            print(model_rel_list)
             validation_out_file = ValidationRy_new(catcherr_out_file, input_template, enum_props_dict, enum_strict_props, model_rel_list)
         except Exception as e:
             validation_out_file = None
