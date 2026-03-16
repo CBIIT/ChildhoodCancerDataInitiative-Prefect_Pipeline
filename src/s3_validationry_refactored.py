@@ -17,6 +17,7 @@ from bento_mdf import MDFReader
 from src.file_mover import parse_file_url
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
+from prefect import unmapped
 from typing import TypeVar
 from importlib.metadata import version
 
@@ -273,11 +274,11 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
 
 
 
-#@task(
-#    name="Validate terms and value sets of one sheet",
-#    log_prints=True,
-#    task_run_name="Validate terms and value sets of node {node_name}",
-#)
+@task(
+    name="Validate terms and value sets of one sheet",
+    log_prints=True,
+    task_run_name="Validate terms and value sets of node {node_name}",
+)
 def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
@@ -287,27 +288,6 @@ def validate_terms_value_sets_one_sheet(
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     print_str = f"\n\t{node_name}\n\t----------\n\t"
-
-    ## create tavs_df and dict_df
-    # dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    # tavs_df = template_object.read_sheet_na(sheetname="Terms and Value Sets")
-    # tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
-
-    # create an enum property list
-    # For newer versions of the submission template, obtain the arrays from the Dictionary tab
-    # if any(dict_df["Type"].str.contains("array")):
-    #    enum_arrays = dict_df[dict_df["Type"].str.contains("array")][
-    #        "Property"
-    #    ].tolist()
-    # else:
-    #    enum_arrays = [
-    #        "therapeutic_agents",
-    #        "treatment_type",
-    #        "study_data_types",
-    #        "morphology",
-    #        "primary_site",
-    #        "race",
-    #    ]
 
     enum_arrays = list(enum_props_dict.keys())
     enum_string_props = enum_strict_props
@@ -464,11 +444,11 @@ def validate_terms_value_sets_one_sheet(
     return print_str
 
 
-#@flow(
-#    name="Validate terms and value sets",
-#    log_prints=True,
-#    task_runner=ConcurrentTaskRunner(),
-#)
+@flow(
+    name="Validate terms and value sets",
+    log_prints=True,
+    task_runner=ConcurrentTaskRunner(),
+)
 def validate_terms_value_sets(
     file_path: str,
     enum_props_dict: dict[str, list[str]],
@@ -484,14 +464,14 @@ def validate_terms_value_sets(
     
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_list = []
-    for node in node_list:
-        print("processing node: " + node)
-        validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, enum_props_dict, enum_strict_props))
-    validate_str = "".join(validate_str_list)
-    #validate_str_future = validate_terms_value_sets_one_sheet.map(
-    #    node_list, file_object, model_instance
-    #)
-    #validate_str = "".join([i.result() for i in validate_str_future])
+    #for node in node_list:
+    #    print("processing node: " + node)
+    #    validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, enum_props_dict, enum_strict_props))
+    #validate_str = "".join(validate_str_list)
+    validate_str_future = validate_terms_value_sets_one_sheet.map(
+        node_list, file_object, enum_props_dict, unmapped(enum_strict_props)
+    )
+    validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
     with open(output_file, "a+") as outf:
         outf.write(return_str)
