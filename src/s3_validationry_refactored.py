@@ -1847,8 +1847,9 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
         # find the unique values of that linking property
         link_values = node_df[link_prop].dropna().unique().tolist()
 
+        mul_type_to_parse = ["many_to_many", "one_to_many"]
         if link_mul is not None:
-            if link_mul == "many_to_many" or link_mul == "one_to_many":
+            if link_mul in mul_type_to_parse:
                 # only parse link values if the multiplicity is many_to_many or one_to_many
                 parsed_unique_link_values = []
                 for value in link_values:
