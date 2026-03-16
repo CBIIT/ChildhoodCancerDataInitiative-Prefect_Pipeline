@@ -272,6 +272,7 @@ def runner_dcc(
             enum_props_dict = get_enum_props_dict(dcc_model)
             enum_strict_props = get_enum_string_property_array(dcc_model)
             model_rel_list = get_rel_from_mdf(dcc_model)
+            print(model_rel_list)
             validation_out_file = ValidationRy_new(catcherr_out_file, input_template, enum_props_dict, enum_strict_props, model_rel_list)
         except Exception as e:
             validation_out_file = None

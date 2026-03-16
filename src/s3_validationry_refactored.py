@@ -1840,6 +1840,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
         for rel in model_rel_list:
             if rel["src"] == node_name and rel["dst"] == str.split(link_prop, ".")[0]:
                 link_mul = rel["multiplicity"]
+                print(f"rel {node_name} to {str.split(link_prop, '.')[0]} multiplicity is {link_mul} ")
             else:
                 link_mul = None
 
