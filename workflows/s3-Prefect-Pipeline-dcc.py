@@ -10,6 +10,8 @@ from prefect import flow, get_run_logger
 import os
 import sys
 from datetime import date
+from bento_mdf import MDFReader
+from importlib.metadata import version
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -36,7 +38,98 @@ from src.utils import (
     ccdi_to_dcf_index,
     CCDI_DCC_Tags,
 )
+sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
+from workflow.validate_submission import download_model_files
 
+
+class ModelParser:
+    """A higher level wrapper of MDFReader class from bento-mdf that offers direct and easy access to model features"""
+
+    def __init__(self, model_file: str, props_file: str, handle: str | None = None):
+        """Create a class of ModelParser
+
+        Args:
+            model_file (str): file path to the model yaml file
+            props_file (str): file path to the properties yaml file
+            handle (str | None, optional): model name assigned. Defaults to None.
+        """
+        self.model_file = model_file
+        self.props_file = props_file
+        self.model = MDFReader(self.model_file, self.props_file, handle=handle).model
+
+
+def get_enum_props_dict(model_instance: "MDFReader.model") -> dict[str, list[str]]:
+    """Generate a dictionary of porperties, which has property name as key, and a list of permissible values (PV) as value
+
+    Args:
+        model_instance (MDFReader.model): MDFReader.model instance
+
+    Returns:
+        dict[str, list[str]]: a dictionary of porperties, which has property name as key, and a list of permissible values (PV) as value
+    """
+    enum_props_dict = {}
+    for node in model_instance.nodes:
+        node_instance = model_instance.nodes[node]
+        for prop in node_instance.props:
+            if isinstance(node_instance.props[prop].values, list):
+                enum_props_dict[prop] = node_instance.props[prop].values
+            else:
+                pass
+    return enum_props_dict
+
+def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[str]:
+    """Generate a list of property names, which is stricted to its Permissible Values (PV) list
+
+    Args:
+        model_instance (MDFReader.model): MDFReader.model instance
+
+    Returns:
+        list[str]: a list of property names, which are stricted to its own PV list
+    """
+    enum_string_props = []
+    for node in model_instance.nodes:
+        node_instance = model_instance.nodes[node]
+        for prop in node_instance.props:
+            if (
+                isinstance(node_instance.props[prop].values, list)
+                and node_instance.props[prop].is_strict
+            ):
+                enum_string_props.append(prop)
+            else:
+                pass
+    return enum_string_props
+
+def get_rel_from_mdf(model_instance: "MDFReader.model") -> str:
+    """Generate a list of dictionaries describing every rel in the model
+
+    Args:
+        model_instance (MDFReader.model): _description_
+
+    Raises:
+        KeyError: if the node is not found in the model
+
+    Returns:
+        list[dict]: A list of dictionaries describing every rel in the model
+    """
+    rel_dict_list = []
+    for node in model_instance.nodes:
+        try:
+            edges_list_node = model_instance.edges_by_src(model_instance.nodes[node])
+            if len(edges_list_node) > 0:
+                for edge in edges_list_node:
+                    edge_dict = {}
+                    parent_node_type =  edge.triplet[2]
+                    edge_multi = edge.multiplicity
+                    edge_dict["src"] = node
+                    edge_dict["dst"] = parent_node_type
+                    edge_dict["multiplicity"] = edge_multi
+                    rel_dict_list.append(edge_dict)
+            else:
+                # study node in dcc doesn't have any outgoing edge
+                pass
+        except KeyError as e:
+            raise KeyError(f"Node {node} is not found in the model")     
+    return rel_dict_list
 
 @flow(
     name="S3 Prefect Pipeline for DCC",
@@ -180,9 +273,20 @@ def runner_dcc(
         # run ValidationRy
         runner_logger.info("Running ValidationRy flow")
         try:
-            validation_out_file = ValidationRy_new(catcherr_out_file, input_template)
-        except:
+
+            dcc_model_yml, dcc_props_yml = download_model_files(
+                commons_acronym="ccdi_dcc", tag=manifest_version
+            )
+            print(dcc_model_yml, dcc_props_yml)
+            dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
+            print("dcc mdf model created")
+            enum_props_dict = get_enum_props_dict(dcc_model)
+            enum_strict_props = get_enum_string_property_array(dcc_model)
+            model_rel_list = get_rel_from_mdf(dcc_model)
+            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, enum_props_dict, enum_strict_props, model_rel_list)
+        except Exception as e:
             validation_out_file = None
+            raise e # stop flow at here if Validation fails
         # upload ValidationRy output
         runner_logger.info(f"Uploading outputs of ValidationRy to bucket {bucket}")
         ccdi_wf_outputs_ul(

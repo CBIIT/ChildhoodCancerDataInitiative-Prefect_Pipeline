@@ -6,11 +6,20 @@ import sys
 import numpy as np
 import warnings
 import re
-from src.utils import set_s3_session_client, get_time, get_date, CheckCCDI
+from src.utils import (
+    set_s3_session_client,
+    get_time,
+    get_date,
+    CheckCCDI,
+    CCDI_DCC_Tags,
+)
+from bento_mdf import MDFReader
 from src.file_mover import parse_file_url
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
+from prefect import unmapped
 from typing import TypeVar
+from importlib.metadata import version
 
 
 DataFrame = TypeVar("DataFrame")
@@ -47,6 +56,22 @@ def if_template_valid(template_path: str) -> None:
         pass
     template_file.close()
     return None
+
+
+class ModelParser:
+    """A higher level wrapper of MDFReader class from bento-mdf that offers direct and easy access to model features"""
+
+    def __init__(self, model_file: str, props_file: str, handle: str | None = None):
+        """Create a class of ModelParser
+
+        Args:
+            model_file (str): file path to the model yaml file
+            props_file (str): file path to the properties yaml file
+            handle (str | None, optional): model name assigned. Defaults to None.
+        """
+        self.model_file = model_file
+        self.props_file = props_file
+        self.model = MDFReader(self.model_file, self.props_file, handle=handle).model
 
 
 @task
@@ -255,37 +280,26 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
 def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
-    template_object,
-):
+    enum_props_dict: dict[str, list[str]],
+    enum_strict_props: list[str],
+) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     print_str = f"\n\t{node_name}\n\t----------\n\t"
 
-    # create tavs_df and dict_df
-    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    tavs_df = template_object.read_sheet_na(sheetname="Terms and Value Sets")
-    tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
-
-    # create an enum property list
-    # For newer versions of the submission template, obtain the arrays from the Dictionary tab
-    if any(dict_df["Type"].str.contains("array")):
-        enum_arrays = dict_df[dict_df["Type"].str.contains("array")][
-            "Property"
-        ].tolist()
-    else:
-        enum_arrays = [
-            "therapeutic_agents",
-            "treatment_type",
-            "study_data_types",
-            "morphology",
-            "primary_site",
-            "race",
-        ]
+    enum_arrays = list(enum_props_dict.keys())
+    enum_string_props = enum_strict_props
 
     check_list = []
     for property in properties:
         WARN_FLAG = True
-        tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
+        tavs_df_prop = pd.DataFrame({"Value Set Name": [], "Term": []})
+        if property in enum_arrays:
+            permissible_terms = enum_props_dict[property]
+            tavs_df_prop["Term"] = permissible_terms
+            tavs_df_prop["Value Set Name"] = property
+        else:
+            pass
 
         # if the property is in the TaVs data frame
         if len(tavs_df_prop) > 0:
@@ -347,12 +361,8 @@ def validate_terms_value_sets_one_sheet(
                         if WARN_FLAG:
                             WARN_FLAG = False
                             # test to see if string;enum
-                            enum_strings = dict_df[
-                                (dict_df["Type"].str.contains("string"))
-                                & (dict_df["Type"].str.contains("enum"))
-                            ]["Property"].tolist()
                             # if the enum is an string;enum
-                            if property in enum_strings:
+                            if property in enum_string_props:
                                 property_dict["check"] = "WARNING\nfree strings allowed"
                             else:
                                 property_dict["check"] = "ERROR\nunrecognized value"
@@ -386,12 +396,8 @@ def validate_terms_value_sets_one_sheet(
                             if WARN_FLAG:
                                 WARN_FLAG = False
                                 # test to see if string;enum
-                                enum_strings = dict_df[
-                                    (dict_df["Type"].str.contains("string"))
-                                    & (dict_df["Type"].str.contains("enum"))
-                                ]["Property"].tolist()
                                 # if the enum is an string;enum
-                                if property in enum_strings:
+                                if property in enum_string_props:
                                     property_dict["check"] = (
                                         "WARNING\nfree strings allowed"
                                     )
@@ -443,7 +449,8 @@ def validate_terms_value_sets_one_sheet(
 )
 def validate_terms_value_sets(
     file_path: str,
-    template_path: str,
+    enum_props_dict: dict[str, list[str]],
+    enum_strict_props: list[str],
     node_list: list[str],
     output_file: str,
 ) -> None:
@@ -452,10 +459,15 @@ def validate_terms_value_sets(
         + header_str("Terms and Value Sets Check")
         + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\nIf the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
     )
-    template_object = CheckCCDI(ccdi_manifest=template_path)
+    
     file_object = CheckCCDI(ccdi_manifest=file_path)
+    validate_str_list = []
+    #for node in node_list:
+    #    print("processing node: " + node)
+    #    validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, enum_props_dict, enum_strict_props))
+    #validate_str = "".join(validate_str_list)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
-        node_list, file_object, template_object
+        node_list, file_object, unmapped(enum_props_dict), unmapped(enum_strict_props)
     )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
@@ -1765,9 +1777,10 @@ def validate_bucket_content(
     log_prints=True,
     task_run_name="Validate cross links of node {node_name}",
 )
-def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
+def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_list: list[dict[str, str]], delimiter: str = ";") -> str:
     """Performs cross links validation between nodes of a single sheet"""
     print_str = f"\n\t{node_name}:\n\t----------\n"
+    print("validating node: ", node_name)
 
     # get node df
     node_df = file_object.read_sheet_na(sheetname=node_name)
@@ -1821,8 +1834,38 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
     # for the linking property
     for link_prop in link_props:
         property_dict = {}
+
+        # find the multiplicity of rel
+        link_mul = None
+        for rel in model_rel_list:
+            if rel["src"] == node_name and rel["dst"] == str.split(link_prop, ".")[0]:
+                link_mul = rel["multiplicity"]
+                print(f"rel {node_name} to {str.split(link_prop, '.')[0]} multiplicity is {link_mul} ")
+                break
+
         # find the unique values of that linking property
         link_values = node_df[link_prop].dropna().unique().tolist()
+
+        mul_type_to_parse = ["many_to_many", "one_to_many"]
+        #mul_type_to_parse = [
+        #    "many_to_many",
+        #    "one_to_many",
+        #    "many_to_one",
+        #]  # only used for testing the block below
+        if link_mul in mul_type_to_parse:
+            # only parse link values if the multiplicity is many_to_many or one_to_many
+            parsed_unique_link_values = []
+            for value in link_values:
+                if delimiter in value:
+                    print(f"delimiter {delimiter} found in value {value}, parsing the value into multiple values")
+                    value_splits = value.split(delimiter)
+                    parsed_unique_link_values.extend(value_splits)
+                else:
+                    parsed_unique_link_values.append(value)
+            link_values = list(set(parsed_unique_link_values))
+        else:
+            print(f"link_mul {link_mul} not in mul_type_to_parse {mul_type_to_parse}, skip parsing link values")
+            pass
 
         # if there are values in parent link
         if len(link_values) > 0:
@@ -1874,7 +1917,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
 
 @flow(name="Validate cross links", log_prints=True)
 def validate_cross_links(
-    file_path: str, output_file: str, node_list: list[str]
+    file_path: str, output_file: str, node_list: list[str], model_rel_list: list[dict[str, str]]
 ) -> None:
     """Performs cross link validation between nodes of entire manifest file"""
     section_title = (
@@ -1886,7 +1929,7 @@ def validate_cross_links(
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
     cross_validate_future = validate_cross_links_single_sheet.map(
-        node_list, file_object
+        node_list, file_object, unmapped(model_rel_list), delimiter=";"
     )
     cross_validate_str = "".join([i.result() for i in cross_validate_future])
     return_str = section_title + cross_validate_str
@@ -2140,7 +2183,7 @@ def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -
     log_prints=True,
     flow_run_name="CCDI_ValidationRy_refactor" + f"{get_time()}",
 )
-def ValidationRy_new(file_path: str, template_path: str):
+def ValidationRy_new(file_path: str, template_path: str, enum_props_dict: dict[str, list[str]], enum_strict_props: list[str], model_rel_list: list[dict[str, str]]) -> None:
     validation_logger = get_run_logger()
 
     todays_date = get_date()
@@ -2155,9 +2198,10 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # Extract sheet df of template "Dictionary" and "Terms and Value Sets" sheets
     template_file = CheckCCDI(ccdi_manifest=template_path)
+    template_version = template_file.get_version()
     dict_df = template_file.read_sheet_na(sheetname="Dictionary")
-    tavs_df = template_file.read_sheet_na(sheetname="Terms and Value Sets")
-    tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
+    #tavs_df = template_file.read_sheet_na(sheetname="Terms and Value Sets")
+    #tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
 
     # crete a list of all properties and a list of required properties
     # all_properties = set(dict_df["Property"]) # this variable not used in original script
@@ -2189,7 +2233,13 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # validate terms and value sets
     validation_logger.info("Checking term and value sets")
-    validate_terms_value_sets(file_path, template_path, nodes_to_validate, output_file)
+    # create model parser
+    #dcc_model_parser = ModelParser(model_file=model_yaml, props_file=model_props_yaml, handle="ccdi_dcc")
+    #validation_logger.info("Model parser created successfully")
+    #dcc_model = dcc_model_parser.model
+    #validation_logger.info("Model parser model created successfully")
+    validate_terms_value_sets(file_path, enum_props_dict, enum_strict_props, nodes_to_validate, output_file)
+    validation_logger.info("Term and value set validation completed successfully")
 
     # validate integer and numeric vlaues
     validation_logger.info("Checking integer and numeric values")
@@ -2256,7 +2306,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     # validate cross links
     validation_logger.info("Checking cross links between nodes")
     validate_cross_links(
-        node_list=nodes_to_validate, file_path=file_path, output_file=output_file
+        node_list=nodes_to_validate, file_path=file_path, model_rel_list = model_rel_list, output_file=output_file
     )
 
     # validate key id pattern
