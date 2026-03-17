@@ -1847,6 +1847,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
         link_values = node_df[link_prop].dropna().unique().tolist()
         if node_name=="generic_file":
             print(f"link values for {link_prop} are {link_values}")
+            print("delimiter is: ", delimiter )
 
         # mul_type_to_parse = ["many_to_many", "one_to_many"]
         mul_type_to_parse = [
@@ -1934,7 +1935,7 @@ def validate_cross_links(
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
     cross_validate_future = validate_cross_links_single_sheet.map(
-        node_list, file_object, unmapped(model_rel_list)
+        node_list, file_object, unmapped(model_rel_list), delimiter=";"
     )
     cross_validate_str = "".join([i.result() for i in cross_validate_future])
     return_str = section_title + cross_validate_str
