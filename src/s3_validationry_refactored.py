@@ -1855,11 +1855,14 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
             "many_to_one",
         ]  # only used for testing the block below
         if link_mul and link_mul in mul_type_to_parse:
+            if node_name=="generic_file":
+                print(f"parsing link values with delimiter {delimiter}: {,*link_values,}")
             # only parse link values if the multiplicity is many_to_many or one_to_many
             parsed_unique_link_values = []
             for value in link_values:
                 if delimiter in value:
-                    value_splits = str.split(value, delimiter)
+                    print(f"delimiter {delimiter} found in value {value}, parsing the value into multiple values")
+                    value_splits = value.split(delimiter)
                     parsed_unique_link_values.extend(value_splits)
                 else:
                     parsed_unique_link_values.append(value)
