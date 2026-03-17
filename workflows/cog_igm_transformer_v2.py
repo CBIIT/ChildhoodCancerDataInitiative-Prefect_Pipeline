@@ -200,7 +200,7 @@ def cog_igm_transform(
             input_file = [i for i in os.listdir(f"{output_path}/COG/") if i.startswith('COG_JSON_table_conversion_decoded')][0]
             manifest_path = local_manifest_path
             output_path = output_path
-            cog_igm_dcc_mapping_transform(rule_source, rules_file, input_file, manifest_path, output_path)
+            cog_igm_dcc_mapping_transform(rule_source, rules_file, f"{output_path}/COG/{input_file}", manifest_path, output_path)
         else:
             runner_logger.warning(f"Decoded COG TSV not found in {output_path}/COG/, cannot run COG mapping to DCC model.")
             logger.warning(f"Decoded COG TSV not found in {output_path}/COG/, cannot run COG mapping to DCC model.")
