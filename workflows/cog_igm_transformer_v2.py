@@ -19,6 +19,7 @@ from pathlib import Path
 # utils
 from src.cog_igm_utils import manifest_reader, json_downloader
 from src.utils import get_time, folder_ul, file_dl, get_date, get_logger
+from src.cog_igm_mapping_dcc import cog_igm_dcc_mapping_transform
 from prefect import flow, get_run_logger
 from prefect_shell import ShellOperation
 
@@ -189,6 +190,21 @@ def cog_igm_transform(
         output_path=output_path,
         logger=logger,
     )
+    
+    # COG and IGM mapping to DCC model
+    # rule source is determined by form_parsing selection
+    if form_parsing in ["cog_only", "cog_and_igm"]:
+        if [i for i in os.listdir(f"{output_path}/COG/") if i.startswith('COG_JSON_table_conversion_decoded')]: # check decoded CIG TSV exists before running mapping
+            rule_source = "COG"
+            rules_file = "docs/mci_cog_igm_rules_dcc.xlsx"
+            input_file = [i for i in os.listdir(f"{output_path}/COG/") if i.startswith('COG_JSON_table_conversion_decoded')][0]
+            manifest_path = local_manifest_path
+            output_path = output_path
+            cog_igm_dcc_mapping_transform(rule_source, rules_file, input_file, manifest_path, output_path)
+        else:
+            runner_logger.warning(f"Decoded COG TSV not found in {output_path}/COG/, cannot run COG mapping to DCC model.")
+            logger.warning(f"Decoded COG TSV not found in {output_path}/COG/, cannot run COG mapping to DCC model.")
+    
     
     end_time = datetime.now()
     time_diff = end_time - start_time
