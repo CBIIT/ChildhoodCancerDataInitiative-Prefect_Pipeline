@@ -272,8 +272,6 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
     return None
 
 
-
-
 @task(
     name="Validate terms and value sets of one sheet",
     log_prints=True,
@@ -1847,26 +1845,27 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
 
         # find the unique values of that linking property
         link_values = node_df[link_prop].dropna().unique().tolist()
+        if node_name=="generic_file":
+            print(f"link values for {link_prop} are {link_values}")
 
-        #mul_type_to_parse = ["many_to_many", "one_to_many"]
-        mul_type_to_parse = ["many_to_many", "one_to_many", "many_to_one"] # only used for testing the block below
-        if link_mul is not None:
-            if link_mul in mul_type_to_parse:
-                # only parse link values if the multiplicity is many_to_many or one_to_many
-                parsed_unique_link_values = []
-                for value in link_values:
-                    if delimiter in value:
-                        value_splits = str.split(value, delimiter)
-                        parsed_unique_link_values.extend(value_splits)
-                    else:
-                        parsed_unique_link_values.append(value)
-                link_values = list(set(parsed_unique_link_values))
-                if node_name=="generic_file":
-                    print(link_values)
-            else:
-                # if multiplicity is one_to_one or many_to_one, then value shouldn't contain any delimiter, ;
-                # if delimiter is found, the validation next will throw an error
-                pass
+        # mul_type_to_parse = ["many_to_many", "one_to_many"]
+        mul_type_to_parse = [
+            "many_to_many",
+            "one_to_many",
+            "many_to_one",
+        ]  # only used for testing the block below
+        if link_mul and link_mul in mul_type_to_parse:
+            # only parse link values if the multiplicity is many_to_many or one_to_many
+            parsed_unique_link_values = []
+            for value in link_values:
+                if delimiter in value:
+                    value_splits = str.split(value, delimiter)
+                    parsed_unique_link_values.extend(value_splits)
+                else:
+                    parsed_unique_link_values.append(value)
+            link_values = list(set(parsed_unique_link_values))
+            if node_name=="generic_file":
+                print(link_values)
         else:
             pass
 
