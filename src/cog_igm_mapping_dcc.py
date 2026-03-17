@@ -152,7 +152,7 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
         
     # save transformed datarames to tsv
     for node, df in node_outputs.items():
-        df.drop_duplicates().to_csv(f"{output_path}/{node}_{dt}_transformed.tsv", sep="\t", index=False)
+        df.drop_duplicates().to_csv(f"{output_path}/COG/DCC_Mapping/{node}_{dt}_transformed.tsv", sep="\t", index=False)
     
     # copy manifest and save as new manifest with new name that includes date and time of transformation
     #new_manifest_path = f"{output_path}/{manifest_path.replace('.xlsx', f'COG_IGM_DCC_mapped_{dt}.xlsx')}"
