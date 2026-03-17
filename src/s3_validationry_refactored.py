@@ -1845,9 +1845,6 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
 
         # find the unique values of that linking property
         link_values = node_df[link_prop].dropna().unique().tolist()
-        if node_name=="generic_file":
-            print(f"link values for {link_prop} are {link_values}")
-            print("delimiter is: ", delimiter )
 
         # mul_type_to_parse = ["many_to_many", "one_to_many"]
         mul_type_to_parse = [
@@ -1855,11 +1852,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
             "one_to_many",
             "many_to_one",
         ]  # only used for testing the block below
-        print("multiplicity type to parse is: ", mul_type_to_parse)
         if link_mul in mul_type_to_parse:
-            print(f"link_mul {link_mul} in mul_type_to_parse {mul_type_to_parse}")
-            if node_name=="generic_file":
-                print(f"parsing link values with delimiter {delimiter}: {*link_values,}")
             # only parse link values if the multiplicity is many_to_many or one_to_many
             parsed_unique_link_values = []
             for value in link_values:
@@ -1870,8 +1863,6 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
                 else:
                     parsed_unique_link_values.append(value)
             link_values = list(set(parsed_unique_link_values))
-            if node_name=="generic_file":
-                print(link_values)
         else:
             print(f"link_mul {link_mul} not in mul_type_to_parse {mul_type_to_parse}, skip parsing link values")
             pass
@@ -2304,13 +2295,13 @@ def ValidationRy_new(file_path: str, template_path: str, enum_props_dict: dict[s
     )
 
     # validate bucket content
-    #validation_logger.info("Checking bucket contents against manifest file objects")
-    #validate_bucket_content(
-    #    node_list=nodes_to_validate,
-    #    file_path=file_path,
-    #    template_path=template_path,
-    #    output_file=output_file,
-    #)
+    validation_logger.info("Checking bucket contents against manifest file objects")
+    validate_bucket_content(
+        node_list=nodes_to_validate,
+        file_path=file_path,
+        template_path=template_path,
+        output_file=output_file,
+    )
 
     # validate cross links
     validation_logger.info("Checking cross links between nodes")
