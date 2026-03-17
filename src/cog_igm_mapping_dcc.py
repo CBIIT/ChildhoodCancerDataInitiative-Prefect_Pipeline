@@ -144,6 +144,8 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
         node_outputs["treatment_other"] = treatment_other_df[cols_order]
         
     # save transformed datarames to tsv
+    os.makedirs(f"{output_path}/COG/DCC_Mapping/", exist_ok=True)
+    
     for node, df in node_outputs.items():
         df.drop_duplicates().to_csv(f"{output_path}/COG/DCC_Mapping/{node}_{dt}_transformed.tsv", sep="\t", index=False)
     
