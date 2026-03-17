@@ -1855,7 +1855,9 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
             "one_to_many",
             "many_to_one",
         ]  # only used for testing the block below
+        print("multiplicity type to parse is: ", mul_type_to_parse)
         if link_mul in mul_type_to_parse:
+            print(f"link_mul {link_mul} in mul_type_to_parse {mul_type_to_parse}")
             if node_name=="generic_file":
                 print(f"parsing link values with delimiter {delimiter}: {*link_values,}")
             # only parse link values if the multiplicity is many_to_many or one_to_many
@@ -1871,6 +1873,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
             if node_name=="generic_file":
                 print(link_values)
         else:
+            print(f"link_mul {link_mul} not in mul_type_to_parse {mul_type_to_parse}, skip parsing link values")
             pass
 
         # if there are values in parent link
