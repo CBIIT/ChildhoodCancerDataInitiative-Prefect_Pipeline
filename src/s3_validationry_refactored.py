@@ -1782,6 +1782,7 @@ def validate_bucket_content(
 def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_list: list[dict[str, str]], delimiter: str = ";") -> str:
     """Performs cross links validation between nodes of a single sheet"""
     print_str = f"\n\t{node_name}:\n\t----------\n"
+    print("validating node: ", node_name)
 
     # get node df
     node_df = file_object.read_sheet_na(sheetname=node_name)
@@ -1847,7 +1848,8 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
         # find the unique values of that linking property
         link_values = node_df[link_prop].dropna().unique().tolist()
 
-        mul_type_to_parse = ["many_to_many", "one_to_many"]
+        #mul_type_to_parse = ["many_to_many", "one_to_many"]
+        mul_type_to_parse = ["many_to_many", "one_to_many", "many_to_one"] # only used for testing the block below
         if link_mul is not None:
             if link_mul in mul_type_to_parse:
                 # only parse link values if the multiplicity is many_to_many or one_to_many
@@ -1859,6 +1861,8 @@ def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_lis
                     else:
                         parsed_unique_link_values.append(value)
                 link_values = list(set(parsed_unique_link_values))
+                if node_name=="generic_file":
+                    print(link_values)
             else:
                 # if multiplicity is one_to_one or many_to_one, then value shouldn't contain any delimiter, ;
                 # if delimiter is found, the validation next will throw an error
