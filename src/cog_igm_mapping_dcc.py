@@ -7,14 +7,9 @@ from typing import Dict, List, Optional
 from datetime import datetime
 from pytz import timezone
 from src.cog_rules_functions import *
-from prefect import flow, get_run_logger, get_logger
+from src.utils import get_time, get_logger
+from prefect import flow, get_run_logger
 
-def get_time() -> str:
-    """Returns the current time"""
-    tz = timezone("EST")
-    now = datetime.now(tz)
-    dt_string = now.strftime("%Y%m%d_T%H%M%S")
-    return dt_string
 
 @flow(
     name="COG IGM to DCC Mapping Transform",
