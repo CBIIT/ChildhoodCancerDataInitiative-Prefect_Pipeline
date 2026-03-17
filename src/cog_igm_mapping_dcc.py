@@ -142,13 +142,6 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
             "other_treatment_type": lambda x: ";".join(set([item for sublist in x.str.split(";") for item in sublist if item])),
         }).reset_index()
         node_outputs["treatment_other"] = treatment_other_df[cols_order]
-            
-
-    ### TESTING ####
-    # Each node is its own DataFrame
-    for node, df in node_outputs.items():
-        print(f"\n=== {node.upper()} ===")
-        print(df.head(10))
         
     # save transformed datarames to tsv
     for node, df in node_outputs.items():
