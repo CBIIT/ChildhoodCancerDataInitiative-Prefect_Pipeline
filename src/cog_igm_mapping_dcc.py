@@ -147,10 +147,6 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
     for node, df in node_outputs.items():
         df.drop_duplicates().to_csv(f"{output_path}/COG/DCC_Mapping/{node}_{dt}_transformed.tsv", sep="\t", index=False)
     
-    # copy manifest and save as new manifest with new name that includes date and time of transformation
-    #new_manifest_path = f"{output_path}/{manifest_path.replace('.xlsx', f'COG_IGM_DCC_mapped_{dt}.xlsx')}"
-    #shutil.copy(manifest_path, new_manifest_path)
-    
     # for each node type in node_outouts, find corresponding sheet in manifest
     # then load in sheet and append data in node_outputs to manifest sheet and update sheet in the manifest; use columns headers from manifest
     for node, df in node_outputs.items():
