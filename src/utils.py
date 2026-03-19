@@ -279,7 +279,7 @@ class CCDI_DCC_Tags(Task):
                 tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model-props.yml"
             )
             logger.info(
-                f"list files under {os.listdir(tempdirobj.name)[0]}: {os.listdir(os.path.join(tempdirobj.name,os.listdir(tempdirobj.name)[0],"model-desc"))}"
+                f"list files under {os.listdir(tempdirobj.name)[0]}: {os.listdir(os.path.join(tempdirobj.name,os.listdir(tempdirobj.name)[0],'model-desc'))}"
             )
             logger.info("prop file path in temp dir: " + props_yml)
             logger.info("prop file name: " + os.path.basename(props_yml))
