@@ -11,7 +11,6 @@ import itertools
 from collections import defaultdict
 from prefect import task, flow, get_run_logger, unmapped
 from src.utils import get_time, get_date, get_logger
-from src.cog_transform_utils import cog_transformer
 import boto3
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
@@ -325,101 +324,6 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
     downloads = file_dl.map(submit_list, unmapped(dups), unmapped(logger), unmapped(runner_logger))
     
     return downloads.result()
-
-
-def distinguisher(f_path: str, logger):
-    """Attempt to load json and determine type
-
-    Args:
-        f_path (str): Path to JSON file
-
-    Returns:
-        str: File type (COG JSON, IGM JSON or other) or error
-    """
-
-    runner_logger = get_run_logger()
-
-    try:
-        f_begin = open(f_path, "rb").read(1000)  # read in first 1000 bytes of file
-
-        # check for identifiers in beginning of file:
-        if "upi" in str(f_begin):
-            return "cog"
-        elif "report_type" in str(f_begin):
-            if "archer_fusion" in str(f_begin):
-                return "igm.archer_fusion"
-            elif "tumor_normal" in str(f_begin):
-                return "igm.tumor_normal"
-            elif "methylation" in str(f_begin):
-                return "igm.methylation"
-            else:  # not known
-                logger.error(f"Error reading file at {f_path}: IGM assay type unknown.")
-                runner_logger.error(
-                    f"Error reading file at {f_path}: IGM assay type unknown."
-                )
-                return "error"
-        else:
-            return "other"
-    except Exception as e:
-        logger.error(f"Error reading file at {f_path}: {e}")
-        runner_logger.error(f"Error reading file at {f_path}: {e}")
-        return "error"
-
-@flow(
-    name="JSON Distinguish",
-    log_prints=True,
-    flow_run_name="json_distinguisher_" + f"{get_time()}",
-)
-def distinguish(dir_path: str, logger):
-    """Function to distinguish between file types (COG JSON, IGM JSON or other)
-
-    Args:
-        dir_path (str): Inout path containing files to convert
-
-    Returns:
-        dict: Sorting of file names for files by type (COG JSON, IGM JSON, other file or error file)
-    """
-
-    runner_logger = get_run_logger()
-
-    # initialize dict of files by type
-    sorted_dict = {
-        key: []
-        for key in [
-            "cog",
-            "igm.tumor_normal",
-            "igm.archer_fusion",
-            "igm.methylation",
-            "other",
-            "error",
-        ]
-    }
-
-    # get list of files in directory
-    if os.path.exists(dir_path):
-        # filter out those that have suffix json
-        json_files = [i for i in os.listdir(dir_path) if i.endswith(".json")]
-        if len(json_files) == 0:
-            logger.error(f"Input path {dir_path} does not contain any JSON files.")
-            runner_logger.error(
-                f"Input path {dir_path} does not contain any JSON files."
-            )
-            sys.exit(
-                f"Process exited: Input path {dir_path} does not contain any JSON files, please check and try again."
-            )
-        else:
-            for f in json_files:
-                sorted_dict[distinguisher(f"{dir_path}/{f}", logger)].append(f)
-    else:
-        logger.error(f"Input path {dir_path} does not exist.")
-        runner_logger.error(f"Input path {dir_path} does not exist.")
-        sys.exit(
-            f"Process exited: Input path {dir_path} does not exist, please check and try again."
-        )
-
-    # attempt to read them in and check if they have IGM or COG key identifiers
-    # segregate into dict of lists and return dict
-    return sorted_dict
 
 
 @flow(
