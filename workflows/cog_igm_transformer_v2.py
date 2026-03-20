@@ -124,6 +124,7 @@ def cog_igm_transform(
         runner_logger.info(
         ShellOperation(
             commands=[
+                "ls -l /usr/local/data/",
                 "rm -r /usr/local/data/COG_IGM_Transform_*",
                 "ls -l /usr/local/data/",  # confirm removal of COG_IGM_Transform working dirs
             ]
