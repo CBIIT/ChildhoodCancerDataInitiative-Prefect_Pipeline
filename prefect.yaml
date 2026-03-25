@@ -1675,7 +1675,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-- name: ccdi-cog_igm-transform-V3_v2
+  - name: ccdi-cog_igm-transform-V3_v2
       version: null
       tags: ["PROD", "MCI", "V3"]
       description: null
