@@ -7,7 +7,8 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.utils import (
     get_time,
-)
+    file_ul,
+    )
 from src.read_buckets import (
     read_bucket_content,
     bucket_reader_md,
@@ -23,12 +24,14 @@ import traceback
     log_prints=True,
     flow_run_name="bucket-reader-{runner}-" + f"{get_time()}",
 )
-def reader(buckets: list[str], runner: str) -> None:
+def reader(buckets: list[str], runner: str, write_out: bool, bucket_write_out: str) -> None:
     """Pipeline that reads contents of a list of bucket names/paths
 
     Args:
         buckets (list[str]): A list of bucket name/path, e.g., ["my-first-bucket", "my-second-bucket/subdir"]. Click "Add item" to add more list item.
-        runner (str): Unique runner name
+        runner (str): Unique runner name to identify the workflow run, e.g., your name or team name. It will be used in flow_run_name and markdown output file name. 
+        write_out (bool): Whether to write out the bucket content summary in a markdown file.
+        bucket (str): The bucket name/path to write the output markdown file. 
     """
     # create a logging object
     runner_logger = get_run_logger()
@@ -62,20 +65,26 @@ def reader(buckets: list[str], runner: str) -> None:
             traceback.print_exc()
 
     runner_logger.info("Generating markdown output")
+    # if md_str is empty, it means all buckets are empty or failed to read, then no markdown file will be generated and uploaded
+    # if md_str is not empty, it means at least one bucket has content, then the markdown file will be generated and uploaded to the specified bucket
     if md_str != "":
         bucket_reader_md(
             tablestr=md_str,
             runner=runner.lower().replace("_", "-").replace(" ", "-").replace(".", "-"),
         )
+
+        # if write_out is True, write the markdown string to a local file and upload it to the specified bucket; if write_out is False, only upload the markdown string to the specified bucket without writing a local file
+        if write_out:
+            output_file = os.path.join(f"bucket-content-summary_{get_time()}.md")
+            with open(output_file, "w") as f:
+                f.write(md_str)
+            runner_logger.info(f"Markdown output written to {output_file}")
+
+            file_ul(bucket=bucket_write_out, output_folder=runner, sub_folder="", newfile=output_file)
+
+
     else:
         runner_logger.warning("No bucket contents summary was generated")
 
     runner_logger.info("Workflow finished!")
 
-
-if __name__ == "__main__":
-    mylist = [
-        "my-source-bucket",
-        "my-second-bucket",
-    ]
-    reader(*mylist, runner="Qiong Liu.try")

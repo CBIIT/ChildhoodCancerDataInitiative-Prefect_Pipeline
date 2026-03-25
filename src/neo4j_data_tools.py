@@ -47,7 +47,7 @@ class Neo4jCypherQuery:
 
     study_cypher_query: str = (
         """
-MATCH (startNode:study)
+MATCH (startNode:{node_label} {{study_id: "{study_accession}"}})
 WITH startNode, properties(startNode) AS props
 UNWIND keys(props) AS propertyName
 RETURN  startNode.id AS startNodeId,
@@ -743,18 +743,25 @@ def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
 
 @flow
 def pull_study_node(
-    driver, out_dir: str, study_id_list: Union[list[str], None] = None
+    driver, out_dir: str, study_id_list: list[str]
 ) -> None:
     """Pulls data for study node from a neo4j DB. If study_id_list is provided, only pulls data for those studies."""
     cypher_phrase = Neo4jCypherQuery.study_cypher_query
-    pull_data_per_node(
-        driver=driver,
-        data_to_csv=export_to_csv_per_node,
-        node_label="study",
-        query_str=cypher_phrase,
-        output_dir=out_dir,
-        study_id_list=study_id_list,
+    per_study_per_node_out_dir = os.path.join(
+        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
     )
+    os.makedirs(per_study_per_node_out_dir, exist_ok=True)
+
+    future = pull_data_per_node_per_study.map(
+        driver=driver,
+        data_to_csv=export_to_csv_per_node_per_study,
+        study_name=study_id_list,
+        node_label=["study"]*len(study_id_list),
+        query_str=cypher_phrase,
+        output_dir=per_study_per_node_out_dir,
+    )
+    future.result()
+    gc.collect()
     return None
 
 
@@ -1268,18 +1275,23 @@ def query_db_to_csv(
         out_dir=output_dir,
         logger=logger,
     )
-    # combine step will delete per study per node csv files, which saves space
-    combine_node_csv_all_studies(out_dir=output_dir, node_list=unique_nodes)
+    # # combine step will delete per study per node csv files, which saves space
+    # combine_node_csv_all_studies(out_dir=output_dir, node_list=unique_nodes)
 
     # Obtain study node data
     logger.info("Pulling data from study node")
-    pull_study_node(driver=driver, out_dir=output_dir, study_id_list=study_id_list)
+    pull_study_node(driver=driver, out_dir=output_dir, study_id_list=unique_studies)
 
     # close the driver
     logger.info("Closing GraphDatabase driver")
     driver.close()
 
-    return output_dir
+    # the output dir that contians per study per node csv
+    output_dir_per_study_per_node = os.path.join(
+        os.path.dirname(output_dir), os.path.basename(output_dir) + "_per_study_per_node"
+    )
+
+    return output_dir_per_study_per_node
 
 
 def list_type_files(file_dir: str, file_type: str) -> list:
@@ -1297,7 +1309,6 @@ def list_type_files(file_dir: str, file_type: str) -> list:
     return matched_files
 
 
-@task(log_prints=True)
 def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     """Pivot the long df to wider df
     It also removes quotes from column names and value
@@ -1353,12 +1364,21 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
     # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
     df_wide.drop(
-        ["startNodeId", "created", "startNodeLabels", "uuid"], axis=1, inplace=True
+        ["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True
     )
+    # if uuid column exists, drop it
+    if "uuid" in df_wide.columns:
+        df_wide.drop(columns=["uuid"], inplace=True)
+    else:
+        pass
+    # if updated column exists, drop it
+    if "updated" in df_wide.columns:
+        df_wide.drop(columns=["updated"], inplace=True)
+    else:
+        pass
     return df_wide
 
 
-@task(log_prints=True)
 def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
     """Setup links in wide df"""
     print("setup links in wide df")
@@ -1379,52 +1399,37 @@ def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
 
         df_wide["study"] = df_wide["dbgap_accession"]
         df_wide.drop(columns=["dbgap_accession"], inplace=True)
-        if "updated" in df_wide.columns:
-            df_wide.drop(columns=["updated"], inplace=True)
-        else:
-            pass
+
     else:
         # this is only for study node
         df_wide["study"] = df_wide["study_id"]
-        if "updated" in df_wide.columns:
-            df_wide.drop(columns=["updated"], inplace=True)
-        else:
-            pass
+
     return df_wide
 
 
-@task
 def write_wider_df_all(wider_df: DataFrame, output_dir: str, logger) -> None:
-    """It subsets wider df per study, and writes each subset into
-    its own study folder.
-    Each wider df contains information of a specific node across all studies
+    """writes tsv files per study per node to a study folder under output_dir
     """
     # get node label
     node_label = wider_df["type"].unique().tolist()[0]
-    logger.info(f"Writing node {node_label} tsv files for all studies")
 
     # export folder
     os.makedirs(output_dir, exist_ok=True)
 
-    # loop through studies and export tsv per study for the node
-    studies = wider_df["study"].unique().tolist()
-    for study in studies:
-        df_to_write = wider_df[wider_df["study"] == study]
-        df_to_write.drop(columns=["study"], inplace=True)
-
-        # create the output directory if not exist
-        study_folder = os.path.join(output_dir, study)
-        os.makedirs(study_folder, exist_ok=True)
-
-        # node_study_tsv filename
-        node_study_tsv_filename = study + "_" + node_label + ".tsv"
-
-        df_to_write.to_csv(
-            os.path.join(study_folder, node_study_tsv_filename),
-            sep="\t",
-            index=False,
-        )
-
+    # there should only be one study value in the wider_df
+    study = wider_df["study"].unique().tolist()[0]
+    logger.info(f"Writing node {node_label} tsv files for study {study}")
+    wider_df.drop(columns=["study"], inplace=True)
+    # create the output directory if not exist
+    study_folder = os.path.join(output_dir, study)
+    os.makedirs(study_folder, exist_ok=True)
+    # node_study_tsv filename
+    node_study_tsv_filename = study + "_" + node_label + ".tsv"
+    wider_df.to_csv(
+        os.path.join(study_folder, node_study_tsv_filename),
+        sep="\t",
+        index=False,
+    )
     return None
 
 
@@ -1442,16 +1447,22 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
     os.makedirs(export_folder, exist_ok=True)
     logger.info(f"Creating the output for writing output tsv files: {export_folder} ")
 
-    # writing tsv files
+    # check if a file has more than one line
+    def has_contents(path):
+        with open(path, 'rb') as f:
+            f.readline()  # skip header
+            return bool(f.readline())      # if it has another line other than header, return True
+    
+    # converts every csv into tsv if it has records
     for file_path in csv_list:
         logger.info(f"processing csv file: {file_path}")
-        file_df = pd.read_csv(file_path)
-        if file_df.shape[0] > 0:
+        if has_contents(file_path):
             wider_df = pivot_long_df_wide_clean(file_path=file_path)
             wider_df = wide_df_setup_link(df_wide=wider_df)
             logger.info(f"Writing tsv files for all studies from file: {file_path}")
             write_wider_df_all(wider_df, output_dir=export_folder, logger=logger)
         else:
+            logger.info(f"Skipping empty csv file: {file_path}")
             pass
     return export_folder
 

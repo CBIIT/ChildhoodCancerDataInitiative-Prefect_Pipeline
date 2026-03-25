@@ -6,11 +6,20 @@ import sys
 import numpy as np
 import warnings
 import re
-from src.utils import set_s3_session_client, get_time, get_date, CheckCCDI
+from src.utils import (
+    set_s3_session_client,
+    get_time,
+    get_date,
+    CheckCCDI,
+    CCDI_DCC_Tags,
+)
+from bento_mdf import MDFReader
 from src.file_mover import parse_file_url
 from botocore.exceptions import ClientError
 from prefect.task_runners import ConcurrentTaskRunner
+from prefect import unmapped
 from typing import TypeVar
+from importlib.metadata import version
 
 
 DataFrame = TypeVar("DataFrame")
@@ -47,6 +56,22 @@ def if_template_valid(template_path: str) -> None:
         pass
     template_file.close()
     return None
+
+
+class ModelParser:
+    """A higher level wrapper of MDFReader class from bento-mdf that offers direct and easy access to model features"""
+
+    def __init__(self, model_file: str, props_file: str, handle: str | None = None):
+        """Create a class of ModelParser
+
+        Args:
+            model_file (str): file path to the model yaml file
+            props_file (str): file path to the properties yaml file
+            handle (str | None, optional): model name assigned. Defaults to None.
+        """
+        self.model_file = model_file
+        self.props_file = props_file
+        self.model = MDFReader(self.model_file, self.props_file, handle=handle).model
 
 
 @task
@@ -255,37 +280,26 @@ def validate_whitespace(node_list: list[str], file_path: str, output_file: str) 
 def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
-    template_object,
-):
+    enum_props_dict: dict[str, list[str]],
+    enum_strict_props: list[str],
+) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     print_str = f"\n\t{node_name}\n\t----------\n\t"
 
-    # create tavs_df and dict_df
-    dict_df = template_object.read_sheet_na(sheetname="Dictionary")
-    tavs_df = template_object.read_sheet_na(sheetname="Terms and Value Sets")
-    tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
-
-    # create an enum property list
-    # For newer versions of the submission template, obtain the arrays from the Dictionary tab
-    if any(dict_df["Type"].str.contains("array")):
-        enum_arrays = dict_df[dict_df["Type"].str.contains("array")][
-            "Property"
-        ].tolist()
-    else:
-        enum_arrays = [
-            "therapeutic_agents",
-            "treatment_type",
-            "study_data_types",
-            "morphology",
-            "primary_site",
-            "race",
-        ]
+    enum_arrays = list(enum_props_dict.keys())
+    enum_string_props = enum_strict_props
 
     check_list = []
     for property in properties:
         WARN_FLAG = True
-        tavs_df_prop = tavs_df[tavs_df["Value Set Name"] == property]
+        tavs_df_prop = pd.DataFrame({"Value Set Name": [], "Term": []})
+        if property in enum_arrays:
+            permissible_terms = enum_props_dict[property]
+            tavs_df_prop["Term"] = permissible_terms
+            tavs_df_prop["Value Set Name"] = property
+        else:
+            pass
 
         # if the property is in the TaVs data frame
         if len(tavs_df_prop) > 0:
@@ -347,12 +361,8 @@ def validate_terms_value_sets_one_sheet(
                         if WARN_FLAG:
                             WARN_FLAG = False
                             # test to see if string;enum
-                            enum_strings = dict_df[
-                                (dict_df["Type"].str.contains("string"))
-                                & (dict_df["Type"].str.contains("enum"))
-                            ]["Property"].tolist()
                             # if the enum is an string;enum
-                            if property in enum_strings:
+                            if property in enum_string_props:
                                 property_dict["check"] = "WARNING\nfree strings allowed"
                             else:
                                 property_dict["check"] = "ERROR\nunrecognized value"
@@ -386,12 +396,8 @@ def validate_terms_value_sets_one_sheet(
                             if WARN_FLAG:
                                 WARN_FLAG = False
                                 # test to see if string;enum
-                                enum_strings = dict_df[
-                                    (dict_df["Type"].str.contains("string"))
-                                    & (dict_df["Type"].str.contains("enum"))
-                                ]["Property"].tolist()
                                 # if the enum is an string;enum
-                                if property in enum_strings:
+                                if property in enum_string_props:
                                     property_dict["check"] = (
                                         "WARNING\nfree strings allowed"
                                     )
@@ -443,7 +449,8 @@ def validate_terms_value_sets_one_sheet(
 )
 def validate_terms_value_sets(
     file_path: str,
-    template_path: str,
+    enum_props_dict: dict[str, list[str]],
+    enum_strict_props: list[str],
     node_list: list[str],
     output_file: str,
 ) -> None:
@@ -452,10 +459,15 @@ def validate_terms_value_sets(
         + header_str("Terms and Value Sets Check")
         + "\nThe following columns have controlled vocabulary on the 'Terms and Value Sets' page of the template file.\nIf the values present do not match, they will noted and in some cases the values will be replaced:\n----------\n"
     )
-    template_object = CheckCCDI(ccdi_manifest=template_path)
+    
     file_object = CheckCCDI(ccdi_manifest=file_path)
+    validate_str_list = []
+    #for node in node_list:
+    #    print("processing node: " + node)
+    #    validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, enum_props_dict, enum_strict_props))
+    #validate_str = "".join(validate_str_list)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
-        node_list, file_object, template_object
+        node_list, file_object, unmapped(enum_props_dict), unmapped(enum_strict_props)
     )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
@@ -698,37 +710,35 @@ def validate_regex(
     template_object = CheckCCDI(ccdi_manifest=template_path)
     file_object = CheckCCDI(ccdi_manifest=file_path)
     date_regex = [
-            # Numeric formats (day/month/year or month/day/year)
-            r"\b\d{2}/\d{2}/\d{4}\b",       # 01/01/2020
-            r"\b\d{1,2}/\d{1,2}/\d{4}\b",   # 1/1/2020
-            r"\b\d{2}-\d{2}-\d{4}\b",       # 01-01-2020
-            r"\b\d{1,2}-\d{1,2}-\d{4}\b",   # 1-1-2020
-            r"\b\d{4}/\d{2}/\d{2}\b",       # 2020/01/01
-            r"\b\d{4}-\d{2}-\d{2}\b",       # 2020-01-01
-        
-            # Compact numeric formats (turned off due to high false positive rate)
-            #r"\b\d{8}\b",                   # 20200101
-        
-            # Alphanumeric short month
-            r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{4}\b",   # 1Jan2020, 01 Jan 2020
-            r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{4}\b", # Jan 1, 2020 / Jan 1 2020
-        
-            # Alphanumeric full month
-            r"\b\d{1,2}[ ]?[A-Za-z]+[ ]?\d{4}\b",     # 1 January 2020
-            r"\b[A-Za-z]+[ ]?\d{1,2},?[ ]?\d{4}\b",   # January 1, 2020
-        
-            # Variants with apostrophes or 2-digit years
-            r"\b\d{1,2}/\d{1,2}/\d{2}\b",   # 01/01/20
-            r"\b\d{1,2}-\d{1,2}-\d{2}\b",   # 01-01-20
-            r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{2}\b",  # 1Jan20
-            r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{2}\b" # Jan 1 20
+        # Numeric formats (day/month/year or month/day/year)
+        r"\b\d{2}/\d{2}/\d{4}\b",  # 01/01/2020
+        r"\b\d{1,2}/\d{1,2}/\d{4}\b",  # 1/1/2020
+        r"\b\d{2}-\d{2}-\d{4}\b",  # 01-01-2020
+        r"\b\d{1,2}-\d{1,2}-\d{4}\b",  # 1-1-2020
+        r"\b\d{4}/\d{2}/\d{2}\b",  # 2020/01/01
+        r"\b\d{4}-\d{2}-\d{2}\b",  # 2020-01-01
+        # Compact numeric formats (turned off due to high false positive rate)
+        # r"\b\d{8}\b",                   # 20200101
+        # Alphanumeric short month
+        r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{4}\b",  # 1Jan2020, 01 Jan 2020
+        r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{4}\b",  # Jan 1, 2020 / Jan 1 2020
+        # Alphanumeric full month
+        r"\b\d{1,2}[ ]?[A-Za-z]+[ ]?\d{4}\b",  # 1 January 2020
+        r"\b[A-Za-z]+[ ]?\d{1,2},?[ ]?\d{4}\b",  # January 1, 2020
+        # Variants with apostrophes or 2-digit years
+        r"\b\d{1,2}/\d{1,2}/\d{2}\b",  # 01/01/20
+        r"\b\d{1,2}-\d{1,2}-\d{2}\b",  # 01-01-20
+        r"\b\d{1,2}[ ]?[A-Za-z]{3}[ ]?\d{2}\b",  # 1Jan20
+        r"\b[A-Za-z]{3}[ ]?\d{1,2},?[ ]?\d{2}\b",  # Jan 1 20
     ]
     # Problematic regex
     # A month name or abbreviation and a 1, 2, or 4-digit number, in either order, separated by some non-letter, non-number characters or not separated, e.g., "JAN '93", "FEB64", "May 3rd" (but not "May be 14").
     # ```'[a-zA-Z]{3}[\ ]?([0-9]|[0-9]{2}|[0-9]{4})[a-zA-Z]{0,2}'```
-    socsec_regex = [r"\b\d{3}-\d{2}-\d{4}\b"] # US Social Security Number 123-45-6789
-    phone_regex = [r"\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"] # US Phone number (123) 456-7890, 123-456-7890, 123.456.7890, +1 123-456-7890
-    zip_regex = [r"\b\d{5}(?:-\d{4})?\b"] # US Zip code 12345 or 12345-6789
+    socsec_regex = [r"\b\d{3}-\d{2}-\d{4}\b"]  # US Social Security Number 123-45-6789
+    phone_regex = [
+        r"\b(?:\+1[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b"
+    ]  # US Phone number (123) 456-7890, 123-456-7890, 123.456.7890, +1 123-456-7890
+    zip_regex = [r"\b\d{5}(?:-\d{4})?\b"]  # US Zip code 12345 or 12345-6789
     all_regex = date_regex + socsec_regex + phone_regex + zip_regex
 
     validate_str_future = validate_regex_one_sheet.map(
@@ -828,49 +838,64 @@ def validate_age(node_list: list[str], file_path: str, output_file: str):
         outf.write(return_str)
     return None
 
+
 # determine if there is a proband relationship in the family_relationship tab and if so, ensure that there is only one proband per family_id
 @flow(name="Validate Proband in Family", log_prints=True)
 def validate_proband_in_family(file_path: str, output_file: str):
     section_title = (
         "\n\n"
         + header_str("Proband in Family Check")
-        + "\nThis section will check the Family Relationships tab to ensure that there are probands, and there is only one per family_id:\n----------\n"
+        + "\nThis section will check the Family Relationships tab to ensure that there are probands, and there is only one per family_id."
+        + "\nIf you have the family_id of 'MISSING', please be aware that this indicates missing data in the required relationship column."
+        + "\n\tPlease ensure that all relationship values are filled in and run validation again.\n----------\n"
     )
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
     family_df = file_object.read_sheet_na(sheetname="family_relationship")
     print_str = "\n\tfamily relationship\n\t----------\n\t"
     check_list = []
-    for family_id in family_df["family_id"].dropna().unique():
+    # if there are any relationship values that are empty, then error
+    if family_df["relationship"].isna().any():
         family_dict = {}
-        family_dict["family_id"] = family_id
-        family_subset = family_df[family_df["family_id"] == family_id]
-        if "proband" in family_subset["relationship"].str.lower().tolist():
-            if (
-                len(
-                    family_subset[
-                        family_subset["relationship"].str.lower() == "proband"
-                    ]
-                )
-                > 1
-            ):
-                family_dict["check"] = "ERROR"
-                bad_positions = (
-                    family_subset[
-                        family_subset["relationship"].str.lower() == "proband"
-                    ].index
-                    + 2
-                ).tolist()
-                pos_print = ",".join([str(i) for i in bad_positions])
-                family_dict["error row"] = pos_print
-            else:
-                family_dict["check"] = "PASS"
-                family_dict["error row"] = ""
-        else:
-            family_dict["check"] = "ERROR"
-            family_dict["error row"] = "no proband"
+        family_dict["family_id"] = "MISSING"
+        family_dict["check"] = "ERROR"
+        bad_positions = (family_df[family_df["relationship"].isna()].index + 2).tolist()
+        pos_print = ",".join([str(i) for i in bad_positions])
+        family_dict["error row"] = pos_print
         check_list.append(family_dict)
-    check_df = pd.DataFrame.from_records(check_list)
+        check_df = pd.DataFrame.from_records(check_list)
+    else:
+        for family_id in family_df["family_id"].dropna().unique():
+            family_dict = {}
+            family_dict["family_id"] = family_id
+            family_subset = family_df[family_df["family_id"] == family_id]
+            if "proband" in family_subset["relationship"].str.lower().tolist():
+                if (
+                    len(
+                        family_subset[
+                            family_subset["relationship"].str.lower() == "proband"
+                        ]
+                    )
+                    > 1
+                ):
+                    family_dict["check"] = "ERROR"
+                    bad_positions = (
+                        family_subset[
+                            family_subset["relationship"].str.lower() == "proband"
+                        ].index
+                        + 2
+                    ).tolist()
+                    pos_print = ",".join([str(i) for i in bad_positions])
+                    family_dict["error row"] = pos_print
+                else:
+                    family_dict["check"] = "PASS"
+                    family_dict["error row"] = ""
+            else:
+                family_dict["check"] = "ERROR"
+                family_dict["error row"] = "no proband"
+            check_list.append(family_dict)
+        check_df = pd.DataFrame.from_records(check_list)
+
     if check_df.shape[0] > 0:
         check_df["error row"] = check_df["error row"].str.wrap(30)
         check_df["family_id"] = check_df["family_id"].str.wrap(25)
@@ -1211,7 +1236,8 @@ def check_file_basename(file_df: DataFrame) -> str:
         print_str = print_str + "\tINFO: all file names were found in their file_url.\n"
     return print_str
 
-def check_file_extension_type_match(file_df : DataFrame) -> str:
+
+def check_file_extension_type_match(file_df: DataFrame) -> str:
     """Checks if the file_name extension matches the file type value"""
     WARN_FLAG = True
     print_str = ""
@@ -1222,27 +1248,60 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
         # extract file extension with no leading period and in lower case
         file_extension = os.path.splitext(file_name)[1].lower().lstrip(".")
 
-        #if you pull out a .gz extension
+        # create tbi and bai flag exceptions
+        if ".tbi" in file_extension:
+            tbi_flag = True
+        else:
+            tbi_flag = False
+
+        if ".bai" in file_extension:
+            bai_flag = True
+        else:
+            bai_flag = False
+
+        # if you pull out a .gz extension
         if file_extension == "gz":
             # handle .nii.gz and .vcf.gz and .fastq.gz cases
-            file_extension = os.path.splitext(os.path.splitext(file_name)[0])[1].lower().lstrip(".") + ".gz"
+            file_extension = (
+                os.path.splitext(os.path.splitext(file_name)[0])[1].lower().lstrip(".")
+                + ".gz"
+            )
 
         # infer file type from file extension
         if "gz" in file_extension.lower():
-            #the inferred type is based on the extension before .gz
-            inferred_type = file_extension[:-3]
+            # the inferred type is based on the extension before .gz
+            file_extension = file_extension[:-3]
+            inferred_type = file_extension.lower()
+
+        # handle common file extensions exceptions where there are different extensions for the same file type
+        if tbi_flag:
+            inferred_type = "tbi"
+        elif bai_flag:
+            inferred_type = "bai"
         elif len(file_extension) == 0:
-            inferred_type = "txt"
+            inferred_type = [
+                "txt",
+                "tsv",
+            ]  # if there is no extension, likely a text or tsv file
+        elif len(file_extension) > 6:
+            inferred_type = [
+                "txt",
+                "tsv",
+            ]  # if the extension is longer than 6 characters, likely not a standard extension
         elif "dcm" == file_extension:
             inferred_type = "dicom"
         elif "fq" == file_extension:
             inferred_type = "fastq"
         elif "fa" == file_extension:
             inferred_type = "fasta"
+        elif "nii" == file_extension:
+            inferred_type = "nifti"
+        elif "tab" == file_extension:
+            inferred_type = ["tsv", "txt"]
         else:
-            inferred_type = file_extension
+            inferred_type = file_extension.lower()
 
-        if file_type.lower() != inferred_type.lower():
+        if file_type.lower() not in inferred_type:
             extension_type_mismatch.append(
                 {
                     "node": row["node"],
@@ -1277,6 +1336,7 @@ def check_file_extension_type_match(file_df : DataFrame) -> str:
             + "\tINFO: all file name extensions matched their inferred file types from the file_name.\n"
         )
     return print_str
+
 
 def count_buckets(df_file: DataFrame) -> list:
     df_file["bucket"] = df_file["file_url"].str.split("/").str[2]
@@ -1332,15 +1392,16 @@ def validate_bucket_objs_in_manifest(
     df_file = extract_object_file_meta(
         nodes_list=file_node_list, file_object=file_object
     )
-    
+
     # exclude open IDC buckets since buckets are too cumbersome to check against
-    # and contain data not in our purview 
-    df_file = df_file[~df_file["file_url"].str.contains("idc-open-data", regex=False)].reset_index(drop=True)
-    
+    # and contain data not in our purview
+    df_file = df_file[
+        ~df_file["file_url"].str.contains("idc-open-data", regex=False)
+    ].reset_index(drop=True)
+
     readable_buckets = [
         bucket for bucket in readable_buckets if bucket not in ["idc-open-data"]
     ]
-    
 
     df_file_urls = df_file["file_url"].tolist()
     del df_file
@@ -1442,7 +1503,7 @@ def validate_file_metadata(
     # check for file basename in url
     return_str = return_str + check_file_basename(file_df=df_file)
 
-    #check for file extension matching to file_type
+    # check for file extension matching to file_type
     return_str = return_str + check_file_extension_type_match(file_df=df_file)
 
     # print the return_str to output_file
@@ -1458,7 +1519,7 @@ def validate_unique_guid_str(node_list: list[str], file_object) -> str:
 
     Args:
         file_object (_type_): CheckCCDI object
-        node_list (list[str]): list of node names. 
+        node_list (list[str]): list of node names.
 
     Returns:
         str: report str
@@ -1486,11 +1547,13 @@ def validate_unique_guid_str(node_list: list[str], file_object) -> str:
     )
     if error_guid_df.shape[0] == 0:
         return_str = (
-            return_str + f"\tPASS: Every unique indexd guid is assigned for only one url.\n"
+            return_str
+            + f"\tPASS: Every unique indexd guid is assigned for only one url.\n"
         )
     else:
         return_str = (
-            return_str + "\n\tERROR: Found guid(s) that was assigned to more than one url."
+            return_str
+            + "\n\tERROR: Found guid(s) that was assigned to more than one url."
         )
         return_str = (
             return_str
@@ -1714,9 +1777,10 @@ def validate_bucket_content(
     log_prints=True,
     task_run_name="Validate cross links of node {node_name}",
 )
-def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
+def validate_cross_links_single_sheet(node_name: str, file_object, model_rel_list: list[dict[str, str]], delimiter: str = ";") -> str:
     """Performs cross links validation between nodes of a single sheet"""
     print_str = f"\n\t{node_name}:\n\t----------\n"
+    print("validating node: ", node_name)
 
     # get node df
     node_df = file_object.read_sheet_na(sheetname=node_name)
@@ -1770,8 +1834,38 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
     # for the linking property
     for link_prop in link_props:
         property_dict = {}
+
+        # find the multiplicity of rel
+        link_mul = None
+        for rel in model_rel_list:
+            if rel["src"] == node_name and rel["dst"] == str.split(link_prop, ".")[0]:
+                link_mul = rel["multiplicity"]
+                print(f"rel {node_name} to {str.split(link_prop, '.')[0]} multiplicity is {link_mul} ")
+                break
+
         # find the unique values of that linking property
         link_values = node_df[link_prop].dropna().unique().tolist()
+
+        mul_type_to_parse = ["many_to_many", "one_to_many"]
+        #mul_type_to_parse = [
+        #    "many_to_many",
+        #    "one_to_many",
+        #    "many_to_one",
+        #]  # only used for testing the block below
+        if link_mul in mul_type_to_parse:
+            # only parse link values if the multiplicity is many_to_many or one_to_many
+            parsed_unique_link_values = []
+            for value in link_values:
+                if delimiter in value:
+                    print(f"delimiter {delimiter} found in value {value}, parsing the value into multiple values")
+                    value_splits = value.split(delimiter)
+                    parsed_unique_link_values.extend(value_splits)
+                else:
+                    parsed_unique_link_values.append(value)
+            link_values = list(set(parsed_unique_link_values))
+        else:
+            print(f"link_mul {link_mul} not in mul_type_to_parse {mul_type_to_parse}, skip parsing link values")
+            pass
 
         # if there are values in parent link
         if len(link_values) > 0:
@@ -1823,7 +1917,7 @@ def validate_cross_links_single_sheet(node_name: str, file_object) -> str:
 
 @flow(name="Validate cross links", log_prints=True)
 def validate_cross_links(
-    file_path: str, output_file: str, node_list: list[str]
+    file_path: str, output_file: str, node_list: list[str], model_rel_list: list[dict[str, str]]
 ) -> None:
     """Performs cross link validation between nodes of entire manifest file"""
     section_title = (
@@ -1835,7 +1929,7 @@ def validate_cross_links(
     # create file_object and template_object
     file_object = CheckCCDI(ccdi_manifest=file_path)
     cross_validate_future = validate_cross_links_single_sheet.map(
-        node_list, file_object
+        node_list, file_object, unmapped(model_rel_list), delimiter=";"
     )
     cross_validate_str = "".join([i.result() for i in cross_validate_future])
     return_str = section_title + cross_validate_str
@@ -1946,12 +2040,150 @@ def validate_key_id(
     return None
 
 
+@task(
+    name="Validate acl and authz of one sheet",
+    log_prints=True,
+    task_run_name="Validate acl and authz format of node {node_name}",
+)
+def validate_acl_authz_single_sheet(node_name: str, file_object) -> str:
+    """Performs acl/authz validation and returns a single-row chart per sheet"""
+    print_str = f"\n\t{node_name}:\n\t----------\n\t"
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+
+    # prepare dictionary to hold property check results (e.g. ERROR/PASS)
+    property_dict = {
+        "node": node_name, 
+        "property": "acl/authz values",
+        "check": "PASS",
+        "error value": ""
+    }
+    
+    # regex pattern for acl/authz of files with controlled access (works on lists)
+    acl_regex = r"^\[\'phs\d{6,}\.c\d+\'(?:\s*,\s*\'phs\d{6,}\.c\d+\')*\]$"
+    authz_regex = r"^\[\'/programs/phs\d{6,}\.c\d+\'(?:\s*,\s*\'/programs/phs\d{6,}\.c\d+\')*\]$"
+
+    # for each row, determine if the acl/authz is properly formatted
+    # if not, record the row number in acl_authz_error_rows
+    troubled_acl_authz_values = []
+    for index, row in node_df.iterrows():
+
+        # get file access value (e.g. Controlled/Open)
+        file_access_value = str(row.get("file_access", "")).strip().capitalize()
+        acl_value = str(row.get("acl", ""))
+        authz_value = str(row.get("authz", ""))
+        
+        # check "Controlled" files acl/authz match the expected format
+        if file_access_value == "Controlled":
+            if not re.match(acl_regex, acl_value):
+                troubled_acl_authz_values.append(acl_value)
+            if not re.match(authz_regex, authz_value):
+                troubled_acl_authz_values.append(authz_value)
+
+        # check "Open" files acl/authz match the expected format
+        elif file_access_value == "Open":
+            if acl_value != "['*']":
+                troubled_acl_authz_values.append(acl_value)
+            if authz_value != "['/open']":
+                troubled_acl_authz_values.append(authz_value)
+
+    # update the dictionary if errors were found
+    if troubled_acl_authz_values:
+        # filter the unique values and list them
+        unique_troubles = list(set(troubled_acl_authz_values))
+        property_dict["check"] = "ERROR\nregex mismatch"
+        property_dict["error value"] = ",".join(unique_troubles)
+    else:
+        pass
+    
+    # create/format dataframe from property dictionary
+    check_df = pd.DataFrame.from_records([property_dict])
+    check_df["error value"] = check_df["error value"].astype(str).str.wrap(30)
+    print_str = (
+        print_str
+        + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+            "\n", "\n\t"
+        )
+        + "\n"
+    )
+    
+    return print_str
+
+
+@flow(name="Validate acl and authz", log_prints=True)
+def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -> None:
+    """Performs acl/authz validation between nodes of entire manifest file"""
+    section_title = (
+        "\n\n"
+        + header_str("ACL/AUTHZ Regex Check")
+        + "\nIf there are unexpected or missing values in the acl/authz property between nodes, they will be reported below:\n----------\n"
+    )
+
+    # prepare the list of sheets with acl/authz values to check
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    filtered_list = []
+    for node_name in node_list:
+        node_df = file_object.read_sheet_na(sheetname=node_name)
+        if "file_access" in node_df.columns:
+            filtered_list.append(node_name)
+    node_list = filtered_list
+
+    if not node_list:
+        acl_authz_validate_str = "No sheets with acl/authz values found for validation."
+    
+    #send each node for acl/authz validation
+    else:
+        acl_authz_validate_future = validate_acl_authz_single_sheet.map(
+            node_list, file_object
+        )
+        acl_authz_validate_str = "".join([i.result() for i in acl_authz_validate_future])
+    
+    # print results to output file
+    return_str = section_title + acl_authz_validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
+
+@flow(name="Validate acl and authz", log_prints=True)
+def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -> None:
+    """Performs acl/authz validation between nodes of entire manifest file"""
+    section_title = (
+        "\n\n"
+        + header_str("ACL/AUTHZ Regex Check")
+        + "\nIf there are unexpected or missing values in the acl/authz property between nodes, they will be reported below:\n----------\n"
+    )
+
+    # prepare the list of sheets with acl/authz values to check
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    filtered_list = []
+    for node_name in node_list:
+        node_df = file_object.read_sheet_na(sheetname=node_name)
+        if "file_access" in node_df.columns:
+            filtered_list.append(node_name)
+    node_list = filtered_list
+
+    if not node_list:
+        acl_authz_validate_str = "No sheets with acl/authz values found for validation."
+    
+    #send each node for acl/authz validation
+    else:
+        acl_authz_validate_future = validate_acl_authz_single_sheet.map(
+            node_list, file_object
+        )
+        acl_authz_validate_str = "".join([i.result() for i in acl_authz_validate_future])
+    
+    # print results to output file
+    return_str = section_title + acl_authz_validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
 @flow(
     name="CCDI_ValidationRy_refactor",
     log_prints=True,
     flow_run_name="CCDI_ValidationRy_refactor" + f"{get_time()}",
 )
-def ValidationRy_new(file_path: str, template_path: str):
+def ValidationRy_new(file_path: str, template_path: str, enum_props_dict: dict[str, list[str]], enum_strict_props: list[str], model_rel_list: list[dict[str, str]]) -> None:
     validation_logger = get_run_logger()
 
     todays_date = get_date()
@@ -1966,9 +2198,10 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # Extract sheet df of template "Dictionary" and "Terms and Value Sets" sheets
     template_file = CheckCCDI(ccdi_manifest=template_path)
+    template_version = template_file.get_version()
     dict_df = template_file.read_sheet_na(sheetname="Dictionary")
-    tavs_df = template_file.read_sheet_na(sheetname="Terms and Value Sets")
-    tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
+    #tavs_df = template_file.read_sheet_na(sheetname="Terms and Value Sets")
+    #tavs_df = tavs_df.dropna(how="all").dropna(how="all", axis=1)
 
     # crete a list of all properties and a list of required properties
     # all_properties = set(dict_df["Property"]) # this variable not used in original script
@@ -2000,7 +2233,13 @@ def ValidationRy_new(file_path: str, template_path: str):
 
     # validate terms and value sets
     validation_logger.info("Checking term and value sets")
-    validate_terms_value_sets(file_path, template_path, nodes_to_validate, output_file)
+    # create model parser
+    #dcc_model_parser = ModelParser(model_file=model_yaml, props_file=model_props_yaml, handle="ccdi_dcc")
+    #validation_logger.info("Model parser created successfully")
+    #dcc_model = dcc_model_parser.model
+    #validation_logger.info("Model parser model created successfully")
+    validate_terms_value_sets(file_path, enum_props_dict, enum_strict_props, nodes_to_validate, output_file)
+    validation_logger.info("Term and value set validation completed successfully")
 
     # validate integer and numeric vlaues
     validation_logger.info("Checking integer and numeric values")
@@ -2067,7 +2306,7 @@ def ValidationRy_new(file_path: str, template_path: str):
     # validate cross links
     validation_logger.info("Checking cross links between nodes")
     validate_cross_links(
-        node_list=nodes_to_validate, file_path=file_path, output_file=output_file
+        node_list=nodes_to_validate, file_path=file_path, model_rel_list = model_rel_list, output_file=output_file
     )
 
     # validate key id pattern
@@ -2078,6 +2317,10 @@ def ValidationRy_new(file_path: str, template_path: str):
         node_list=nodes_to_validate,
         output_file=output_file,
     )
+
+    # validate acl/authz values
+    validation_logger.info("Checking for acl/authz format errors")
+    validate_acl_authz(file_path, output_file, nodes_to_validate)
 
     validation_logger.info(
         f"Process Complete. The output file can be found here: {output_file}"

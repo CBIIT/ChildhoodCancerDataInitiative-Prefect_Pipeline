@@ -30,7 +30,7 @@ import hashlib
 from urllib.parse import urlparse
 from shutil import copy2
 from prefect.cache_policies import NO_CACHE
-
+from typing import Union
 
 
 ExcelFile = TypeVar("ExcelFile")
@@ -73,6 +73,13 @@ class CCDI_Tags(Task):
         tags_list = self.get_tags()
         tags = [i["name"] for i in tags_list]
         return tags
+    
+    def get_latest_tag(self) -> str:
+        tags = self.get_tags_only()
+        if len(tags) > 0:
+            return tags[0]
+        else:
+            return None
 
     def if_tag_exists(self, tag: str, logger):
         tags = self.get_tags_only()
@@ -89,7 +96,7 @@ class CCDI_Tags(Task):
         tag_element = [i for i in tags_list if i["name"] == tag][0]
         return tag_element
 
-    def download_tag_manifest(self, tag: str, logger) -> None:
+    def download_tag_manifest(self, tag: str, logger) -> Union[str, None]:
         check_tag = self.if_tag_exists(tag=tag, logger=logger)
         if check_tag:
             tag_element = self.get_tag_element(tag=tag)
@@ -140,7 +147,151 @@ class CCDI_Tags(Task):
                 f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
             )
             return None
+    
+    def download_latest_tag_manifest(self, logger) -> Union[str, None]:
+        latest_tag = self.get_latest_tag()
+        if latest_tag is not None:
+            return self.download_tag_manifest(tag=latest_tag, logger=logger)
+        else:
+            logger.error("No tags found in ccdi-model GitHub repo")
+            return None
 
+class CCDI_DCC_Tags(Task):
+    """Class that fetches available releases, checks if a release exists,
+    and download ccdi-dcc manifest of a certain release
+    """
+
+    def __init__(self) -> None:
+        self.tags_api = "https://api.github.com/repos/CBIIT/ccdi-dcc-model/tags"
+
+    def get_tags(self) -> List[Dict]:
+        github_token = get_github_token()
+        headers = {"Authorization": "token " + github_token}
+        api_re = requests.get(self.tags_api, headers=headers)
+        tags_list = api_re.json()
+        return tags_list
+
+    def get_tags_only(self) -> List:
+        tags_list = self.get_tags()
+        tags = [i["name"] for i in tags_list]
+        return tags
+
+    def if_tag_exists(self, tag: str, logger):
+        tags = self.get_tags_only()
+        if tag in tags:
+            logger.info(
+                f"Version {tag} is found among the released versions of ccdi-model GitHub repo"
+            )
+            return True
+        else:
+            return False
+
+    def get_latest_tag(self) -> str:
+        tags = self.get_tags_only()
+        if len(tags) > 0:
+            return tags[0]
+        else:
+            return None
+
+    def get_tag_element(self, tag: str):
+        tags_list = self.get_tags()
+        tag_element = [i for i in tags_list if i["name"] == tag][0]
+        return tag_element
+
+    def download_tag_manifest(self, tag: str, logger) -> Union[str, None]:
+        check_tag = self.if_tag_exists(tag=tag, logger=logger)
+        if check_tag:
+            tag_element = self.get_tag_element(tag=tag)
+            tag_zipurl = tag_element["zipball_url"]
+            http_response = urlopen(tag_zipurl)
+            zipfile = ZipFile(BytesIO(http_response.read()))
+            # create a temp dir to download the zipfile
+            tempdirobj = tempfile.TemporaryDirectory(suffix="_github_dl")
+            tempdir = tempdirobj.name
+            zipfile.extractall(path=tempdir)
+            # manifest folder list files
+            manifests_folder_path = os.path.join(
+                tempdirobj.name, os.listdir(tempdirobj.name)[0], "metadata-manifest"
+            )
+            try:
+                manifest_file_list = os.listdir(manifests_folder_path)
+                manifest_tag_match = [
+                    i for i in manifest_file_list if i.endswith(tag + ".xlsx")
+                ]
+                if len(manifest_tag_match) == 0:
+                    logger.error(
+                        f"No CCDI-DCC manifest file ends with v{tag}.xlsx under matadata-manifest folder"
+                    )
+                    return None
+                elif len(manifest_tag_match) >= 1:
+                    if len(manifest_tag_match) > 1:
+                        logger.warning(
+                            f"More than one manifest file ends with v{tag}.xlsx.\n{*manifest_tag_match,}\nThe workflow defaults to first item {manifest_tag_match[0]}"
+                        )
+                    else:
+                        pass
+                    copy(
+                        os.path.join(manifests_folder_path, manifest_tag_match[0]),
+                        manifest_tag_match[0],
+                    )
+                    return manifest_tag_match[0]
+            except FileNotFoundError as e:
+                logger.error(e)
+                return None
+            except:
+                logger.error(
+                    f"Error in finding manifest .xlsx file, please download the zipfile and investigate. {tag_zipurl}"
+                )
+                return None
+        else:
+            available_tags = self.get_tags_only()
+            logger.error(
+                f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
+            )
+            return None
+
+    def download_latest_tag_manifest(self, logger) -> Union[str, None]:
+        latest_tag = self.get_latest_tag()
+        if latest_tag is not None:
+            return self.download_tag_manifest(tag=latest_tag, logger=logger)
+        else:
+            logger.error("No tags found in ccdi-model GitHub repo")
+            return None
+
+    def download_model_files(self, tag: str, logger) -> Tuple[str, str]:
+        check_tag = self.if_tag_exists(tag=tag, logger=logger)
+        if check_tag:
+            tag_element = self.get_tag_element(tag=tag)
+            tag_zipurl = tag_element["zipball_url"]
+            http_response = urlopen(tag_zipurl)
+            zipfile = ZipFile(BytesIO(http_response.read()))
+            # create a temp dir to download the zipfile
+            tempdirobj = tempfile.TemporaryDirectory(suffix="_github_dl")
+            tempdir = tempdirobj.name
+            zipfile.extractall(path=tempdir)
+            # model file
+            model_yml = os.path.join(
+                tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model.yml"
+            )
+            logger.info("model file path in temp dir: " + model_yml)
+            logger.info("model file name: " + os.path.basename(model_yml))
+            props_yml = os.path.join(
+                tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model-props.yml"
+            )
+            logger.info(
+                f"list files under {os.listdir(tempdirobj.name)[0]}: {os.listdir(os.path.join(tempdirobj.name,os.listdir(tempdirobj.name)[0],'model-desc'))}"
+            )
+            logger.info("prop file path in temp dir: " + props_yml)
+            logger.info("prop file name: " + os.path.basename(props_yml))
+            copy(model_yml, os.path.basename(model_yml))
+            copy(props_yml, os.path.basename(props_yml))
+            return os.path.basename(model_yml), os.path.basename(props_yml)
+        else:
+            available_tags = self.get_tags_only()
+            logger.error(
+                f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
+            )
+            return None, None
 
 def get_ccdi_latest_release() -> str:
     latest_url = GithubAPTendpoint.ccdi_model_recent_release
@@ -388,7 +539,7 @@ def ccdi_wf_inputs_ul(
     output_folder: str,
     ccdi_manifest: str,
     ccdi_template: str,
-    sra_template: str,
+    sra_template: Union[str, None] = None,
 ):
     """Upload inputs of CCDI data curation workflow into designated bucket"""
     # upload input files
@@ -404,22 +555,24 @@ def ccdi_wf_inputs_ul(
         sub_folder="workflow_inputs",
         newfile=ccdi_template,
     )
-    file_ul(
-        bucket,
-        output_folder=output_folder,
-        sub_folder="workflow_inputs",
-        newfile=sra_template,
-    )
+    if sra_template is not None:
+        file_ul(
+            bucket,
+            output_folder=output_folder,
+            sub_folder="workflow_inputs",
+            newfile=sra_template,
+        )
+    else:
+        pass
 
 
 @flow(
     name="Upload ccdi workflow outputs",
-    flow_run_name="upload_workflow_outputs_{wf_step}",
+    flow_run_name="upload_workflow_outputs_{sub_folder}",
 )
 def ccdi_wf_outputs_ul(
     bucket: str,
     output_folder: str,
-    wf_step: str,
     sub_folder: str,
     output_path: typing.Optional[str] = None,
     output_log: typing.Optional[str] = None,
@@ -1397,6 +1550,31 @@ def get_secret(secret_name_path: str, secret_key_name: str):
         str: Secret hash/token
     """
     region_name = "us-east-1"
+    # Create a Secrets Manager client
+    session = boto3.session.Session()
+    client = session.client(service_name="secretsmanager", region_name=region_name)
+    try:
+        get_secret_value_response = client.get_secret_value(SecretId=secret_name_path)
+    except ClientError as e:
+        # For a list of exceptions thrown, see
+        # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+        raise e
+
+    return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
+
+@task(name="get secret from secrets manager in an external account", log_prints=True)
+def get_secret_centralized_worker(secret_path_name: str, secret_key_name: str, account: str):
+    """Retrieve a secret hash from AWS Secrets Manager
+
+    Args:
+        secret_path_name (str): Secrets name path, i.e. ccdi/storage/inventory/token
+        secret_key_name (str): Secret key name associated with hash/token
+        account (str): AWS account identifier
+    Returns:
+        str: Secret hash/token
+    """
+    region_name = "us-east-1"
+    secret_name_path = f"arn:aws:secretsmanager:{region_name}:{account}:secret:{secret_path_name}"
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
