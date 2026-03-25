@@ -21,8 +21,12 @@ class Transformation(ABC):
     def apply(self, row: pd.Series):
         pass
 
+# -----------------------------
+# Transformation functions classes
+# -----------------------------
 
 class Liftover(Transformation):
+    """Class for direct mapping of a single input column to an output column without transformation"""
     def apply(self, row):
         if not self.inputs:
             return None
@@ -30,6 +34,7 @@ class Liftover(Transformation):
 
 
 class Concatenation(Transformation):
+    """Class for concatenating values from multiple input columns into a single output column, with handling for missing values"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
         if not values:
@@ -52,6 +57,7 @@ class Difference(Transformation):
         return b - a
 
 class Age_Event_Mapper(Transformation):
+    """Class for calculating age at event based on birthdate and event date columns, with error handling for non-numeric and missing values"""
     def apply(self, row):
         if len(self.inputs) != 2:
             return None
@@ -192,6 +198,7 @@ class Tumor_Grade_Mapper(Transformation):
         return ";".join(set(mapped_values))
 
 class Substudy_Integrated_Dx_Mapper(Transformation):
+    """Class for mapping substudy integrated diagnosis to a standardized set of terms based on the provided mapping file"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
         if not values:
@@ -204,6 +211,7 @@ class Substudy_Integrated_Dx_Mapper(Transformation):
 
 
 class EFS_Status(Transformation):
+    """Class for mapping event-free survival (EFS) status based on the presence of any non-null value in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
         if not values:
@@ -216,6 +224,7 @@ class EFS_Status(Transformation):
             return None
         
 class EFS_Age(Transformation):
+    """Class for calculating age at event-free survival (EFS) event based on birthdate and event date columns, with error handling for non-numeric and missing values; returns age in years"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
         if not values or len(values) != 2:
@@ -231,6 +240,7 @@ class EFS_Age(Transformation):
         return event - birth
 
 class Follow_Up_Treatment_Response_Mapper(Transformation):
+    """Class for mapping follow-up treatment response based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs]
         
@@ -259,6 +269,7 @@ class Follow_Up_Treatment_Response_Mapper(Transformation):
         return "Not Reported"
     
 class Other_Treatment_Type_Mapper(Transformation):
+    """Class for mapping other treatment types (e.g. surgery, chemotherapy, radiation) based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
         if not values:
@@ -281,6 +292,7 @@ class Other_Treatment_Type_Mapper(Transformation):
         return ";".join(set(mapped_values))
     
 class Surgery_Type_Mapper(Transformation):
+    """Class for mapping surgery type based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs]
         if not values:
@@ -340,6 +352,7 @@ class Surgery_Type_Mapper(Transformation):
         return ";".join(mapped_values_parse) if mapped_values_parse else None
         
 class Resection_Margin_Mapper(Transformation):
+    """Class for mapping resection margin status based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs]
         if not values:
@@ -403,6 +416,7 @@ class Resection_Margin_Mapper(Transformation):
         return ";".join(mapped_values_parse) if mapped_values_parse else None
     
 class CNS_Chemo_ID_Mapper(Transformation):
+    """Class for mapping chemotherapy drug names to standardized drug classes based on the provided mapping file too generate treatment_id"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
         if not values:
@@ -490,6 +504,7 @@ class CNS_Chemo_ID_Mapper(Transformation):
         return "_".join(set(mapped_values))
     
 class CNS_Chemo_Type_Mapper(Transformation):
+    """Class for mapping chemotherapy drug names to standardized drug classes based on the provided mapping file"""
     def apply(self, row):
         values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
         if not values:
