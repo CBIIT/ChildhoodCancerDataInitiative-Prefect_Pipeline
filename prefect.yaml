@@ -1676,11 +1676,13 @@ deployments:
       job_variables: {}
 
   - name: ccdi-cog_igm-transform-V3_v2
-      version: null
-      tags: ["PROD", "MCI", "V3"]
-      description: null
-      entrypoint: workflows/cog_igm_transformer_v2.py:cog_igm_transform
-      
+    version: null
+    tags: ["PROD", "MCI", "V3"]
+    description: null
+    entrypoint: workflows/cog_igm_transformer_v2.py:cog_igm_transform
+    
+    parameters:
+      bucket: "ccdi-validation"
       runner: ""
       manifest_path: ""
       form_parsing: "cog_and_igm"
