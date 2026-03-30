@@ -15,10 +15,10 @@ numpy==2.4.4
 openpyxl==3.1.5
 pandas==3.0.1
 pip-autoremove==0.10.0
-prefect-aws==0.7.4
-prefect-docker==0.7.1
-prefect-github==0.4.1
-prefect-shell==0.3.2
+prefect-aws==0.5.9
+prefect-docker==0.6.2
+prefect-github==0.3.1
+prefect-shell==0.3.1
 python-dateutil==2.9.0.post0
 pytz==2025.2
 s3transfer==0.16.0
