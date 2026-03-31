@@ -1497,19 +1497,20 @@ def stats_pull_graph_data_study(
                 study_query = query.format(study_id=study_id)
                 # Execute the query and fetch results
                 records = session.run(study_query)
-                # Convert the result to a dataframe
-                df = pd.DataFrame(
-                    [
-                        {
-                            "study_id": study_id,
-                            "column_name": f"{record['NodeType'][0]}_{query_topic}",  # Assuming one label per node
-                            "value": str(record["Value"]),
-                        }
-                        for record in records
-                    ]
-                )
-                # Append the dataframe to the list
-                df_list.append(df)
+                # If data exists, convert the result to a dataframe
+                if records:
+                    df = pd.DataFrame(
+                        [
+                            {
+                                "study_id": study_id,
+                                "column_name": f"{record['NodeType'][0]}_{query_topic}",  # Assuming one label per node
+                                "value": str(record["Value"]),
+                            }
+                            for record in records
+                        ]
+                    )
+                    # Append the dataframe to the list
+                    df_list.append(df)
             # Concatenate all dataframes into one
             final_df = pd.concat(df_list, ignore_index=True)
             final_df = pd.concat([final_df, df_study], axis=0, ignore_index=True)
@@ -1555,18 +1556,19 @@ def stats_pull_graph_data_nodes(
                     node_query = query.format(study_id=study_id, node=node)
                     # Execute the query and fetch results
                     records = session.run(node_query)
-                    # Convert the result to a dataframe
-                    df = pd.DataFrame(
-                        [
-                            {
-                                "study_id": study_id,
-                                "column_name": f"{record['NodeType'][0]}_{query_topic}",  # Assuming one label per node
-                                "value": str(record["Value"]),
-                            }
-                            for record in records
-                        ]
-                    )
-                    # Append the dataframe to the list
+                    # If data exists, convert the result to a dataframe
+                    if records:
+                        df = pd.DataFrame(
+                            [
+                                {
+                                    "study_id": study_id,
+                                    "column_name": f"{record['NodeType'][0]}_{query_topic}",  # Assuming one label per node
+                                    "value": str(record["Value"]),
+                                }
+                                for record in records
+                            ]
+                        )
+                        # Append the dataframe to the list
                     df_list.append(df)
             # Concatenate all dataframes into one
             final_df = pd.concat(df_list, ignore_index=True)
