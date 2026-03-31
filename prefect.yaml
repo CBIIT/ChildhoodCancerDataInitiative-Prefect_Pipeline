@@ -46,7 +46,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2392_update_yaml_py3.13
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
@@ -83,13 +83,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -117,13 +117,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
   
@@ -151,13 +151,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
   
@@ -185,13 +185,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -219,13 +219,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: 3.2.0
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-60gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -248,13 +248,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -276,13 +276,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-60gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -304,13 +304,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -336,7 +336,7 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
@@ -370,7 +370,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-curation-60gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}
 
@@ -394,13 +394,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -433,13 +433,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {} 
 
@@ -463,13 +463,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -491,13 +491,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -519,13 +519,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -546,13 +546,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
       
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -574,13 +574,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -602,13 +602,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -631,13 +631,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -659,13 +659,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -687,13 +687,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -715,13 +715,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -743,13 +743,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -771,13 +771,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-60gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
       
@@ -805,7 +805,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-curation-60gb-prefect-3.2.14-python3.9
       work_queue_name: null
       job_variables: {}  
 
@@ -827,7 +827,7 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
@@ -849,7 +849,7 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
@@ -871,13 +871,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}  
 
@@ -899,13 +899,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -931,13 +931,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -968,13 +968,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1000,7 +1000,6 @@ deployments:
       n_processes: 40
       process_type: "upload_files"
 
-
     # pull action to overwrite from file pull action
     pull:
     - prefect.deployments.steps.git_clone:
@@ -1008,13 +1007,13 @@ deployments:
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: main
     - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_V3.txt
+        requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1039,13 +1038,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1072,13 +1071,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1103,13 +1102,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
   
@@ -1135,16 +1134,15 @@ deployments:
           branch: main
           include_submodules: True
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}  
-
 
   - name: ccdi-cpi-query-v3
     version: null
@@ -1167,13 +1165,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-8gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1199,13 +1197,13 @@ deployments:
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: main
     - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_V3.txt
+        requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
       
@@ -1231,13 +1229,13 @@ deployments:
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: main
     - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_V3.txt
+        requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1263,13 +1261,13 @@ deployments:
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: main
     - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_V3.txt
+        requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1299,13 +1297,13 @@ deployments:
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
         branch: main
     - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_V3.txt
+        requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1327,13 +1325,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-2gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1359,16 +1357,15 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-32gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
-
 
   - name: model-to-submission-ccdi-dcc-v3
     version: null
@@ -1394,7 +1391,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-future-prefect-3.4.19-python3.13
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1422,7 +1419,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-future-prefect-3.4.19-python3.13
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1451,7 +1448,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-future-prefect-3.4.19-python3.13
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1474,13 +1471,13 @@ deployments:
           branch: main
           include_submodules: True
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1510,7 +1507,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-future-prefect-3.4.19-python3.13
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1533,13 +1530,13 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1563,7 +1560,7 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
@@ -1602,7 +1599,7 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
@@ -1633,7 +1630,7 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
@@ -1665,7 +1662,7 @@ deployments:
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
       - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
+          requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
@@ -1700,11 +1697,12 @@ deployments:
         branch: main
         include_submodules: True
     - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_V3.txt
+        requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
         stream_output: False
     # infra-specific fields
     work_pool:
-      name: ccdi-curation-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
+
