@@ -374,35 +374,35 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: ccdi-guid-checker-32gb-v3
-    version: null
-    tags: ["Production","V3"]
-    description: null
-    entrypoint: workflows/guid_checker.py:guid_checker_runner
-    schedule: null
+  # - name: ccdi-guid-checker-32gb-v3
+  #   version: null
+  #   tags: ["Production","V3"]
+  #   description: null
+  #   entrypoint: workflows/guid_checker.py:guid_checker_runner
+  #   schedule: null
 
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
-      file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
-      runner: "your_uniq_id"
+  #   # flow-specific parameters
+  #   parameters:
+  #     bucket: "ccdi-validation"
+  #     file_path: "inputs/CCDI_Submission_Template_v1.7.2_10ExampleR20231228.xlsx"
+  #     runner: "your_uniq_id"
 
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
+  #   # pull action to overwrite from file pull action
+  #   pull:
+  #     - prefect.deployments.steps.git_clone:
+  #         id: clone-step
+  #         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+  #         branch: main
+  #     - prefect.deployments.steps.pip_install_requirements:
+  #         requirements_file: requirements_python3.13_prefect3.txt
+  #         directory: "{{ clone-step.directory }}"
+  #         stream_output: False
 
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
+  #   # infra-specific fields
+  #   work_pool:
+  #     name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
+  #     work_queue_name: null
+  #     job_variables: {}
 
   # base metadata
   - name: model-mapping-maker-8gb-v3
@@ -831,27 +831,27 @@ deployments:
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
-  - name: guid-meta-check-v3
-    version: null
-    tags: ["Production","V3"]
-    description: null
-    entrypoint: src/sandbox_indexd_guid_validation.py:guid_validation_between_sandbox_indexd
-    schedule: null
+  # - name: guid-meta-check-v3
+  #   version: null
+  #   tags: ["Production","V3"]
+  #   description: null
+  #   entrypoint: src/sandbox_indexd_guid_validation.py:guid_validation_between_sandbox_indexd
+  #   schedule: null
 
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
+  #   # flow-specific parameters
+  #   parameters:
+  #     bucket: "ccdi-validation"
 
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
+  #   # pull action to overwrite from file pull action
+  #   pull:
+  #     - prefect.deployments.steps.git_clone:
+  #         id: clone-step
+  #         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+  #         branch: main
+  #     - prefect.deployments.steps.pip_install_requirements:
+  #         requirements_file: requirements_python3.13_prefect3.txt
+  #         directory: "{{ clone-step.directory }}"
+  #         stream_output: False
 
   - name: DB-props-uniq-report-v3
     version: null
