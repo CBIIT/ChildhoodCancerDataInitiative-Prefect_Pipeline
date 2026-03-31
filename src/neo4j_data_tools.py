@@ -291,14 +291,21 @@ RETURN SUM(TotalFileSize) AS Value, NodeType
     # Query to get the unique buckets found in each study
     stats_get_study_buckets: str = (
         """
-WITH ['study'] as NodeType
+WITH ['study'] AS NodeType
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 WHERE n.file_url IS NOT NULL
 WITH n.file_url AS fileUrl, NodeType
-WITH COLLECT(DISTINCT substring(fileUrl, 0, apoc.text.indexOf(fileUrl, "/", 5) + 1)) AS Value, NodeType
+
+// Split URL into parts
+WITH split(fileUrl, "/") AS parts, NodeType
+
+// Rebuild first 3 segments (adjust if needed)
+WITH NodeType,
+    parts[0] + "//" + parts[2] + "/" AS prefix
+
 RETURN 
     NodeType,
-    Value
+    COLLECT(DISTINCT prefix) AS Value;
 """
     )
 
