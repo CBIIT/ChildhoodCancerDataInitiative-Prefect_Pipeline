@@ -1498,7 +1498,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2392_update_yaml_py3.13
+          branch: main
           include_submodules: True
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
