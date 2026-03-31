@@ -63,6 +63,9 @@ def pull_db_stats(
     )
 
     # Run the queries
+    logger.info("Pulling data from database")
+
+    logger.info("Pulling PI data from database")
     pi_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -71,6 +74,7 @@ def pull_db_stats(
         "PI",
     )
 
+    logger.info("Pulling curation status data from database")
     curation_status_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -79,6 +83,7 @@ def pull_db_stats(
         "curation_status",
     )
 
+    logger.info("Pulling estimated size data from database")
     est_size_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -87,6 +92,7 @@ def pull_db_stats(
         "estimated_size",
     )
 
+    logger.info("Pulling institution data from database")
     institution_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -95,6 +101,7 @@ def pull_db_stats(
         "institution",
     )
 
+    logger.info("Pulling bucket data from database")
     bucket_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -103,6 +110,7 @@ def pull_db_stats(
         "bucket",
     )
 
+    logger.info("Pulling study file size data from database")
     study_size_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -111,6 +119,7 @@ def pull_db_stats(
         "file_size(Tb)",
     )
 
+    logger.info("Pulling node count data from database")
     node_count_df = stats_pull_graph_data_nodes(
         uri,
         username,
@@ -119,6 +128,7 @@ def pull_db_stats(
         "node_count",
     )
 
+    logger.info("Pulling file size data from database")
     file_size_df = stats_pull_graph_data_nodes(
         uri,
         username,
@@ -127,6 +137,7 @@ def pull_db_stats(
         "file_size(Tb)",
     )
 
+    logger.info("Pulling library strategy data from database")
     library_strategy_df = stats_pull_graph_data_nodes(
         uri,
         username,
@@ -135,6 +146,7 @@ def pull_db_stats(
         "library_strategy",
     )
 
+    logger.info("Pulling library strategy file count data from database")
     library_strategy_count_df = stats_pull_graph_data_nodes(
         uri,
         username,
@@ -143,6 +155,7 @@ def pull_db_stats(
         "file_count",
     )
 
+    logger.info("Pulling library strategy file size data from database")
     library_strategy_size_df = stats_pull_graph_data_nodes(
         uri,
         username,
@@ -151,6 +164,7 @@ def pull_db_stats(
         "file_size(Tb)",
     )
 
+    logger.info("Pulling clinical data from database")
     study_clinical_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -159,6 +173,7 @@ def pull_db_stats(
         "data_exist",
     )
 
+    logger.info("Pulling methylation array data from database")
     study_methylation_array_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -167,6 +182,7 @@ def pull_db_stats(
         "data_exist",
     )
 
+    logger.info("Pulling cytogenomic data from database")
     study_cytogenomic_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -175,6 +191,7 @@ def pull_db_stats(
         "data_exist",
     )
 
+    logger.info("Pulling pathology data from database")
     study_pathology_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -183,6 +200,7 @@ def pull_db_stats(
         "data_exist",
     )
 
+    logger.info("Pulling radiology data from database")
     study_radiology_df = stats_pull_graph_data_study(
         uri,
         username,
@@ -191,6 +209,7 @@ def pull_db_stats(
         "data_exist",
     )
 
+    logger.info("Pulling study file count data from database")
     study_file_count_df = stats_pull_graph_data_study(
         uri,
         username,
