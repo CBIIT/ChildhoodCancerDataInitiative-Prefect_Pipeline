@@ -1605,7 +1605,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-dcc-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
@@ -1668,7 +1668,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-dcc-16gb-prefect-3.2.14-python3.9
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
 
