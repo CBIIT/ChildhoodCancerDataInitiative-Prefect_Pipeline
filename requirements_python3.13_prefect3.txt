@@ -13,7 +13,7 @@ Markdown==3.10.2
 neo4j==6.1.0
 numpy==2.4.4
 openpyxl==3.1.5
-pandas==3.0.1
+pandas==2.2.3
 pip-autoremove==0.10.0
 prefect-aws==0.5.9
 prefect-docker==0.6.2
