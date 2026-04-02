@@ -781,33 +781,33 @@ deployments:
       work_queue_name: null
       job_variables: {}
       
-  - name: neo4j-stats-v3
-    version: null
-    tags: ["Production","V3"]
-    description: null
-    entrypoint: workflows/neo4j_stats.py:pull_neo4j_stats
-    schedule: null
+  # - name: neo4j-stats-v3
+  #   version: null
+  #   tags: ["Production","V3"]
+  #   description: null
+  #   entrypoint: workflows/neo4j_stats.py:pull_neo4j_stats
+  #   schedule: null
 
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
+  #   # flow-specific parameters
+  #   parameters:
+  #     bucket: "ccdi-validation"
 
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_V3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
+  #   # pull action to overwrite from file pull action
+  #   pull:
+  #     - prefect.deployments.steps.git_clone:
+  #         id: clone-step
+  #         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+  #         branch: main
+  #     - prefect.deployments.steps.pip_install_requirements:
+  #         requirements_file: requirements_V3.txt
+  #         directory: "{{ clone-step.directory }}"
+  #         stream_output: False
 
-    # infra-specific fields
-    work_pool:
-      name: ccdi-curation-60gb-prefect-3.2.14-python3.9
-      work_queue_name: null
-      job_variables: {}  
+  #   # infra-specific fields
+  #   work_pool:
+  #     name: ccdi-curation-60gb-prefect-3.2.14-python3.9
+  #     work_queue_name: null
+  #     job_variables: {}  
 
   - name: join-tsv-to-manifest_OLD-v3
     version: null
