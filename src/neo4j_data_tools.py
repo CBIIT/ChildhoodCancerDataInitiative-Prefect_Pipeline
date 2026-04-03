@@ -1272,12 +1272,12 @@ def validate_df_to_id_summary(validate_df: DataFrame) -> DataFrame:
 
 
 @task
-def neo4j_validation_md(
+def db_validation_md(
     count_summary_df: DataFrame, id_summary_df: DataFrame, runner=str
 ) -> None:
     count_df_str = count_summary_df.to_markdown(tablefmt="pipe", index=False)
     id_df_str = id_summary_df.to_markdown(tablefmt="pipe", index=False)
-    markdown_report = f"""# CCDI Neo4j DB Validation Summary
+    markdown_report = f"""# CCDI DB Validation Summary
 
 ## Entry Count Validation Summary
 
@@ -1289,9 +1289,9 @@ def neo4j_validation_md(
 
 """
     create_markdown_artifact(
-        key=f"neo4j-validation-report-{runner.lower().replace('_','-').replace(' ','-').replace('.','-').replace('/','-')}",
+        key=f"db-validation-report-{runner.lower().replace('_','-').replace(' ','-').replace('.','-').replace('/','-')}",
         markdown=markdown_report,
-        description=f"Neo4j validation Report for {runner}",
+        description=f"DB validation Report for {runner}",
     )
     return None
 

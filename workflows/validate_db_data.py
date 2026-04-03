@@ -8,7 +8,7 @@ from src.utils import get_time, folder_dl, get_date, file_ul, get_secret_central
 from src.neo4j_data_tools import (
     counts_DB_all_nodes_all_studies_w_secrets,
     validate_DB_with_input_tsvs_w_secrets,
-    neo4j_validation_md,
+    db_validation_md,
     validate_df_to_count_summary,
     validate_df_to_id_summary
 )
@@ -29,7 +29,7 @@ def validate_db_data(
     database_secret_key_username: str,
     database_secret_key_password: str,
 ):
-    """Pipeline that pulls specific stats from ingested studies from a Neo4j database
+    """Pipeline that pulls specific stats from ingested studies from a database
 
     Args:
         bucket (str): Bucket name of where output goes to
@@ -92,23 +92,23 @@ def validate_db_data(
         )
 
         # create markdown report for validation purpose
-        logger.info("Creating markdown report for Neo4j validation")
+        logger.info("Creating markdown report for db validation")
         count_summary_df = validate_df_to_count_summary(validate_df=validate_df)
         id_summary_df = validate_df_to_id_summary(validate_df=validate_df)
-        neo4j_validation_md(count_summary_df=count_summary_df, id_summary_df=id_summary_df, runner=runner)
+        db_validation_md(count_summary_df=count_summary_df, id_summary_df=id_summary_df, runner=runner)
 
         df_for_bucket_upload = validate_df
     else:
         df_for_bucket_upload = db_node_count_all_studies
 
-    # folder name in the bucket for file ul
-    summary_file_name =  f"neo4j_validation_summary_{get_date()}.tsv"
+    # folder name in the bucket for file upload
+    summary_file_name =  f"db_validation_summary_{get_date()}.tsv"
     df_for_bucket_upload.to_csv(summary_file_name, sep='\t', index=False)
-    bucket_folder = os.path.join(runner, "neo4j_validation_" + get_time())
+    bucket_folder = os.path.join(runner, "db_validation_" + get_time())
     file_ul(
         bucket=bucket,
         output_folder=bucket_folder,
         sub_folder="",
         newfile=summary_file_name,
     )
-    logger.info(f"Neo4j validation summary file {summary_file_name} has been uploaded to bucket {bucket} at folder {bucket_folder}")
+    logger.info(f"db validation summary file {summary_file_name} has been uploaded to bucket {bucket} at folder {bucket_folder}")
