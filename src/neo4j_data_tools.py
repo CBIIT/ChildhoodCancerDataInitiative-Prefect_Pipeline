@@ -1277,7 +1277,7 @@ def db_validation_md(
 ) -> None:
     count_df_str = count_summary_df.to_markdown(tablefmt="pipe", index=False)
     id_df_str = id_summary_df.to_markdown(tablefmt="pipe", index=False)
-    markdown_report = f"""# CCDI DB Validation Summary
+    markdown_report = f"""# DB Validation Summary
 
 ## Entry Count Validation Summary
 
