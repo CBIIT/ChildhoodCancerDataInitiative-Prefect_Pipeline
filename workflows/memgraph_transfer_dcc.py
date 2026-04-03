@@ -1,6 +1,10 @@
 from prefect import flow, get_run_logger
 from websockets import uri
-from src.memgraph_transfer import export_memgraph, import_memgraph, export_memgraph_curation
+from src.memgraph_transfer import (
+    export_memgraph,
+    import_memgraph,
+    export_memgraph_curation,
+)
 from typing import Literal
 import os
 from src.utils import (
@@ -24,7 +28,9 @@ def memgraph_transfer_dcc(
     runner: str,
     file_path: str,
     chunk_size: int = 1000,
-    mode: Literal["export", "import", "promotion", "curation promotion"] = "export",  # dropdown choice
+    mode: Literal[
+        "export", "import", "promotion", "curation promotion"
+    ] = "export",  # dropdown choice
     database_source_account_name: str = None,
     database_source_account_id: str = None,
     database_source_secret_path: str = None,
@@ -39,7 +45,6 @@ def memgraph_transfer_dcc(
     database_target_secret_key_password: str = None,
     wipe_db: bool = False,
 ):
-
     """
     Prefect flow for transferring/promoting a Memgraph database.
 
@@ -103,14 +108,17 @@ def memgraph_transfer_dcc(
             account=database_target_account_id,
         )
 
-
-    #check the mode and run the corresponding flow
+    # check the mode and run the corresponding flow
 
     if mode == "export":
         logger.info(f"Running export with chunk size {chunk_size}")
         logger.info(f"Source database account: {database_source_account_name}")
-        output_file = f"memgraph_dump_{database_source_account_name}_{get_time()}.cypherl"
-        export_memgraph(uri_source, username_source, password_source, output_file, chunk_size)
+        output_file = (
+            f"memgraph_dump_{database_source_account_name}_{get_time()}.cypherl"
+        )
+        export_memgraph(
+            uri_source, username_source, password_source, output_file, chunk_size
+        )
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         logger.info(f"Export completed: {output_file}")
@@ -121,7 +129,9 @@ def memgraph_transfer_dcc(
         file_name = os.path.basename(file_path)
         logger.info(f"Running import with chunk size {chunk_size}")
         logger.info(f"Target database account: {database_target_account_name}")
-        import_memgraph(uri_target, username_target, password_target, file_name, chunk_size, wipe_db)
+        import_memgraph(
+            uri_target, username_target, password_target, file_name, chunk_size, wipe_db
+        )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
     elif mode == "promotion":
@@ -130,13 +140,19 @@ def memgraph_transfer_dcc(
         logger.info(f"Target database account: {database_target_account_name}")
         # First export the source database to a local file
         logger.info(f"Running export with chunk size {chunk_size}")
-        output_file = f"memgraph_dump_{database_source_account_name}_{get_time()}.cypherl"
-        export_memgraph(uri_source, username_source, password_source, output_file, chunk_size)
+        output_file = (
+            f"memgraph_dump_{database_source_account_name}_{get_time()}.cypherl"
+        )
+        export_memgraph(
+            uri_source, username_source, password_source, output_file, chunk_size
+        )
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         logger.info(f"Export completed: {output_file}")
         logger.info(f"Running import with chunk size {chunk_size}")
-        import_memgraph(uri_target, username_target, password_target, file_name, chunk_size, wipe_db)
+        import_memgraph(
+            uri_target, username_target, password_target, file_name, chunk_size, wipe_db
+        )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
     elif mode == "curation promotion":
@@ -146,17 +162,21 @@ def memgraph_transfer_dcc(
         logger.info(f"Target database account: {database_target_account_name}")
         logger.info(f"Running export with chunk size {chunk_size}")
         output_file = f"memgraph_dump_curation_{database_source_account_name}_{get_time()}.cypherl"
-        export_memgraph_curation(uri_source, username_source, password_source, output_file, chunk_size)
+        export_memgraph_curation(
+            uri_source, username_source, password_source, output_file, chunk_size
+        )
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         logger.info(f"Export completed: {output_file}")
         logger.info(f"Running import with chunk size {chunk_size}")
-        import_memgraph(uri_target, username_target, password_target, file_name, chunk_size, wipe_db)
+        import_memgraph(
+            uri_target, username_target, password_target, file_name, chunk_size, wipe_db
+        )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
     else:
-        logger.error(f"Invalid mode: {mode}. Must be 'export', 'import', 'promotion', or 'curation promotion'.")
-
+        logger.error(
+            f"Invalid mode: {mode}. Must be 'export', 'import', 'promotion', or 'curation promotion'."
+        )
 
     logger.info(f"{mode} flow completed successfully")
-
