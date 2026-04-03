@@ -1089,6 +1089,29 @@ def counts_DB_all_nodes_all_studies(
 
     return studies_dataframe
 
+@flow
+def counts_DB_all_nodes_all_studies_w_secrets(
+    uri: str, username: str, password: str
+) -> Dict:
+    logger = get_run_logger()
+
+    # driver instance
+    logger.info("Creating GraphDatabase driver using uri, username, and password")
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+
+    # fetch all unique studies
+    study_list = pull_uniq_studies(driver=driver)
+    logger.info(f"Unique study list in DB: {*study_list,}")
+
+    # Loop through each study and fetch counts of all nodes per study
+    studies_dataframe = pull_studies_loop(
+        driver=driver, study_list=study_list, logger=logger
+    )
+
+    driver.close()
+
+    return studies_dataframe
+
 
 @flow
 def counts_DB_all_nodes_all_studies_w_secrets(
