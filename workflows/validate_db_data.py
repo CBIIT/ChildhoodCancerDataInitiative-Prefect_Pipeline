@@ -29,7 +29,7 @@ def validate_db_data(
     database_secret_key_username: str,
     database_secret_key_password: str,
 ):
-    """Pipeline that pulls specific stats from ingested studies from a db database
+    """Pipeline that pulls specific stats from ingested studies from a database
 
     Args:
         bucket (str): Bucket name of where output goes to
