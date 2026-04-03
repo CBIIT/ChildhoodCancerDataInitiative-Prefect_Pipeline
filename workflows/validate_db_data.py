@@ -34,7 +34,7 @@ def validate_db_data(
     Args:
         bucket (str): Bucket name of where output goes to
         runner (str): Unique runner name
-        tsv_folder (str, optional): Folder path in the provided bucket. Defaults to "".
+        tsv_folder (str, optional): Folder path of load files in the provided bucket. Defaults to "".
         database_account_id (str): Account ID for the database
         database_secret_path (str): Secret path for the database
         database_secret_key_ip (str): Secret key for the IP of the database

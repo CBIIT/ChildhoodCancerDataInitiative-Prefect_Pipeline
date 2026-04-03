@@ -18,11 +18,11 @@ from src.neo4j_data_tools import (
 def pull_db_stats(
     bucket: str,
     runner: str,
-    database_1_account_id: str,
-    database_1_secret_path: str,
-    database_1_secret_key_ip: str,
-    database_1_secret_key_username: str,
-    database_1_secret_key_password: str,
+    database_account_id: str,
+    database_secret_path: str,
+    database_secret_key_ip: str,
+    database_secret_key_username: str,
+    database_secret_key_password: str,
     additional_info_file: str = "",
 ):
     """Pipeline that pulls specific stats from ingested studies from a Neo4j database
@@ -30,11 +30,11 @@ def pull_db_stats(
     Args:
         bucket (str): Bucket name of where output goes to
         runner (str): Unique runner name
-        database_1_account_id (str): Account ID for the database
-        database_1_secret_path (str): Secret path for the database
-        database_1_secret_key_ip (str): Secret key for the IP of the database
-        database_1_secret_key_username (str): Secret key for the username of the database
-        database_1_secret_key_password (str): Secret key for the password of the database
+        database_account_id (str): Account ID for the database
+        database_secret_path (str): Secret path for the database
+        database_secret_key_ip (str): Secret key for the IP of the database
+        database_secret_key_username (str): Secret key for the username of the database
+        database_secret_key_password (str): Secret key for the password of the database
         additional_info_file (str, optional): An extra information tsv file with one line per study in a study_id column.
     """
 
@@ -47,19 +47,19 @@ def pull_db_stats(
     logger.info("Getting uri, username and password parameter from AWS")
     # get uri, username, and password value
     uri = get_secret_centralized_worker(
-        secret_path_name=database_1_secret_path,
-        secret_key_name=database_1_secret_key_ip,
-        account=database_1_account_id,
+        secret_path_name=database_secret_path,
+        secret_key_name=database_secret_key_ip,
+        account=database_account_id,
     )
     username = get_secret_centralized_worker(
-        secret_path_name=database_1_secret_path,
-        secret_key_name=database_1_secret_key_username,
-        account=database_1_account_id,
+        secret_path_name=database_secret_path,
+        secret_key_name=database_secret_key_username,
+        account=database_account_id,
     )
     password = get_secret_centralized_worker(
-        secret_path_name=database_1_secret_path,
-        secret_key_name=database_1_secret_key_password,
-        account=database_1_account_id,
+        secret_path_name=database_secret_path,
+        secret_key_name=database_secret_key_password,
+        account=database_account_id,
     )
 
     # Run the queries
