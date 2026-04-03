@@ -7,7 +7,7 @@ sys.path.append(parent_dir)
 from src.utils import get_time, folder_dl, get_date, file_ul, get_secret_centralized_worker
 from src.neo4j_data_tools import (
     counts_DB_all_nodes_all_studies_w_secrets,
-    validate_DB_with_input_tsvs,
+    validate_DB_with_input_tsvs_w_secrets,
     neo4j_validation_md,
     validate_df_to_count_summary,
     validate_df_to_id_summary
@@ -83,10 +83,10 @@ def validate_db_data(
     if tsv_folder != "":
         # validate db info with files in tsv folder
         logger.info("Reading tsv files and validating records between tsv files and DB")
-        validate_df = validate_DB_with_input_tsvs(
-            uri_parameter=uri,
-            username_parameter=username,
-            password_parameter=password,
+        validate_df = validate_DB_with_input_tsvs_w_secrets(
+            uri=uri,
+            username=username,
+            password=password,
             tsv_folder=tsv_folder,
             studies_dataframe=db_node_count_all_studies,
         )
