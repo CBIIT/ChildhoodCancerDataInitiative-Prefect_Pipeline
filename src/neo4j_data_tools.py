@@ -1089,6 +1089,29 @@ def counts_DB_all_nodes_all_studies(
 
     return studies_dataframe
 
+@flow
+def counts_DB_all_nodes_all_studies_w_secrets(
+    uri: str, username: str, password: str
+) -> Dict:
+    logger = get_run_logger()
+
+    # driver instance
+    logger.info("Creating GraphDatabase driver using uri, username, and password")
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+
+    # fetch all unique studies
+    study_list = pull_uniq_studies(driver=driver)
+    logger.info(f"Unique study list in DB: {*study_list,}")
+
+    # Loop through each study and fetch counts of all nodes per study
+    studies_dataframe = pull_studies_loop(
+        driver=driver, study_list=study_list, logger=logger
+    )
+
+    driver.close()
+
+    return studies_dataframe
+
 
 @flow
 def counts_DB_all_nodes_all_studies_w_secrets(
@@ -1132,6 +1155,52 @@ def validate_DB_with_input_tsvs(
         password_parameter=password_parameter,
         logger=logger,
     )
+
+    # driver instance
+    logger.info("Creating GraphDatabase driver using uri, username, and password")
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+
+    # read trhough tsv folder and extrac study_id, node, id_count,
+    # and id list from each file
+    tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
+    ingested_studies_dataframe = parse_tsv_files(tsv_files)
+
+    logger.info("pulled all ids based off the nodes and studies from tsv provided")
+    db_id_list_all_studies = pull_node_ids_all_studies(
+        driver=driver,
+        studies_dataframe=ingested_studies_dataframe[["study_id", "node"]],
+        logger=logger,
+    )
+
+    logger.info("Start comparing db pulled id with ids in tsv files")
+    comparison_df = compare_id_input_db(
+        db_id_pulled_dict=db_id_list_all_studies,
+        parsed_tsv_file_df=ingested_studies_dataframe,
+        logger=logger,
+    )
+
+    merged_summary_table = pd.merge(
+        studies_dataframe, comparison_df, on=["study_id", "node"], how="outer"
+    )
+    merged_summary_table.drop(columns=["tsv_id"], inplace=True)
+
+    # sort the df order based on study id and node
+    merged_summary_table = merged_summary_table.sort_values(
+        by=["study_id", "node"], ascending=True
+    )
+    # close driver
+    driver.close()
+    return merged_summary_table
+
+@flow(log_prints=True)
+def validate_DB_with_input_tsvs_w_secrets(
+    uri: str,
+    username: str,
+    password: str,
+    tsv_folder: str,
+    studies_dataframe: DataFrame,
+) -> DataFrame:
+    logger = get_run_logger()
 
     # driver instance
     logger.info("Creating GraphDatabase driver using uri, username, and password")
