@@ -5,7 +5,7 @@ import sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.utils import get_time, folder_dl, get_date, file_ul, get_secret_centralized_worker
-from src.db_data_tools import (
+from src.neo4j_data_tools import (
     counts_DB_all_nodes_all_studies_w_secrets,
     validate_DB_with_input_tsvs_w_secrets,
     db_validation_md,
@@ -101,7 +101,7 @@ def validate_db_data(
     else:
         df_for_bucket_upload = db_node_count_all_studies
 
-    # folder name in the bucket for file ul
+    # folder name in the bucket for file upload
     summary_file_name =  f"db_validation_summary_{get_date()}.tsv"
     df_for_bucket_upload.to_csv(summary_file_name, sep='\t', index=False)
     bucket_folder = os.path.join(runner, "db_validation_" + get_time())
