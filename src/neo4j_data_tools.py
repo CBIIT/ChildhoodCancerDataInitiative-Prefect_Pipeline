@@ -368,7 +368,7 @@ RETURN [NodeType] AS NodeType, Value
     # Get file count by sequencing file library strategy
     stats_get_study_library_strategy_size: str = (
         """
-MATCH (study:study {study_id: "{study_id}"})-[*0..6]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL AND n.file_url IS NOT NULL
 WITH n.library_strategy AS NodeType, n.file_url AS fileUrl, n.file_size AS fileSize
 WITH NodeType, fileUrl, MIN(fileSize) AS uniqueFileSize
