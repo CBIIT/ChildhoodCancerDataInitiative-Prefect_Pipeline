@@ -267,8 +267,9 @@ RETURN DISTINCT
         """
 WITH ['study_level_file'] AS NodeType
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
-WHERE n.file_size IS NOT NULL
-WITH count(n) as Value, NodeType
+WHERE n.file_size IS NOT NULL AND n.file_url IS NOT NULL
+WITH n.file_url AS fileUrl
+WITH COUNT(DISTINCT fileUrl) AS Value, NodeType
 RETURN DISTINCT
     NodeType,
     Value
