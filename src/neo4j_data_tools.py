@@ -267,8 +267,8 @@ RETURN DISTINCT
         """
 WITH ['study_level_file'] AS NodeType
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
-WHERE n.file_size IS NOT NULL AND n.file_url IS NOT NULL
-WITH COUNT(DISTINCT n.file_url) AS Value, NodeType
+WHERE n.file_size IS NOT NULL AND n.dcf_indexd_guid IS NOT NULL
+WITH COUNT(DISTINCT n.dcf_indexd_guid) AS Value, NodeType
 RETURN DISTINCT
     NodeType,
     Value
@@ -359,8 +359,8 @@ RETURN NodeType, Value
         """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL AND n.file_url IS NOT NULL
-WITH n.library_strategy AS NodeType, n.file_url AS fileUrl
-WITH NodeType, COUNT(DISTINCT fileUrl) AS Value
+WITH n.library_strategy AS NodeType, n.dcf_indexd_guid AS dcfGuid
+WITH NodeType, COUNT(DISTINCT dcfGuid) AS Value
 RETURN [NodeType] AS NodeType, Value
 """
     )
