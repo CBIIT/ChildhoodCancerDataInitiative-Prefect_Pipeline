@@ -1549,7 +1549,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      secret_name_path: "secret-name-path"
+      secret_path_name: "secret-path-name"
       secret_key_name: "secret-key-name"
       account: "aws_account_id"
       
