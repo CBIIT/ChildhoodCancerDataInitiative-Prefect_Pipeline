@@ -133,6 +133,7 @@ RETURN NodeType, Value
     )
     
     # query to obtain the study curation status
+    # TODO: remove when using DCC model
     stats_get_curation_status_query: str = (
         """
 MATCH (s:study)
@@ -266,8 +267,8 @@ RETURN DISTINCT
         """
 WITH ['study_level_file'] AS NodeType
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
-WHERE n.file_size IS NOT NULL
-WITH count(n) as Value, NodeType
+WHERE n.file_size IS NOT NULL AND n.dcf_indexd_guid IS NOT NULL
+WITH COUNT(DISTINCT n.dcf_indexd_guid) AS Value, NodeType
 RETURN DISTINCT
     NodeType,
     Value
@@ -357,9 +358,10 @@ RETURN NodeType, Value
     stats_get_study_library_strategy_count: str = (
         """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
-WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
-WITH [n.library_strategy] AS NodeType, COUNT(n) AS Value
-RETURN NodeType, Value
+WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL AND n.file_url IS NOT NULL
+WITH n.library_strategy AS NodeType, n.dcf_indexd_guid AS dcfGuid
+WITH NodeType, COUNT(DISTINCT dcfGuid) AS Value
+RETURN [NodeType] AS NodeType, Value
 """
     )
 
@@ -367,9 +369,11 @@ RETURN NodeType, Value
     stats_get_study_library_strategy_size: str = (
         """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
-WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
-WITH [n.library_strategy] AS NodeType, sum(n.file_size) AS Value
-RETURN NodeType, Value
+WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL AND n.file_url IS NOT NULL
+WITH n.library_strategy AS NodeType, n.file_url AS fileUrl, n.file_size AS fileSize
+WITH NodeType, fileUrl, MIN(fileSize) AS uniqueFileSize
+WITH NodeType, SUM(uniqueFileSize) AS Value
+RETURN [NodeType] AS NodeType, Value
 """
     )
 
