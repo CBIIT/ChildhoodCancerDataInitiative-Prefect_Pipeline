@@ -4,7 +4,7 @@ import os
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.utils import get_time, folder_dl, CCDI_Tags, file_ul
+from src.utils import CCDI_DCC_Tags, get_time, folder_dl, file_ul
 from src.join_tsv_to_manifest import (
     join_tsv_to_manifest_single_study,
     multi_studies_tsv_join,
@@ -21,7 +21,7 @@ def join_tsv_to_manifest(
     bucket: str,
     runner: str,
     tsv_folder_path: str,
-    ccdi_template_tag: str
+    dcc_template_tag: str
     
 ) -> None:
     """Pipeline that combines a folder of tsv files into a single CCDI manifest
@@ -30,7 +30,7 @@ def join_tsv_to_manifest(
         bucket (str): Bucket name of where tsv files located in and output goes to
         runner (str): Unique runner name
         tsv_folder_path (str): Folder path of tsv files in the bucket 
-        ccdi_template_tag (str): Tag name of CCDI manifest
+        dcc_template_tag (str): Tag name of the DCC template
         
 
     Raises:
@@ -41,8 +41,8 @@ def join_tsv_to_manifest(
 
     # download the ccdi manifest of a given tag
     logger.info("")
-    ccdi_manifest = CCDI_Tags().download_tag_manifest(
-        tag=ccdi_template_tag, logger=logger
+    ccdi_manifest = CCDI_DCC_Tags().download_tag_manifest(
+        tag=dcc_template_tag, logger=logger
     )
     if ccdi_manifest is None:
         raise ValueError(

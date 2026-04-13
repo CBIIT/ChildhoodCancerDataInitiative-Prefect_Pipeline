@@ -1803,3 +1803,67 @@ def consolidate_uniquevalue_props(folder_path: str, prop_file_path: str):
             os.remove(k)
 
     return  new_folder
+
+@flow
+def query_db_to_csv_w_secrets(
+    output_dir: str,
+    uri_secret: str,
+    username_secret: str,
+    password_secret: str,
+    study_id_list: Union[list[str], None] = None,
+) -> str:
+    """It export one csv file for each unique node.
+    Each csv file (per node) contains all the info of the node across all studies
+    in DB
+    """
+    logger = get_run_logger()
+    logger.info(
+        f"Creating folder {output_dir} if not exists for writing data pulled from DB"
+    )
+    # create the output dir if not exist
+    os.makedirs(output_dir, exist_ok=True)
+
+    # driver instance
+    logger.info("Creating GraphDatabase driver using uri, username, and password")
+    driver = GraphDatabase.driver(uri_secret, auth=(username_secret, password_secret))
+
+    # fetch unique nodes and unique studies
+    logger.info("Fetching all unique nodes in DB")
+    unique_nodes = pull_uniq_nodes(driver=driver)
+    logger.info("Fetching all unique studies in DB")
+    if study_id_list:
+        unique_studies = study_id_list
+    else:
+        unique_studies = pull_uniq_studies(driver=driver)
+    print(f"unique_studies: {unique_studies}")
+    logger.info(f"Nodes list: {*unique_nodes,}")
+    logger.info(f"Studies list: {*unique_studies,}")
+
+    # Iterate through each unique node and export data
+    logger.info("Pulling data by each node")
+
+    # pull all the nodes for each study
+    pull_nodes_loop(
+        study_list=unique_studies,
+        node_list=unique_nodes,
+        driver=driver,
+        out_dir=output_dir,
+        logger=logger,
+    )
+    # # combine step will delete per study per node csv files, which saves space
+    # combine_node_csv_all_studies(out_dir=output_dir, node_list=unique_nodes)
+
+    # Obtain study node data
+    logger.info("Pulling data from study node")
+    pull_study_node(driver=driver, out_dir=output_dir, study_id_list=unique_studies)
+
+    # close the driver
+    logger.info("Closing GraphDatabase driver")
+    driver.close()
+
+    # the output dir that contians per study per node csv
+    output_dir_per_study_per_node = os.path.join(
+        os.path.dirname(output_dir), os.path.basename(output_dir) + "_per_study_per_node"
+    )
+
+    return output_dir_per_study_per_node
