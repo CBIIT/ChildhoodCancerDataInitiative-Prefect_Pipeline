@@ -30,8 +30,7 @@ def join_tsv_to_manifest(
         bucket (str): Bucket name of where tsv files located in and output goes to
         runner (str): Unique runner name
         tsv_folder_path (str): Folder path of tsv files in the bucket 
-        dcc_template_tag (str): Tag name of the DCC template
-        
+        dcc_template_tag (str): Tag name of the DCC template to use for the manifest generation. 
 
     Raises:
         ValueError: Value Error raised if pipeline fails to proceed
