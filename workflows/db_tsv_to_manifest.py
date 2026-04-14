@@ -13,9 +13,9 @@ from src.join_tsv_to_manifest import (
 
 
 @flow(
-    name="JoinRy tsv to manifest",
+    name="Join TSV files to CCDI manifest",
     log_prints=True,
-    flow_run_name="joinry-tsv-to-manifest-{runner}-" + f"{get_time()}",
+    flow_run_name="join-tsv-to-manifest-{runner}-" + f"{get_time()}",
 )
 def join_tsv_to_manifest(
     bucket: str,
