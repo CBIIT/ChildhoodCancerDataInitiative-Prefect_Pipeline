@@ -49,6 +49,7 @@ def memgraph_transfer_dcc(
     Prefect flow for transferring/promoting a Memgraph database.
 
     Args:
+        mode: Operation mode for the transfer. Must be one of 'export', 'import', 'promotion', or 'curation promotion'.
         bucket: Working cloud storage bucket name.
         runner: Identifier for the runner executing the flow and output file path.
         file_path: Path to the CypherL file for import.
