@@ -2,7 +2,7 @@ from typing import Any
 from neo4j import GraphDatabase
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
-
+import json
 
 
 # ------------------------------------------------------------------
@@ -19,7 +19,7 @@ def export_memgraph(
     """
     logger = get_run_logger()
     driver = GraphDatabase.driver(uri, auth=(username, password))
-    logger.info(f"Connected to Memgraph at {uri}")
+    logger.info(f"Connected to Memgraph")
 
     def _extract_query_from_record(record: Any) -> str:
         """
@@ -73,6 +73,125 @@ def export_memgraph(
 
 
 # ------------------------------------------------------------------
+# TASK: EXPORT DATABASE FOR CURATION PROMOTION
+# ------------------------------------------------------------------
+def format_properties(props):
+    """Convert dict to Cypher map string"""
+    if not props:
+        return "{}"
+    pairs = []
+    for k, v in props.items():
+        if isinstance(v, str):
+            v = v.replace('"', '\\"')
+            pairs.append(f'{k}: "{v}"')
+        elif v is None:
+            continue
+        else:
+            pairs.append(f"{k}: {json.dumps(v)}")
+    return "{ " + ", ".join(pairs) + " }"
+
+
+def format_labels(labels):
+    return ":" + ":".join(labels) if labels else ""
+
+
+def export_nodes(tx):
+    query = """
+    MATCH (st:study {promotion_status: "Promote"})-[*0..]-(n)
+    RETURN DISTINCT n
+    """
+    result = tx.run(query)
+
+    nodes = []
+    for record in result:
+        n = record["n"]
+        nodes.append({"id": n.id, "labels": list(n.labels), "properties": dict(n)})
+    return nodes
+
+
+def export_relationships(tx):
+    query = """
+    MATCH (st:study {promotion_status: "Promote"})-[r]->(n)
+    RETURN DISTINCT r
+    """
+    result = tx.run(query)
+
+    rels = []
+    for record in result:
+        r = record["r"]
+        rels.append(
+            {
+                "start": r.start_node.id,
+                "end": r.end_node.id,
+                "type": r.type,
+                "properties": dict(r),
+            }
+        )
+    return rels
+
+
+@task(cache_policy=NO_CACHE, name="export_memgraph_curation")
+def export_memgraph_curation(
+    uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
+) -> None:
+    """
+    Export a Memgraph database to a CypherL (.cypher) file using DUMP DATABASE.
+    Each record is assumed to contain a complete Cypher statement.
+    Writes to disk in chunks for large-scale databases.
+    """
+    logger = get_run_logger()
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+    logger.info(f"Connected to Memgraph")
+
+    with driver.session() as session:
+        nodes = session.execute_read(export_nodes)
+        rels = session.execute_read(export_relationships)
+
+    # Map old IDs to variable names
+    node_vars = {}
+    cypher_lines = []
+    total_statements = 0
+
+    # --- CREATE NODES ---
+    for i, node in enumerate(nodes):
+        var = f"n{i}"
+        node_vars[node["id"]] = var
+
+        labels = format_labels(node["labels"])
+        props = format_properties(node["properties"])
+
+        cypher_lines.append(f"CREATE ({var}{labels} {props});")
+        total_statements += 1
+
+    # --- CREATE RELATIONSHIPS ---
+    for rel in rels:
+        start_var = node_vars.get(rel["start"])
+        end_var = node_vars.get(rel["end"])
+
+        if not start_var or not end_var:
+            continue  # skip if node missing
+
+        props = format_properties(rel["properties"])
+
+        cypher_lines.append(
+            f"CREATE ({start_var})-[:{rel['type']} {props}]->({end_var});"
+        )
+        total_statements += 1
+
+    # --- WRITE FILE ---
+    with open(output_file, "w") as f:
+        for line in cypher_lines:
+            f.write(line + "\n")
+
+        logger.info(
+            f"Export complet {output_file}.\n\n Total statements exported: {total_statements}"
+        )
+
+    driver.close()
+    logger.info("Memgraph connection closed.")
+
+
+# ------------------------------------------------------------------
 # INTERNAL TASK: RUN QUERY CHUNKS
 # ------------------------------------------------------------------
 def _execute_batch(session, queries, logger):
@@ -86,8 +205,11 @@ def _execute_batch(session, queries, logger):
         except Exception as e:
             logger.warning(f"Failed query: {q[:120]}... Error: {e}")
 
-    logger.info(f"Executed batch of {len(queries)} queries ({success_count} succeeded).")
+    logger.info(
+        f"Executed batch of {len(queries)} queries ({success_count} succeeded)."
+    )
     return success_count
+
 
 # ------------------------------------------------------------------
 # INTERNAL TASK: WIPE DATABASE
@@ -102,6 +224,7 @@ def _wipe_database(session, logger):
         logger.error(f"Error wiping database: {e}")
         raise
 
+
 # ------------------------------------------------------------------
 # TASK: IMPORT DATABASE
 # ------------------------------------------------------------------
@@ -112,7 +235,7 @@ def import_memgraph(
     password: str,
     input_file: str,
     chunk_size: int = 500,
-    wipe_db: bool = False
+    wipe_db: bool = False,
 ) -> None:
     """
     Imports a CypherL dump into Memgraph in batches.
@@ -165,5 +288,3 @@ def import_memgraph(
         logger.info(
             f"Import complete — total lines read: {total_lines}, total executed: {executed}, total errors: {errors}"
         )
-
-
