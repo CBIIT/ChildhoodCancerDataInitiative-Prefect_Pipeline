@@ -1762,9 +1762,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: memgraph_transfer_dcc_v3
+  - name: TEST_memgraph_transfer_dcc_v3
     version: null
-    tags: ["Production", "V3"]
+    tags: ["TEST", "V3", "DCC", "Centralized Worker", "CCDIDC-2393"]
     description: null
     entrypoint: workflows/memgraph_transfer_dcc.py:memgraph_transfer_dcc
     schedule: null
