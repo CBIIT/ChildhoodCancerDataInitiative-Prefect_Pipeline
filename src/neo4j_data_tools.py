@@ -1979,7 +1979,7 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
 
         # Add [node].id columns
         df_wide_links = df_wide.pivot(
-            index="id", columns="linkedNodeLabels", values="linkedNodeId"
+            index="guid", columns="linkedNodeLabels", values="linkedNodeId"
         ).reset_index()
 
         # Add linkages back into data frame and drop extra columns
