@@ -15,7 +15,7 @@ def get_dcc_namespace():
     return dcc_namespace
 
 
-def get_dcc_uuid(x: str, study_id: str, node_name: str) -> str:
+def get_dcc_uuid(x: str, study_id: str, node_name: str, delimiter: str = ";") -> str:
     """Generates uuid value for DCC using DCC based namespace
 
     Args:
@@ -30,8 +30,14 @@ def get_dcc_uuid(x: str, study_id: str, node_name: str) -> str:
         return x
     else:
         dcc_namespace = get_dcc_namespace()
-        x_str_input = study_id + "::" + node_name + "::" + x
-        return get_uuid(uuid_namespace=dcc_namespace, id_str=x_str_input)
+        # if delimiter exists in the 
+        if delimiter in x:
+            x_list = x.split(delimiter)
+            x_str_input = [study_id + "::" + node_name + "::" + item.strip() for item in x_list]
+            return delimiter.join([get_uuid(uuid_namespace=dcc_namespace, id_str=item) for item in x_str_input])
+        else:
+            x_str_input = study_id + "::" + node_name + "::" + x.strip()
+            return get_uuid(uuid_namespace=dcc_namespace, id_str=x_str_input)
 
 
 @flow(
