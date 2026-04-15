@@ -1907,7 +1907,7 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     """Pivot the long df to wider df
     It also removes quotes from column names and value
     """
-    df_long = pd.read_csv(file_path)
+    df_long = pd.read_csv(file_path).drop_duplicates()
 
     # Pivot the DataFrame to wide format
     df_wide = df_long.pivot(
