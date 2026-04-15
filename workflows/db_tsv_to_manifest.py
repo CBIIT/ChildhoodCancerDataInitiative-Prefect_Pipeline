@@ -5,7 +5,7 @@ import os
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.utils import CCDI_DCC_Tags, get_time, folder_dl, file_ul
-from src.join_tsv_to_manifest import (
+from src.join_tsv_to_manifest_dcc import (
     join_tsv_to_manifest_single_study,
     multi_studies_tsv_join,
     check_subfolder,
