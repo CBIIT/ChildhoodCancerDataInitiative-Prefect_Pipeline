@@ -1892,7 +1892,9 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
     for file_path in csv_list:
         logger.info(f"processing csv file: {file_path}")
         if has_contents(file_path):
+            logger.info(f"Pivoting long df to wide df and cleaning the data for file: {file_path}")
             wider_df = pivot_long_df_wide_clean_dcc(file_path=file_path)
+            logger.info(f"Setting up links in wide df for file: {file_path}")
             wider_df = wide_df_setup_link_dcc(df_wide=wider_df)
             logger.info(f"Writing tsv files for all studies from file: {file_path}")
             write_wider_df_all_dcc(wider_df, output_dir=export_folder, logger=logger)
