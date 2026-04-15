@@ -30,7 +30,7 @@ def get_dcc_uuid(x: str, study_id: str, node_name: str, delimiter: str = ";") ->
         return x
     else:
         dcc_namespace = get_dcc_namespace()
-        # if delimiter exists in the 
+        # if delimiter exists in the x
         if delimiter in x:
             x_list = x.split(delimiter)
             x_str_input = [study_id + "::" + node_name + "::" + item.strip() for item in x_list]
