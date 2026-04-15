@@ -5,7 +5,7 @@ from typing import Union
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.neo4j_data_tools import convert_csv_to_tsv, query_db_to_csv_w_secrets
+from src.neo4j_data_tools import convert_csv_to_tsv_dcc, query_db_to_csv_w_secrets
 from src.utils import get_secret_centralized_worker, get_time, folder_ul
 
 
@@ -72,7 +72,7 @@ def pull_db_data(
 
     # converting data pulled from DB (csv files) to tsv files
     logger.info("Starting to convert DB pulled csv to tsv files")
-    export_folder = convert_csv_to_tsv(db_pulled_outdir=db_data_folder, output_dir="./")
+    export_folder = convert_csv_to_tsv_dcc(db_pulled_outdir=db_data_folder, output_dir="./")
 
     # upload converted tsv files to the bucket
     logger.info(f"Uploading folder of {export_folder} to the bucket {bucket} at {bucket_folder}")

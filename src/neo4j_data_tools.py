@@ -1867,3 +1867,159 @@ def query_db_to_csv_w_secrets(
     )
 
     return output_dir_per_study_per_node
+
+@flow
+def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
+    """Converts all csv exports from query_db_to_csv to tsv files per study"""
+    logger = get_run_logger()
+    # fetch a list of csv files under folder db_pulled_outdir
+    csv_list = list_type_files(file_dir=db_pulled_outdir, file_type=".csv")
+
+    logger.info(f"List of csv files under {db_pulled_outdir}: {*csv_list,}")
+
+    # export folder for tsv files
+    export_folder = os.path.join(output_dir, "export_" + get_date())
+    os.makedirs(export_folder, exist_ok=True)
+    logger.info(f"Creating the output for writing output tsv files: {export_folder} ")
+
+    # check if a file has more than one line
+    def has_contents(path):
+        with open(path, 'rb') as f:
+            f.readline()  # skip header
+            return bool(f.readline())      # if it has another line other than header, return True
+    
+    # converts every csv into tsv if it has records
+    for file_path in csv_list:
+        logger.info(f"processing csv file: {file_path}")
+        if has_contents(file_path):
+            wider_df = pivot_long_df_wide_clean_dcc(file_path=file_path)
+            wider_df = wide_df_setup_link_dcc(df_wide=wider_df)
+            logger.info(f"Writing tsv files for all studies from file: {file_path}")
+            write_wider_df_all_dcc(wider_df, output_dir=export_folder, logger=logger)
+        else:
+            logger.info(f"Skipping empty csv file: {file_path}")
+            pass
+    return export_folder
+
+def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
+    """Pivot the long df to wider df
+    It also removes quotes from column names and value
+    """
+    df_long = pd.read_csv(file_path)
+
+    # Pivot the DataFrame to wide format
+    df_wide = df_long.pivot(
+        index="startNodeId",
+        columns="startNodePropertyName",
+        values="startNodePropertyValue",
+    ).reset_index()
+
+    df_wide = df_wide.merge(
+        df_long[["startNodeId", "startNodeLabels"]].drop_duplicates(), on="startNodeId"
+    )
+
+    if "['study']" not in df_long["startNodeLabels"].unique().tolist():
+        # Preserve relational columns by merging with the original DataFrame
+        df_wide = df_wide.merge(
+            df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
+        )
+        df_wide = df_wide.merge(
+            df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(),
+            on="startNodeId",
+        )
+        df_wide = df_wide.merge(
+            df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
+            on="startNodeId",
+        )
+
+        df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
+        df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
+
+    else:
+        pass
+
+    # remove quotes from column names.
+    # remove quotes and brackets from str value
+    df_wide.columns = df_wide.columns.str.strip('"')
+    df_wide.columns = df_wide.columns.str.strip("'")
+
+    # Only fix the node label and nothing else.
+    df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("['")
+    df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("']")
+
+    # removed as it was affecting acl property.
+    # df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
+    # df_wide = df_wide.applymap(lambda x: x.strip("]") if isinstance(x, str) else x)
+    # df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
+    # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
+
+    # remove few columns
+    df_wide["type"] = df_wide["startNodeLabels"]
+    df_wide.drop(
+        ["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True
+    )
+    # if uuid column exists, drop it
+    if "uuid" in df_wide.columns:
+        df_wide.drop(columns=["uuid"], inplace=True)
+    else:
+        pass
+    # if updated column exists, drop it
+    if "updated" in df_wide.columns:
+        df_wide.drop(columns=["updated"], inplace=True)
+    else:
+        pass
+    return df_wide
+
+
+def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
+    """Setup links in wide df"""
+    print("setup links in wide df")
+    if "study" not in df_wide["type"].unique().tolist():
+        df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"] + ".guid"
+
+        # Add [node].id columns
+        df_wide_links = df_wide.pivot(
+            index="id", columns="linkedNodeLabels", values="linkedNodeId"
+        ).reset_index()
+
+        # Add linkages back into data frame and drop extra columns
+        df_wide_links = df_wide_links.merge(df_wide.drop_duplicates(), on="guid")
+        df_wide_links = df_wide_links.drop(["linkedNodeId", "linkedNodeLabels"], axis=1)
+        df_wide = df_wide_links
+
+        # below should only work for non study nodes
+
+        df_wide["study"] = df_wide["dbgap_accession"]
+        df_wide.drop(columns=["dbgap_accession"], inplace=True)
+
+    else:
+        # this is only for study node
+        df_wide["study"] = df_wide["study_id"]
+
+    return df_wide
+
+
+def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None:
+    """writes tsv files per study per node to a study folder under output_dir
+    """
+    # get node label
+    node_label = wider_df["type"].unique().tolist()[0]
+
+    # export folder
+    os.makedirs(output_dir, exist_ok=True)
+
+    # there should only be one study value in the wider_df
+    study = wider_df["study"].unique().tolist()[0]
+    logger.info(f"Writing node {node_label} tsv files for study {study}")
+    wider_df.drop(columns=["study"], inplace=True)
+    # create the output directory if not exist
+    study_folder = os.path.join(output_dir, study)
+    os.makedirs(study_folder, exist_ok=True)
+    # node_study_tsv filename
+    node_study_tsv_filename = study + "_" + node_label + ".tsv"
+    wider_df.to_csv(
+        os.path.join(study_folder, node_study_tsv_filename),
+        sep="\t",
+        index=False,
+    )
+    return None
