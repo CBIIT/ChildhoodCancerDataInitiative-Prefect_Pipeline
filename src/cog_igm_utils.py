@@ -425,6 +425,9 @@ def percent_necrosis_tumor_fill_in(manifest_path: str, decoded_tsv_path: list[st
     # reset col order, auto drop unneeded cols from merge
     sample_df = sample_df[col_order]
     
+    # dedupe sample_df on participant.participant_id and sample_id, keeping the first non-null percent_necrosis and percent_tumor values
+    sample_df = sample_df.sort_values(by=['percent_necrosis', 'percent_tumor'], na_position='last').drop_duplicates(subset=['participant.participant_id', 'sample_id'], keep='first').reset_index(drop=True)
+    
     # save to manifest
     with pd.ExcelWriter(manifest_path, engine="openpyxl", mode="a", if_sheet_exists="overlay") as writer:
         sample_df.drop_duplicates().to_excel(writer, sheet_name="sample", index=False, header=False, startrow=1)
