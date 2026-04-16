@@ -70,14 +70,6 @@ def pull_db_data(
         study_id_list=study_id_list
     )
 
-    logger.info(f"Finished pulling data from DB. Data stored at {db_data_folder}")
-    folder_ul(
-        local_folder=db_data_folder,
-        bucket=bucket,
-        destination=bucket_folder,
-        sub_folder="",
-    )
-
     # converting data pulled from DB (csv files) to tsv files
     logger.info("Starting to convert DB pulled csv to tsv files")
     export_folder = convert_csv_to_tsv_dcc(db_pulled_outdir=db_data_folder, output_dir="./")
