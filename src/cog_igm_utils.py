@@ -406,6 +406,10 @@ def percent_necrosis_tumor_fill_in(manifest_path: str, decoded_tsv_path: list[st
     # read in sample sheet
     sample_df = pd.read_excel(manifest_path, sheet_name="sample", engine="openpyxl")
     
+    # set sample_id as string to avoid issues with leading zeros
+    sample_df['sample_id'] = sample_df['sample_id'].astype(str)
+    merged_df['sample.sample_id'] = merged_df['sample.sample_id'].astype(str)
+    
     # grab col order of sample_df to reset after merge
     col_order = sample_df.columns.tolist()
     
