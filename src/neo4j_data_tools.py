@@ -103,6 +103,68 @@ RETURN DISTINCT n.{property} as uniqueValues
 """
     )
 
+@dataclass
+class DBCypherQueryDCC:
+    """Dataclass for Cypher Query"""
+
+    study_cypher_query: str = (
+        """
+MATCH (startNode:{node_label} {{study_id: "{study_accession}"}})
+WITH startNode, properties(startNode) AS props
+UNWIND keys(props) AS propertyName
+RETURN  startNode.guid AS startNodeId,
+    labels(startNode) AS startNodeLabels,
+    propertyName AS startNodePropertyName,
+    startNode[propertyName] AS startNodePropertyValue,
+    startNode.study_id as dbgap_accession 
+"""
+    )
+    main_cypher_query_per_study_node: str = (
+        """
+MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
+WITH study, startNode, linkedNode, properties(startNode) AS props
+UNWIND keys(props) AS propertyName
+RETURN startNode.guid AS startNodeId, 
+labels(startNode) AS startNodeLabels, 
+propertyName AS startNodePropertyName, 
+startNode[propertyName] AS startNodePropertyValue, 
+linkedNode.guid AS linkedNodeId, 
+labels(linkedNode) AS linkedNodeLabels, 
+study.study_id AS dbgap_accession
+"""
+    )
+    unique_nodes_query: str = (
+        """
+MATCH (n)
+RETURN DISTINCT labels(n) AS uniqueNodes
+"""
+    )
+    study_list_cypher_query: str = (
+        """
+MATCH (n:study)
+RETURN
+    n.study_id as study_id
+"""
+    )
+    all_nodes_entries_study_cypher_query: str = (
+        """
+MATCH (study:study {{study_id: "{study_id}"}})-[*1..7]-(node)
+RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
+"""
+    )
+    node_id_cypher_query_query: str = (
+        """
+MATCH (study:study{{study_id:"{study_id}"}})-[*0..7]-(node:{node})
+RETURN node.guid AS id
+"""
+    )
+    node_property_uniq_value: str = (
+        """
+MATCH (n:{node})
+RETURN DISTINCT n.{property} as uniqueValues
+"""
+    )
+
 
 # dataclass for stats query pipeline
 @dataclass
@@ -644,112 +706,140 @@ def pull_nodes_loop(
     gc.collect()
     return None
 
-
-@flow(log_prints=True)
-def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
-    """Look at csv query result files and combine the results from the same node together
-
-    Args:
-        folder_dir (str): folder that contains query result csv per node per study
-        node_list (list[str]): unique node list
-    """    
-    # look at the out_dir and concatenate files for the same node,
-    # so each node can have one csv file
-    print("Below is the list of query results per study per node:")
-    folder_dir = os.path.join(
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+def pull_nodes_loop_dcc(
+    study_list: list, node_list: list, driver, out_dir: str, logger
+) -> None:
+    """Loops through a list of node labels and pulls data from a neo4j DB"""
+    cypher_phrase = DBCypherQueryDCC.main_cypher_query_per_study_node
+    per_study_per_node_out_dir = os.path.join(
         os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
     )
-    print(os.listdir(folder_dir))
-    
-    # OPTIMIZATION 1: Define columns once outside the loop to avoid recreation
-    columns_list = [
-        "startNodeId",
-        "startNodeLabels", 
-        "startNodePropertyName",
-        "startNodePropertyValue",
-        "linkedNodeId",
-        "linkedNodeLabels",
-        "dbgap_accession",
-    ]
+    print(per_study_per_node_out_dir)
+    os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
-    # OPTIMIZATION 2: Use generator instead of loading all files into memory
-    def get_node_files(folder_path, node_pattern):
-        """Generator that yields matching files without loading all paths into memory"""
-        try:
-            for filename in os.listdir(folder_path):
-                if node_pattern in filename:
-                    yield os.path.join(folder_path, filename)
-        except OSError as e:
-            print(f"Error accessing folder {folder_path}: {e}")
-            return
+    study_node_pair = list(itertools.product(study_list, node_list))
 
-    for node_label in node_list:
-        print(get_available_space())
-        node_label_phrase = "_" + node_label + "_output.csv"
-        
-        # OPTIMIZATION 3: Use generator for file processing
-        node_files_generator = get_node_files(folder_dir, node_label_phrase)
-        node_file_list = list(node_files_generator)  # Convert to list only for logging
-        print(f"files belongs to node {node_label}: {*node_file_list,}")
-    
-        node_df_filename = node_label + "_output.csv"
-        node_df_dir = os.path.join(out_dir, node_df_filename)
-        
-        first_write = True
-        processed_files = []
-        
-        for j in node_file_list:
-            try:
-                # OPTIMIZATION 4: Process chunks immediately and optimize dtypes
-                chunk_count = 0
-                for chunk in pd.read_csv(j, chunksize=100000, dtype='string'):  # Use string dtype to save memory
-                    if chunk.shape[0] == 0:
-                        continue
-                    
-                    # OPTIMIZATION 5: Check columns exist before selecting to avoid errors
-                    available_columns = [col for col in columns_list if col in chunk.columns]
-                    if not available_columns:
-                        print(f"Warning: No required columns found in {j}")
-                        continue
-                        
-                    # Select only available columns and process immediately
-                    chunk = chunk[available_columns]
-                    
-                    # Write chunk and immediately release it from memory
-                    if first_write:
-                        chunk.to_csv(node_df_dir, index=False, header=True)
-                        first_write = False
-                    else:
-                        chunk.to_csv(node_df_dir, mode="a", header=False, index=False)
-                    
-                    chunk_count += 1
-                    # OPTIMIZATION 6: Explicit memory cleanup for large datasets
-                    del chunk
-                    if chunk_count % 10 == 0:  # Garbage collect every 10 chunks
-                        gc.collect()
-                        
-                print(f"Processed {chunk_count} chunks from {os.path.basename(j)}")
-                processed_files.append(j)
-                
-            except Exception as e:
-                print(f"Error processing file {j}: {e}")
-                raise e
-        
-        # OPTIMIZATION 7: Delete files immediately after processing each node to free space
-        # Only delete files that were successfully processed
-        for j in processed_files:
-            try:
-                os.remove(j)
-                print(f"Deleted processed file: {os.path.basename(j)}")
-            except OSError as e:
-                print(f"Warning: Could not delete {j}: {e}")
-        
-        # OPTIMIZATION 8: Force garbage collection after each node to free memory
-        processed_files.clear()  # Clear the list
-        gc.collect()
-        print(f"Completed processing node {node_label}, memory cleaned up")
-    
+    logger.info("start pulling data per node per study")
+
+    future = pull_data_per_node_per_study.map(
+            driver=driver,
+            data_to_csv=export_to_csv_per_node_per_study,
+            study_name=[x for x, y in study_node_pair],
+            node_label=[y for x, y in study_node_pair],
+            query_str=cypher_phrase,
+            output_dir=per_study_per_node_out_dir,
+        )
+    future.result()
+    gc.collect()
     return None
+
+
+# @flow(log_prints=True)
+# def combine_node_csv_all_studies(node_list: list[str], out_dir: str):
+#     """Look at csv query result files and combine the results from the same node together
+
+#     Args:
+#         folder_dir (str): folder that contains query result csv per node per study
+#         node_list (list[str]): unique node list
+#     """    
+#     # look at the out_dir and concatenate files for the same node,
+#     # so each node can have one csv file
+#     print("Below is the list of query results per study per node:")
+#     folder_dir = os.path.join(
+#         os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
+#     )
+#     print(os.listdir(folder_dir))
+    
+#     # OPTIMIZATION 1: Define columns once outside the loop to avoid recreation
+#     columns_list = [
+#         "startNodeId",
+#         "startNodeLabels", 
+#         "startNodePropertyName",
+#         "startNodePropertyValue",
+#         "linkedNodeId",
+#         "linkedNodeLabels",
+#         "dbgap_accession",
+#     ]
+
+#     # OPTIMIZATION 2: Use generator instead of loading all files into memory
+#     def get_node_files(folder_path, node_pattern):
+#         """Generator that yields matching files without loading all paths into memory"""
+#         try:
+#             for filename in os.listdir(folder_path):
+#                 if node_pattern in filename:
+#                     yield os.path.join(folder_path, filename)
+#         except OSError as e:
+#             print(f"Error accessing folder {folder_path}: {e}")
+#             return
+
+#     for node_label in node_list:
+#         print(get_available_space())
+#         node_label_phrase = "_" + node_label + "_output.csv"
+        
+#         # OPTIMIZATION 3: Use generator for file processing
+#         node_files_generator = get_node_files(folder_dir, node_label_phrase)
+#         node_file_list = list(node_files_generator)  # Convert to list only for logging
+#         print(f"files belongs to node {node_label}: {*node_file_list,}")
+    
+#         node_df_filename = node_label + "_output.csv"
+#         node_df_dir = os.path.join(out_dir, node_df_filename)
+        
+#         first_write = True
+#         processed_files = []
+        
+#         for j in node_file_list:
+#             try:
+#                 # OPTIMIZATION 4: Process chunks immediately and optimize dtypes
+#                 chunk_count = 0
+#                 for chunk in pd.read_csv(j, chunksize=100000, dtype='string'):  # Use string dtype to save memory
+#                     if chunk.shape[0] == 0:
+#                         continue
+                    
+#                     # OPTIMIZATION 5: Check columns exist before selecting to avoid errors
+#                     available_columns = [col for col in columns_list if col in chunk.columns]
+#                     if not available_columns:
+#                         print(f"Warning: No required columns found in {j}")
+#                         continue
+                        
+#                     # Select only available columns and process immediately
+#                     chunk = chunk[available_columns]
+                    
+#                     # Write chunk and immediately release it from memory
+#                     if first_write:
+#                         chunk.to_csv(node_df_dir, index=False, header=True)
+#                         first_write = False
+#                     else:
+#                         chunk.to_csv(node_df_dir, mode="a", header=False, index=False)
+                    
+#                     chunk_count += 1
+#                     # OPTIMIZATION 6: Explicit memory cleanup for large datasets
+#                     del chunk
+#                     if chunk_count % 10 == 0:  # Garbage collect every 10 chunks
+#                         gc.collect()
+                        
+#                 print(f"Processed {chunk_count} chunks from {os.path.basename(j)}")
+#                 processed_files.append(j)
+                
+#             except Exception as e:
+#                 print(f"Error processing file {j}: {e}")
+#                 raise e
+        
+#         # OPTIMIZATION 7: Delete files immediately after processing each node to free space
+#         # Only delete files that were successfully processed
+#         for j in processed_files:
+#             try:
+#                 os.remove(j)
+#                 print(f"Deleted processed file: {os.path.basename(j)}")
+#             except OSError as e:
+#                 print(f"Warning: Could not delete {j}: {e}")
+        
+#         # OPTIMIZATION 8: Force garbage collection after each node to free memory
+#         processed_files.clear()  # Clear the list
+#         gc.collect()
+#         print(f"Completed processing node {node_label}, memory cleaned up")
+    
+#     return None
 
 
 @flow
@@ -775,6 +865,28 @@ def pull_study_node(
     gc.collect()
     return None
 
+@flow
+def pull_study_node_dcc(
+    driver, out_dir: str, study_id_list: list[str]
+) -> None:
+    """Pulls data for study node from a neo4j DB. If study_id_list is provided, only pulls data for those studies."""
+    cypher_phrase = DBCypherQueryDCC.study_cypher_query
+    per_study_per_node_out_dir = os.path.join(
+        os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
+    )
+    os.makedirs(per_study_per_node_out_dir, exist_ok=True)
+
+    future = pull_data_per_node_per_study.map(
+        driver=driver,
+        data_to_csv=export_to_csv_per_node_per_study,
+        study_name=study_id_list,
+        node_label=["study"]*len(study_id_list),
+        query_str=cypher_phrase,
+        output_dir=per_study_per_node_out_dir,
+    )
+    future.result()
+    gc.collect()
+    return None
 
 @task(
     cache_policy=NO_CACHE,
@@ -1843,7 +1955,7 @@ def query_db_to_csv_w_secrets(
     logger.info("Pulling data by each node")
 
     # pull all the nodes for each study
-    pull_nodes_loop(
+    pull_nodes_loop_dcc(
         study_list=unique_studies,
         node_list=unique_nodes,
         driver=driver,
@@ -1855,7 +1967,7 @@ def query_db_to_csv_w_secrets(
 
     # Obtain study node data
     logger.info("Pulling data from study node")
-    pull_study_node(driver=driver, out_dir=output_dir, study_id_list=unique_studies)
+    pull_study_node_dcc(driver=driver, out_dir=output_dir, study_id_list=unique_studies)
 
     # close the driver
     logger.info("Closing GraphDatabase driver")
