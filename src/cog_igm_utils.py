@@ -329,10 +329,11 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
     name="Percent Necrosis and Tumor Content Fill In", 
     log_prints=True,
 )
-def percent_necrosis_tumor_fill_in(manifest_path: str, decoded_tsv_path: list[str], runner_logger):
+def percent_necrosis_tumor_fill_in(output_path: str, manifest_path: str, decoded_tsv_path: list[str], runner_logger):
     """Function for filling in percent necrosis and tumor content data from decoded TSVs back into manifest clinical_measure_file sheet and outputting updated manifest to output path
 
     Args:
+        output_path (str): Path to output directory for intermediate files
         manifest_path (str): Path to manifest file
         decoded_tsv_path (list[str]): List of paths to decoded TSVs to parse for percent necrosis and tumor content data
         runner_logger: Logger object for logging messages
@@ -366,6 +367,9 @@ def percent_necrosis_tumor_fill_in(manifest_path: str, decoded_tsv_path: list[st
     
     # drop rows with null percent_necrosis and percent_tumor data
     merged_df = merged_df.dropna(subset=['percent_necrosis', 'percent_tumor'], how='all')
+    
+    # save raw merged_df to output path for reference
+    merged_df.to_csv(f"{output_path}/merged_percent_necrosis_tumor_data.csv", index=False)
     
     def refine_percent_necrosis_tumor(val):
         
