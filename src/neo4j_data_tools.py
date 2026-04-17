@@ -26,6 +26,7 @@ from botocore.exceptions import ClientError
 import random
 import itertools
 import gc
+import glob
 
 
 DataFrame = TypeVar("DataFrame")
@@ -1993,7 +1994,7 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
 
     # export folder for tsv files
     export_folder = os.path.join(output_dir, "export_" + get_date())
-    os.makedirs(export_folder, exist_ok=True)
+    
     logger.info(f"Creating the output for writing output tsv files: {export_folder} ")
 
     # check if a file has more than one line
@@ -2001,152 +2002,319 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
         with open(path, 'rb') as f:
             f.readline()  # skip header
             return bool(f.readline())      # if it has another line other than header, return True
-    
+        
     # converts every csv into tsv if it has records
-    for file_path in csv_list:
-        logger.info(f"processing csv file: {file_path}")
-        if has_contents(file_path):
-            logger.info(f"Pivoting long df to wide df and cleaning the data for file: {file_path}")
-            wider_df = pivot_long_df_wide_clean_dcc(file_path=file_path)
-            logger.info(f"Setting up links in wide df for file: {file_path}")
-            wider_df = wide_df_setup_link_dcc(df_wide=wider_df)
-            logger.info(f"Writing tsv files for all studies from file: {file_path}")
-            write_wider_df_all_dcc(wider_df, output_dir=export_folder, logger=logger)
-        else:
-            logger.info(f"Skipping empty csv file: {file_path}")
-            pass
+    wide_frames = load_and_widen(csv_dir=db_pulled_outdir)
+    guid_index = build_guid_index(wide_frames)
+    relinked_frames = relink(wide_frames, guid_index)
+    save_wide_csvs(relinked_frames, export_folder)
+
     return export_folder
 
-def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
-    """Pivot the long df to wider df
-    It also removes quotes from column names and value
+
+
+
+    
+def collapse_values(x):
+    """Return a scalar when only one unique value exists, else a list."""
+    vals = list(dict.fromkeys(x))  # unique, order-preserved
+    return vals[0] if len(vals) == 1 else vals
+
+
+def collapse_ids(x):
     """
-    df_long = pd.read_csv(file_path).drop_duplicates()
-
-    # define a function to collapse values if there are duplicates after pivoting
-    def collapse(x):
-        vals = list(dict.fromkeys(x))  # unique values, order preserved
-        return vals[0] if len(vals) == 1 else vals
-
-    # Pivot the DataFrame to wide format with aggregation to handle duplicates
-    df_wide = (
-        df_long.groupby(["startNodeId", "startNodePropertyName"])["startNodePropertyValue"]
-        .agg(collapse)
-        .reset_index()
-        .pivot(
-            index="startNodeId",
-            columns="startNodePropertyName",
-            values="startNodePropertyValue",
-        )
-        .reset_index()
-    )
-
-    df_wide = df_wide.merge(
-        df_long[["startNodeId", "startNodeLabels"]].drop_duplicates(), on="startNodeId"
-    )
-
-    if "['study']" not in df_long["startNodeLabels"].unique().tolist():
-        # Preserve relational columns by merging with the original DataFrame
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
-        )
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(),
-            on="startNodeId",
-        )
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
-            on="startNodeId",
-        )
-
-        df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
-        df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
-
-    else:
-        pass
-
-    # remove quotes from column names.
-    # remove quotes and brackets from str value
-    df_wide.columns = df_wide.columns.str.strip('"')
-    df_wide.columns = df_wide.columns.str.strip("'")
-
-    # Only fix the node label and nothing else.
-    df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("['")
-    df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("']")
-
-    # removed as it was affecting acl property.
-    # df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip("]") if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
-
-    # remove few columns
-    df_wide["type"] = df_wide["startNodeLabels"]
-    df_wide.drop(
-        ["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True
-    )
-    # if uuid column exists, drop it
-    if "uuid" in df_wide.columns:
-        df_wide.drop(columns=["uuid"], inplace=True)
-    else:
-        pass
-    # if updated column exists, drop it
-    if "updated" in df_wide.columns:
-        df_wide.drop(columns=["updated"], inplace=True)
-    else:
-        pass
-    return df_wide
-
-
-def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
-    """Setup links in wide df"""
-    print("setup links in wide df")
-    if "study" not in df_wide["type"].unique().tolist():
-        df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"] + ".guid"
-
-        # Add [node].id columns
-        df_wide_links = df_wide.pivot(
-            index="guid", columns="linkedNodeLabels", values="linkedNodeId"
-        ).reset_index()
-
-        # Add linkages back into data frame and drop extra columns
-        df_wide_links = df_wide_links.merge(df_wide.drop_duplicates(), on="guid")
-        df_wide_links = df_wide_links.drop(["linkedNodeId", "linkedNodeLabels"], axis=1)
-        df_wide = df_wide_links
-
-        # below should only work for non study nodes
-
-        df_wide["study"] = df_wide["dbgap_accession"]
-        df_wide.drop(columns=["dbgap_accession"], inplace=True)
-
-    else:
-        # this is only for study node
-        df_wide["study"] = df_wide["study_id"]
-
-    return df_wide
-
-
-def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None:
-    """writes tsv files per study per node to a study folder under output_dir
+    linkedNodeId cells may already be 'id1;id2' strings.
+    Split them, flatten, deduplicate, return scalar or list.
     """
-    # get node label
-    node_label = wider_df["type"].unique().tolist()[0]
+    seen = {}
+    for cell in x:
+        for part in str(cell).split(";"):
+            part = part.strip()
+            if part:
+                seen[part] = None
+    vals = list(seen.keys())
+    return vals[0] if len(vals) == 1 else vals
 
-    # export folder
+
+# ── step 1: load all CSVs and reshape to wide ────────────────────────────────
+
+def load_and_widen(csv_dir: str) -> dict[str, pd.DataFrame]:
+    """
+    Load every CSV in csv_dir, pivot long → wide per node type.
+    Returns {node_label: wide_dataframe}.
+    """
+    wide_frames: dict[str, pd.DataFrame] = {}
+
+    for path in glob.glob(os.path.join(csv_dir, "*.csv")):
+        df_long = pd.read_csv(path)
+
+        # derive the node type from the startNodeLabels column
+        node_label = df_long["startNodeLabels"].iloc[0]
+
+        # ── property columns (one column per unique startNodePropertyName) ──
+        props = (
+            df_long.groupby(["startNodeId", "startNodePropertyName"])["startNodePropertyValue"]
+            .agg(collapse_values)
+            .reset_index()
+            .pivot(index="startNodeId", columns="startNodePropertyName", values="startNodePropertyValue")
+            .reset_index()
+        )
+        props.columns.name = None
+
+        # ── linked-node columns (one row per startNodeId) ────────────────────
+        # keep startNodeLabels, linkedNodeLabels, linkedNodeId, dbgap_accession
+        meta_cols = ["startNodeId", "startNodeLabels", "linkedNodeLabels", "linkedNodeId", "dbgap_accession"]
+        meta = (
+            df_long[meta_cols]
+            .groupby("startNodeId")
+            .agg({
+                "startNodeLabels":  lambda x: collapse_values(x),
+                "linkedNodeLabels": lambda x: collapse_values(x),
+                "linkedNodeId":     lambda x: collapse_ids(x),
+                "dbgap_accession":  lambda x: collapse_values(x),
+            })
+            .reset_index()
+        )
+
+        df_wide = props.merge(meta, on="startNodeId", how="left")
+        wide_frames[node_label] = df_wide
+
+    return wide_frames
+
+
+# ── step 2: build a lookup  guid → node_id per node type ─────────────────────
+
+def build_guid_index(wide_frames: dict[str, pd.DataFrame]) -> dict[str, dict[str, str]]:
+    """
+    For each node type, build {guid: node_id_value} so we can resolve links.
+    Assumes the id column is named '<node_label>_id' (case-insensitive match).
+    """
+    guid_index: dict[str, dict[str, str]] = {}
+
+    for label, df in wide_frames.items():
+        id_col = next(
+            (c for c in df.columns if c.lower() == f"{label.lower()}_id"),
+            None,
+        )
+        if id_col is None:
+            print(f"[warn] no id column found for node type '{label}' — skipping index")
+            continue
+
+        mapping: dict[str, str] = {}
+        for _, row in df.iterrows():
+            guid = row["startNodeId"]
+            node_id = row[id_col]
+            mapping[guid] = node_id
+
+        guid_index[label] = mapping
+
+    return guid_index
+
+
+# ── step 3: relink ────────────────────────────────────────────────────────────
+
+def relink(wide_frames: dict[str, pd.DataFrame], guid_index: dict[str, dict[str, str]]) -> dict[str, pd.DataFrame]:
+    """
+    For each wide frame, resolve linkedNodeId GUIDs → node_id values
+    and write them into [linked_label].[linked_label]_id columns.
+    """
+    relinked: dict[str, pd.DataFrame] = {}
+
+    for label, df in wide_frames.items():
+        df = df.copy()
+
+        for _, row in df.iterrows():
+            linked_labels = row["linkedNodeLabels"]
+            linked_ids    = row["linkedNodeId"]
+
+            # normalise to lists
+            if not isinstance(linked_labels, list):
+                linked_labels = [linked_labels] if pd.notna(linked_labels) else []
+            if not isinstance(linked_ids, list):
+                linked_ids = [linked_ids] if pd.notna(linked_ids) else []
+
+            for linked_label in linked_labels:
+                if linked_label not in guid_index:
+                    continue
+
+                mapping    = guid_index[linked_label]
+                target_col = f"{linked_label}.{linked_label}_id"
+
+                if target_col not in df.columns:
+                    df[target_col] = None
+
+                resolved = [mapping[g] for g in linked_ids if g in mapping]
+
+                if resolved:
+                    idx = row.name
+                    df.at[idx, target_col] = resolved[0] if len(resolved) == 1 else resolved
+
+        relinked[label] = df
+
+    return relinked
+
+
+# ── step 4: save ──────────────────────────────────────────────────────────────
+
+def save_wide_csvs(wide_frames: dict[str, pd.DataFrame], output_dir: str) -> None:
     os.makedirs(output_dir, exist_ok=True)
+    for label, df in wide_frames.items():
+        out_path = os.path.join(output_dir, f"{label}_wide.csv")
+        df.to_csv(out_path, index=False)
+        print(f"saved: {out_path}")
 
-    # there should only be one study value in the wider_df
-    study = wider_df["study"].unique().tolist()[0]
-    logger.info(f"Writing node {node_label} tsv files for study {study}")
-    wider_df.drop(columns=["study"], inplace=True)
-    # create the output directory if not exist
-    study_folder = os.path.join(output_dir, study)
-    os.makedirs(study_folder, exist_ok=True)
-    # node_study_tsv filename
-    node_study_tsv_filename = study + "_" + node_label + ".tsv"
-    wider_df.to_csv(
-        os.path.join(study_folder, node_study_tsv_filename),
-        sep="\t",
-        index=False,
-    )
-    return None
+
+
+
+
+
+
+
+#     # converts every csv into tsv if it has records
+#     for file_path in csv_list:
+#         logger.info(f"processing csv file: {file_path}")
+#         if has_contents(file_path):
+#             logger.info(f"Pivoting long df to wide df and cleaning the data for file: {file_path}")
+#             wider_df = pivot_long_df_wide_clean_dcc(file_path=file_path)
+#             logger.info(f"Setting up links in wide df for file: {file_path}")
+#             wider_df = wide_df_setup_link_dcc(df_wide=wider_df)
+#             logger.info(f"Writing tsv files for all studies from file: {file_path}")
+#             write_wider_df_all_dcc(wider_df, output_dir=export_folder, logger=logger)
+#         else:
+#             logger.info(f"Skipping empty csv file: {file_path}")
+#             pass
+#     return export_folder
+
+# def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
+#     """Pivot the long df to wider df
+#     It also removes quotes from column names and value
+#     """
+#     df_long = pd.read_csv(file_path).drop_duplicates()
+
+#     # define a function to collapse values if there are duplicates after pivoting
+#     def collapse(x):
+#         vals = list(dict.fromkeys(x))  # unique values, order preserved
+#         return vals[0] if len(vals) == 1 else vals
+
+#     # Pivot the DataFrame to wide format with aggregation to handle duplicates
+#     df_wide = (
+#         df_long.groupby(["startNodeId", "startNodePropertyName"])["startNodePropertyValue"]
+#         .agg(collapse)
+#         .reset_index()
+#         .pivot(
+#             index="startNodeId",
+#             columns="startNodePropertyName",
+#             values="startNodePropertyValue",
+#         )
+#         .reset_index()
+#     )
+
+#     df_wide = df_wide.merge(
+#         df_long[["startNodeId", "startNodeLabels"]].drop_duplicates(), on="startNodeId"
+#     )
+
+#     if "['study']" not in df_long["startNodeLabels"].unique().tolist():
+#         # Preserve relational columns by merging with the original DataFrame
+#         df_wide = df_wide.merge(
+#             df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
+#         )
+#         df_wide = df_wide.merge(
+#             df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(),
+#             on="startNodeId",
+#         )
+#         df_wide = df_wide.merge(
+#             df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
+#             on="startNodeId",
+#         )
+
+#         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
+#         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
+
+#     else:
+#         pass
+
+#     # remove quotes from column names.
+#     # remove quotes and brackets from str value
+#     df_wide.columns = df_wide.columns.str.strip('"')
+#     df_wide.columns = df_wide.columns.str.strip("'")
+
+#     # Only fix the node label and nothing else.
+#     df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("['")
+#     df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("']")
+
+#     # removed as it was affecting acl property.
+#     # df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
+#     # df_wide = df_wide.applymap(lambda x: x.strip("]") if isinstance(x, str) else x)
+#     # df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
+#     # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
+
+#     # remove few columns
+#     df_wide["type"] = df_wide["startNodeLabels"]
+#     df_wide.drop(
+#         ["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True
+#     )
+#     # if uuid column exists, drop it
+#     if "uuid" in df_wide.columns:
+#         df_wide.drop(columns=["uuid"], inplace=True)
+#     else:
+#         pass
+#     # if updated column exists, drop it
+#     if "updated" in df_wide.columns:
+#         df_wide.drop(columns=["updated"], inplace=True)
+#     else:
+#         pass
+#     return df_wide
+
+
+# def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
+#     """Setup links in wide df"""
+#     print("setup links in wide df")
+#     if "study" not in df_wide["type"].unique().tolist():
+#         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"] + ".guid"
+
+#         # Add [node].id columns
+#         df_wide_links = df_wide.pivot(
+#             index="guid", columns="linkedNodeLabels", values="linkedNodeId"
+#         ).reset_index()
+
+#         # Add linkages back into data frame and drop extra columns
+#         df_wide_links = df_wide_links.merge(df_wide.drop_duplicates(), on="guid")
+#         df_wide_links = df_wide_links.drop(["linkedNodeId", "linkedNodeLabels"], axis=1)
+#         df_wide = df_wide_links
+
+#         # below should only work for non study nodes
+
+#         df_wide["study"] = df_wide["dbgap_accession"]
+#         df_wide.drop(columns=["dbgap_accession"], inplace=True)
+
+#     else:
+#         # this is only for study node
+#         df_wide["study"] = df_wide["study_id"]
+
+#     return df_wide
+
+
+# def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None:
+#     """writes tsv files per study per node to a study folder under output_dir
+#     """
+#     # get node label
+#     node_label = wider_df["type"].unique().tolist()[0]
+
+#     # export folder
+#     os.makedirs(output_dir, exist_ok=True)
+
+#     # there should only be one study value in the wider_df
+#     study = wider_df["study"].unique().tolist()[0]
+#     logger.info(f"Writing node {node_label} tsv files for study {study}")
+#     wider_df.drop(columns=["study"], inplace=True)
+#     # create the output directory if not exist
+#     study_folder = os.path.join(output_dir, study)
+#     os.makedirs(study_folder, exist_ok=True)
+#     # node_study_tsv filename
+#     node_study_tsv_filename = study + "_" + node_label + ".tsv"
+#     wider_df.to_csv(
+#         os.path.join(study_folder, node_study_tsv_filename),
+#         sep="\t",
+#         index=False,
+#     )
+#     return None
