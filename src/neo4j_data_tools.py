@@ -2047,7 +2047,7 @@ def load_and_widen(csv_dir: str) -> dict[str, pd.DataFrame]:
     logger=get_run_logger()
 
     for path in glob.glob(os.path.join(csv_dir, "*.csv")):
-        df_long = pd.read_csv(path, header=True)
+        df_long = pd.read_csv(path)
 
         # derive the node type from the startNodeLabels column
         node_label = df_long["startNodeLabels"].iloc[0]
