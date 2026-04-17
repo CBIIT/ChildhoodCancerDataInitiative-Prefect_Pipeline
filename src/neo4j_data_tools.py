@@ -2023,12 +2023,23 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     """
     df_long = pd.read_csv(file_path).drop_duplicates()
 
-    # Pivot the DataFrame to wide format
-    df_wide = df_long.pivot(
-        index="startNodeId",
-        columns="startNodePropertyName",
-        values="startNodePropertyValue",
-    ).reset_index()
+    # define a function to collapse values if there are duplicates after pivoting
+    def collapse(x):
+        vals = list(x)
+        return vals[0] if len(vals) == 1 else vals
+
+    # Pivot the DataFrame to wide format with aggregation to handle duplicates
+    df_wide = (
+        df_long.groupby(["startNodeId", "startNodePropertyName"])["startNodePropertyValue"]
+        .agg(collapse)
+        .reset_index()
+        .pivot(
+            index="startNodeId",
+            columns="startNodePropertyName",
+            values="startNodePropertyValue",
+        )
+        .reset_index()
+    )
 
     df_wide = df_wide.merge(
         df_long[["startNodeId", "startNodeLabels"]].drop_duplicates(), on="startNodeId"
