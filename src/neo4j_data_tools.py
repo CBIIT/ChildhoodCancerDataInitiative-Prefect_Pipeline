@@ -2025,9 +2025,10 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     df_long = pd.read_csv(file_path).drop_duplicates()
 
     # define a function to collapse values if there are duplicates after pivoting
+    # We also want to take that list and make it a string with ; as separator, so that it can be easily ingested back to the db if needed.
     def collapse(x):
         vals = list(dict.fromkeys(x))  # unique values, order preserved
-        return vals[0] if len(vals) == 1 else vals
+        return vals[0] if len(vals) == 1 else ";".join(vals)
 
     # Pivot the DataFrame to wide format with aggregation to handle duplicates
     df_wide = (
@@ -2105,10 +2106,18 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
     if "study" not in df_wide["type"].unique().tolist():
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"] + ".guid"
 
-        # Add [node].id columns
-        df_wide_links = df_wide.pivot(
-            index="guid", columns="linkedNodeLabels", values="linkedNodeId"
-        ).reset_index()
+        def collapse(x):
+            vals = list(dict.fromkeys(x))  # unique, order-preserved
+            return vals[0] if len(vals) == 1 else ";".join(vals)
+
+        df_wide_links = (
+            df_wide.groupby(["guid", "linkedNodeLabels"])["linkedNodeId"]
+            .agg(collapse)
+            .reset_index()
+            .pivot(index="guid", columns="linkedNodeLabels", values="linkedNodeId")
+            .reset_index()
+            )
+        df_wide_links.columns.name = None
 
         # Add linkages back into data frame and drop extra columns
         df_wide_links = df_wide_links.merge(df_wide.drop_duplicates(), on="guid")
