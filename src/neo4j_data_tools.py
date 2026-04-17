@@ -1988,20 +1988,20 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
     """Converts all csv exports from query_db_to_csv to tsv files per study"""
     logger = get_run_logger()
     # fetch a list of csv files under folder db_pulled_outdir
-    csv_list = list_type_files(file_dir=db_pulled_outdir, file_type=".csv")
+    # csv_list = list_type_files(file_dir=db_pulled_outdir, file_type=".csv")
 
-    logger.info(f"List of csv files under {db_pulled_outdir}: {*csv_list,}")
+    # logger.info(f"List of csv files under {db_pulled_outdir}: {*csv_list,}")
 
     # export folder for tsv files
     export_folder = os.path.join(output_dir, "export_" + get_date())
-    
+    os.makedirs(export_folder, exist_ok=True)
     logger.info(f"Creating the output for writing output tsv files: {export_folder} ")
 
-    # check if a file has more than one line
-    def has_contents(path):
-        with open(path, 'rb') as f:
-            f.readline()  # skip header
-            return bool(f.readline())      # if it has another line other than header, return True
+    # # check if a file has more than one line
+    # def has_contents(path):
+    #     with open(path, 'rb') as f:
+    #         f.readline()  # skip header
+    #         return bool(f.readline())      # if it has another line other than header, return True
         
     # converts every csv into tsv if it has records
     wide_frames = load_and_widen(csv_dir=db_pulled_outdir)
@@ -2044,12 +2044,14 @@ def load_and_widen(csv_dir: str) -> dict[str, pd.DataFrame]:
     Returns {node_label: wide_dataframe}.
     """
     wide_frames: dict[str, pd.DataFrame] = {}
+    logger=get_run_logger()
 
     for path in glob.glob(os.path.join(csv_dir, "*.csv")):
-        df_long = pd.read_csv(path)
+        df_long = pd.read_csv(path, header=True)
 
         # derive the node type from the startNodeLabels column
         node_label = df_long["startNodeLabels"].iloc[0]
+        logger.info(f"Processing node type '{node_label}' from file: {path}")
 
         # ── property columns (one column per unique startNodePropertyName) ──
         props = (
