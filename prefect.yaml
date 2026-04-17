@@ -1761,3 +1761,104 @@ deployments:
       name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-join-tsv-to-manifest-v3
+    version: null
+    tags: ["TEST","SVB","CCDIDC-2417","DCC","V3"]
+    description: null
+    entrypoint: workflows/db_tsv_to_manifest.py:join_tsv_to_manifest
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: ""
+      tsv_folder_path: "path/to/tsv_folder"
+      dcc_template_tag: "1.0.0"
+    
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-2417_pull_n_join_joinry_updates
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
+
+  - name: TEST-pull_n_join_manifest_single_study
+    version: null
+    tags: ["TEST", "SVB", "CCDIDC-2417", "DCC","Centralized Worker", "V3"]
+    description: null
+    entrypoint: workflows/pull_n_join_manifest_single_study.py:pull_n_join_manifest_single_study
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: ""
+      database_account_id: "aws_account_id"
+      database_secret_path: "secret_path"
+      database_secret_key_ip: "secret_key_ip"
+      database_secret_key_username: "secret_key_username"
+      database_secret_key_password: "secret_key_password"
+      study_id: "phs002790"
+      dcc_template_tag: "1.0.0"
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.deployments.steps.git_clone:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: CCDIDC-2417_pull_n_join_joinry_updates
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements_python3.13_prefect3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
+
+  - name: TEST-pull-db-data-32gb-ccdi-v3
+    version: null
+    tags: ["TEST","V3", "DCC", "CCDIDCC-2417", "Centralized Worker"]
+    description: null
+    entrypoint: workflows/pull_db_data.py:pull_db_data
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "ccdi-sandbox-export"
+      database_account_id: "aws_account_id"
+      database_secret_path: "secret_path"
+      database_secret_key_ip: "secret_key_ip"
+      database_secret_key_username: "secret_key_username"
+      database_secret_key_password: "secret_key_password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-2417_pull_n_join_joinry_updates
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
