@@ -2025,7 +2025,7 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
 
     # define a function to collapse values if there are duplicates after pivoting
     def collapse(x):
-        vals = list(x)
+        vals = list(dict.fromkeys(x))  # unique values, order preserved
         return vals[0] if len(vals) == 1 else vals
 
     # Pivot the DataFrame to wide format with aggregation to handle duplicates
