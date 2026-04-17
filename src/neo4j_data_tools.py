@@ -121,16 +121,18 @@ RETURN  startNode.guid AS startNodeId,
     )
     main_cypher_query_per_study_node: str = (
         """
-MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
-WITH study, startNode, linkedNode, properties(startNode) AS props
-UNWIND keys(props) AS propertyName
-RETURN startNode.guid AS startNodeId, 
-labels(startNode) AS startNodeLabels, 
-propertyName AS startNodePropertyName, 
-startNode[propertyName] AS startNodePropertyValue, 
-linkedNode.guid AS linkedNodeId, 
-labels(linkedNode) AS linkedNodeLabels, 
-study.study_id AS dbgap_accession
+MATCH (study:study {{study_id:"{study_accession}"}})
+MATCH (study)-[*0..5]-(linkedNode)-[:of_{node_label}]-(startNode:{node_label})
+WITH DISTINCT study, startNode, linkedNode
+UNWIND keys(properties(startNode)) AS propertyName
+RETURN
+  startNode.guid              AS startNodeId,
+  labels(startNode)           AS startNodeLabels,
+  propertyName                AS startNodePropertyName,
+  startNode[propertyName]     AS startNodePropertyValue,
+  linkedNode.guid             AS linkedNodeId,
+  labels(linkedNode)          AS linkedNodeLabels,
+  study.study_id              AS dbgap_accession
 """
     )
     unique_nodes_query: str = (
