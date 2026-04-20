@@ -107,11 +107,14 @@ def unpack_folder_list(folder_path_list: list[str]):
             pass
     return unpacked_folder_list
 
+
 def map_ids(cell, mapping):
     if pd.isna(cell) or cell == "":
         return cell
     ids = [i.strip() for i in str(cell).split(";")]
-    mapped = [mapping.get(i, i) for i in ids if i]  # falls back to original if not found
+    mapped = [
+        mapping.get(i, i) for i in ids if i
+    ]  # falls back to original if not found
     return ";".join(mapped)
 
 
@@ -175,10 +178,11 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
         logger.info(f"sheet parent guid cols: {*parent_guid_cols,}")
         for i in range(len(guid_cols)):
             i_col = guid_cols[i]  # e.g. participant.guid
-            parent_i_col = i_col.split(".")[0] + "." + i_col.split(".")[0] + "_id"  # participant.participant_id
+            parent_i_col = (
+                i_col.split(".")[0] + "." + i_col.split(".")[0] + "_id"
+            )  # participant.participant_id
             tsv_df[parent_i_col] = [
-                map_ids(j, key_id_mapping)
-                for j in tsv_df[i_col].tolist()
+                map_ids(j, key_id_mapping) for j in tsv_df[i_col].tolist()
             ]
             # remove the i_col content
             tsv_df[i_col] = ""

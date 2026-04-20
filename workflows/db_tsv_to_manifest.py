@@ -18,23 +18,19 @@ from src.join_tsv_to_manifest_dcc import (
     flow_run_name="join-tsv-to-manifest-{runner}-" + f"{get_time()}",
 )
 def join_tsv_to_manifest(
-    bucket: str,
-    runner: str,
-    tsv_folder_path: str,
-    dcc_template_tag: str
-    
+    bucket: str, runner: str, tsv_folder_path: str, dcc_template_tag: str
 ) -> None:
     """Pipeline that combines a folder of tsv files into a single CCDI-DCC manifest
 
     Args:
         bucket (str): Bucket name of where tsv files located in and output goes to
         runner (str): Unique runner name
-        tsv_folder_path (str): Folder path of tsv files in the bucket 
-        dcc_template_tag (str): Tag name of the DCC template to use for the manifest generation. 
+        tsv_folder_path (str): Folder path of tsv files in the bucket
+        dcc_template_tag (str): Tag name of the DCC template to use for the manifest generation.
 
     Raises:
         ValueError: Value Error raised if pipeline fails to proceed
-    """      
+    """
     logger = get_run_logger()
     current_time = get_time()
 
@@ -60,8 +56,14 @@ def join_tsv_to_manifest(
 
     if folder_check == "single":
         logger.info(f"Folder {tsv_folder_path} contains tsv files only")
-        file_list = [os.path.join(tsv_folder_path, i) for i in os.listdir(tsv_folder_path) if i.endswith("tsv")]
-        manifest_output =  join_tsv_to_manifest_single_study(file_list = file_list, manifest_path=ccdi_manifest)
+        file_list = [
+            os.path.join(tsv_folder_path, i)
+            for i in os.listdir(tsv_folder_path)
+            if i.endswith("tsv")
+        ]
+        manifest_output = join_tsv_to_manifest_single_study(
+            file_list=file_list, manifest_path=ccdi_manifest
+        )
         manifest_output_list = []
         manifest_output_list.append(manifest_output)
         logger.info(f"CCDI manifest {manifest_output} generated ")
@@ -72,7 +74,9 @@ def join_tsv_to_manifest(
             for i in os.listdir(tsv_folder_path)
             if os.path.isdir(os.path.join(tsv_folder_path, i))
         ]
-        manifest_output_list = multi_studies_tsv_join(folder_path_list = subfolders_list, manifest_path=ccdi_manifest)
+        manifest_output_list = multi_studies_tsv_join(
+            folder_path_list=subfolders_list, manifest_path=ccdi_manifest
+        )
         logger.info(f"List of CCDI manifests generated: {*manifest_output_list,}")
     else:
         pass
@@ -82,7 +86,7 @@ def join_tsv_to_manifest(
     logger.info(f"Output(s) will be uploaded to bucket {bucket} folder {output_folder}")
     for k in manifest_output_list:
         logger.info(f"Uploading {k}")
-        file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile = k)
+        file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=k)
     logger.info("workflow finished!")
 
     return None

@@ -104,6 +104,7 @@ RETURN DISTINCT n.{property} as uniqueValues
 """
     )
 
+
 @dataclass
 class DBCypherQueryDCC:
     """Dataclass for Cypher Query"""
@@ -196,7 +197,7 @@ WITH labels(s) AS NodeType, COLLECT(s.size_of_data_being_uploaded) AS Value
 RETURN NodeType, Value
 """
     )
-    
+
     # query to obtain the study curation status
     # TODO: remove when using DCC model
     stats_get_curation_status_query: str = (
@@ -207,8 +208,6 @@ WITH labels(s) AS NodeType, COLLECT(s.curation_status) AS Value
 RETURN NodeType, Value
 """
     )
-
-
 
     # Querty to obtain the study PI
     stats_get_pi_query: str = (
@@ -590,12 +589,13 @@ def pull_data_per_node(
                 "startNode[propertyName] AS startNodePropertyValue, "
                 "startNode.study_id as dbgap_accession "
             )
-            session.execute_read(
-                data_to_csv, node_label, cypher, output_dir
-            )
+            session.execute_read(data_to_csv, node_label, cypher, output_dir)
         else:
             session.execute_read(
-                data_to_csv, node_label, query_str.format(node_label=node_label), output_dir
+                data_to_csv,
+                node_label,
+                query_str.format(node_label=node_label),
+                output_dir,
             )
     except:
         traceback.print_exc()
@@ -698,16 +698,17 @@ def pull_nodes_loop(
     logger.info("start pulling data per node per study")
 
     future = pull_data_per_node_per_study.map(
-            driver=driver,
-            data_to_csv=export_to_csv_per_node_per_study,
-            study_name=[x for x, y in study_node_pair],
-            node_label=[y for x, y in study_node_pair],
-            query_str=cypher_phrase,
-            output_dir=per_study_per_node_out_dir,
-        )
+        driver=driver,
+        data_to_csv=export_to_csv_per_node_per_study,
+        study_name=[x for x, y in study_node_pair],
+        node_label=[y for x, y in study_node_pair],
+        query_str=cypher_phrase,
+        output_dir=per_study_per_node_out_dir,
+    )
     future.result()
     gc.collect()
     return None
+
 
 @flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
 def pull_nodes_loop_dcc(
@@ -726,13 +727,13 @@ def pull_nodes_loop_dcc(
     logger.info("start pulling data per node per study")
 
     future = pull_data_per_node_per_study.map(
-            driver=driver,
-            data_to_csv=export_to_csv_per_node_per_study,
-            study_name=[x for x, y in study_node_pair],
-            node_label=[y for x, y in study_node_pair],
-            query_str=cypher_phrase,
-            output_dir=per_study_per_node_out_dir,
-        )
+        driver=driver,
+        data_to_csv=export_to_csv_per_node_per_study,
+        study_name=[x for x, y in study_node_pair],
+        node_label=[y for x, y in study_node_pair],
+        query_str=cypher_phrase,
+        output_dir=per_study_per_node_out_dir,
+    )
     future.result()
     gc.collect()
     return None
@@ -745,7 +746,7 @@ def pull_nodes_loop_dcc(
 #     Args:
 #         folder_dir (str): folder that contains query result csv per node per study
 #         node_list (list[str]): unique node list
-#     """    
+#     """
 #     # look at the out_dir and concatenate files for the same node,
 #     # so each node can have one csv file
 #     print("Below is the list of query results per study per node:")
@@ -753,11 +754,11 @@ def pull_nodes_loop_dcc(
 #         os.path.dirname(out_dir), os.path.basename(out_dir) + "_per_study_per_node"
 #     )
 #     print(os.listdir(folder_dir))
-    
+
 #     # OPTIMIZATION 1: Define columns once outside the loop to avoid recreation
 #     columns_list = [
 #         "startNodeId",
-#         "startNodeLabels", 
+#         "startNodeLabels",
 #         "startNodePropertyName",
 #         "startNodePropertyValue",
 #         "linkedNodeId",
@@ -779,18 +780,18 @@ def pull_nodes_loop_dcc(
 #     for node_label in node_list:
 #         print(get_available_space())
 #         node_label_phrase = "_" + node_label + "_output.csv"
-        
+
 #         # OPTIMIZATION 3: Use generator for file processing
 #         node_files_generator = get_node_files(folder_dir, node_label_phrase)
 #         node_file_list = list(node_files_generator)  # Convert to list only for logging
 #         print(f"files belongs to node {node_label}: {*node_file_list,}")
-    
+
 #         node_df_filename = node_label + "_output.csv"
 #         node_df_dir = os.path.join(out_dir, node_df_filename)
-        
+
 #         first_write = True
 #         processed_files = []
-        
+
 #         for j in node_file_list:
 #             try:
 #                 # OPTIMIZATION 4: Process chunks immediately and optimize dtypes
@@ -798,36 +799,36 @@ def pull_nodes_loop_dcc(
 #                 for chunk in pd.read_csv(j, chunksize=100000, dtype='string'):  # Use string dtype to save memory
 #                     if chunk.shape[0] == 0:
 #                         continue
-                    
+
 #                     # OPTIMIZATION 5: Check columns exist before selecting to avoid errors
 #                     available_columns = [col for col in columns_list if col in chunk.columns]
 #                     if not available_columns:
 #                         print(f"Warning: No required columns found in {j}")
 #                         continue
-                        
+
 #                     # Select only available columns and process immediately
 #                     chunk = chunk[available_columns]
-                    
+
 #                     # Write chunk and immediately release it from memory
 #                     if first_write:
 #                         chunk.to_csv(node_df_dir, index=False, header=True)
 #                         first_write = False
 #                     else:
 #                         chunk.to_csv(node_df_dir, mode="a", header=False, index=False)
-                    
+
 #                     chunk_count += 1
 #                     # OPTIMIZATION 6: Explicit memory cleanup for large datasets
 #                     del chunk
 #                     if chunk_count % 10 == 0:  # Garbage collect every 10 chunks
 #                         gc.collect()
-                        
+
 #                 print(f"Processed {chunk_count} chunks from {os.path.basename(j)}")
 #                 processed_files.append(j)
-                
+
 #             except Exception as e:
 #                 print(f"Error processing file {j}: {e}")
 #                 raise e
-        
+
 #         # OPTIMIZATION 7: Delete files immediately after processing each node to free space
 #         # Only delete files that were successfully processed
 #         for j in processed_files:
@@ -836,19 +837,17 @@ def pull_nodes_loop_dcc(
 #                 print(f"Deleted processed file: {os.path.basename(j)}")
 #             except OSError as e:
 #                 print(f"Warning: Could not delete {j}: {e}")
-        
+
 #         # OPTIMIZATION 8: Force garbage collection after each node to free memory
 #         processed_files.clear()  # Clear the list
 #         gc.collect()
 #         print(f"Completed processing node {node_label}, memory cleaned up")
-    
+
 #     return None
 
 
 @flow
-def pull_study_node(
-    driver, out_dir: str, study_id_list: list[str]
-) -> None:
+def pull_study_node(driver, out_dir: str, study_id_list: list[str]) -> None:
     """Pulls data for study node from a neo4j DB. If study_id_list is provided, only pulls data for those studies."""
     cypher_phrase = Neo4jCypherQuery.study_cypher_query
     per_study_per_node_out_dir = os.path.join(
@@ -860,7 +859,7 @@ def pull_study_node(
         driver=driver,
         data_to_csv=export_to_csv_per_node_per_study,
         study_name=study_id_list,
-        node_label=["study"]*len(study_id_list),
+        node_label=["study"] * len(study_id_list),
         query_str=cypher_phrase,
         output_dir=per_study_per_node_out_dir,
     )
@@ -868,10 +867,9 @@ def pull_study_node(
     gc.collect()
     return None
 
+
 @flow
-def pull_study_node_dcc(
-    driver, out_dir: str, study_id_list: list[str]
-) -> None:
+def pull_study_node_dcc(driver, out_dir: str, study_id_list: list[str]) -> None:
     """Pulls data for study node from a neo4j DB. If study_id_list is provided, only pulls data for those studies."""
     cypher_phrase = DBCypherQueryDCC.study_cypher_query
     per_study_per_node_out_dir = os.path.join(
@@ -883,13 +881,14 @@ def pull_study_node_dcc(
         driver=driver,
         data_to_csv=export_to_csv_per_node_per_study,
         study_name=study_id_list,
-        node_label=["study"]*len(study_id_list),
+        node_label=["study"] * len(study_id_list),
         query_str=cypher_phrase,
         output_dir=per_study_per_node_out_dir,
     )
     future.result()
     gc.collect()
     return None
+
 
 @task(
     cache_policy=NO_CACHE,
@@ -911,7 +910,7 @@ def pull_uniq_nodes(driver) -> List:
 
 @task(
     cache_policy=NO_CACHE,
-    name= "Pull unique study ids from neo4j DB",
+    name="Pull unique study ids from neo4j DB",
 )
 def pull_uniq_studies(driver) -> List:
     """Return a list of studies in DB"""
@@ -1148,7 +1147,7 @@ def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     temp_folder_name = f"db_node_entry_counts_all_studies_{random.choice(range(1000))}"
     os.mkdir(temp_folder_name)
     logger.info("Start pulling entry counts per node per study")
-    
+
     logger.info(f"Pulling entry counts per node for study list {*study_list,}")
     future = pull_all_nodes_a_study.map(
         driver=driver,
@@ -1207,6 +1206,7 @@ def counts_DB_all_nodes_all_studies(
     driver.close()
 
     return studies_dataframe
+
 
 @flow
 def counts_DB_all_nodes_all_studies_w_secrets(
@@ -1310,6 +1310,7 @@ def validate_DB_with_input_tsvs(
     # close driver
     driver.close()
     return merged_summary_table
+
 
 @flow(log_prints=True)
 def validate_DB_with_input_tsvs_w_secrets(
@@ -1483,7 +1484,8 @@ def query_db_to_csv(
 
     # the output dir that contians per study per node csv
     output_dir_per_study_per_node = os.path.join(
-        os.path.dirname(output_dir), os.path.basename(output_dir) + "_per_study_per_node"
+        os.path.dirname(output_dir),
+        os.path.basename(output_dir) + "_per_study_per_node",
     )
 
     return output_dir_per_study_per_node
@@ -1558,9 +1560,7 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
 
     # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
-    df_wide.drop(
-        ["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True
-    )
+    df_wide.drop(["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True)
     # if uuid column exists, drop it
     if "uuid" in df_wide.columns:
         df_wide.drop(columns=["uuid"], inplace=True)
@@ -1603,8 +1603,7 @@ def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
 
 
 def write_wider_df_all(wider_df: DataFrame, output_dir: str, logger) -> None:
-    """writes tsv files per study per node to a study folder under output_dir
-    """
+    """writes tsv files per study per node to a study folder under output_dir"""
     # get node label
     node_label = wider_df["type"].unique().tolist()[0]
 
@@ -1644,10 +1643,12 @@ def convert_csv_to_tsv(db_pulled_outdir: str, output_dir: str) -> None:
 
     # check if a file has more than one line
     def has_contents(path):
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             f.readline()  # skip header
-            return bool(f.readline())      # if it has another line other than header, return True
-    
+            return bool(
+                f.readline()
+            )  # if it has another line other than header, return True
+
     # converts every csv into tsv if it has records
     for file_path in csv_list:
         logger.info(f"processing csv file: {file_path}")
@@ -1897,7 +1898,7 @@ def consolidate_uniquevalue_props(folder_path: str, prop_file_path: str):
     tsv_filelist = [os.path.join(new_folder, i) for i in os.listdir(new_folder)]
     for h in file_props:
         print(h)
-        h_filelist = [j for j in tsv_filelist if h+".tsv" in j]
+        h_filelist = [j for j in tsv_filelist if h + ".tsv" in j]
         print(f"{h} prop files: {*h_filelist,}")
         h_filename = "file_type_node-" + h + ".tsv"
         file_uniq_terms = []
@@ -1911,13 +1912,16 @@ def consolidate_uniquevalue_props(folder_path: str, prop_file_path: str):
                     pass
         file_uniq_terms_df = pd.DataFrame(columns=["unique_terms"])
         file_uniq_terms_df["unique_terms"] = file_uniq_terms
-        file_uniq_terms_df.to_csv(os.path.join(new_folder, h_filename), sep="\t", index=False)
+        file_uniq_terms_df.to_csv(
+            os.path.join(new_folder, h_filename), sep="\t", index=False
+        )
 
         # remove file_props files for 6 nodes
         for k in h_filelist:
             os.remove(k)
 
-    return  new_folder
+    return new_folder
+
 
 @flow
 def query_db_to_csv_w_secrets(
@@ -1978,10 +1982,12 @@ def query_db_to_csv_w_secrets(
 
     # the output dir that contians per study per node csv
     output_dir_per_study_per_node = os.path.join(
-        os.path.dirname(output_dir), os.path.basename(output_dir) + "_per_study_per_node"
+        os.path.dirname(output_dir),
+        os.path.basename(output_dir) + "_per_study_per_node",
     )
 
     return output_dir_per_study_per_node
+
 
 @flow
 def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
@@ -1999,15 +2005,19 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
 
     # check if a file has more than one line
     def has_contents(path):
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             f.readline()  # skip header
-            return bool(f.readline())      # if it has another line other than header, return True
-    
+            return bool(
+                f.readline()
+            )  # if it has another line other than header, return True
+
     # converts every csv into tsv if it has records
     for file_path in csv_list:
         logger.info(f"processing csv file: {file_path}")
         if has_contents(file_path):
-            logger.info(f"Pivoting long df to wide df and cleaning the data for file: {file_path}")
+            logger.info(
+                f"Pivoting long df to wide df and cleaning the data for file: {file_path}"
+            )
             wider_df = pivot_long_df_wide_clean_dcc(file_path=file_path)
             logger.info(f"Setting up links in wide df for file: {file_path}")
             wider_df = wide_df_setup_link_dcc(df_wide=wider_df)
@@ -2017,6 +2027,7 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
             logger.info(f"Skipping empty csv file: {file_path}")
             pass
     return export_folder
+
 
 def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     """Pivot the long df to wider df
@@ -2032,7 +2043,9 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
 
     # Pivot the DataFrame to wide format with aggregation to handle duplicates
     df_wide = (
-        df_long.groupby(["startNodeId", "startNodePropertyName"])["startNodePropertyValue"]
+        df_long.groupby(["startNodeId", "startNodePropertyName"])[
+            "startNodePropertyValue"
+        ]
         .agg(collapse)
         .reset_index()
         .pivot(
@@ -2084,9 +2097,7 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
 
     # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
-    df_wide.drop(
-        ["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True
-    )
+    df_wide.drop(["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True)
     # if uuid column exists, drop it
     if "uuid" in df_wide.columns:
         df_wide.drop(columns=["uuid"], inplace=True)
@@ -2116,7 +2127,7 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
             .reset_index()
             .pivot(index="guid", columns="linkedNodeLabels", values="linkedNodeId")
             .reset_index()
-            )
+        )
         df_wide_links.columns.name = None
 
         # Add linkages back into data frame and drop extra columns
@@ -2137,8 +2148,7 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
 
 
 def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None:
-    """writes tsv files per study per node to a study folder under output_dir
-    """
+    """writes tsv files per study per node to a study folder under output_dir"""
     # get node label
     node_label = wider_df["type"].unique().tolist()[0]
 

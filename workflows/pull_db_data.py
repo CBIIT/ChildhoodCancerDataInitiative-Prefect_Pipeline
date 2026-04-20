@@ -22,9 +22,9 @@ def pull_db_data(
     database_secret_key_ip: str,
     database_secret_key_username: str,
     database_secret_key_password: str,
-    study_id_list: Union[list[str], None] = None
+    study_id_list: Union[list[str], None] = None,
 ):
-    """Pipeline that pulls ingested studies from a DB database. Default pulls all studies unless a single study phs ID provided. 
+    """Pipeline that pulls ingested studies from a DB database. Default pulls all studies unless a single study phs ID provided.
 
     Args:
         bucket (str): Bucket name of where output goes to
@@ -35,7 +35,7 @@ def pull_db_data(
         database_secret_key_username (str): Key name for the username in the secret
         database_secret_key_password (str): Key name for the password in the secret
         study_id_list (list[str], optional): List of Study IDs to pull data for multiple study pulls. If None, the pipeline pulls all the studies. Defaults to None.
-    """    
+    """
     logger = get_run_logger()
 
     # create a unqiue folder name for final outputs
@@ -67,11 +67,13 @@ def pull_db_data(
         uri_secret=uri,
         username_secret=username,
         password_secret=password,
-        study_id_list=study_id_list
+        study_id_list=study_id_list,
     )
 
     # upload converted tsv files to the bucket
-    logger.info(f"Uploading folder of {db_data_folder} to the bucket {bucket} at {bucket_folder}")
+    logger.info(
+        f"Uploading folder of {db_data_folder} to the bucket {bucket} at {bucket_folder}"
+    )
     folder_ul(
         local_folder=db_data_folder,
         bucket=bucket,
@@ -81,10 +83,14 @@ def pull_db_data(
 
     # converting data pulled from DB (csv files) to tsv files
     logger.info("Starting to convert DB pulled csv to tsv files")
-    export_folder = convert_csv_to_tsv_dcc(db_pulled_outdir=db_data_folder, output_dir="./")
+    export_folder = convert_csv_to_tsv_dcc(
+        db_pulled_outdir=db_data_folder, output_dir="./"
+    )
 
     # upload converted tsv files to the bucket
-    logger.info(f"Uploading folder of {export_folder} to the bucket {bucket} at {bucket_folder}")
+    logger.info(
+        f"Uploading folder of {export_folder} to the bucket {bucket} at {bucket_folder}"
+    )
     folder_ul(
         local_folder=export_folder,
         bucket=bucket,

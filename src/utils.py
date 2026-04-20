@@ -73,7 +73,7 @@ class CCDI_Tags(Task):
         tags_list = self.get_tags()
         tags = [i["name"] for i in tags_list]
         return tags
-    
+
     def get_latest_tag(self) -> str:
         tags = self.get_tags_only()
         if len(tags) > 0:
@@ -147,7 +147,7 @@ class CCDI_Tags(Task):
                 f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
             )
             return None
-    
+
     def download_latest_tag_manifest(self, logger) -> Union[str, None]:
         latest_tag = self.get_latest_tag()
         if latest_tag is not None:
@@ -155,6 +155,7 @@ class CCDI_Tags(Task):
         else:
             logger.error("No tags found in ccdi-model GitHub repo")
             return None
+
 
 class CCDI_DCC_Tags(Task):
     """Class that fetches available releases, checks if a release exists,
@@ -271,12 +272,16 @@ class CCDI_DCC_Tags(Task):
             zipfile.extractall(path=tempdir)
             # model file
             model_yml = os.path.join(
-                tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model.yml"
+                tempdirobj.name,
+                os.listdir(tempdirobj.name)[0],
+                "model-desc/ccdi-dcc-model.yml",
             )
             logger.info("model file path in temp dir: " + model_yml)
             logger.info("model file name: " + os.path.basename(model_yml))
             props_yml = os.path.join(
-                tempdirobj.name, os.listdir(tempdirobj.name)[0], "model-desc/ccdi-dcc-model-props.yml"
+                tempdirobj.name,
+                os.listdir(tempdirobj.name)[0],
+                "model-desc/ccdi-dcc-model-props.yml",
             )
             logger.info(
                 f"list files under {os.listdir(tempdirobj.name)[0]}: {os.listdir(os.path.join(tempdirobj.name,os.listdir(tempdirobj.name)[0],'model-desc'))}"
@@ -292,6 +297,7 @@ class CCDI_DCC_Tags(Task):
                 f"v{tag} is not found in released versions. Here is a list of available versions:\n{*available_tags,}"
             )
             return None, None
+
 
 def get_ccdi_latest_release() -> str:
     latest_url = GithubAPTendpoint.ccdi_model_recent_release
@@ -395,7 +401,9 @@ def get_manifest_phs(manifest_path: str) -> str:
     elif "dbgap_accession" in study_sheet_df.columns:
         phs_accession = study_sheet_df["dbgap_accession"].tolist()[0]
     else:
-        raise KeyError("Can't find a column phs_accession or dbgap_accession in study sheet. Failed to get the dbgap accession number")
+        raise KeyError(
+            "Can't find a column phs_accession or dbgap_accession in study sheet. Failed to get the dbgap accession number"
+        )
     return phs_accession
 
 
@@ -481,7 +489,10 @@ def file_ul(bucket: str, output_folder: str, sub_folder: str, newfile: str):
     # extra_args={'ACL': 'bucket-owner-full-control'}
     source.upload_file(newfile, file_key)  # , extra_args)
 
-@task(name="Upload folder", task_run_name="upload_folder_{local_folder}", log_prints=True)
+
+@task(
+    name="Upload folder", task_run_name="upload_folder_{local_folder}", log_prints=True
+)
 def folder_ul(
     local_folder: str, bucket: str, destination: str, sub_folder: str
 ) -> None:
@@ -507,7 +518,11 @@ def folder_ul(
             source.upload_file(local_path, s3_path)
 
 
-@task(name="Download folder", task_run_name="download_folder_{remote_folder}", log_prints=True)
+@task(
+    name="Download folder",
+    task_run_name="download_folder_{remote_folder}",
+    log_prints=True,
+)
 def folder_dl(bucket: str, remote_folder: str) -> None:
     """Downloads a remote direcotry folder from s3
     bucket to local. it generates a folder that follows the
@@ -1043,7 +1058,7 @@ def excel_sheets_to_dict(excel_file: ExcelFile, no_names: List) -> Dict:
     return excel_dict
 
 
-@task ( cache_policy= NO_CACHE, name="CCDI manifest to dict", log_prints=True)
+@task(cache_policy=NO_CACHE, name="CCDI manifest to dict", log_prints=True)
 def ccdi_manifest_to_dict(excel_file: ExcelFile) -> Dict:
     """Reads a validated CDDI manifest excel and retruns
     a dictionary with sheetnames as keys and pandas
@@ -1151,9 +1166,7 @@ class CheckCCDI:
 
     def find_file_nodes(self):
         dict_df = self.get_dict_df()
-        file_node_list = dict_df[dict_df["Property"] == "file_url"][
-            "Node"
-        ].tolist()
+        file_node_list = dict_df[dict_df["Property"] == "file_url"]["Node"].tolist()
         # remove any duplcates
         file_node_list_uniq = list(set(file_node_list))
         return file_node_list_uniq
@@ -1309,7 +1322,7 @@ def calculate_list_md5sum_consecutively(s3uri_list: list[str]) -> list[str]:
     md5sum_value_list = []
     progress = 1
     for i in s3uri_list:
-        i_md5sum =  calculate_single_md5sum_task.fn(i, s3_client)
+        i_md5sum = calculate_single_md5sum_task.fn(i, s3_client)
         md5sum_value_list.append(i_md5sum)
         print(f"progress: {progress}/{len(s3uri_list)}")
         progress += 1
@@ -1332,7 +1345,7 @@ def calculate_list_size(s3uri_list: list[str]) -> list[str]:
 @task(
     name="Extract one sheet dcf index info",
     log_prints=True,
-    task_run_name="extract dcf index info of {sheetname}"
+    task_run_name="extract dcf index info of {sheetname}",
 )
 def extract_dcf_index_single_sheet(
     sheetname: str, CCDI_manifest: CheckCCDI, logger, modified_manifest: str
@@ -1344,8 +1357,8 @@ def extract_dcf_index_single_sheet(
 
     This function is compatible for ccdi data model 1.9.0 and after
     All file nodes will have "acl" and "authz" properties
-    The return df will have 8 cols, "guid", "md5sum", "urls", "size", "node", 
-    "if_guid_missing", "acl", "authz" 
+    The return df will have 8 cols, "guid", "md5sum", "urls", "size", "node",
+    "if_guid_missing", "acl", "authz"
     """
     logger.info(f"Reading sheet {sheetname}")
     sheet_df = CCDI_manifest.read_sheet_na(sheetname=sheetname)
@@ -1369,7 +1382,7 @@ def extract_dcf_index_single_sheet(
     # if the sheet_ff is not empty
     else:
         # insert type column back as the first column
-        sheet_df.insert(loc=0, column="type", value=[sheetname]*sheet_df.shape[0])
+        sheet_df.insert(loc=0, column="type", value=[sheetname] * sheet_df.shape[0])
         # add extra column at the end
         sheet_df["if_guid_missing"] = sheet_df["dcf_indexd_guid"].isna()
         # assign guid if guid is missing
@@ -1380,8 +1393,11 @@ def extract_dcf_index_single_sheet(
         if sum(sheet_df["if_guid_missing"]) > 0:
             # new guid df has three columns, "md5sum","file_url","new_guid"
             new_guid_df = (
-                sheet_df[sheet_df["dcf_indexd_guid"].isna()] # subset only rows with missing guid
-                .groupby(["md5sum", "file_url"]).apply(lambda x: "dg.4DFC/" + str(uuid.uuid4()))
+                sheet_df[
+                    sheet_df["dcf_indexd_guid"].isna()
+                ]  # subset only rows with missing guid
+                .groupby(["md5sum", "file_url"])
+                .apply(lambda x: "dg.4DFC/" + str(uuid.uuid4()))
                 .reset_index()
                 .rename(columns={0: "new_guid"})
             )
@@ -1394,17 +1410,21 @@ def extract_dcf_index_single_sheet(
 
                 # assign new guid value back to sheet_df
                 sheet_df.loc[
-                    (sheet_df["md5sum"] == i_md5)
-                    & (sheet_df["file_url"] == i_url),
+                    (sheet_df["md5sum"] == i_md5) & (sheet_df["file_url"] == i_url),
                     "dcf_indexd_guid",
                 ] = i_new_guid
             del new_guid_df
             # rewrite sheet content for this node in modified manifest
             rewrite_df = sheet_df.drop(columns=["if_guid_missing"])
             with pd.ExcelWriter(
-                modified_manifest, mode="a", engine="openpyxl", if_sheet_exists="overlay"
+                modified_manifest,
+                mode="a",
+                engine="openpyxl",
+                if_sheet_exists="overlay",
             ) as writer:
-                rewrite_df.to_excel(writer, sheet_name = sheetname, index=False, header=False, startrow=1)
+                rewrite_df.to_excel(
+                    writer, sheet_name=sheetname, index=False, header=False, startrow=1
+                )
             del rewrite_df
         else:
             pass
@@ -1447,7 +1467,12 @@ def extract_dcf_index(
     logger = get_run_logger()
     list_dict = []
     for sheet_name in sheetname_list:
-        return_dict = extract_dcf_index_single_sheet(sheetname=sheet_name, CCDI_manifest=CCDI_manifest, logger=logger, modified_manifest=modified_manifest)
+        return_dict = extract_dcf_index_single_sheet(
+            sheetname=sheet_name,
+            CCDI_manifest=CCDI_manifest,
+            logger=logger,
+            modified_manifest=modified_manifest,
+        )
         list_dict.append(return_dict)
     return list_dict
 
@@ -1479,8 +1504,8 @@ def ccdi_to_dcf_index(ccdi_manifest: str) -> tuple:
     """
     current_time = get_time()
 
-    manifest_obj =  CheckCCDI(ccdi_manifest=ccdi_manifest)
-    manifest_name =  os.path.basename(ccdi_manifest)
+    manifest_obj = CheckCCDI(ccdi_manifest=ccdi_manifest)
+    manifest_name = os.path.basename(ccdi_manifest)
     logger = get_logger(loggername="CCDI_to_DCF_Index", log_level="info")
     log_name = "CCDI_to_DCF_Index_" + get_date() + ".log"
 
@@ -1538,6 +1563,7 @@ def ccdi_to_dcf_index(ccdi_manifest: str) -> tuple:
 
     return output_filename, log_name
 
+
 @task(name="ccdi get secret from secrets manager")
 def get_secret(secret_name_path: str, secret_key_name: str):
     """Retrieve a secret hash from AWS Secrets Manager
@@ -1562,8 +1588,11 @@ def get_secret(secret_name_path: str, secret_key_name: str):
 
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
 
+
 @task(name="get secret from secrets manager in an external account", log_prints=True)
-def get_secret_centralized_worker(secret_path_name: str, secret_key_name: str, account: str):
+def get_secret_centralized_worker(
+    secret_path_name: str, secret_key_name: str, account: str
+):
     """Retrieve a secret hash from AWS Secrets Manager
 
     Args:
@@ -1574,7 +1603,9 @@ def get_secret_centralized_worker(secret_path_name: str, secret_key_name: str, a
         str: Secret hash/token
     """
     region_name = "us-east-1"
-    secret_name_path = f"arn:aws:secretsmanager:{region_name}:{account}:secret:{secret_path_name}"
+    secret_name_path = (
+        f"arn:aws:secretsmanager:{region_name}:{account}:secret:{secret_path_name}"
+    )
     # Create a Secrets Manager client
     session = boto3.session.Session()
     client = session.client(service_name="secretsmanager", region_name=region_name)
@@ -1589,7 +1620,7 @@ def get_secret_centralized_worker(secret_path_name: str, secret_key_name: str, a
 
 
 def sanitize_return(err_string: str, remove_value_list: list):
-    """Sanitize a string of provided substrings to remove. 
+    """Sanitize a string of provided substrings to remove.
 
     Args:
         err_string (str): String to remove any secret or sensitive substrings from
@@ -1600,4 +1631,4 @@ def sanitize_return(err_string: str, remove_value_list: list):
     """
     for remove_value in remove_value_list:
         err_string = err_string.replace(remove_value, "")
-    return err_string 
+    return err_string
