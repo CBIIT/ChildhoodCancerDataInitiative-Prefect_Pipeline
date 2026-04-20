@@ -181,9 +181,9 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
                 for j in tsv_df[i_col].tolist()
             ]
             # remove the i_col content
-            tsv_df[i_col] = ""
+            # tsv_df[i_col] = ""
         # remove the content of col "guid"
-        tsv_df["guid"] = ""
+        # tsv_df["guid"] = ""
 
         # reorder columns in tsv according to sheet
         tsv_df = tsv_df[manifest_df.columns.tolist()]
