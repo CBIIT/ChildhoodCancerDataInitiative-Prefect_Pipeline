@@ -1762,9 +1762,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-join-tsv-to-manifest-v3
+  - name: join-tsv-to-manifest-v3-dcc
     version: null
-    tags: ["TEST","SVB","CCDIDC-2417","DCC","V3"]
+    tags: ["Production","DCC","Centralized Worker","V3"]
     description: null
     entrypoint: workflows/db_tsv_to_manifest.py:join_tsv_to_manifest
     schedule: null
@@ -1781,7 +1781,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2417_pull_n_join_joinry_updates
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
@@ -1793,9 +1793,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-pull_n_join_manifest_single_study
+  - name: pull_n_join_manifest_single_study-dcc
     version: null
-    tags: ["TEST", "SVB", "CCDIDC-2417", "DCC","Centralized Worker", "V3"]
+    tags: ["Production", "DCC", "Centralized Worker", "V3"]
     description: null
     entrypoint: workflows/pull_n_join_manifest_single_study.py:pull_n_join_manifest_single_study
     schedule: null
@@ -1817,7 +1817,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: CCDIDC-2417_pull_n_join_joinry_updates
+        branch: main
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
@@ -1829,9 +1829,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-pull-db-data-32gb-ccdi-v3
+  - name: pull-db-data-32gb-v3
     version: null
-    tags: ["TEST","V3", "DCC", "CCDIDCC-2417", "Centralized Worker"]
+    tags: ["Production","V3", "DCC", "Centralized Worker"]
     description: null
     entrypoint: workflows/pull_db_data.py:pull_db_data
     schedule: null
@@ -1851,7 +1851,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2417_pull_n_join_joinry_updates
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
