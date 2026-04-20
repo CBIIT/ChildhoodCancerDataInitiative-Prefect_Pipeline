@@ -13,7 +13,7 @@ from src.join_tsv_to_manifest_dcc import (
 
 
 @flow(
-    name="Join TSV files to CCDI manifest",
+    name="Join TSV files to CCDI-DCC manifest",
     log_prints=True,
     flow_run_name="join-tsv-to-manifest-{runner}-" + f"{get_time()}",
 )
@@ -24,7 +24,7 @@ def join_tsv_to_manifest(
     dcc_template_tag: str
     
 ) -> None:
-    """Pipeline that combines a folder of tsv files into a single CCDI manifest
+    """Pipeline that combines a folder of tsv files into a single CCDI-DCC manifest
 
     Args:
         bucket (str): Bucket name of where tsv files located in and output goes to
