@@ -3,7 +3,7 @@ from prefect import flow, task, get_run_logger
 import os
 import sys
 
-from workflows.pull_neo4j_data import pull_db_data
+from workflows.pull_db_data import pull_db_data
 from workflows.db_tsv_to_manifest import join_tsv_to_manifest
 
 
