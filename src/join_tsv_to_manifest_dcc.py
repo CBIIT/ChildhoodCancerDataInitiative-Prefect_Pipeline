@@ -107,6 +107,13 @@ def unpack_folder_list(folder_path_list: list[str]):
             pass
     return unpacked_folder_list
 
+def map_ids(cell, mapping):
+    if pd.isna(cell) or cell == "":
+        return cell
+    ids = [i.strip() for i in str(cell).split(";")]
+    mapped = [mapping.get(i, i) for i in ids if i]  # falls back to original if not found
+    return ";".join(mapped)
+
 
 @task(name="Join tsv to Manifest", log_prints=True)
 def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) -> str:
@@ -167,15 +174,15 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
         parent_guid_cols = find_parent_guid_cols(guid_cols=guid_cols)
         logger.info(f"sheet parent guid cols: {*parent_guid_cols,}")
         for i in range(len(guid_cols)):
-            i_col = guid_cols[i] # for example participant.guid
-            parent_i_col = i_col.split(".")[0] + "." + i_col.split(".")[0] + "_guid" # participant.participant_guid
+            i_col = guid_cols[i]  # e.g. participant.guid
+            parent_i_col = i_col.split(".")[0] + "." + i_col.split(".")[0] + "_guid"  # participant.participant_guid
             tsv_df[parent_i_col] = [
-                key_id_mapping[j] if not (pd.isna(j) or j=="") else j
+                map_ids(j, key_id_mapping)
                 for j in tsv_df[i_col].tolist()
             ]
-            # keep the i_col content
+            # remove the i_col content
             tsv_df[i_col] = ""
-        # keep the content of col "guid"
+        # remove the content of col "guid"
         tsv_df["guid"] = ""
 
         # reorder columns in tsv according to sheet
