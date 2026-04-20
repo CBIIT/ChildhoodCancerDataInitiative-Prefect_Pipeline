@@ -59,23 +59,23 @@ def get_study_accession(file_list: list[str]) -> str:
         )
 
 
-# we need a mapping dictionary that maps id(uuid str) against key property value
+# we need a mapping dictionary that maps GUID(str) against key property value
 def create_key_id_mapping(file_list: list[str]) -> dict:
-    """Returns a dictionary of id and key property.
-    Loops through every tsv, and use the id column as key and [node]_id as value
+    """Returns a dictionary of GUID and key property.
+    Loops through every tsv, and use the GUID column as key and [node]_id as value
 
     Args:
         file_list (list[str]): a list of file paths
 
     Returns:
-        dict: dictionary of id column value as key and [node]_id column value as value
+        dict: dictionary of GUID column value as key and [node]_id column value as value
     """
     return_dict = {}
     for file in file_list:
         file_df = pd.read_csv(file, sep="\t")
         file_type = file_df.loc[0, "type"]
         file_key_prop = file_type + "_id"
-        file_mapping_dict = dict(zip(file_df["id"], file_df[file_key_prop]))
+        file_mapping_dict = dict(zip(file_df["guid"], file_df[file_key_prop]))
         return_dict = {**return_dict, **file_mapping_dict}
     return return_dict
 
@@ -85,14 +85,14 @@ def find_missing_cols(tsv_cols: list, sheet_cols: list) -> list:
     return missing_cols
 
 
-def find_id_cols(col_list: list) -> list:
-    id_cols = [i for i in col_list if i.endswith(".id")]
-    return id_cols
+def find_guid_cols(col_list: list) -> list:
+    guid_cols = [i for i in col_list if i.endswith(".guid")]
+    return guid_cols
 
 
-def find_parent_id_cols(id_cols: list) -> list:
-    parent_names = [i.split(".")[0] for i in id_cols]
-    extended_parent_names = [i + "." + i + "_id" for i in parent_names]
+def find_parent_guid_cols(guid_cols: list) -> list:
+    parent_names = [i.split(".")[0] for i in guid_cols]
+    extended_parent_names = [i + "." + i + "_guid" for i in parent_names]
     return extended_parent_names
 
 
@@ -108,10 +108,20 @@ def unpack_folder_list(folder_path_list: list[str]):
     return unpacked_folder_list
 
 
+def map_ids(cell, mapping):
+    if pd.isna(cell) or cell == "":
+        return cell
+    ids = [i.strip() for i in str(cell).split(";")]
+    mapped = [
+        mapping.get(i, i) for i in ids if i
+    ]  # falls back to original if not found
+    return ";".join(mapped)
+
+
 @task(name="Join tsv to Manifest", log_prints=True)
 def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) -> str:
     logger = get_run_logger()
-    # Remove the step of checking if only one phs is found under id column
+    # Remove the step of checking if only one phs is found under guid column
     # Because the
     # study_accession = check_same_study_files(file_list=file_list, logger=logger)
     study_accession = get_study_accession(file_list=file_list)
@@ -128,7 +138,7 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
     copy(manifest_path, output_file_name)
 
     # output_file = pd.ExcelFile(output_file_name)
-    # create key prop and id(guid) mapping dict
+    # create key prop and guid mapping dict
     key_id_mapping = create_key_id_mapping(file_list=file_list)
 
     for tsv_file in file_list:
@@ -160,23 +170,24 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
                 tsv_df[i] = ""
         else:
             pass
-        # copy [parent].id column to [parent].[parent]_id col
-        # and remove content of [parent].id
-        id_cols = find_id_cols(col_list=tsv_df.columns.tolist())
-        logger.info(f"tsv parent id cols: {*id_cols,}")
-        parent_id_cols = find_parent_id_cols(id_cols=id_cols)
-        logger.info(f"sheet parent id cols: {*parent_id_cols,}")
-        for i in range(len(id_cols)):
-            i_col = id_cols[i] # for example participant.id
-            parent_i_col = i_col.split(".")[0] + "." + i_col.split(".")[0] + "_id" # participant.participant_id
+        # copy [parent].guid column to [parent].[parent]_guid col
+        # and remove content of [parent].guid
+        guid_cols = find_guid_cols(col_list=tsv_df.columns.tolist())
+        logger.info(f"tsv parent guid cols: {*guid_cols,}")
+        parent_guid_cols = find_parent_guid_cols(guid_cols=guid_cols)
+        logger.info(f"sheet parent guid cols: {*parent_guid_cols,}")
+        for i in range(len(guid_cols)):
+            i_col = guid_cols[i]  # e.g. participant.guid
+            parent_i_col = (
+                i_col.split(".")[0] + "." + i_col.split(".")[0] + "_id"
+            )  # participant.participant_id
             tsv_df[parent_i_col] = [
-                key_id_mapping[j] if not (pd.isna(j) or j=="") else j
-                for j in tsv_df[i_col].tolist()
+                map_ids(j, key_id_mapping) for j in tsv_df[i_col].tolist()
             ]
-            # keep the i_col content
+            # remove the i_col content
             tsv_df[i_col] = ""
-        # keep the content of col "id"
-        tsv_df["id"] = ""
+        # remove the content of col "guid"
+        tsv_df["guid"] = ""
 
         # reorder columns in tsv according to sheet
         tsv_df = tsv_df[manifest_df.columns.tolist()]

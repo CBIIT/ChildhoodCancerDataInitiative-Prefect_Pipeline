@@ -4,7 +4,7 @@ from botocore.exceptions import ClientError
 import json
 from src.utils import get_secret_centralized_worker
 
-@flow(name="TEST Secret Retrieval Pipeline", log_prints=True)
+@flow(name="Secret Test Retrieval Pipeline", log_prints=True)
 def secret_pipeline(secret_path_name: str, secret_key_name: str, account: str) -> None:
     """
     Prefect pipeline that retrieves and prints a secret.
