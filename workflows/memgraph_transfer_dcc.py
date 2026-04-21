@@ -152,11 +152,10 @@ def memgraph_transfer_dcc(
         logger.info(f"Export completed: {output_file}")
         logger.info(f"Running import with chunk size {chunk_size}")
 
-        # Need to create the file path from the export step to pass to the import step
-        file_path = f"{runner}/{output_file}"
+        input_file = os.path.basename(output_file)
 
         import_memgraph(
-            uri_target, username_target, password_target, file_path, chunk_size, wipe_db
+            uri_target, username_target, password_target, input_file = input_file, chunk_size = chunk_size, wipe_db = wipe_db
         )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
@@ -175,11 +174,10 @@ def memgraph_transfer_dcc(
         logger.info(f"Export completed: {output_file}")
         logger.info(f"Running import with chunk size {chunk_size}")
 
-        # Need to create the file path from the export step to pass to the import step
-        file_path = f"{runner}/{output_file}"
+        input_file = os.path.basename(output_file)
 
         import_memgraph(
-            uri_target, username_target, password_target, file_path, chunk_size, wipe_db
+            uri_target, username_target, password_target, input_file = input_file, chunk_size = chunk_size, wipe_db = wipe_db
         )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
