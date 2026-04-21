@@ -303,7 +303,7 @@ class Surgery_Type_Mapper(Transformation):
         values = {k:v for k,v in zip(keys, values)}
         
         if values['ON_STUDY_DX.PR_PRSCAT_EXT'] == "No Procedure":
-            return None
+            return "Not Applicable"
         
         if values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "Yes":
             values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Resection"
