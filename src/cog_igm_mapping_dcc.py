@@ -158,6 +158,8 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
             empty_df = pd.DataFrame(columns=manifest_df.columns)
             # strip whitespace from column names in node_outputs df
             df.columns = df.columns.str.strip()
+            # reorder df cols to match manifest sheet cols, 
+            df = df.reindex(columns=manifest_df.columns)
             # strip whitespace from column names in manifest_df
             manifest_df.columns = manifest_df.columns.str.strip()
             # concat data from node_outputs to empty_df to ensure same columns
