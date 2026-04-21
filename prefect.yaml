@@ -1640,9 +1640,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: ccdi-cog_igm-transform-V3_v2
+  - name: TEST-ccdi-cog_igm-transform-V3_v2
     version: null
-    tags: ["PROD", "MCI", "V3"]
+    tags: ["TEST", "MCI", "V3"]
     description: null
     entrypoint: workflows/cog_igm_transformer_v2.py:cog_igm_transform
     
@@ -1662,7 +1662,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: main
+        branch: patch_rule
         include_submodules: True
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_python3.13_prefect3.txt
