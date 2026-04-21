@@ -127,11 +127,11 @@ def memgraph_transfer_dcc(
     elif mode == "import":
         # download the cypherl file
         file_dl(bucket, file_path)
-        file_name = os.path.basename(file_path)
+        file_path = os.path.basename(file_path)
         logger.info(f"Running import with chunk size {chunk_size}")
         logger.info(f"Target database account: {database_target_account_name}")
         import_memgraph(
-            uri_target, username_target, password_target, file_name, chunk_size, wipe_db
+            uri_target, username_target, password_target, file_path, chunk_size, wipe_db
         )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
@@ -151,8 +151,12 @@ def memgraph_transfer_dcc(
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         logger.info(f"Export completed: {output_file}")
         logger.info(f"Running import with chunk size {chunk_size}")
+
+        # Need to create the file path from the export step to pass to the import step
+        file_path = f"{runner}/{output_file}"
+
         import_memgraph(
-            uri_target, username_target, password_target, file_name, chunk_size, wipe_db
+            uri_target, username_target, password_target, file_path, chunk_size, wipe_db
         )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
@@ -170,8 +174,12 @@ def memgraph_transfer_dcc(
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         logger.info(f"Export completed: {output_file}")
         logger.info(f"Running import with chunk size {chunk_size}")
+
+        # Need to create the file path from the export step to pass to the import step
+        file_path = f"{runner}/{output_file}"
+
         import_memgraph(
-            uri_target, username_target, password_target, file_name, chunk_size, wipe_db
+            uri_target, username_target, password_target, file_path, chunk_size, wipe_db
         )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
