@@ -52,7 +52,7 @@ def memgraph_transfer_dcc(
         mode: Operation mode for the transfer. Must be one of 'export', 'import', 'promotion', or 'curation promotion'.
         bucket: Working cloud storage bucket name.
         runner: Identifier for the runner executing the flow and output file path.
-        file_path: Path to the CypherL file for import.
+        file_path: s3 file path to the CypherL file for import only pipeline.
         database_source_account_name (str): Account name/nickname/shorthand for the source database
         database_source_account_id (str): Account ID for the source database
         database_source_secret_path (str): Secret path for the source database
