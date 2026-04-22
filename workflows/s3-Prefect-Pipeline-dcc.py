@@ -78,13 +78,13 @@ def get_enum_props_dict(model_instance: "MDFReader.model") -> dict[str, list[str
     return enum_props_dict
 
 def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[str]:
-    """Generate a list of property names, which is stricted to its Permissible Values (PV) list
+    """Generate a list of enum property names, which is non-stricted to its Permissible Values (PV) list
 
     Args:
         model_instance (MDFReader.model): MDFReader.model instance
 
     Returns:
-        list[str]: a list of property names, which are stricted to its own PV list
+        list[str]: a list of property names, which are non-stricted to its own PV list
     """
     enum_string_props = []
     for node in model_instance.nodes:
