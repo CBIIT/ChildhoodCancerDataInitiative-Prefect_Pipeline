@@ -243,11 +243,12 @@ def _execute_batch(session, queries, logger):
 # INTERNAL TASK: WIPE DATABASE
 # ------------------------------------------------------------------
 def _wipe_database(session, logger):
-    """Deletes all nodes and relationships from the database."""
-    logger.warning("Wiping Memgraph database: deleting all nodes and relationships...")
+    """Deletes all nodes, relationships and indexes from the database."""
+    logger.warning("Wiping Memgraph database: deleting all nodes, relationships, and indexes...")
     try:
         session.run("MATCH (n) DETACH DELETE n;")
-        logger.info("Database wipe complete. All nodes and relationships removed.")
+        session.run("CALL db.indexes() YIELD name WHERE name IS NOT NULL CALL db.dropIndex(name) RETURN name;")
+        logger.info("Database wipe complete. All nodes, relationships, and indexes removed.")
     except Exception as e:
         logger.error(f"Error wiping database: {e}")
         raise
