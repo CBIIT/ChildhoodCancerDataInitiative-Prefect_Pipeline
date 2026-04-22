@@ -129,24 +129,15 @@ def export_relationships(tx):
         )
     return rels
 
-def export_indicies(tx):
-    query = """
-    CALL db.indexes() YIELD name, type, entityType, labelsOrTypes, properties
-    RETURN name, type, entityType, labelsOrTypes, properties
-    """
-    result = tx.run(query)
-
+def export_indices(tx):
+    result = list(tx.run("SHOW INDEX INFO;").data())
     indices = []
     for record in result:
-        indices.append(
-            {
-                "name": record["name"],
-                "type": record["type"],
-                "entityType": record["entityType"],
-                "labelsOrTypes": record["labelsOrTypes"],
-                "properties": record["properties"],
-            }
-        )
+        indices.append({
+            "label": record["label"],
+            "property": record["property"],
+            "type": record["type"]
+        })
     return indices
 
 
@@ -199,11 +190,22 @@ def export_memgraph_curation(
         total_statements += 1
 
     # --- CREATE INDEXES ---
-    indices = session.execute_read(export_indicies)
+    indices = session.execute_read(export_indices)
     for index in indices:
-        labels_or_types = ":".join(index["labelsOrTypes"])
-        properties = format_properties({prop: None for prop in index["properties"]})
-        cypher_lines.append(f"CREATE {index['type']} INDEX ON :{labels_or_types} {properties};")
+        label = index["label"]
+        property = index["property"]
+        index_type = index["type"].lower()
+
+        if "edge" in index_type:
+            # CREATE EDGE INDEX ON :label
+            cypher_lines.append(f"CREATE EDGE INDEX ON :{label};")
+        elif property:
+            # CREATE INDEX ON :label(property)
+            cypher_lines.append(f"CREATE INDEX ON :{label}({property});")
+        else:
+            # CREATE INDEX ON :label
+            cypher_lines.append(f"CREATE INDEX ON :{label};")
+
         total_statements += 1
 
     # --- WRITE FILE ---
@@ -247,17 +249,26 @@ def _wipe_database(session, logger):
     logger.warning("Wiping Memgraph database: deleting all nodes, relationships, and indexes...")
     try:
         session.run("MATCH (n) DETACH DELETE n;")
-        indexes = session.run("SHOW INDEX INFO;").data()
-    
+        
+        # Fetch all indexes
+        indexes = list(session.run("SHOW INDEX INFO;").data())
+
+        # Drop each index based on its type
         for index in indexes:
             label = index["label"]
             property = index["property"]
-            
-            if property:
+            index_type = index["type"]
+
+            if "edge" in index_type.lower():
+                # Edge index: CREATE EDGE INDEX ON :label
+                query = f"DROP EDGE INDEX ON :{label};"
+            elif property:
+                # Label-property index: CREATE INDEX ON :label(property)
                 query = f"DROP INDEX ON :{label}({property});"
             else:
+                # Label index: CREATE INDEX ON :label
                 query = f"DROP INDEX ON :{label};"
-            
+
             print(f"Running: {query}")
             session.run(query)
 
