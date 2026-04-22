@@ -98,7 +98,7 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
     if "treatment_surgery" in node_outputs:
         # filter out rows where surgery_type is Not Applicable
         treatment_surgery_df = node_outputs["treatment_surgery"]
-        treatment_surgery_df = treatment_surgery_df[~((treatment_surgery_df["surgery_type"] == "Not Applicable") & (treatment_surgery_df["surgery_type"].notna()))]
+        treatment_surgery_df = treatment_surgery_df[~((treatment_surgery_df["surgery_type"] == "Not Applicable") & (treatment_surgery_df["surgery_type"].notna() & (treatment_surgery_df["surgery_type"] != "")))]
         node_outputs["treatment_surgery"] = treatment_surgery_df
     
     if "treatment_chemotherapy" in node_outputs:
