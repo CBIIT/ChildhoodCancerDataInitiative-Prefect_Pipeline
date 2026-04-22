@@ -281,14 +281,14 @@ def validate_terms_value_sets_one_sheet(
     node_name: str,
     checkccdi_object,
     enum_props_dict: dict[str, list[str]],
-    enum_strict_props: list[str],
+    enum_string_props: list[str],
 ) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
     print_str = f"\n\t{node_name}\n\t----------\n\t"
 
     enum_arrays = list(enum_props_dict.keys())
-    enum_string_props = enum_strict_props
+    enum_string_props = enum_string_props
 
     check_list = []
     for property in properties:
@@ -450,7 +450,7 @@ def validate_terms_value_sets_one_sheet(
 def validate_terms_value_sets(
     file_path: str,
     enum_props_dict: dict[str, list[str]],
-    enum_strict_props: list[str],
+    enum_string_props: list[str],
     node_list: list[str],
     output_file: str,
 ) -> None:
@@ -461,13 +461,8 @@ def validate_terms_value_sets(
     )
     
     file_object = CheckCCDI(ccdi_manifest=file_path)
-    validate_str_list = []
-    #for node in node_list:
-    #    print("processing node: " + node)
-    #    validate_str_list.append(validate_terms_value_sets_one_sheet(node, file_object, enum_props_dict, enum_strict_props))
-    #validate_str = "".join(validate_str_list)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
-        node_list, file_object, unmapped(enum_props_dict), unmapped(enum_strict_props)
+        node_list, file_object, unmapped(enum_props_dict), unmapped(enum_string_props)
     )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
@@ -2183,7 +2178,11 @@ def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -
     log_prints=True,
     flow_run_name="CCDI_ValidationRy_refactor" + f"{get_time()}",
 )
-def ValidationRy_new(file_path: str, template_path: str, enum_props_dict: dict[str, list[str]], enum_strict_props: list[str], model_rel_list: list[dict[str, str]]) -> None:
+def ValidationRy_new(file_path: str, 
+                     template_path: str, 
+                     enum_props_dict: dict[str, list[str]], 
+                     enum_string_props: list[str], 
+                     model_rel_list: list[dict[str, str]]) -> None:
     validation_logger = get_run_logger()
 
     todays_date = get_date()
@@ -2233,12 +2232,7 @@ def ValidationRy_new(file_path: str, template_path: str, enum_props_dict: dict[s
 
     # validate terms and value sets
     validation_logger.info("Checking term and value sets")
-    # create model parser
-    #dcc_model_parser = ModelParser(model_file=model_yaml, props_file=model_props_yaml, handle="ccdi_dcc")
-    #validation_logger.info("Model parser created successfully")
-    #dcc_model = dcc_model_parser.model
-    #validation_logger.info("Model parser model created successfully")
-    validate_terms_value_sets(file_path, enum_props_dict, enum_strict_props, nodes_to_validate, output_file)
+    validate_terms_value_sets(file_path, enum_props_dict, enum_string_props, nodes_to_validate, output_file)
     validation_logger.info("Term and value set validation completed successfully")
 
     # validate integer and numeric vlaues
