@@ -92,7 +92,7 @@ def get_enum_string_property_array(model_instance: "MDFReader.model") -> list[st
         for prop in node_instance.props:
             if (
                 isinstance(node_instance.props[prop].values, list)
-                and node_instance.props[prop].is_strict
+                and not node_instance.props[prop].is_strict
             ):
                 enum_string_props.append(prop)
             else:
@@ -281,9 +281,15 @@ def runner_dcc(
             dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
             print("dcc mdf model created")
             enum_props_dict = get_enum_props_dict(dcc_model)
-            enum_strict_props = get_enum_string_property_array(dcc_model)
+            enum_string_props = get_enum_string_property_array(dcc_model)
             model_rel_list = get_rel_from_mdf(dcc_model)
-            validation_out_file = ValidationRy_new(catcherr_out_file, input_template, enum_props_dict, enum_strict_props, model_rel_list)
+            validation_out_file = ValidationRy_new(
+                file_path=catcherr_out_file,
+                template_path=input_template,
+                enum_props_dict=enum_props_dict,
+                enum_string_props=enum_string_props,
+                model_rel_list=model_rel_list
+            )
         except Exception as e:
             validation_out_file = None
             raise e # stop flow at here if Validation fails
