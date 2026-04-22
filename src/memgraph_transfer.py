@@ -136,7 +136,7 @@ def export_indices(tx):
         indices.append({
             "label": record["label"],
             "property": record["property"],
-            "type": record["type"]
+            "index_type": record["index_type"]
         })
     return indices
 
@@ -194,7 +194,7 @@ def export_memgraph_curation(
     for index in indices:
         label = index["label"]
         property = index["property"]
-        index_type = index["type"].lower()
+        index_type = index["index_type"].lower()
 
         if "edge" in index_type:
             # CREATE EDGE INDEX ON :label
@@ -259,7 +259,7 @@ def _wipe_database(session, logger):
         for index in indexes:
             label = index["label"]
             property = index["property"]
-            index_type = index["type"]
+            index_type = index["index_type"].lower()
 
             logger.info(f"Dropping index: {index_type} on label: {label} property: {property}")
 
