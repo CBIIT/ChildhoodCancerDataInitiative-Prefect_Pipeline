@@ -248,8 +248,10 @@ def _wipe_database(session, logger):
     """Deletes all nodes, relationships and indexes from the database."""
     logger.warning("Wiping Memgraph database: deleting all nodes, relationships, and indexes...")
     try:
+        logger.info("Deleting all nodes and relationships...")
         session.run("MATCH (n) DETACH DELETE n;")
         
+        logger.info("Dropping all indexes...")
         # Fetch all indexes
         indexes = list(session.run("SHOW INDEX INFO;").data())
 
@@ -258,6 +260,8 @@ def _wipe_database(session, logger):
             label = index["label"]
             property = index["property"]
             index_type = index["type"]
+
+            logger.info(f"Dropping index: {index_type} on label: {label} property: {property}")
 
             if "edge" in index_type.lower():
                 # Edge index: CREATE EDGE INDEX ON :label
@@ -269,10 +273,10 @@ def _wipe_database(session, logger):
                 # Label index: CREATE INDEX ON :label
                 query = f"DROP INDEX ON :{label};"
 
-            print(f"Running: {query}")
+            logger.info(f"Running: {query}")
             session.run(query)
 
-        print("All indexes dropped.")
+        logger.info("All indexes dropped.")
         logger.info("Database wipe complete. All nodes, relationships, and indexes removed.")
     except Exception as e:
         logger.error(f"Error wiping database: {e}")
