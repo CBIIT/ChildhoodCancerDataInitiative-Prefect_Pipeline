@@ -129,6 +129,26 @@ def export_relationships(tx):
         )
     return rels
 
+def export_indicies(tx):
+    query = """
+    CALL db.indexes() YIELD name, type, entityType, labelsOrTypes, properties
+    RETURN name, type, entityType, labelsOrTypes, properties
+    """
+    result = tx.run(query)
+
+    indices = []
+    for record in result:
+        indices.append(
+            {
+                "name": record["name"],
+                "type": record["type"],
+                "entityType": record["entityType"],
+                "labelsOrTypes": record["labelsOrTypes"],
+                "properties": record["properties"],
+            }
+        )
+    return indices
+
 
 @task(cache_policy=NO_CACHE, name="export_memgraph_curation")
 def export_memgraph_curation(
@@ -176,6 +196,14 @@ def export_memgraph_curation(
         cypher_lines.append(
             f"CREATE ({start_var})-[:{rel['type']} {props}]->({end_var});"
         )
+        total_statements += 1
+
+    # --- CREATE INDEXES ---
+    indices = session.execute_read(export_indicies)
+    for index in indices:
+        labels_or_types = ":".join(index["labelsOrTypes"])
+        properties = format_properties({prop: None for prop in index["properties"]})
+        cypher_lines.append(f"CREATE {index['type']} INDEX ON :{labels_or_types} {properties};")
         total_statements += 1
 
     # --- WRITE FILE ---
