@@ -137,7 +137,7 @@ def export_indices(tx):
         indices.append({
             "label": record["label"],
             "property": record["property"],
-            "index_type": record["index_type"]
+            "index_type": record["index type"]
         })
     return indices
 
@@ -262,9 +262,9 @@ def _wipe_database(session, logger):
         for index in indexes:
             label = index["label"]
             property = index["property"]
-            index_type = index["index_type"].lower()
+            index_type = index["index type"].lower()
 
-            logger.info(f"Dropping index: {index_type} on label: {label} property: {property}")
+            logger.info(f"Dropping index: {index['index type']} on label: {label} property: {property}")
 
             if "edge" in index_type.lower():
                 # Edge index: CREATE EDGE INDEX ON :label
