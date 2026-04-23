@@ -132,6 +132,8 @@ def export_relationships(tx):
 def export_indices(tx):
     logger = get_run_logger()
     result = list(tx.run("SHOW INDEX INFO;").data())
+    logger.info(f"SHOW INDEX INFO returned {len(result)} records.")
+    logger.info(result)
     indices = []
     if result:
         logger.info(f"Found {len(result)} indexes in the database.")
