@@ -202,8 +202,9 @@ def export_memgraph_curation(
             # CREATE EDGE INDEX ON :label
             cypher_lines.append(f"CREATE EDGE INDEX ON :{label};")
         elif property:
-            # CREATE INDEX ON :label(property)
-            cypher_lines.append(f"CREATE INDEX ON :{label}({property});")
+            # Handle property being either a list or a string
+            prop = property[0] if isinstance(property, list) else property
+            cypher_lines.append(f"CREATE INDEX ON :{label}({prop});")
         else:
             # CREATE INDEX ON :label
             cypher_lines.append(f"CREATE INDEX ON :{label};")
