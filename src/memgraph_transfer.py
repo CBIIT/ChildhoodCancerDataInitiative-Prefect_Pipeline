@@ -114,40 +114,42 @@ def export_nodes(tx):
 def export_relationships(tx):
     logger = get_run_logger()
     logger.info("Exporting relationships for nodes with promotion_status 'Promote'...")
-    # THIS WILL NEED TO BE CHANGED LATER
-    # THIS IS UNDER THE ASSUMPTION THAT PROMOTION_STATUS IS A LIST
-    # IT SHOULD ONLY BE A STRING, BUT THIS WON'T CHANGE UNTIL DCC 2.0.0
     query = """
     MATCH (st:study)-[*1..5]-(n)
     WHERE "Promote" in st.promotion_status
     WITH DISTINCT n
     MATCH (n)-[r]-(m)
-    RETURN DISTINCT r
+    RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
     """
-    result = tx.run(query)
+    # Exhaust into a list ONCE so we can get the count and iterate
+    result = list(tx.run(query))
 
     rels = []
     counter = 0
-    counter_total = len(list(result))
+    counter_total = len(result)
+    log_interval = max(1, counter_total // 100)
     logger.info(f"Total relationships to process: {counter_total}")
+
     for record in result:
         r = record["r"]
+        start_node = record["start_node"]
+        end_node = record["end_node"]
         counter += 1
         try:
             rels.append(
                 {
-                    "start": r.start_node.id,
-                    "end": r.end_node.id,
+                    "start": start_node.id,
+                    "end": end_node.id,
                     "type": r.type,
                     "properties": dict(r),
                 }
             )
         except Exception as e:
             logger.warning(f"Failed to process relationship record #{counter}: {record}. Error: {e}")
-        
-        # Create a counter that logs progress every 1% processed based on the total number of relationships expected (if available)
-        if counter_total > 0 and counter % (counter_total // 100) == 0:
-            logger.info(f"Processed {counter} relationships so far...")
+
+        if counter_total > 0 and counter % log_interval == 0:
+            logger.info(f"Processed {counter}/{counter_total} relationships...")
+
     return rels
 
 @task(cache_policy=NO_CACHE, name="export_indices")
