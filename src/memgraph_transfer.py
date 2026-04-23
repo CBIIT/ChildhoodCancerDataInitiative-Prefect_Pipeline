@@ -130,9 +130,15 @@ def export_relationships(tx):
     return rels
 
 def export_indices(tx):
+    logger = get_run_logger()
     result = list(tx.run("SHOW INDEX INFO;").data())
     indices = []
+    if result:
+        logger.info(f"Found {len(result)} indexes in the database.")
+        logger.info("Index details:")
+        logger.info(result[0].keys())
     for record in result:
+        logger.info(f"Processing index: {record}")
         indices.append({
             "label": record["label"],
             "property": record["property"],
