@@ -272,7 +272,6 @@ def _wipe_database(session, logger):
                 query = f"DROP EDGE INDEX ON :{label};"
             elif property:
                 prop = property[0] if isinstance(property, list) else property
-                logger.info(f"Dropping property index on label: {label} property: {prop}")
                 query = f"DROP INDEX ON :{label}({prop});"
             else:
                 # Label index: CREATE INDEX ON :label
