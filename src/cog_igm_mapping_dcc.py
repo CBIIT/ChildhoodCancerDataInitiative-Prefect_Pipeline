@@ -98,7 +98,7 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
     if "treatment_surgery" in node_outputs:
         # filter out rows where surgery_type is Not Applicable
         treatment_surgery_df = node_outputs["treatment_surgery"]
-        treatment_surgery_df = treatment_surgery_df[~((treatment_surgery_df["surgery_type"] == "Not Applicable") & (treatment_surgery_df["surgery_type"].notna()))]
+        treatment_surgery_df = treatment_surgery_df[~((treatment_surgery_df["surgery_type"] == "Not Applicable") & (treatment_surgery_df["surgery_type"].notna() & (treatment_surgery_df["surgery_type"] != "")))]
         node_outputs["treatment_surgery"] = treatment_surgery_df
     
     if "treatment_chemotherapy" in node_outputs:
@@ -158,6 +158,8 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
             empty_df = pd.DataFrame(columns=manifest_df.columns)
             # strip whitespace from column names in node_outputs df
             df.columns = df.columns.str.strip()
+            # reorder df cols to match manifest sheet cols, 
+            df = df.reindex(columns=manifest_df.columns)
             # strip whitespace from column names in manifest_df
             manifest_df.columns = manifest_df.columns.str.strip()
             # concat data from node_outputs to empty_df to ensure same columns

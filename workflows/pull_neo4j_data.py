@@ -6,7 +6,7 @@ from typing import Union
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.neo4j_data_tools import query_db_to_csv, convert_csv_to_tsv
-from src.utils import get_time, folder_ul
+from src.utils import get_time, folder_ul, get_secret_centralized_worker
 
 
 @flow(
@@ -17,19 +17,23 @@ from src.utils import get_time, folder_ul
 def pull_neo4j_data(
     bucket: str,
     runner: str,
-    uri_parameter: str = "uri",
-    username_parameter: str = "username",
-    password_parameter: str = "password",
-    study_id_list: Union[list[str], None] = None
+    database_account_id: str,
+    database_secret_path: str,
+    database_secret_key_ip: str,
+    database_secret_key_username: str,
+    database_secret_key_password: str,
+    study_id_list: Union[list[str], None] = None,
 ):
     """Pipeline that pulls ingested studies from a Neo4j database. Default pulls all studies unless a single study phs ID provided. 
 
     Args:
         bucket (str): Bucket name of where output goes to
         runner (str): Unique runner name
-        uri_parameter (str, optional): uri parameter. Defaults to "uri".
-        username_parameter (str, optional): username parameter. Defaults to "username".
-        password_parameter (str, optional): password parameter. Defaults to "password".
+        database_account_id (str): database account id
+        database_secret_path (str): database secret path
+        database_secret_key_ip (str): database secret key for ip
+        database_secret_key_username (str): database secret key for username
+        database_secret_key_password (str): database secret key for password
         study_id_list (list[str], optional): List of Study IDs to pull data for multiple study pulls. If None, the pipeline pulls all the studies. Defaults to None.
     """    
     logger = get_run_logger()
@@ -38,13 +42,31 @@ def pull_neo4j_data(
     # destination in the bucket
     bucket_folder = runner + "/db_data_pull_outputs_" + get_time()
 
+    logger.info("Getting uri, username and password parameter from AWS")
+    # get uri, username, and password value
+    uri = get_secret_centralized_worker(
+        secret_path_name=database_secret_path,
+        secret_key_name=database_secret_key_ip,
+        account=database_account_id,
+    )
+    username = get_secret_centralized_worker(
+        secret_path_name=database_secret_path,
+        secret_key_name=database_secret_key_username,
+        account=database_account_id,
+    )
+    password = get_secret_centralized_worker(
+        secret_path_name=database_secret_path,
+        secret_key_name=database_secret_key_password,
+        account=database_account_id,
+    )
+
     # pulling data from DB
     logger.info("Starting pulling data from neo4j DB")
     db_data_folder = query_db_to_csv(
         output_dir="./pulled_db_csv",
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
+        db_uri=uri,
+        db_username=username,
+        db_password=password,
         study_id_list=study_id_list
     )
 

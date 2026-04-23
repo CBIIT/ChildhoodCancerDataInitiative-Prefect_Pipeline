@@ -44,6 +44,13 @@ def sample_mapper(manifest_path: str):
     Returns:
         None
     """
+    # read in clinical_measure_file
+    clin_tab = pd.read_excel(manifest_path, sheet_name='clinical_measure_file')
+    
+    # Check if all rows have sample.sample_id filled - if so, return early
+    if clin_tab['sample.sample_id'].notna().all():
+        return None
+    
     seq_tab = pd.read_excel(manifest_path, sheet_name='sequencing_file')
     
     seq_tab = seq_tab[seq_tab.file_type == 'pdf']
@@ -79,22 +86,15 @@ def sample_mapper(manifest_path: str):
 
     # merge seq_tab with sample_tab
     seq_tab = seq_tab.merge(sample_tab, left_on='sample.sample_id', right_on='sample_id', how='left')
-
-    # read in clinical_measure_file
-    clin_tab = pd.read_excel(manifest_path, sheet_name='clinical_measure_file')
     
-    # if all of sample.sample_id col is empty, drop the column
-    if clin_tab['sample.sample_id'].isna().all():
-        clin_tab = clin_tab.drop(columns=['sample.sample_id'])
-        clin_tab_filled = pd.DataFrame()
-
-    else:
-        # assign clin tab with sample data already populated to clin_tab_filled
-        clin_tab_filled = clin_tab[~clin_tab['sample.sample_id'].isna()]
-        
-        # assign clin tab rows with no sample data to clin_tab and drop sample.sample_id
-        clin_tab = clin_tab[clin_tab['sample.sample_id'].isna()]
-        clin_tab = clin_tab.drop(columns=['sample.sample_id'])
+    # Separate rows that already have sample.sample_id filled
+    clin_tab_filled = clin_tab[clin_tab['sample.sample_id'].notna()]
+    
+    # Only process rows that don't have sample.sample_id
+    clin_tab = clin_tab[clin_tab['sample.sample_id'].isna()]
+    
+    # Drop the sample.sample_id column from unfilled rows since we'll be populating it
+    clin_tab = clin_tab.drop(columns=['sample.sample_id'])
 
     for index, row in clin_tab.iterrows():
         if 'archer_fusion' in row['file_name']:
@@ -325,3 +325,114 @@ def json_downloader(manifest: pd.DataFrame, dups: list, logger):
     
     return downloads.result()
 
+@task(
+    name="Percent Necrosis and Tumor Content Fill In", 
+    log_prints=True,
+)
+def percent_necrosis_tumor_fill_in(output_path: str, manifest_path: str, decoded_tsv_path: list[str], runner_logger):
+    """Function for filling in percent necrosis and tumor content data from decoded TSVs back into manifest clinical_measure_file sheet and outputting updated manifest to output path
+
+    Args:
+        output_path (str): Path to output directory for intermediate files
+        manifest_path (str): Path to manifest file
+        decoded_tsv_path (list[str]): List of paths to decoded TSVs to parse for percent necrosis and tumor content data
+        runner_logger: Logger object for logging messages
+    """
+    runner_logger.info("Starting percent necrosis and tumor content fill in process.")
+    # read in clin measure file sheet of manifest to df for mapping of subject_id to sample
+    clin_df = pd.read_excel(manifest_path, sheet_name="clinical_measure_file", engine="openpyxl")[["participant.participant_id", "sample.sample_id", "data_category"]]
+    
+    # drop cols with no sample.sample_id data
+    clin_df = clin_df.dropna(subset=['sample.sample_id'])
+    
+    # pandas one liner to replace data_category that contains the string 'Methylation' nested in a string with 'methylation' in clin_df
+    clin_df.loc[clin_df['data_category'].str.contains('Methylation', na=False), 'data_category'] = 'methylation'
+    clin_df.loc[clin_df['data_category'].str.contains('Gene Fusion', na=False), 'data_category'] = 'archer_fusion'
+    clin_df.loc[clin_df['data_category'].str.contains('Tumor Normal', na=False), 'data_category'] = 'tumor_normal'
+    
+    # for each decoded TSV, parse subject_id, percent_necrosis and percent_tumor content data
+    # and concat into one df then drop duplicates
+    parsed_data = pd.DataFrame()
+    for tsv in decoded_tsv_path:
+        tsv_df = pd.read_csv(tsv, sep="\t", low_memory=False)
+        tsv_df = tsv_df[["subject_id", "report_type", "percent_necrosis", "percent_tumor"]]
+        parsed_data = pd.concat([parsed_data, tsv_df], ignore_index=True)
+    parsed_data = parsed_data.drop_duplicates()
+    
+    # merge parsed_data with clin_df on subject_id and data_category to map percent necrosis and tumor content data to sample.sample_id in clin_df
+    merged_df = clin_df.merge(parsed_data, left_on=['participant.participant_id', 'data_category'], right_on=['subject_id', 'report_type'], how='left')
+    
+    # drop subject_id, report_type, data_category cols
+    merged_df = merged_df.drop(columns=['subject_id', 'report_type', 'data_category'])
+    
+    # drop rows with null percent_necrosis and percent_tumor data
+    merged_df = merged_df.dropna(subset=['percent_necrosis', 'percent_tumor'], how='all')
+    
+    # save raw merged_df to output path for reference
+    merged_df.to_csv(f"{output_path}/merged_percent_necrosis_tumor_data.csv", index=False)
+    
+    def refine_percent_necrosis_tumor(val):
+        
+        if type(val) == float or type(val) == int:
+            return val
+        
+        # strip white space and replace any spaces with empty string
+        val_fmt = val.strip().replace(" ", "")
+        
+        #remove chars +, ~, < and > using regex
+        val_fmt = re.sub(r'[+~<>]', '', val_fmt)
+        
+        # if - in val, take midpoint of the two numbers on either side of the dash as the value
+        if '-' in val_fmt:
+            try:
+                low, high = val_fmt.split('-')
+                low = float(low)
+                high = float(high)
+                val_fmt = (low + high) / 2
+            except ValueError:
+                # if there is an error converting to float, return orignal value
+                runner_logger.warning(f"Value {val} could not be converted to float after formatting, returning original value.")
+                return val
+        else:
+            try:
+                val_fmt = float(val_fmt)
+            except ValueError:
+                # if there is an error converting to float, return orignal value
+                runner_logger.warning(f"Value {val} could not be converted to float after formatting, returning original value.")
+                return val
+
+        return val_fmt
+
+    # apply refine_percent_necrosis_tumor to percent_necrosis and percent_tumor columns
+    merged_df['percent_necrosis'] = merged_df['percent_necrosis'].apply(refine_percent_necrosis_tumor)
+    merged_df['percent_tumor'] = merged_df['percent_tumor'].apply(refine_percent_necrosis_tumor)
+    
+    # read in sample sheet
+    sample_df = pd.read_excel(manifest_path, sheet_name="sample", engine="openpyxl")
+    
+    # set sample_id and participant_id as string to avoid issues with leading zeros
+    sample_df['sample_id'] = sample_df['sample_id'].astype(str)
+    merged_df['sample.sample_id'] = merged_df['sample.sample_id'].astype(str)
+    sample_df['participant.participant_id'] = sample_df['participant.participant_id'].astype(str)
+    merged_df['participant.participant_id'] = merged_df['participant.participant_id'].astype(str)
+    
+    # grab col order of sample_df to reset after merge
+    col_order = sample_df.columns.tolist()
+    
+    # merge merged_df with sample_df on sample.sample_id to map percent necrosis and tumor content data to sample_id in sample sheet
+    # do not overwrite existing percent necrosis and tumor content data in sample sheet, only fill in where sample sheet has null values and merged_df has data
+    # using combine_first()
+    sample_df = sample_df.merge(merged_df, left_on=['participant.participant_id', 'sample_id'], right_on=['participant.participant_id', 'sample.sample_id'], how='left')
+    sample_df['percent_necrosis'] = sample_df['percent_necrosis_x'].combine_first(sample_df['percent_necrosis_y'])
+    sample_df['percent_tumor'] = sample_df['percent_tumor_x'].combine_first(sample_df['percent_tumor_y'])
+    
+    # reset col order, auto drop unneeded cols from merge
+    sample_df = sample_df[col_order]
+    
+    # dedupe sample_df on participant.participant_id and sample_id, keeping the first non-null percent_necrosis and percent_tumor values
+    sample_df = sample_df.sort_values(by=['percent_necrosis', 'percent_tumor'], na_position='last').drop_duplicates(subset=['participant.participant_id', 'sample_id'], keep='first').reset_index(drop=True)
+    
+    # save to manifest
+    with pd.ExcelWriter(manifest_path, engine="openpyxl", mode="a", if_sheet_exists="overlay") as writer:
+        sample_df.drop_duplicates().to_excel(writer, sheet_name="sample", index=False, header=False, startrow=1)
+    runner_logger.info("Finished percent necrosis and tumor content fill in process.")

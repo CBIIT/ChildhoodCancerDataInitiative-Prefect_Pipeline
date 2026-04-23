@@ -1419,9 +1419,9 @@ def db_validation_md(
 @flow
 def query_db_to_csv(
     output_dir: str,
-    uri_parameter: str,
-    username_parameter: str,
-    password_parameter: str,
+    db_uri: str,
+    db_username: str,
+    db_password: str,
     study_id_list: Union[list[str], None] = None,
 ) -> str:
     """It export one csv file for each unique node.
@@ -1435,18 +1435,18 @@ def query_db_to_csv(
     # create the output dir if not exist
     os.makedirs(output_dir, exist_ok=True)
 
-    logger.info("Getting uri, username and password parameter from AWS")
-    # get uri, username, and password value
-    uri, username, password = cypher_query_parameters(
-        uri_parameter=uri_parameter,
-        username_parameter=username_parameter,
-        password_parameter=password_parameter,
-        logger=logger,
-    )
+    #logger.info("Getting uri, username and password parameter from AWS")
+    ## get uri, username, and password value
+    #uri, username, password = cypher_query_parameters(
+    #    uri_parameter=uri_parameter,
+    #    username_parameter=username_parameter,
+    #    password_parameter=password_parameter,
+    #    logger=logger,
+    #)
 
     # driver instance
     logger.info("Creating GraphDatabase driver using uri, username, and password")
-    driver = GraphDatabase.driver(uri, auth=(username, password))
+    driver = GraphDatabase.driver(db_uri, auth=(db_username, db_password))
 
     # fetch unique nodes and unique studies
     logger.info("Fetching all unique nodes in DB")

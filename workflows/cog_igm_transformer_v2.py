@@ -17,7 +17,7 @@ import logging
 from pathlib import Path
 
 # utils
-from src.cog_igm_utils import manifest_reader, json_downloader
+from src.cog_igm_utils import manifest_reader, json_downloader, percent_necrosis_tumor_fill_in
 from src.utils import get_time, folder_ul, file_dl, get_date, get_logger
 from src.cog_igm_mapping_dcc import cog_igm_dcc_mapping_transform
 from prefect import flow, get_run_logger
@@ -206,6 +206,14 @@ def cog_igm_transform(
             runner_logger.warning(f"Decoded COG TSV not found in {output_path}/COG/, cannot run COG mapping to DCC model.")
             logger.warning(f"Decoded COG TSV not found in {output_path}/COG/, cannot run COG mapping to DCC model.")
     
+    # percent_tumor and percent_necrosis fill in 
+    if form_parsing in ["igm_only", "cog_and_igm"]:
+        if os.path.exists(f"{output_path}/IGM/") and len([i for i in os.listdir(f"{output_path}/IGM/") if i.endswith('.tsv')]) > 0: # check decoded IGM TSV exists before running fill in step
+            percent_files = [f"{output_path}/IGM/{i}" for i in os.listdir(f"{output_path}/IGM/") if i.endswith('.tsv') and '_JSON_table_conversion' in i]
+            percent_necrosis_tumor_fill_in(output_path, local_manifest_path, percent_files, runner_logger)
+        else:
+            runner_logger.warning(f"Decoded IGM TSVs not found in {output_path}/IGM/, cannot run percent necrosis and tumor content fill in.")
+            logger.warning(f"Decoded IGM TSVs not found in {output_path}/IGM/, cannot run percent necrosis and tumor content fill in.")
     
     end_time = datetime.now()
     time_diff = end_time - start_time
