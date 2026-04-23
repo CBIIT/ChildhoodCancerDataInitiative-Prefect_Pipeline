@@ -130,17 +130,10 @@ def export_relationships(tx):
     return rels
 
 def export_indices(tx):
-    logger = get_run_logger()
     result = list(tx.run("SHOW INDEX INFO;").data())
-    logger.info(f"SHOW INDEX INFO returned {len(result)} records.")
-    logger.info(result)
+
     indices = []
-    if result:
-        logger.info(f"Found {len(result)} indexes in the database.")
-        logger.info("Index details:")
-        logger.info(result[0].keys())
     for record in result:
-        logger.info(f"Processing index: {record}")
         indices.append({
             "label": record["label"],
             "property": record["property"],
@@ -199,6 +192,7 @@ def export_memgraph_curation(
 
     # --- CREATE INDEXES ---
     indices = session.execute_read(export_indices)
+    logger.info(indices)
     for index in indices:
         label = index["label"]
         property = index["property"]
@@ -222,7 +216,7 @@ def export_memgraph_curation(
             f.write(line + "\n")
 
         logger.info(
-            f"Export complet {output_file}.\n\n Total statements exported: {total_statements}"
+            f"Export complete {output_file}.\n\n Total statements exported: {total_statements}"
         )
 
     driver.close()
