@@ -247,6 +247,7 @@ def _execute_batch(session, queries, logger):
 # ------------------------------------------------------------------
 # INTERNAL TASK: WIPE DATABASE
 # ------------------------------------------------------------------
+@task(cache_policy=NO_CACHE, name="wipe_memgraph_database")
 def _wipe_database(session, logger):
     """Deletes all nodes, relationships and indexes from the database."""
     logger.warning("Wiping Memgraph database: deleting all nodes, relationships, and indexes...")
