@@ -114,8 +114,14 @@ def export_nodes(tx):
 def export_relationships(tx):
     logger = get_run_logger()
     logger.info("Exporting relationships for nodes with promotion_status 'Promote'...")
+    # THIS WILL NEED TO BE CHANGED LATER
+    # THIS IS UNDER THE ASSUMPTION THAT PROMOTION_STATUS IS A LIST
+    # IT SHOULD ONLY BE A STRING, BUT THIS WON'T CHANGE UNTIL DCC 2.0.0
     query = """
-    MATCH (st:study {promotion_status: "Promote"})-[r]->(n)
+    MATCH (st:study)-[*1..5]-(n)
+    WHERE "Promote" in st.promotion_status
+    WITH DISTINCT n
+    MATCH (n)-[r]-(m)
     RETURN DISTINCT r
     """
     result = tx.run(query)
