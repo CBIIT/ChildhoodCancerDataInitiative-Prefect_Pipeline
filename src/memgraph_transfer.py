@@ -115,7 +115,7 @@ def export_relationships(tx):
     logger = get_run_logger()
     logger.info("Exporting relationships for nodes with promotion_status 'Promote'...")
     query = """
-    MATCH (st:study)-[*1..5]-(n)
+    MATCH (st:study)-[*0..]-(n)
     WHERE "Promote" in st.promotion_status
     WITH DISTINCT n
     MATCH (n)-[r]-(m)
