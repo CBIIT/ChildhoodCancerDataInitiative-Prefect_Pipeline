@@ -257,7 +257,7 @@ def _wipe_database(session, logger):
         # Fetch all indexes
         indexes = list(session.run("SHOW INDEX INFO;").data())
         logger.info(f"Found {len(indexes)} indexes to drop.")
-        logger.debug(f"Indexes details: {indexes}")
+        logger.info(f"Indexes details: {indexes}")
         # Drop each index based on its type
         for index in indexes:
             label = index["label"]
