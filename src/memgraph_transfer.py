@@ -128,7 +128,7 @@ def export_relationships(tx):
 
     rels = []
     counter = 0
-    counter_total = len(result.peek())
+    counter_total = len(result)
     logger.info(f"Total relationships to process: {counter_total}")
     for record in result:
         r = record["r"]
