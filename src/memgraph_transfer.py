@@ -94,7 +94,7 @@ def format_properties(props):
 def format_labels(labels):
     return ":" + ":".join(labels) if labels else ""
 
-
+@task(cache_policy=NO_CACHE, name="export_nodes")
 def export_nodes(tx):
     logger = get_run_logger()
     logger.info("Exporting nodes with promotion_status 'Promote' and their connected nodes...")
@@ -110,7 +110,7 @@ def export_nodes(tx):
         nodes.append({"id": n.id, "labels": list(n.labels), "properties": dict(n)})
     return nodes
 
-
+@task(cache_policy=NO_CACHE, name="export_relationships")
 def export_relationships(tx):
     logger = get_run_logger()
     logger.info("Exporting relationships for nodes with promotion_status 'Promote'...")
@@ -127,18 +127,29 @@ def export_relationships(tx):
     result = tx.run(query)
 
     rels = []
+    counter = 0
+    counter_total = len(result.peek())
     for record in result:
         r = record["r"]
-        rels.append(
-            {
-                "start": r.start_node.id,
-                "end": r.end_node.id,
-                "type": r.type,
-                "properties": dict(r),
-            }
-        )
+        counter += 1
+        try:
+            rels.append(
+                {
+                    "start": r.start_node.id,
+                    "end": r.end_node.id,
+                    "type": r.type,
+                    "properties": dict(r),
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to process relationship record #{counter}: {record}. Error: {e}")
+        
+        # Create a counter that logs progress every 1% processed based on the total number of relationships expected (if available)
+        if counter_total > 0 and counter % (counter_total // 100) == 0:
+            logger.info(f"Processed {counter} relationships so far...")
     return rels
 
+@task(cache_policy=NO_CACHE, name="export_indices")
 def export_indices(tx):
     logger = get_run_logger()
     logger.info("Exporting index information...")
