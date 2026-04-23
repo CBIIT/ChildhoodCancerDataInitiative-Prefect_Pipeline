@@ -96,6 +96,8 @@ def format_labels(labels):
 
 
 def export_nodes(tx):
+    logger = get_run_logger()
+    logger.info("Exporting nodes with promotion_status 'Promote' and their connected nodes...")
     query = """
     MATCH (st:study {promotion_status: "Promote"})-[*0..]-(n)
     RETURN DISTINCT n
@@ -110,6 +112,8 @@ def export_nodes(tx):
 
 
 def export_relationships(tx):
+    logger = get_run_logger()
+    logger.info("Exporting relationships for nodes with promotion_status 'Promote'...")
     query = """
     MATCH (st:study {promotion_status: "Promote"})-[r]->(n)
     RETURN DISTINCT r
@@ -130,6 +134,8 @@ def export_relationships(tx):
     return rels
 
 def export_indices(tx):
+    logger = get_run_logger()
+    logger.info("Exporting index information...")
     result = list(tx.run("SHOW INDEX INFO;").data())
 
     indices = []
