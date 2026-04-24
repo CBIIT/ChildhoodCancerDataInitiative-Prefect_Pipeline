@@ -84,7 +84,7 @@ def pull_neo4j_join_manifest_single_study(
     database_secret_key_username: str,
     database_secret_key_password: str,
     study_id: str,
-    dcc_template_tag: str,
+    ccdi_template_tag: str,
 ):
     """Pipeline that pulls ingested study from a Neo4j database for study phs ID provided.
 
@@ -97,7 +97,7 @@ def pull_neo4j_join_manifest_single_study(
         database_secret_key_username (str): Key name for the username in the secret
         database_secret_key_password (str): Key name for the password in the secret
         study_id (str): The study ID to pull data for.
-        dcc_template_tag (str): Tag name of the DCC template
+        ccdi_template_tag (str): Tag name of the DCC template
     """
 
     logger = get_run_logger()
@@ -126,7 +126,7 @@ def pull_neo4j_join_manifest_single_study(
         bucket=bucket,
         runner=runner,
         tsv_folder_path=op_folder_path,
-        ccdi_template_tag=dcc_template_tag,
+        ccdi_template_tag=ccdi_template_tag,
     )
 
     return None
