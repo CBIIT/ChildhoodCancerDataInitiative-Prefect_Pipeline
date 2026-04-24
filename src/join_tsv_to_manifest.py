@@ -108,8 +108,8 @@ def unpack_folder_list(folder_path_list: list[str]):
     return unpacked_folder_list
 
 
-@task(name="Join tsv to Manifest", log_prints=True)
-def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) -> str:
+@task(name="Join tsv to CCDI Manifest", log_prints=True)
+def join_tsv_to_ccdi_manifest_single_study(file_list: list[str], manifest_path: str) -> str:
     logger = get_run_logger()
     # Remove the step of checking if only one phs is found under id column
     # Because the
@@ -192,14 +192,14 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
     return output_file_name
 
 
-@flow(name="Join tsv to Manifest Concurrently")
-def multi_studies_tsv_join(folder_path_list: list, manifest_path: str) -> list[str]:
+@flow(name="Join tsv to CCDI Manifest Concurrently")
+def multi_studies_tsv_join_ccdi(folder_path_list: list, manifest_path: str) -> list[str]:
     logger = get_run_logger()
     logger.info(f"Subfolder counts: {len(folder_path_list)}")
 
     unpacked_folder_list = unpack_folder_list(folder_path_list=folder_path_list)
     logger.info("Start creating manifest files concurrently")
-    manifest_outputs = join_tsv_to_manifest_single_study.map(
+    manifest_outputs = join_tsv_to_ccdi_manifest_single_study.map(
         unpacked_folder_list, manifest_path
     )
     return [i.result() for i in manifest_outputs]
