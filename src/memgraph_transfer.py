@@ -3,7 +3,7 @@ from neo4j import GraphDatabase
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
 import json
-from utils import get_date
+from src.utils import get_time
 
 
 # ------------------------------------------------------------------
@@ -95,6 +95,7 @@ def format_properties(props):
 def format_labels(labels):
     return ":" + ":".join(labels) if labels else ""
 
+
 @task(cache_policy=NO_CACHE, name="export_nodes")
 def export_nodes(session):
     logger = get_run_logger()
@@ -111,7 +112,7 @@ def export_nodes(session):
 
     nodes = []
     seen_node_ids = set()
-    log_file = f"nodes_export_{get_date()}.tsv"
+    log_file = f"nodes_export_{get_time()}.tsv"
 
     with open(log_file, "w") as f:
         f.write("study\tnode\tcount\n")
@@ -130,7 +131,9 @@ def export_nodes(session):
                     record["label"]
                     for record in session.run(label_query, study_id=study_id)
                 ]
-                logger.info(f"Found {len(labels)} node labels for study {study_id}: {labels}")
+                logger.info(
+                    f"Found {len(labels)} node labels for study {study_id}: {labels}"
+                )
             except Exception as e:
                 logger.error(f"Failed to fetch node labels for study {study_id}: {e}")
                 continue
@@ -156,19 +159,27 @@ def export_nodes(session):
                         new_count += 1
 
                         try:
-                            nodes.append({
-                                "id": n.id,
-                                "labels": list(n.labels),
-                                "properties": dict(n)
-                            })
+                            nodes.append(
+                                {
+                                    "id": n.id,
+                                    "labels": list(n.labels),
+                                    "properties": dict(n),
+                                }
+                            )
                         except Exception as e:
-                            logger.warning(f"Failed to process node: {record}. Error: {e}")
+                            logger.warning(
+                                f"Failed to process node: {record}. Error: {e}"
+                            )
 
-                    logger.info(f"Found {new_count} new nodes of label '{label}' for study {study_id}")
+                    logger.info(
+                        f"Found {new_count} new nodes of label '{label}' for study {study_id}"
+                    )
                     f.write(f"{study_id}\t{label}\t{new_count}\n")
 
                 except Exception as e:
-                    logger.error(f"Failed to process label '{label}' for study {study_id}: {e}")
+                    logger.error(
+                        f"Failed to process label '{label}' for study {study_id}: {e}"
+                    )
                     f.write(f"{study_id}\t{label}\tERROR\n")
                     continue
 
@@ -192,7 +203,7 @@ def export_relationships(session):
 
     rels = []
     seen_rel_ids = set()
-    log_file = f"relationships_export_{get_date()}.tsv"
+    log_file = f"relationships_export_{get_time()}.tsv"
 
     with open(log_file, "w") as f:
         f.write("study\trel_type\tcount\n")
@@ -210,14 +221,20 @@ def export_relationships(session):
                     record["rel_type"]
                     for record in session.run(rel_type_query, study_id=study_id)
                 ]
-                logger.info(f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}")
+                logger.info(
+                    f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}"
+                )
             except Exception as e:
-                logger.error(f"Failed to fetch relationship types for study {study_id}: {e}")
+                logger.error(
+                    f"Failed to fetch relationship types for study {study_id}: {e}"
+                )
                 continue
 
             # Step 3: Query one relationship type at a time
             for rel_type in rel_types:
-                logger.info(f"Processing relationship type '{rel_type}' for study {study_id}...")
+                logger.info(
+                    f"Processing relationship type '{rel_type}' for study {study_id}..."
+                )
                 query = """
                 MATCH (st:study {study_id: $study_id})-[*1..5]-(n)
                 WITH DISTINCT n
@@ -226,7 +243,9 @@ def export_relationships(session):
                 RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
                 """
                 try:
-                    result = list(session.run(query, study_id=study_id, rel_type=rel_type))
+                    result = list(
+                        session.run(query, study_id=study_id, rel_type=rel_type)
+                    )
                     new_count = 0
 
                     for record in result:
@@ -249,18 +268,25 @@ def export_relationships(session):
                                 }
                             )
                         except Exception as e:
-                            logger.warning(f"Failed to process relationship: {record}. Error: {e}")
+                            logger.warning(
+                                f"Failed to process relationship: {record}. Error: {e}"
+                            )
 
-                    logger.info(f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}")
+                    logger.info(
+                        f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}"
+                    )
                     f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
 
                 except Exception as e:
-                    logger.error(f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}")
+                    logger.error(
+                        f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}"
+                    )
                     f.write(f"{study_id}\t{rel_type}\tERROR\n")
                     continue
 
     logger.info(f"Total unique relationships exported: {len(rels)}")
     return rels, log_file
+
 
 @task(cache_policy=NO_CACHE, name="export_indices")
 def export_indices(session):
@@ -270,12 +296,15 @@ def export_indices(session):
 
     indices = []
     for record in result:
-        indices.append({
-            "label": record["label"],
-            "property": record["property"],
-            "index_type": record["index type"]
-        })
+        indices.append(
+            {
+                "label": record["label"],
+                "property": record["property"],
+                "index_type": record["index type"],
+            }
+        )
     return indices
+
 
 @task(cache_policy=NO_CACHE, name="export_memgraph_curation")
 def export_memgraph_curation(
@@ -387,11 +416,13 @@ def _execute_batch(session, queries, logger):
 @task(cache_policy=NO_CACHE, name="wipe_memgraph_database")
 def _wipe_database(session, logger):
     """Deletes all nodes, relationships and indexes from the database."""
-    logger.warning("Wiping Memgraph database: deleting all nodes, relationships, and indexes...")
+    logger.warning(
+        "Wiping Memgraph database: deleting all nodes, relationships, and indexes..."
+    )
     try:
         logger.info("Deleting all nodes and relationships...")
         session.run("MATCH (n) DETACH DELETE n;")
-        
+
         logger.info("Dropping all indexes...")
         # Fetch all indexes
         indexes = list(session.run("SHOW INDEX INFO;").data())
@@ -402,7 +433,9 @@ def _wipe_database(session, logger):
             property = index["property"]
             index_type = index["index type"].lower()
 
-            logger.info(f"Dropping index: {index['index type']} on label: {label} property: {property}")
+            logger.info(
+                f"Dropping index: {index['index type']} on label: {label} property: {property}"
+            )
 
             if "edge" in index_type.lower():
                 # Edge index: CREATE EDGE INDEX ON :label
@@ -418,7 +451,9 @@ def _wipe_database(session, logger):
             session.run(query)
 
         logger.info("All indexes dropped.")
-        logger.info("Database wipe complete. All nodes, relationships, and indexes removed.")
+        logger.info(
+            "Database wipe complete. All nodes, relationships, and indexes removed."
+        )
     except Exception as e:
         logger.error(f"Error wiping database: {e}")
         raise
