@@ -155,8 +155,6 @@ def export_relationships(session):
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
     # Step 1: Get all promote study IDs first
-        # PROMOTE IS CURRENTLY A LIST PROPERTY
-        # THIS WILL NEED TO BE UPDATED IN THE FUTURE ONCE WE UPDATE THE MODEL TO HAVE A STRING VALUE FOR PROMOTION STATUS
     study_query = """
     MATCH (st:study)
     WHERE "Promote" IN st.promotion_status
@@ -167,46 +165,64 @@ def export_relationships(session):
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
     rels = []
-    seen_rel_ids = set()  # Avoid duplicate relationships across studies
+    seen_rel_ids = set()
 
-    # Step 2: Loop through each study individually
     for study_id in study_ids:
         logger.info(f"Processing relationships for study: {study_id}...")
-        query = """
-        MATCH (st:study {study_id : $study_id})<-[*0..]-(n)
-        WITH DISTINCT n
-        MATCH (n)-[r]-(m)
-        RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
+
+        # Step 2: Get all relationship types present in this study
+        rel_type_query = """
+        MATCH (st:study {study_id : $study_id})<-[*0..]-(n)-[r]-(m)
+        RETURN DISTINCT type(r) AS rel_type
         """
         try:
-            result = list(session.run(query, study_id=study_id))
-            logger.info(f"Found {len(result)} relationships for study: {study_id}")
-
-            for record in result:
-                r = record["r"]
-                start_node = record["start_node"]
-                end_node = record["end_node"]
-
-                # Skip if we've already seen this relationship
-                if r.id in seen_rel_ids:
-                    continue
-                seen_rel_ids.add(r.id)
-
-                try:
-                    rels.append(
-                        {
-                            "start": start_node.id,
-                            "end": end_node.id,
-                            "type": r.type,
-                            "properties": dict(r),
-                        }
-                    )
-                except Exception as e:
-                    logger.warning(f"Failed to process relationship: {record}. Error: {e}")
-
+            rel_types = [
+                record["rel_type"]
+                for record in session.run(rel_type_query, study_id=study_id)
+            ]
+            logger.info(f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}")
         except Exception as e:
-            logger.error(f"Failed to process study {study_id}: {e}")
+            logger.error(f"Failed to fetch relationship types for study {study_id}: {e}")
             continue
+
+        # Step 3: Query one relationship type at a time
+        for rel_type in rel_types:
+            logger.info(f"Processing relationship type '{rel_type}' for study {study_id}...")
+            query = """
+            MATCH (st:study {study_id : $study_id})<-[*0..]-(n)
+            WITH DISTINCT n
+            MATCH (n)-[r]-(m)
+            WHERE type(r) = $rel_type
+            RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
+            """
+            try:
+                result = list(session.run(query, study_id=study_id, rel_type=rel_type))
+                logger.info(f"Found {len(result)} relationships of type '{rel_type}' for study {study_id}")
+
+                for record in result:
+                    r = record["r"]
+                    start_node = record["start_node"]
+                    end_node = record["end_node"]
+
+                    if r.id in seen_rel_ids:
+                        continue
+                    seen_rel_ids.add(r.id)
+
+                    try:
+                        rels.append(
+                            {
+                                "start": start_node.id,
+                                "end": end_node.id,
+                                "type": r.type,
+                                "properties": dict(r),
+                            }
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to process relationship: {record}. Error: {e}")
+
+            except Exception as e:
+                logger.error(f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}")
+                continue
 
     logger.info(f"Total unique relationships exported: {len(rels)}")
     return rels
