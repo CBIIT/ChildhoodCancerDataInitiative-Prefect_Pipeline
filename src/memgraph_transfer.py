@@ -208,10 +208,10 @@ def export_relationships(session):
     return rels
 
 @task(cache_policy=NO_CACHE, name="export_indices")
-def export_indices(tx):
+def export_indices(session):
     logger = get_run_logger()
     logger.info("Exporting index information...")
-    result = list(tx.run("SHOW INDEX INFO;").data())
+    result = list(session.run("SHOW INDEX INFO;").data())
 
     indices = []
     for record in result:
