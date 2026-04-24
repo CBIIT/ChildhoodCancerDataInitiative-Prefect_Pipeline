@@ -100,6 +100,8 @@ def export_nodes(session):
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
     # Step 1: Get all promote study IDs first
+        # PROMOTE IS CURRENTLY A LIST PROPERTY
+        # THIS WILL NEED TO BE UPDATED IN THE FUTURE ONCE WE UPDATE THE MODEL TO HAVE A STRING VALUE FOR PROMOTION STATUS
     study_query = """
     MATCH (st:study)
     WHERE "Promote" IN st.promotion_status
@@ -116,7 +118,7 @@ def export_nodes(session):
     for study_id in study_ids:
         logger.info(f"Processing nodes for study: {study_id}...")
         query = """
-        MATCH (st:study {study_id : $study_id})-[*0..]-(n)
+        MATCH (st:study {study_id : $study_id})<-[*0..]-(n)
         RETURN DISTINCT n
         """
         try:
@@ -153,6 +155,8 @@ def export_relationships(session):
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
     # Step 1: Get all promote study IDs first
+        # PROMOTE IS CURRENTLY A LIST PROPERTY
+        # THIS WILL NEED TO BE UPDATED IN THE FUTURE ONCE WE UPDATE THE MODEL TO HAVE A STRING VALUE FOR PROMOTION STATUS
     study_query = """
     MATCH (st:study)
     WHERE "Promote" IN st.promotion_status
@@ -169,7 +173,7 @@ def export_relationships(session):
     for study_id in study_ids:
         logger.info(f"Processing relationships for study: {study_id}...")
         query = """
-        MATCH (st:study {study_id : $study_id})-[*0..]-(n)
+        MATCH (st:study {study_id : $study_id})<-[*0..]-(n)
         WITH DISTINCT n
         MATCH (n)-[r]-(m)
         RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
