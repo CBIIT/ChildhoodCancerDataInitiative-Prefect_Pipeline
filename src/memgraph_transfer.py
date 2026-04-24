@@ -1,5 +1,6 @@
 from typing import Any
 from neo4j import GraphDatabase
+from neo4j.exceptions import TransactionError
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
 import json
@@ -109,6 +110,13 @@ def run_paginated_with_retry(session, query, params=None, page_size=1000, retrie
                 page = list(session.run(paginated_query, params or {}))
                 results.extend(page)
                 break
+            except TransactionError as e:
+                if attempt < retries - 1:
+                    logger.warning(f"Transaction error (attempt {attempt + 1}/{retries}) at SKIP {skip}, retrying in {delay}s... Error: {e}")
+                    time.sleep(delay * (attempt + 1))  # exponential backoff
+                else:
+                    logger.error(f"Transaction error after {retries} attempts at SKIP {skip}: {e}")
+                    return results  # return what we have so far rather than raising
             except Exception as e:
                 if attempt < retries - 1:
                     logger.warning(f"Query failed (attempt {attempt + 1}/{retries}) at SKIP {skip}, retrying in {delay}s... Error: {e}")
@@ -123,7 +131,7 @@ def run_paginated_with_retry(session, query, params=None, page_size=1000, retrie
     return results
 
 
-@task(cache_policy=NO_CACHE, name="export_nodes")
+@task(cache_policy=NO_CACHE, name="export_nodes", persist_result=False)
 def export_nodes(session):
     logger = get_run_logger()
     logger.info("Fetching studies with promotion_status 'Promote'...")
@@ -237,7 +245,7 @@ def export_nodes(session):
     return nodes, log_file
 
 
-@task(cache_policy=NO_CACHE, name="export_relationships")
+@task(cache_policy=NO_CACHE, name="export_relationships", persist_result=False)
 def export_relationships(session):
     logger = get_run_logger()
     logger.info("Fetching studies with promotion_status 'Promote'...")
@@ -334,7 +342,7 @@ def export_relationships(session):
     return rels, log_file
 
 
-@task(cache_policy=NO_CACHE, name="export_indices")
+@task(cache_policy=NO_CACHE, name="export_indices", persist_result=False)
 def export_indices(session):
     logger = get_run_logger()
     logger.info("Exporting index information...")
@@ -352,7 +360,7 @@ def export_indices(session):
     return indices
 
 
-@task(cache_policy=NO_CACHE, name="export_memgraph_curation")
+@task(cache_policy=NO_CACHE, name="export_memgraph_curation", persist_result=False)
 def export_memgraph_curation(
     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
 ) -> None:
