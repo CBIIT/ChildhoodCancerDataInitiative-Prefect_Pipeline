@@ -3,6 +3,8 @@ from neo4j import GraphDatabase
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
 import json
+
+from requests import session
 from src.utils import get_time
 import time
 
@@ -97,17 +99,29 @@ def format_labels(labels):
     return ":" + ":".join(labels) if labels else ""
 
 
-def run_with_retry(session, query, params=None, retries=3, delay=2):
-    logger=get_run_logger()
-    for attempt in range(retries):
-        try:
-            return list(session.run(query, params or {}))
-        except Exception as e:
-            if attempt < retries - 1:
-                logger.warning(f"Query failed (attempt {attempt + 1}/{retries}), retrying in {delay}s... Error: {e}")
-                time.sleep(delay)
-            else:
-                raise e
+def run_paginated_with_retry(session, query, params=None, page_size=1000, retries=3, delay=2):
+    logger = get_run_logger()
+    results = []
+    skip = 0
+    while True:
+        paginated_query = query + f" SKIP {skip} LIMIT {page_size}"
+        for attempt in range(retries):
+            try:
+                page = list(session.run(paginated_query, params or {}))
+                results.extend(page)
+                break
+            except Exception as e:
+                if attempt < retries - 1:
+                    logger.warning(f"Query failed (attempt {attempt + 1}/{retries}) at SKIP {skip}, retrying in {delay}s... Error: {e}")
+                    time.sleep(delay)
+                else:
+                    logger.error(f"Query failed after {retries} attempts at SKIP {skip}: {e}")
+                    raise e
+        if len(page) < page_size:
+            break
+        skip += page_size
+        time.sleep(0.5)
+    return results
 
 
 @task(cache_policy=NO_CACHE, name="export_nodes")
@@ -120,7 +134,7 @@ def export_nodes(session):
     WHERE "Promote" IN st.promotion_status
     RETURN st.study_id AS study_id
     """
-    studies = run_with_retry(session, study_query)
+    studies = run_paginated_with_retry(session, study_query)
     study_ids = [record["study_id"] for record in studies]
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
@@ -141,7 +155,7 @@ def export_nodes(session):
             RETURN DISTINCT label
             """
             try:
-                labels = [record["label"] for record in run_with_retry(session, label_query, {"study_id": study_id})]
+                labels = [record["label"] for record in run_paginated_with_retry(session, label_query, {"study_id": study_id})]
                 logger.info(
                     f"Found {len(labels)} node labels for study {study_id}: {labels}"
                 )
@@ -155,7 +169,7 @@ def export_nodes(session):
             RETURN st AS n
             """
             try:
-                study_result = run_with_retry(session, study_node_query, {"study_id": study_id})
+                study_result = run_paginated_with_retry(session, study_node_query, {"study_id": study_id})
                 new_count = 0
                 for record in study_result:
                     n = record["n"]
@@ -183,7 +197,7 @@ def export_nodes(session):
                 RETURN DISTINCT n
                 """
                 try:
-                    result = run_with_retry(session, query, {"study_id": study_id, "label": label})
+                    result = run_paginated_with_retry(session, query, {"study_id": study_id, "label": label})
                     new_count = 0
 
                     for record in result:
@@ -218,7 +232,7 @@ def export_nodes(session):
                     )
                     f.write(f"{study_id}\t{label}\tERROR\n")
                     continue
-                time.sleep(0.1)  # brief pause to avoid overwhelming the database
+                time.sleep(0.5)  # brief pause to avoid overwhelming the database
 
     logger.info(f"Total unique nodes exported: {len(nodes)}")
     return nodes, log_file
@@ -234,7 +248,7 @@ def export_relationships(session):
     WHERE "Promote" IN st.promotion_status
     RETURN st.study_id AS study_id
     """
-    studies = run_with_retry(session, study_query)
+    studies = run_paginated_with_retry(session, study_query)
     study_ids = [record["study_id"] for record in studies]
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
@@ -254,7 +268,7 @@ def export_relationships(session):
             RETURN DISTINCT type(r) AS rel_type
             """
             try:
-                rel_types = [record["rel_type"] for record in run_with_retry(session, rel_type_query, {"study_id": study_id})]
+                rel_types = [record["rel_type"] for record in run_paginated_with_retry(session, rel_type_query, {"study_id": study_id})]
                 logger.info(
                     f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}"
                 )
@@ -277,7 +291,7 @@ def export_relationships(session):
                 RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
                 """
                 try:
-                    result = run_with_retry(session, query, {"study_id": study_id, "rel_type": rel_type})
+                    result = run_paginated_with_retry(session, query, {"study_id": study_id, "rel_type": rel_type})
                     new_count = 0
 
                     for record in result:
@@ -315,7 +329,7 @@ def export_relationships(session):
                     )
                     f.write(f"{study_id}\t{rel_type}\tERROR\n")
                     continue
-                time.sleep(0.1)  # brief pause to avoid overwhelming the database
+                time.sleep(0.5)  # brief pause to avoid overwhelming the database
 
     logger.info(f"Total unique relationships exported: {len(rels)}")
     return rels, log_file
