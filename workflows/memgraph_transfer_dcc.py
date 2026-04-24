@@ -155,7 +155,12 @@ def memgraph_transfer_dcc(
         input_file = os.path.basename(output_file)
 
         import_memgraph(
-            uri_target, username_target, password_target, input_file = input_file, chunk_size = chunk_size, wipe_db = wipe_db
+            uri_target,
+            username_target,
+            password_target,
+            input_file=input_file,
+            chunk_size=chunk_size,
+            wipe_db=wipe_db,
         )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
@@ -179,7 +184,12 @@ def memgraph_transfer_dcc(
         input_file = os.path.basename(output_file)
 
         import_memgraph(
-            uri_target, username_target, password_target, input_file = input_file, chunk_size = chunk_size, wipe_db = wipe_db
+            uri_target,
+            username_target,
+            password_target,
+            input_file=input_file,
+            chunk_size=chunk_size,
+            wipe_db=wipe_db,
         )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
