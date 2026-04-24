@@ -95,61 +95,116 @@ def format_labels(labels):
     return ":" + ":".join(labels) if labels else ""
 
 @task(cache_policy=NO_CACHE, name="export_nodes")
-def export_nodes(tx):
+def export_nodes(session):
     logger = get_run_logger()
-    logger.info("Exporting nodes with promotion_status 'Promote' and their connected nodes...")
-    query = """
-    MATCH (st:study {promotion_status: "Promote"})-[*0..]-(n)
-    RETURN DISTINCT n
+    logger.info("Fetching studies with promotion_status 'Promote'...")
+
+    # Step 1: Get all promote study IDs first
+    study_query = """
+    MATCH (st:study)
+    WHERE "Promote" IN st.promotion_status
+    RETURN st.study_id AS study_id
     """
-    result = tx.run(query)
+    studies = list(session.run(study_query))
+    study_ids = [record["study_id"] for record in studies]
+    logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
     nodes = []
-    for record in result:
-        n = record["n"]
-        nodes.append({"id": n.id, "labels": list(n.labels), "properties": dict(n)})
+    seen_node_ids = set()  # Avoid duplicate nodes across studies
+
+    # Step 2: Loop through each study individually
+    for study_id in study_ids:
+        logger.info(f"Processing nodes for study: {study_id}...")
+        query = """
+        MATCH (st:study {study_id: {study_id}})-[*0..]-(n)
+        RETURN DISTINCT n
+        """
+        try:
+            result = list(session.run(query, study_id=study_id))
+            logger.info(f"Found {len(result)} nodes for study: {study_id}")
+
+            for record in result:
+                n = record["n"]
+
+                # Skip if we've already seen this node
+                if n.id in seen_node_ids:
+                    continue
+                seen_node_ids.add(n.id)
+
+                try:
+                    nodes.append({
+                        "id": n.id,
+                        "labels": list(n.labels),
+                        "properties": dict(n)
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to process node: {record}. Error: {e}")
+
+        except Exception as e:
+            logger.error(f"Failed to process study {study_id}: {e}")
+            continue
+
+    logger.info(f"Total unique nodes exported: {len(nodes)}")
     return nodes
 
 @task(cache_policy=NO_CACHE, name="export_relationships")
-def export_relationships(tx):
+def export_relationships(session):
     logger = get_run_logger()
-    logger.info("Exporting relationships for nodes with promotion_status 'Promote'...")
-    query = """
-    MATCH (st:study)-[*0..]-(n)
-    WHERE "Promote" in st.promotion_status
-    WITH DISTINCT n
-    MATCH (n)-[r]-(m)
-    RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
+    logger.info("Fetching studies with promotion_status 'Promote'...")
+
+    # Step 1: Get all promote study IDs first
+    study_query = """
+    MATCH (st:study)
+    WHERE "Promote" IN st.promotion_status
+    RETURN st.study_id AS study_id
     """
-    # Exhaust into a list ONCE so we can get the count and iterate
-    result = list(tx.run(query))
+    studies = list(session.run(study_query))
+    study_ids = [record["study_id"] for record in studies]
+    logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
     rels = []
-    counter = 0
-    counter_total = len(result)
-    log_interval = max(1, counter_total // 100)
-    logger.info(f"Total relationships to process: {counter_total}")
+    seen_rel_ids = set()  # Avoid duplicate relationships across studies
 
-    for record in result:
-        r = record["r"]
-        start_node = record["start_node"]
-        end_node = record["end_node"]
-        counter += 1
+    # Step 2: Loop through each study individually
+    for study_id in study_ids:
+        logger.info(f"Processing relationships for study: {study_id}...")
+        query = """
+        MATCH (st:study {study_id: {study_id}})-[*0..]-(n)
+        WITH DISTINCT n
+        MATCH (n)-[r]-(m)
+        RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
+        """
         try:
-            rels.append(
-                {
-                    "start": start_node.id,
-                    "end": end_node.id,
-                    "type": r.type,
-                    "properties": dict(r),
-                }
-            )
+            result = list(session.run(query, study_id=study_id))
+            logger.info(f"Found {len(result)} relationships for study: {study_id}")
+
+            for record in result:
+                r = record["r"]
+                start_node = record["start_node"]
+                end_node = record["end_node"]
+
+                # Skip if we've already seen this relationship
+                if r.id in seen_rel_ids:
+                    continue
+                seen_rel_ids.add(r.id)
+
+                try:
+                    rels.append(
+                        {
+                            "start": start_node.id,
+                            "end": end_node.id,
+                            "type": r.type,
+                            "properties": dict(r),
+                        }
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to process relationship: {record}. Error: {e}")
+
         except Exception as e:
-            logger.warning(f"Failed to process relationship record #{counter}: {record}. Error: {e}")
+            logger.error(f"Failed to process study {study_id}: {e}")
+            continue
 
-        if counter_total > 0 and counter % log_interval == 0:
-            logger.info(f"Processed {counter}/{counter_total} relationships...")
-
+    logger.info(f"Total unique relationships exported: {len(rels)}")
     return rels
 
 @task(cache_policy=NO_CACHE, name="export_indices")
