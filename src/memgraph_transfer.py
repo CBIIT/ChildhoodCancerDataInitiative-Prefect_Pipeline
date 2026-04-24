@@ -132,7 +132,7 @@ def run_paginated_with_retry(session, query, params=None, page_size=1000, retrie
 
 
 @task(cache_policy=NO_CACHE, name="export_nodes", persist_result=False)
-def export_nodes(session):
+def export_nodes(driver):
     logger = get_run_logger()
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
@@ -141,7 +141,8 @@ def export_nodes(session):
     WHERE "Promote" IN st.promotion_status
     RETURN st.study_id AS study_id
     """
-    studies = run_paginated_with_retry(session, study_query)
+    with driver.session() as session:
+        studies = run_paginated_with_retry(session, study_query)
     study_ids = [record["study_id"] for record in studies]
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
@@ -153,100 +154,101 @@ def export_nodes(session):
         f.write("study\tnode\tcount\n")
 
         for study_id in study_ids:
-            logger.info(f"Processing nodes for study: {study_id}...")
+            with driver.session() as session:
+                logger.info(f"Processing nodes for study: {study_id}...")
 
-            # Step 2: Get all distinct node labels present in this study
-            label_query = """
-            MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
-            UNWIND labels(n) AS label
-            RETURN DISTINCT label
-            """
-            try:
-                labels = [record["label"] for record in run_paginated_with_retry(session, label_query, {"study_id": study_id})]
-                logger.info(
-                    f"Found {len(labels)} node labels for study {study_id}: {labels}"
-                )
-            except Exception as e:
-                logger.error(f"Failed to fetch node labels for study {study_id}: {e}")
-                continue
-
-            # Add the study node itself
-            study_node_query = """
-            MATCH (st:study {study_id : $study_id})
-            RETURN st AS n
-            """
-            try:
-                study_result = run_paginated_with_retry(session, study_node_query, {"study_id": study_id})
-                new_count = 0
-                for record in study_result:
-                    n = record["n"]
-                    if n.id in seen_node_ids:
-                        continue
-                    seen_node_ids.add(n.id)
-                    new_count += 1
-                    nodes.append({
-                        "id": n.id,
-                        "labels": list(n.labels),
-                        "properties": dict(n)
-                    })
-                logger.info(f"Added study node for {study_id}")
-                f.write(f"{study_id}\tstudy\t{new_count}\n")
-            except Exception as e:
-                logger.error(f"Failed to fetch study node for {study_id}: {e}")
-                f.write(f"{study_id}\tstudy\tERROR\n")
-
-            # Step 3: Query one label at a time
-            for label in labels:
-                logger.info(f"Processing label '{label}' for study {study_id}...")
-                query = """
+                # Step 2: Get all distinct node labels present in this study
+                label_query = """
                 MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
-                WHERE $label IN labels(n)
-                RETURN DISTINCT n
+                UNWIND labels(n) AS label
+                RETURN DISTINCT label
                 """
                 try:
-                    result = run_paginated_with_retry(session, query, {"study_id": study_id, "label": label})
+                    labels = [record["label"] for record in run_paginated_with_retry(session, label_query, {"study_id": study_id})]
+                    logger.info(
+                        f"Found {len(labels)} node labels for study {study_id}: {labels}"
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to fetch node labels for study {study_id}: {e}")
+                    continue
+
+                # Add the study node itself
+                study_node_query = """
+                MATCH (st:study {study_id : $study_id})
+                RETURN st AS n
+                """
+                try:
+                    study_result = run_paginated_with_retry(session, study_node_query, {"study_id": study_id})
                     new_count = 0
-
-                    for record in result:
+                    for record in study_result:
                         n = record["n"]
-
                         if n.id in seen_node_ids:
                             continue
                         seen_node_ids.add(n.id)
                         new_count += 1
-
-                        try:
-                            nodes.append(
-                                {
-                                    "id": n.id,
-                                    "labels": list(n.labels),
-                                    "properties": dict(n),
-                                }
-                            )
-                        except Exception as e:
-                            logger.warning(
-                                f"Failed to process node: {record}. Error: {e}"
-                            )
-
-                    logger.info(
-                        f"Found {new_count} new nodes of label '{label}' for study {study_id}"
-                    )
-                    f.write(f"{study_id}\t{label}\t{new_count}\n")
-
+                        nodes.append({
+                            "id": n.id,
+                            "labels": list(n.labels),
+                            "properties": dict(n)
+                        })
+                    logger.info(f"Added study node for {study_id}")
+                    f.write(f"{study_id}\tstudy\t{new_count}\n")
                 except Exception as e:
-                    logger.error(
-                        f"Failed to process label '{label}' for study {study_id}: {e}"
-                    )
-                    f.write(f"{study_id}\t{label}\tERROR\n")
-                    continue
-                time.sleep(0.5)  # brief pause to avoid overwhelming the database
+                    logger.error(f"Failed to fetch study node for {study_id}: {e}")
+                    f.write(f"{study_id}\tstudy\tERROR\n")
+
+                # Step 3: Query one label at a time
+                for label in labels:
+                    logger.info(f"Processing label '{label}' for study {study_id}...")
+                    query = """
+                    MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
+                    WHERE $label IN labels(n)
+                    RETURN DISTINCT n
+                    """
+                    try:
+                        result = run_paginated_with_retry(session, query, {"study_id": study_id, "label": label})
+                        new_count = 0
+
+                        for record in result:
+                            n = record["n"]
+
+                            if n.id in seen_node_ids:
+                                continue
+                            seen_node_ids.add(n.id)
+                            new_count += 1
+
+                            try:
+                                nodes.append(
+                                    {
+                                        "id": n.id,
+                                        "labels": list(n.labels),
+                                        "properties": dict(n),
+                                    }
+                                )
+                            except Exception as e:
+                                logger.warning(
+                                    f"Failed to process node: {record}. Error: {e}"
+                                )
+
+                        logger.info(
+                            f"Found {new_count} new nodes of label '{label}' for study {study_id}"
+                        )
+                        f.write(f"{study_id}\t{label}\t{new_count}\n")
+
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to process label '{label}' for study {study_id}: {e}"
+                        )
+                        f.write(f"{study_id}\t{label}\tERROR\n")
+                        continue
+                    time.sleep(0.5)  # brief pause to avoid overwhelming the database
 
     logger.info(f"Total unique nodes exported: {len(nodes)}")
     return nodes, log_file
 
 
 @task(cache_policy=NO_CACHE, name="export_relationships", persist_result=False)
-def export_relationships(session):
+def export_relationships(driver):
     logger = get_run_logger()
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
@@ -255,7 +257,8 @@ def export_relationships(session):
     WHERE "Promote" IN st.promotion_status
     RETURN st.study_id AS study_id
     """
-    studies = run_paginated_with_retry(session, study_query)
+    with driver.session() as session:
+        studies = run_paginated_with_retry(session, study_query)
     study_ids = [record["study_id"] for record in studies]
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
@@ -267,76 +270,77 @@ def export_relationships(session):
         f.write("study\trel_type\tcount\n")
 
         for study_id in study_ids:
-            logger.info(f"Processing relationships for study: {study_id}...")
+            with driver.session() as session:
+                logger.info(f"Processing relationships for study: {study_id}...")
 
-            # Step 2: Get all relationship types present in this study
-            rel_type_query = """
-            MATCH (st:study {study_id : $study_id})-[*1..6]-(n)-[r]-(m)
-            RETURN DISTINCT type(r) AS rel_type
-            """
-            try:
-                rel_types = [record["rel_type"] for record in run_paginated_with_retry(session, rel_type_query, {"study_id": study_id})]
-                logger.info(
-                    f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}"
-                )
-            except Exception as e:
-                logger.error(
-                    f"Failed to fetch relationship types for study {study_id}: {e}"
-                )
-                continue
-
-            # Step 3: Query one relationship type at a time
-            for rel_type in rel_types:
-                logger.info(
-                    f"Processing relationship type '{rel_type}' for study {study_id}..."
-                )
-                query = """
-                MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
-                WITH DISTINCT n
-                MATCH (n)-[r]-(m)
-                WHERE type(r) = $rel_type
-                RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
+                # Step 2: Get all relationship types present in this study
+                rel_type_query = """
+                MATCH (st:study {study_id : $study_id})-[*1..6]-(n)-[r]-(m)
+                RETURN DISTINCT type(r) AS rel_type
                 """
                 try:
-                    result = run_paginated_with_retry(session, query, {"study_id": study_id, "rel_type": rel_type})
-                    new_count = 0
-
-                    for record in result:
-                        r = record["r"]
-                        start_node = record["start_node"]
-                        end_node = record["end_node"]
-
-                        if r.id in seen_rel_ids:
-                            continue
-                        seen_rel_ids.add(r.id)
-                        new_count += 1
-
-                        try:
-                            rels.append(
-                                {
-                                    "start": start_node.id,
-                                    "end": end_node.id,
-                                    "type": r.type,
-                                    "properties": dict(r),
-                                }
-                            )
-                        except Exception as e:
-                            logger.warning(
-                                f"Failed to process relationship: {record}. Error: {e}"
-                            )
-
+                    rel_types = [record["rel_type"] for record in run_paginated_with_retry(session, rel_type_query, {"study_id": study_id})]
                     logger.info(
-                        f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}"
+                        f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}"
                     )
-                    f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
-
                 except Exception as e:
                     logger.error(
-                        f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}"
+                        f"Failed to fetch relationship types for study {study_id}: {e}"
                     )
-                    f.write(f"{study_id}\t{rel_type}\tERROR\n")
                     continue
-                time.sleep(0.5)  # brief pause to avoid overwhelming the database
+
+                # Step 3: Query one relationship type at a time
+                for rel_type in rel_types:
+                    logger.info(
+                        f"Processing relationship type '{rel_type}' for study {study_id}..."
+                    )
+                    query = """
+                    MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
+                    WITH DISTINCT n
+                    MATCH (n)-[r]-(m)
+                    WHERE type(r) = $rel_type
+                    RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
+                    """
+                    try:
+                        result = run_paginated_with_retry(session, query, {"study_id": study_id, "rel_type": rel_type})
+                        new_count = 0
+
+                        for record in result:
+                            r = record["r"]
+                            start_node = record["start_node"]
+                            end_node = record["end_node"]
+
+                            if r.id in seen_rel_ids:
+                                continue
+                            seen_rel_ids.add(r.id)
+                            new_count += 1
+
+                            try:
+                                rels.append(
+                                    {
+                                        "start": start_node.id,
+                                        "end": end_node.id,
+                                        "type": r.type,
+                                        "properties": dict(r),
+                                    }
+                                )
+                            except Exception as e:
+                                logger.warning(
+                                    f"Failed to process relationship: {record}. Error: {e}"
+                                )
+
+                        logger.info(
+                            f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}"
+                        )
+                        f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
+
+                    except Exception as e:
+                        logger.error(
+                            f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}"
+                        )
+                        f.write(f"{study_id}\t{rel_type}\tERROR\n")
+                        continue
+                    time.sleep(0.5)  # brief pause to avoid overwhelming the database
 
     logger.info(f"Total unique relationships exported: {len(rels)}")
     return rels, log_file
@@ -373,9 +377,10 @@ def export_memgraph_curation(
     driver = GraphDatabase.driver(uri, auth=(username, password))
     logger.info(f"Connected to Memgraph")
 
-    with driver.session() as session:
-        nodes, node_log = session.execute_read(export_nodes)
-        rels, rel_log = session.execute_read(export_relationships)
+    nodes, node_log = export_nodes(driver)
+    rels, rel_log = export_relationships(driver)
+    # nodes, node_log = session.execute_read(export_nodes(driver))
+    # rels, rel_log = session.execute_read(export_relationships(driver))
 
     # Map old IDs to variable names
     node_vars = {}
