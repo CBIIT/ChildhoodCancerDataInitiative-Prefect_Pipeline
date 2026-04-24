@@ -1271,41 +1271,41 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: memgraph_transfer
-    version: null
-    tags: ["Production", "V3"]
-    description: null
-    entrypoint: workflows/memgraph_transfer.py:memgraph_export_import_flow
-    schedule: null
+  # - name: memgraph_transfer
+  #   version: null
+  #   tags: ["Production", "V3"]
+  #   description: null
+  #   entrypoint: workflows/memgraph_transfer.py:memgraph_export_import_flow
+  #   schedule: null
 
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
-      runner: ""
-      file_path: "directory/path/to/file.cypherl"
-      uri_parameter: "uri_memgraph"
-      username_parameter: "username_memgraph"
-      password_parameter: "password_memgraph"
-      mode: "export"
-      chunk_size: 1000
-      wipe_db: false
+  #   # flow-specific parameters
+  #   parameters:
+  #     bucket: "ccdi-validation"
+  #     runner: ""
+  #     file_path: "directory/path/to/file.cypherl"
+  #     uri_parameter: "uri_memgraph"
+  #     username_parameter: "username_memgraph"
+  #     password_parameter: "password_memgraph"
+  #     mode: "export"
+  #     chunk_size: 1000
+  #     wipe_db: false
 
-    # pull action to overwrite from file pull action
-    pull:
-    - prefect.deployments.steps.git_clone:
-        id: clone-step
-        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: main
-    - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_python3.13_prefect3.txt
-        directory: "{{ clone-step.directory }}"
-        stream_output: False
+  #   # pull action to overwrite from file pull action
+  #   pull:
+  #   - prefect.deployments.steps.git_clone:
+  #       id: clone-step
+  #       repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+  #       branch: main
+  #   - prefect.deployments.steps.pip_install_requirements:
+  #       requirements_file: requirements_python3.13_prefect3.txt
+  #       directory: "{{ clone-step.directory }}"
+  #       stream_output: False
 
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
+  #   # infra-specific fields
+  #   work_pool:
+  #     name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
+  #     work_queue_name: null
+  #     job_variables: {}
 
   - name: hello-world-v3
     version: null
@@ -1864,3 +1864,48 @@ deployments:
       name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
+      
+  - name: TEST_memgraph_transfer_dcc_v3
+    version: null
+    tags: ["TEST", "V3", "DCC", "Centralized Worker", "CCDIDC-2393"]
+    description: null
+    entrypoint: workflows/memgraph_transfer_dcc.py:memgraph_transfer_dcc
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: ""
+      file_path: "directory/path/to/file.cypherl"
+      mode: "export"
+      chunk_size: 1000
+      database_source_account_name: "aws_account_name_source"
+      database_source_account_id: "aws_account_id_source"
+      database_source_secret_path: "aws_secret_path_source"
+      database_source_secret_key_ip: "aws_secret_key_ip_source"
+      database_source_secret_key_username: "aws_secret_key_username_source"
+      database_source_secret_key_password: "aws_secret_key_password_source"
+      database_target_account_name: "aws_account_name_target"
+      database_target_account_id: "aws_account_id_target"
+      database_target_secret_path: "aws_secret_path_target"
+      database_target_secret_key_ip: "aws_secret_key_ip_target"
+      database_target_secret_key_username: "aws_secret_key_username_target"
+      database_target_secret_key_password: "aws_secret_key_password_target"
+      wipe_db: false
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.deployments.steps.git_clone:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: CCDIDC-2393-Promotion_pipelines
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements_python3.13_prefect3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}   
