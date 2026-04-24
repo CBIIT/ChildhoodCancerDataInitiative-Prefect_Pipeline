@@ -241,7 +241,7 @@ def export_nodes(driver):
                         )
                         f.write(f"{study_id}\t{label}\tERROR\n")
                         continue
-                    time.sleep(0.5)  # brief pause to avoid overwhelming the database
+                    time.sleep(0.1)  # brief pause to avoid overwhelming the database
 
     logger.info(f"Total unique nodes exported: {len(nodes)}")
     return nodes, log_file
@@ -340,7 +340,7 @@ def export_relationships(driver):
                         )
                         f.write(f"{study_id}\t{rel_type}\tERROR\n")
                         continue
-                    time.sleep(0.5)  # brief pause to avoid overwhelming the database
+                    time.sleep(0.1)  # brief pause to avoid overwhelming the database
 
     logger.info(f"Total unique relationships exported: {len(rels)}")
     return rels, log_file
