@@ -3,6 +3,7 @@ from neo4j import GraphDatabase
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
 import json
+from utils import get_date
 
 
 # ------------------------------------------------------------------
@@ -99,9 +100,6 @@ def export_nodes(session):
     logger = get_run_logger()
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
-    # Step 1: Get all promote study IDs first
-    # PROMOTE IS CURRENTLY A LIST PROPERTY
-    # THIS WILL NEED TO BE UPDATED IN THE FUTURE ONCE WE UPDATE THE MODEL TO HAVE A STRING VALUE FOR PROMOTION STATUS
     study_query = """
     MATCH (st:study)
     WHERE "Promote" IN st.promotion_status
@@ -113,67 +111,76 @@ def export_nodes(session):
 
     nodes = []
     seen_node_ids = set()
+    log_file = f"nodes_export_{get_date()}.tsv"
 
-    for study_id in study_ids:
-        logger.info(f"Processing nodes for study: {study_id}...")
+    with open(log_file, "w") as f:
+        f.write("study\tnode\tcount\n")
 
-        # Step 2: Get all distinct node labels present in this study
-        label_query = """
-        MATCH (st:study {study_id: $study_id})-[*1..]-(n)
-        UNWIND labels(n) AS label
-        RETURN DISTINCT label
-        """
-        try:
-            labels = [
-                record["label"]
-                for record in session.run(label_query, study_id=study_id)
-            ]
-            logger.info(f"Found {len(labels)} node labels for study {study_id}: {labels}")
-        except Exception as e:
-            logger.error(f"Failed to fetch node labels for study {study_id}: {e}")
-            continue
+        for study_id in study_ids:
+            logger.info(f"Processing nodes for study: {study_id}...")
 
-        # Step 3: Query one label at a time
-        for label in labels:
-            logger.info(f"Processing label '{label}' for study {study_id}...")
-            query = """
-            MATCH (st:study {study_id: $study_id})-[*1..]-(n)
-            WHERE $label IN labels(n)
-            RETURN DISTINCT n
+            # Step 2: Get all distinct node labels present in this study
+            label_query = """
+            MATCH (st:study {study_id: $study_id})-[*1..5]-(n)
+            UNWIND labels(n) AS label
+            RETURN DISTINCT label
             """
             try:
-                result = list(session.run(query, study_id=study_id, label=label))
-                logger.info(f"Found {len(result)} nodes of label '{label}' for study {study_id}")
-
-                for record in result:
-                    n = record["n"]
-
-                    if n.id in seen_node_ids:
-                        continue
-                    seen_node_ids.add(n.id)
-
-                    try:
-                        nodes.append({
-                            "id": n.id,
-                            "labels": list(n.labels),
-                            "properties": dict(n)
-                        })
-                    except Exception as e:
-                        logger.warning(f"Failed to process node: {record}. Error: {e}")
-
+                labels = [
+                    record["label"]
+                    for record in session.run(label_query, study_id=study_id)
+                ]
+                logger.info(f"Found {len(labels)} node labels for study {study_id}: {labels}")
             except Exception as e:
-                logger.error(f"Failed to process label '{label}' for study {study_id}: {e}")
+                logger.error(f"Failed to fetch node labels for study {study_id}: {e}")
                 continue
 
+            # Step 3: Query one label at a time
+            for label in labels:
+                logger.info(f"Processing label '{label}' for study {study_id}...")
+                query = """
+                MATCH (st:study {study_id: $study_id})-[*1..5]-(n)
+                WHERE $label IN labels(n)
+                RETURN DISTINCT n
+                """
+                try:
+                    result = list(session.run(query, study_id=study_id, label=label))
+                    new_count = 0
+
+                    for record in result:
+                        n = record["n"]
+
+                        if n.id in seen_node_ids:
+                            continue
+                        seen_node_ids.add(n.id)
+                        new_count += 1
+
+                        try:
+                            nodes.append({
+                                "id": n.id,
+                                "labels": list(n.labels),
+                                "properties": dict(n)
+                            })
+                        except Exception as e:
+                            logger.warning(f"Failed to process node: {record}. Error: {e}")
+
+                    logger.info(f"Found {new_count} new nodes of label '{label}' for study {study_id}")
+                    f.write(f"{study_id}\t{label}\t{new_count}\n")
+
+                except Exception as e:
+                    logger.error(f"Failed to process label '{label}' for study {study_id}: {e}")
+                    f.write(f"{study_id}\t{label}\tERROR\n")
+                    continue
+
     logger.info(f"Total unique nodes exported: {len(nodes)}")
-    return nodes
+    return nodes, log_file
+
 
 @task(cache_policy=NO_CACHE, name="export_relationships")
 def export_relationships(session):
     logger = get_run_logger()
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
-    # Step 1: Get all promote study IDs first
     study_query = """
     MATCH (st:study)
     WHERE "Promote" IN st.promotion_status
@@ -185,66 +192,75 @@ def export_relationships(session):
 
     rels = []
     seen_rel_ids = set()
+    log_file = f"relationships_export_{get_date()}.tsv"
 
-    for study_id in study_ids:
-        logger.info(f"Processing relationships for study: {study_id}...")
+    with open(log_file, "w") as f:
+        f.write("study\trel_type\tcount\n")
 
-        # Step 2: Get all relationship types present in this study
-        rel_type_query = """
-        MATCH (st:study {study_id : $study_id})-[*1..]-(n)-[r]-(m)
-        RETURN DISTINCT type(r) AS rel_type
-        """
-        try:
-            rel_types = [
-                record["rel_type"]
-                for record in session.run(rel_type_query, study_id=study_id)
-            ]
-            logger.info(f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}")
-        except Exception as e:
-            logger.error(f"Failed to fetch relationship types for study {study_id}: {e}")
-            continue
+        for study_id in study_ids:
+            logger.info(f"Processing relationships for study: {study_id}...")
 
-        # Step 3: Query one relationship type at a time
-        for rel_type in rel_types:
-            logger.info(f"Processing relationship type '{rel_type}' for study {study_id}...")
-            query = """
-            MATCH (st:study {study_id : $study_id})-[*1..]-(n)
-            WITH DISTINCT n
-            MATCH (n)-[r]-(m)
-            WHERE type(r) = $rel_type
-            RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
+            # Step 2: Get all relationship types present in this study
+            rel_type_query = """
+            MATCH (st:study {study_id: $study_id})-[*1..5]-(n)-[r]-(m)
+            RETURN DISTINCT type(r) AS rel_type
             """
             try:
-                result = list(session.run(query, study_id=study_id, rel_type=rel_type))
-                logger.info(f"Found {len(result)} relationships of type '{rel_type}' for study {study_id}")
-
-                for record in result:
-                    r = record["r"]
-                    start_node = record["start_node"]
-                    end_node = record["end_node"]
-
-                    if r.id in seen_rel_ids:
-                        continue
-                    seen_rel_ids.add(r.id)
-
-                    try:
-                        rels.append(
-                            {
-                                "start": start_node.id,
-                                "end": end_node.id,
-                                "type": r.type,
-                                "properties": dict(r),
-                            }
-                        )
-                    except Exception as e:
-                        logger.warning(f"Failed to process relationship: {record}. Error: {e}")
-
+                rel_types = [
+                    record["rel_type"]
+                    for record in session.run(rel_type_query, study_id=study_id)
+                ]
+                logger.info(f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}")
             except Exception as e:
-                logger.error(f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}")
+                logger.error(f"Failed to fetch relationship types for study {study_id}: {e}")
                 continue
 
+            # Step 3: Query one relationship type at a time
+            for rel_type in rel_types:
+                logger.info(f"Processing relationship type '{rel_type}' for study {study_id}...")
+                query = """
+                MATCH (st:study {study_id: $study_id})-[*1..5]-(n)
+                WITH DISTINCT n
+                MATCH (n)-[r]-(m)
+                WHERE type(r) = $rel_type
+                RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
+                """
+                try:
+                    result = list(session.run(query, study_id=study_id, rel_type=rel_type))
+                    new_count = 0
+
+                    for record in result:
+                        r = record["r"]
+                        start_node = record["start_node"]
+                        end_node = record["end_node"]
+
+                        if r.id in seen_rel_ids:
+                            continue
+                        seen_rel_ids.add(r.id)
+                        new_count += 1
+
+                        try:
+                            rels.append(
+                                {
+                                    "start": start_node.id,
+                                    "end": end_node.id,
+                                    "type": r.type,
+                                    "properties": dict(r),
+                                }
+                            )
+                        except Exception as e:
+                            logger.warning(f"Failed to process relationship: {record}. Error: {e}")
+
+                    logger.info(f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}")
+                    f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
+
+                except Exception as e:
+                    logger.error(f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}")
+                    f.write(f"{study_id}\t{rel_type}\tERROR\n")
+                    continue
+
     logger.info(f"Total unique relationships exported: {len(rels)}")
-    return rels
+    return rels, log_file
 
 @task(cache_policy=NO_CACHE, name="export_indices")
 def export_indices(session):
@@ -261,7 +277,6 @@ def export_indices(session):
         })
     return indices
 
-
 @task(cache_policy=NO_CACHE, name="export_memgraph_curation")
 def export_memgraph_curation(
     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
@@ -276,8 +291,8 @@ def export_memgraph_curation(
     logger.info(f"Connected to Memgraph")
 
     with driver.session() as session:
-        nodes = session.execute_read(export_nodes)
-        rels = session.execute_read(export_relationships)
+        nodes, node_log = session.execute_read(export_nodes)
+        rels, rel_log = session.execute_read(export_relationships)
 
     # Map old IDs to variable names
     node_vars = {}
@@ -342,6 +357,8 @@ def export_memgraph_curation(
 
     driver.close()
     logger.info("Memgraph connection closed.")
+
+    return node_log, rel_log
 
 
 # ------------------------------------------------------------------

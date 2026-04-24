@@ -166,11 +166,13 @@ def memgraph_transfer_dcc(
         logger.info(f"Target database account: {database_target_account_name}")
         logger.info(f"Running export with chunk size {chunk_size}")
         output_file = f"memgraph_dump_curation_{database_source_account_name}_{get_time()}.cypherl"
-        export_memgraph_curation(
+        node_log, rel_log = export_memgraph_curation(
             uri_source, username_source, password_source, output_file, chunk_size
         )
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
+        file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=node_log)
+        file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=rel_log)
         logger.info(f"Export completed: {output_file}")
         logger.info(f"Running import with chunk size {chunk_size}")
 
