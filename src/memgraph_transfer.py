@@ -138,6 +138,31 @@ def export_nodes(session):
                 logger.error(f"Failed to fetch node labels for study {study_id}: {e}")
                 continue
 
+            # Add the study node itself
+            study_node_query = """
+            MATCH (st:study {study_id : $study_id})
+            RETURN st AS n
+            """
+            try:
+                study_result = list(session.run(study_node_query, study_id=study_id))
+                new_count = 0
+                for record in study_result:
+                    n = record["n"]
+                    if n.id in seen_node_ids:
+                        continue
+                    seen_node_ids.add(n.id)
+                    new_count += 1
+                    nodes.append({
+                        "id": n.id,
+                        "labels": list(n.labels),
+                        "properties": dict(n)
+                    })
+                logger.info(f"Added study node for {study_id}")
+                f.write(f"{study_id}\tstudy\t{new_count}\n")
+            except Exception as e:
+                logger.error(f"Failed to fetch study node for {study_id}: {e}")
+                f.write(f"{study_id}\tstudy\tERROR\n")
+
             # Step 3: Query one label at a time
             for label in labels:
                 logger.info(f"Processing label '{label}' for study {study_id}...")
