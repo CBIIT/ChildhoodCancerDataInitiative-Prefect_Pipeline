@@ -148,14 +148,17 @@ def export_nodes(driver):
 
     nodes = []
     seen_node_ids = set()
+    study_count = 0
+    study_total = len(study_ids)
     log_file = f"nodes_export_{get_time()}.tsv"
 
     with open(log_file, "w") as f:
         f.write("study\tnode\tcount\n")
 
         for study_id in study_ids:
+            study_count += 1
+            logger.info(f"Processing study {study_count}/{study_total}: {study_id}...")
             with driver.session() as session:
-                logger.info(f"Processing nodes for study: {study_id}...")
 
                 # Step 2: Get all distinct node labels present in this study
                 label_query = """
@@ -264,14 +267,17 @@ def export_relationships(driver):
 
     rels = []
     seen_rel_ids = set()
+    study_count = 0
+    study_total = len(study_ids)
     log_file = f"relationships_export_{get_time()}.tsv"
 
     with open(log_file, "w") as f:
         f.write("study\trel_type\tcount\n")
 
         for study_id in study_ids:
+            study_count += 1
+            logger.info(f"Processing study {study_count}/{study_total}: {study_id}...")
             with driver.session() as session:
-                logger.info(f"Processing relationships for study: {study_id}...")
 
                 # Step 2: Get all relationship types present in this study
                 rel_type_query = """
