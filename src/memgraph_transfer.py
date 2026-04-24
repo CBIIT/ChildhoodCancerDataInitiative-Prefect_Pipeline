@@ -116,7 +116,7 @@ def export_nodes(session):
     for study_id in study_ids:
         logger.info(f"Processing nodes for study: {study_id}...")
         query = """
-        MATCH (st:study {study_id : {study_id}})-[*0..]-(n)
+        MATCH (st:study {study_id : $study_id})-[*0..]-(n)
         RETURN DISTINCT n
         """
         try:
@@ -169,7 +169,7 @@ def export_relationships(session):
     for study_id in study_ids:
         logger.info(f"Processing relationships for study: {study_id}...")
         query = """
-        MATCH (st:study {study_id : {study_id}})-[*0..]-(n)
+        MATCH (st:study {study_id : $study_id})-[*0..]-(n)
         WITH DISTINCT n
         MATCH (n)-[r]-(m)
         RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
