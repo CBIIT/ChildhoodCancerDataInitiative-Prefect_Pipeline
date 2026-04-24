@@ -4,6 +4,7 @@ from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
 import json
 from src.utils import get_time
+import time
 
 
 # ------------------------------------------------------------------
@@ -96,6 +97,19 @@ def format_labels(labels):
     return ":" + ":".join(labels) if labels else ""
 
 
+def run_with_retry(session, query, params=None, retries=3, delay=2):
+    logger=get_run_logger()
+    for attempt in range(retries):
+        try:
+            return list(session.run(query, params or {}))
+        except Exception as e:
+            if attempt < retries - 1:
+                logger.warning(f"Query failed (attempt {attempt + 1}/{retries}), retrying in {delay}s... Error: {e}")
+                time.sleep(delay)
+            else:
+                raise e
+
+
 @task(cache_policy=NO_CACHE, name="export_nodes")
 def export_nodes(session):
     logger = get_run_logger()
@@ -106,7 +120,7 @@ def export_nodes(session):
     WHERE "Promote" IN st.promotion_status
     RETURN st.study_id AS study_id
     """
-    studies = list(session.run(study_query))
+    studies = run_with_retry(session, study_query)
     study_ids = [record["study_id"] for record in studies]
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
@@ -127,10 +141,7 @@ def export_nodes(session):
             RETURN DISTINCT label
             """
             try:
-                labels = [
-                    record["label"]
-                    for record in session.run(label_query, study_id=study_id)
-                ]
+                labels = [record["label"] for record in run_with_retry(session, label_query, {"study_id": study_id})]
                 logger.info(
                     f"Found {len(labels)} node labels for study {study_id}: {labels}"
                 )
@@ -144,7 +155,7 @@ def export_nodes(session):
             RETURN st AS n
             """
             try:
-                study_result = list(session.run(study_node_query, study_id=study_id))
+                study_result = run_with_retry(session, study_node_query, {"study_id": study_id})
                 new_count = 0
                 for record in study_result:
                     n = record["n"]
@@ -172,7 +183,7 @@ def export_nodes(session):
                 RETURN DISTINCT n
                 """
                 try:
-                    result = list(session.run(query, study_id=study_id, label=label))
+                    result = run_with_retry(session, query, {"study_id": study_id, "label": label})
                     new_count = 0
 
                     for record in result:
@@ -207,6 +218,7 @@ def export_nodes(session):
                     )
                     f.write(f"{study_id}\t{label}\tERROR\n")
                     continue
+                time.sleep(0.1)  # brief pause to avoid overwhelming the database
 
     logger.info(f"Total unique nodes exported: {len(nodes)}")
     return nodes, log_file
@@ -222,7 +234,7 @@ def export_relationships(session):
     WHERE "Promote" IN st.promotion_status
     RETURN st.study_id AS study_id
     """
-    studies = list(session.run(study_query))
+    studies = run_with_retry(session, study_query)
     study_ids = [record["study_id"] for record in studies]
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
@@ -242,10 +254,7 @@ def export_relationships(session):
             RETURN DISTINCT type(r) AS rel_type
             """
             try:
-                rel_types = [
-                    record["rel_type"]
-                    for record in session.run(rel_type_query, study_id=study_id)
-                ]
+                rel_types = [record["rel_type"] for record in run_with_retry(session, rel_type_query, {"study_id": study_id})]
                 logger.info(
                     f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}"
                 )
@@ -268,9 +277,7 @@ def export_relationships(session):
                 RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
                 """
                 try:
-                    result = list(
-                        session.run(query, study_id=study_id, rel_type=rel_type)
-                    )
+                    result = run_with_retry(session, query, {"study_id": study_id, "rel_type": rel_type})
                     new_count = 0
 
                     for record in result:
@@ -308,6 +315,7 @@ def export_relationships(session):
                     )
                     f.write(f"{study_id}\t{rel_type}\tERROR\n")
                     continue
+                time.sleep(0.1)  # brief pause to avoid overwhelming the database
 
     logger.info(f"Total unique relationships exported: {len(rels)}")
     return rels, log_file
