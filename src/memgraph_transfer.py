@@ -379,7 +379,7 @@ def export_relationships(driver, output_file, node_vars):
     return log_file
 
 
-@task(cache_policy=NO_CACHE, name="export_indices", persist_result=False)
+@flow(cache_policy=NO_CACHE, name="export_indices", persist_result=False)
 def export_indices(session):
     logger = get_run_logger()
     logger.info("Exporting index information...")
@@ -466,7 +466,7 @@ def _execute_batch(session, queries, logger):
 # ------------------------------------------------------------------
 # INTERNAL TASK: WIPE DATABASE
 # ------------------------------------------------------------------
-@task(cache_policy=NO_CACHE, name="wipe_memgraph_database")
+@flow(cache_policy=NO_CACHE, name="wipe_memgraph_database")
 def _wipe_database(session, logger):
     """Deletes all nodes, relationships and indexes from the database."""
     logger.warning(
@@ -552,6 +552,10 @@ def import_memgraph(
                     query = line.strip()
                     if not query:
                         continue  # skip empty lines
+
+                    if query.startswith("//"):
+                        logger.info(f"Skipping comment line: {query}")
+                        continue  # skip comment lines
 
                     batch.append(query)
                     total_lines += 1
