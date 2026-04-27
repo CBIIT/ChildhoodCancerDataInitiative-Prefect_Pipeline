@@ -168,7 +168,7 @@ def export_nodes(driver, output_file, node_vars):
 
                 # Get all distinct node labels present in this study
                 label_query = """
-                MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
+                MATCH (st:study {study_id : $study_id})-[*1..5]-(n)
                 UNWIND labels(n) AS label
                 RETURN DISTINCT label
                 """
@@ -212,7 +212,7 @@ def export_nodes(driver, output_file, node_vars):
                 for label in labels:
                     logger.info(f"Processing label '{label}' for study {study_id}...")
                     query = """
-                    MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
+                    MATCH (st:study {study_id : $study_id})-[*1..5]-(n)
                     WHERE $label IN labels(n)
                     RETURN DISTINCT n
                     """
@@ -286,7 +286,7 @@ def export_relationships(driver, output_file, node_vars):
 
                 # Get all relationship types present in this study
                 rel_type_query = """
-                MATCH (st:study {study_id : $study_id})-[*1..6]-(n)-[r]-(m)
+                MATCH (st:study {study_id : $study_id})-[*1..5]-(n)-[r]-(m)
                 RETURN DISTINCT type(r) AS rel_type
                 """
                 try:
@@ -300,7 +300,7 @@ def export_relationships(driver, output_file, node_vars):
                 for rel_type in rel_types:
                     logger.info(f"Processing relationship type '{rel_type}' for study {study_id}...")
                     query = """
-                    MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
+                    MATCH (st:study {study_id : $study_id})-[*1..5]-(n)
                     WITH DISTINCT n
                     MATCH (n)-[r]-(m)
                     WHERE type(r) = $rel_type
