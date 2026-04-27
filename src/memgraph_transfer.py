@@ -1,7 +1,7 @@
 from typing import Any
 from neo4j import GraphDatabase
 from neo4j.exceptions import TransactionError
-from prefect import task, get_run_logger
+from prefect import flow, task, get_run_logger
 from prefect.cache_policies import NO_CACHE
 import json
 from neo4j.time import DateTime, Date, Time, Duration
@@ -13,7 +13,7 @@ import time
 # ------------------------------------------------------------------
 # TASK: EXPORT DATABASE
 # ------------------------------------------------------------------
-@task(cache_policy=NO_CACHE, name="export_memgraph")
+@flow(cache_policy=NO_CACHE, name="export_memgraph")
 def export_memgraph(
     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
 ) -> None:
@@ -397,7 +397,7 @@ def export_indices(session):
     return indices
 
 
-@task(cache_policy=NO_CACHE, name="export_memgraph_curation", persist_result=False)
+@flow(cache_policy=NO_CACHE, name="export_memgraph_curation", persist_result=False)
 def export_memgraph_curation(
     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
 ) -> None:
@@ -515,7 +515,7 @@ def _wipe_database(session, logger):
 # ------------------------------------------------------------------
 # TASK: IMPORT DATABASE
 # ------------------------------------------------------------------
-@task(cache_policy=NO_CACHE, name="import_memgraph")
+@flow(cache_policy=NO_CACHE, name="import_memgraph")
 def import_memgraph(
     uri: str,
     username: str,
