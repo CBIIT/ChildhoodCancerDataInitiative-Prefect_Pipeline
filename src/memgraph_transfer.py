@@ -199,7 +199,7 @@ def export_nodes(driver, output_file, node_vars):
 
                 # Get all distinct node labels present in this study
                 label_query = """
-                MATCH (st:study {study_id : $study_id})-[*1..5]-(n)
+                MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
                 UNWIND labels(n) AS label
                 RETURN DISTINCT label
                 """
@@ -223,14 +223,14 @@ def export_nodes(driver, output_file, node_vars):
                         if n.id in seen_node_ids:
                             continue
                         seen_node_ids.add(n.id)
-                        var = f"n{node_counter}"
-                        node_vars[n.id] = var
+                        node_vars[n.id] = n.id  # map internal id to itself for MATCH lookup
                         node_counter += 1
                         new_count += 1
-                        labels_str = format_labels(list(n.labels))
-                        props_str = format_properties(dict(n))
-                        # Write directly to output file
-                        output_file.write(f"CREATE ({var}{labels_str} {props_str});\n")
+                        labels_str = ":__mg_vertex__:" + ":".join(list(n.labels))
+                        props = dict(n)
+                        props["__mg_id__"] = n.id  # inject __mg_id__ for later MATCH
+                        props_str = format_properties(props)
+                        output_file.write(f"CREATE (:{labels_str} {props_str});\n")
                     logger.info(f"Added study node for {study_id}")
                     log_f.write(f"{study_id}\tstudy\t{new_count}\n")
                     log_f.flush()
@@ -243,7 +243,7 @@ def export_nodes(driver, output_file, node_vars):
                 for label in labels:
                     logger.info(f"Processing label '{label}' for study {study_id}...")
                     query = """
-                    MATCH (st:study {study_id : $study_id})-[*1..5]-(n)
+                    MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
                     WHERE $label IN labels(n)
                     RETURN DISTINCT n
                     """
@@ -256,16 +256,16 @@ def export_nodes(driver, output_file, node_vars):
                             if n.id in seen_node_ids:
                                 continue
                             seen_node_ids.add(n.id)
-                            var = f"n{node_counter}"
-                            node_vars[n.id] = var
+                            node_vars[n.id] = n.id
                             node_counter += 1
                             new_count += 1
-                            labels_str = format_labels(list(n.labels))
-                            props_str = format_properties(dict(n))
-                            # Write directly to output file
-                            output_file.write(f"CREATE ({var}{labels_str} {props_str});\n")
+                            labels_str = ":__mg_vertex__:" + ":".join(list(n.labels))
+                            props = dict(n)
+                            props["__mg_id__"] = n.id
+                            props_str = format_properties(props)
+                            output_file.write(f"CREATE (:{labels_str} {props_str});\n")
 
-                        output_file.flush()  # flush after each label
+                        output_file.flush()
                         logger.info(f"Found {new_count} new nodes of label '{label}' for study {study_id}")
                         log_f.write(f"{study_id}\t{label}\t{new_count}\n")
                         log_f.flush()
@@ -315,9 +315,8 @@ def export_relationships(driver, output_file, node_vars):
 
             with driver.session() as session:
 
-                # Get all relationship types present in this study
                 rel_type_query = """
-                MATCH (st:study {study_id : $study_id})-[*1..5]-(n)-[r]-(m)
+                MATCH (st:study {study_id : $study_id})-[*1..6]-(n)-[r]-(m)
                 RETURN DISTINCT type(r) AS rel_type
                 """
                 try:
@@ -327,11 +326,10 @@ def export_relationships(driver, output_file, node_vars):
                     logger.error(f"Failed to fetch relationship types for study {study_id}: {e}")
                     continue
 
-                # Query one relationship type at a time
                 for rel_type in rel_types:
                     logger.info(f"Processing relationship type '{rel_type}' for study {study_id}...")
                     query = """
-                    MATCH (st:study {study_id : $study_id})-[*1..5]-(n)
+                    MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
                     WITH DISTINCT n
                     MATCH (n)-[r]-(m)
                     WHERE type(r) = $rel_type
@@ -350,19 +348,21 @@ def export_relationships(driver, output_file, node_vars):
                                 continue
                             seen_rel_ids.add(r.id)
 
-                            start_var = node_vars.get(start_node.id)
-                            end_var = node_vars.get(end_node.id)
-
-                            if not start_var or not end_var:
-                                logger.warning(f"Skipping relationship {r.id} — missing node var for start={start_node.id} or end={end_node.id}")
+                            # Check both nodes were exported
+                            if start_node.id not in node_vars or end_node.id not in node_vars:
+                                logger.warning(f"Skipping relationship {r.id} — missing node for start={start_node.id} or end={end_node.id}")
                                 continue
 
                             new_count += 1
                             props_str = format_properties(dict(r))
-                            # Write directly to output file
-                            output_file.write(f"CREATE ({start_var})-[:{r.type} {props_str}]->({end_var});\n")
+                            # Use MATCH on __mg_id__ to find nodes, same as DUMP DATABASE format
+                            output_file.write(
+                                f"MATCH (u:__mg_vertex__ {{__mg_id__: {start_node.id}}}), "
+                                f"(v:__mg_vertex__ {{__mg_id__: {end_node.id}}}) "
+                                f"CREATE (u)-[:{rel_type} {props_str}]->(v);\n"
+                            )
 
-                        output_file.flush()  # flush after each rel_type
+                        output_file.flush()
                         logger.info(f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}")
                         log_f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
                         log_f.flush()
@@ -405,12 +405,13 @@ def export_memgraph_curation(
     driver = GraphDatabase.driver(uri, auth=(username, password))
     logger.info("Connected to Memgraph")
 
-    node_vars = {}  # shared map of node id -> cypher variable name
+    node_vars = {}  # shared map of node id -> __mg_id__
 
     with open(output_file, "w") as out_f:
 
         # --- WRITE NODES ---
         out_f.write("// --- NODES ---\n")
+        out_f.write("CREATE INDEX ON :__mg_vertex__(__mg_id__);\n")
         node_log = export_nodes(driver, out_f, node_vars)
 
         # --- WRITE RELATIONSHIPS ---
@@ -433,6 +434,11 @@ def export_memgraph_curation(
                 out_f.write(f"CREATE INDEX ON :{label}({prop});\n")
             else:
                 out_f.write(f"CREATE INDEX ON :{label};\n")
+
+        # --- CLEANUP (matches DUMP DATABASE format) ---
+        out_f.write("// --- CLEANUP ---\n")
+        out_f.write("DROP INDEX ON :__mg_vertex__(__mg_id__);\n")
+        out_f.write("MATCH (u) REMOVE u:__mg_vertex__, u.__mg_id__;\n")
 
         out_f.flush()
 
