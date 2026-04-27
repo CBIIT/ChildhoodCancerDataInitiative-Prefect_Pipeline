@@ -13,7 +13,7 @@ import time
 # ------------------------------------------------------------------
 # TASK: EXPORT DATABASE
 # ------------------------------------------------------------------
-@flow(cache_policy=NO_CACHE, name="export_memgraph")
+@flow(name="export_memgraph")
 def export_memgraph(
     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
 ) -> None:
@@ -379,7 +379,7 @@ def export_relationships(driver, output_file, node_vars):
     return log_file
 
 
-@flow(cache_policy=NO_CACHE, name="export_indices", persist_result=False)
+@flow(name="export_indices", persist_result=False)
 def export_indices(session):
     logger = get_run_logger()
     logger.info("Exporting index information...")
@@ -397,7 +397,7 @@ def export_indices(session):
     return indices
 
 
-@flow(cache_policy=NO_CACHE, name="export_memgraph_curation", persist_result=False)
+@flow(name="export_memgraph_curation", persist_result=False)
 def export_memgraph_curation(
     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
 ) -> None:
@@ -466,7 +466,7 @@ def _execute_batch(session, queries, logger):
 # ------------------------------------------------------------------
 # INTERNAL TASK: WIPE DATABASE
 # ------------------------------------------------------------------
-@flow(cache_policy=NO_CACHE, name="wipe_memgraph_database")
+@flow(name="wipe_memgraph_database")
 def _wipe_database(session, logger):
     """Deletes all nodes, relationships and indexes from the database."""
     logger.warning(
@@ -515,7 +515,7 @@ def _wipe_database(session, logger):
 # ------------------------------------------------------------------
 # TASK: IMPORT DATABASE
 # ------------------------------------------------------------------
-@flow(cache_policy=NO_CACHE, name="import_memgraph")
+@flow(name="import_memgraph")
 def import_memgraph(
     uri: str,
     username: str,
