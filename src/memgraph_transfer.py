@@ -388,6 +388,7 @@ def export_memgraph_curation(
 
         # --- WRITE INDEXES ---
         out_f.write("// --- INDEXES ---\n")
+        with driver.session() as session:
             indices = export_indices(session)
         for index in indices:
             label = index["label"]
