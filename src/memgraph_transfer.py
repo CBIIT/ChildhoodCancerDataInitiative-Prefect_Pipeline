@@ -105,6 +105,7 @@ def run_paginated_with_retry(session, query, params=None, page_size=1000, retrie
     skip = 0
     while True:
         paginated_query = query + f" SKIP {skip} LIMIT {page_size}"
+        page = []
         for attempt in range(retries):
             try:
                 page = list(session.run(paginated_query, params or {}))
@@ -112,11 +113,11 @@ def run_paginated_with_retry(session, query, params=None, page_size=1000, retrie
                 break
             except TransactionError as e:
                 if attempt < retries - 1:
-                    logger.warning(f"Transaction error (attempt {attempt + 1}/{retries}) at SKIP {skip}, retrying in {delay}s... Error: {e}")
-                    time.sleep(delay * (attempt + 1))  # exponential backoff
+                    logger.warning(f"Transaction error (attempt {attempt + 1}/{retries}) at SKIP {skip}, retrying in {delay * (attempt + 1)}s... Error: {e}")
+                    time.sleep(delay * (attempt + 1))
                 else:
                     logger.error(f"Transaction error after {retries} attempts at SKIP {skip}: {e}")
-                    return results  # return what we have so far rather than raising
+                    return results
             except Exception as e:
                 if attempt < retries - 1:
                     logger.warning(f"Query failed (attempt {attempt + 1}/{retries}) at SKIP {skip}, retrying in {delay}s... Error: {e}")
@@ -132,7 +133,11 @@ def run_paginated_with_retry(session, query, params=None, page_size=1000, retrie
 
 
 @task(cache_policy=NO_CACHE, name="export_nodes", persist_result=False)
-def export_nodes(driver):
+def export_nodes(driver, output_file, node_vars):
+    """
+    Exports nodes directly to the output file as they are fetched.
+    Populates node_vars dict in place for use by export_relationships.
+    """
     logger = get_run_logger()
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
@@ -146,21 +151,22 @@ def export_nodes(driver):
     study_ids = [record["study_id"] for record in studies]
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
-    nodes = []
     seen_node_ids = set()
+    node_counter = 0
     study_count = 0
     study_total = len(study_ids)
     log_file = f"nodes_export_{get_time()}.tsv"
 
-    with open(log_file, "w") as f:
-        f.write("study\tnode\tcount\n")
+    with open(log_file, "w") as log_f:
+        log_f.write("study\tnode\tcount\n")
 
         for study_id in study_ids:
             study_count += 1
             logger.info(f"Processing study {study_count}/{study_total}: {study_id}...")
+
             with driver.session() as session:
 
-                # Step 2: Get all distinct node labels present in this study
+                # Get all distinct node labels present in this study
                 label_query = """
                 MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
                 UNWIND labels(n) AS label
@@ -168,9 +174,7 @@ def export_nodes(driver):
                 """
                 try:
                     labels = [record["label"] for record in run_paginated_with_retry(session, label_query, {"study_id": study_id})]
-                    logger.info(
-                        f"Found {len(labels)} node labels for study {study_id}: {labels}"
-                    )
+                    logger.info(f"Found {len(labels)} node labels for study {study_id}: {labels}")
                 except Exception as e:
                     logger.error(f"Failed to fetch node labels for study {study_id}: {e}")
                     continue
@@ -188,19 +192,23 @@ def export_nodes(driver):
                         if n.id in seen_node_ids:
                             continue
                         seen_node_ids.add(n.id)
+                        var = f"n{node_counter}"
+                        node_vars[n.id] = var
+                        node_counter += 1
                         new_count += 1
-                        nodes.append({
-                            "id": n.id,
-                            "labels": list(n.labels),
-                            "properties": dict(n)
-                        })
+                        labels_str = format_labels(list(n.labels))
+                        props_str = format_properties(dict(n))
+                        # Write directly to output file
+                        output_file.write(f"CREATE ({var}{labels_str} {props_str});\n")
                     logger.info(f"Added study node for {study_id}")
-                    f.write(f"{study_id}\tstudy\t{new_count}\n")
+                    log_f.write(f"{study_id}\tstudy\t{new_count}\n")
+                    log_f.flush()
                 except Exception as e:
                     logger.error(f"Failed to fetch study node for {study_id}: {e}")
-                    f.write(f"{study_id}\tstudy\tERROR\n")
+                    log_f.write(f"{study_id}\tstudy\tERROR\n")
+                    log_f.flush()
 
-                # Step 3: Query one label at a time
+                # Query one label at a time
                 for label in labels:
                     logger.info(f"Processing label '{label}' for study {study_id}...")
                     query = """
@@ -214,44 +222,41 @@ def export_nodes(driver):
 
                         for record in result:
                             n = record["n"]
-
                             if n.id in seen_node_ids:
                                 continue
                             seen_node_ids.add(n.id)
+                            var = f"n{node_counter}"
+                            node_vars[n.id] = var
+                            node_counter += 1
                             new_count += 1
+                            labels_str = format_labels(list(n.labels))
+                            props_str = format_properties(dict(n))
+                            # Write directly to output file
+                            output_file.write(f"CREATE ({var}{labels_str} {props_str});\n")
 
-                            try:
-                                nodes.append(
-                                    {
-                                        "id": n.id,
-                                        "labels": list(n.labels),
-                                        "properties": dict(n),
-                                    }
-                                )
-                            except Exception as e:
-                                logger.warning(
-                                    f"Failed to process node: {record}. Error: {e}"
-                                )
-
-                        logger.info(
-                            f"Found {new_count} new nodes of label '{label}' for study {study_id}"
-                        )
-                        f.write(f"{study_id}\t{label}\t{new_count}\n")
+                        output_file.flush()  # flush after each label
+                        logger.info(f"Found {new_count} new nodes of label '{label}' for study {study_id}")
+                        log_f.write(f"{study_id}\t{label}\t{new_count}\n")
+                        log_f.flush()
 
                     except Exception as e:
-                        logger.error(
-                            f"Failed to process label '{label}' for study {study_id}: {e}"
-                        )
-                        f.write(f"{study_id}\t{label}\tERROR\n")
+                        logger.error(f"Failed to process label '{label}' for study {study_id}: {e}")
+                        log_f.write(f"{study_id}\t{label}\tERROR\n")
+                        log_f.flush()
                         continue
-                    time.sleep(0.1)  # brief pause to avoid overwhelming the database
 
-    logger.info(f"Total unique nodes exported: {len(nodes)}")
-    return nodes, log_file
+                    time.sleep(0.1)
+
+    logger.info(f"Total unique nodes exported: {node_counter}")
+    return log_file
 
 
 @task(cache_policy=NO_CACHE, name="export_relationships", persist_result=False)
-def export_relationships(driver):
+def export_relationships(driver, output_file, node_vars):
+    """
+    Exports relationships directly to the output file as they are fetched.
+    Requires node_vars to be populated by export_nodes first.
+    """
     logger = get_run_logger()
     logger.info("Fetching studies with promotion_status 'Promote'...")
 
@@ -265,41 +270,35 @@ def export_relationships(driver):
     study_ids = [record["study_id"] for record in studies]
     logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
 
-    rels = []
     seen_rel_ids = set()
     study_count = 0
     study_total = len(study_ids)
     log_file = f"relationships_export_{get_time()}.tsv"
 
-    with open(log_file, "w") as f:
-        f.write("study\trel_type\tcount\n")
+    with open(log_file, "w") as log_f:
+        log_f.write("study\trel_type\tcount\n")
 
         for study_id in study_ids:
             study_count += 1
             logger.info(f"Processing study {study_count}/{study_total}: {study_id}...")
+
             with driver.session() as session:
 
-                # Step 2: Get all relationship types present in this study
+                # Get all relationship types present in this study
                 rel_type_query = """
                 MATCH (st:study {study_id : $study_id})-[*1..6]-(n)-[r]-(m)
                 RETURN DISTINCT type(r) AS rel_type
                 """
                 try:
                     rel_types = [record["rel_type"] for record in run_paginated_with_retry(session, rel_type_query, {"study_id": study_id})]
-                    logger.info(
-                        f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}"
-                    )
+                    logger.info(f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}")
                 except Exception as e:
-                    logger.error(
-                        f"Failed to fetch relationship types for study {study_id}: {e}"
-                    )
+                    logger.error(f"Failed to fetch relationship types for study {study_id}: {e}")
                     continue
 
-                # Step 3: Query one relationship type at a time
+                # Query one relationship type at a time
                 for rel_type in rel_types:
-                    logger.info(
-                        f"Processing relationship type '{rel_type}' for study {study_id}..."
-                    )
+                    logger.info(f"Processing relationship type '{rel_type}' for study {study_id}...")
                     query = """
                     MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
                     WITH DISTINCT n
@@ -319,37 +318,34 @@ def export_relationships(driver):
                             if r.id in seen_rel_ids:
                                 continue
                             seen_rel_ids.add(r.id)
+
+                            start_var = node_vars.get(start_node.id)
+                            end_var = node_vars.get(end_node.id)
+
+                            if not start_var or not end_var:
+                                logger.warning(f"Skipping relationship {r.id} — missing node var for start={start_node.id} or end={end_node.id}")
+                                continue
+
                             new_count += 1
+                            props_str = format_properties(dict(r))
+                            # Write directly to output file
+                            output_file.write(f"CREATE ({start_var})-[:{r.type} {props_str}]->({end_var});\n")
 
-                            try:
-                                rels.append(
-                                    {
-                                        "start": start_node.id,
-                                        "end": end_node.id,
-                                        "type": r.type,
-                                        "properties": dict(r),
-                                    }
-                                )
-                            except Exception as e:
-                                logger.warning(
-                                    f"Failed to process relationship: {record}. Error: {e}"
-                                )
-
-                        logger.info(
-                            f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}"
-                        )
-                        f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
+                        output_file.flush()  # flush after each rel_type
+                        logger.info(f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}")
+                        log_f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
+                        log_f.flush()
 
                     except Exception as e:
-                        logger.error(
-                            f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}"
-                        )
-                        f.write(f"{study_id}\t{rel_type}\tERROR\n")
+                        logger.error(f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}")
+                        log_f.write(f"{study_id}\t{rel_type}\tERROR\n")
+                        log_f.flush()
                         continue
-                    time.sleep(0.1)  # brief pause to avoid overwhelming the database
 
-    logger.info(f"Total unique relationships exported: {len(rels)}")
-    return rels, log_file
+                    time.sleep(0.1)
+
+    logger.info(f"Relationships export complete.")
+    return log_file
 
 
 @task(cache_policy=NO_CACHE, name="export_indices", persist_result=False)
@@ -374,83 +370,43 @@ def export_indices(session):
 def export_memgraph_curation(
     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
 ) -> None:
-    """
-    Export a Memgraph database to a CypherL (.cypher) file using DUMP DATABASE.
-    Each record is assumed to contain a complete Cypher statement.
-    Writes to disk in chunks for large-scale databases.
-    """
     logger = get_run_logger()
     driver = GraphDatabase.driver(uri, auth=(username, password))
-    logger.info(f"Connected to Memgraph")
+    logger.info("Connected to Memgraph")
 
-    nodes, node_log = export_nodes(driver)
-    rels, rel_log = export_relationships(driver)
-    # nodes, node_log = session.execute_read(export_nodes(driver))
-    # rels, rel_log = session.execute_read(export_relationships(driver))
+    node_vars = {}  # shared map of node id -> cypher variable name
 
-    # Map old IDs to variable names
-    node_vars = {}
-    cypher_lines = []
-    total_statements = 0
+    with open(output_file, "w") as out_f:
 
-    # --- CREATE NODES ---
-    for i, node in enumerate(nodes):
-        var = f"n{i}"
-        node_vars[node["id"]] = var
+        # --- WRITE NODES ---
+        out_f.write("// --- NODES ---\n")
+        node_log = export_nodes(driver, out_f, node_vars)
 
-        labels = format_labels(node["labels"])
-        props = format_properties(node["properties"])
+        # --- WRITE RELATIONSHIPS ---
+        out_f.write("// --- RELATIONSHIPS ---\n")
+        rel_log = export_relationships(driver, out_f, node_vars)
 
-        cypher_lines.append(f"CREATE ({var}{labels} {props});")
-        total_statements += 1
+        # --- WRITE INDEXES ---
+        out_f.write("// --- INDEXES ---\n")
+            indices = export_indices(session)
+        for index in indices:
+            label = index["label"]
+            property = index["property"]
+            index_type = index["index_type"].lower()
 
-    # --- CREATE RELATIONSHIPS ---
-    for rel in rels:
-        start_var = node_vars.get(rel["start"])
-        end_var = node_vars.get(rel["end"])
+            if "edge" in index_type:
+                out_f.write(f"CREATE EDGE INDEX ON :{label};\n")
+            elif property:
+                prop = property[0] if isinstance(property, list) else property
+                out_f.write(f"CREATE INDEX ON :{label}({prop});\n")
+            else:
+                out_f.write(f"CREATE INDEX ON :{label};\n")
 
-        if not start_var or not end_var:
-            continue  # skip if node missing
-
-        props = format_properties(rel["properties"])
-
-        cypher_lines.append(
-            f"CREATE ({start_var})-[:{rel['type']} {props}]->({end_var});"
-        )
-        total_statements += 1
-
-    # --- CREATE INDEXES ---
-    indices = session.execute_read(export_indices)
-    logger.info(indices)
-    for index in indices:
-        label = index["label"]
-        property = index["property"]
-        index_type = index["index_type"].lower()
-
-        if "edge" in index_type:
-            # CREATE EDGE INDEX ON :label
-            cypher_lines.append(f"CREATE EDGE INDEX ON :{label};")
-        elif property:
-            # Handle property being either a list or a string
-            prop = property[0] if isinstance(property, list) else property
-            cypher_lines.append(f"CREATE INDEX ON :{label}({prop});")
-        else:
-            # CREATE INDEX ON :label
-            cypher_lines.append(f"CREATE INDEX ON :{label};")
-
-        total_statements += 1
-
-    # --- WRITE FILE ---
-    with open(output_file, "w") as f:
-        for line in cypher_lines:
-            f.write(line + "\n")
-
-        logger.info(
-            f"Export complete {output_file}.\n\n Total statements exported: {total_statements}"
-        )
+        out_f.flush()
 
     driver.close()
     logger.info("Memgraph connection closed.")
+    logger.info(f"Export complete: {output_file}")
 
     return node_log, rel_log
 
