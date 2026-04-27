@@ -4,6 +4,7 @@ from neo4j.exceptions import TransactionError
 from prefect import task, get_run_logger
 from prefect.cache_policies import NO_CACHE
 import json
+from neo4j.time import DateTime, Date, Time, Duration
 from requests import session
 from src.utils import get_time
 import time
@@ -97,6 +98,36 @@ def format_properties(props):
 
 def format_labels(labels):
     return ":" + ":".join(labels) if labels else ""
+
+def format_properties(props):
+    """Convert dict to Cypher map string"""
+    if not props:
+        return "{}"
+    pairs = []
+    for k, v in props.items():
+        if v is None:
+            continue
+        elif isinstance(v, str):
+            v = v.replace('"', '\\"')
+            pairs.append(f'{k}: "{v}"')
+        elif isinstance(v, bool):
+            pairs.append(f'{k}: {str(v).lower()}')
+        elif isinstance(v, (int, float)):
+            pairs.append(f'{k}: {v}')
+        elif isinstance(v, DateTime):
+            pairs.append(f'{k}: "{v.iso_format()}"')
+        elif isinstance(v, Date):
+            pairs.append(f'{k}: "{v.iso_format()}"')
+        elif isinstance(v, Time):
+            pairs.append(f'{k}: "{v.iso_format()}"')
+        elif isinstance(v, Duration):
+            pairs.append(f'{k}: "{str(v)}"')
+        elif isinstance(v, list):
+            serialized = json.dumps([i.iso_format() if isinstance(i, (DateTime, Date, Time)) else i for i in v])
+            pairs.append(f'{k}: {serialized}')
+        else:
+            pairs.append(f'{k}: {json.dumps(v)}')
+    return "{ " + ", ".join(pairs) + " }"
 
 
 def run_paginated_with_retry(session, query, params=None, page_size=1000, retries=3, delay=2):
