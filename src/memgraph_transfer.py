@@ -226,7 +226,7 @@ def export_nodes(driver, output_file, node_vars):
                         node_vars[n.id] = n.id  # map internal id to itself for MATCH lookup
                         node_counter += 1
                         new_count += 1
-                        labels_str = ":__mg_vertex__:" + ":".join(list(n.labels))
+                        labels_str = "__mg_vertex__:" + ":".join(list(n.labels))
                         props = dict(n)
                         props["__mg_id__"] = n.id  # inject __mg_id__ for later MATCH
                         props_str = format_properties(props)
@@ -259,7 +259,7 @@ def export_nodes(driver, output_file, node_vars):
                             node_vars[n.id] = n.id
                             node_counter += 1
                             new_count += 1
-                            labels_str = ":__mg_vertex__:" + ":".join(list(n.labels))
+                            labels_str = "__mg_vertex__:" + ":".join(list(n.labels))
                             props = dict(n)
                             props["__mg_id__"] = n.id
                             props_str = format_properties(props)
