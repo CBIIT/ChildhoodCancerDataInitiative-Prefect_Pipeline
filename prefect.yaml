@@ -1895,7 +1895,7 @@ deployments:
       job_variables: {}
 
 
-  - name: db-index-creation-32gb-v3
+  - name: TEST-db-index-creation-32gb-v3
     version: null
     tags: ["TEST","SVB","CCDIDC-2437","V3", "DCC", "Centralized Worker"]
     description: null
