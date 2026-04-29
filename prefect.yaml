@@ -1893,31 +1893,3 @@ deployments:
       name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
-
-  - name: TEST-validate-db-data-32gb-v3
-    version: null
-    tags: ["TEST","CCDIDC-2440","Centralized Worker","DCC","V3"]
-    description: null
-    entrypoint: workflows/validate_db_data.py:validate_db_data
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
-
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2440-Validation_and_Stats_update
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
