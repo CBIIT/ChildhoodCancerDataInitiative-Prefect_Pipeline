@@ -124,17 +124,17 @@ RETURN  startNode.guid AS startNodeId,
     main_cypher_query_per_study_node: str = (
         """
 MATCH (study:study {{study_id:"{study_accession}"}})
-MATCH (study)-[*0..5]-(linkedNode)-[:of_{node_label}]-(startNode:{node_label})
+MATCH (study)<-[*1..5]-(linkedNode)<-[:of_{node_label}]-(startNode:{node_label})
 WITH DISTINCT study, startNode, linkedNode
 UNWIND keys(properties(startNode)) AS propertyName
 RETURN
-  startNode.guid              AS startNodeId,
-  labels(startNode)           AS startNodeLabels,
-  propertyName                AS startNodePropertyName,
-  startNode[propertyName]     AS startNodePropertyValue,
-  linkedNode.guid             AS linkedNodeId,
-  labels(linkedNode)          AS linkedNodeLabels,
-  study.study_id              AS dbgap_accession
+    startNode.guid              AS startNodeId,
+    labels(startNode)           AS startNodeLabels,
+    propertyName                AS startNodePropertyName,
+    startNode[propertyName]     AS startNodePropertyValue,
+    linkedNode.guid             AS linkedNodeId,
+    labels(linkedNode)          AS linkedNodeLabels,
+    study.study_id              AS dbgap_accession
 """
     )
     unique_nodes_query: str = (
@@ -152,13 +152,13 @@ RETURN
     )
     all_nodes_entries_study_cypher_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*1..7]-(node)
+MATCH (study:study {{study_id: "{study_id}"}})<-[*1..7]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
     )
     node_id_cypher_query_query: str = (
         """
-MATCH (study:study{{study_id:"{study_id}"}})-[*0..7]-(node:{node})
+MATCH (study:study{{study_id:"{study_id}"}})<-[*1..7]-(node:{node})
 RETURN node.guid AS id
 """
     )
