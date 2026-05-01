@@ -1895,9 +1895,9 @@ deployments:
       job_variables: {}
 
 
-  - name: TEST-db-index-creation-32gb-v3
+  - name: daap-db-index-creation-32gb-v3
     version: null
-    tags: ["TEST","SVB","CCDIDC-2437","V3", "DCC", "Centralized Worker"]
+    tags: ["Production","DaaP","V3", "Centralized Worker"]
     description: null
     entrypoint: workflows/db_index_creation.py:db_index_creation_flow
     schedule: null
@@ -1918,7 +1918,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2437-Index_Creation_Script
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
