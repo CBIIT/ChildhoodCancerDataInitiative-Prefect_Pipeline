@@ -25,7 +25,7 @@ def db_index_creation_flow(
     Args:
         bucket: Working cloud storage bucket name.
         runner: Identifier for the runner executing the flow and output file path.
-        file_path: s3 file path to yaml file containing index management queries. One line per query, each line should be a complete Cypher statement.
+        file_path: s3 file path to CypherL file containing index management queries. One line per query, each line should be a complete Cypher statement.
         database_target_account_id (str): Account ID for the target database
         database_target_secret_path (str): Secret path for the target database
         database_target_secret_key_ip (str): Secret key for the IP of the target database
@@ -62,7 +62,7 @@ def db_index_creation_flow(
 
     driver = GraphDatabase.driver(uri, auth=(username, password))
 
-    # Read in the yaml file with cypher commands and execute queries for index management
+    # Read in the CypherL file with cypher commands and execute queries for index management
     for line in open(file_path_local, "r", encoding="utf-8"):
         query = line.strip()
         if not query:
