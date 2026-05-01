@@ -1893,3 +1893,39 @@ deployments:
       name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
+
+
+  - name: daap-db-index-creation-32gb-v3
+    version: null
+    tags: ["Production","DaaP","V3", "Centralized Worker"]
+    description: null
+    entrypoint: workflows/db_index_creation.py:db_index_creation_flow
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "ccdi-sandbox-export"
+      file_path: "directory/path/to/file.cypherl"
+      database_target_account_id: "aws_account_id"
+      database_target_secret_path: "secret_path"
+      database_target_secret_key_ip: "secret_key_ip"
+      database_target_secret_key_username: "secret_key_username"
+      database_target_secret_key_password: "secret_key_password"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
