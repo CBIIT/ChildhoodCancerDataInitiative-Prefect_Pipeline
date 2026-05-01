@@ -109,24 +109,33 @@ def format_properties(props):
             continue
         elif isinstance(v, str):
             v = v.replace('"', '\\"')
-            pairs.append(f'{k}: "{v}"')
+            pairs.append(f'`{k}`: "{v}"')
         elif isinstance(v, bool):
-            pairs.append(f'{k}: {str(v).lower()}')
+            pairs.append(f'`{k}`: {str(v).lower()}')
         elif isinstance(v, (int, float)):
-            pairs.append(f'{k}: {v}')
+            pairs.append(f'`{k}`: {v}')
         elif isinstance(v, DateTime):
-            pairs.append(f'{k}: "{v.iso_format()}"')
+            pairs.append(f'`{k}`: DATETIME("{v.iso_format()}")')
         elif isinstance(v, Date):
-            pairs.append(f'{k}: "{v.iso_format()}"')
+            pairs.append(f'`{k}`: DATE("{v.iso_format()}")')
         elif isinstance(v, Time):
-            pairs.append(f'{k}: "{v.iso_format()}"')
+            pairs.append(f'`{k}`: TIME("{v.iso_format()}")')
         elif isinstance(v, Duration):
-            pairs.append(f'{k}: "{str(v)}"')
+            pairs.append(f'`{k}`: DURATION("{str(v)}")')
         elif isinstance(v, list):
-            serialized = json.dumps([i.iso_format() if isinstance(i, (DateTime, Date, Time)) else i for i in v])
-            pairs.append(f'{k}: {serialized}')
+            serialized_items = []
+            for i in v:
+                if isinstance(i, DateTime):
+                    serialized_items.append(f'DATETIME("{i.iso_format()}")')
+                elif isinstance(i, Date):
+                    serialized_items.append(f'DATE("{i.iso_format()}")')
+                elif isinstance(i, Time):
+                    serialized_items.append(f'TIME("{i.iso_format()}")')
+                else:
+                    serialized_items.append(json.dumps(i))
+            pairs.append(f'`{k}`: [{", ".join(serialized_items)}]')
         else:
-            pairs.append(f'{k}: {json.dumps(v)}')
+            pairs.append(f'`{k}`: {json.dumps(v)}')
     return "{ " + ", ".join(pairs) + " }"
 
 
@@ -159,7 +168,7 @@ def run_paginated_with_retry(session, query, params=None, page_size=1000, retrie
         if len(page) < page_size:
             break
         skip += page_size
-        time.sleep(0.5)
+        time.sleep(0.1)  # brief pause between pages to reduce load
     return results
 
 
@@ -226,7 +235,7 @@ def export_nodes(driver, output_file, node_vars):
                         node_vars[n.id] = n.id  # map internal id to itself for MATCH lookup
                         node_counter += 1
                         new_count += 1
-                        labels_str = "__mg_vertex__:" + ":".join(list(n.labels))
+                        labels_str = "__mg_vertex__:" + ":".join([f"`{l}`" for l in list(n.labels)])
                         props = dict(n)
                         props["__mg_id__"] = n.id  # inject __mg_id__ for later MATCH
                         props_str = format_properties(props)
@@ -331,7 +340,7 @@ def export_relationships(driver, output_file, node_vars):
                     query = """
                     MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
                     WITH DISTINCT n
-                    MATCH (n)-[r]-(m)
+                    MATCH (n)-[r]->(m)
                     WHERE type(r) = $rel_type
                     RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
                     """
@@ -357,9 +366,9 @@ def export_relationships(driver, output_file, node_vars):
                             props_str = format_properties(dict(r))
                             # Use MATCH on __mg_id__ to find nodes, same as DUMP DATABASE format
                             output_file.write(
-                                f"MATCH (u:__mg_vertex__ {{__mg_id__: {start_node.id}}}), "
-                                f"(v:__mg_vertex__ {{__mg_id__: {end_node.id}}}) "
-                                f"CREATE (u)-[:{rel_type} {props_str}]->(v);\n"
+                                f"MATCH (u:__mg_vertex__), (v:__mg_vertex__) "
+                                f"WHERE u.__mg_id__ = {start_node.id} AND v.__mg_id__ = {end_node.id} "
+                                f"CREATE (u)-[:`{rel_type}` {props_str}]->(v);\n"
                             )
 
                         output_file.flush()
