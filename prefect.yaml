@@ -1906,7 +1906,7 @@ deployments:
     parameters:
       bucket: "ccdi-validation"
       runner: "ccdi-sandbox-export"
-      file_path: str,
+      file_path: "directory/path/to/file.cypherl"
       database_target_account_id: "aws_account_id"
       database_target_secret_path: "secret_path"
       database_target_secret_key_ip: "secret_key_ip"
