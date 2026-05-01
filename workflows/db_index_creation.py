@@ -70,6 +70,9 @@ def db_index_creation_flow(
         elif query.startswith("#"):
             logger.info(f"Skipping comment line: {query}")
             continue  # skip comment lines
+        elif query.startswith("//"):
+            logger.info(f"Skipping comment line: {query}")
+            continue  # skip comment lines
         elif not query.endswith(";"):
             logger.warning(f"Query does not end with a semicolon: {query}. This may cause execution issues.")
             logger.warning(f"Skipping query: {query}")
