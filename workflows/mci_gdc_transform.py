@@ -25,6 +25,7 @@ PARENT_SUB_IDS = {
     "sample": "cases.submitter_id",
     "demographic": "cases.submitter_id",
     "diagnosis": "cases.submitter_id",
+    "case": "projects.code",
 }
 
 @task(name="Extract Metadata to TSV Task: Survival Status Parser", log_prints=True)
@@ -467,12 +468,13 @@ def validate_graph(output_dfs: dict, logger: logging.Logger) -> None:
     """
 
     for node in output_dfs.keys():
-        if node in PARENT_SUB_IDS.keys():
+        if node in PARENT_SUB_IDS.keys() and node != 'case':  # only validate nodes that have parent submitter_id fields and exclude case node which uses project code as submitter_id
             id_col = PARENT_SUB_IDS[node]
             if id_col not in output_dfs[node].columns:
                 logger.error(
                     f"Validation error: {id_col} column missing from {node} node dataframe."
                 )
+                continue
             parent_node = id_col.split(".")[0].rstrip("s")
             missing_ids = set(output_dfs[node][id_col]) - set(
                 output_dfs[parent_node]["submitter_id"]
