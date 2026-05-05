@@ -539,7 +539,7 @@ def mci_gdc_transform(
     logger.info(f"Logs beginning at {dt}")
 
     # download manifest file
-    file_dl(bucket, manifest_file, logger)
+    file_dl(bucket, manifest_file)
 
     # set up working directory path
     working_dir = f"/usr/local/data/mci_gdc_transform_{dt}"
