@@ -554,7 +554,7 @@ def mci_gdc_transform(
     # do prior work to transform the manifest file into GDC submission files
     # i.e. filter out most recent surival status, filter out already submitted files and patients, etc.
     prepped_manifest = setup_transform(
-        working_dir, manifest_file, dt, preservation_meth_platform_file
+        working_dir, manifest_file, dt, preservation_meth_platform_file, bucket, runner
     )
 
     # read in rules file for transformations
