@@ -292,7 +292,7 @@ def methylation_parser(
     ]
     return methylation_array_file_df
 
-
+@task(name="Convert TSV to JSON Task", log_prints=True)
 def convert_tsv_json(df: pd.DataFrame, output_json: str):
     """Convert a TSV file to JSON format.
 
