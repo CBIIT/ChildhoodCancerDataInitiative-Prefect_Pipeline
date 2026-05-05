@@ -311,12 +311,9 @@ def preservation_method_n_meth_platform_parser(
     os.makedirs(pres_files_dir, exist_ok=True)
 
     ## read in manifest file sheets to get files to download
-    pres_seq_df = pd.read_excel(manifest_file, sheet_name="sequencing_file", dtype=str)[
-        []
-    ]
+    pres_seq_df = pd.read_excel(manifest_file, sheet_name="sequencing_file")
     pres_meth_df = pd.read_excel(
-        manifest_file, sheet_name="methylation_array_file", dtype=str
-    )
+        manifest_file, sheet_name="methylation_array_file")
     
     ## download json files from node
     pres_seq_df = pres_seq_df[pres_seq_df.file_type == 'json'][['file_name', 'file_path']].drop_duplicates()
