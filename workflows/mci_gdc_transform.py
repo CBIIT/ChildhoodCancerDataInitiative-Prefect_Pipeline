@@ -366,7 +366,7 @@ def setup_transform(
 
     processed_manifest_file = f"{working_dir}/processed_manifest_{dt}.xlsx"
 
-    if preservation_meth_platform_file is None:
+    if preservation_meth_platform_file is None or not os.path.isfile(preservation_meth_platform_file):
         preservation_meth_platform_file = preservation_method_n_meth_platform_parser(
             manifest_file, working_dir, dt, bucket, runner
         )
