@@ -316,8 +316,8 @@ def preservation_method_n_meth_platform_parser(
         manifest_file, sheet_name="methylation_array_file")
     
     ## download json files from node
-    pres_seq_df = pres_seq_df[pres_seq_df.file_type == 'json'][['file_name', 'file_path']].drop_duplicates()
-    pres_meth_df = pres_meth_df[pres_meth_df.file_type == 'json'][['file_name', 'file_path']].drop_duplicates()
+    pres_seq_df = pres_seq_df[pres_seq_df.file_type == 'json'][['file_name', 'file_url']].drop_duplicates()
+    pres_meth_df = pres_meth_df[pres_meth_df.file_type == 'json'][['file_name', 'file_url']].drop_duplicates()
     concat_dl_df = pd.concat([pres_seq_df, pres_meth_df], ignore_index=True).drop_duplicates()
     if not [i for i in os.listdir(os.getcwd()) if i.endswith('.json')]: # check if dir empty, if so download JSONs
 
