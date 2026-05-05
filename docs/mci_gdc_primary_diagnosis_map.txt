@@ -18,7 +18,7 @@ Angiomatoid fibrous histiocytoma	Angiomatoid fibrous histiocytoma	8836/1
 Angiomyofibroblastoma	Angiomyofibroblastoma	8826/0
 Angiomyosarcoma	Angiomyosarcoma	8894/3
 Astroblastoma	Astroblastoma	9430/3
-Astrocytoma, anaplastic, NOS	Astrocytoma, anaplastic, NOS	9401/3
+Astrocytoma, anaplastic, NOS	Astrocytoma, anaplastic	9401/3
 Astrocytoma, NOS	Astrocytoma, NOS	9400/3
 Atypical choroid plexus papilloma	Atypical choroid plexus papilloma	9390/1
 Atypical meningioma	Atypical meningioma	9539/1
