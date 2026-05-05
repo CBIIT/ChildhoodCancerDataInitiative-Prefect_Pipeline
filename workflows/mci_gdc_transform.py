@@ -333,14 +333,14 @@ def preservation_method_n_meth_platform_parser(
             json_downloader(concat_dl_df[chunk:chunk+chunk_size], [], logger)
     
     ## run preservation method and methylation platform parser to add preservation method and methylation platform to
-    output_file = f"{working_dir}/preservation_method_platform_output_{dt}.tsv"
+    output_file = f"{pres_files_dir}/preservation_method_platform_output_{dt}.tsv"
     extract_metadata_to_tsv(pres_files_dir, output_file)
+    
+    # after processing, upload to output dir in S3
+    file_ul(bucket, runner, "", os.path.basename(output_file))
     
     # chdir back to running dir
     os.chdir(cwd)
-
-    # after processing, upload to output dir in S3
-    file_ul(bucket, runner, "", output_file)
 
     return output_file
 
