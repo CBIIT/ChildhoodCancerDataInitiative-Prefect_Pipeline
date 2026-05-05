@@ -15,6 +15,18 @@ from src.cog_igm_utils import json_downloader
 from prefect_shell import ShellOperation
 from typing import Literal
 
+
+# mapping dict for parent submitter_id fields for each node type
+PARENT_SUB_IDS = {
+    "submitted_unaligned_reads": "read_groups.submitter_id",
+    "raw_methylation_array": "aliquots.submitter_id",
+    "read_group": "aliquots.submitter_id",
+    "aliquot": "samples.submitter_id",
+    "sample": "cases.submitter_id",
+    "demographic": "cases.submitter_id",
+    "diagnosis": "cases.submitter_id",
+}
+
 @task(name="Extract Metadata to TSV Task: Survival Status Parser", log_prints=True)
 def survival_status_parser(
     participant_df: pd.DataFrame, survival_df: pd.DataFrame
@@ -280,6 +292,33 @@ def methylation_parser(
     ]
     return methylation_array_file_df
 
+
+def convert_tsv_json(df: pd.DataFrame, output_json: str):
+    """Convert a TSV file to JSON format.
+
+    Args:
+        pd.DataFrame: DataFrame containing the data to be converted.
+        output_json (str): Path to the output JSON file.
+    """
+    # Convert DataFrame to JSON
+    json_data = json.loads(df.to_json(orient="records"))
+    
+    # grab type from first node in list
+    node_type = json_data[0]["type"] if "type" in json_data[0] else "unknown_node"
+    
+    sub_id = PARENT_SUB_IDS.get(node_type)
+    
+    def format_parent_id(json_obj, sub_id):
+        for i in range(0, len(json_obj)):
+            if sub_id in json_obj[i].keys():
+                json_obj[i][sub_id.split(".")[0]] = { "submitter_id" : json_obj[i][sub_id] }
+                del json_obj[i][sub_id]
+        return json_obj
+
+    # Write JSON data to file
+    with open(output_json, "w") as json_file:
+        json_file.write(json.dumps(format_parent_id(json_data, sub_id)))
+
 @flow(name="Preservation Method and Methylation Platform Parser Flow", log_prints=True)
 def preservation_method_n_meth_platform_parser(
     manifest_file: str,
@@ -427,20 +466,9 @@ def validate_graph(output_dfs: dict, logger: logging.Logger) -> None:
         None
     """
 
-    # mapping dict for required nodes for cases with sequencing and methylation files
-    required_nodes = {
-        "submitted_unaligned_reads": "read_groups.submitter_id",
-        "raw_methylation_array": "aliquots.submitter_id",
-        "read_group": "aliquots.submitter_id",
-        "aliquot": "samples.submitter_id",
-        "sample": "cases.submitter_id",
-        "demographic": "cases.submitter_id",
-        "diagnosis": "cases.submitter_id",
-    }
-
     for node in output_dfs.keys():
-        if node in required_nodes.keys():
-            id_col = required_nodes[node]
+        if node in PARENT_SUB_IDS.keys():
+            id_col = PARENT_SUB_IDS[node]
             if id_col not in output_dfs[node].columns:
                 logger.error(
                     f"Validation error: {id_col} column missing from {node} node dataframe."
@@ -603,8 +631,10 @@ def mci_gdc_transform(
     for node, df in output_dfs.items():
         print(f"Output for node {node}:")
         print(df.head())
-        # save to file
+        # save to tsv file
         df.to_csv(f"{outputs_dir}/{node}_output.tsv", sep="\t", index=False)
+        # save to json
+        convert_tsv_json(df, f"{outputs_dir}/{node}_output.json")
 
     # validate that seq/meth files thru case have complete set of nodes' data
     validate_graph(output_dfs, logger)
