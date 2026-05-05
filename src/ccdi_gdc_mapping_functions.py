@@ -470,6 +470,8 @@ def apply_modifier(value, modifiers, modifier_values):
             value = modifier_value
         elif modifier == "default_bool":
             value = bool(modifier_value)
+        elif modifier == "default_int":
+            value = int(modifier_value)
         elif modifier == "uppercase":
             value = str(value).upper()
 

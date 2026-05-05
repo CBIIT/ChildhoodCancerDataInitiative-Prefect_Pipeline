@@ -11,7 +11,7 @@ CCDI		demographic	submitter_id	concatenation		participant	participant_id	suffix	
 CCDI		demographic	race	race		participant	race				
 CCDI		demographic	ethnicity	eth		participant	race				
 CCDI		demographic	sex_at_birth	sex		participant	sex_at_birth				
-CCDI		demographic	vital_status	liftover		participant	vital_status				
+CCDI		demographic	vital_status	liftover		participant	last_known_survival_status				
 CCDI		demographic	cases.submitter_id	liftover		participant	participant_id				
 CCDI		diagnosis	type	default		diagnosis		default	diagnosis		
 CCDI		diagnosis	project_id	default		diagnosis		default	CCDI-MCI		
@@ -46,7 +46,7 @@ CCDI	WXS	read_group	library_selection	liftover		sequencing_file	library_selectio
 CCDI	WXS	read_group	library_strategy	liftover	WXS	sequencing_file	library_strategy				
 CCDI	WXS	read_group	library_name	liftover		sequencing_file	sample.sample_id				
 CCDI	WXS	read_group	is_paired_end	default		sequencing_file		default_bool	True		
-CCDI	WXS	read_group	read_length	default		sequencing_file		default	150		
+CCDI	WXS	read_group	read_length	default		sequencing_file		default_int	150		
 CCDI	WXS	read_group	read_group_name	wxs_rg_id_parse		sequencing_file	"sample.sample_id,file_name"				
 CCDI	WXS	read_group	target_capture_kit	default		sequencing_file		default	xGen Exome Research Panel v2.0		
 CCDI	WXS	read_group	aliquots.submitter_id	liftover		sequencing_file	sample.sample_id	suffix	aliquot		
@@ -73,7 +73,7 @@ CCDI	RNA-Seq_Azenta	read_group	library_selection	liftover		sequencing_file	libra
 CCDI	RNA-Seq_Azenta	read_group	library_strategy	liftover	RNA-Seq	sequencing_file	library_strategy				
 CCDI	RNA-Seq_Azenta	read_group	library_name	liftover		sequencing_file	sample.sample_id				
 CCDI	RNA-Seq_Azenta	read_group	is_paired_end	default		sequencing_file		default_bool	True		
-CCDI	RNA-Seq_Azenta	read_group	read_length	default		sequencing_file		default	150		
+CCDI	RNA-Seq_Azenta	read_group	read_length	default		sequencing_file		default_int	150		
 CCDI	RNA-Seq_Azenta	read_group	read_group_name	liftover		sequencing_file	library_id				
 CCDI	RNA-Seq_Azenta	read_group	target_capture_kit	default		sequencing_file		default	Not Applicable		
 CCDI	RNA-Seq_Azenta	read_group	aliquots.submitter_id	liftover		sequencing_file	sample.sample_id	suffix	aliquot		

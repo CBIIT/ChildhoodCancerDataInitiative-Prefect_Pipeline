@@ -312,7 +312,7 @@ def convert_tsv_json(df: pd.DataFrame, output_json: str):
     def format_parent_id(json_obj, sub_id):
         for i in range(0, len(json_obj)):
             if sub_id in json_obj[i].keys():
-                json_obj[i][sub_id.split(".")[0]] = { "submitter_id" : json_obj[i][sub_id] }
+                json_obj[i][sub_id.split(".")[0]] = { sub_id.split(".")[1] : json_obj[i][sub_id] }
                 del json_obj[i][sub_id]
         return json_obj
 
