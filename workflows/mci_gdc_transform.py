@@ -532,13 +532,15 @@ def mci_gdc_transform(
     # set up logger
     log_filename = f"DCC_GDC_transform_{dt}.log"
     file_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(
-        filename=log_filename,
-        level=logging.INFO,
-        format=file_FORMAT,
-        filemode="w"
-    )
+    
     logger = logging.getLogger("DCC_GDC_transform")
+    logger.setLevel(logging.INFO)
+    
+    # Create file handler
+    file_handler = logging.FileHandler(log_filename, mode="w")
+    file_handler.setFormatter(logging.Formatter(file_FORMAT))
+    file_handler.setLevel(logging.INFO)
+    logger.addHandler(file_handler)
 
     logger.info(f"Logs beginning at {dt}")
 
