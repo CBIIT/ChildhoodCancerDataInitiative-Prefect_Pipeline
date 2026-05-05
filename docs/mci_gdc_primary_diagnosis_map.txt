@@ -1,0 +1,263 @@
+diagnosis	primary_diagnosis	morphology
+Abdominal fibromatosis	Abdominal fibromatosis	8822/1
+Acinar cell carcinoma	Acinar cell carcinoma	8550/3
+Adenocarcinoma in adenomatous polyposis coli	Adenocarcinoma in adenomatous polyposis coli	8220/3
+Adenocarcinoma in situ in tubulovillous adenoma	Adenocarcinoma in situ in tubulovillous adenoma	8263/2
+Adenocarcinoma, metastatic, NOS	Adenocarcinoma, metastatic, NOS	8140/6
+Adenocarcinoma, NOS	Adenocarcinoma, NOS	8140/3
+Adenoid cystic carcinoma	Adenoid cystic carcinoma	8200/3
+Adenoma, NOS	Adenoma, NOS	8140/0
+Adenosarcoma	Adenosarcoma	8933/3
+Adrenal cortical adenoma, NOS	Adrenal cortical adenoma, NOS	8370/0
+Adrenal cortical carcinoma	Adrenal cortical carcinoma	8370/3
+Aggressive fibromatosis	Aggressive fibromatosis	8821/1
+Alveolar rhabdomyosarcoma	Alveolar rhabdomyosarcoma	8920/3
+Alveolar soft part sarcoma	Alveolar soft part sarcoma	9581/3
+Angiocentric immunoproliferative lesion	Angiocentric immunoproliferative lesion	9766/1
+Angiomatoid fibrous histiocytoma	Angiomatoid fibrous histiocytoma	8836/1
+Angiomyofibroblastoma	Angiomyofibroblastoma	8826/0
+Angiomyosarcoma	Angiomyosarcoma	8894/3
+Astroblastoma	Astroblastoma	9430/3
+Astrocytoma, anaplastic, NOS	Astrocytoma, anaplastic, NOS	9401/3
+Astrocytoma, NOS	Astrocytoma, NOS	9400/3
+Atypical choroid plexus papilloma	Atypical choroid plexus papilloma	9390/1
+Atypical meningioma	Atypical meningioma	9539/1
+Atypical teratoid/rhabdoid tumor	Atypical teratoid/rhabdoid tumor	9508/3
+Benign cystic nephroma	Benign cystic nephroma	8959/0
+Benign fibrous histiocytoma, NOS	Benign fibrous histiocytoma	8830/0
+Capillary hemangioma	Capillary hemangioma	9131/0
+Carcinoid tumor of uncertain malignant potential	Carcinoid tumor of uncertain malignant potential	8240/1
+Carcinoma ex pleomorphic adenoma	Pleomorphic adenoma	8941/3
+Carcinoma in situ, NOS	Carcinoma in situ, NOS	8010/2
+Carcinoma, anaplastic, NOS	Carcinoma, anaplastic, NOS	8021/3
+Carcinoma, metastatic, NOS	Carcinoma, metastatic, NOS	8010/6
+Carcinoma, NOS	Carcinoma, NOS	8010/3
+Carcinoma, undifferentiated, NOS	Carcinoma, undifferentiated, NOS	8020/3
+Carcinomatosis	Carcinomatosis	8010/9
+Central neurocytoma	Central neurocytoma	9506/1
+Chondroid chordoma	Chondroid chordoma	9371/3
+Chondromyxoid fibroma	Chondromyxoid fibroma	9241/0
+Chordoma, NOS	Chordoma, NOS	9370/3
+Choriocarcinoma combined with other germ cell elements	Choriocarcinoma combined with other germ cell elements	9101/3
+Choroid plexus carcinoma	Choroid plexus carcinoma	9390/3
+Choroid plexus papilloma, NOS	Choroid plexus papilloma, NOS	9390/0
+Clear cell adenocarcinoma, NOS	Clear cell adenocarcinoma, NOS	8310/3
+Clear cell meningioma	Clear cell meningioma	9538/1
+Clear cell sarcoma of kidney	Clear cell sarcoma of kidney	8964/3
+Clear cell sarcoma, NOS	Clear cell sarcoma, NOS	9044/3
+Craniopharyngioma, NOS	Craniopharyngioma	9350/1
+Craniopharyngioma, adamantinomatous	Craniopharyngioma, adamantinomatous	9351/1
+Cribriform carcinoma, NOS	Cribriform carcinoma, NOS	8201/3
+Dedifferentiated liposarcoma	Dedifferentiated liposarcoma	8858/3
+Dermatofibroma, NOS	Dermatofibroma, NOS	8832/0
+Dermatofibrosarcoma protuberans, NOS	Dermatofibrosarcoma protuberans, NOS	Unknown
+Desmoplastic fibroma	Desmoplastic fibroma	8823/0
+Desmoplastic infantile astrocytoma	Desmoplastic infantile astrocytoma	9412/1
+Desmoplastic melanoma, NOS	Neoplasm, NOS	8000/1
+Desmoplastic nodular medulloblastoma	Desmoplastic nodular medulloblastoma	9471/3
+Desmoplastic small round cell tumor	Desmoplastic small round cell tumor	8806/3
+Diffuse large B-cell lymphoma, NOS	Diffuse large B-cell lymphoma, NOS	9680/3
+Dysembryoplastic neuroepithelial tumor	Dysembryoplastic neuroepithelial tumor	9413/0
+Dysgerminoma	Dysgerminoma	9060/3
+Dysplastic gangliocytoma of cerebellum (Lhermitte-Duclos)	Dysplastic gangliocytoma of cerebellum (Lhermitte-Duclos)	9493/0
+Embryonal carcinoma, NOS	Embryonal carcinoma, NOS	9070/3
+Embryonal rhabdomyosarcoma, NOS	Embryonal rhabdomyosarcoma, NOS	8910/3
+Embryonal sarcoma	Embryonal sarcoma	8991/3
+Endometrioid adenoma, NOS	Endometrioid adenoma, NOS	8380/0
+Ependymoma, anaplastic	Ependymoma, anaplastic	9392/3
+Ependymoma, NOS	Ependymoma, NOS	9391/3
+Epithelial tumor, benign	Epithelial tumor, benign	8010/0
+Epithelial-myoepithelial carcinoma	Epithelial-myoepithelial carcinoma	8562/3
+Epithelioid and spindle cell nevus	Epithelioid and spindle cell nevus	8770/0
+Epithelioid hemangioendothelioma, NOS	Epithelioid hemangioendothelioma, NOS	9133/1
+Epithelioid mesothelioma, malignant	Epithelioid mesothelioma, malignant	9052/3
+Epithelioid sarcoma	Epithelioid sarcoma	8804/3
+Ewing sarcoma	Ewing sarcoma	9260/3
+Fibrillary astrocytoma	Fibrillary astrocytoma	9420/3
+Fibroma, NOS	Fibroma, NOS	8810/0
+Fibromyxosarcoma	Fibromyxosarcoma	8811/3
+Fibrosarcoma, NOS	Fibrosarcoma, NOS	8810/3
+Follicular adenocarcinoma, trabecular	Follicular adenocarcinoma, trabecular	8332/3
+Follicular adenoma, NOS	Follicular adenoma	8330/0
+Follicular carcinoma, minimally invasive	Follicular carcinoma, minimally invasive	8335/3
+Follicular carcinoma, NOS	Follicular carcinoma, NOS	8330/3
+Gangliocytoma	Gangliocytoma	9492/0
+Ganglioglioma, NOS	Ganglioglioma, NOS	9505/1
+Ganglioneuroblastoma	Ganglioneuroblastoma	9490/3
+Ganglioneuroma	Ganglioneuroma	9490/0
+Gastrinoma, NOS	Gastrinoma, NOS	8153/3
+Gastrointestinal stromal tumor	Gastrointestinal stromal tumor, NOS	8936/1
+Gastrointestinal stromal tumor, benign	Gastrointestinal stromal tumor, benign	8936/0
+Gastrointestinal stromal tumor, NOS	Gastrointestinal stromal tumor, NOS	8936/1
+Genital rhabdomyoma	Genital rhabdomyoma	8905/0
+Germ cell tumor, nonseminomatous	Germ cell tumor, nonseminomatous	9065/3
+Germinoma	Germinoma	9064/3
+Giant cell glioblastoma	Giant cell glioblastoma	9441/3
+Giant cell tumor of soft parts, NOS	Giant cell tumor of soft parts, NOS	9251/1
+Glioblastoma, NOS	Glioblastoma	9440/3
+Glioma, malignant	Glioma, malignant	9380/3
+Gliomatosis cerebri	Gliomatosis cerebri	9381/3
+Gliosarcoma	Gliosarcoma	9442/3
+Granular cell tumor, malignant	Granular cell tumor, malignant	9580/3
+Granulosa cell tumor, adult type	Granulosa cell tumor, adult type	8620/1
+Granulosa cell tumor, juvenile	Granulosa cell tumor, juvenile	8622/1
+Gynandroblastoma	Gynandroblastoma	8632/1
+Hemangioblastoma	Neoplasm, NOS	8000/1
+Hemangioendothelioma, malignant	Hemangioendothelioma, malignant	9130/3
+Hemangioendothelioma, NOS	Hemangioendothelioma, NOS	9130/1
+Hemangioma, NOS	Hemangioma, NOS	9120/0
+Hepatocellular carcinoma, fibrolamellar	Hepatocellular carcinoma, fibrolamellar	8171/3
+Histiocytic sarcoma	Histiocytic sarcoma	9755/3
+Infantile fibrosarcoma	Infantile fibrosarcoma	8814/3
+Intraductal papillary mucinous neoplasm with an associated invasive carcinoma	Intraductal papillary mucinous neoplasm with an associated invasive carcinoma	8453/3
+Lactotroph adenoma	Adenoma, NOS	8140/0
+Large cell medulloblastoma	Large cell medulloblastoma	9474/3
+Leiomyosarcoma, NOS	Leiomyosarcoma, NOS	8890/3
+Leydig cell tumor, malignant	Leydig cell tumor, malignant	8650/3
+Leydig cell tumor, NOS	Leydig cell tumor, NOS	8650/1
+Liposarcoma, NOS	Liposarcoma, NOS	8850/3
+Lymphoepithelial carcinoma	Lymphoepithelial carcinoma	8082/3
+Malignant eccrine spiradenoma	Malignant eccrine spiradenoma	8403/3
+Malignant lymphoma, non-Hodgkin, NOS	Malignant lymphoma, non-Hodgkin, NOS	9591/3
+Malignant melanoma arising in giant congenital nevus	Malignant melanoma, NOS	8720/3
+Malignant melanoma, NOS	Malignant melanoma, NOS	8720/3
+Malignant Peripheral Nerve Sheath Tumor	Malignant peripheral nerve sheath tumor	9540/3
+Malignant peripheral nerve sheath tumor with rhabdomyoblastic differentiation	Malignant peripheral nerve sheath tumor with rhabdomyoblastic differentiation	9561/3
+Malignant tumor, small cell type	Malignant tumor, small cell type	8002/3
+Malignant tumor, spindle cell type	Malignant tumor, spindle cell type	8004/3
+Medullary carcinoma, NOS	Medullary carcinoma, NOS	8510/3
+Medulloblastoma, NOS	Medulloblastoma, NOS	9470/3
+Medulloepithelioma, NOS	Medulloepithelioma, NOS	9501/3
+Melanoma in situ	Melanoma in situ	8720/2
+Melanotic neuroectodermal tumor	Melanotic neuroectodermal tumor	9363/0
+Meningeal melanocytoma	Meningeal melanocytoma	8728/1
+Meningeal melanomatosis	Meningeal melanomatosis	8728/3
+Meningioma, malignant	Meningioma, malignant	9530/3
+Meningioma, NOS	Meningioma, NOS	9530/0
+Meningiomatosis, NOS	Meningiomatosis, NOS	9530/1
+Meningothelial meningioma	Meningothelial meningioma	9531/0
+Mesenchymal chondrosarcoma	Mesenchymal chondrosarcoma	9240/3
+Mesenchymoma, malignant	Mesenchymoma, malignant	8990/3
+Metastatic signet ring cell carcinoma	Metastatic signet ring cell carcinoma	8490/6
+Mixed germ cell tumor	Mixed germ cell tumor	9085/3
+Mixed type rhabdomyosarcoma	Mixed type rhabdomyosarcoma	8902/3
+Mucinous adenocarcinoma	Mucinous adenocarcinoma	8480/3
+Mucinous cystadenocarcinoma, NOS	Mucinous cystadenocarcinoma, NOS	8470/3
+Mucinous cystic tumor of borderline malignancy	Mucinous cystic tumor of borderline malignancy	8472/1
+Mucoepidermoid carcinoma	Mucoepidermoid carcinoma	8430/3
+Myeloid sarcoma	Myeloid sarcoma	9930/3
+Myofibroblastic tumor, NOS	Myofibroblastic tumor, NOS	8825/1
+Myofibroma	Myofibroma	8824/0
+Myofibromatosis	Myofibromatosis	8824/1
+Myxoid chondrosarcoma	Myxoid chondrosarcoma	9231/3
+Myxoid liposarcoma	Myxoid liposarcoma	8852/3
+Myxopapillary ependymoma	Myxopapillary ependymoma	9394/1
+Neoplasm, benign	Neoplasm, benign	8000/0
+Neoplasm, malignant	Neoplasm, malignant	8000/3
+Neoplasm, malignant, uncertain whether primary or metastatic	Neoplasm, malignant, uncertain whether primary or metastatic	8000/9
+Neoplasm, metastatic	Neoplasm, metastatic	8000/6
+Neoplasm, uncertain whether benign or malignant	Neoplasm, uncertain whether benign or malignant	8000/1
+Nephroblastoma, NOS	Nephroblastoma, NOS	8960/3
+Neuroblastoma, NOS	Neuroblastoma, NOS	9500/3
+Neuroendocrine carcinoma, NOS	Neuroendocrine carcinoma, NOS	8246/3
+Neuroendocrine tumor, NOS	Neoplasm, NOS	8000/1
+Neuroepithelioma, NOS	Neuroepithelioma, NOS	9503/3
+Neurofibroma, NOS	Neurofibroma, NOS	9540/0
+Neurofibromatosis, NOS	Neurofibromatosis, NOS	9540/1
+Neuroma, NOS	Neuroma, NOS	9570/0
+Nodular melanoma	Nodular melanoma	8721/3
+Odontogenic Carcinosarcoma	Odontogenic carcinosarcoma	9342/3
+Olfactory neuroblastoma	Olfactory neuroblastoma	9522/3
+Olfactory neurocytoma	Olfactory neurocytoma	9521/3
+Oligoastrocytoma, NOS	Oligoastrocytoma	9382/3
+Oligodendroglioma, anaplastic, NOS	Oligodendroglioma, anaplastic	9451/3
+Oligodendroglioma, NOS	Oligodendroglioma, NOS	9450/3
+Ossifying fibromyxoid tumor, NOS	Ossifying fibromyxoid tumor	8842/0
+Osteosarcoma, NOS	Osteosarcoma, NOS	9180/3
+Pancreatoblastoma	Pancreatoblastoma	8971/3
+Papillary adenocarcinoma, NOS	Papillary adenocarcinoma, NOS	8260/3
+Papillary carcinoma in situ	Papillary carcinoma in situ	8050/2
+Papillary carcinoma, follicular variant	Papillary carcinoma, follicular variant	8340/3
+Papillary carcinoma, NOS	Papillary carcinoma, NOS	8050/3
+Papillary craniopharyngioma	Craniopharyngioma, papillary	9352/1
+Papillary intralymphatic angioendothelioma	Dabska tumor	9135/1
+Papillary microcarcinoma	Papillary microcarcinoma	8341/3
+Paraganglioma, malignant	Paraganglioma, malignant	8680/3
+Paraganglioma, NOS	Paraganglioma, NOS	8680/1
+Pheochromocytoma, NOS	Pheochromocytoma, NOS	8700/0
+Phyllodes tumor, malignant	Phyllodes tumor, malignant	9020/3
+Pigmented dermatofibrosarcoma protuberans	Pigmented dermatofibrosarcoma protuberans	8833/3
+Pigmented nevus, NOS	Pigmented nevus, NOS	8720/0
+Pilocytic astrocytoma	Pilocytic astrocytoma	9421/1
+Pinealoma	Pinealoma	9360/1
+Pineoblastoma	Pineoblastoma	9362/3
+Pineocytoma	Pineocytoma	9361/1
+Pituitary adenoma, NOS	Pituitary adenoma, NOS	8272/0
+Pituitary carcinoma, NOS	Pituitary carcinoma, NOS	8272/3
+Plasmacytoma, extramedullary	Plasmacytoma, extramedullary	9734/3
+Pleomorphic liposarcoma	Pleomorphic liposarcoma	8854/3
+Pleomorphic rhabdomyosarcoma, adult type	Pleomorphic rhabdomyosarcoma, adult type	8901/3
+Pleomorphic Xanthoastrocytoma	Pleomorphic xanthoastrocytoma	9424/3
+Pleuropulmonary blastoma	Pleuropulmonary blastoma	8973/3
+Plexiform fibrohistiocytic tumor	Plexiform fibrohistiocytic tumor	8835/1
+Plexiform neurofibroma	Plexiform neurofibroma	9550/0
+Precancerous melanosis, NOS	Precancerous melanosis, NOS	8741/2
+Precursor B-cell lymphoblastic leukemia	Precursor B-cell lymphoblastic leukemia	9835/3
+Primitive neuroectodermal tumor, NOS	Primitive neuroectodermal tumor, NOS	9473/3
+Proliferative dermal lesion in congenital nevus	Proliferative dermal lesion in congenital nevus	8762/1
+Pseudosarcomatous carcinoma	Pseudosarcomatous carcinoma	8033/3
+Renal cell carcinoma, NOS	Renal cell carcinoma, NOS	8312/3
+Retinoblastoma, diffuse	Retinoblastoma, diffuse	9513/3
+Retinoblastoma, NOS	Retinoblastoma, NOS	9510/3
+Rhabdoid tumor, NOS	Rhabdoid tumor, NOS	8963/3
+Rhabdomyoma, NOS	Rhabdomyoma, NOS	8900/0
+Rhabdomyosarcoma, NOS	Rhabdomyosarcoma, NOS	8900/3
+Sarcoma, NOS	Sarcoma, NOS	8800/3
+Schwannoma, NOS	Schwannoma, NOS	9560/0
+Sclerosing stromal tumor	Sclerosing stromal tumor	8602/0
+Serous borderline tumor, NOS	Serous tumor, NOS, of low malignant potential	8442/1
+Sertoli cell tumor, NOS	Sertoli cell tumor, NOS	8640/1
+Sertoli-Leydig cell tumor of intermediate differentiation, NOS	Sertoli-Leydig cell tumor of intermediate differentiation	8631/1
+Sertoli-Leydig cell tumor, intermediate differentiation, with heterologous elements	Sertoli-Leydig cell tumor, intermediate differentiation, with heterologous elements	8634/1
+Sertoli-Leydig cell tumor, poorly differentiated	Sertoli-Leydig cell tumor, poorly differentiated	8631/3
+Sertoli-Leydig cell tumor, poorly differentiated, with heterologous elements	Sertoli-Leydig cell tumor, poorly differentiated, with heterologous elements	8634/3
+Sex cord-gonadal stromal tumor, mixed forms	Sex cord-gonadal stromal tumor, mixed forms	8592/1
+Sex cord-gonadal stromal tumor, NOS	Sex cord-gonadal stromal tumor, NOS	8590/1
+Signet ring cell carcinoma	Signet ring cell carcinoma	8490/3
+Small cell carcinoma, NOS	Small cell carcinoma, NOS	8041/3
+Small cell sarcoma	Small cell sarcoma	8803/3
+Smooth muscle tumor of uncertain malignant potential	Smooth muscle tumor of uncertain malignant potential	8897/1
+Soft tissue tumor, benign	Soft tissue tumor, benign	8800/0
+Solid pseudopapillary carcinoma	Solid pseudopapillary carcinoma	8452/3
+Solid pseudopapillary neoplasm of pancreas	Solid pseudopapillary tumor	8452/1
+Neoplasm, NOS	Neoplasm, NOS	8000/1
+Solitary fibrous tumor	Solitary fibrous tumor	8815/0
+Spindle cell carcinoma, NOS	Spindle cell carcinoma, NOS	8032/3
+Spindle cell rhabdomyosarcoma	Spindle cell rhabdomyosarcoma	8912/3
+Spindle cell sarcoma	Spindle cell sarcoma	8801/3
+Squamous cell carcinoma, large cell, nonkeratinizing, NOS	Squamous cell carcinoma, large cell, nonkeratinizing, NOS	8072/3
+Squamous cell carcinoma, metastatic, NOS	Squamous cell carcinoma, metastatic, NOS	8070/6
+Squamous cell carcinoma, NOS	Squamous cell carcinoma, NOS	8070/3
+Squamous cell carcinoma, small cell, nonkeratinizing	Squamous cell carcinoma, small cell, nonkeratinizing	8073/3
+Stromal tumor, NOS	Stromal tumor, NOS	8935/1
+Subependymal giant cell astrocytoma	Subependymal giant cell astrocytoma	9384/1
+Subependymoma	Subependymoma	9383/1
+Superficial spreading melanoma	Superficial spreading melanoma	8743/3
+Sympathetic paraganglioma	Sympathetic paraganglioma	8681/1
+Synovial sarcoma, biphasic	Synovial sarcoma, biphasic	9043/3
+Synovial sarcoma, NOS	Synovial sarcoma, NOS	9040/3
+Synovial sarcoma, spindle cell	Synovial sarcoma, spindle cell	9041/3
+Teratoma with malignant transformation	Teratoma with malignant transformation	9084/3
+Teratoma, benign	Teratoma, benign	9080/0
+Teratoma, malignant, NOS	Teratoma, malignant, NOS	9080/3
+Teratoma, NOS	Teratoma, NOS	9080/1
+Thymic carcinoma, NOS	Thymic carcinoma, NOS	8586/3
+Thymoma, NOS	Thymoma, NOS	8580/1
+Transitional meningioma	Transitional meningioma	9537/0
+Tumor cells, benign	Tumor cells, benign	8001/0
+Tumor cells, malignant	Tumor cells, malignant	8001/3
+Tumor cells, uncertain whether benign or malignant	Tumor cells, uncertain whether benign or malignant	8001/1
+Undifferentiated sarcoma	Undifferentiated sarcoma	8805/3
+Unknown	Unknown	Unknown
+Vipoma	Vipoma, NOS	8155/3
+Yolk Sac Tumor	Yolk sac tumor	9071/3

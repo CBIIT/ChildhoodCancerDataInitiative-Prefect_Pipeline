@@ -1,0 +1,67 @@
+diagnosis_category	disease_type
+Acinar cell neoplasms	Acinar Cell Neoplasms
+Adenomas and adenocarcinomas	Adenomas and Adenocarcinomas
+Adnexal and skin appendage neoplasms	Adnexal and Skin Appendage Neoplasms
+Basal cell neoplasms	Basal Cell Neoplasms
+Blood vessel tumors	Blood Vessel Tumors
+CNS Sarcomas	Miscellaneous Tumors
+Complex epithelial neoplasms	Complex Epithelial Neoplasms
+Complex mixed and stromal neoplasms	Complex Mixed and Stromal Neoplasms
+Craniopharyngiomas	Miscellaneous Tumors
+Cystic, mucinous and serous neoplasms	Cystic,Mucinous and Serous Neoplasms
+Ductal and lobular neoplasms	Ductal and Lobular Neoplasms
+Epithelial neoplasms, NOS	Epithelial Neoplasms, NOS
+Ewings Sarcoma	Miscellaneous Bone Tumors
+Fibroepithelial neoplasms	Fibroepithelial Neoplasms
+Fibromatous neoplasms	Fibromatous Neoplasms
+Germ cell neoplasms	Germ Cell Neoplasms
+Germ Cell Tumors	Germ Cell Neoplasms
+Giant cell tumors	Giant Cell Tumors
+Gliomas	Gliomas
+Gliomas, glioneuronal tumors, and neuronal tumors	Gliomas
+Glioneuronal and Neuronal Tumors	Gliomas
+Granular cell tumors and alveolar soft part sarcomas	Granular Cell Tumors and Alveolar Soft Part Sarcomas
+Hodgkin Lymphoma	Hodgkin Lymphoma
+Hodgkin and non-Hodgkin lymphomas	Other Hematologic Disorders
+Immunoproliferative diseases	Immunoproliferative Diseases
+Leukemias, NOS	Leukemias, NOS
+Lipomatous neoplasms	Lipomatous Neoplasms
+Lymphatic vessel tumors	Lymphatic Vessel Tumors
+Lymphoid leukemias	Lymphoid Leukemias
+Mast cell neoplasms	Mast Cell Tumors
+Mature T- and NK-cell lymphomas	Mature T- and NK-Cell Lymphomas
+Meningiomas	Meningiomas
+Mesothelial neoplasms	Mesothelial Neoplasms
+Miscellaneous bone tumors	Miscellaneous Bone Tumors
+Miscellaneous tumors	Miscellaneous Tumors
+Mucoepidermoid neoplasms	Mucoepidermoid Neoplasms
+Myelodysplastic syndromes	Myelodysplastic Syndromes
+Myeloid Leukemia	Myeloid Leukemias
+Myeloid leukemias	Myeloid Leukemias
+Myomatous neoplasms	Myomatous Neoplasms
+Myomatous neoplasms, Rhabdomyosarcoma	Myomatous Neoplasms
+Myxomatous neoplasms	Myxomatous Neoplasms
+Neoplasms of histiocytes and accessory lymphoid cells	Neoplasms of Histiocytes and Accessory Lymphoid Cells
+Neoplasms, NOS	Neoplasms, NOS
+Nerve sheath tumors	Nerve Sheath Tumors
+Neuroepitheliomatous neoplasms	Neuroepitheliomatous Neoplasms
+Nevi and melanomas	Nevi and Melanomas
+Odontogenic tumors	Odontogenic Tumors
+Osseous and chondromatous neoplasms	Osseous and Chondromatous Neoplasms
+Other hematological neoplasms	Other Hematologic Disorders
+Other Hematopoietic Tumors	Other Hematologic Disorders
+Other leukemias	Other Leukemias
+Paragangliomas and glomus tumors	Paragangliomas and Glomus Tumors
+Plasma cell neoplasms	Plasma Cell Tumors
+Rhabdomyosarcoma 	Soft Tissue Tumors and Sarcomas, NOS
+Soft Tissue Tumors	Soft Tissue Tumors and Sarcomas, NOS
+Soft tissue tumors and sarcomas, NOS	Soft Tissue Tumors and Sarcomas, NOS
+Specialized gonadal neoplasms	Specialized Gonadal Neoplasms
+Squamous cell neoplasms	Squamous Cell Neoplasms
+Synovial-like neoplasms	Synovial-like Neoplasms
+Thymic epithelial neoplasms	Thymic Epithelial Neoplasms
+Transitional cell papillomas and carcinomas	Transitional Cell Papillomas and Carcinomas
+Trophoblastic neoplasms	Trophoblastic neoplasms
+Unknown	Unknown
+Not Reported	Not Reported
+Not Applicable	Not Applicable
