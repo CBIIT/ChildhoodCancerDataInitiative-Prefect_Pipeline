@@ -548,6 +548,8 @@ def mci_gdc_transform(
     if not os.path.isfile(os.path.basename(manifest_file)):
         print(f"Error: Manifest file '{manifest_file}' not found.")
         sys.exit(1)
+    
+    manifest_file = os.path.basename(manifest_file)
 
     # do prior work to transform the manifest file into GDC submission files
     # i.e. filter out most recent surival status, filter out already submitted files and patients, etc.
