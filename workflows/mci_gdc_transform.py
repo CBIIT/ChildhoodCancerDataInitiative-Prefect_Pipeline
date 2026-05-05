@@ -337,7 +337,7 @@ def preservation_method_n_meth_platform_parser(
     extract_metadata_to_tsv(pres_files_dir, output_file)
     
     # after processing, upload to output dir in S3
-    file_ul(bucket, runner, "", os.path.basename(output_file))
+    file_ul(bucket, runner, f"mci_gdc_transform_{dt}_outputs", os.path.basename(output_file))
     
     # chdir back to running dir
     os.chdir(cwd)
@@ -576,7 +576,7 @@ def mci_gdc_transform(
     )
 
     output_dfs = {}  # dict to hold output dataframes for each node
-    outputs_dir = f"{working_dir}/outputs"
+    outputs_dir = f"{working_dir}/mci_gdc_transform_{dt}_outputs"
     os.makedirs(outputs_dir, exist_ok=True)
 
     # actual transformations to create GDC submission files
