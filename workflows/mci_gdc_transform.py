@@ -349,6 +349,7 @@ def setup_transform(
     preservation_meth_platform_file: str = None,
     bucket: str = None,
     runner: str = None,
+    logger: logging.Logger = None,
 ) -> str:
     """Set up the transformation process by reading input files and preparing data.
 
@@ -359,6 +360,7 @@ def setup_transform(
         preservation_meth_platform_file (str, optional): Path to the preservation method and methylation platform file. Defaults to None.
         bucket (str, optional): Name of the S3 bucket where input files are stored and output files will be saved.
         runner (str, optional): Name of the runner.
+        logger (logging.Logger, optional): Logger object for logging progress and results.
 
     Returns:
         str: Path to the prepped manifest file ready for transformation.
@@ -368,7 +370,7 @@ def setup_transform(
 
     if preservation_meth_platform_file is None or not os.path.isfile(preservation_meth_platform_file):
         preservation_meth_platform_file = preservation_method_n_meth_platform_parser(
-            manifest_file, working_dir, dt, bucket, runner
+            manifest_file, working_dir, dt, bucket, runner, logger
         )
 
     # transforms
@@ -554,7 +556,7 @@ def mci_gdc_transform(
     # do prior work to transform the manifest file into GDC submission files
     # i.e. filter out most recent surival status, filter out already submitted files and patients, etc.
     prepped_manifest = setup_transform(
-        working_dir, manifest_file, dt, preservation_meth_platform_file, bucket, runner
+        working_dir, manifest_file, dt, preservation_meth_platform_file, bucket, runner, logger
     )
 
     # read in rules file for transformations
