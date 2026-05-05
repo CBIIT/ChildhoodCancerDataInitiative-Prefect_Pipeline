@@ -1,6 +1,7 @@
 """Script to parse, process and transform MCI matadata template into GDC Submission Files"""
 
 import json
+import shutil
 import os, sys
 import pandas as pd
 import argparse
@@ -619,7 +620,7 @@ def mci_gdc_transform(
     logging.shutdown()
     
     # move log file to outputs dir
-    os.rename(log_filename, f"{outputs_dir}/{log_filename}")
+    shutil.move(log_filename, f"{outputs_dir}/{log_filename}")
     
     # upload outputs to S3
     folder_ul(
