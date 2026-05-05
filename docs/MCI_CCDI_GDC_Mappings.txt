@@ -17,7 +17,7 @@ CCDI		diagnosis	type	default		diagnosis		default	diagnosis
 CCDI		diagnosis	project_id	default		diagnosis		default	CCDI-MCI		
 CCDI		diagnosis	submitter_id	liftover		diagnosis	diagnosis_id				
 CCDI		diagnosis	age_at_diagnosis	liftover		diagnosis	age_at_diagnosis				
-CCDI		diagnosis	diagnosis_is_primary_disease	default		diagnosis		default	TRUE		
+CCDI		diagnosis	diagnosis_is_primary_disease	default		diagnosis		default_bool	True		
 CCDI		diagnosis	morphology	morphology_mapper		diagnosis	diagnosis				
 CCDI		diagnosis	primary_diagnosis	prim_dx_mapper		diagnosis	diagnosis			unknown	
 CCDI		diagnosis	site_of_resection_or_biopsy	default		diagnosis		default	Not Reported		
@@ -45,7 +45,7 @@ CCDI	WXS	read_group	instrument_model	liftover		sequencing_file	instrument_model
 CCDI	WXS	read_group	library_selection	liftover		sequencing_file	library_selection				
 CCDI	WXS	read_group	library_strategy	liftover	WXS	sequencing_file	library_strategy				
 CCDI	WXS	read_group	library_name	liftover		sequencing_file	sample.sample_id				
-CCDI	WXS	read_group	is_paired_end	default		sequencing_file		default	TRUE		
+CCDI	WXS	read_group	is_paired_end	default		sequencing_file		default_bool	True		
 CCDI	WXS	read_group	read_length	default		sequencing_file		default	150		
 CCDI	WXS	read_group	read_group_name	wxs_rg_id_parse		sequencing_file	"sample.sample_id,file_name"				
 CCDI	WXS	read_group	target_capture_kit	default		sequencing_file		default	xGen Exome Research Panel v2.0		
@@ -72,7 +72,7 @@ CCDI	RNA-Seq_Azenta	read_group	instrument_model	liftover		sequencing_file	instru
 CCDI	RNA-Seq_Azenta	read_group	library_selection	liftover		sequencing_file	library_selection				
 CCDI	RNA-Seq_Azenta	read_group	library_strategy	liftover	RNA-Seq	sequencing_file	library_strategy				
 CCDI	RNA-Seq_Azenta	read_group	library_name	liftover		sequencing_file	sample.sample_id				
-CCDI	RNA-Seq_Azenta	read_group	is_paired_end	default		sequencing_file		default	TRUE		
+CCDI	RNA-Seq_Azenta	read_group	is_paired_end	default		sequencing_file		default_bool	True		
 CCDI	RNA-Seq_Azenta	read_group	read_length	default		sequencing_file		default	150		
 CCDI	RNA-Seq_Azenta	read_group	read_group_name	liftover		sequencing_file	library_id				
 CCDI	RNA-Seq_Azenta	read_group	target_capture_kit	default		sequencing_file		default	Not Applicable		
