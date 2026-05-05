@@ -300,11 +300,10 @@ def preservation_method_n_meth_platform_parser(
     Returns:
         pd.DataFrame: DataFrame with an additional column for preservation method.
     """
-    # download json files from node
+    
 
-    # parse preservation method and methylation platform if applicable
-    # run preservation method and methylation platform parser to add preservation method
-    # and methylation platform to sample table if no preservation method and methylation platform file is provided
+    # get cwd for later use
+    cwd = os.getcwd()
     
     ## make dir
     pres_files_dir = f"{working_dir}/preservation_method_platform_files"
@@ -314,6 +313,9 @@ def preservation_method_n_meth_platform_parser(
     pres_seq_df = pd.read_excel(manifest_file, sheet_name="sequencing_file")
     pres_meth_df = pd.read_excel(
         manifest_file, sheet_name="methylation_array_file")
+    
+    # chdir to pres_files_dir to download JSON files there
+    os.chdir(pres_files_dir)
     
     ## download json files from node
     pres_seq_df = pres_seq_df[pres_seq_df.file_type == 'json'][['file_name', 'file_url']].drop_duplicates()
@@ -332,6 +334,9 @@ def preservation_method_n_meth_platform_parser(
     ## run preservation method and methylation platform parser to add preservation method and methylation platform to
     output_file = f"{working_dir}/preservation_method_platform_output_{dt}.tsv"
     extract_metadata_to_tsv(pres_files_dir, output_file)
+    
+    # chdir back to running dir
+    os.chdir(cwd)
 
     # after processing, upload to output dir in S3
     file_ul(bucket, runner, "", output_file)
