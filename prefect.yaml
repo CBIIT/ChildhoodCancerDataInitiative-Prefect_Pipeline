@@ -1930,9 +1930,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-mci_gdc_transformer-v3
+  - name: mci_gdc_transformer-v3
     version: null
-    tags: ["TEST", "V3"]
+    tags: ["PROD", "V3"]
     description: null
     entrypoint: workflows/mci_gdc_transform.py:mci_gdc_transform
     schedule: null
@@ -1950,7 +1950,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: CCDIDC-2426_mci_gdc
+        branch: main
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
