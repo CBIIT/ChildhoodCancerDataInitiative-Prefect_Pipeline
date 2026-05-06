@@ -1,0 +1,324 @@
+anatomic_site	tissue_or_organ_of_origin	primary_site
+abdomen	Abdomen, NOS	Other and ill-defined sites
+abdomen connective tissue	Abdomen, NOS	Other and ill-defined sites
+abdominal lymph node	Abdomen, NOS	Other and ill-defined sites
+abdominal part of esophagus	Abdomen, NOS	Other and ill-defined sites
+adnexa of uterus	Uterus, NOS	Uterus, NOS
+adrenal cortex	Adrenal gland, NOS	Adrenal gland
+adrenal gland	Adrenal gland, NOS	Adrenal gland
+adrenal medulla	Adrenal gland, NOS	Adrenal gland
+alimentary part of gastrointestinal system	Gastrointestinal tract, NOS	Other and ill-defined digestive organs
+anal canal	Anal canal	Anus and anal canal
+ankle joint	Lower limb, NOS	Other and ill-defined sites
+anterior mediastinum	Mediastinum, NOS	Heart, mediastinum, and pleura
+anterior part of tongue	Tongue, NOS	Other and unspecified parts of tongue
+anterior surface of kidney	Kidney, NOS	Kidney
+anterior wall of urinary bladder	Anterior wall of bladder	Bladder
+anus	Anus, NOS	Anus and anal canal
+aortic body	Aortic body and other paraganglia	Peripheral nerves and autonomic nervous system
+arm	Upper limb, NOS	Other and ill-defined sites
+ascending colon	Ascending colon	Colon
+autonomic nervous system	Autonomic nervous system, NOS	Peripheral nerves and autonomic nervous system
+axilla	Other ill-defined sites	Other and ill-defined sites
+axillary lymph node	Lymph nodes of axilla or arm	Lymph nodes
+axillary tail of breast	Axillary tail of breast	Breast
+bile duct	Biliary tract, NOS	Liver and intrahepatic bile ducts
+biliary tree	Biliary tract, NOS	Liver and intrahepatic bile ducts
+bladder organ	Bladder, NOS	Bladder
+blood	Blood	Hematopoietic and reticuloendothelial systems
+blood plasma	Blood	Hematopoietic and reticuloendothelial systems
+blood serum	Blood	Hematopoietic and reticuloendothelial systems
+body of pancreas	Pancreas, NOS	Pancreas
+body of stomach	Stomach, NOS	Stomach
+body of uterus	Uterus, NOS	Uterus, NOS
+bone element	Bone, NOS	Bones, joints and articular cartilage of limbs
+bone marrow	Bone marrow	Hematopoietic and reticuloendothelial systems
+brain	Brain, NOS	Brain
+brainstem	Brain stem	Brain
+brain ventricle	Brain, NOS	Brain
+brainstem nucleus	Brain, NOS	Brain
+breast	Breast, NOS	Breast
+broad ligament of uterus	Uterus, NOS	Uterus, NOS
+buccal mucosa	Mouth, NOS	Other and ill-defined sites in lip, oral cavity and pharynx
+bulb of penis	Penis, NOS	Penis
+buttock	Lower limb, NOS	Other and ill-defined sites
+calf	Lower limb, NOS	Other and ill-defined sites
+cardia of stomach	Cardia, NOS	Stomach
+carotid body	Carotid body	Peripheral nerves and autonomic nervous system
+cauda equina	Cauda equina	Spinal cord, cranial nerves, and other parts of central nervous system
+central nervous system	Nervous system, NOS	Spinal cord, cranial nerves, and other parts of central nervous system
+cerebellum	cerebellum	Brain
+cerebral hemisphere	Cerebrum	Brain
+cerebrospinal fluid	Other ill-defined sites	Other and ill-defined sites
+cervical part of esophagus	Esophagus, NOS	Esophagus
+chest	Thorax, NOS	Other and ill-defined sites
+chest connective tissue	Connective, subcutaneous and other soft tissues of trunk, NOS	Connective, subcutaneous and other soft tissues
+chest wall	Thorax, NOS	Other and ill-defined sites
+ciliary body	Ciliary body	Eye and adnexa
+clitoris	Clitoris	Other and unspecified female genital organs
+cochlear nerve	Acoustic nerve	Spinal cord, cranial nerves, and other parts of central nervous system
+colon	Colon, NOS	Colon
+conjunctiva	Conjunctiva	Eye and adnexa
+connective tissue	Connective, subcutaneous and other soft tissues, NOS	Connective, subcutaneous and other soft tissues
+cornea	Cornea, NOS	Eye and adnexa
+cranial fossa	Bones of skull and face and associated joints	Bones, joints and articular cartilage of other and unspecified sites
+cranial nerve	Nervous system, NOS	Spinal cord, cranial nerves, and other parts of central nervous system
+craniocervical lymph node	Lymph nodes of head, face and neck	Lymph nodes
+craniopharyngeal canal	Head, face or neck, NOS	Bones, joints and articular cartilage of other and unspecified sites
+descending colon	Descending colon	Colon
+diaphragm	Abdomen, NOS	Other and ill-defined sites within respiratory system and intrathoracic organs
+dome of urinary bladder	Dome of bladder	Bladder
+dorsal thoracic segment of trunk	Thorax, NOS	Other and ill-defined sites within respiratory system and intrathoracic organs
+dorsum of tongue	Dorsal surface of tongue, NOS	Other and unspecified parts of tongue
+duodenum	Duodenum	Small intestine
+ectocervix	Exocervix	Other and unspecified female genital organs
+elbow	Upper limb, NOS	Other and ill-defined sites
+endocardial ring	Other ill-defined sites	Other and ill-defined sites
+endocervix	Endocervix	Cervix uteri
+endocrine gland	Endocrine gland, NOS	Other endocrine glands and related structures
+endometrium	Endometrium	Other and unspecified female genital organs
+epididymis	Epididymis	Other and unspecified male genital organs
+epiglottic vallecula	Vallecula	Other and ill-defined sites in lip, oral cavity and pharynx
+esophagus	Esophagus, NOS	Esophagus
+ethmoid sinus	Ethmoid sinus	Other and ill-defined sites
+external ear	External ear	Other and ill-defined sites
+external soft tissue zone	Connective, subcutaneous and other soft tissues, NOS	Connective, subcutaneous and other soft tissues
+extrahepatic bile duct	Extrahepatic bile duct	Liver and intrahepatic bile ducts
+eye	Eye, NOS	Eye and adnexa
+eyelid	Eyelid	Eye and adnexa
+fallopian tube	Fallopian tube	Other and unspecified female genital organs
+female genital tubercle	Female genital tract, NOS	Other and unspecified female genital organs
+female reproductive system	Female genital tract, NOS	Other and unspecified female genital organs
+femur	Lower limb, NOS	Bones, joints and articular cartilage of other and unspecified sites
+flocculonodular lobe, hemisphere portion	Brain, NOS	Brain
+foot	Lower limb, NOS	Other and ill-defined sites
+forelimb	Upper limb, NOS	Other and ill-defined sites
+frontal lobe	Frontal lobe	Brain
+frontal sinus	Frontal sinus	Other and ill-defined sites
+fundus of stomach	Fundus of stomach	Stomach
+fundus striati	Brain, NOS	Brain
+fused tarsal bones 2 and 3	Bone of limb, NOS	Bones, joints and articular cartilage of limbs
+gallbladder	Gallbladder	Gallbladder
+gingiva	Gum, NOS	Gum
+gingiva of lower jaw	Gum, NOS	Gum
+gingiva of upper jaw	Gum, NOS	Gum
+glabella region	Head, face or neck, NOS	Other and ill-defined sites
+glans penis	Glans penis	Penis
+glottis	Glottis	Other and ill-defined sites in lip, oral cavity and pharynx
+greater curvature of stomach	Greater curvature of stomach, NOS	Stomach
+hand	Upper limb, NOS	Other and ill-defined sites
+hard palate	Hard palate	Other and ill-defined sites in lip, oral cavity and pharynx
+head	Head, face or neck, NOS	Other and ill-defined sites
+head connective tissue	Connective, subcutaneous and other soft tissues of head, face, and neck	Connective, subcutaneous and other soft tissues
+head of pancreas	Head of pancreas	Pancreas
+heart	Heart	Heart, mediastinum, and pleura
+heel	Lower limb, NOS	Other and ill-defined sites
+hematopoietic system	Hematopoietic system, NOS	Hematopoietic and reticuloendothelial systems
+hepatic cecum	Cecum	Other and ill-defined digestive organs
+hepatic flexure of colon	Hepatic flexure of colon	Colon
+hepatopancreatic ampulla	Ampulla of Vater	Liver and intrahepatic bile ducts
+hindlimb	Lower limb, NOS	Other and ill-defined sites
+hip	Lower limb, NOS	Other and ill-defined sites
+hip connective tissue	Connective, subcutaneous and other soft tissues of lower limb and hip	Connective, subcutaneous and other soft tissues
+hypopharynx	Hypopharynx, NOS	Hypopharynx
+ileum	Ileum	Small intestine
+inferior surface of tongue	Tongue, NOS	Other and unspecified parts of tongue
+infratemporal fossa	Head, face or neck, NOS	Other and ill-defined sites
+inguinal lymph node	Lymph nodes of inguinal region or leg	Lymph nodes
+inguinal part of abdomen	Pelvis, NOS	Other and ill-defined sites within respiratory system and intrathoracic organs
+inner ear canal	Middle ear	Nasal cavity and middle ear
+intestine	Small intestine, NOS	Small intestine
+intrahepatic bile duct	Intrahepatic bile duct	Liver and intrahepatic bile ducts
+islet of Langerhans	Islets of Langerhans	Pancreas
+isthmus	Isthmus uteri	Uterus, NOS
+jejunum	Jejunum	Small intestine
+kidney	Kidney, NOS	Kidney
+knee	Lower limb, NOS	Other and ill-defined sites
+labial commissure	Female genital tract, NOS	Other and unspecified female genital organs
+labium majora	Labium majus	Other and unspecified female genital organs
+labium minora	Labium minus	Other and unspecified female genital organs
+lacrimal gland	Lacrimal gland	Eye and adnexa
+laryngeal cartilage	Laryngeal cartilage	Larynx
+larynx	Larynx, NOS	Larynx
+lateral wall of nasopharynx	Lateral wall of nasopharynx	Nasopharynx
+lateral wall of oropharynx	Lateral wall of oropharynx	Oropharynx
+lateral wall of urinary bladder	Lateral wall of bladder	Bladder
+leg	Lower limb, NOS	Other and ill-defined sites
+lesser curvature of stomach	Lesser curvature of stomach, NOS	Stomach
+limb bone	Bone of limb, NOS	Bones, joints and articular cartilage of limbs
+lingual tonsil	Tonsil, NOS	Tonsil
+lip	Lip, NOS	Lip
+liver	Liver	Liver and intrahepatic bile ducts
+lower esophagus	Lower third of esophagus	Esophagus
+lower inner quadrant of breast	Lower-inner quadrant of breast	Breast
+lower leg skin	Skin of lower limb and hip	Skin
+lower lip	Lip, NOS	Lip
+lower lobe of lung	Lower lobe, lung	Bronchus and lung
+lower outer quadrant of breast	Lower-outer quadrant of breast	Breast
+lumbar region of vertebral column	Vertebral column	Bones, joints and articular cartilage of other and unspecified sites
+lung	Lung, NOS	Bronchus and lung
+lymph node	Lymph node, NOS	Lymph nodes
+main bronchus	Main bronchus	Bronchus and lung
+major salivary gland	Major salivary gland, NOS	Other and unspecified major salivary glands
+male genital swelling	Male genital organs, NOS	Other and unspecified male genital organs
+male prepuce epithelium	Male genital organs, NOS	Other and unspecified male genital organs
+male reproductive organ	Male genital organs, NOS	Other and unspecified male genital organs
+male reproductive system	Male genital organs, NOS	Other and unspecified male genital organs
+mammalian vulva	Vulva, NOS	Vulva
+mandible	Mandible	Bones, joints and articular cartilage of other and unspecified sites
+margin of tongue	Tongue, NOS	Other and unspecified parts of tongue
+maxillary sinus	Maxillary sinus	Other and ill-defined sites
+Meckel's diverticulum	Meckel diverticulum	Small intestine
+mediastinum	Mediastinum, NOS	Heart, mediastinum, and pleura
+meningeal cluster	Meninges, NOS	Meninges
+meninx	Meninges, NOS	Meninges
+meninx of spinal cord	Meninges, NOS	Meninges
+mesentery	Peritoneum, NOS	Retroperitoneum and peritoneum
+middle ear	Middle ear	Nasal cavity and middle ear
+middle lobe of right lung	Middle lobe, lung	Bronchus and lung
+middle part of esophagus	Middle third of esophagus	Esophagus
+minor vestibular gland	Female genital tract, NOS	Other and unspecified female genital organs
+mouth	Mouth, NOS	Other and ill-defined sites in lip, oral cavity and pharynx
+mouth floor	Floor of mouth, NOS	Floor of mouth
+mucosa of lip	Mucosa of lip, NOS	Lip
+mucosa of lower lip	Mucosa of lower lip	Lip
+mucosa of upper lip	Mucosa of upper lip	Lip
+muscle tissue	Other ill-defined sites	Other and ill-defined sites
+myometrium	Myometrium	Uterus, NOS
+nasal cavity	Nasal cavity	Nasal cavity and middle ear
+nasopharynx	Nasopharynx, NOS	Nasopharynx
+neck	Head, face or neck, NOS	Other and ill-defined sites
+neck nerve	Nervous system, NOS	Peripheral nerves and autonomic nervous system
+neck of urinary bladder	Bladder neck	Bladder
+nerve	Nervous system, NOS	Peripheral nerves and autonomic nervous system
+nervous system	Nervous system, NOS	Peripheral nerves and autonomic nervous system
+neuron projection bundle connecting eye with brain	Nervous system, NOS	Spinal cord, cranial nerves, and other parts of central nervous system
+nipple	Nipple	Skin
+occipital lobe	Occipital lobe	Brain
+olfactory nerve	Olfactory nerve	Spinal cord, cranial nerves, and other parts of central nervous system
+omentum	Peritoneum, NOS	Retroperitoneum and peritoneum
+optic choroid	Choroid	Eye and adnexa
+oral cavity	Mouth, NOS	Other and ill-defined sites in lip, oral cavity and pharynx
+orbital cavity	Orbit, NOS	Eye and adnexa
+oropharynx	Oropharynx, NOS	Oropharynx
+ovary	Ovary	Ovary
+palatine uvula	Uvula	Other and ill-defined sites in lip, oral cavity and pharynx
+pancreas	Pancreas, NOS	Pancreas
+pancreatic duct	Pancreatic duct	Pancreas
+parametrium	Parametrium	Uterus, NOS
+paranasal sinus	Head, face or neck, NOS	Nasal cavity and middle ear
+parapharyngeal space	Head, face or neck, NOS	Other and ill-defined sites in lip, oral cavity and pharynx
+paraspinal region	Other ill-defined sites	Other and ill-defined sites
+parathyroid gland	Parathyroid gland	Other endocrine glands and related structures
+parietal lobe	Parietal lobe	Brain
+parotid gland	Parotid gland	Parotid gland
+pelvic complex	Pelvis, NOS	Other and ill-defined sites
+pelvic girdle region	Pelvis, NOS	Other and ill-defined sites
+pelvic lymph node	Lymph node, NOS	Lymph nodes
+pelvic region of trunk	Pelvis, NOS	Other and ill-defined sites
+pelvis connective tissue	Connective, subcutaneous and other soft tissues of pelvis	Connective, subcutaneous and other soft tissues
+penis	Penis, NOS	Penis
+peritoneal fluid	Other ill-defined sites	Other and ill-defined sites
+perineum	Other ill-defined sites	Other and ill-defined sites
+peripheral nervous system	Nervous system, NOS	Peripheral nerves and autonomic nervous system
+peritoneum	Peritoneum, NOS	Retroperitoneum and peritoneum
+pharynx	Pharynx, NOS	Other and ill-defined sites in lip, oral cavity and pharynx
+pineal body	Pineal gland	Other endocrine glands and related structures
+piriform sinus	Pyriform sinus	Pyriform sinus
+pituitary gland	Pituitary gland	Other endocrine glands and related structures
+placenta	Placenta	Other and unspecified female genital organs
+pleura	Pleura, NOS	Other and ill-defined sites within respiratory system and intrathoracic organs
+posterior mediastinum	Posterior mediastinum	Heart, mediastinum, and pleura
+posterior part of tongue	Tongue, NOS	Other and unspecified parts of tongue
+posterior wall of laryngopharynx	Head, face or neck, NOS	Larynx
+posterior wall of nasopharynx	Posterior wall of nasopharynx	Nasopharynx
+posterior wall of oropharynx	Posterior wall of oropharynx	Oropharynx
+posterior wall of urinary bladder	Posterior wall of bladder	Bladder
+primitive palate	Other ill-defined sites	Other and ill-defined sites
+prostate gland	Prostate gland	Prostate gland
+pyloric antrum	Stomach, NOS	Stomach
+pylorus	Pylorus	Other and ill-defined digestive organs
+rectosigmoid junction	Rectosigmoid junction	Rectosigmoid junction
+rectum	Rectum, NOS	Rectum
+remnant of Rathke's pouch	Head, face or neck, NOS	Other and ill-defined sites
+renal pelvis	Renal pelvis	Renal pelvis
+renal system	Urinary system, NOS	Other and unspecified urinary organs
+respiratory system	Upper respiratory tract, NOS	Other and ill-defined sites within respiratory system and intrathoracic organs
+reticuloendothelial system	Reticuloendothelial system, NOS	Hematopoietic and reticuloendothelial systems
+retina	Retina	Eye and adnexa
+retromolar triangle	Retromolar area	Other and ill-defined sites in lip, oral cavity and pharynx
+retroperitoneal space	Retroperitoneum	Retroperitoneum and peritoneum
+roof of nasopharynx	Bones of skull and face and associated joints	Bones, joints and articular cartilage of other and unspecified sites
+round ligament of uterus	Round ligament	Uterus, NOS
+saliva	Other ill-defined sites	Other and ill-defined sites
+scrotum	Scrotum, NOS	Other and unspecified male genital organs
+Sertoli cell barrier	Other ill-defined sites	Other and ill-defined sites
+shoulder	Upper limb, NOS	Other and ill-defined sites
+shoulder bone	Bone of limb, NOS	Bones, joints and articular cartilage of limbs
+shoulder connective tissue	Connective, subcutaneous and other soft tissues of upper limb and shoulder	Connective, subcutaneous and other soft tissues
+sigmoid colon	Sigmoid colon	Colon
+sinusoidal space	Liver	Liver and intrahepatic bile ducts
+skeleton of pectoral complex	Upper limb, NOS	Bones, joints and articular cartilage of other and unspecified sites
+skeleton of pelvic complex	Pelvis, NOS	Bones, joints and articular cartilage of other and unspecified sites
+skin epidermis	Skin, NOS	Skin
+skin of face	Skin of other and unspecified parts of face	Skin
+skin of lip	Skin of lip, NOS	Lip
+skin of scalp	Skin of scalp and neck	Skin
+skin of trunk	Skin of trunk	Skin
+skull	Bones of skull and face and associated joints	Bones, joints and articular cartilage of other and unspecified sites
+small intestine	Small intestine, NOS	Small intestine
+soft palate	Soft palate, NOS	Other and ill-defined sites in lip, oral cavity and pharynx
+spermatic cord	Spermatic cord	Other and unspecified male genital organs
+sphenoidal sinus	Sphenoid sinus	Other and ill-defined sites
+spinal cord	Spinal cord	Spinal cord, cranial nerves, and other parts of central nervous system
+spleen	Spleen	Other and ill-defined sites
+splenic flexure of colon	Splenic flexure of colon	Colon
+stomach	Stomach, NOS	Stomach
+strand of hair	Other ill-defined sites	Other and ill-defined sites
+subglottis	Subglottis	Larynx
+sublingual gland	Sublingual gland	Other and unspecified major salivary glands
+submandibular gland	Submandibular gland	Other and unspecified major salivary glands
+supraglottic part of larynx	Supraglottis	Larynx
+tail of pancreas	Tail of pancreas	Pancreas
+temporal lobe	Temporal lobe	Brain
+testis	Testis, NOS	Testis
+thalamic complex	Brain, NOS	Brain
+thoracic cavity connective tissue	Connective, subcutaneous and other soft tissues of thorax	Connective, subcutaneous and other soft tissues
+thoracic part of esophagus	Esophagus, NOS	Esophagus
+thoracic rib cage	Thorax, NOS	Bones, joints and articular cartilage of other and unspecified sites
+thoracic segment organ	Thorax, NOS	Other and ill-defined sites within respiratory system and intrathoracic organs
+thorax	Thorax, NOS	Other and ill-defined sites
+throat	Head, face or neck, NOS	Other and ill-defined sites in lip, oral cavity and pharynx
+thymus	Thymus	Thymus
+thyroid gland	Thyroid gland	Thyroid gland
+tibia	Lower limb, NOS	Bones, joints and articular cartilage of limbs
+tongue	Tongue, NOS	Other and unspecified parts of tongue
+tonsil	Tonsil, NOS	Tonsil
+tonsillar fossa	Tonsillar fossa	Oropharynx
+tonsillar pillar	Tonsillar pillar	Oropharynx
+trachea	Trachea	Trachea
+transitional glandular epithelium of anorectum	Anus, NOS	Anus and anal canal
+transverse colon	Transverse colon	Colon
+trigone of urinary bladder	Trigone of bladder	Bladder
+trunk	Thorax, NOS	Other and ill-defined sites
+trunk connective tissue	Connective, subcutaneous and other soft tissues of trunk, NOS	Connective, subcutaneous and other soft tissues
+umbilicus	Other ill-defined sites	Other and ill-defined sites
+upper esophagus	Upper third of esophagus	Esophagus
+upper inner quadrant of breast	Upper-inner quadrant of breast	Breast
+upper leg skin	Skin of lower limb and hip	Skin
+upper lip	Lip, NOS	Lip
+upper lobe of lung	Upper lobe, lung	Bronchus and lung
+upper outer quadrant of breast	Upper-outer quadrant of breast	Breast
+urachus	Urachus	Other and unspecified urinary organs
+ureter	Ureter	Ureter
+ureteral orifice	Ureteric orifice	Ureter
+urethra	Urethra	Ureter
+urine	Other ill-defined sites	Other and ill-defined sites
+uterine cervix	Cervix uteri	Uterus, NOS
+uterus	Uterus, NOS	Uterus, NOS
+vagina	Vagina, NOS	Vagina
+vein	Other ill-defined sites	Other and ill-defined sites
+vermiform appendix	Appendix	Other and ill-defined digestive organs
+vertebral column	Vertebral column	Bones, joints and articular cartilage of other and unspecified sites
+Not Reported	Not Reported	Not Reported
+Unknown	Unknown	Unknown
