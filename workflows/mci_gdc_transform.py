@@ -298,7 +298,7 @@ def convert_tsv_json(df: pd.DataFrame, output_json: str):
     """Convert a TSV file to JSON format.
 
     Args:
-        pd.DataFrame: DataFrame containing the data to be converted.
+        df (pd.DataFrame): DataFrame containing the data to be converted.
         output_json (str): Path to the output JSON file.
     """
     # Convert DataFrame to JSON
@@ -339,7 +339,7 @@ def preservation_method_n_meth_platform_parser(
         runner (str): Name of the runner.
         logger (logging.Logger): Logger object for logging progress and results.
     Returns:
-        pd.DataFrame: DataFrame with an additional column for preservation method.
+        str: Path to the output TSV file containing preservation method and methylation platform information.
     """
     
 
