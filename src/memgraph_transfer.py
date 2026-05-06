@@ -80,22 +80,6 @@ def export_memgraph(
 # ------------------------------------------------------------------
 # TASK: EXPORT DATABASE FOR CURATION PROMOTION
 # ------------------------------------------------------------------
-def format_properties(props):
-    """Convert dict to Cypher map string"""
-    if not props:
-        return "{}"
-    pairs = []
-    for k, v in props.items():
-        if isinstance(v, str):
-            v = v.replace('"', '\\"')
-            pairs.append(f'{k}: "{v}"')
-        elif v is None:
-            continue
-        else:
-            pairs.append(f"{k}: {json.dumps(v)}")
-    return "{ " + ", ".join(pairs) + " }"
-
-
 def format_labels(labels):
     return ":" + ":".join(labels) if labels else ""
 
@@ -115,7 +99,9 @@ def format_properties(props):
         elif isinstance(v, (int, float)):
             pairs.append(f'`{k}`: {v}')
         elif isinstance(v, DateTime):
-            pairs.append(f'`{k}`: DATETIME("{v.iso_format()}")')
+            # Strip nanoseconds to microseconds (6 decimal places) and append [Etc/UTC]
+            formatted = f"{v.year:04d}-{v.month:02d}-{v.day:02d}T{v.hour:02d}:{v.minute:02d}:{v.second:02d}.{v.nanosecond // 1000:06d}+00:00[Etc/UTC]"
+            pairs.append(f'`{k}`: DATETIME("{formatted}")')
         elif isinstance(v, Date):
             pairs.append(f'`{k}`: DATE("{v.iso_format()}")')
         elif isinstance(v, Time):
@@ -126,7 +112,9 @@ def format_properties(props):
             serialized_items = []
             for i in v:
                 if isinstance(i, DateTime):
-                    serialized_items.append(f'DATETIME("{i.iso_format()}")')
+                    # Strip nanoseconds to microseconds (6 decimal places) and append [Etc/UTC]
+                    formatted = f"{i.year:04d}-{i.month:02d}-{i.day:02d}T{i.hour:02d}:{i.minute:02d}:{i.second:02d}.{i.nanosecond // 1000:06d}+00:00[Etc/UTC]"
+                    serialized_items.append(f'DATETIME("{formatted}")')
                 elif isinstance(i, Date):
                     serialized_items.append(f'DATE("{i.iso_format()}")')
                 elif isinstance(i, Time):
