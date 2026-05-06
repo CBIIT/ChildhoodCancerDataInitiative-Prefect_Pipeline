@@ -127,7 +127,8 @@ def format_properties(props):
     return "{ " + ", ".join(pairs) + " }"
 
 
-def run_paginated_with_retry(session, query, params=None, page_size=1000, retries=3, delay=2):
+def run_paginated_with_retry(session, query, params=None, page_size=5000, retries=3, delay=2):
+    """Increased default page_size from 1000 to 5000 for fewer round trips"""
     logger = get_run_logger()
     results = []
     skip = 0
@@ -156,19 +157,11 @@ def run_paginated_with_retry(session, query, params=None, page_size=1000, retrie
         if len(page) < page_size:
             break
         skip += page_size
-        time.sleep(0.1)  # brief pause between pages to reduce load
-    return results
+    return results  # removed time.sleep(0.1) between pages
 
 
-@task(cache_policy=NO_CACHE, name="export_nodes", persist_result=False)
-def export_nodes(driver, output_file, node_vars):
-    """
-    Exports nodes directly to the output file as they are fetched.
-    Populates node_vars dict in place for use by export_relationships.
-    """
-    logger = get_run_logger()
-    logger.info("Fetching studies with promotion_status 'Promote'...")
-
+def get_promote_study_ids(driver):
+    """Fetch promote study IDs once and reuse across both export functions"""
     study_query = """
     MATCH (st:study)
     WHERE "Promote" IN st.promotion_status
@@ -176,78 +169,40 @@ def export_nodes(driver, output_file, node_vars):
     """
     with driver.session() as session:
         studies = run_paginated_with_retry(session, study_query)
-    study_ids = [record["study_id"] for record in studies]
-    logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
+    return [record["study_id"] for record in studies]
 
+
+@task(cache_policy=NO_CACHE, name="export_nodes", persist_result=False)
+def export_nodes(driver, output_file, node_vars, study_ids):
+    logger = get_run_logger()
     seen_node_ids = set()
     node_counter = 0
-    study_count = 0
     study_total = len(study_ids)
     log_file = f"nodes_export_{get_time()}.tsv"
 
     with open(log_file, "w") as log_f:
         log_f.write("study\tnode\tcount\n")
 
-        for study_id in study_ids:
-            study_count += 1
+        for study_count, study_id in enumerate(study_ids, 1):
             logger.info(f"Processing study {study_count}/{study_total}: {study_id}...")
 
             with driver.session() as session:
-
-                # Get all distinct node labels present in this study
-                label_query = """
+                # Fetch ALL nodes for the study in one query instead of label by label
+                node_query = """
                 MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
-                UNWIND labels(n) AS label
-                RETURN DISTINCT label
+                RETURN DISTINCT n
                 """
-                try:
-                    labels = [record["label"] for record in run_paginated_with_retry(session, label_query, {"study_id": study_id})]
-                    logger.info(f"Found {len(labels)} node labels for study {study_id}: {labels}")
-                except Exception as e:
-                    logger.error(f"Failed to fetch node labels for study {study_id}: {e}")
-                    continue
-
-                # Add the study node itself
+                # Also fetch the study node itself
                 study_node_query = """
                 MATCH (st:study {study_id : $study_id})
                 RETURN st AS n
                 """
-                try:
-                    study_result = run_paginated_with_retry(session, study_node_query, {"study_id": study_id})
-                    new_count = 0
-                    for record in study_result:
-                        n = record["n"]
-                        if n.id in seen_node_ids:
-                            continue
-                        seen_node_ids.add(n.id)
-                        node_vars[n.id] = n.id  # map internal id to itself for MATCH lookup
-                        node_counter += 1
-                        new_count += 1
-                        labels_str = "__mg_vertex__:" + ":".join([f"`{l}`" for l in list(n.labels)])
-                        props = dict(n)
-                        props["__mg_id__"] = n.id  # inject __mg_id__ for later MATCH
-                        props_str = format_properties(props)
-                        output_file.write(f"CREATE (:{labels_str} {props_str});\n")
-                    logger.info(f"Added study node for {study_id}")
-                    log_f.write(f"{study_id}\tstudy\t{new_count}\n")
-                    log_f.flush()
-                except Exception as e:
-                    logger.error(f"Failed to fetch study node for {study_id}: {e}")
-                    log_f.write(f"{study_id}\tstudy\tERROR\n")
-                    log_f.flush()
+                write_buffer = []
+                label_counts = {}
 
-                # Query one label at a time
-                for label in labels:
-                    logger.info(f"Processing label '{label}' for study {study_id}...")
-                    query = """
-                    MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
-                    WHERE $label IN labels(n)
-                    RETURN DISTINCT n
-                    """
+                for query in [study_node_query, node_query]:
                     try:
-                        result = run_paginated_with_retry(session, query, {"study_id": study_id, "label": label})
-                        new_count = 0
-
+                        result = run_paginated_with_retry(session, query, {"study_id": study_id})
                         for record in result:
                             n = record["n"]
                             if n.id in seen_node_ids:
@@ -255,63 +210,51 @@ def export_nodes(driver, output_file, node_vars):
                             seen_node_ids.add(n.id)
                             node_vars[n.id] = n.id
                             node_counter += 1
-                            new_count += 1
-                            labels_str = "__mg_vertex__:" + ":".join(list(n.labels))
+
+                            # Track counts per label for the log
+                            for lbl in n.labels:
+                                label_counts[lbl] = label_counts.get(lbl, 0) + 1
+
+                            labels_str = "__mg_vertex__:" + ":".join([f"`{l}`" for l in list(n.labels)])
                             props = dict(n)
                             props["__mg_id__"] = n.id
                             props_str = format_properties(props)
-                            output_file.write(f"CREATE (:{labels_str} {props_str});\n")
-
-                        output_file.flush()
-                        logger.info(f"Found {new_count} new nodes of label '{label}' for study {study_id}")
-                        log_f.write(f"{study_id}\t{label}\t{new_count}\n")
-                        log_f.flush()
+                            write_buffer.append(f"CREATE (:{labels_str} {props_str});\n")
 
                     except Exception as e:
-                        logger.error(f"Failed to process label '{label}' for study {study_id}: {e}")
-                        log_f.write(f"{study_id}\t{label}\tERROR\n")
-                        log_f.flush()
+                        logger.error(f"Failed to fetch nodes for study {study_id}: {e}")
                         continue
 
-                    time.sleep(0.1)
+                # Write entire study's nodes in one batch
+                output_file.writelines(write_buffer)
+                output_file.flush()
+
+                # Log counts per label
+                for lbl, count in label_counts.items():
+                    log_f.write(f"{study_id}\t{lbl}\t{count}\n")
+                log_f.flush()
+
+                logger.info(f"Exported {len(write_buffer)} nodes for study {study_id}")
 
     logger.info(f"Total unique nodes exported: {node_counter}")
     return log_file
 
 
 @task(cache_policy=NO_CACHE, name="export_relationships", persist_result=False)
-def export_relationships(driver, output_file, node_vars):
-    """
-    Exports relationships directly to the output file as they are fetched.
-    Requires node_vars to be populated by export_nodes first.
-    """
+def export_relationships(driver, output_file, node_vars, study_ids):
     logger = get_run_logger()
-    logger.info("Fetching studies with promotion_status 'Promote'...")
-
-    study_query = """
-    MATCH (st:study)
-    WHERE "Promote" IN st.promotion_status
-    RETURN st.study_id AS study_id
-    """
-    with driver.session() as session:
-        studies = run_paginated_with_retry(session, study_query)
-    study_ids = [record["study_id"] for record in studies]
-    logger.info(f"Found {len(study_ids)} studies to process: {study_ids}")
-
     seen_rel_ids = set()
-    study_count = 0
     study_total = len(study_ids)
     log_file = f"relationships_export_{get_time()}.tsv"
 
     with open(log_file, "w") as log_f:
         log_f.write("study\trel_type\tcount\n")
 
-        for study_id in study_ids:
-            study_count += 1
+        for study_count, study_id in enumerate(study_ids, 1):
             logger.info(f"Processing study {study_count}/{study_total}: {study_id}...")
 
             with driver.session() as session:
-
+                # Get all relationship types for this study
                 rel_type_query = """
                 MATCH (st:study {study_id : $study_id})-[*1..6]-(n)-[r]-(m)
                 RETURN DISTINCT type(r) AS rel_type
@@ -324,7 +267,6 @@ def export_relationships(driver, output_file, node_vars):
                     continue
 
                 for rel_type in rel_types:
-                    logger.info(f"Processing relationship type '{rel_type}' for study {study_id}...")
                     query = """
                     MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
                     WITH DISTINCT n
@@ -334,6 +276,7 @@ def export_relationships(driver, output_file, node_vars):
                     """
                     try:
                         result = run_paginated_with_retry(session, query, {"study_id": study_id, "rel_type": rel_type})
+                        write_buffer = []
                         new_count = 0
 
                         for record in result:
@@ -345,20 +288,20 @@ def export_relationships(driver, output_file, node_vars):
                                 continue
                             seen_rel_ids.add(r.id)
 
-                            # Check both nodes were exported
                             if start_node.id not in node_vars or end_node.id not in node_vars:
                                 logger.warning(f"Skipping relationship {r.id} — missing node for start={start_node.id} or end={end_node.id}")
                                 continue
 
                             new_count += 1
                             props_str = format_properties(dict(r))
-                            # Use MATCH on __mg_id__ to find nodes, same as DUMP DATABASE format
-                            output_file.write(
+                            write_buffer.append(
                                 f"MATCH (u:__mg_vertex__), (v:__mg_vertex__) "
                                 f"WHERE u.__mg_id__ = {start_node.id} AND v.__mg_id__ = {end_node.id} "
                                 f"CREATE (u)-[:`{rel_type}` {props_str}]->(v);\n"
                             )
 
+                        # Write entire rel_type batch in one go
+                        output_file.writelines(write_buffer)
                         output_file.flush()
                         logger.info(f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}")
                         log_f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
@@ -370,8 +313,6 @@ def export_relationships(driver, output_file, node_vars):
                         log_f.flush()
                         continue
 
-                    time.sleep(0.1)
-
     logger.info(f"Relationships export complete.")
     return log_file
 
@@ -381,17 +322,14 @@ def export_indices(session):
     logger = get_run_logger()
     logger.info("Exporting index information...")
     result = list(session.run("SHOW INDEX INFO;").data())
-
-    indices = []
-    for record in result:
-        indices.append(
-            {
-                "label": record["label"],
-                "property": record["property"],
-                "index_type": record["index type"],
-            }
-        )
-    return indices
+    return [
+        {
+            "label": record["label"],
+            "property": record["property"],
+            "index_type": record["index type"],
+        }
+        for record in result
+    ]
 
 
 @flow(name="export_memgraph_curation", persist_result=False)
@@ -402,18 +340,22 @@ def export_memgraph_curation(
     driver = GraphDatabase.driver(uri, auth=(username, password))
     logger.info("Connected to Memgraph")
 
-    node_vars = {}  # shared map of node id -> __mg_id__
+    # Fetch study IDs once and pass to both functions
+    study_ids = get_promote_study_ids(driver)
+    logger.info(f"Found {len(study_ids)} studies to export: {study_ids}")
+
+    node_vars = {}
 
     with open(output_file, "w") as out_f:
 
         # --- WRITE NODES ---
         out_f.write("// --- NODES ---\n")
         out_f.write("CREATE INDEX ON :__mg_vertex__(__mg_id__);\n")
-        node_log = export_nodes(driver, out_f, node_vars)
+        node_log = export_nodes(driver, out_f, node_vars, study_ids)
 
         # --- WRITE RELATIONSHIPS ---
         out_f.write("// --- RELATIONSHIPS ---\n")
-        rel_log = export_relationships(driver, out_f, node_vars)
+        rel_log = export_relationships(driver, out_f, node_vars, study_ids)
 
         # --- WRITE INDEXES ---
         out_f.write("// --- INDEXES ---\n")
@@ -432,7 +374,7 @@ def export_memgraph_curation(
             else:
                 out_f.write(f"CREATE INDEX ON :{label};\n")
 
-        # --- CLEANUP (matches DUMP DATABASE format) ---
+        # --- CLEANUP ---
         out_f.write("// --- CLEANUP ---\n")
         out_f.write("DROP INDEX ON :__mg_vertex__(__mg_id__);\n")
         out_f.write("MATCH (u) REMOVE u:__mg_vertex__, u.__mg_id__;\n")
