@@ -398,7 +398,7 @@ def export_memgraph(
 
 def parse_mg_id(line):
     """Extract __mg_id__ value from a CREATE node line"""
-    match = re.search(r'`__mg_id__`:\s*(\d+)', line)
+    match = re.search(r'__mg_id__:\s*(\d+)', line)  # no backticks around __mg_id__
     if match:
         return int(match.group(1))
     return None
@@ -406,9 +406,10 @@ def parse_mg_id(line):
 
 def parse_node_labels(line):
     """Extract labels from a CREATE node line"""
-    match = re.search(r'CREATE\s*\(:([\w`: ]+)\s*\{', line)
+    match = re.search(r'CREATE\s*\(:([^{]+)\{', line)
     if match:
         labels_str = match.group(1)
+        # Strip backticks and split on colon
         labels = [l.strip().strip('`') for l in labels_str.split(':') if l.strip()]
         return labels
     return []
@@ -416,9 +417,11 @@ def parse_node_labels(line):
 
 def parse_node_property(line, property_name):
     """Extract a specific property value from a CREATE node line"""
+    # Match backtick-quoted property key with string value
     match = re.search(rf'`{property_name}`:\s*"([^"]*)"', line)
     if match:
         return match.group(1)
+    # Match backtick-quoted property key with JSON list value
     match = re.search(rf'`{property_name}`:\s*(\[[^\]]*\])', line)
     if match:
         try:
