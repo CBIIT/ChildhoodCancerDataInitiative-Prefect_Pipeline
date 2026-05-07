@@ -208,7 +208,7 @@ def memgraph_transfer_dcc(
         logger.info(f"Running export with chunk size {chunk_size}")
         output_file = f"memgraph_dump_curation_filtered_{database_source_account_name}_{get_time()}.cypherl"
         output_file, node_log, rel_log, study_log = export_memgraph_curation_filtered_file(
-            uri_source, username_source, password_source, output_file, chunk_size, FILTER_LABEL, FILTER_PROPERTY, FILTER_VALUE
+            uri_source, username_source, password_source, output_file, FILTER_LABEL, FILTER_PROPERTY, FILTER_VALUE
         )
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
