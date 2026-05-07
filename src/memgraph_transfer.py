@@ -717,7 +717,7 @@ def export_memgraph_curation_filtered_file(
 
     # Derive the dump file name from the output file name
     #base, ext = os.path.splitext(output_file)
-    dump_file = f"database_full_dump{get_time()}.cypherl"
+    dump_file = f"database_full_dump_{get_time()}.cypherl"
 
     logger.info(f"Step 1: Dumping database to {dump_file}...")
     dump_database(uri, username, password, dump_file)
