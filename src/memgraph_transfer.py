@@ -389,12 +389,7 @@ def export_memgraph(
 
 #     return node_log, rel_log
 
-# ------------------------------------------------------------------
-# CONSTANTS - adjust these as needed
-# ------------------------------------------------------------------
-FILTER_LABEL = "study"
-FILTER_PROPERTY = "promotion_status"
-FILTER_VALUE = "Promote"
+
 
 
 # ------------------------------------------------------------------
@@ -508,9 +503,9 @@ def dump_database(uri: str, username: str, password: str, dump_file: str):
 def filter_cypherl(
     input_file: str,
     output_file: str,
-    filter_label: str = FILTER_LABEL,
-    filter_property: str = FILTER_PROPERTY,
-    filter_value: str = FILTER_VALUE,
+    filter_label: str,
+    filter_property: str,
+    filter_value: str,
 ):
     """
     Filters a Memgraph DUMP DATABASE cypherl file to only include nodes
@@ -708,9 +703,9 @@ def export_memgraph_curation_filtered_file(
     username: str,
     password: str,
     output_file: str,
-    filter_label: str = FILTER_LABEL,
-    filter_property: str = FILTER_PROPERTY,
-    filter_value: str = FILTER_VALUE,
+    filter_label: str,
+    filter_property: str,
+    filter_value: str,
 ) -> tuple:
     """
     Main flow:
