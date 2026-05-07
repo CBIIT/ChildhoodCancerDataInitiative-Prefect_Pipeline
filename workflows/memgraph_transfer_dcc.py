@@ -3,7 +3,8 @@ from websockets import uri
 from src.memgraph_transfer import (
     export_memgraph,
     import_memgraph,
-    export_memgraph_curation,
+    #export_memgraph_curation,
+    export_memgraph_curation_filtered_file,
 )
 from typing import Literal
 import os
@@ -29,7 +30,7 @@ def memgraph_transfer_dcc(
     file_path: str,
     chunk_size: int = 1000,
     mode: Literal[
-        "export", "import", "promotion", "curation promotion"
+        "export", "import", "promotion", "curation promotion", "curation promotion filtered file"
     ] = "export",  # dropdown choice
     database_source_account_name: str = None,
     database_source_account_id: str = None,
@@ -73,7 +74,7 @@ def memgraph_transfer_dcc(
     logger.info("Getting uri, username and password parameter from AWS")
     # get uri, username, and password value
 
-    if mode in ["export", "promotion", "curation promotion"]:
+    if mode in ["export", "promotion", "curation promotion", "curation promotion filtered file"]:
         logger.info("Mode requires source database credentials, retrieving from AWS")
         uri_source = get_secret_centralized_worker(
             secret_path_name=database_source_secret_path,
@@ -91,7 +92,7 @@ def memgraph_transfer_dcc(
             account=database_source_account_id,
         )
 
-    if mode in ["import", "promotion", "curation promotion"]:
+    if mode in ["import", "promotion", "curation promotion", "curation promotion filtered file"]:
         logger.info("Mode requires target database credentials, retrieving from AWS")
         uri_target = get_secret_centralized_worker(
             secret_path_name=database_target_secret_path,
@@ -164,20 +165,50 @@ def memgraph_transfer_dcc(
         )
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
-    elif mode == "curation promotion":
-        logger.info("Running curation promotion flow")
-        logger.info("Exporting only the promoted studies and its connected subgraph")
+    # elif mode == "curation promotion":
+    #     logger.info("Running curation promotion flow")
+    #     logger.info("Exporting only the promoted studies and its connected subgraph")
+    #     logger.info(f"Source database account: {database_source_account_name}")
+    #     logger.info(f"Target database account: {database_target_account_name}")
+    #     logger.info(f"Running export with chunk size {chunk_size}")
+    #     output_file = f"memgraph_dump_curation_{database_source_account_name}_{get_time()}.cypherl"
+    #     node_log, rel_log = export_memgraph_curation(
+    #         uri_source, username_source, password_source, output_file, chunk_size
+    #     )
+    #     # upload the cypherl file
+    #     file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
+    #     file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=node_log)
+    #     file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=rel_log)
+    #     logger.info(f"Export completed: {output_file}")
+    #     logger.info(f"Running import with chunk size {chunk_size}")
+
+    #     input_file = os.path.basename(output_file)
+
+    #     import_memgraph(
+    #         uri_target,
+    #         username_target,
+    #         password_target,
+    #         input_file=input_file,
+    #         chunk_size=chunk_size,
+    #         wipe_db=wipe_db,
+    #     )
+    #     logger.info(f"Import to {database_target_account_name} completed successfully")
+
+    elif mode == "curation promotion filtered file":
+        logger.info("Running curation promotion filtered file flow")
+        logger.info("Exporting all studies and then filtering only for Promoted studies and its connected subgraph")
         logger.info(f"Source database account: {database_source_account_name}")
         logger.info(f"Target database account: {database_target_account_name}")
         logger.info(f"Running export with chunk size {chunk_size}")
-        output_file = f"memgraph_dump_curation_{database_source_account_name}_{get_time()}.cypherl"
-        node_log, rel_log = export_memgraph_curation(
+        output_file = f"memgraph_dump_curation_filtered_{database_source_account_name}_{get_time()}.cypherl"
+        output_file, node_log, rel_log, study_log = export_memgraph_curation_filtered_file(
             uri_source, username_source, password_source, output_file, chunk_size
         )
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=node_log)
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=rel_log)
+        file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=study_log)
         logger.info(f"Export completed: {output_file}")
         logger.info(f"Running import with chunk size {chunk_size}")
 
@@ -195,7 +226,7 @@ def memgraph_transfer_dcc(
 
     else:
         logger.error(
-            f"Invalid mode: {mode}. Must be 'export', 'import', 'promotion', or 'curation promotion'."
+            f"Invalid mode: {mode}. Must be 'export', 'import', 'promotion', 'curation promotion', or 'curation promotion filtered file'."
         )
 
     logger.info(f"{mode} flow completed successfully")
