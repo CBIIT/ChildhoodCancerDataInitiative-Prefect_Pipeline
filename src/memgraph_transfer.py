@@ -716,8 +716,8 @@ def export_memgraph_curation_filtered_file(
     logger = get_run_logger()
 
     # Derive the dump file name from the output file name
-    base, ext = os.path.splitext(output_file)
-    dump_file = f"{base}_full_dump{ext}"
+    #base, ext = os.path.splitext(output_file)
+    dump_file = f"database_full_dump{get_time()}.cypherl"
 
     logger.info(f"Step 1: Dumping database to {dump_file}...")
     dump_database(uri, username, password, dump_file)
@@ -737,7 +737,7 @@ def export_memgraph_curation_filtered_file(
     logger.info(f"Rel log:       {rel_log}")
     logger.info(f"Study log:     {study_log}")
 
-    return output_file, node_log, rel_log, study_log
+    return node_log, rel_log, study_log
 
 
 # ------------------------------------------------------------------
