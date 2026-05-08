@@ -79,317 +79,6 @@ def export_memgraph(
     logger.info("Memgraph connection closed.")
 
 
-# # ------------------------------------------------------------------
-# # TASK: EXPORT DATABASE FOR CURATION PROMOTION
-# # ------------------------------------------------------------------
-# def format_labels(labels):
-#     return ":" + ":".join(labels) if labels else ""
-
-# def format_properties(props):
-#     """Convert dict to Cypher map string"""
-#     if not props:
-#         return "{}"
-#     pairs = []
-#     for k, v in props.items():
-#         if v is None:
-#             continue
-#         elif isinstance(v, str):
-#             v = v.replace('"', '\\"')
-#             pairs.append(f'`{k}`: "{v}"')
-#         elif isinstance(v, bool):
-#             pairs.append(f'`{k}`: {str(v).lower()}')
-#         elif isinstance(v, (int, float)):
-#             pairs.append(f'`{k}`: {v}')
-#         elif isinstance(v, DateTime):
-#             # Strip nanoseconds to microseconds (6 decimal places) and append [Etc/UTC]
-#             formatted = f"{v.year:04d}-{v.month:02d}-{v.day:02d}T{v.hour:02d}:{v.minute:02d}:{v.second:02d}.{v.nanosecond // 1000:06d}+00:00[Etc/UTC]"
-#             pairs.append(f'`{k}`: DATETIME("{formatted}")')
-#         elif isinstance(v, Date):
-#             pairs.append(f'`{k}`: DATE("{v.iso_format()}")')
-#         elif isinstance(v, Time):
-#             pairs.append(f'`{k}`: TIME("{v.iso_format()}")')
-#         elif isinstance(v, Duration):
-#             pairs.append(f'`{k}`: DURATION("{str(v)}")')
-#         elif isinstance(v, list):
-#             serialized_items = []
-#             for i in v:
-#                 if isinstance(i, DateTime):
-#                     # Strip nanoseconds to microseconds (6 decimal places) and append [Etc/UTC]
-#                     formatted = f"{i.year:04d}-{i.month:02d}-{i.day:02d}T{i.hour:02d}:{i.minute:02d}:{i.second:02d}.{i.nanosecond // 1000:06d}+00:00[Etc/UTC]"
-#                     serialized_items.append(f'DATETIME("{formatted}")')
-#                 elif isinstance(i, Date):
-#                     serialized_items.append(f'DATE("{i.iso_format()}")')
-#                 elif isinstance(i, Time):
-#                     serialized_items.append(f'TIME("{i.iso_format()}")')
-#                 else:
-#                     serialized_items.append(json.dumps(i))
-#             pairs.append(f'`{k}`: [{", ".join(serialized_items)}]')
-#         else:
-#             pairs.append(f'`{k}`: {json.dumps(v)}')
-#     return "{ " + ", ".join(pairs) + " }"
-
-
-# def run_paginated_with_retry(session, query, params=None, page_size=5000, retries=3, delay=2):
-#     """Increased default page_size from 1000 to 5000 for fewer round trips"""
-#     logger = get_run_logger()
-#     results = []
-#     skip = 0
-#     while True:
-#         paginated_query = query + f" SKIP {skip} LIMIT {page_size}"
-#         page = []
-#         for attempt in range(retries):
-#             try:
-#                 page = list(session.run(paginated_query, params or {}))
-#                 results.extend(page)
-#                 break
-#             except TransactionError as e:
-#                 if attempt < retries - 1:
-#                     logger.warning(f"Transaction error (attempt {attempt + 1}/{retries}) at SKIP {skip}, retrying in {delay * (attempt + 1)}s... Error: {e}")
-#                     time.sleep(delay * (attempt + 1))
-#                 else:
-#                     logger.error(f"Transaction error after {retries} attempts at SKIP {skip}: {e}")
-#                     return results
-#             except Exception as e:
-#                 if attempt < retries - 1:
-#                     logger.warning(f"Query failed (attempt {attempt + 1}/{retries}) at SKIP {skip}, retrying in {delay}s... Error: {e}")
-#                     time.sleep(delay)
-#                 else:
-#                     logger.error(f"Query failed after {retries} attempts at SKIP {skip}: {e}")
-#                     raise e
-#         if len(page) < page_size:
-#             break
-#         skip += page_size
-#     return results  # removed time.sleep(0.1) between pages
-
-
-# def get_promote_study_ids(driver):
-#     """Fetch promote study IDs once and reuse across both export functions"""
-#     study_query = """
-#     MATCH (st:study)
-#     WHERE "Promote" IN st.promotion_status
-#     RETURN st.study_id AS study_id
-#     """
-#     with driver.session() as session:
-#         studies = run_paginated_with_retry(session, study_query)
-#     return [record["study_id"] for record in studies]
-
-
-# @task(cache_policy=NO_CACHE, name="export_nodes", persist_result=False)
-# def export_nodes(driver, output_file, node_vars, study_ids):
-#     logger = get_run_logger()
-#     seen_node_ids = set()
-#     node_counter = 0
-#     study_total = len(study_ids)
-#     log_file = f"nodes_export_{get_time()}.tsv"
-
-#     with open(log_file, "w") as log_f:
-#         log_f.write("study\tnode\tcount\n")
-
-#         for study_count, study_id in enumerate(study_ids, 1):
-#             logger.info(f"Processing study {study_count}/{study_total}: {study_id}...")
-
-#             with driver.session() as session:
-#                 # Fetch ALL nodes for the study in one query instead of label by label
-#                 node_query = """
-#                 MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
-#                 RETURN DISTINCT n
-#                 """
-#                 # Also fetch the study node itself
-#                 study_node_query = """
-#                 MATCH (st:study {study_id : $study_id})
-#                 RETURN st AS n
-#                 """
-#                 write_buffer = []
-#                 label_counts = {}
-
-#                 for query in [study_node_query, node_query]:
-#                     try:
-#                         result = run_paginated_with_retry(session, query, {"study_id": study_id})
-#                         for record in result:
-#                             n = record["n"]
-#                             if n.id in seen_node_ids:
-#                                 continue
-#                             seen_node_ids.add(n.id)
-#                             node_vars[n.id] = n.id
-#                             node_counter += 1
-
-#                             # Track counts per label for the log
-#                             for lbl in n.labels:
-#                                 label_counts[lbl] = label_counts.get(lbl, 0) + 1
-
-#                             labels_str = "__mg_vertex__:" + ":".join([f"`{l}`" for l in list(n.labels)])
-#                             props = dict(n)
-#                             props["__mg_id__"] = n.id
-#                             props_str = format_properties(props)
-#                             write_buffer.append(f"CREATE (:{labels_str} {props_str});\n")
-
-#                     except Exception as e:
-#                         logger.error(f"Failed to fetch nodes for study {study_id}: {e}")
-#                         continue
-
-#                 # Write entire study's nodes in one batch
-#                 output_file.writelines(write_buffer)
-#                 output_file.flush()
-
-#                 # Log counts per label
-#                 for lbl, count in label_counts.items():
-#                     log_f.write(f"{study_id}\t{lbl}\t{count}\n")
-#                 log_f.flush()
-
-#                 logger.info(f"Exported {len(write_buffer)} nodes for study {study_id}")
-
-#     logger.info(f"Total unique nodes exported: {node_counter}")
-#     return log_file
-
-
-# @task(cache_policy=NO_CACHE, name="export_relationships", persist_result=False)
-# def export_relationships(driver, output_file, node_vars, study_ids):
-#     logger = get_run_logger()
-#     seen_rel_ids = set()
-#     study_total = len(study_ids)
-#     log_file = f"relationships_export_{get_time()}.tsv"
-
-#     with open(log_file, "w") as log_f:
-#         log_f.write("study\trel_type\tcount\n")
-
-#         for study_count, study_id in enumerate(study_ids, 1):
-#             logger.info(f"Processing study {study_count}/{study_total}: {study_id}...")
-
-#             with driver.session() as session:
-#                 # Get all relationship types for this study
-#                 rel_type_query = """
-#                 MATCH (st:study {study_id : $study_id})-[*1..6]-(n)-[r]-(m)
-#                 RETURN DISTINCT type(r) AS rel_type
-#                 """
-#                 try:
-#                     rel_types = [record["rel_type"] for record in run_paginated_with_retry(session, rel_type_query, {"study_id": study_id})]
-#                     logger.info(f"Found {len(rel_types)} relationship types for study {study_id}: {rel_types}")
-#                 except Exception as e:
-#                     logger.error(f"Failed to fetch relationship types for study {study_id}: {e}")
-#                     continue
-
-#                 for rel_type in rel_types:
-#                     query = """
-#                     MATCH (st:study {study_id : $study_id})-[*1..6]-(n)
-#                     WITH DISTINCT n
-#                     MATCH (n)-[r]->(m)
-#                     WHERE type(r) = $rel_type
-#                     RETURN DISTINCT r, startNode(r) AS start_node, endNode(r) AS end_node
-#                     """
-#                     try:
-#                         result = run_paginated_with_retry(session, query, {"study_id": study_id, "rel_type": rel_type})
-#                         write_buffer = []
-#                         new_count = 0
-
-#                         for record in result:
-#                             r = record["r"]
-#                             start_node = record["start_node"]
-#                             end_node = record["end_node"]
-
-#                             if r.id in seen_rel_ids:
-#                                 continue
-#                             seen_rel_ids.add(r.id)
-
-#                             if start_node.id not in node_vars or end_node.id not in node_vars:
-#                                 logger.warning(f"Skipping relationship {r.id} — missing node for start={start_node.id} or end={end_node.id}")
-#                                 continue
-
-#                             new_count += 1
-#                             props_str = format_properties(dict(r))
-#                             write_buffer.append(
-#                                 f"MATCH (u:__mg_vertex__), (v:__mg_vertex__) "
-#                                 f"WHERE u.__mg_id__ = {start_node.id} AND v.__mg_id__ = {end_node.id} "
-#                                 f"CREATE (u)-[:`{rel_type}` {props_str}]->(v);\n"
-#                             )
-
-#                         # Write entire rel_type batch in one go
-#                         output_file.writelines(write_buffer)
-#                         output_file.flush()
-#                         logger.info(f"Found {new_count} new relationships of type '{rel_type}' for study {study_id}")
-#                         log_f.write(f"{study_id}\t{rel_type}\t{new_count}\n")
-#                         log_f.flush()
-
-#                     except Exception as e:
-#                         logger.error(f"Failed to process rel_type '{rel_type}' for study {study_id}: {e}")
-#                         log_f.write(f"{study_id}\t{rel_type}\tERROR\n")
-#                         log_f.flush()
-#                         continue
-
-#     logger.info(f"Relationships export complete.")
-#     return log_file
-
-
-# @flow(name="export_indices", persist_result=False)
-# def export_indices(session):
-#     logger = get_run_logger()
-#     logger.info("Exporting index information...")
-#     result = list(session.run("SHOW INDEX INFO;").data())
-#     return [
-#         {
-#             "label": record["label"],
-#             "property": record["property"],
-#             "index_type": record["index type"],
-#         }
-#         for record in result
-#     ]
-
-
-# @flow(name="export_memgraph_curation", persist_result=False)
-# def export_memgraph_curation(
-#     uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
-# ) -> None:
-#     logger = get_run_logger()
-#     driver = GraphDatabase.driver(uri, auth=(username, password))
-#     logger.info("Connected to Memgraph")
-
-#     # Fetch study IDs once and pass to both functions
-#     study_ids = get_promote_study_ids(driver)
-#     logger.info(f"Found {len(study_ids)} studies to export: {study_ids}")
-
-#     node_vars = {}
-
-#     with open(output_file, "w") as out_f:
-
-#         # --- WRITE NODES ---
-#         out_f.write("// --- NODES ---\n")
-#         out_f.write("CREATE INDEX ON :__mg_vertex__(__mg_id__);\n")
-#         node_log = export_nodes(driver, out_f, node_vars, study_ids)
-
-#         # --- WRITE RELATIONSHIPS ---
-#         out_f.write("// --- RELATIONSHIPS ---\n")
-#         rel_log = export_relationships(driver, out_f, node_vars, study_ids)
-
-#         # --- WRITE INDEXES ---
-#         out_f.write("// --- INDEXES ---\n")
-#         with driver.session() as session:
-#             indices = export_indices(session)
-#         for index in indices:
-#             label = index["label"]
-#             property = index["property"]
-#             index_type = index["index_type"].lower()
-
-#             if "edge" in index_type:
-#                 out_f.write(f"CREATE EDGE INDEX ON :{label};\n")
-#             elif property:
-#                 prop = property[0] if isinstance(property, list) else property
-#                 out_f.write(f"CREATE INDEX ON :{label}({prop});\n")
-#             else:
-#                 out_f.write(f"CREATE INDEX ON :{label};\n")
-
-#         # --- CLEANUP ---
-#         out_f.write("// --- CLEANUP ---\n")
-#         out_f.write("DROP INDEX ON :__mg_vertex__(__mg_id__);\n")
-#         out_f.write("MATCH (u) REMOVE u:__mg_vertex__, u.__mg_id__;\n")
-
-#         out_f.flush()
-
-#     driver.close()
-#     logger.info("Memgraph connection closed.")
-#     logger.info(f"Export complete: {output_file}")
-
-#     return node_log, rel_log
-
-
 # ------------------------------------------------------------------
 # TASK: EXPORT DATABASE FOR CURATION PROMOTION
 # ------------------------------------------------------------------
@@ -398,9 +87,10 @@ def export_memgraph(
 # HELPER FUNCTIONS
 # ------------------------------------------------------------------
 
+
 def parse_mg_id(line):
     """Extract __mg_id__ value from a CREATE node line"""
-    match = re.search(r'__mg_id__:\s*(\d+)', line)  # no backticks around __mg_id__
+    match = re.search(r"__mg_id__:\s*(\d+)", line)  # no backticks around __mg_id__
     if match:
         return int(match.group(1))
     return None
@@ -408,11 +98,11 @@ def parse_mg_id(line):
 
 def parse_node_labels(line):
     """Extract labels from a CREATE node line"""
-    match = re.search(r'CREATE\s*\(:([^{]+)\{', line)
+    match = re.search(r"CREATE\s*\(:([^{]+)\{", line)
     if match:
         labels_str = match.group(1)
         # Strip backticks and split on colon
-        labels = [l.strip().strip('`') for l in labels_str.split(':') if l.strip()]
+        labels = [l.strip().strip("`") for l in labels_str.split(":") if l.strip()]
         return labels
     return []
 
@@ -424,7 +114,7 @@ def parse_node_property(line, property_name):
     if match:
         return match.group(1)
     # Match backtick-quoted property key with JSON list value
-    match = re.search(rf'`{property_name}`:\s*(\[[^\]]*\])', line)
+    match = re.search(rf"`{property_name}`:\s*(\[[^\]]*\])", line)
     if match:
         try:
             return json.loads(match.group(1))
@@ -454,7 +144,7 @@ def node_matches_filter(line, filter_label, filter_property, filter_value):
 
 def parse_relationship_mg_ids(line):
     """Extract u.__mg_id__ and v.__mg_id__ from a MATCH/CREATE relationship line"""
-    match = re.search(r'u\.__mg_id__\s*=\s*(\d+).*?v\.__mg_id__\s*=\s*(\d+)', line)
+    match = re.search(r"u\.__mg_id__\s*=\s*(\d+).*?v\.__mg_id__\s*=\s*(\d+)", line)
     if match:
         return int(match.group(1)), int(match.group(2))
     return None, None
@@ -462,7 +152,7 @@ def parse_relationship_mg_ids(line):
 
 def parse_relationship_type(line):
     """Extract relationship type from a MATCH/CREATE relationship line"""
-    match = re.search(r'CREATE \(u\)-\[:`([^`]+)`', line)
+    match = re.search(r"CREATE \(u\)-\[:`([^`]+)`", line)
     if match:
         return match.group(1)
     return "unknown"
@@ -471,6 +161,7 @@ def parse_relationship_type(line):
 # ------------------------------------------------------------------
 # TASK: DUMP DATABASE TO FILE
 # ------------------------------------------------------------------
+
 
 @task(cache_policy=NO_CACHE, name="dump_database", persist_result=False)
 def dump_database(uri: str, username: str, password: str, dump_file: str):
@@ -503,6 +194,7 @@ def dump_database(uri: str, username: str, password: str, dump_file: str):
 # ------------------------------------------------------------------
 # TASK: FILTER CYPHERL FILE FOR CURATION PROMOTION
 # ------------------------------------------------------------------
+
 
 @task(cache_policy=NO_CACHE, name="filter_cypherl", persist_result=False)
 def filter_cypherl(
@@ -550,12 +242,16 @@ def filter_cypherl(
             if mg_id is None:
                 continue
             all_study_mg_id_to_study_id[mg_id] = study_id or f"unknown_mg_id_{mg_id}"
-            if node_matches_filter(stripped, filter_label, filter_property, filter_value):
+            if node_matches_filter(
+                stripped, filter_label, filter_property, filter_value
+            ):
                 qualifying_study_mg_ids.add(mg_id)
             else:
                 excluded_study_mg_ids.add(mg_id)
 
-    logger.info(f"Found {len(qualifying_study_mg_ids)} qualifying studies, {len(excluded_study_mg_ids)} excluded studies")
+    logger.info(
+        f"Found {len(qualifying_study_mg_ids)} qualifying studies, {len(excluded_study_mg_ids)} excluded studies"
+    )
 
     # Write study log
     with open(study_log_file, "w") as f:
@@ -588,7 +284,9 @@ def filter_cypherl(
 
     # BFS flood fill — each node inherits its study attribution from its parent
     connected_mg_ids = set(qualifying_study_mg_ids)
-    mg_id_to_study_id = {mg_id: all_study_mg_id_to_study_id[mg_id] for mg_id in qualifying_study_mg_ids}
+    mg_id_to_study_id = {
+        mg_id: all_study_mg_id_to_study_id[mg_id] for mg_id in qualifying_study_mg_ids
+    }
     frontier = set(qualifying_study_mg_ids)
 
     while frontier:
@@ -614,7 +312,7 @@ def filter_cypherl(
     rels_written = 0
     rels_skipped = 0
     node_label_counts = {}  # (study_id, label) -> count
-    rel_type_counts = {}    # (study_id, rel_type) -> count
+    rel_type_counts = {}  # (study_id, rel_type) -> count
 
     with open(input_file, "r") as in_f, open(output_file, "w") as out_f:
         for line in in_f:
@@ -695,8 +393,9 @@ def filter_cypherl(
 # FLOW: EXPORT MEMGRAPH CURATION FILTERED FILE
 # ------------------------------------------------------------------
 
-@flow(name="export_memgraph_curation_filtered_file", persist_result=False)
-def export_memgraph_curation_filtered_file(
+
+@flow(name="export_memgraph_curation_filter", persist_result=False)
+def export_memgraph_curation_filter(
     uri: str,
     username: str,
     password: str,
@@ -713,8 +412,7 @@ def export_memgraph_curation_filtered_file(
     """
     logger = get_run_logger()
 
-    # Derive the dump file name from the output file name
-    #base, ext = os.path.splitext(output_file)
+    # Create a unique dump file name to avoid conflicts
     dump_file = f"database_full_dump_{get_time()}.cypherl"
 
     logger.info(f"Step 1: Dumping database to {dump_file}...")
