@@ -390,7 +390,9 @@ def export_memgraph(
 #     return node_log, rel_log
 
 
-
+# ------------------------------------------------------------------
+# TASK: EXPORT DATABASE FOR CURATION PROMOTION
+# ------------------------------------------------------------------
 
 # ------------------------------------------------------------------
 # HELPER FUNCTIONS
@@ -533,8 +535,6 @@ def filter_cypherl(
     logger.info("Pass 1: Finding qualifying study nodes...")
     qualifying_study_mg_ids = set()
     excluded_study_mg_ids = set()
-
-    # mg_id -> study_id mapping for logging
     all_study_mg_id_to_study_id = {}
 
     with open(input_file, "r") as f:
@@ -570,7 +570,7 @@ def filter_cypherl(
         return output_file, node_log_file, rel_log_file, study_log_file
 
     # ------------------------------------------------------------------
-    # PASS 2: Find all node mg_ids connected to qualifying studies via BFS
+    # PASS 2: Build adjacency map and BFS flood fill from qualifying studies
     # ------------------------------------------------------------------
     logger.info("Pass 2: Finding all connected node mg_ids...")
 
@@ -586,16 +586,19 @@ def filter_cypherl(
             adjacency.setdefault(u_id, set()).add(v_id)
             adjacency.setdefault(v_id, set()).add(u_id)
 
-    # BFS flood fill from qualifying study nodes
+    # BFS flood fill — each node inherits its study attribution from its parent
     connected_mg_ids = set(qualifying_study_mg_ids)
+    mg_id_to_study_id = {mg_id: all_study_mg_id_to_study_id[mg_id] for mg_id in qualifying_study_mg_ids}
     frontier = set(qualifying_study_mg_ids)
 
     while frontier:
         next_frontier = set()
         for mg_id in frontier:
+            study_id = mg_id_to_study_id[mg_id]
             for neighbor in adjacency.get(mg_id, set()):
                 if neighbor not in connected_mg_ids:
                     connected_mg_ids.add(neighbor)
+                    mg_id_to_study_id[neighbor] = study_id  # inherit study from parent
                     next_frontier.add(neighbor)
         frontier = next_frontier
 
@@ -610,10 +613,6 @@ def filter_cypherl(
     nodes_skipped = 0
     rels_written = 0
     rels_skipped = 0
-
-    # Track counts per label and rel_type per study for log files
-    # mg_id -> study_id for connected nodes
-    mg_id_to_study_id = {mg_id: all_study_mg_id_to_study_id[mg_id] for mg_id in qualifying_study_mg_ids}
     node_label_counts = {}  # (study_id, label) -> count
     rel_type_counts = {}    # (study_id, rel_type) -> count
 
@@ -640,17 +639,14 @@ def filter_cypherl(
                     out_f.write(line)
                     nodes_written += 1
 
-                    # Track label counts — attribute node to its study
+                    # Attribute node to its study via the BFS map
+                    study_id = mg_id_to_study_id.get(mg_id, "unknown")
                     labels = parse_node_labels(stripped)
-                    # Find which study this node belongs to via adjacency
                     for label in labels:
-                        if label in ("__mg_vertex__",):
+                        if label == "__mg_vertex__":
                             continue
-                        # Find the closest qualifying study
-                        for study_mg_id, study_id in mg_id_to_study_id.items():
-                            key = (study_id, label)
-                            node_label_counts[key] = node_label_counts.get(key, 0) + 1
-                            break  # attribute to first matching study to avoid duplication
+                        key = (study_id, label)
+                        node_label_counts[key] = node_label_counts.get(key, 0) + 1
                 else:
                     nodes_skipped += 1
                 continue
@@ -662,12 +658,11 @@ def filter_cypherl(
                     out_f.write(line)
                     rels_written += 1
 
-                    # Track rel_type counts
+                    # Attribute relationship to the study of the start node
+                    study_id = mg_id_to_study_id.get(u_id, "unknown")
                     rel_type = parse_relationship_type(stripped)
-                    for study_mg_id, study_id in mg_id_to_study_id.items():
-                        key = (study_id, rel_type)
-                        rel_type_counts[key] = rel_type_counts.get(key, 0) + 1
-                        break
+                    key = (study_id, rel_type)
+                    rel_type_counts[key] = rel_type_counts.get(key, 0) + 1
                 else:
                     rels_skipped += 1
                 continue
