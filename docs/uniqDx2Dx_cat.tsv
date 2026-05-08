@@ -192,7 +192,7 @@ Chondrosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Chordoid glioma	Low-grade Gliomas	WHO CNS5
 Chordoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Chordoma, NOS	Miscellaneous tumors	ICD-O-3.2
-Choriocarcinoma	Germ Cell tumors	WHO5 Pediatric Tumor
+Choriocarcinoma	Germ Cell Tumors	WHO5 Pediatric Tumor
 Choriocarcinoma combined with other germ cell elements	Trophoblastic neoplasms	ICD-O-3.2
 Choriocarcinoma, NOS	Trophoblastic neoplasms	ICD-O-3.2
 Choroid plexus carcinoma	Gliomas;Choroid Plexus Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
@@ -222,7 +222,7 @@ CNS embryonal tumor with rhabdoid features	Neuroepitheliomatous neoplasms	ICD-O-
 CNS embryonal tumor, NOS or NEC	Gliomas;Other CNS Embryonal tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 CNS germ cell tumor, NOS or NEC	CNS Germ Cell Tumors	WHO CNS5
 CNS Germinoma	CNS Germ Cell Tumors	WHO CNS5
-CNS mature teratoma	Germ Cell tumors	WHO CNS5
+CNS mature teratoma	Germ Cell Tumors	WHO CNS5
 CNS neuroblastoma, FOXR2-activated	Other CNS Embryonal tumors	WHO5 Pediatric Tumor
 CNS Non-Germinomatous Germ Cell Tumor	CNS Germ Cell Tumors	WHO CNS5
 CNS Sarcoma, NOS or NEC	CNS Sarcomas	WHO CNS5
@@ -299,7 +299,7 @@ Ependymoma, NOS	Gliomas	ICD-O-3.2
 Epithelial tumor, benign	Epithelial neoplasms, NOS	ICD-O-3.2
 Epithelial-myoepithelial carcinoma	Complex epithelial neoplasms	ICD-O-3.2
 Epithelial/myoepithelial carcinoma	Complex epithelial neoplasms	ICD-O-3.2
-Epitheliod Neoplasm, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
+Epithelioid Neoplasm, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
 Epithelioid and spindle cell nevus	Nevi and melanomas	ICD-O-3.2
 Epithelioid Angiomyolipoma	Renal Tumors	WHO5 Pediatric Tumor
 Epithelioid hemangioendothelioma, NOS	Blood vessel tumors	ICD-O-3.2
@@ -374,6 +374,7 @@ Glioneuronal and Neuronal Tumors, NOS or NEC	Glioneuronal and Neuronal Tumors	WH
 Gliosarcoma	Gliomas	ICD-O-3.2
 Glomangiosarcoma	Paragangliomas and glomus tumors	ICD-O-3.2
 Glomus tumor, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
+Glomus Tumor, NOS	Paragangliomas and glomus tumors	ICD-O-3.2
 Gonadal Stromal Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Granular cell tumor, malignant	Granular cell tumors and alveolar soft part sarcomas	ICD-O-3.2
 Granular cell tumor, NOS	Granular cell tumors and alveolar soft part sarcomas	ICD-O-3.2

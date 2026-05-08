@@ -8,7 +8,7 @@ from src.utils import get_time, folder_dl, get_date, file_ul
 from src.neo4j_data_tools import (
     counts_DB_all_nodes_all_studies,
     validate_DB_with_input_tsvs,
-    neo4j_validation_md,
+    db_validation_md,
     validate_df_to_count_summary,
     validate_df_to_id_summary
 )
@@ -70,7 +70,7 @@ def validate_neo4j_data(
         logger.info("Creating markdown report for Neo4j validation")
         count_summary_df = validate_df_to_count_summary(validate_df=validate_df)
         id_summary_df = validate_df_to_id_summary(validate_df=validate_df)
-        neo4j_validation_md(count_summary_df=count_summary_df, id_summary_df=id_summary_df, runner=runner)
+        db_validation_md(count_summary_df=count_summary_df, id_summary_df=id_summary_df, runner=runner)
 
         df_for_bucket_upload = validate_df
     else:

@@ -1,0 +1,104 @@
+source	mode	target_node	target_property	function	core	source_node	source_property	modifier	modifier_value	required_default	notes
+CCDI		case	type	default		participant		default	case		
+CCDI		case	project_id	default		participant		default	CCDI-MCI		
+CCDI		case	submitter_id	liftover		participant	participant_id				
+CCDI		case	disease_type	disease_type_mapper		participant	diagnosis_category				
+CCDI		case	primary_site	primary_site_mapper		participant	anatomic_site				
+CCDI		case	projects.code	default		participant		default	MCI		
+CCDI		demographic	type	default		participant		default	demographic		
+CCDI		demographic	project_id	default		participant		default	CCDI-MCI		
+CCDI		demographic	submitter_id	concatenation		participant	participant_id	suffix	demo		
+CCDI		demographic	race	race		participant	race				
+CCDI		demographic	ethnicity	eth		participant	race				
+CCDI		demographic	sex_at_birth	sex		participant	sex_at_birth				
+CCDI		demographic	vital_status	liftover		participant	last_known_survival_status			Not Reported	
+CCDI		demographic	cases.submitter_id	liftover		participant	participant_id				
+CCDI		diagnosis	type	default		diagnosis		default	diagnosis		
+CCDI		diagnosis	project_id	default		diagnosis		default	CCDI-MCI		
+CCDI		diagnosis	submitter_id	liftover		diagnosis	diagnosis_id				
+CCDI		diagnosis	age_at_diagnosis	liftover		diagnosis	age_at_diagnosis				
+CCDI		diagnosis	diagnosis_is_primary_disease	default		diagnosis		default_bool	True		
+CCDI		diagnosis	morphology	morphology_mapper		diagnosis	diagnosis				
+CCDI		diagnosis	primary_diagnosis	prim_dx_mapper		diagnosis	diagnosis			unknown	
+CCDI		diagnosis	site_of_resection_or_biopsy	default		diagnosis		default	Not Reported		
+CCDI		diagnosis	tissue_or_organ_of_origin	tissue_mapper		diagnosis	anatomic_site			unknown	
+CCDI		diagnosis	cases.submitter_id	liftover		diagnosis	participant.participant_id				
+CCDI		sample	type	default		sample		default	sample		
+CCDI		sample	submitter_id	liftover		sample	sample_id				
+CCDI		sample	project_id	default		sample		default	CCDI-MCI		
+CCDI		sample	preservation_method	liftover		sample	preservation_method				
+CCDI		sample	tissue_type	liftover		sample	sample_tumor_status				
+CCDI		sample	specimen_type	specimen_mapper		sample	sample_tumor_status				
+CCDI		sample	tumor_descriptor	tumor_desc_mapper		sample	tumor_spatial_extent,sample_tumor_status				
+CCDI		sample	cases.submitter_id	liftover		sample	participant.participant_id				
+CCDI		aliquot	type	default		sample		default	aliquot		
+CCDI		aliquot	project_id	default		sample		default	CCDI-MCI		
+CCDI		aliquot	submitter_id	liftover		sample	sample_id	suffix	aliquot		
+CCDI		aliquot	samples.submitter_id	liftover		sample	sample_id				
+CCDI	WXS	read_group	type	default		sequencing_file		default	read_group		
+CCDI	WXS	read_group	project_id	default		sequencing_file		default	CCDI-MCI		
+CCDI	WXS	read_group	submitter_id	wxs_rg_id_parse		sequencing_file	sample.sample_id,file_name				
+CCDI	WXS	read_group	experiment_name	liftover		sequencing_file	design_description				
+CCDI	WXS	read_group	sequencing_center	default		sequencing_file		default	The Institute for Genomic Medicine at Nationwide Children's Hospital		
+CCDI	WXS	read_group	platform	liftover		sequencing_file	platform				
+CCDI	WXS	read_group	instrument_model	liftover		sequencing_file	instrument_model				
+CCDI	WXS	read_group	library_selection	liftover		sequencing_file	library_selection				
+CCDI	WXS	read_group	library_strategy	liftover	WXS	sequencing_file	library_strategy				
+CCDI	WXS	read_group	library_name	liftover		sequencing_file	sample.sample_id				
+CCDI	WXS	read_group	is_paired_end	default		sequencing_file		default_bool	True		
+CCDI	WXS	read_group	read_length	default		sequencing_file		default_int	150		
+CCDI	WXS	read_group	read_group_name	wxs_rg_id_parse		sequencing_file	sample.sample_id,file_name				
+CCDI	WXS	read_group	target_capture_kit	default		sequencing_file		default	xGen Exome Research Panel v2.0		
+CCDI	WXS	read_group	aliquots.submitter_id	liftover		sequencing_file	sample.sample_id	suffix	aliquot		
+CCDI	WXS	submitted_unaligned_reads	type	default		sequencing_file		default	submitted_unaligned_reads		
+CCDI	WXS	submitted_unaligned_reads	project_id	default		sequencing_file		default	CCDI-MCI		
+CCDI	WXS	submitted_unaligned_reads	submitter_id	liftover		sequencing_file	file_name				
+CCDI	WXS	submitted_unaligned_reads	data_category	default		sequencing_file		default	Sequencing Reads		
+CCDI	WXS	submitted_unaligned_reads	data_format	liftover		sequencing_file	file_type	uppercase			
+CCDI	WXS	submitted_unaligned_reads	data_type	default		sequencing_file		default	Unaligned Reads		
+CCDI	WXS	submitted_unaligned_reads	experimental_strategy	liftover	WXS	sequencing_file	library_strategy				
+CCDI	WXS	submitted_unaligned_reads	file_name	liftover		sequencing_file	file_name				
+CCDI	WXS	submitted_unaligned_reads	file_size	liftover		sequencing_file	file_size				
+CCDI	WXS	submitted_unaligned_reads	md5sum	liftover		sequencing_file	md5sum				
+CCDI	WXS	submitted_unaligned_reads	read_pair_number	read_pair_parse		sequencing_file	file_name				
+CCDI	WXS	submitted_unaligned_reads	read_groups.submitter_id	wxs_rg_id_parse		sequencing_file	sample.sample_id,file_name				
+CCDI	RNA-Seq_Azenta	read_group	type	default		sequencing_file	sample.sample_id,file_name	default	read_group		
+CCDI	RNA-Seq_Azenta	read_group	project_id	default		sequencing_file	sample.sample_id,file_name	default	CCDI-MCI		
+CCDI	RNA-Seq_Azenta	read_group	submitter_id	liftover		sequencing_file	library_id				
+CCDI	RNA-Seq_Azenta	read_group	experiment_name	default		sequencing_file		default	RNA Sequencing Azenta Retro		
+CCDI	RNA-Seq_Azenta	read_group	sequencing_center	default		sequencing_file		default	Genewiz Azenta Life Sciences		
+CCDI	RNA-Seq_Azenta	read_group	platform	liftover		sequencing_file	platform				
+CCDI	RNA-Seq_Azenta	read_group	instrument_model	liftover		sequencing_file	instrument_model				
+CCDI	RNA-Seq_Azenta	read_group	library_selection	liftover		sequencing_file	library_selection				
+CCDI	RNA-Seq_Azenta	read_group	library_strategy	liftover	RNA-Seq	sequencing_file	library_strategy				
+CCDI	RNA-Seq_Azenta	read_group	library_name	liftover		sequencing_file	sample.sample_id				
+CCDI	RNA-Seq_Azenta	read_group	is_paired_end	default		sequencing_file		default_bool	True		
+CCDI	RNA-Seq_Azenta	read_group	read_length	default		sequencing_file		default_int	150		
+CCDI	RNA-Seq_Azenta	read_group	read_group_name	liftover		sequencing_file	library_id				
+CCDI	RNA-Seq_Azenta	read_group	target_capture_kit	default		sequencing_file		default	Not Applicable		
+CCDI	RNA-Seq_Azenta	read_group	aliquots.submitter_id	liftover		sequencing_file	sample.sample_id	suffix	aliquot		
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	type	default		sequencing_file		default	submitted_unaligned_reads		
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	project_id	default		sequencing_file		default	CCDI-MCI		
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	submitter_id	liftover		sequencing_file	file_name				
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	data_category	default		sequencing_file		default	Sequencing Reads		
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	data_format	liftover		sequencing_file	file_type	uppercase			
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	data_type	default		sequencing_file		default	Unaligned Reads		
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	experimental_strategy	liftover	RNA-Seq	sequencing_file	library_strategy				
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	file_name	liftover		sequencing_file	file_name				
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	file_size	liftover		sequencing_file	file_size				
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	md5sum	liftover		sequencing_file	md5sum				
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	read_pair_number	read_pair_parse		sequencing_file	file_name				
+CCDI	RNA-Seq_Azenta	submitted_unaligned_reads	read_groups.submitter_id	liftover		sequencing_file	library_id				
+CCDI		raw_methylation_array	type	default		methylation_array_file		default	raw_methylation_array		
+CCDI		raw_methylation_array	project_id	default		methylation_array_file		default	CCDI-MCI		
+CCDI		raw_methylation_array	submitter_id	liftover		methylation_array_file	file_name				
+CCDI		raw_methylation_array	data_category	default		methylation_array_file		default	DNA Methylation		
+CCDI		raw_methylation_array	channel	channel_color		methylation_array_file	file_name				
+CCDI		raw_methylation_array	data_format	liftover		methylation_array_file	file_type	uppercase			
+CCDI		raw_methylation_array	data_type	default		methylation_array_file		default	Raw Intensities		
+CCDI		raw_methylation_array	experimental_strategy	default		methylation_array_file		default	Methylation Array		
+CCDI		raw_methylation_array	file_name	liftover		methylation_array_file	file_name				
+CCDI		raw_methylation_array	file_size	liftover		methylation_array_file	file_size				
+CCDI		raw_methylation_array	md5sum	liftover		methylation_array_file	md5sum				
+CCDI		raw_methylation_array	platform	liftover		methylation_array_file	platform				
+CCDI		raw_methylation_array	aliquots.submitter_id	liftover		methylation_array_file	sample.sample_id	suffix	aliquot		

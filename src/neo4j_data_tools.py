@@ -27,6 +27,7 @@ import random
 import itertools
 import gc
 import glob
+import time
 
 
 DataFrame = TypeVar("DataFrame")
@@ -87,13 +88,13 @@ RETURN
     )
     all_nodes_entries_study_cypher_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*1..7]-(node)
+MATCH (study:study {{study_id: "{study_id}"}})<-[*1..7]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
     )
     node_id_cypher_query_query: str = (
         """
-MATCH (study:study{{study_id:"{study_id}"}})-[*0..7]-(node:{node})
+MATCH (study:study{{study_id:"{study_id}"}})<-[*1..7]-(node:{node})
 RETURN node.id AS id
 """
     )
@@ -124,17 +125,17 @@ RETURN  startNode.guid AS startNodeId,
     main_cypher_query_per_study_node: str = (
         """
 MATCH (study:study {{study_id:"{study_accession}"}})
-MATCH (study)-[*0..5]-(linkedNode)-[:of_{node_label}]-(startNode:{node_label})
+MATCH (study)<-[*1..5]-(linkedNode)<-[:of_{node_label}]-(startNode:{node_label})
 WITH DISTINCT study, startNode, linkedNode
 UNWIND keys(properties(startNode)) AS propertyName
 RETURN
-  startNode.guid              AS startNodeId,
-  labels(startNode)           AS startNodeLabels,
-  propertyName                AS startNodePropertyName,
-  startNode[propertyName]     AS startNodePropertyValue,
-  linkedNode.guid             AS linkedNodeId,
-  labels(linkedNode)          AS linkedNodeLabels,
-  study.study_id              AS dbgap_accession
+    startNode.guid              AS startNodeId,
+    labels(startNode)           AS startNodeLabels,
+    propertyName                AS startNodePropertyName,
+    startNode[propertyName]     AS startNodePropertyValue,
+    linkedNode.guid             AS linkedNodeId,
+    labels(linkedNode)          AS linkedNodeLabels,
+    study.study_id              AS dbgap_accession
 """
     )
     unique_nodes_query: str = (
@@ -152,13 +153,13 @@ RETURN
     )
     all_nodes_entries_study_cypher_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})-[*1..7]-(node)
+MATCH (study:study {{study_id: "{study_id}"}})<-[*1..6]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
     )
     node_id_cypher_query_query: str = (
         """
-MATCH (study:study{{study_id:"{study_id}"}})-[*0..7]-(node:{node})
+MATCH (study:study{{study_id:"{study_id}"}})<-[*1..7]-(node:{node})
 RETURN node.guid AS id
 """
     )
@@ -927,46 +928,58 @@ def pull_uniq_studies(driver) -> List:
 
 
 def export_node_counts_a_study(tx, study_id: str, output_dir: str) -> None:
-    """Returns a csv which contains counts of entries of every node of a study
+    """Returns a csv which contains counts of entries of every node of a study"""
+    logger = get_run_logger()
+    logger.info(f"Exporting node counts for study {study_id}")
 
-    Example content of csv file:
-    study_id, node, DB_count
-    phs000123, study_admin, 1
-    ...
+    # Step 1: Get distinct labels first
+    label_query = f"""
+    MATCH (study:study {{study_id: "{study_id}"}})-[*1..6]-(node)
+    UNWIND labels(node) AS label
+    RETURN DISTINCT label
     """
-    cypher_query = Neo4jCypherQuery.all_nodes_entries_study_cypher_query.format(
-        study_id=study_id
-    )
-    # run the cypher query with specified study_id
-    result = tx.run(cypher_query)
+    labels = [record["label"] for record in tx.run(label_query)]
+    logger.info(f"Found {len(labels)} labels for study {study_id}: {labels}")
+
     output_filename = os.path.join(output_dir, f"{study_id}_nodes_entry_counts.csv")
     with open(output_filename, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
         csv_writer.writerow(["study_id", "node", "DB_count"])
-        for record in result:
-            node_label = record["NodeLabel"][0]
-            node_count = record["NodeCount"]
-            csv_writer.writerow([study_id, node_label, node_count])
-    return None
 
+        # Step 2: Count one label at a time to avoid memory explosion
+        for label in labels:
+            count_query = f"""
+            MATCH (study:study {{study_id: "{study_id}"}})-[*1..6]-(node:{label})
+            RETURN "{label}" AS NodeLabel, COUNT(DISTINCT node) AS NodeCount
+            """
+            try:
+                result = list(tx.run(count_query))
+                for record in result:
+                    csv_writer.writerow([study_id, record["NodeLabel"], record["NodeCount"]])
+            except Exception as e:
+                logger.warning(f"Failed to count label '{label}' for study {study_id}: {e}")
+                csv_writer.writerow([study_id, label, "ERROR"])
+            time.sleep(0.1)
+
+    return None
 
 @task(
     name="Pull counts per node a study",
     task_run_name="pull_counts_per_node_study_{study_id}",
     cache_policy=NO_CACHE,
+    retries=3,
+    retry_delay_seconds=10,
 )
 def pull_all_nodes_a_study(
     driver, export_to_csv, study_id: str, output_dir: str
 ) -> None:
     """Executes export_node_count_a_study"""
-    session = driver.session()
-    try:
-        session.execute_read(export_to_csv, study_id, output_dir)
-    except:
-        traceback.print_exc()
-        raise
-    finally:
-        session.close()
+    with driver.session() as session:
+        try:
+            session.execute_read(export_to_csv, study_id, output_dir)
+        except Exception:
+            traceback.print_exc()
+            raise
     return None
 
 
@@ -1138,17 +1151,16 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
     return ids_dict
 
 
-@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=3), log_prints=True)  # reduce from 10 to 3
 def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     """Returns temp folder which contains counts all nodes(except study node)
     of all studies in a DB
     """
-    # create a folder to keep all node entry counts per study
     temp_folder_name = f"db_node_entry_counts_all_studies_{random.choice(range(1000))}"
     os.mkdir(temp_folder_name)
     logger.info("Start pulling entry counts per node per study")
-
     logger.info(f"Pulling entry counts per node for study list {*study_list,}")
+
     future = pull_all_nodes_a_study.map(
         driver=driver,
         export_to_csv=export_node_counts_a_study,
