@@ -1869,7 +1869,7 @@ deployments:
     version: null
     tags: ["Production", "V3", "DCC", "Centralized Worker", "Database Promotion"]
     description: null
-    entrypoint: workflows/memgraph_transfer_dcc.py:memgraph_transfer_dcc
+    entrypoint: workflows/memgraph_transfer_promotion.py:memgraph_transfer_promotion
     schedule: null
 
     # flow-specific parameters

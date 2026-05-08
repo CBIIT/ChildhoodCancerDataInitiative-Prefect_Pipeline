@@ -16,14 +16,14 @@ from src.utils import (
 
 
 # ------------------------------------------------------------------
-# PREFECT FLOW: MEMGRAPH TRANSFER DCC
+# PREFECT FLOW: MEMGRAPH TRANSFER PROMOTION
 # ------------------------------------------------------------------
 @flow(
-    name="Memgraph Transfer DCC Flow",
+    name="Memgraph Transfer Promotion Flow",
     log_prints=True,
     flow_run_name="{runner}_" + f"{get_time()}",
 )
-def memgraph_transfer_dcc(
+def memgraph_transfer_promotion(
     bucket: str,
     runner: str,
     file_path: str,
