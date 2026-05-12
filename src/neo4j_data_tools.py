@@ -13,6 +13,7 @@ from prefect.task_runners import ConcurrentTaskRunner
 from prefect.task_runners import ThreadPoolTaskRunner
 from prefect.cache_policies import NO_CACHE
 from neo4j import GraphDatabase
+from neo4j.exceptions import TransactionError
 import pandas as pd
 import numpy as np
 import csv
@@ -123,19 +124,16 @@ RETURN  startNode.guid AS startNodeId,
 """
     )
     main_cypher_query_per_study_node: str = (
-        """
+    """
 MATCH (study:study {{study_id:"{study_accession}"}})
 MATCH (study)<-[*1..5]-(linkedNode)<-[:of_{node_label}]-(startNode:{node_label})
-WITH DISTINCT study, startNode, linkedNode
-UNWIND keys(properties(startNode)) AS propertyName
-RETURN
+RETURN DISTINCT
     startNode.guid              AS startNodeId,
     labels(startNode)           AS startNodeLabels,
-    propertyName                AS startNodePropertyName,
-    startNode[propertyName]     AS startNodePropertyValue,
     linkedNode.guid             AS linkedNodeId,
     labels(linkedNode)          AS linkedNodeLabels,
-    study.study_id              AS dbgap_accession
+    study.study_id              AS dbgap_accession,
+    properties(startNode)       AS startNodeProperties
 """
     )
     unique_nodes_query: str = (
@@ -519,32 +517,36 @@ def export_to_csv_per_node(
     return None
 
 
-def export_to_csv_per_node_per_study(
-    tx, study_name: str, node_label: str, cypher_query: str, output_directory: str
-) -> None:
-    """Export query results to csv file per node per study present in DB"""
-    # Run the main Cypher query with the specified node_label
-    result = tx.run(
-        cypher_query.format(node_label=node_label, study_accession=study_name)
-    )
+def export_to_csv_per_node_per_study(tx, study_name, node_label, query_str, output_dir):
+    logger = get_run_logger()
+    query = query_str.format(study_accession=study_name, node_label=node_label)
+    result = list(tx.run(query))
 
-    output_file_path = os.path.join(
-        output_directory, f"{study_name}_{node_label}_output.csv"
-    )
-
-    with open(output_file_path, "w", newline="") as csvfile:
+    output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
+    with open(output_filename, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
-
-        # Write header
-        header = result.keys()
-        csv_writer.writerow(header)
-
-        # Write data rows
+        csv_writer.writerow([
+            "startNodeId",
+            "startNodeLabels",
+            "startNodePropertyName",
+            "startNodePropertyValue",
+            "linkedNodeId",
+            "linkedNodeLabels",
+            "dbgap_accession",
+        ])
         for record in result:
-            csv_writer.writerow(record.values())
-    # garbage collect
-    gc.collect()
-    return None
+            props = record["startNodeProperties"] or {}
+            for prop_name, prop_value in props.items():
+                csv_writer.writerow([
+                    record["startNodeId"],
+                    record["startNodeLabels"],
+                    prop_name,
+                    prop_value,
+                    record["linkedNodeId"],
+                    record["linkedNodeLabels"],
+                    record["dbgap_accession"],
+                ])
+    logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
 
 
 def export_uniq_values_node_property(
@@ -611,6 +613,8 @@ def pull_data_per_node(
     task_run_name="pull_node_data_{node_label}_{study_name}",
     cache_policy=NO_CACHE,
     tags=["pull-db-tag"],
+    retries=3,
+    retry_delay_seconds=[10, 30, 60],  # exponential backoff
 )
 def pull_data_per_node_per_study(
     driver,
@@ -621,23 +625,22 @@ def pull_data_per_node_per_study(
     output_dir: str,
 ) -> None:
     """Exports DB data by a given node and a given study"""
-    session = driver.session()
-    try:
-        # session.execute_read(
-        #    data_to_csv, study_name, node_label, query_str.format(node_label=node_label, study_accession=study_name), output_dir
-        # 3)
-        session.execute_read(
-            data_to_csv,
-            study_name,
-            node_label,
-            query_str,
-            output_dir,
-        )
-    except:
-        traceback.print_exc()
-        raise
-    finally:
-        session.close()
+    with driver.session() as session:
+        try:
+            session.execute_read(
+                data_to_csv,
+                study_name,
+                node_label,
+                query_str,
+                output_dir,
+            )
+        except TransactionError as e:
+            logger = get_run_logger()
+            logger.warning(f"Transaction timeout for {node_label}/{study_name}, will retry. Error: {e}")
+            raise  # re-raise so Prefect retries the task
+        except Exception:
+            traceback.print_exc()
+            raise
     return None
 
 
@@ -711,7 +714,7 @@ def pull_nodes_loop(
     return None
 
 
-@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=3), log_prints=True)  # reduced from 10
 def pull_nodes_loop_dcc(
     study_list: list, node_list: list, driver, out_dir: str, logger
 ) -> None:
@@ -724,7 +727,6 @@ def pull_nodes_loop_dcc(
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
     study_node_pair = list(itertools.product(study_list, node_list))
-
     logger.info("start pulling data per node per study")
 
     future = pull_data_per_node_per_study.map(
