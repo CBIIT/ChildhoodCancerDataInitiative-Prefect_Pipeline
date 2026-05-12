@@ -522,6 +522,16 @@ def export_to_csv_per_node_per_study(tx, study_name, node_label, query_str, outp
     query = query_str.format(study_accession=study_name, node_label=node_label)
     result = list(tx.run(query))
 
+    # DEBUG: Note query being run
+    logger.info(f"Running query: {query}")
+
+    # DEBUG: Print available keys from first record
+    if result:
+        logger.info(f"Available keys: {result[0].keys()}")
+    else:
+        logger.info(f"No results returned for {node_label}/{study_name}")
+        return
+
     output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
     with open(output_filename, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
