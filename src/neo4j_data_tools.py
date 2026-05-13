@@ -589,6 +589,10 @@ def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, 
     query = query_str.format(study_accession=study_name, node_label=node_label)
     result = list(tx.run(query))
 
+    if not result:
+        logger.info(f"No records found for {node_label}/{study_name}, skipping file creation")
+        return
+
     output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
     with open(output_filename, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
