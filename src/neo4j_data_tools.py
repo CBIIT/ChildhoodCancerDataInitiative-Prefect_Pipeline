@@ -515,46 +515,74 @@ def export_to_csv_per_node(
     return None
 
 
-def export_to_csv_per_node_per_study(tx, study_name, node_label, query_str, output_dir):
-    logger = get_run_logger()
-    query = query_str.format(study_accession=study_name, node_label=node_label)
-    result = list(tx.run(query))
+def export_to_csv_per_node_per_study(
+    tx, study_name: str, node_label: str, cypher_query: str, output_directory: str
+) -> None:
+    """Export query results to csv file per node per study present in DB"""
+    # Run the main Cypher query with the specified node_label
+    result = tx.run(
+        cypher_query.format(node_label=node_label, study_accession=study_name)
+    )
 
-    # DEBUG: Note query being run
-    logger.info(f"Running query: {query}")
+    output_file_path = os.path.join(
+        output_directory, f"{study_name}_{node_label}_output.csv"
+    )
 
-    # DEBUG: Print available keys from first record
-    if result:
-        logger.info(f"Available keys: {result[0].keys()}")
-    else:
-        logger.info(f"No results returned for {node_label}/{study_name}")
-        return
-
-    output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
-    with open(output_filename, "w", newline="") as csvfile:
+    with open(output_file_path, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
-        csv_writer.writerow([
-            "startNodeId",
-            "startNodeLabels",
-            "startNodePropertyName",
-            "startNodePropertyValue",
-            "linkedNodeId",
-            "linkedNodeLabels",
-            "dbgap_accession",
-        ])
+
+        # Write header
+        header = result.keys()
+        csv_writer.writerow(header)
+
+        # Write data rows
         for record in result:
-            props = record["startNodeProperties"] or {}
-            for prop_name, prop_value in props.items():
-                csv_writer.writerow([
-                    record["startNodeId"],
-                    record["startNodeLabels"],
-                    prop_name,
-                    prop_value,
-                    record["linkedNodeId"],
-                    record["linkedNodeLabels"],
-                    record["dbgap_accession"],
-                ])
-    logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
+            csv_writer.writerow(record.values())
+    # garbage collect
+    gc.collect()
+    return None
+
+
+# def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, output_dir):
+#     logger = get_run_logger()
+#     query = query_str.format(study_accession=study_name, node_label=node_label)
+#     result = list(tx.run(query))
+
+#     # DEBUG: Note query being run
+#     logger.info(f"Running query: {query}")
+
+#     # DEBUG: Print available keys from first record
+#     if result:
+#         logger.info(f"Available keys: {result[0].keys()}")
+#     else:
+#         logger.info(f"No results returned for {node_label}/{study_name}")
+#         return
+
+#     output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
+#     with open(output_filename, "w", newline="") as csvfile:
+#         csv_writer = csv.writer(csvfile)
+#         csv_writer.writerow([
+#             "startNodeId",
+#             "startNodeLabels",
+#             "startNodePropertyName",
+#             "startNodePropertyValue",
+#             "linkedNodeId",
+#             "linkedNodeLabels",
+#             "dbgap_accession",
+#         ])
+#         for record in result:
+#             props = record["startNodeProperties"] or {}
+#             for prop_name, prop_value in props.items():
+#                 csv_writer.writerow([
+#                     record["startNodeId"],
+#                     record["startNodeLabels"],
+#                     prop_name,
+#                     prop_value,
+#                     record["linkedNodeId"],
+#                     record["linkedNodeLabels"],
+#                     record["dbgap_accession"],
+#                 ])
+#     logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
 
 def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, output_dir):
     logger = get_run_logger()
