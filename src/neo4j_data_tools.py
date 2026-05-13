@@ -66,12 +66,12 @@ MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:st
 WITH study, startNode, linkedNode, properties(startNode) AS props
 UNWIND keys(props) AS propertyName
 RETURN startNode.id AS startNodeId, 
-labels(startNode) AS startNodeLabels, 
-propertyName AS startNodePropertyName, 
-startNode[propertyName] AS startNodePropertyValue, 
-linkedNode.id AS linkedNodeId, 
-labels(linkedNode) AS linkedNodeLabels, 
-study.study_id AS dbgap_accession
+    labels(startNode) AS startNodeLabels, 
+    propertyName AS startNodePropertyName, 
+    startNode[propertyName] AS startNodePropertyValue, 
+    linkedNode.id AS linkedNodeId, 
+    labels(linkedNode) AS linkedNodeLabels, 
+    study.study_id AS dbgap_accession
 """
     )
     unique_nodes_query: str = (
@@ -112,17 +112,15 @@ class DBCypherQueryDCC:
     """Dataclass for Cypher Query"""
 
     study_cypher_query: str = (
-        """
+    """
 MATCH (startNode:{node_label} {{study_id: "{study_accession}"}})
-WITH startNode, properties(startNode) AS props
-UNWIND keys(props) AS propertyName
-RETURN  startNode.guid AS startNodeId,
-    labels(startNode) AS startNodeLabels,
-    propertyName AS startNodePropertyName,
-    startNode[propertyName] AS startNodePropertyValue,
-    startNode.study_id as dbgap_accession 
+RETURN
+    startNode.id                AS startNodeId,
+    labels(startNode)           AS startNodeLabels,
+    startNode.study_id          AS dbgap_accession,
+    properties(startNode)       AS startNodeProperties
 """
-    )
+)
     main_cypher_query_per_study_node: str = (
     """
 MATCH (study:study {{study_id:"{study_accession}"}})
@@ -558,6 +556,40 @@ def export_to_csv_per_node_per_study(tx, study_name, node_label, query_str, outp
                 ])
     logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
 
+def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, output_dir):
+    logger = get_run_logger()
+    query = query_str.format(study_accession=study_name, node_label=node_label)
+    result = list(tx.run(query))
+
+    output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
+    with open(output_filename, "w", newline="") as csvfile:
+        csv_writer = csv.writer(csvfile)
+        csv_writer.writerow([
+            "startNodeId",
+            "startNodeLabels",
+            "startNodePropertyName",
+            "startNodePropertyValue",
+            "linkedNodeId",
+            "linkedNodeLabels",
+            "dbgap_accession",
+        ])
+        for record in result:
+            keys = record.keys()
+            props = record["startNodeProperties"] or {}
+            linked_node_id = record["linkedNodeId"] if "linkedNodeId" in keys else None
+            linked_node_labels = record["linkedNodeLabels"] if "linkedNodeLabels" in keys else None
+            for prop_name, prop_value in props.items():
+                csv_writer.writerow([
+                    record["startNodeId"],
+                    record["startNodeLabels"],
+                    prop_name,
+                    prop_value,
+                    linked_node_id,
+                    linked_node_labels,
+                    record["dbgap_accession"],
+                ])
+    logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
+
 
 def export_uniq_values_node_property(
     tx, node: str, property: str, cypher_query: str, output_directory: str
@@ -741,7 +773,7 @@ def pull_nodes_loop_dcc(
 
     future = pull_data_per_node_per_study.map(
         driver=driver,
-        data_to_csv=export_to_csv_per_node_per_study,
+        data_to_csv=export_to_csv_per_node_per_study_dcc,
         study_name=[x for x, y in study_node_pair],
         node_label=[y for x, y in study_node_pair],
         query_str=cypher_phrase,
@@ -892,7 +924,7 @@ def pull_study_node_dcc(driver, out_dir: str, study_id_list: list[str]) -> None:
 
     future = pull_data_per_node_per_study.map(
         driver=driver,
-        data_to_csv=export_to_csv_per_node_per_study,
+        data_to_csv=export_to_csv_per_node_per_study_dcc,
         study_name=study_id_list,
         node_label=["study"] * len(study_id_list),
         query_str=cypher_phrase,
