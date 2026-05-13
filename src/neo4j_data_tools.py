@@ -2123,13 +2123,10 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     """
     df_long = pd.read_csv(file_path).drop_duplicates()
 
-    # define a function to collapse values if there are duplicates after pivoting
-    # We also want to take that list and make it a string with ; as separator, so that it can be easily ingested back to the db if needed.
     def collapse(x):
-        vals = list(dict.fromkeys(x))  # unique values, order preserved
-        return vals[0] if len(vals) == 1 else ";".join(vals)
+        vals = list(dict.fromkeys(x))
+        return vals[0] if len(vals) == 1 else ";".join(str(v) for v in vals)
 
-    # Pivot the DataFrame to wide format with aggregation to handle duplicates
     df_wide = (
         df_long.groupby(["startNodeId", "startNodePropertyName"])[
             "startNodePropertyValue"
@@ -2149,7 +2146,6 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     )
 
     if "['study']" not in df_long["startNodeLabels"].unique().tolist():
-        # Preserve relational columns by merging with the original DataFrame
         df_wide = df_wide.merge(
             df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
         )
@@ -2165,37 +2161,21 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
 
-    else:
-        pass
-
-    # remove quotes from column names.
-    # remove quotes and brackets from str value
+    # Remove quotes from column names
     df_wide.columns = df_wide.columns.str.strip('"')
     df_wide.columns = df_wide.columns.str.strip("'")
 
-    # Only fix the node label and nothing else.
+    # Only fix the node label
     df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("['")
     df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("']")
 
-    # removed as it was affecting acl property.
-    # df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip("]") if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
-
-    # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
-    df_wide.drop(["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True)
-    # if uuid column exists, drop it
-    if "uuid" in df_wide.columns:
-        df_wide.drop(columns=["uuid"], inplace=True)
-    else:
-        pass
-    # if updated column exists, drop it
-    if "updated" in df_wide.columns:
-        df_wide.drop(columns=["updated"], inplace=True)
-    else:
-        pass
+
+    # Drop columns that exist — don't assume they're all present
+    cols_to_drop = ["startNodeId", "created", "startNodeLabels", "updated", "uuid"]
+    cols_to_drop = [c for c in cols_to_drop if c in df_wide.columns]
+    df_wide.drop(cols_to_drop, axis=1, inplace=True)
+
     return df_wide
 
 
