@@ -2103,17 +2103,24 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
     for file_path in csv_list:
         logger.info(f"processing csv file: {file_path}")
         if has_contents(file_path):
-            logger.info(
-                f"Pivoting long df to wide df and cleaning the data for file: {file_path}"
-            )
+            logger.info(f"Pivoting long df to wide df and cleaning the data for file: {file_path}")
             wider_df = pivot_long_df_wide_clean_dcc(file_path=file_path)
+
+            if wider_df is None or wider_df.empty:
+                logger.info(f"Empty dataframe after pivot for file: {file_path}, skipping")
+                continue
+
             logger.info(f"Setting up links in wide df for file: {file_path}")
             wider_df = wide_df_setup_link_dcc(df_wide=wider_df)
+
+            if wider_df is None or wider_df.empty:
+                logger.info(f"Empty dataframe after link setup for file: {file_path}, skipping")
+                continue
+
             logger.info(f"Writing tsv files for all studies from file: {file_path}")
             write_wider_df_all_dcc(wider_df, output_dir=export_folder, logger=logger)
         else:
             logger.info(f"Skipping empty csv file: {file_path}")
-            pass
     return export_folder
 
 
@@ -2234,19 +2241,35 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
 
 def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None:
     """writes tsv files per study per node to a study folder under output_dir"""
+    
+    # Guard against empty dataframe
+    if wider_df is None or wider_df.empty:
+        logger.info("Received empty dataframe, skipping write")
+        return None
+
+    if "type" not in wider_df.columns or wider_df["type"].dropna().empty:
+        logger.info("No type column or no values in type column, skipping write")
+        return None
+
     # get node label
-    node_label = wider_df["type"].unique().tolist()[0]
+    node_label = wider_df["type"].dropna().unique().tolist()[0]
 
     # export folder
     os.makedirs(output_dir, exist_ok=True)
 
+    if "study" not in wider_df.columns or wider_df["study"].dropna().empty:
+        logger.info(f"No study column or no values in study column for node {node_label}, skipping write")
+        return None
+
     # there should only be one study value in the wider_df
-    study = wider_df["study"].unique().tolist()[0]
+    study = wider_df["study"].dropna().unique().tolist()[0]
     logger.info(f"Writing node {node_label} tsv files for study {study}")
     wider_df.drop(columns=["study"], inplace=True)
+
     # create the output directory if not exist
     study_folder = os.path.join(output_dir, study)
     os.makedirs(study_folder, exist_ok=True)
+
     # node_study_tsv filename
     node_study_tsv_filename = study + "_" + node_label + ".tsv"
     wider_df.to_csv(
