@@ -2146,17 +2146,29 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     )
 
     if "['study']" not in df_long["startNodeLabels"].unique().tolist():
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
-        )
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(),
-            on="startNodeId",
-        )
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
-            on="startNodeId",
-        )
+        # Only merge linkedNodeId if it exists and has non-null values
+        if "linkedNodeId" in df_long.columns and df_long["linkedNodeId"].notna().any():
+            df_wide = df_wide.merge(
+                df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
+            )
+        else:
+            df_wide["linkedNodeId"] = None
+
+        if "linkedNodeLabels" in df_long.columns and df_long["linkedNodeLabels"].notna().any():
+            df_wide = df_wide.merge(
+                df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(), on="startNodeId"
+            )
+            df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
+            df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
+        else:
+            df_wide["linkedNodeLabels"] = None
+
+        if "dbgap_accession" in df_long.columns and df_long["dbgap_accession"].notna().any():
+            df_wide = df_wide.merge(
+                df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(), on="startNodeId"
+            )
+        else:
+            df_wide["dbgap_accession"] = None
 
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
@@ -2183,11 +2195,19 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
     """Setup links in wide df"""
     print("setup links in wide df")
     if "study" not in df_wide["type"].unique().tolist():
+
+        # Guard against missing link columns
+        if "linkedNodeLabels" not in df_wide.columns or df_wide["linkedNodeLabels"].isna().all():
+            df_wide["study"] = df_wide.get("dbgap_accession", None)
+            if "dbgap_accession" in df_wide.columns:
+                df_wide.drop(columns=["dbgap_accession"], inplace=True)
+            return df_wide
+
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"] + ".guid"
 
         def collapse(x):
-            vals = list(dict.fromkeys(x))  # unique, order-preserved
-            return vals[0] if len(vals) == 1 else ";".join(vals)
+            vals = list(dict.fromkeys(x))
+            return vals[0] if len(vals) == 1 else ";".join(str(v) for v in vals)
 
         df_wide_links = (
             df_wide.groupby(["guid", "linkedNodeLabels"])["linkedNodeId"]
@@ -2198,18 +2218,15 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
         )
         df_wide_links.columns.name = None
 
-        # Add linkages back into data frame and drop extra columns
         df_wide_links = df_wide_links.merge(df_wide.drop_duplicates(), on="guid")
-        df_wide_links = df_wide_links.drop(["linkedNodeId", "linkedNodeLabels"], axis=1)
+        df_wide_links = df_wide_links.drop(
+            columns=[c for c in ["linkedNodeId", "linkedNodeLabels"] if c in df_wide_links.columns]
+        )
         df_wide = df_wide_links
-
-        # below should only work for non study nodes
-
         df_wide["study"] = df_wide["dbgap_accession"]
         df_wide.drop(columns=["dbgap_accession"], inplace=True)
 
     else:
-        # this is only for study node
         df_wide["study"] = df_wide["study_id"]
 
     return df_wide
