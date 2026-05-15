@@ -105,11 +105,9 @@ def unpack_folder_list(folder_path_list: list[str]):
 def map_ids(cell, mapping):
     if pd.isna(cell) or cell == "":
         return cell
-    ids = [i.strip() for i in str(cell).split(";")]
-    mapped = [
-        str(mapping.get(i, i)) for i in ids if i  # wrap in str() to handle int values
-    ]
-    return ";".join(mapped)
+    ids = [str(i).strip() for i in str(cell).split(";")]
+    mapped = [str(mapping.get(i, i)) for i in ids if i]
+    return ";".join(str(m) for m in mapped)  # triple str() safety net
 
 
 @task(name="Join tsv to Manifest", log_prints=True)
@@ -170,6 +168,14 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
         logger.info(f"tsv parent guid cols: {*guid_cols,}")
         parent_guid_cols = find_parent_guid_cols(guid_cols=guid_cols)
         logger.info(f"sheet parent guid cols: {*parent_guid_cols,}")
+
+        for j in tsv_df[i_col].tolist():
+            try:
+                map_ids(j, key_id_mapping)
+            except TypeError as e:
+                logger.error(f"map_ids failed for col={i_col}, value={j}, type={type(j)}, error={e}")
+                raise
+
         for i in range(len(guid_cols)):
             i_col = guid_cols[i]  # e.g. participant.guid
             parent_i_col = (
