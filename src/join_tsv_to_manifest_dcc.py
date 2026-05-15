@@ -166,7 +166,7 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
         # Debugging log to check the types of values in the column before mapping
         for j in tsv_df[i_col].tolist():
             try:
-                map_ids(j, key_id_mapping)
+                logger.info(map_ids(j, key_id_mapping))
             except TypeError as e:
                 logger.error(f"map_ids failed for col={i_col}, value={j}, type={type(j)}, error={e}")
                 raise
