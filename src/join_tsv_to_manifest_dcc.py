@@ -85,9 +85,8 @@ def find_guid_cols(col_list: list) -> list:
 
 
 def find_parent_guid_cols(guid_cols: list) -> list:
-    parent_names = [i.split(".")[0] for i in guid_cols]
-    extended_parent_names = [i + "." + i + "_guid" for i in parent_names]
-    return extended_parent_names
+    """Returns the guid column name in the parent sheet, which is just 'guid'"""
+    return ["guid"] * len(guid_cols)
 
 
 def unpack_folder_list(folder_path_list: list[str]):
@@ -161,33 +160,30 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
 
         for i in range(len(guid_cols)):
             i_col = guid_cols[i]  # e.g. participant.guid
-            parent_i_col = (
-                i_col.split(".")[0] + "." + i_col.split(".")[0] + "_id"
-            )  # e.g. participant.participant_id
+            parent_node = i_col.split(".")[0]  # e.g. participant
+            parent_i_col = f"{parent_node}.{parent_node}_id"  # e.g. participant.participant_id
 
             logger.info(f"Mapping column {i_col} -> {parent_i_col}")
 
             mapped_values = []
             for j in tsv_df[i_col].tolist():
-                # Handle NaN and empty values explicitly
                 if j is None or (isinstance(j, float) and pd.isna(j)) or str(j).strip() in ("", "nan", "None"):
                     mapped_values.append("")
                     continue
 
-                # Split on semicolon in case of multiple GUIDs
                 guids = [g.strip() for g in str(j).split(";") if g.strip()]
                 mapped = []
                 for guid in guids:
                     result = key_id_mapping.get(guid)
                     if result is None:
                         logger.warning(f"GUID not found in mapping: '{guid}' for col={i_col} in {node_type}")
-                        mapped.append(guid)  # fall back to original guid string
+                        mapped.append(guid)
                     else:
                         mapped.append(str(result))
                 mapped_values.append(";".join(mapped))
 
             tsv_df[parent_i_col] = mapped_values
-            tsv_df[i_col] = ""
+            tsv_df[i_col] = ""  # clear guid column after mapping
 
         tsv_df["guid"] = ""
 
