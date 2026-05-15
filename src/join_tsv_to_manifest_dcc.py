@@ -113,9 +113,6 @@ def map_ids(cell, mapping):
 @task(name="Join tsv to Manifest", log_prints=True)
 def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) -> str:
     logger = get_run_logger()
-    # Remove the step of checking if only one phs is found under guid column
-    # Because the
-    # study_accession = check_same_study_files(file_list=file_list, logger=logger)
     study_accession = get_study_accession(file_list=file_list)
     logger.info(f"Creating CCDI manifest for study {study_accession}")
     logger.info(f"tsv files will be written to manifest: {len(file_list)}")
@@ -129,21 +126,19 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
     )
     copy(manifest_path, output_file_name)
 
-    # output_file = pd.ExcelFile(output_file_name)
-    # create key prop and guid mapping dict
     key_id_mapping = create_key_id_mapping(file_list=file_list)
+    logger.info(f"Key ID mapping contains {len(key_id_mapping)} entries")
 
     for tsv_file in file_list:
         logger.info(f"working on tsv file: {tsv_file}")
-        tsv_df = pd.read_csv(tsv_file, sep="\t", dtype=str)  # force all columns to str
+        tsv_df = pd.read_csv(tsv_file, sep="\t", dtype=str)
+
         if "study" in tsv_df.columns:
             tsv_df.drop(columns=["study"], inplace=True)
-        else:
-            pass
-        # find the node type of tsv file
+
         node_type = tsv_df["type"].tolist()[0]
         logger.info(f"tsv file node type: {node_type}")
-        # read the node sheet in ccdi manifest
+
         manifest_df = pd.read_excel(
             output_file_name,
             sheet_name=node_type,
@@ -151,51 +146,54 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
             dtype="string",
         )
 
-        # check if all columns in sheet can be found in tsv
-        # and add the missing column in the tsv df
         missing_cols = find_missing_cols(
             tsv_cols=tsv_df.columns.tolist(), sheet_cols=manifest_df.columns.tolist()
         )
         logger.info(f"cols in sheet not found in tsv: {*missing_cols,}")
-        if len(missing_cols) > 0:
-            for i in missing_cols:
-                tsv_df[i] = ""
-        else:
-            pass
+        for i in missing_cols:
+            tsv_df[i] = ""
 
-        # Debugging log to check the types of values in the column before mapping
-        for j in tsv_df[i_col].tolist():
-            try:
-                logger.info(map_ids(j, key_id_mapping))
-            except TypeError as e:
-                logger.error(f"map_ids failed for col={i_col}, value={j}, type={type(j)}, error={e}")
-                raise
-
-        # copy [parent].guid column to [parent].[parent]_guid col
-        # and remove content of [parent].guid
+        # Find guid columns and perform mapping
         guid_cols = find_guid_cols(col_list=tsv_df.columns.tolist())
         logger.info(f"tsv parent guid cols: {*guid_cols,}")
         parent_guid_cols = find_parent_guid_cols(guid_cols=guid_cols)
         logger.info(f"sheet parent guid cols: {*parent_guid_cols,}")
 
-        
-
         for i in range(len(guid_cols)):
             i_col = guid_cols[i]  # e.g. participant.guid
             parent_i_col = (
                 i_col.split(".")[0] + "." + i_col.split(".")[0] + "_id"
-            )  # participant.participant_id
-            tsv_df[parent_i_col] = [
-                map_ids(j, key_id_mapping) for j in tsv_df[i_col].tolist()
-            ]
-            # remove the i_col content
+            )  # e.g. participant.participant_id
+
+            logger.info(f"Mapping column {i_col} -> {parent_i_col}")
+
+            mapped_values = []
+            for j in tsv_df[i_col].tolist():
+                # Handle NaN and empty values explicitly
+                if j is None or (isinstance(j, float) and pd.isna(j)) or str(j).strip() in ("", "nan", "None"):
+                    mapped_values.append("")
+                    continue
+
+                # Split on semicolon in case of multiple GUIDs
+                guids = [g.strip() for g in str(j).split(";") if g.strip()]
+                mapped = []
+                for guid in guids:
+                    result = key_id_mapping.get(guid)
+                    if result is None:
+                        logger.warning(f"GUID not found in mapping: '{guid}' for col={i_col} in {node_type}")
+                        mapped.append(guid)  # fall back to original guid string
+                    else:
+                        mapped.append(str(result))
+                mapped_values.append(";".join(mapped))
+
+            tsv_df[parent_i_col] = mapped_values
             tsv_df[i_col] = ""
-        # remove the content of col "guid"
+
         tsv_df["guid"] = ""
 
-        # reorder columns in tsv according to sheet
+        # Reorder columns in tsv according to sheet
         tsv_df = tsv_df[manifest_df.columns.tolist()]
-        # write tsv_df to excel sheet
+
         logger.info(f"writing the tsv df to sheet {node_type} in CCDI manifest")
         with pd.ExcelWriter(
             output_file_name, mode="a", engine="openpyxl", if_sheet_exists="overlay"
