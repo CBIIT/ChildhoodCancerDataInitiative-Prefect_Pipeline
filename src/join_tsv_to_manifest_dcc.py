@@ -45,7 +45,7 @@ def get_study_accession(file_list: list[str]) -> str:
         str: dbGaP accession number
     """
     for file in file_list:
-        file_df = pd.read_csv(file, sep="\t")
+        file_df = pd.read_csv(file, sep="\t", dtype=str)  # force all columns to str
         if file_df.loc[0, "type"] == "study":
             dbgap_accession = file_df.loc[0, "dbgap_accession"]
         else:
@@ -137,7 +137,7 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
 
     for tsv_file in file_list:
         logger.info(f"working on tsv file: {tsv_file}")
-        tsv_df = pd.read_csv(tsv_file, sep="\t")
+        tsv_df = pd.read_csv(tsv_file, sep="\t", dtype=str)  # force all columns to str
         if "study" in tsv_df.columns:
             tsv_df.drop(columns=["study"], inplace=True)
         else:
