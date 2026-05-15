@@ -584,6 +584,15 @@ def export_to_csv_per_node_per_study(
 #                 ])
 #     logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
 
+def format_prop_value(value):
+    """Convert property values to strings, joining lists with semicolons"""
+    if value is None:
+        return ""
+    elif isinstance(value, list):
+        return ";".join(str(v) for v in value)
+    else:
+        return str(value)
+
 def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, output_dir):
     logger = get_run_logger()
     query = query_str.format(study_accession=study_name, node_label=node_label)
@@ -610,12 +619,18 @@ def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, 
             props = record["startNodeProperties"] or {}
             linked_node_id = record["linkedNodeId"] if "linkedNodeId" in keys else None
             linked_node_labels = record["linkedNodeLabels"] if "linkedNodeLabels" in keys else None
+
+            # Verify linkedNodeId is a GUID (string) and not an internal integer ID
+            if linked_node_id is not None and not isinstance(linked_node_id, str):
+                logger.warning(f"linkedNodeId is not a string for {node_label}/{study_name}: {linked_node_id} ({type(linked_node_id)}), converting to string")
+                linked_node_id = str(linked_node_id)
+
             for prop_name, prop_value in props.items():
                 csv_writer.writerow([
                     record["startNodeId"],
                     record["startNodeLabels"],
                     prop_name,
-                    prop_value,
+                    format_prop_value(prop_value),
                     linked_node_id,
                     linked_node_labels,
                     record["dbgap_accession"],
