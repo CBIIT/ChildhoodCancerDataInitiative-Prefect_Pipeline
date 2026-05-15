@@ -115,7 +115,7 @@ class DBCypherQueryDCC:
     """
 MATCH (startNode:{node_label} {{study_id: "{study_accession}"}})
 RETURN
-    startNode.id                AS startNodeId,
+    startNode.guid              AS startNodeId,
     labels(startNode)           AS startNodeLabels,
     startNode.study_id          AS dbgap_accession,
     properties(startNode)       AS startNodeProperties
