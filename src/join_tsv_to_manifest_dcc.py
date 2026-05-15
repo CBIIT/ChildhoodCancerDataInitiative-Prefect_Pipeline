@@ -162,6 +162,15 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
                 tsv_df[i] = ""
         else:
             pass
+
+        # Debugging log to check the types of values in the column before mapping
+        for j in tsv_df[i_col].tolist():
+            try:
+                map_ids(j, key_id_mapping)
+            except TypeError as e:
+                logger.error(f"map_ids failed for col={i_col}, value={j}, type={type(j)}, error={e}")
+                raise
+
         # copy [parent].guid column to [parent].[parent]_guid col
         # and remove content of [parent].guid
         guid_cols = find_guid_cols(col_list=tsv_df.columns.tolist())
@@ -169,12 +178,7 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
         parent_guid_cols = find_parent_guid_cols(guid_cols=guid_cols)
         logger.info(f"sheet parent guid cols: {*parent_guid_cols,}")
 
-        for j in tsv_df[i_col].tolist():
-            try:
-                map_ids(j, key_id_mapping)
-            except TypeError as e:
-                logger.error(f"map_ids failed for col={i_col}, value={j}, type={type(j)}, error={e}")
-                raise
+        
 
         for i in range(len(guid_cols)):
             i_col = guid_cols[i]  # e.g. participant.guid
