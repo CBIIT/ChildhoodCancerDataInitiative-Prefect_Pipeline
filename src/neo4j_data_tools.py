@@ -124,7 +124,7 @@ RETURN
     main_cypher_query_per_study_node: str = (
     """
 MATCH (study:study {{study_id:"{study_accession}"}})
-MATCH (study)<-[*1..5]-(linkedNode)<-[:of_{node_label}]-(startNode:{node_label})
+MATCH (study)<-[*0..5]-(linkedNode)<-[:of_{node_label}]-(startNode:{node_label})
 RETURN DISTINCT
     startNode.guid              AS startNodeId,
     labels(startNode)           AS startNodeLabels,
@@ -149,7 +149,7 @@ RETURN
     )
     all_nodes_entries_study_cypher_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})<-[*1..6]-(node)
+MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
     )
