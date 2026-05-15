@@ -85,8 +85,8 @@ def find_guid_cols(col_list: list) -> list:
 
 
 def find_parent_guid_cols(guid_cols: list) -> list:
-    """Returns the guid column name in the parent sheet, which is just 'guid'"""
-    return ["guid"] * len(guid_cols)
+    """Returns just 'guid' for each parent guid col since guid has no prefix in parent sheets"""
+    return ["guid" for _ in guid_cols]
 
 
 def unpack_folder_list(folder_path_list: list[str]):
