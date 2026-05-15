@@ -61,20 +61,14 @@ def get_study_accession(file_list: list[str]) -> str:
 
 # we need a mapping dictionary that maps GUID(str) against key property value
 def create_key_id_mapping(file_list: list[str]) -> dict:
-    """Returns a dictionary of GUID and key property.
-    Loops through every tsv, and use the GUID column as key and [node]_id as value
-
-    Args:
-        file_list (list[str]): a list of file paths
-
-    Returns:
-        dict: dictionary of GUID column value as key and [node]_id column value as value
-    """
+    """Returns a dictionary of GUID and key property."""
     return_dict = {}
     for file in file_list:
-        file_df = pd.read_csv(file, sep="\t")
+        file_df = pd.read_csv(file, sep="\t", dtype=str)  # force all columns to str
         file_type = file_df.loc[0, "type"]
         file_key_prop = file_type + "_id"
+        if file_key_prop not in file_df.columns:
+            continue  # skip if key prop column doesn't exist
         file_mapping_dict = dict(zip(file_df["guid"], file_df[file_key_prop]))
         return_dict = {**return_dict, **file_mapping_dict}
     return return_dict
@@ -113,8 +107,8 @@ def map_ids(cell, mapping):
         return cell
     ids = [i.strip() for i in str(cell).split(";")]
     mapped = [
-        mapping.get(i, i) for i in ids if i
-    ]  # falls back to original if not found
+        str(mapping.get(i, i)) for i in ids if i  # wrap in str() to handle int values
+    ]
     return ";".join(mapped)
 
 
