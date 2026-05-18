@@ -3,6 +3,7 @@ import pandas as pd
 from prefect import flow, task, get_run_logger
 from shutil import copy
 from src.utils import get_date
+from prefect.task_runners import ThreadPoolTaskRunner
 
 
 def check_subfolder(folder_path: str, logger) -> bool:
@@ -59,19 +60,19 @@ def get_study_accession(file_list: list[str]) -> str:
         )
 
 
-# we need a mapping dictionary that maps GUID(str) against key property value
-def create_key_id_mapping(file_list: list[str]) -> dict:
-    """Returns a dictionary of GUID and key property."""
-    return_dict = {}
-    for file in file_list:
-        file_df = pd.read_csv(file, sep="\t", dtype=str)  # force all columns to str
-        file_type = file_df.loc[0, "type"]
-        file_key_prop = file_type + "_id"
-        if file_key_prop not in file_df.columns:
-            continue  # skip if key prop column doesn't exist
-        file_mapping_dict = dict(zip(file_df["guid"], file_df[file_key_prop]))
-        return_dict = {**return_dict, **file_mapping_dict}
-    return return_dict
+# # we need a mapping dictionary that maps GUID(str) against key property value
+# def create_key_id_mapping(file_list: list[str]) -> dict:
+#     """Returns a dictionary of GUID and key property."""
+#     return_dict = {}
+#     for file in file_list:
+#         file_df = pd.read_csv(file, sep="\t", dtype=str)  # force all columns to str
+#         file_type = file_df.loc[0, "type"]
+#         file_key_prop = file_type + "_id"
+#         if file_key_prop not in file_df.columns:
+#             continue  # skip if key prop column doesn't exist
+#         file_mapping_dict = dict(zip(file_df["guid"], file_df[file_key_prop]))
+#         return_dict = {**return_dict, **file_mapping_dict}
+#     return return_dict
 
 
 def find_missing_cols(tsv_cols: list, sheet_cols: list) -> list:
@@ -79,14 +80,14 @@ def find_missing_cols(tsv_cols: list, sheet_cols: list) -> list:
     return missing_cols
 
 
-def find_guid_cols(col_list: list) -> list:
-    guid_cols = [i for i in col_list if i.endswith(".guid")]
-    return guid_cols
+# def find_guid_cols(col_list: list) -> list:
+#     guid_cols = [i for i in col_list if i.endswith(".guid")]
+#     return guid_cols
 
 
-def find_parent_guid_cols(guid_cols: list) -> list:
-    """Returns just 'guid' for each parent guid col since guid has no prefix in parent sheets"""
-    return ["guid" for _ in guid_cols]
+# def find_parent_guid_cols(guid_cols: list) -> list:
+#     """Returns just 'guid' for each parent guid col since guid has no prefix in parent sheets"""
+#     return ["guid" for _ in guid_cols]
 
 
 def unpack_folder_list(folder_path_list: list[str]):
@@ -322,9 +323,7 @@ def join_tsv_to_manifest_single_study(file_list: list[str], manifest_path: str) 
     return output_file_name
 
 
-
-
-@flow(name="Join tsv to Manifest Concurrently")
+@flow(name="Join tsv to Manifest Concurrently", task_runner=ThreadPoolTaskRunner(max_workers=3))
 def multi_studies_tsv_join(folder_path_list: list, manifest_path: str) -> list[str]:
     logger = get_run_logger()
     logger.info(f"Subfolder counts: {len(folder_path_list)}")
