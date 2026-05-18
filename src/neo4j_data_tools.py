@@ -13,6 +13,7 @@ from prefect.task_runners import ConcurrentTaskRunner
 from prefect.task_runners import ThreadPoolTaskRunner
 from prefect.cache_policies import NO_CACHE
 from neo4j import GraphDatabase
+from neo4j.exceptions import TransactionError
 import pandas as pd
 import numpy as np
 import csv
@@ -65,12 +66,12 @@ MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:st
 WITH study, startNode, linkedNode, properties(startNode) AS props
 UNWIND keys(props) AS propertyName
 RETURN startNode.id AS startNodeId, 
-labels(startNode) AS startNodeLabels, 
-propertyName AS startNodePropertyName, 
-startNode[propertyName] AS startNodePropertyValue, 
-linkedNode.id AS linkedNodeId, 
-labels(linkedNode) AS linkedNodeLabels, 
-study.study_id AS dbgap_accession
+    labels(startNode) AS startNodeLabels, 
+    propertyName AS startNodePropertyName, 
+    startNode[propertyName] AS startNodePropertyValue, 
+    linkedNode.id AS linkedNodeId, 
+    labels(linkedNode) AS linkedNodeLabels, 
+    study.study_id AS dbgap_accession
 """
     )
     unique_nodes_query: str = (
@@ -111,31 +112,26 @@ class DBCypherQueryDCC:
     """Dataclass for Cypher Query"""
 
     study_cypher_query: str = (
-        """
+    """
 MATCH (startNode:{node_label} {{study_id: "{study_accession}"}})
-WITH startNode, properties(startNode) AS props
-UNWIND keys(props) AS propertyName
-RETURN  startNode.guid AS startNodeId,
-    labels(startNode) AS startNodeLabels,
-    propertyName AS startNodePropertyName,
-    startNode[propertyName] AS startNodePropertyValue,
-    startNode.study_id as dbgap_accession 
-"""
-    )
-    main_cypher_query_per_study_node: str = (
-        """
-MATCH (study:study {{study_id:"{study_accession}"}})
-MATCH (study)<-[*1..5]-(linkedNode)<-[:of_{node_label}]-(startNode:{node_label})
-WITH DISTINCT study, startNode, linkedNode
-UNWIND keys(properties(startNode)) AS propertyName
 RETURN
     startNode.guid              AS startNodeId,
     labels(startNode)           AS startNodeLabels,
-    propertyName                AS startNodePropertyName,
-    startNode[propertyName]     AS startNodePropertyValue,
+    startNode.study_id          AS dbgap_accession,
+    properties(startNode)       AS startNodeProperties
+"""
+)
+    main_cypher_query_per_study_node: str = (
+    """
+MATCH (study:study {{study_id:"{study_accession}"}})
+MATCH (study)<-[*0..5]-(linkedNode)<-[:of_{node_label}]-(startNode:{node_label})
+RETURN DISTINCT
+    startNode.guid              AS startNodeId,
+    labels(startNode)           AS startNodeLabels,
     linkedNode.guid             AS linkedNodeId,
     labels(linkedNode)          AS linkedNodeLabels,
-    study.study_id              AS dbgap_accession
+    study.study_id              AS dbgap_accession,
+    properties(startNode)       AS startNodeProperties
 """
     )
     unique_nodes_query: str = (
@@ -153,7 +149,7 @@ RETURN
     )
     all_nodes_entries_study_cypher_query: str = (
         """
-MATCH (study:study {{study_id: "{study_id}"}})<-[*1..6]-(node)
+MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
     )
@@ -547,6 +543,101 @@ def export_to_csv_per_node_per_study(
     return None
 
 
+# def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, output_dir):
+#     logger = get_run_logger()
+#     query = query_str.format(study_accession=study_name, node_label=node_label)
+#     result = list(tx.run(query))
+
+#     # DEBUG: Note query being run
+#     logger.info(f"Running query: {query}")
+
+#     # DEBUG: Print available keys from first record
+#     if result:
+#         logger.info(f"Available keys: {result[0].keys()}")
+#     else:
+#         logger.info(f"No results returned for {node_label}/{study_name}")
+#         return
+
+#     output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
+#     with open(output_filename, "w", newline="") as csvfile:
+#         csv_writer = csv.writer(csvfile)
+#         csv_writer.writerow([
+#             "startNodeId",
+#             "startNodeLabels",
+#             "startNodePropertyName",
+#             "startNodePropertyValue",
+#             "linkedNodeId",
+#             "linkedNodeLabels",
+#             "dbgap_accession",
+#         ])
+#         for record in result:
+#             props = record["startNodeProperties"] or {}
+#             for prop_name, prop_value in props.items():
+#                 csv_writer.writerow([
+#                     record["startNodeId"],
+#                     record["startNodeLabels"],
+#                     prop_name,
+#                     prop_value,
+#                     record["linkedNodeId"],
+#                     record["linkedNodeLabels"],
+#                     record["dbgap_accession"],
+#                 ])
+#     logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
+
+def format_prop_value(value):
+    """Convert property values to strings, joining lists with semicolons"""
+    if value is None:
+        return ""
+    elif isinstance(value, list):
+        return ";".join(str(v) for v in value)
+    else:
+        return str(value)
+
+def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, output_dir):
+    logger = get_run_logger()
+    query = query_str.format(study_accession=study_name, node_label=node_label)
+    result = list(tx.run(query))
+
+    if not result:
+        logger.info(f"No records found for {node_label}/{study_name}, skipping file creation")
+        return
+
+    output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
+    with open(output_filename, "w", newline="") as csvfile:
+        csv_writer = csv.writer(csvfile)
+        csv_writer.writerow([
+            "startNodeId",
+            "startNodeLabels",
+            "startNodePropertyName",
+            "startNodePropertyValue",
+            "linkedNodeId",
+            "linkedNodeLabels",
+            "dbgap_accession",
+        ])
+        for record in result:
+            keys = record.keys()
+            props = record["startNodeProperties"] or {}
+            linked_node_id = record["linkedNodeId"] if "linkedNodeId" in keys else None
+            linked_node_labels = record["linkedNodeLabels"] if "linkedNodeLabels" in keys else None
+
+            # Verify linkedNodeId is a GUID (string) and not an internal integer ID
+            if linked_node_id is not None and not isinstance(linked_node_id, str):
+                logger.warning(f"linkedNodeId is not a string for {node_label}/{study_name}: {linked_node_id} ({type(linked_node_id)}), converting to string")
+                linked_node_id = str(linked_node_id)
+
+            for prop_name, prop_value in props.items():
+                csv_writer.writerow([
+                    record["startNodeId"],
+                    record["startNodeLabels"],
+                    prop_name,
+                    format_prop_value(prop_value),
+                    linked_node_id,
+                    linked_node_labels,
+                    record["dbgap_accession"],
+                ])
+    logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
+
+
 def export_uniq_values_node_property(
     tx, node: str, property: str, cypher_query: str, output_directory: str
 ) -> None:
@@ -611,6 +702,8 @@ def pull_data_per_node(
     task_run_name="pull_node_data_{node_label}_{study_name}",
     cache_policy=NO_CACHE,
     tags=["pull-db-tag"],
+    retries=3,
+    retry_delay_seconds=[10, 30, 60],  # exponential backoff
 )
 def pull_data_per_node_per_study(
     driver,
@@ -621,23 +714,22 @@ def pull_data_per_node_per_study(
     output_dir: str,
 ) -> None:
     """Exports DB data by a given node and a given study"""
-    session = driver.session()
-    try:
-        # session.execute_read(
-        #    data_to_csv, study_name, node_label, query_str.format(node_label=node_label, study_accession=study_name), output_dir
-        # 3)
-        session.execute_read(
-            data_to_csv,
-            study_name,
-            node_label,
-            query_str,
-            output_dir,
-        )
-    except:
-        traceback.print_exc()
-        raise
-    finally:
-        session.close()
+    with driver.session() as session:
+        try:
+            session.execute_read(
+                data_to_csv,
+                study_name,
+                node_label,
+                query_str,
+                output_dir,
+            )
+        except TransactionError as e:
+            logger = get_run_logger()
+            logger.warning(f"Transaction timeout for {node_label}/{study_name}, will retry. Error: {e}")
+            raise  # re-raise so Prefect retries the task
+        except Exception:
+            traceback.print_exc()
+            raise
     return None
 
 
@@ -711,7 +803,7 @@ def pull_nodes_loop(
     return None
 
 
-@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=3), log_prints=True)  # reduced from 10
 def pull_nodes_loop_dcc(
     study_list: list, node_list: list, driver, out_dir: str, logger
 ) -> None:
@@ -724,12 +816,11 @@ def pull_nodes_loop_dcc(
     os.makedirs(per_study_per_node_out_dir, exist_ok=True)
 
     study_node_pair = list(itertools.product(study_list, node_list))
-
     logger.info("start pulling data per node per study")
 
     future = pull_data_per_node_per_study.map(
         driver=driver,
-        data_to_csv=export_to_csv_per_node_per_study,
+        data_to_csv=export_to_csv_per_node_per_study_dcc,
         study_name=[x for x, y in study_node_pair],
         node_label=[y for x, y in study_node_pair],
         query_str=cypher_phrase,
@@ -880,7 +971,7 @@ def pull_study_node_dcc(driver, out_dir: str, study_id_list: list[str]) -> None:
 
     future = pull_data_per_node_per_study.map(
         driver=driver,
-        data_to_csv=export_to_csv_per_node_per_study,
+        data_to_csv=export_to_csv_per_node_per_study_dcc,
         study_name=study_id_list,
         node_label=["study"] * len(study_id_list),
         query_str=cypher_phrase,
@@ -2027,17 +2118,24 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
     for file_path in csv_list:
         logger.info(f"processing csv file: {file_path}")
         if has_contents(file_path):
-            logger.info(
-                f"Pivoting long df to wide df and cleaning the data for file: {file_path}"
-            )
+            logger.info(f"Pivoting long df to wide df and cleaning the data for file: {file_path}")
             wider_df = pivot_long_df_wide_clean_dcc(file_path=file_path)
+
+            if wider_df is None or wider_df.empty:
+                logger.info(f"Empty dataframe after pivot for file: {file_path}, skipping")
+                continue
+
             logger.info(f"Setting up links in wide df for file: {file_path}")
             wider_df = wide_df_setup_link_dcc(df_wide=wider_df)
+
+            if wider_df is None or wider_df.empty:
+                logger.info(f"Empty dataframe after link setup for file: {file_path}, skipping")
+                continue
+
             logger.info(f"Writing tsv files for all studies from file: {file_path}")
             write_wider_df_all_dcc(wider_df, output_dir=export_folder, logger=logger)
         else:
             logger.info(f"Skipping empty csv file: {file_path}")
-            pass
     return export_folder
 
 
@@ -2047,13 +2145,10 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     """
     df_long = pd.read_csv(file_path).drop_duplicates()
 
-    # define a function to collapse values if there are duplicates after pivoting
-    # We also want to take that list and make it a string with ; as separator, so that it can be easily ingested back to the db if needed.
     def collapse(x):
-        vals = list(dict.fromkeys(x))  # unique values, order preserved
-        return vals[0] if len(vals) == 1 else ";".join(vals)
+        vals = list(dict.fromkeys(x))
+        return vals[0] if len(vals) == 1 else ";".join(str(v) for v in vals)
 
-    # Pivot the DataFrame to wide format with aggregation to handle duplicates
     df_wide = (
         df_long.groupby(["startNodeId", "startNodePropertyName"])[
             "startNodePropertyValue"
@@ -2073,53 +2168,48 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
     )
 
     if "['study']" not in df_long["startNodeLabels"].unique().tolist():
-        # Preserve relational columns by merging with the original DataFrame
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
-        )
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(),
-            on="startNodeId",
-        )
-        df_wide = df_wide.merge(
-            df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
-            on="startNodeId",
-        )
+        # Only merge linkedNodeId if it exists and has non-null values
+        if "linkedNodeId" in df_long.columns and df_long["linkedNodeId"].notna().any():
+            df_wide = df_wide.merge(
+                df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
+            )
+        else:
+            df_wide["linkedNodeId"] = None
+
+        if "linkedNodeLabels" in df_long.columns and df_long["linkedNodeLabels"].notna().any():
+            df_wide = df_wide.merge(
+                df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(), on="startNodeId"
+            )
+            df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
+            df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
+        else:
+            df_wide["linkedNodeLabels"] = None
+
+        if "dbgap_accession" in df_long.columns and df_long["dbgap_accession"].notna().any():
+            df_wide = df_wide.merge(
+                df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(), on="startNodeId"
+            )
+        else:
+            df_wide["dbgap_accession"] = None
 
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
 
-    else:
-        pass
-
-    # remove quotes from column names.
-    # remove quotes and brackets from str value
+    # Remove quotes from column names
     df_wide.columns = df_wide.columns.str.strip('"')
     df_wide.columns = df_wide.columns.str.strip("'")
 
-    # Only fix the node label and nothing else.
+    # Only fix the node label
     df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("['")
     df_wide["startNodeLabels"] = df_wide["startNodeLabels"].str.strip("']")
 
-    # removed as it was affecting acl property.
-    # df_wide = df_wide.applymap(lambda x: x.strip("[") if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip("]") if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip('"') if isinstance(x, str) else x)
-    # df_wide = df_wide.applymap(lambda x: x.strip("'") if isinstance(x, str) else x)
-
-    # remove few columns
     df_wide["type"] = df_wide["startNodeLabels"]
-    df_wide.drop(["startNodeId", "created", "startNodeLabels"], axis=1, inplace=True)
-    # if uuid column exists, drop it
-    if "uuid" in df_wide.columns:
-        df_wide.drop(columns=["uuid"], inplace=True)
-    else:
-        pass
-    # if updated column exists, drop it
-    if "updated" in df_wide.columns:
-        df_wide.drop(columns=["updated"], inplace=True)
-    else:
-        pass
+
+    # Drop columns that exist — don't assume they're all present
+    cols_to_drop = ["startNodeId", "created", "startNodeLabels", "updated", "uuid"]
+    cols_to_drop = [c for c in cols_to_drop if c in df_wide.columns]
+    df_wide.drop(cols_to_drop, axis=1, inplace=True)
+
     return df_wide
 
 
@@ -2127,11 +2217,19 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
     """Setup links in wide df"""
     print("setup links in wide df")
     if "study" not in df_wide["type"].unique().tolist():
+
+        # Guard against missing link columns
+        if "linkedNodeLabels" not in df_wide.columns or df_wide["linkedNodeLabels"].isna().all():
+            df_wide["study"] = df_wide.get("dbgap_accession", None)
+            if "dbgap_accession" in df_wide.columns:
+                df_wide.drop(columns=["dbgap_accession"], inplace=True)
+            return df_wide
+
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"] + ".guid"
 
         def collapse(x):
-            vals = list(dict.fromkeys(x))  # unique, order-preserved
-            return vals[0] if len(vals) == 1 else ";".join(vals)
+            vals = list(dict.fromkeys(x))
+            return vals[0] if len(vals) == 1 else ";".join(str(v) for v in vals)
 
         df_wide_links = (
             df_wide.groupby(["guid", "linkedNodeLabels"])["linkedNodeId"]
@@ -2142,18 +2240,15 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
         )
         df_wide_links.columns.name = None
 
-        # Add linkages back into data frame and drop extra columns
         df_wide_links = df_wide_links.merge(df_wide.drop_duplicates(), on="guid")
-        df_wide_links = df_wide_links.drop(["linkedNodeId", "linkedNodeLabels"], axis=1)
+        df_wide_links = df_wide_links.drop(
+            columns=[c for c in ["linkedNodeId", "linkedNodeLabels"] if c in df_wide_links.columns]
+        )
         df_wide = df_wide_links
-
-        # below should only work for non study nodes
-
         df_wide["study"] = df_wide["dbgap_accession"]
         df_wide.drop(columns=["dbgap_accession"], inplace=True)
 
     else:
-        # this is only for study node
         df_wide["study"] = df_wide["study_id"]
 
     return df_wide
@@ -2161,19 +2256,35 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
 
 def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None:
     """writes tsv files per study per node to a study folder under output_dir"""
+    
+    # Guard against empty dataframe
+    if wider_df is None or wider_df.empty:
+        logger.info("Received empty dataframe, skipping write")
+        return None
+
+    if "type" not in wider_df.columns or wider_df["type"].dropna().empty:
+        logger.info("No type column or no values in type column, skipping write")
+        return None
+
     # get node label
-    node_label = wider_df["type"].unique().tolist()[0]
+    node_label = wider_df["type"].dropna().unique().tolist()[0]
 
     # export folder
     os.makedirs(output_dir, exist_ok=True)
 
+    if "study" not in wider_df.columns or wider_df["study"].dropna().empty:
+        logger.info(f"No study column or no values in study column for node {node_label}, skipping write")
+        return None
+
     # there should only be one study value in the wider_df
-    study = wider_df["study"].unique().tolist()[0]
+    study = wider_df["study"].dropna().unique().tolist()[0]
     logger.info(f"Writing node {node_label} tsv files for study {study}")
     wider_df.drop(columns=["study"], inplace=True)
+
     # create the output directory if not exist
     study_folder = os.path.join(output_dir, study)
     os.makedirs(study_folder, exist_ok=True)
+
     # node_study_tsv filename
     node_study_tsv_filename = study + "_" + node_label + ".tsv"
     wider_df.to_csv(
