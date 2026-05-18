@@ -101,12 +101,12 @@ def unpack_folder_list(folder_path_list: list[str]):
     return unpacked_folder_list
 
 
-def map_ids(cell, mapping):
-    if pd.isna(cell) or cell == "":
-        return cell
-    ids = [str(i).strip() for i in str(cell).split(";")]
-    mapped = [str(mapping.get(i, i)) for i in ids if i]
-    return ";".join(str(m) for m in mapped)  # triple str() safety net
+# def map_ids(cell, mapping):
+#     if pd.isna(cell) or cell == "":
+#         return cell
+#     ids = [str(i).strip() for i in str(cell).split(";")]
+#     mapped = [str(mapping.get(i, i)) for i in ids if i]
+#     return ";".join(str(m) for m in mapped)  # triple str() safety net
 
 
 # @task(name="Join tsv to Manifest", log_prints=True)
