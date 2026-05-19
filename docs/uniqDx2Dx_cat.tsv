@@ -102,6 +102,7 @@ ATRT-TYR	Atypical Teratoid/Rhabdoid Tumors	WHO CNS5
 ATRT, NOS or NEC	Atypical Teratoid/Rhabdoid Tumors	WHO CNS5
 Atypical choroid plexus papilloma	Gliomas;Choroid Plexus Tumors	ICD-O-3.2;WHO CNS5
 Atypical Dendritic Cell Tumor	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
+Atypical lipomatous tumor	Lipomatous neoplasms	ICD-O-3.2
 Atypical meningioma	Meningiomas	ICD-O-3.2
 Atypical teratoid/rhabdoid tumor	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Atypical Teratoid/Rhabdoid Tumors	Atypical Teratoid/Rhabdoid Tumors	WHO5 Pediatric Tumor
@@ -628,11 +629,13 @@ Ossifying fibromyxoid tumor	Myxomatous neoplasms	ICD-O-3.2
 Ossifying fibromyxoid tumor, NOS	Myxomatous neoplasms	ICD-O-3.2
 Osteoblastoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Osteoblastoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
+Osteochondroma	Osseous and chondromatous neoplasms	ICD-O-3.2
 Osteoid Osteoma	Other Solid Tumors	WHO5 Pediatric Tumor
 Osteosarcoma	Osteosarcoma	WHO5 Pediatric Tumor
 Osteosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Other CNS Embryonal Tumors	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 Other low-grade B-cell lymphomas of the CNS	Other CNS	WHO CNS5
+Palmar/plantar type fibromatosis	Fibromatous neoplasms	ICD-O-3.2
 Pancreatic neuroendocrine tumor, nonfunctioning	Adenomas and adenocarcinomas	ICD-O-3.2
 Pancreatoblastoma	Complex mixed and stromal neoplasm;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Papillary adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -723,6 +726,7 @@ Rhabdomyosarcoma, NOS	Myomatous neoplasms;Rhabdomyosarcoma	ICD-O-3.2;WHO5 Pediat
 Rosai-Dorfman disease	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
 Rosette-forming glioneuronal tumor	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
 Rosette-forming Glioneuronal Tumors	Glioneuronal and Neuronal Tumors	WHO5 Pediatric Tumor
+Round cell sarcoma, NOS	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Salivary Gland Anlage Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Sarcoma with BCOR genetic alterations	Miscellaneous tumors;Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Sarcoma, NEC	Soft Tissue Tumors	WHO5 Pediatric Tumor
