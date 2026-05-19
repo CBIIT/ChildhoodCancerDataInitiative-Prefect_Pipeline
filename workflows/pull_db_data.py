@@ -1,3 +1,4 @@
+from neo4j import GraphDatabase
 from prefect import flow, task, get_run_logger
 import os
 import sys
@@ -60,13 +61,13 @@ def pull_db_data(
         account=database_account_id,
     )
 
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+
     # pulling data from DB
     logger.info("Starting pulling data from DB")
     db_data_folder = query_db_to_csv_w_secrets(
         output_dir="./pulled_db_csv",
-        uri_secret=uri,
-        username_secret=username,
-        password_secret=password,
+        driver=driver,
         study_id_list=study_id_list,
     )
 

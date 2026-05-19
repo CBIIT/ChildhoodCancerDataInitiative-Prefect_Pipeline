@@ -1,3 +1,4 @@
+from neo4j import GraphDatabase
 from prefect import flow, get_run_logger
 from src.memgraph_transfer import export_memgraph, import_memgraph
 from src.neo4j_data_tools import cypher_query_parameters
@@ -55,10 +56,12 @@ def memgraph_export_import_flow(
         logger=logger,
     )
 
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+
     if mode == "export":
         logger.info(f"Running export with chunk size {chunk_size}")
         output_file = f"memgraph_dump_{get_time()}.cypherl"
-        export_memgraph(uri, username, password, output_file, chunk_size)
+        export_memgraph(driver, output_file, chunk_size)
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         logger.info(f"Export completed: {output_file}")
@@ -68,7 +71,7 @@ def memgraph_export_import_flow(
         file_dl(bucket, file_path)
         file_name = os.path.basename(file_path)
         logger.info(f"Running import with chunk size {chunk_size}")
-        import_memgraph(uri, username, password, file_name, chunk_size, wipe_db)
+        import_memgraph(driver, file_name, chunk_size, wipe_db)
         logger.info("Import completed successfully")
 
     else:

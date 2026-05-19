@@ -1,16 +1,23 @@
+from neo4j import GraphDatabase
 from prefect import flow, get_run_logger
 import os
 import sys
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
-from src.utils import get_time, folder_dl, get_date, file_ul, get_secret_centralized_worker
+from src.utils import (
+    get_time,
+    folder_dl,
+    get_date,
+    file_ul,
+    get_secret_centralized_worker,
+)
 from src.neo4j_data_tools import (
     counts_DB_all_nodes_all_studies_w_secrets,
     validate_DB_with_input_tsvs_w_secrets,
     db_validation_md,
     validate_df_to_count_summary,
-    validate_df_to_id_summary
+    validate_df_to_id_summary,
 )
 
 
@@ -62,13 +69,11 @@ def validate_db_data(
         account=database_account_id,
     )
 
+    driver = GraphDatabase.driver(uri, auth=(username, password))
+
     # it returns a pandas dataframe
     logger.info("Fetching entry counts per node per study")
-    db_node_count_all_studies = counts_DB_all_nodes_all_studies_w_secrets(
-        uri=uri,
-        username=username,
-        password=password,
-    )
+    db_node_count_all_studies = counts_DB_all_nodes_all_studies_w_secrets(driver=driver)
 
     # Run the queries
     logger.info("Pulling data from database")
@@ -84,9 +89,7 @@ def validate_db_data(
         # validate db info with files in tsv folder
         logger.info("Reading tsv files and validating records between tsv files and DB")
         validate_df = validate_DB_with_input_tsvs_w_secrets(
-            uri=uri,
-            username=username,
-            password=password,
+            driver=driver,
             tsv_folder=tsv_folder,
             studies_dataframe=db_node_count_all_studies,
         )
@@ -95,15 +98,19 @@ def validate_db_data(
         logger.info("Creating markdown report for db validation")
         count_summary_df = validate_df_to_count_summary(validate_df=validate_df)
         id_summary_df = validate_df_to_id_summary(validate_df=validate_df)
-        db_validation_md(count_summary_df=count_summary_df, id_summary_df=id_summary_df, runner=runner)
+        db_validation_md(
+            count_summary_df=count_summary_df,
+            id_summary_df=id_summary_df,
+            runner=runner,
+        )
 
         df_for_bucket_upload = validate_df
     else:
         df_for_bucket_upload = db_node_count_all_studies
 
     # folder name in the bucket for file upload
-    summary_file_name =  f"db_validation_summary_{get_date()}.tsv"
-    df_for_bucket_upload.to_csv(summary_file_name, sep='\t', index=False)
+    summary_file_name = f"db_validation_summary_{get_date()}.tsv"
+    df_for_bucket_upload.to_csv(summary_file_name, sep="\t", index=False)
     bucket_folder = os.path.join(runner, "db_validation_" + get_time())
     file_ul(
         bucket=bucket,
@@ -111,4 +118,6 @@ def validate_db_data(
         sub_folder="",
         newfile=summary_file_name,
     )
-    logger.info(f"db validation summary file {summary_file_name} has been uploaded to bucket {bucket} at folder {bucket_folder}")
+    logger.info(
+        f"db validation summary file {summary_file_name} has been uploaded to bucket {bucket} at folder {bucket_folder}"
+    )
