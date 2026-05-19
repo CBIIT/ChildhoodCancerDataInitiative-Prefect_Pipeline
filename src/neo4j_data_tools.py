@@ -1999,7 +1999,7 @@ def consolidate_uniquevalue_props(folder_path: str, prop_file_path: str):
 @flow
 def query_db_to_csv_w_secrets(
     output_dir: str,
-    driver: GraphDatabase,
+    driver,
     study_id_list: Union[list[str], None] = None,
 ) -> str:
     """It export one csv file for each unique node.
