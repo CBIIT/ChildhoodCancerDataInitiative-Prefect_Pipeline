@@ -104,8 +104,6 @@ def memgraph_transfer_promotion(
             account=database_source_account_id,
         )
 
-        driver_export = GraphDatabase.driver(uri_source, auth=(username_source, password_source))
-
     if mode in [
         "import",
         "promotion",
@@ -128,6 +126,11 @@ def memgraph_transfer_promotion(
             account=database_target_account_id,
         )
 
+
+    # Create drivers for export and import if needed
+    if mode in ["export", "promotion", "curation promotion filter"]:
+        driver_export = GraphDatabase.driver(uri_source, auth=(username_source, password_source))
+    if mode in ["import", "promotion", "curation promotion filter"]:
         driver_import = GraphDatabase.driver(uri_target, auth=(username_target, password_target))
 
     # check the mode and run the corresponding flow
