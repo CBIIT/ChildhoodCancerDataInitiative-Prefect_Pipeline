@@ -1962,7 +1962,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: memgraph_transfer_v3
+  - name: memgraph_promotion_v3
     version: null
     tags: ["Production", "V3", "DCC", "Centralized Worker", "Database Promotion"]
     description: null

@@ -1,6 +1,5 @@
 from neo4j import GraphDatabase
 from prefect import flow, get_run_logger
-from websockets import uri
 from src.memgraph_transfer import (
     export_memgraph,
     import_memgraph,
