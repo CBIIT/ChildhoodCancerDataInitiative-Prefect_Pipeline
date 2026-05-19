@@ -1313,37 +1313,11 @@ def counts_DB_all_nodes_all_studies(
 
 @flow
 def counts_DB_all_nodes_all_studies_w_secrets(
-    uri: str, username: str, password: str
+    driver
 ) -> Dict:
     logger = get_run_logger()
 
-    # driver instance
-    logger.info("Creating GraphDatabase driver using uri, username, and password")
-    driver = GraphDatabase.driver(uri, auth=(username, password))
-
-    # fetch all unique studies
-    study_list = pull_uniq_studies(driver=driver)
-    logger.info(f"Unique study list in DB: {*study_list,}")
-
-    # Loop through each study and fetch counts of all nodes per study
-    studies_dataframe = pull_studies_loop(
-        driver=driver, study_list=study_list, logger=logger
-    )
-
-    driver.close()
-
-    return studies_dataframe
-
-
-@flow
-def counts_DB_all_nodes_all_studies_w_secrets(
-    uri: str, username: str, password: str
-) -> Dict:
-    logger = get_run_logger()
-
-    # driver instance
-    logger.info("Creating GraphDatabase driver using uri, username, and password")
-    driver = GraphDatabase.driver(uri, auth=(username, password))
+    logger.info("Using provided GraphDatabase driver")
 
     # fetch all unique studies
     study_list = pull_uniq_studies(driver=driver)
@@ -1417,17 +1391,13 @@ def validate_DB_with_input_tsvs(
 
 @flow(log_prints=True)
 def validate_DB_with_input_tsvs_w_secrets(
-    uri: str,
-    username: str,
-    password: str,
+    driver,
     tsv_folder: str,
     studies_dataframe: DataFrame,
 ) -> DataFrame:
     logger = get_run_logger()
 
-    # driver instance
-    logger.info("Creating GraphDatabase driver using uri, username, and password")
-    driver = GraphDatabase.driver(uri, auth=(username, password))
+    logger.info("Using provided GraphDatabase driver")
 
     # read trhough tsv folder and extrac study_id, node, id_count,
     # and id list from each file
@@ -2029,9 +1999,7 @@ def consolidate_uniquevalue_props(folder_path: str, prop_file_path: str):
 @flow
 def query_db_to_csv_w_secrets(
     output_dir: str,
-    uri_secret: str,
-    username_secret: str,
-    password_secret: str,
+    driver: GraphDatabase,
     study_id_list: Union[list[str], None] = None,
 ) -> str:
     """It export one csv file for each unique node.
@@ -2046,8 +2014,7 @@ def query_db_to_csv_w_secrets(
     os.makedirs(output_dir, exist_ok=True)
 
     # driver instance
-    logger.info("Creating GraphDatabase driver using uri, username, and password")
-    driver = GraphDatabase.driver(uri_secret, auth=(username_secret, password_secret))
+    logger.info("Using provided GraphDatabase driver")
 
     # fetch unique nodes and unique studies
     logger.info("Fetching all unique nodes in DB")

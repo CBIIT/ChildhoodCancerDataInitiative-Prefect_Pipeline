@@ -1,3 +1,4 @@
+from neo4j import GraphDatabase
 from prefect import flow, get_run_logger
 import os
 import sys
@@ -7,6 +8,7 @@ from src.neo4j_data_tools import counts_DB_all_nodes_all_studies_w_secrets
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
+
 
 @flow(name="Get diff between neo4j or memgraph instances", log_prints=True)
 def db_diff(
@@ -23,7 +25,7 @@ def db_diff(
     database_2_secret_key_username: str,
     database_2_secret_key_password: str,
 ) -> None:
-    '''This flow will pull credentials for two neo4j/memgraph db instances, get counts of all nodes in each db, and then output a tsv file with the counts and differences in counts between the two dbs. The output file will be saved to a specified bucket.
+    """This flow will pull credentials for two neo4j/memgraph db instances, get counts of all nodes in each db, and then output a tsv file with the counts and differences in counts between the two dbs. The output file will be saved to a specified bucket.
     Args:
         bucket (str): the bucket to save the output file to
         runner (str): the name of the runner executing the flow, used for naming output folder
@@ -37,13 +39,10 @@ def db_diff(
         database_2_secret_key_ip (str): the secret key for the second neo4j/memgraph db instance ip, used to pull aws secrets
         database_2_secret_key_username (str): the secret key for the second neo4j/memgraph db instance username, used to pull aws secrets
         database_2_secret_key_password (str): the secret key for the second neo4j/memgraph db instance password, used to pull aws secrets
-    '''
-
+    """
 
     logger = get_run_logger()
     logger.info("Getting secrets for accessing neo4j or memgraph db instances")
-
-
 
     # pull from first db
     db1_ip = get_secret_centralized_worker(
@@ -62,6 +61,8 @@ def db_diff(
         account=database_1_account_id,
     )
 
+    driver1 = GraphDatabase.driver(db1_ip, auth=(db1_username, db1_password))
+
     # pull from second db
     db2_ip = get_secret_centralized_worker(
         secret_path_name=database_2_secret_path,
@@ -79,29 +80,27 @@ def db_diff(
         account=database_2_account_id,
     )
 
-    logger.info(f"Retrieved counts for DB1")
-    count_db1 = counts_DB_all_nodes_all_studies_w_secrets(
-        uri=db1_ip,
-        username=db1_username,
-        password=db1_password,
-    )
-    logger.info(f"Retrieved counts for DB2")
-    count_db2 = counts_DB_all_nodes_all_studies_w_secrets(
-        uri=db2_ip,
-        username=db2_username,
-        password=db2_password,
-    )
+    driver2 = GraphDatabase.driver(db2_ip, auth=(db2_username, db2_password))
 
+    logger.info(f"Retrieved counts for DB1")
+    count_db1 = counts_DB_all_nodes_all_studies_w_secrets(driver=driver1)
+    logger.info(f"Retrieved counts for DB2")
+    count_db2 = counts_DB_all_nodes_all_studies_w_secrets(driver=driver2)
 
     count_db1.rename(columns={"DB_count": "database_1_count"}, inplace=True)
     count_db2.rename(columns={"DB_count": "database_2_count"}, inplace=True)
 
     # merge two dataframes
     combined_df = count_db1.merge(
-        count_db2, on=["study_id", "node"], how="outer", suffixes=("_database_1_count", "_database_2_count")
+        count_db2,
+        on=["study_id", "node"],
+        how="outer",
+        suffixes=("_database_1_count", "_database_2_count"),
     )
     combined_df.fillna(0, inplace=True)
-    combined_df["count_diff"] = combined_df["database_1_count"] - combined_df["database_2_count"]
+    combined_df["count_diff"] = (
+        combined_df["database_1_count"] - combined_df["database_2_count"]
+    )
     output_name = f"neo4j_db_diff_{get_date()}.tsv"
     combined_df.to_csv(output_name, sep="\t", index=False)
 

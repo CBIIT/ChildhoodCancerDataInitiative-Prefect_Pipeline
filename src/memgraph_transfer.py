@@ -16,16 +16,13 @@ import re
 # TASK: EXPORT DATABASE
 # ------------------------------------------------------------------
 @flow(name="export_memgraph")
-def export_memgraph(
-    uri: str, username: str, password: str, output_file: str, chunk_size: int = 1000
-) -> None:
+def export_memgraph(driver, output_file: str, chunk_size: int = 1000) -> None:
     """
     Export a Memgraph database to a CypherL (.cypher) file using DUMP DATABASE.
     Each record is assumed to contain a complete Cypher statement.
     Writes to disk in chunks for large-scale databases.
     """
     logger = get_run_logger()
-    driver = GraphDatabase.driver(uri, auth=(username, password))
     logger.info(f"Connected to Memgraph")
 
     def _extract_query_from_record(record: Any) -> str:
@@ -164,7 +161,7 @@ def parse_relationship_type(line):
 
 
 @task(cache_policy=NO_CACHE, name="dump_database", persist_result=False)
-def dump_database(uri: str, username: str, password: str, dump_file: str):
+def dump_database(driver, dump_file: str):
     """
     Dumps the entire Memgraph database to a cypherl file using DUMP DATABASE.
     Streams line by line to avoid memory issues with large databases.
@@ -172,7 +169,6 @@ def dump_database(uri: str, username: str, password: str, dump_file: str):
     logger = get_run_logger()
     logger.info(f"Starting DUMP DATABASE to {dump_file}...")
 
-    driver = GraphDatabase.driver(uri, auth=(username, password))
     lines_written = 0
 
     try:
@@ -396,9 +392,7 @@ def filter_cypherl(
 
 @flow(name="export_memgraph_curation_filter", persist_result=False)
 def export_memgraph_curation_filter(
-    uri: str,
-    username: str,
-    password: str,
+    driver: GraphDatabase.driver,
     output_file: str,
     filter_label: str,
     filter_property: str,
@@ -416,7 +410,7 @@ def export_memgraph_curation_filter(
     dump_file = f"database_full_dump_{get_time()}.cypherl"
 
     logger.info(f"Step 1: Dumping database to {dump_file}...")
-    dump_database(uri, username, password, dump_file)
+    dump_database(driver, dump_file)
 
     logger.info(f"Step 2: Filtering dump to {output_file}...")
     output_file, node_log, rel_log, study_log = filter_cypherl(
@@ -510,9 +504,7 @@ def _wipe_database(session, logger):
 # ------------------------------------------------------------------
 @flow(name="import_memgraph")
 def import_memgraph(
-    uri: str,
-    username: str,
-    password: str,
+    driver: GraphDatabase.driver,
     input_file: str,
     chunk_size: int = 500,
     wipe_db: bool = False,
@@ -524,7 +516,6 @@ def import_memgraph(
     """
     logger = get_run_logger()
     logger.info(f"Connecting to Memgraph.")
-    driver = GraphDatabase.driver(uri, auth=(username, password))
 
     total_lines = 0
     executed = 0
