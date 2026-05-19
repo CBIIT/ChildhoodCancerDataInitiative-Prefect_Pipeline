@@ -203,7 +203,10 @@ def unpack_folder_list(folder_path_list: list[str]):
 #     return output_file_name
 
 
-# REWRITE
+# REWRITE for clarity and performance improvements based on profiling and debugging of the original version. Key changes include:
+# - Build a single guid->id mapping from all TSV files upfront instead of per node type
+# - Read all manifest sheets once upfront instead of per node type
+# - Open ExcelWriter once for all node writes instead of per node type
 def build_guid_to_id_mapping(file_list: list[str]) -> dict:
     """
     Builds a mapping of guid -> [node]_id from all TSV files.
