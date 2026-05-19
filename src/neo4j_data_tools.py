@@ -711,7 +711,7 @@ def pull_nodes_loop(
     return None
 
 
-@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=3), log_prints=True)
 def pull_nodes_loop_dcc(
     study_list: list, node_list: list, driver, out_dir: str, logger
 ) -> None:
