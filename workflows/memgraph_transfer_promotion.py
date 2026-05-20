@@ -1,4 +1,4 @@
-from neo4j import GraphDatabase
+from neo4j import GraphDatabase, basic_auth
 from prefect import flow, get_run_logger
 from src.memgraph_transfer import (
     export_memgraph,
@@ -126,22 +126,20 @@ def memgraph_transfer_promotion(
             account=database_target_account_id,
         )
 
-
     # Create drivers for export and import if needed
     if mode in ["export", "promotion", "curation promotion filter"]:
-        driver_export = GraphDatabase.driver(uri_source, auth=(username_source, password_source))
+        driver_export = GraphDatabase.driver(uri_source, auth=basic_auth(username_source, password_source))
     if mode in ["import", "promotion", "curation promotion filter"]:
-        driver_import = GraphDatabase.driver(uri_target, auth=(username_target, password_target))
+        driver_import = GraphDatabase.driver(uri_target, auth=basic_auth(username_target, password_target))
 
     # check the mode and run the corresponding flow
-
     if mode == "export":
         logger.info(f"Running export with chunk size {chunk_size}")
         logger.info(f"Source database account: {database_source_account_name}")
         output_file = (
             f"memgraph_dump_{database_source_account_name}_{get_time()}.cypherl"
         )
-        export_memgraph(driver_export, output_file, chunk_size)
+        export_memgraph(driver=driver_export, output_file=output_file, chunk_size=chunk_size)
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         logger.info(f"Export completed: {output_file}")
@@ -152,7 +150,7 @@ def memgraph_transfer_promotion(
         file_path = os.path.basename(file_path)
         logger.info(f"Running import with chunk size {chunk_size}")
         logger.info(f"Target database account: {database_target_account_name}")
-        import_memgraph(driver_import, file_path, chunk_size, wipe_db)
+        import_memgraph(driver=driver_import, input_file=file_path, chunk_size=chunk_size, wipe_db=wipe_db)
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
     elif mode == "promotion":
@@ -164,7 +162,7 @@ def memgraph_transfer_promotion(
         output_file = (
             f"memgraph_dump_{database_source_account_name}_{get_time()}.cypherl"
         )
-        export_memgraph(driver_export, output_file, chunk_size)
+        export_memgraph(driver=driver_export, output_file=output_file, chunk_size=chunk_size)
         # upload the cypherl file
         file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_file)
         logger.info(f"Export completed: {output_file}")
@@ -172,7 +170,7 @@ def memgraph_transfer_promotion(
 
         input_file = os.path.basename(output_file)
 
-        import_memgraph(driver_import, input_file, chunk_size, wipe_db)
+        import_memgraph(driver=driver_import, input_file=input_file, chunk_size=chunk_size, wipe_db=wipe_db)
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
     elif mode == "curation promotion filter":
@@ -201,7 +199,7 @@ def memgraph_transfer_promotion(
 
         input_file = os.path.basename(output_file)
 
-        import_memgraph(driver_import, input_file, chunk_size, wipe_db)
+        import_memgraph(driver=driver_import, input_file=input_file, chunk_size=chunk_size, wipe_db=wipe_db)
         logger.info(f"Import to {database_target_account_name} completed successfully")
 
     else:
