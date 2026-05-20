@@ -1,3 +1,4 @@
+from __future__ import annotations
 from neo4j import GraphDatabase
 from prefect import flow, get_run_logger
 from src.memgraph_transfer import (
