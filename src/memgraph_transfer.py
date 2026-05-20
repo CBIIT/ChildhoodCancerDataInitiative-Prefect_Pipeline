@@ -392,7 +392,7 @@ def filter_cypherl(
 
 @flow(name="export_memgraph_curation_filter", persist_result=False)
 def export_memgraph_curation_filter(
-    driver: GraphDatabase.driver,
+    driver,
     output_file: str,
     filter_label: str,
     filter_property: str,
@@ -504,7 +504,7 @@ def _wipe_database(session, logger):
 # ------------------------------------------------------------------
 @flow(name="import_memgraph")
 def import_memgraph(
-    driver: GraphDatabase.driver,
+    driver,
     input_file: str,
     chunk_size: int = 500,
     wipe_db: bool = False,
