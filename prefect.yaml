@@ -1356,7 +1356,7 @@ deployments:
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
-- name: TEST-gc-liftover-helper
+  - name: TEST-gc-liftover-helper
     version: null
     tags: ["TEST", "Liftover", "CCDI", "DCC"]
     description: null
