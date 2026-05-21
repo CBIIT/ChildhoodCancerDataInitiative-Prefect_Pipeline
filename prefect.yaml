@@ -1356,9 +1356,9 @@ deployments:
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
-  - name: TEST-gc-liftover-helper
+  - name: gc-liftover-helper
     version: null
-    tags: ["TEST", "Liftover", "CCDI", "DCC"]
+    tags: ["Production", "Liftover", "CCDI", "DCC"]
     description: null
     entrypoint: workflows/gc_liftover_helper.py:generate_ids_flow
     schedule: null
