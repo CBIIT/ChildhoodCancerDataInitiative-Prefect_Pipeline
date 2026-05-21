@@ -1366,6 +1366,7 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-validation"
+      submission_path: ""
       runner: "" 
     
     # pull action to overwrite from file pull action

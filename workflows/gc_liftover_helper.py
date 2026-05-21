@@ -85,24 +85,25 @@ def generate_ids_task(sheet_dfs):
 
 
 @flow(name="GC ID Post-Processing Flow", log_prints=True)
-def generate_ids_flow(bucket: str, runner: str) -> None:
+def generate_ids_flow(bucket: str, submission_path: str, runner: str) -> None:
     
     """
     Main flow that calls tasks to load TSVs, generate GC IDs and save the fixed TSVs
     Args:
-        bucket (str): bucket name
-        submission_path (str): folder path contains a set of tsv files under bucket, e.g. "submissions/submission_tsv_files/"
+        bucket (str): bucket name on aws where the submission folder is located, e.g. "ccdi-validation"
+        submission_path (str): folder path that contains a set of tsv files under bucket, e.g. "your_name/JIRA_tix/submission_tsv_files/"
+        runner (str): folder path where the output files from this flow will be uploaded, e.g. "your_name/JIRA_tix/"
     """
     logger = get_run_logger()
 
     # download: bring the folder from S3 to the local Prefect runner
-    # The runner path in S3 becomes the folder name locally
-    logger.info(f"Downloading {runner} from bucket {bucket}")
-    folder_dl(bucket=bucket, remote_folder=runner)
+    # The submission path in S3 becomes the folder name locally
+    logger.info(f"Downloading {submission_path} from bucket {bucket}")
+    folder_dl(bucket=bucket, remote_folder=submission_path)
 
     # load: convert local TSVs --> dataframes
     logger.info("Loading local TSVs...")
-    sheet_dfs = load_tsvs_from_folder(runner)
+    sheet_dfs = load_tsvs_from_folder(submission_path)
     
     # process: fix the IDs in the dataframes
     logger.info("Generating GC IDs...")
