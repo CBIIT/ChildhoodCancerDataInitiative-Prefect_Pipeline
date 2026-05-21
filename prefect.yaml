@@ -1360,7 +1360,7 @@ deployments:
     version: null
     tags: ["TEST", "Liftover", "CCDI", "DCC"]
     description: null
-    entrypoint: workflows/gc_liftover_helper:generate_ids_flow
+    entrypoint: workflows/gc_liftover_helper.py:generate_ids_flow
     schedule: null
 
     # flow-specific parameters
