@@ -1356,6 +1356,30 @@ deployments:
           directory: "{{ clone-step.directory }}"
           stream_output: False
 
+  - name: gc-liftover-helper
+    version: null
+    tags: ["Production", "Liftover", "CCDI", "DCC"]
+    description: null
+    entrypoint: workflows/gc_liftover_helper.py:generate_ids_flow
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      submission_path: ""
+      runner: "" 
+    
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
     # infra-specific fields
     work_pool:
       name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
