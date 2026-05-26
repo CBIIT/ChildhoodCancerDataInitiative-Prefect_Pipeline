@@ -1269,6 +1269,7 @@ def calculate_object_md5sum_new(s3_client, url) -> str:
     retries=3,
     retry_delay_seconds=1,
     log_prints=True,
+    cache_policy=NO_CACHE,
 )
 def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
     try:
@@ -1287,6 +1288,7 @@ def calculate_single_md5sum_task(s3uri: str, s3_client) -> str:
     retries=3,
     retry_delay_seconds=1,
     log_prints=True,
+    cache_policy=NO_CACHE,
 )
 def calculate_single_size_task(s3uri: str, s3_client) -> str:
     try:
