@@ -586,6 +586,9 @@ def mci_gdc_transform(
 
     # set up working directory path
     working_dir = f"/usr/local/data/mci_gdc_transform_{dt}"
+    
+    # make working directory
+    os.makedirs(working_dir, exist_ok=True)
 
     # check if downloaded
     if not os.path.isfile(os.path.basename(manifest_file)):
