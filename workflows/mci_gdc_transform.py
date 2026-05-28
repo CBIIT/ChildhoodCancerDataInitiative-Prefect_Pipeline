@@ -426,7 +426,6 @@ def setup_transform(
     methylation_array_file_df = pd.read_excel(
         manifest_file, sheet_name="methylation_array_file"
     )
-    sample_df = pd.read_excel(manifest_file, sheet_name="sample")
 
     # 1: filter most recent surival status and add surival.last_known_survival_status to participant table
     participant_parse = survival_status_parser(participant, survival)
@@ -576,6 +575,14 @@ def mci_gdc_transform(
 
     # download manifest file
     file_dl(bucket, manifest_file)
+    
+    # if preservation method and methylation platform file provided, download it
+    if preservation_meth_platform_file is not None:
+        file_dl(bucket, preservation_meth_platform_file)
+        if not os.path.isfile(os.path.basename(preservation_meth_platform_file)):
+            print(f"Error: Preservation method and methylation platform file '{preservation_meth_platform_file}' not found.")
+            sys.exit(1)
+        preservation_meth_platform_file = os.getcwd() + "/" + os.path.basename(preservation_meth_platform_file)
 
     # set up working directory path
     working_dir = f"/usr/local/data/mci_gdc_transform_{dt}"
