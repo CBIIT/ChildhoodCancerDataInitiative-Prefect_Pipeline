@@ -1,6 +1,6 @@
 diagnosis	diagnosis_category	source
 Abdominal fibromatosis	Fibromatous neoplasms	ICD-O-3.2
-Acinar cell carcinoma	Acinar cell neoplasms; Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Acinar cell carcinoma	Acinar cell neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute erythroid leukemia	Myeloid leukemias	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute leukemia, NOS	Leukemias, NOS	ICD-O-3.2
 Acute Leukemias of Ambiguous Lineage	Other Hematopoietic Tumors	WHO5 Pediatric Tumor
@@ -80,10 +80,10 @@ Anaplastic Large Cell Lymphoma	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
 Anaplastic large cell lymphoma, ALK positive	Hodgkin and non-Hodgkin lymphomas;Non-Hodgkin Lymphoma	ICD-O-3.2;WHO5 Pediatric Tumor
 Anaplastic large cell lymphoma, T-cell and Null-cell type	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Aneurysmal Bone Cyst	Other Solid Tumors	WHO5 Pediatric Tumor
-Angiocentric glioma	Gliomas; Low-grade Gliomas	ICD-O-3.2;WHO5 Pediatric Tumor
+Angiocentric glioma	Gliomas;Low-grade Gliomas	ICD-O-3.2;WHO5 Pediatric Tumor
 Angiocentric immunoproliferative lesion	Immunoproliferative diseases	ICD-O-3.2
 Angioimmunoblastic T-cell lymphoma	Mature T- and NK-cell lymphomas	ICD-O-3.2
-Angiomatoid fibrous histiocytoma	Fibromatous neoplasms; Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Angiomatoid fibrous histiocytoma	Fibromatous neoplasms;Soft Tissue Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Angiomyofibroblastoma	Fibromatous neoplasms	ICD-O-3.2
 Angiomyolipoma	Renal Tumors	WHO5 Pediatric Tumor
 Angiomyosarcoma	Myomatous neoplasms	ICD-O-3.2
@@ -220,15 +220,15 @@ Clear cell sarcoma of kidney	Complex mixed and stromal neoplasms;Renal Tumors	IC
 Clear cell sarcoma, NOS	Synovial-like neoplasms	ICD-O-3.2
 CNS CIC-rearranged Sarcoma	CNS Sarcomas	WHO5 Pediatric Tumor
 CNS embryonal tumor with rhabdoid features	Neuroepitheliomatous neoplasms	ICD-O-3.2
-CNS embryonal tumor, NOS or NEC	Gliomas;Other CNS Embryonal tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+CNS embryonal tumor, NOS or NEC	Gliomas;Other CNS Embryonal Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 CNS germ cell tumor, NOS or NEC	CNS Germ Cell Tumors	WHO CNS5
 CNS Germinoma	CNS Germ Cell Tumors	WHO CNS5
 CNS mature teratoma	Germ Cell Tumors	WHO CNS5
-CNS neuroblastoma, FOXR2-activated	Other CNS Embryonal tumors	WHO5 Pediatric Tumor
+CNS neuroblastoma, FOXR2-activated	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 CNS Non-Germinomatous Germ Cell Tumor	CNS Germ Cell Tumors	WHO CNS5
 CNS Sarcoma, NOS or NEC	CNS Sarcomas	WHO CNS5
 CNS Soft Tissue Tumors	CNS Sarcomas	WHO5 Pediatric Tumor
-CNS tumor with BCOR internal tandem duplication	High-grade Gliomas;Other CNS Embryonal tumors	WHO CNS5
+CNS tumor with BCOR internal tandem duplication	High-grade Gliomas;Other CNS Embryonal Tumors	WHO CNS5
 CNS Tumors of Uncertain Differentiation	CNS Sarcomas	WHO5 Pediatric Tumor
 CNS Tumors with BCOR Internal Tandem Duplication	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 Colorectal Carcinoma	Other Solid Tumors	WHO5 Pediatric Tumor
@@ -239,7 +239,7 @@ Cranial and Paraspinal Nerve Tumors, NOS	Other Brain Tumors
 Craniopharyngioma, adamantinomatous	Miscellaneous tumors	ICD-O-3.2
 Craniopharyngioma, NOS	Miscellaneous tumors;Craniopharyngiomas	ICD-O-3.2;WHO5 Pediatric Tumor
 Cribriform carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
-Cribriform neuroepithelial tumor	Other CNS Embryonal tumors	WHO CNS5
+Cribriform neuroepithelial tumor	Other CNS Embryonal Tumors	WHO CNS5
 Cutaneous Myxoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Cutaneous T-cell lymphoma, NOS	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Dedifferentiated liposarcoma	Lipomatous neoplasms	ICD-O-3.2
@@ -282,8 +282,8 @@ Embryonal Rhabdomyosarcoma	Rhabdomyosarcoma	WHO5 Pediatric Tumor
 Embryonal rhabdomyosarcoma, NOS	Myomatous neoplasms	ICD-O-3.2
 Embryonal sarcoma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Embryonal Sarcoma of the Liver	Soft Tissue Tumors	WHO5 Pediatric Tumor
-Embryonal tumor with multilayered rosettes with C19MC alteration	Gliomas;Other CNS Embryonal tumors	ICD-O-3.2;WHO5 Pediatric Tumor
-Embryonal tumor with multilayered rosettes, NOS	Other CNS Embryonal tumors	WHO CNS5
+Embryonal tumor with multilayered rosettes with C19MC alteration	Gliomas;Other CNS Embryonal Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Embryonal tumor with multilayered rosettes, NOS	Other CNS Embryonal Tumors	WHO CNS5
 Embryonal Tumors with Multilayered Rosettes	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 Embryonal Tumors, NOS	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 Encapsulated papillary carcinoma	Ductal and lobular neoplasms	ICD-O-3.2
@@ -305,7 +305,7 @@ Epithelioid and spindle cell nevus	Nevi and melanomas	ICD-O-3.2
 Epithelioid Angiomyolipoma	Renal Tumors	WHO5 Pediatric Tumor
 Epithelioid hemangioendothelioma, NOS	Blood vessel tumors	ICD-O-3.2
 Epithelioid mesothelioma, malignant	Mesothelial neoplasms	ICD-O-3.2
-Epithelioid sarcoma	Soft tissue tumors and sarcomas	ICD-O-3.2;WHO5 Pediatric Tumor
+Epithelioid sarcoma	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2;WHO5 Pediatric Tumor
 Erdheim-Chester disease	Other CNS	WHO CNS5
 Ewing sarcoma	Miscellaneous tumors;Ewings Sarcoma	ICD-O-3.2;WHO5 Pediatric Tumor
 Extranodal Marginal Zone Lymphoma	Non-Hodgkin Lymphoma	WHO5 Pediatric Tumor
@@ -637,7 +637,7 @@ Other CNS Embryonal Tumors	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 Other low-grade B-cell lymphomas of the CNS	Other CNS	WHO CNS5
 Palmar/plantar type fibromatosis	Fibromatous neoplasms	ICD-O-3.2
 Pancreatic neuroendocrine tumor, nonfunctioning	Adenomas and adenocarcinomas	ICD-O-3.2
-Pancreatoblastoma	Complex mixed and stromal neoplasm;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Pancreatoblastoma	Complex mixed and stromal neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Papillary adenocarcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Papillary carcinoma in situ	Squamous cell neoplasms	ICD-O-3.2
 Papillary carcinoma, columnar cell	Adenomas and adenocarcinomas	ICD-O-3.2
