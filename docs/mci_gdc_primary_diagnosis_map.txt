@@ -76,7 +76,7 @@ Epithelioid mesothelioma, malignant	Epithelioid mesothelioma, malignant	9052/3
 Epithelioid sarcoma	Epithelioid sarcoma	8804/3
 Ewing sarcoma	Ewing sarcoma	9260/3
 Fibrillary astrocytoma	Fibrillary astrocytoma	9420/3
-Fibrolipoma    Fibrolipoma	8851/0
+Fibrolipoma	Fibrolipoma	8851/0
 Fibroma, NOS	Fibroma, NOS	8810/0
 Fibromyxosarcoma	Fibromyxosarcoma	8811/3
 Fibrosarcoma, NOS	Fibrosarcoma, NOS	8810/3
@@ -135,7 +135,7 @@ Malignant tumor, spindle cell type	Malignant tumor, spindle cell type	8004/3
 Medullary carcinoma, NOS	Medullary carcinoma, NOS	8510/3
 Medulloblastoma, NOS	Medulloblastoma, NOS	9470/3
 Medulloepithelioma, NOS	Medulloepithelioma, NOS	9501/3
-Melanoma    Melanoma, NOS	8720/3
+Melanoma	Melanoma, NOS	8720/3
 Melanoma in situ	Melanoma in situ	8720/2
 Melanotic neuroectodermal tumor	Melanotic neuroectodermal tumor	9363/0
 Meningeal melanocytoma	Meningeal melanocytoma	8728/1
@@ -149,7 +149,7 @@ Mesenchymal chondrosarcoma	Mesenchymal chondrosarcoma	9240/3
 Mesenchymoma, malignant	Mesenchymoma, malignant	8990/3
 Metastatic signet ring cell carcinoma	Metastatic signet ring cell carcinoma	8490/6
 Mixed germ cell tumor	Mixed germ cell tumor	9085/3
-Mixed glioma    Mixed glioma	9382/3
+Mixed glioma	Mixed glioma	9382/3
 Mixed type rhabdomyosarcoma	Mixed type rhabdomyosarcoma	8902/3
 Mucinous adenocarcinoma	Mucinous adenocarcinoma	8480/3
 Mucinous cystadenocarcinoma, NOS	Mucinous cystadenocarcinoma, NOS	8470/3
