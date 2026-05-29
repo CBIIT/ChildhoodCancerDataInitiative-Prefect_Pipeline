@@ -2065,7 +2065,7 @@ deployments:
     version: null
     tags: ["Production","V3"]
     description: null
-    entrypoint: workflows/file_mover_delete.py:file_mover_delete_complete_input
+    entrypoint: workflows/kf_data_sync_manifest_generator.py:kf_data_sync_manifest_generator
     schedule: null
 
     # flow-specific parameters
