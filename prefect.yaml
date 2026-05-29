@@ -1946,7 +1946,6 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-
   - name: daap-db-index-creation-32gb-v3
     version: null
     tags: ["Production","DaaP","V3", "Centralized Worker"]
@@ -2061,3 +2060,34 @@ deployments:
       name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}   
+
+  - name: KF-Data-Sync-Manifest-Generator-v3
+    version: null
+    tags: ["Production","V3","DCC", "Centralized Worker"]
+    description: null
+    entrypoint: workflows/kf_data_sync_manifest_generator.py:kf_data_sync_manifest_generator
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      file_path: "path/to/file"
+      runner: "runner_id"
+      kf_data_sync_bucket: "kidsfirst-datasync-collaboration-datasync-manifests"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
