@@ -94,19 +94,23 @@ def kf_data_sync_manifest_generator(
         sub_folder="",
     )
 
-    # For each generated manifest in the output directory, upload to S3 for the kf_data_sync_bucket
-    for manifest_file in os.listdir(output_dir):
-        if manifest_file.endswith(".csv"):
-            logger.info(f"Uploading {manifest_file} to s3://{kf_data_sync_bucket}/")
+    # if you want to immediately upload the generated manifest to kf_data_sync_bucket and a value is provided for kf_data_sync_bucket, then run the code below.
+    if kf_data_sync_bucket:
+        # For each generated manifest in the output directory, upload to S3 for the kf_data_sync_bucket
+        for manifest_file in os.listdir(output_dir):
+            if manifest_file.endswith(".csv"):
+                logger.info(f"Uploading {manifest_file} to s3://{kf_data_sync_bucket}/")
 
-            # Move the file to the current working directory for uploading, since file_ul function is designed to upload from local path. After uploading, remove the local file to save space.
-            local_manifest_path = os.path.join(output_dir, manifest_file)
-            os.rename(local_manifest_path, manifest_file)
-            
-            file_ul(
-                bucket=kf_data_sync_bucket,
-                output_folder="",
-                sub_folder="",
-                newfile=manifest_file,
-            )
-            logger.info(f"Uploaded {manifest_file} to s3://{kf_data_sync_bucket}/.")
+                # Move the file to the current working directory for uploading, since file_ul function is designed to upload from local path. After uploading, remove the local file to save space.
+                local_manifest_path = os.path.join(output_dir, manifest_file)
+                os.rename(local_manifest_path, manifest_file)
+
+                file_ul(
+                    bucket=kf_data_sync_bucket,
+                    output_folder="",
+                    sub_folder="",
+                    newfile=manifest_file,
+                )
+                logger.info(f"Uploaded {manifest_file} to s3://{kf_data_sync_bucket}/.")
+                # Remove the local file after uploading to save space
+                os.remove(manifest_file)
