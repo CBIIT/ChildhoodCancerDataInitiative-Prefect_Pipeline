@@ -2061,9 +2061,9 @@ deployments:
       work_queue_name: null
       job_variables: {}   
 
-  - name: TEST-KF-Data-Sync-Manifest-Generator-v3
+  - name: KF-Data-Sync-Manifest-Generator-v3
     version: null
-    tags: ["Production","V3"]
+    tags: ["Production","V3","DCC", "Centralized Worker"]
     description: null
     entrypoint: workflows/kf_data_sync_manifest_generator.py:kf_data_sync_manifest_generator
     schedule: null
@@ -2080,7 +2080,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2435-KF-DS-Manifest
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
