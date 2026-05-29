@@ -230,7 +230,7 @@ Schwannoma, NOS	Schwannoma, NOS	9560/0
 Sclerosing stromal tumor	Sclerosing stromal tumor	8602/0
 Secretory carcinoma	Secretory carcinoma of breast	8502/3
 Serous borderline tumor, NOS	Serous tumor, NOS, of low malignant potential	8442/1
-Serous Cystadenoma	Serous Cystadenoma, NOS	8441/0
+Serous Cystadenoma	Serous cystadenoma, NOS	8441/0
 Sertoli cell tumor, NOS	Sertoli cell tumor, NOS	8640/1
 Sertoli-Leydig cell tumor of intermediate differentiation, NOS	Sertoli-Leydig cell tumor of intermediate differentiation	8631/1
 Sertoli-Leydig cell tumor, intermediate differentiation, with heterologous elements	Sertoli-Leydig cell tumor, intermediate differentiation, with heterologous elements	8634/1
