@@ -21,7 +21,10 @@ def split_s3(url: str):
 
 
 def process_file(input_tsv: str, output_dir: str):
+    logger = get_run_logger()
+    
     # Read TSV (no headers)
+    logger.info(f"Reading input TSV file: {input_tsv}")
     df = pd.read_csv(input_tsv, sep="\t", header=None)
     df.columns = ["source", "dest"]
 
@@ -40,9 +43,11 @@ def process_file(input_tsv: str, output_dir: str):
     Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     for (src_bucket, dst_bucket), group in grouped:
+        logger.info(f"Processing group: {src_bucket} to {dst_bucket}")
         # Clean bucket names for filename
         src_name = src_bucket.replace("s3://", "")
         dst_name = dst_bucket.replace("s3://", "")
+
 
         output_file = Path(output_dir) / f"{src_name}_transfer_{dst_name}.csv"
 
@@ -51,7 +56,7 @@ def process_file(input_tsv: str, output_dir: str):
 
         out_df.to_csv(output_file, index=False, header=False)
 
-        print(f"Wrote: {output_file} ({len(out_df)} rows)")
+        logger.info(f"Wrote: {output_file} ({len(out_df)} rows)")
 
 
 @flow(
