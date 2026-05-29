@@ -22,7 +22,7 @@ def split_s3(url: str):
 
 def process_file(input_tsv: str, output_dir: str):
     logger = get_run_logger()
-    
+
     # Read TSV (no headers)
     logger.info(f"Reading input TSV file: {input_tsv}")
     df = pd.read_csv(input_tsv, sep="\t", header=None)
@@ -48,7 +48,6 @@ def process_file(input_tsv: str, output_dir: str):
         src_name = src_bucket.replace("s3://", "")
         dst_name = dst_bucket.replace("s3://", "")
 
-
         output_file = Path(output_dir) / f"{src_name}_TRANSFER_{dst_name}.csv"
 
         # Keep only source_path
@@ -64,7 +63,9 @@ def process_file(input_tsv: str, output_dir: str):
     log_prints=True,
     flow_run_name="kf-data-sync-manifest-{runner}-" + f"{get_time()}",
 )
-def kf_data_sync_manifest_generator(bucket: str, file_path: str, runner: str, kf_data_sync_bucket: str) -> None:
+def kf_data_sync_manifest_generator(
+    bucket: str, file_path: str, runner: str, kf_data_sync_bucket: str
+) -> None:
     """Pipeline that takes a KF File Manifest and generates new manifests for syncing files from source buckets to destination buckets based on the file paths in the original manifest. The output manifests are grouped by source and destination bucket combinations.
 
     Args:
@@ -96,6 +97,12 @@ def kf_data_sync_manifest_generator(bucket: str, file_path: str, runner: str, kf
     # For each generated manifest in the output directory, upload to S3 for the kf_data_sync_bucket
     for manifest_file in os.listdir(output_dir):
         if manifest_file.endswith(".csv"):
+            logger.info(f"Uploading {manifest_file} to s3://{kf_data_sync_bucket}/")
             local_path = os.path.join(output_dir, manifest_file)
-            file_ul(local_path, kf_data_sync_bucket, ".")
+            file_ul(
+                bucket=kf_data_sync_bucket,
+                output_folder=".",
+                sub_folder="",
+                newfile=local_path,
+            )
             logger.info(f"Uploaded {local_path} to s3://{kf_data_sync_bucket}/.")
