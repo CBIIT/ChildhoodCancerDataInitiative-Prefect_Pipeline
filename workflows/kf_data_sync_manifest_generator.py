@@ -98,11 +98,15 @@ def kf_data_sync_manifest_generator(
     for manifest_file in os.listdir(output_dir):
         if manifest_file.endswith(".csv"):
             logger.info(f"Uploading {manifest_file} to s3://{kf_data_sync_bucket}/")
-            local_path = os.path.join(output_dir, manifest_file)
+
+            # Move the file to the current working directory for uploading, since file_ul function is designed to upload from local path. After uploading, remove the local file to save space.
+            local_manifest_path = os.path.join(output_dir, manifest_file)
+            os.rename(local_manifest_path, manifest_file)
+            
             file_ul(
                 bucket=kf_data_sync_bucket,
-                output_folder=".",
+                output_folder="",
                 sub_folder="",
-                newfile=local_path,
+                newfile=manifest_file,
             )
-            logger.info(f"Uploaded {local_path} to s3://{kf_data_sync_bucket}/.")
+            logger.info(f"Uploaded {manifest_file} to s3://{kf_data_sync_bucket}/.")
