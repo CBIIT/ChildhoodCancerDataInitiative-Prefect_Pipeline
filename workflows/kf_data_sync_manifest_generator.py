@@ -76,7 +76,8 @@ def kf_data_sync_manifest_generator(bucket: str, file_path: str, runner: str) ->
 
     logger.info(f"Processing manifest file: {file_path}")
     output_dir = f"outputs_{get_time()}"
-    process_file(input_tsv=file_path, output_dir=output_dir)
+    file_name = os.path.basename(file_path)
+    process_file(input_tsv=file_name, output_dir=output_dir)
 
     logger.info(f"Uploading generated manifests to s3://{bucket}/{output_dir}/")
     folder_ul(
