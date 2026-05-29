@@ -1,6 +1,6 @@
 import pandas as pd
 from pathlib import Path
-from src.utils import file_dl, folder_ul, get_time
+from src.utils import file_dl, folder_ul, file_ul, get_time
 from prefect import flow, get_run_logger
 import os
 import sys
@@ -49,7 +49,7 @@ def process_file(input_tsv: str, output_dir: str):
         dst_name = dst_bucket.replace("s3://", "")
 
 
-        output_file = Path(output_dir) / f"{src_name}_transfer_{dst_name}.csv"
+        output_file = Path(output_dir) / f"{src_name}_TRANSFER_{dst_name}.csv"
 
         # Keep only source_path
         out_df = group[["source_path"]]
@@ -64,13 +64,14 @@ def process_file(input_tsv: str, output_dir: str):
     log_prints=True,
     flow_run_name="kf-data-sync-manifest-{runner}-" + f"{get_time()}",
 )
-def kf_data_sync_manifest_generator(bucket: str, file_path: str, runner: str) -> None:
+def kf_data_sync_manifest_generator(bucket: str, file_path: str, runner: str, kf_data_sync_bucket: str) -> None:
     """Pipeline that takes a KF File Manifest and generates new manifests for syncing files from source buckets to destination buckets based on the file paths in the original manifest. The output manifests are grouped by source and destination bucket combinations.
 
     Args:
         bucket (str): Bucket name of where the manifest located at and output goes to
-        file_path (str): File path of KF Data Sync manifest
+        file_path (str): File path of KF Data Sync manifest, two column tsv with no header, source and destination paths
         runner (str): Unique runner name
+        kf_data_sync_bucket (str): Bucket name of where the manifest located at and output goes to
     """
     logger = get_run_logger()
 
@@ -91,3 +92,10 @@ def kf_data_sync_manifest_generator(bucket: str, file_path: str, runner: str) ->
         destination=runner + "/",
         sub_folder="",
     )
+
+    # For each generated manifest in the output directory, upload to S3 for the kf_data_sync_bucket
+    for manifest_file in os.listdir(output_dir):
+        if manifest_file.endswith(".csv"):
+            local_path = os.path.join(output_dir, manifest_file)
+            file_ul(local_path, kf_data_sync_bucket, ".")
+            logger.info(f"Uploaded {local_path} to s3://{kf_data_sync_bucket}/.")

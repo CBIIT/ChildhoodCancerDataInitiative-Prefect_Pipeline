@@ -2073,6 +2073,7 @@ deployments:
       bucket: "ccdi-validation"
       file_path: "path/to/file"
       runner: "runner_id"
+      kf_data_sync_bucket: "kidsfirst-datasync-collaboration-datasync-manifests"
 
     # pull action to overwrite from file pull action
     pull:
