@@ -20,7 +20,7 @@ def split_s3(url: str):
     return bucket, path
 
 
-def process_file(input_tsv: str, output_dir: str ):
+def process_file(input_tsv: str, output_dir: str):
     # Read TSV (no headers)
     df = pd.read_csv(input_tsv, sep="\t", header=None)
     df.columns = ["source", "dest"]
@@ -53,6 +53,7 @@ def process_file(input_tsv: str, output_dir: str ):
 
         print(f"Wrote: {output_file} ({len(out_df)} rows)")
 
+
 @flow(
     name="KF Data Sync Manifest Generator",
     log_prints=True,
@@ -75,7 +76,7 @@ def kf_data_sync_manifest_generator(bucket: str, file_path: str, runner: str) ->
 
     logger.info(f"Processing manifest file: {file_path}")
     output_dir = f"outputs_{get_time()}"
-    process_file(input_tsv = file_path, output_dir=output_dir)
+    process_file(input_tsv=file_path, output_dir=output_dir)
 
     logger.info(f"Uploading generated manifests to s3://{bucket}/{output_dir}/")
     folder_ul(
