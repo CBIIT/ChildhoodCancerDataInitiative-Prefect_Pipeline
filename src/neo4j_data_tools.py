@@ -1147,6 +1147,31 @@ def parse_tsv_files(filelist: list) -> DataFrame:
     return_df = return_df[return_df["node"] != "study"].reset_index(drop=True)
     return return_df
 
+@task
+def parse_tsv_files_dcc(filelist: list) -> DataFrame:
+    """Loops through all ingested tsv files downloaded from bucket
+    and returns dataframe with columns of ["study_id","node","tsv_count","tsv_id"]
+    """
+    return_df = pd.DataFrame(columns=["study_id", "node", "tsv_count", "tsv_id"])
+    for file in filelist:
+        tsv_df = pd.read_csv(file, sep="\t", low_memory=False)
+        tsv_study_id = os.path.basename(file)[:9]
+        tsv_node = tsv_df["type"].unique().tolist()[0]
+        tsv_id_list = tsv_df["guid"].tolist()
+        tsv_id_count = tsv_df.shape[0]
+        tsv_df_info = pd.DataFrame(
+            {
+                "study_id": [tsv_study_id],
+                "node": [tsv_node],
+                "tsv_count": [tsv_id_count],
+                "tsv_id": [tsv_id_list],
+            }
+        )
+        return_df = pd.concat([return_df, tsv_df_info], ignore_index=True)
+    # filter out any node ==  "study"
+    return_df = return_df[return_df["node"] != "study"].reset_index(drop=True)
+    return return_df
+
 
 def compare_id_input_db(
     db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, logger
@@ -1402,7 +1427,7 @@ def validate_DB_with_input_tsvs_w_secrets(
     # read trhough tsv folder and extrac study_id, node, id_count,
     # and id list from each file
     tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
-    ingested_studies_dataframe = parse_tsv_files(tsv_files)
+    ingested_studies_dataframe = parse_tsv_files_dcc(tsv_files)
 
     logger.info("pulled all ids based off the nodes and studies from tsv provided")
     db_id_list_all_studies = pull_node_ids_all_studies(
