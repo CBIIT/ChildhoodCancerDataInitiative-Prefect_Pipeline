@@ -835,7 +835,7 @@ def runner(
             chunk_size = 20
         else:
             chunk_size = 200"""
-        chunk_size = 20
+        chunk_size = 10
 
         for node_set in range(0, len(new_nodes), chunk_size):
 
