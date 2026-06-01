@@ -826,7 +826,7 @@ def runner(
 
         # chunk nodes to not overwhelm prefect
 
-        if node_type in [
+        """if node_type in [
             "diagnosis",
             "treatment",
             "other_clinical_attribute",
@@ -834,7 +834,8 @@ def runner(
         ]:
             chunk_size = 20
         else:
-            chunk_size = 200
+            chunk_size = 200"""
+        chunk_size = 20
 
         for node_set in range(0, len(new_nodes), chunk_size):
 
@@ -870,7 +871,7 @@ def runner(
         error_df_list = []
         success_uuid_df_list = []
 
-        if node_type in [
+        """if node_type in [
             "diagnosis",
             "treatment",
             "other_clinical_attribute",
@@ -878,7 +879,8 @@ def runner(
         ]:
             chunk_size = 20
         else:
-            chunk_size = 200
+            chunk_size = 200"""
+        chunk_size = 20
 
         for node_set in range(0, len(update_nodes), chunk_size):
 
