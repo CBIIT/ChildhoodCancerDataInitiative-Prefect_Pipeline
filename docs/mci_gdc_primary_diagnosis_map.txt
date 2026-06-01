@@ -18,6 +18,7 @@ Angiomatoid fibrous histiocytoma	Angiomatoid fibrous histiocytoma	8836/1
 Angiomyofibroblastoma	Angiomyofibroblastoma	8826/0
 Angiomyosarcoma	Angiomyosarcoma	8894/3
 Astroblastoma	Astroblastoma	9430/3
+Astrocytoma, anaplastic	Astrocytoma, anaplastic	9401/3
 Astrocytoma, anaplastic, NOS	Astrocytoma, anaplastic	9401/3
 Astrocytoma, NOS	Astrocytoma, NOS	9400/3
 Atypical choroid plexus papilloma	Atypical choroid plexus papilloma	9390/1
@@ -50,7 +51,8 @@ Craniopharyngioma, adamantinomatous	Craniopharyngioma, adamantinomatous	9351/1
 Cribriform carcinoma, NOS	Cribriform carcinoma, NOS	8201/3
 Dedifferentiated liposarcoma	Dedifferentiated liposarcoma	8858/3
 Dermatofibroma, NOS	Dermatofibroma, NOS	8832/0
-Dermatofibrosarcoma protuberans, NOS	Dermatofibrosarcoma protuberans, NOS	Unknown
+Dermatofibrosarcoma, NOS	Dermatofibrosarcoma, NOS	8832/1
+Dermatofibrosarcoma protuberans, NOS	Dermatofibrosarcoma protuberans, NOS	8832/1
 Desmoplastic fibroma	Desmoplastic fibroma	8823/0
 Desmoplastic infantile astrocytoma	Desmoplastic infantile astrocytoma	9412/1
 Desmoplastic melanoma, NOS	Neoplasm, NOS	8000/1
@@ -74,9 +76,11 @@ Epithelioid mesothelioma, malignant	Epithelioid mesothelioma, malignant	9052/3
 Epithelioid sarcoma	Epithelioid sarcoma	8804/3
 Ewing sarcoma	Ewing sarcoma	9260/3
 Fibrillary astrocytoma	Fibrillary astrocytoma	9420/3
+Fibrolipoma	Fibrolipoma	8851/0
 Fibroma, NOS	Fibroma, NOS	8810/0
 Fibromyxosarcoma	Fibromyxosarcoma	8811/3
 Fibrosarcoma, NOS	Fibrosarcoma, NOS	8810/3
+Follicular adenocarcinoma, NOS	Follicular adenocarcinoma, NOS	8330/3
 Follicular adenocarcinoma, trabecular	Follicular adenocarcinoma, trabecular	8332/3
 Follicular adenoma, NOS	Follicular adenoma	8330/0
 Follicular carcinoma, minimally invasive	Follicular carcinoma, minimally invasive	8335/3
@@ -109,6 +113,7 @@ Hemangioma, NOS	Hemangioma, NOS	9120/0
 Hepatocellular carcinoma, fibrolamellar	Hepatocellular carcinoma, fibrolamellar	8171/3
 Histiocytic sarcoma	Histiocytic sarcoma	9755/3
 Infantile fibrosarcoma	Infantile fibrosarcoma	8814/3
+Inflammatory carcinoma	Inflammatory carcinoma	8530/3
 Intraductal papillary mucinous neoplasm with an associated invasive carcinoma	Intraductal papillary mucinous neoplasm with an associated invasive carcinoma	8453/3
 Lactotroph adenoma	Adenoma, NOS	8140/0
 Large cell medulloblastoma	Large cell medulloblastoma	9474/3
@@ -116,6 +121,7 @@ Leiomyosarcoma, NOS	Leiomyosarcoma, NOS	8890/3
 Leydig cell tumor, malignant	Leydig cell tumor, malignant	8650/3
 Leydig cell tumor, NOS	Leydig cell tumor, NOS	8650/1
 Liposarcoma, NOS	Liposarcoma, NOS	8850/3
+Liposarcoma	Liposarcoma, NOS	8850/3
 Lymphoepithelial carcinoma	Lymphoepithelial carcinoma	8082/3
 Malignant eccrine spiradenoma	Malignant eccrine spiradenoma	8403/3
 Malignant lymphoma, non-Hodgkin, NOS	Malignant lymphoma, non-Hodgkin, NOS	9591/3
@@ -123,15 +129,18 @@ Malignant melanoma arising in giant congenital nevus	Malignant melanoma, NOS	872
 Malignant melanoma, NOS	Malignant melanoma, NOS	8720/3
 Malignant Peripheral Nerve Sheath Tumor	Malignant peripheral nerve sheath tumor	9540/3
 Malignant peripheral nerve sheath tumor with rhabdomyoblastic differentiation	Malignant peripheral nerve sheath tumor with rhabdomyoblastic differentiation	9561/3
+Malignant rhabdoid tumor	Malignant rhabdoid tumor	8963/3
 Malignant tumor, small cell type	Malignant tumor, small cell type	8002/3
 Malignant tumor, spindle cell type	Malignant tumor, spindle cell type	8004/3
 Medullary carcinoma, NOS	Medullary carcinoma, NOS	8510/3
 Medulloblastoma, NOS	Medulloblastoma, NOS	9470/3
 Medulloepithelioma, NOS	Medulloepithelioma, NOS	9501/3
+Melanoma	Melanoma, NOS	8720/3
 Melanoma in situ	Melanoma in situ	8720/2
 Melanotic neuroectodermal tumor	Melanotic neuroectodermal tumor	9363/0
 Meningeal melanocytoma	Meningeal melanocytoma	8728/1
 Meningeal melanomatosis	Meningeal melanomatosis	8728/3
+Meningioma	Meningioma, NOS	9530/0
 Meningioma, malignant	Meningioma, malignant	9530/3
 Meningioma, NOS	Meningioma, NOS	9530/0
 Meningiomatosis, NOS	Meningiomatosis, NOS	9530/1
@@ -140,6 +149,7 @@ Mesenchymal chondrosarcoma	Mesenchymal chondrosarcoma	9240/3
 Mesenchymoma, malignant	Mesenchymoma, malignant	8990/3
 Metastatic signet ring cell carcinoma	Metastatic signet ring cell carcinoma	8490/6
 Mixed germ cell tumor	Mixed germ cell tumor	9085/3
+Mixed glioma	Mixed glioma	9382/3
 Mixed type rhabdomyosarcoma	Mixed type rhabdomyosarcoma	8902/3
 Mucinous adenocarcinoma	Mucinous adenocarcinoma	8480/3
 Mucinous cystadenocarcinoma, NOS	Mucinous cystadenocarcinoma, NOS	8470/3
@@ -158,6 +168,7 @@ Neoplasm, malignant, uncertain whether primary or metastatic	Neoplasm, malignant
 Neoplasm, metastatic	Neoplasm, metastatic	8000/6
 Neoplasm, uncertain whether benign or malignant	Neoplasm, uncertain whether benign or malignant	8000/1
 Nephroblastoma, NOS	Nephroblastoma, NOS	8960/3
+Neurilemoma, NOS	Neurilemoma, NOS	9560/0
 Neuroblastoma, NOS	Neuroblastoma, NOS	9500/3
 Neuroendocrine carcinoma, NOS	Neuroendocrine carcinoma, NOS	8246/3
 Neuroendocrine tumor, NOS	Neoplasm, NOS	8000/1
@@ -184,6 +195,8 @@ Papillary intralymphatic angioendothelioma	Dabska tumor	9135/1
 Papillary microcarcinoma	Papillary microcarcinoma	8341/3
 Paraganglioma, malignant	Paraganglioma, malignant	8680/3
 Paraganglioma, NOS	Paraganglioma, NOS	8680/1
+Peripheral neuroectodermal tumor	Peripheral neuroectodermal tumor	9364/3
+Pheochromocytoma, malignant	Pheochromocytoma, malignant	8700/3
 Pheochromocytoma, NOS	Pheochromocytoma, NOS	8700/0
 Phyllodes tumor, malignant	Phyllodes tumor, malignant	9020/3
 Pigmented dermatofibrosarcoma protuberans	Pigmented dermatofibrosarcoma protuberans	8833/3
@@ -215,7 +228,9 @@ Rhabdomyosarcoma, NOS	Rhabdomyosarcoma, NOS	8900/3
 Sarcoma, NOS	Sarcoma, NOS	8800/3
 Schwannoma, NOS	Schwannoma, NOS	9560/0
 Sclerosing stromal tumor	Sclerosing stromal tumor	8602/0
+Secretory carcinoma	Secretory carcinoma of breast	8502/3
 Serous borderline tumor, NOS	Serous tumor, NOS, of low malignant potential	8442/1
+Serous Cystadenoma	Serous cystadenoma, NOS	8441/0
 Sertoli cell tumor, NOS	Sertoli cell tumor, NOS	8640/1
 Sertoli-Leydig cell tumor of intermediate differentiation, NOS	Sertoli-Leydig cell tumor of intermediate differentiation	8631/1
 Sertoli-Leydig cell tumor, intermediate differentiation, with heterologous elements	Sertoli-Leydig cell tumor, intermediate differentiation, with heterologous elements	8634/1
@@ -223,6 +238,7 @@ Sertoli-Leydig cell tumor, poorly differentiated	Sertoli-Leydig cell tumor, poor
 Sertoli-Leydig cell tumor, poorly differentiated, with heterologous elements	Sertoli-Leydig cell tumor, poorly differentiated, with heterologous elements	8634/3
 Sex cord-gonadal stromal tumor, mixed forms	Sex cord-gonadal stromal tumor, mixed forms	8592/1
 Sex cord-gonadal stromal tumor, NOS	Sex cord-gonadal stromal tumor, NOS	8590/1
+Sex Cord-stromal Tumor, NOS	Sex cord-gonadal stromal tumor, NOS	8590/1
 Signet ring cell carcinoma	Signet ring cell carcinoma	8490/3
 Small cell carcinoma, NOS	Small cell carcinoma, NOS	8041/3
 Small cell sarcoma	Small cell sarcoma	8803/3
