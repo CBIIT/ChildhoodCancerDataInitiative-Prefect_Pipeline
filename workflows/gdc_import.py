@@ -109,6 +109,8 @@ def dbgap_retrieve(phs_id_version: str):
     """
 
     runner_logger = get_run_logger()
+    
+    delay = 3
 
     # number of entries to return on a page
     page_size = 500
@@ -141,6 +143,7 @@ def dbgap_retrieve(phs_id_version: str):
             subject["submitted_subject_id"]
             for subject in json.loads(response.text)["subjects"]
         ]
+        time.sleep(delay)
 
     return subjects_dbgap
 
