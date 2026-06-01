@@ -1172,10 +1172,10 @@ def parse_tsv_files_dcc(filelist: list) -> DataFrame:
     return_df = return_df[return_df["node"] != "study"].reset_index(drop=True)
     return return_df
 
-
+@task
 def compare_id_input_db(
-    db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, logger
-) -> DataFrame:
+    db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame) -> DataFrame:
+    logger = get_run_logger()
     comparison_df = parsed_tsv_file_df
     comparison_df["count_check"] = np.nan
     comparison_df["id_check"] = np.nan
@@ -1397,7 +1397,6 @@ def validate_DB_with_input_tsvs(
     comparison_df = compare_id_input_db(
         db_id_pulled_dict=db_id_list_all_studies,
         parsed_tsv_file_df=ingested_studies_dataframe,
-        logger=logger,
     )
 
     merged_summary_table = pd.merge(
@@ -1440,7 +1439,6 @@ def validate_DB_with_input_tsvs_w_secrets(
     comparison_df = compare_id_input_db(
         db_id_pulled_dict=db_id_list_all_studies,
         parsed_tsv_file_df=ingested_studies_dataframe,
-        logger=logger,
     )
 
     merged_summary_table = pd.merge(
