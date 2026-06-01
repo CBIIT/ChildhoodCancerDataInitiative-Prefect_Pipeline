@@ -1453,7 +1453,7 @@ def validate_DB_with_input_tsvs_w_secrets(
         by=["study_id", "node"], ascending=True
     )
     # close driver
-    driver.close()
+    #driver.close()
     return merged_summary_table
 
 
