@@ -489,7 +489,7 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
     else:
         return False
 
-@flow(name="gdc_import_compare_diff", log_prints=True)
+#@flow(name="gdc_import_compare_diff", log_prints=True)
 def compare_diff(nodes: list, project_id: str, node_type: str, secret_name_path: str, secret_key_name: str, check_for_updates: str):
     """Determine if nodes in submission file are new entities or already exist in GDC
 
@@ -812,6 +812,7 @@ def runner(
         nodes = dbgap_compare(sstr, nodes)
 
     # parse nodes into new and update nodes
+    runner_logger.info("Comparing nodes in submission file to nodes already submitted to GDC for parsing into new and update nodes...")
     new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, secret_name_path, secret_key_name, check_for_updates)
 
     # get time for file outputs
