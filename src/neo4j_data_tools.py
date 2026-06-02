@@ -1100,6 +1100,24 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
 
     return None
 
+def export_node_ids_a_study_dcc(tx, study_id: str, node: str, output_dir: str) -> None:
+    cypher_query = DBCypherQueryDCC.node_id_cypher_query_query.format(
+        study_id=study_id, node=node
+    )
+    result = tx.run(cypher_query)
+    db_guid_list = [record["id"] for record in result]  # query alias is still "id"
+
+    study_node_id_df = pd.DataFrame(columns=["study_id", "node", "guid"])
+    if len(db_guid_list) == 0:
+        study_node_id_df["guid"] = [pd.NA]
+    else:
+        study_node_id_df["guid"] = db_guid_list
+    study_node_id_df["study_id"] = study_id
+    study_node_id_df["node"] = node
+
+    output_filepath = os.path.join(output_dir, f"{study_id}_{node}_id_list.csv")
+    study_node_id_df.to_csv(output_filepath, index=False)
+    return None
 
 @task(
     name="Pull ids a node a study",
@@ -1208,6 +1226,46 @@ def compare_id_input_db(
             )
     return comparison_df
 
+@task
+def compare_id_input_db_dcc(
+    db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame
+) -> DataFrame:
+    logger = get_run_logger()
+    comparison_df = parsed_tsv_file_df
+    comparison_df["count_check"] = np.nan
+    comparison_df["id_check"] = np.nan
+    comparison_df["db_missing_guid"] = np.nan  # <-- renamed column
+    for i in range(comparison_df.shape[0]):
+        i_study_id = comparison_df.loc[i, "study_id"]
+        i_node = comparison_df.loc[i, "node"]
+        i_node_guid = comparison_df.loc[i, "tsv_id"]  # still tsv_id in parsed df
+        i_node_guid_count = comparison_df.loc[i, "tsv_count"]
+        db_node_guid_count = len(db_id_pulled_dict[i_study_id][i_node])
+        db_node_guid = db_id_pulled_dict[i_study_id][i_node]
+        if i_node_guid_count == db_node_guid_count:
+            comparison_df.loc[i, "count_check"] = "Equal"
+        else:
+            comparison_df.loc[i, "count_check"] = "Unequal"
+            logger.warning(
+                f"Study {i_study_id} node {i_node} ingestion file contains "
+                f"different number of entries compared to neo4j DB"
+            )
+        db_missing_guids = [g for g in i_node_guid if g not in db_node_guid]
+        if len(db_missing_guids) > 0:
+            comparison_df.loc[i, "db_missing_guid"] = ";".join(db_missing_guids)
+            comparison_df.loc[i, "id_check"] = "Fail"
+            logger.error(
+                f"Study {i_study_id} node {i_node} ingestion has guids not "
+                f"found in neo4j DB: {*db_missing_guids,}"
+            )
+        else:
+            comparison_df.loc[i, "id_check"] = "Pass"
+            logger.info(
+                f"Study {i_study_id} node {i_node} ingestion has all guids "
+                f"found in neo4j DB"
+            )
+    return comparison_df
+
 
 @flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
 def pull_node_ids_all_studies_write(
@@ -1241,6 +1299,37 @@ def pull_node_ids_all_studies_write(
 
     return temp_folder_name
 
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+def pull_node_ids_all_studies_write_dcc(
+    driver, studies_dataframe: DataFrame, logger
+) -> str:
+    """Returns a temp folder containing guid-based id files for each node and study.
+    Uses the DCC cypher query variant that returns node.guid instead of node.id.
+    """
+    temp_folder_name = "db_ids_all_node_all_studies"
+    os.mkdir(temp_folder_name)
+
+    logger.info(
+        f"ingested studies dataframe has rows of {studies_dataframe.shape[0]} "
+        f"and size of {studies_dataframe.size}"
+    )
+
+    study_id_list = studies_dataframe["study_id"].tolist()
+    study_id_chunks = list_to_chunks(study_id_list, 50)
+    node_list = studies_dataframe["node"].tolist()
+    node_chunks = list_to_chunks(node_list, 50)
+
+    for i in range(len(node_chunks)):
+        future = pull_ids_node_study.map(
+            driver,
+            export_node_ids_a_study_dcc,  # <-- DCC variant
+            study_id_chunks[i],
+            node_chunks[i],
+            temp_folder_name,
+        )
+        future.result()
+
+    return temp_folder_name
 
 @flow(log_prints=True)
 def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> Dict:
@@ -1266,6 +1355,21 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
         ids_dict[file_study][file_node] = file_df["id"].dropna().tolist()
     return ids_dict
 
+@flow(log_prints=True)
+def pull_node_ids_all_studies_dcc(driver, studies_dataframe: DataFrame, logger) -> Dict:
+    csv_folder = pull_node_ids_all_studies_write_dcc(
+        driver=driver, studies_dataframe=studies_dataframe, logger=logger
+    )
+    ids_dict = {}
+    for file in os.listdir(csv_folder):
+        file_path = os.path.join(csv_folder, file)
+        file_df = pd.read_csv(file_path, header=0)
+        file_study = file_df["study_id"].unique().tolist()[0]
+        if file_study not in ids_dict:
+            ids_dict[file_study] = {}
+        file_node = file_df["node"].unique().tolist()[0]
+        ids_dict[file_study][file_node] = file_df["guid"].dropna().tolist()  # <-- guid
+    return ids_dict
 
 @flow(task_runner=ThreadPoolTaskRunner(max_workers=3), log_prints=True)  # reduce from 10 to 3
 def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
@@ -1420,23 +1524,20 @@ def validate_DB_with_input_tsvs_w_secrets(
     studies_dataframe: DataFrame,
 ) -> DataFrame:
     logger = get_run_logger()
-
     logger.info("Using provided GraphDatabase driver")
 
-    # read trhough tsv folder and extrac study_id, node, id_count,
-    # and id list from each file
     tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
-    ingested_studies_dataframe = parse_tsv_files_dcc(tsv_files)
+    ingested_studies_dataframe = parse_tsv_files_dcc(tsv_files)  # reads guid column
 
-    logger.info("pulled all ids based off the nodes and studies from tsv provided")
-    db_id_list_all_studies = pull_node_ids_all_studies(
+    logger.info("Pulling all guids based on nodes and studies from tsv provided")
+    db_id_list_all_studies = pull_node_ids_all_studies_dcc(  # <-- DCC variant
         driver=driver,
         studies_dataframe=ingested_studies_dataframe[["study_id", "node"]],
         logger=logger,
     )
 
-    logger.info("Start comparing db pulled id with ids in tsv files")
-    comparison_df = compare_id_input_db(
+    logger.info("Start comparing db pulled guids with guids in tsv files")
+    comparison_df = compare_id_input_db_dcc(
         db_id_pulled_dict=db_id_list_all_studies,
         parsed_tsv_file_df=ingested_studies_dataframe,
     )
@@ -1445,13 +1546,9 @@ def validate_DB_with_input_tsvs_w_secrets(
         studies_dataframe, comparison_df, on=["study_id", "node"], how="outer"
     )
     merged_summary_table.drop(columns=["tsv_id"], inplace=True)
-
-    # sort the df order based on study id and node
     merged_summary_table = merged_summary_table.sort_values(
         by=["study_id", "node"], ascending=True
     )
-    # close driver
-    #driver.close()
     return merged_summary_table
 
 
