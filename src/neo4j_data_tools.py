@@ -30,7 +30,6 @@ import gc
 import glob
 import time
 
-
 DataFrame = TypeVar("DataFrame")
 
 
@@ -48,8 +47,7 @@ def get_available_space() -> str:
 class Neo4jCypherQuery:
     """Dataclass for Cypher Query"""
 
-    study_cypher_query: str = (
-        """
+    study_cypher_query: str = """
 MATCH (startNode:{node_label} {{study_id: "{study_accession}"}})
 WITH startNode, properties(startNode) AS props
 UNWIND keys(props) AS propertyName
@@ -59,9 +57,7 @@ RETURN  startNode.id AS startNodeId,
     startNode[propertyName] AS startNodePropertyValue,
     startNode.study_id as dbgap_accession 
 """
-    )
-    main_cypher_query_per_study_node: str = (
-        """
+    main_cypher_query_per_study_node: str = """
 MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
 WITH study, startNode, linkedNode, properties(startNode) AS props
 UNWIND keys(props) AS propertyName
@@ -73,46 +69,34 @@ RETURN startNode.id AS startNodeId,
     labels(linkedNode) AS linkedNodeLabels, 
     study.study_id AS dbgap_accession
 """
-    )
-    unique_nodes_query: str = (
-        """
+    unique_nodes_query: str = """
 MATCH (n)
 RETURN DISTINCT labels(n) AS uniqueNodes
 """
-    )
-    study_list_cypher_query: str = (
-        """
+    study_list_cypher_query: str = """
 MATCH (n:study)
 RETURN
     n.study_id as study_id
 """
-    )
-    all_nodes_entries_study_cypher_query: str = (
-        """
+    all_nodes_entries_study_cypher_query: str = """
 MATCH (study:study {{study_id: "{study_id}"}})<-[*1..7]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
-    )
-    node_id_cypher_query_query: str = (
-        """
+    node_id_cypher_query_query: str = """
 MATCH (study:study{{study_id:"{study_id}"}})<-[*1..7]-(node:{node})
 RETURN node.id AS id
 """
-    )
-    node_property_uniq_value: str = (
-        """
+    node_property_uniq_value: str = """
 MATCH (n:{node})
 RETURN DISTINCT n.{property} as uniqueValues
 """
-    )
 
 
 @dataclass
 class DBCypherQueryDCC:
     """Dataclass for Cypher Query"""
 
-    study_cypher_query: str = (
-    """
+    study_cypher_query: str = """
 MATCH (startNode:{node_label} {{study_id: "{study_accession}"}})
 RETURN
     startNode.guid              AS startNodeId,
@@ -120,9 +104,7 @@ RETURN
     startNode.study_id          AS dbgap_accession,
     properties(startNode)       AS startNodeProperties
 """
-)
-    main_cypher_query_per_study_node: str = (
-    """
+    main_cypher_query_per_study_node: str = """
 MATCH (study:study {{study_id:"{study_accession}"}})
 MATCH (study)<-[*0..5]-(linkedNode)<-[:of_{node_label}]-(startNode:{node_label})
 RETURN DISTINCT
@@ -133,38 +115,27 @@ RETURN DISTINCT
     study.study_id              AS dbgap_accession,
     properties(startNode)       AS startNodeProperties
 """
-    )
-    unique_nodes_query: str = (
-        """
+    unique_nodes_query: str = """
 MATCH (n)
 RETURN DISTINCT labels(n) AS uniqueNodes
 """
-    )
-    study_list_cypher_query: str = (
-        """
+    study_list_cypher_query: str = """
 MATCH (n:study)
 RETURN
     n.study_id as study_id
 """
-    )
-    all_nodes_entries_study_cypher_query: str = (
-        """
+    all_nodes_entries_study_cypher_query: str = """
 MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(node)
 RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
 """
-    )
-    node_id_cypher_query_query: str = (
-        """
+    node_id_cypher_query_query: str = """
 MATCH (study:study{{study_id:"{study_id}"}})<-[*1..7]-(node:{node})
 RETURN node.guid AS id
 """
-    )
-    node_property_uniq_value: str = (
-        """
+    node_property_uniq_value: str = """
 MATCH (n:{node})
 RETURN DISTINCT n.{property} as uniqueValues
 """
-    )
 
 
 # dataclass for stats query pipeline
@@ -177,60 +148,49 @@ class StatsNeo4jCypherQuery:
     #######################
 
     # Query to obtain all unique studies in the database
-    stats_get_unique_study_query: str = (
-        """
+    stats_get_unique_study_query: str = """
 MATCH (s:study)
 WITH s.study_id as study_id, s.study_name as study_name
 RETURN DISTINCT study_id, study_name
 """
-    )
 
     # query to obtain the study estimated size
-    stats_get_est_size_query: str = (
-        """
+    stats_get_est_size_query: str = """
 MATCH (s:study)
 WHERE s.study_id = "{study_id}"
 WITH labels(s) AS NodeType, COLLECT(s.size_of_data_being_uploaded) AS Value
 RETURN NodeType, Value
 """
-    )
 
     # query to obtain the study curation status
     # TODO: remove when using DCC model
-    stats_get_curation_status_query: str = (
-        """
+    stats_get_curation_status_query: str = """
 MATCH (s:study)
 WHERE s.study_id = "{study_id}"
 WITH labels(s) AS NodeType, COLLECT(s.curation_status) AS Value
 RETURN NodeType, Value
 """
-    )
 
     # Querty to obtain the study PI
-    stats_get_pi_query: str = (
-        """
+    stats_get_pi_query: str = """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..3]-(n:study_personnel {{personnel_type: "PI"}})
 WITH labels(n) AS NodeType, COLLECT(n.personnel_name) AS Value
 RETURN
     NodeType,
     Value
 """
-    )
 
     # Querty to obtain the study institution based on PI
-    stats_get_institution_query: str = (
-        """
+    stats_get_institution_query: str = """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..3]-(n:study_personnel {{personnel_type: "PI"}})
 WITH labels(n) AS NodeType, COLLECT(n.institution) AS Value
 RETURN
     NodeType,
     Value
 """
-    )
 
     # Querty to obtain prescence of clinical data in study
-    stats_get_study_clinical: str = (
-        """
+    stats_get_study_clinical: str = """
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:clinical_measure_file)
 WITH
     CASE 
@@ -245,11 +205,9 @@ RETURN DISTINCT
     NodeType,
     Value
 """
-    )
 
     # Querty to obtain prescence of pathology data in study
-    stats_get_study_pathology: str = (
-        """
+    stats_get_study_pathology: str = """
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:pathology_file)
 WITH
     CASE 
@@ -264,11 +222,9 @@ RETURN DISTINCT
     NodeType,
     Value
 """
-    )
 
     # Querty to obtain prescence of radiology data in study
-    stats_get_study_radiology: str = (
-        """
+    stats_get_study_radiology: str = """
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:radiology_file)
 WITH
     CASE 
@@ -283,11 +239,9 @@ RETURN DISTINCT
     NodeType,
     Value
 """
-    )
 
     # Querty to obtain prescence of methylation_array data in study
-    stats_get_study_methylation_array: str = (
-        """
+    stats_get_study_methylation_array: str = """
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:methylation_array_file)
 WITH
     CASE 
@@ -302,11 +256,9 @@ RETURN DISTINCT
     NodeType,
     Value
 """
-    )
 
     # Querty to obtain prescence of cytogenomic data in study
-    stats_get_study_cytogenomic: str = (
-        """
+    stats_get_study_cytogenomic: str = """
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:cytogenomic_file)
 WITH
     CASE 
@@ -321,11 +273,9 @@ RETURN DISTINCT
     NodeType,
     Value
 """
-    )
 
     # Query to get file count in study
-    stats_get_study_file_count: str = (
-        """
+    stats_get_study_file_count: str = """
 WITH ['study_level_file'] AS NodeType
 OPTIONAL MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 WHERE n.file_size IS NOT NULL AND n.dcf_indexd_guid IS NOT NULL
@@ -334,11 +284,9 @@ RETURN DISTINCT
     NodeType,
     Value
 """
-    )
 
     # Query to get file size in study, based on unique file_urls
-    stats_get_study_file_size: str = (
-        """
+    stats_get_study_file_size: str = """
 WITH ['study_level'] AS NodeType
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 WHERE n.file_size IS NOT NULL AND n.file_url IS NOT NULL
@@ -348,11 +296,9 @@ WITH n.file_url AS FileURL,
 WITH FileURL, REDUCE(totalSize = 0, size IN FileSizes | totalSize + size) AS TotalFileSize, NodeType
 RETURN SUM(TotalFileSize) AS Value, NodeType
 """
-    )
 
     # Query to get the unique buckets found in each study
-    stats_get_study_buckets: str = (
-        """
+    stats_get_study_buckets: str = """
 WITH ['study'] AS NodeType
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 WHERE n.file_url IS NOT NULL
@@ -369,32 +315,26 @@ RETURN
     NodeType,
     COLLECT(DISTINCT prefix) AS Value;
 """
-    )
 
     ######################
     # NODE LEVEL QUERIES #
     ######################
 
     # Query for study nodes
-    stats_get_study_nodes: str = (
-        """
+    stats_get_study_nodes: str = """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
 UNWIND labels(n) AS NodeLabel
 RETURN DISTINCT NodeLabel
 """
-    )
 
     # Query to get all records per study in the database, with escaped curly braces
-    stats_get_study_node_counts: str = (
-        """
+    stats_get_study_node_counts: str = """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 RETURN labels(n) AS NodeType, COUNT(n) AS Value
 """
-    )
 
     # Query to get file size
-    stats_get_study_node_file_size: str = (
-        """
+    stats_get_study_node_file_size: str = """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.md5sum IS NOT NULL
 WITH n.md5sum AS md5, n.file_size AS fileSize, labels(n) as NodeType
@@ -403,32 +343,26 @@ RETURN
     NodeType,
     SUM(uniqueFileSize) AS Value
 """
-    )
 
     # Query to get library strategies
-    stats_get_study_library_strategy: str = (
-        """
+    stats_get_study_library_strategy: str = """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
 WITH study, COLLECT(DISTINCT n.library_strategy) AS Value, labels(n) as NodeType   
 RETURN NodeType, Value
 """
-    )
 
     # Get file count by sequencing file library strategy
-    stats_get_study_library_strategy_count: str = (
-        """
+    stats_get_study_library_strategy_count: str = """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL AND n.file_url IS NOT NULL
 WITH n.library_strategy AS NodeType, n.dcf_indexd_guid AS dcfGuid
 WITH NodeType, COUNT(DISTINCT dcfGuid) AS Value
 RETURN [NodeType] AS NodeType, Value
 """
-    )
 
     # Get file count by sequencing file library strategy
-    stats_get_study_library_strategy_size: str = (
-        """
+    stats_get_study_library_strategy_size: str = """
 MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL AND n.file_url IS NOT NULL
 WITH n.library_strategy AS NodeType, n.file_url AS fileUrl, n.file_size AS fileSize
@@ -436,7 +370,6 @@ WITH NodeType, fileUrl, MIN(fileSize) AS uniqueFileSize
 WITH NodeType, SUM(uniqueFileSize) AS Value
 RETURN [NodeType] AS NodeType, Value
 """
-    )
 
 
 def get_aws_parameter(parameter_name: str, logger) -> Dict:
@@ -584,6 +517,7 @@ def export_to_csv_per_node_per_study(
 #                 ])
 #     logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
 
+
 def format_prop_value(value):
     """Convert property values to strings, joining lists with semicolons"""
     if value is None:
@@ -593,48 +527,61 @@ def format_prop_value(value):
     else:
         return str(value)
 
-def export_to_csv_per_node_per_study_dcc(tx, study_name, node_label, query_str, output_dir):
+
+def export_to_csv_per_node_per_study_dcc(
+    tx, study_name, node_label, query_str, output_dir
+):
     logger = get_run_logger()
     query = query_str.format(study_accession=study_name, node_label=node_label)
     result = list(tx.run(query))
 
     if not result:
-        logger.info(f"No records found for {node_label}/{study_name}, skipping file creation")
+        logger.info(
+            f"No records found for {node_label}/{study_name}, skipping file creation"
+        )
         return
 
     output_filename = os.path.join(output_dir, f"{study_name}_{node_label}.csv")
     with open(output_filename, "w", newline="") as csvfile:
         csv_writer = csv.writer(csvfile)
-        csv_writer.writerow([
-            "startNodeId",
-            "startNodeLabels",
-            "startNodePropertyName",
-            "startNodePropertyValue",
-            "linkedNodeId",
-            "linkedNodeLabels",
-            "dbgap_accession",
-        ])
+        csv_writer.writerow(
+            [
+                "startNodeId",
+                "startNodeLabels",
+                "startNodePropertyName",
+                "startNodePropertyValue",
+                "linkedNodeId",
+                "linkedNodeLabels",
+                "dbgap_accession",
+            ]
+        )
         for record in result:
             keys = record.keys()
             props = record["startNodeProperties"] or {}
             linked_node_id = record["linkedNodeId"] if "linkedNodeId" in keys else None
-            linked_node_labels = record["linkedNodeLabels"] if "linkedNodeLabels" in keys else None
+            linked_node_labels = (
+                record["linkedNodeLabels"] if "linkedNodeLabels" in keys else None
+            )
 
             # Verify linkedNodeId is a GUID (string) and not an internal integer ID
             if linked_node_id is not None and not isinstance(linked_node_id, str):
-                logger.warning(f"linkedNodeId is not a string for {node_label}/{study_name}: {linked_node_id} ({type(linked_node_id)}), converting to string")
+                logger.warning(
+                    f"linkedNodeId is not a string for {node_label}/{study_name}: {linked_node_id} ({type(linked_node_id)}), converting to string"
+                )
                 linked_node_id = str(linked_node_id)
 
             for prop_name, prop_value in props.items():
-                csv_writer.writerow([
-                    record["startNodeId"],
-                    record["startNodeLabels"],
-                    prop_name,
-                    format_prop_value(prop_value),
-                    linked_node_id,
-                    linked_node_labels,
-                    record["dbgap_accession"],
-                ])
+                csv_writer.writerow(
+                    [
+                        record["startNodeId"],
+                        record["startNodeLabels"],
+                        prop_name,
+                        format_prop_value(prop_value),
+                        linked_node_id,
+                        linked_node_labels,
+                        record["dbgap_accession"],
+                    ]
+                )
     logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
 
 
@@ -725,7 +672,9 @@ def pull_data_per_node_per_study(
             )
         except TransactionError as e:
             logger = get_run_logger()
-            logger.warning(f"Transaction timeout for {node_label}/{study_name}, will retry. Error: {e}")
+            logger.warning(
+                f"Transaction timeout for {node_label}/{study_name}, will retry. Error: {e}"
+            )
             raise  # re-raise so Prefect retries the task
         except Exception:
             traceback.print_exc()
@@ -1046,13 +995,18 @@ def export_node_counts_a_study(tx, study_id: str, output_dir: str) -> None:
             try:
                 result = list(tx.run(count_query))
                 for record in result:
-                    csv_writer.writerow([study_id, record["NodeLabel"], record["NodeCount"]])
+                    csv_writer.writerow(
+                        [study_id, record["NodeLabel"], record["NodeCount"]]
+                    )
             except Exception as e:
-                logger.warning(f"Failed to count label '{label}' for study {study_id}: {e}")
+                logger.warning(
+                    f"Failed to count label '{label}' for study {study_id}: {e}"
+                )
                 csv_writer.writerow([study_id, label, "ERROR"])
             time.sleep(0.1)
 
     return None
+
 
 @task(
     name="Pull counts per node a study",
@@ -1098,6 +1052,26 @@ def export_node_ids_a_study(tx, study_id: str, node: str, output_dir: str) -> No
     output_filepath = os.path.join(output_dir, f"{study_id}_{node}_id_list.csv")
     study_node_id_df.to_csv(output_filepath, index=False)
 
+    return None
+
+
+def export_node_ids_a_study_dcc(tx, study_id: str, node: str, output_dir: str) -> None:
+    cypher_query = DBCypherQueryDCC.node_id_cypher_query_query.format(
+        study_id=study_id, node=node
+    )
+    result = tx.run(cypher_query)
+    db_guid_list = [record["id"] for record in result]  # query alias is still "id"
+
+    study_node_id_df = pd.DataFrame(columns=["study_id", "node", "guid"])
+    if len(db_guid_list) == 0:
+        study_node_id_df["guid"] = [pd.NA]
+    else:
+        study_node_id_df["guid"] = db_guid_list
+    study_node_id_df["study_id"] = study_id
+    study_node_id_df["node"] = node
+
+    output_filepath = os.path.join(output_dir, f"{study_id}_{node}_id_list.csv")
+    study_node_id_df.to_csv(output_filepath, index=False)
     return None
 
 
@@ -1148,9 +1122,37 @@ def parse_tsv_files(filelist: list) -> DataFrame:
     return return_df
 
 
+@task
+def parse_tsv_files_dcc(filelist: list) -> DataFrame:
+    """Loops through all ingested tsv files downloaded from bucket
+    and returns dataframe with columns of ["study_id","node","tsv_count","tsv_id"]
+    """
+    return_df = pd.DataFrame(columns=["study_id", "node", "tsv_count", "tsv_id"])
+    for file in filelist:
+        tsv_df = pd.read_csv(file, sep="\t", low_memory=False)
+        tsv_study_id = os.path.basename(file)[:9]
+        tsv_node = tsv_df["type"].unique().tolist()[0]
+        tsv_id_list = tsv_df["guid"].tolist()
+        tsv_id_count = tsv_df.shape[0]
+        tsv_df_info = pd.DataFrame(
+            {
+                "study_id": [tsv_study_id],
+                "node": [tsv_node],
+                "tsv_count": [tsv_id_count],
+                "tsv_id": [tsv_id_list],
+            }
+        )
+        return_df = pd.concat([return_df, tsv_df_info], ignore_index=True)
+    # filter out any node ==  "study"
+    return_df = return_df[return_df["node"] != "study"].reset_index(drop=True)
+    return return_df
+
+
+@task
 def compare_id_input_db(
-    db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame, logger
+    db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame
 ) -> DataFrame:
+    logger = get_run_logger()
     comparison_df = parsed_tsv_file_df
     comparison_df["count_check"] = np.nan
     comparison_df["id_check"] = np.nan
@@ -1180,6 +1182,47 @@ def compare_id_input_db(
             comparison_df.loc[i, "id_check"] = "Pass"
             logger.info(
                 f"Study {i_study_id} node {i_node} ingestion has all ids found in neo4j DB"
+            )
+    return comparison_df
+
+
+@task
+def compare_id_input_db_dcc(
+    db_id_pulled_dict: dict, parsed_tsv_file_df: DataFrame
+) -> DataFrame:
+    logger = get_run_logger()
+    comparison_df = parsed_tsv_file_df
+    comparison_df["count_check"] = np.nan
+    comparison_df["id_check"] = np.nan
+    comparison_df["db_missing_guid"] = np.nan  # <-- renamed column
+    for i in range(comparison_df.shape[0]):
+        i_study_id = comparison_df.loc[i, "study_id"]
+        i_node = comparison_df.loc[i, "node"]
+        i_node_guid = comparison_df.loc[i, "tsv_id"]  # still tsv_id in parsed df
+        i_node_guid_count = comparison_df.loc[i, "tsv_count"]
+        db_node_guid_count = len(db_id_pulled_dict[i_study_id][i_node])
+        db_node_guid = db_id_pulled_dict[i_study_id][i_node]
+        if i_node_guid_count == db_node_guid_count:
+            comparison_df.loc[i, "count_check"] = "Equal"
+        else:
+            comparison_df.loc[i, "count_check"] = "Unequal"
+            logger.warning(
+                f"Study {i_study_id} node {i_node} ingestion file contains "
+                f"different number of entries compared to neo4j DB"
+            )
+        db_missing_guids = [g for g in i_node_guid if g not in db_node_guid]
+        if len(db_missing_guids) > 0:
+            comparison_df.loc[i, "db_missing_guid"] = ";".join(db_missing_guids)
+            comparison_df.loc[i, "id_check"] = "Fail"
+            logger.error(
+                f"Study {i_study_id} node {i_node} ingestion has guids not "
+                f"found in neo4j DB: {*db_missing_guids,}"
+            )
+        else:
+            comparison_df.loc[i, "id_check"] = "Pass"
+            logger.info(
+                f"Study {i_study_id} node {i_node} ingestion has all guids "
+                f"found in neo4j DB"
             )
     return comparison_df
 
@@ -1217,6 +1260,39 @@ def pull_node_ids_all_studies_write(
     return temp_folder_name
 
 
+@flow(task_runner=ThreadPoolTaskRunner(max_workers=10), log_prints=True)
+def pull_node_ids_all_studies_write_dcc(
+    driver, studies_dataframe: DataFrame, logger
+) -> str:
+    """Returns a temp folder containing guid-based id files for each node and study.
+    Uses the DCC cypher query variant that returns node.guid instead of node.id.
+    """
+    temp_folder_name = "db_ids_all_node_all_studies"
+    os.mkdir(temp_folder_name)
+
+    logger.info(
+        f"ingested studies dataframe has rows of {studies_dataframe.shape[0]} "
+        f"and size of {studies_dataframe.size}"
+    )
+
+    study_id_list = studies_dataframe["study_id"].tolist()
+    study_id_chunks = list_to_chunks(study_id_list, 50)
+    node_list = studies_dataframe["node"].tolist()
+    node_chunks = list_to_chunks(node_list, 50)
+
+    for i in range(len(node_chunks)):
+        future = pull_ids_node_study.map(
+            driver,
+            export_node_ids_a_study_dcc,  # <-- DCC variant
+            study_id_chunks[i],
+            node_chunks[i],
+            temp_folder_name,
+        )
+        future.result()
+
+    return temp_folder_name
+
+
 @flow(log_prints=True)
 def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> Dict:
     """Returns a dictionary of db id list using study id and node name
@@ -1242,7 +1318,26 @@ def pull_node_ids_all_studies(driver, studies_dataframe: DataFrame, logger) -> D
     return ids_dict
 
 
-@flow(task_runner=ThreadPoolTaskRunner(max_workers=3), log_prints=True)  # reduce from 10 to 3
+@flow(log_prints=True)
+def pull_node_ids_all_studies_dcc(driver, studies_dataframe: DataFrame, logger) -> Dict:
+    csv_folder = pull_node_ids_all_studies_write_dcc(
+        driver=driver, studies_dataframe=studies_dataframe, logger=logger
+    )
+    ids_dict = {}
+    for file in os.listdir(csv_folder):
+        file_path = os.path.join(csv_folder, file)
+        file_df = pd.read_csv(file_path, header=0)
+        file_study = file_df["study_id"].unique().tolist()[0]
+        if file_study not in ids_dict:
+            ids_dict[file_study] = {}
+        file_node = file_df["node"].unique().tolist()[0]
+        ids_dict[file_study][file_node] = file_df["guid"].dropna().tolist()  # <-- guid
+    return ids_dict
+
+
+@flow(
+    task_runner=ThreadPoolTaskRunner(max_workers=3), log_prints=True
+)  # reduce from 10 to 3
 def pull_studies_loop_write(driver, study_list: list, logger) -> DataFrame:
     """Returns temp folder which contains counts all nodes(except study node)
     of all studies in a DB
@@ -1312,9 +1407,7 @@ def counts_DB_all_nodes_all_studies(
 
 
 @flow
-def counts_DB_all_nodes_all_studies_w_secrets(
-    driver
-) -> Dict:
+def counts_DB_all_nodes_all_studies_w_secrets(driver) -> Dict:
     logger = get_run_logger()
 
     logger.info("Using provided GraphDatabase driver")
@@ -1372,7 +1465,6 @@ def validate_DB_with_input_tsvs(
     comparison_df = compare_id_input_db(
         db_id_pulled_dict=db_id_list_all_studies,
         parsed_tsv_file_df=ingested_studies_dataframe,
-        logger=logger,
     )
 
     merged_summary_table = pd.merge(
@@ -1396,39 +1488,31 @@ def validate_DB_with_input_tsvs_w_secrets(
     studies_dataframe: DataFrame,
 ) -> DataFrame:
     logger = get_run_logger()
-
     logger.info("Using provided GraphDatabase driver")
 
-    # read trhough tsv folder and extrac study_id, node, id_count,
-    # and id list from each file
     tsv_files = list_type_files(file_dir=tsv_folder, file_type=".tsv")
-    ingested_studies_dataframe = parse_tsv_files(tsv_files)
+    ingested_studies_dataframe = parse_tsv_files_dcc(tsv_files)  # reads guid column
 
-    logger.info("pulled all ids based off the nodes and studies from tsv provided")
-    db_id_list_all_studies = pull_node_ids_all_studies(
+    logger.info("Pulling all guids based on nodes and studies from tsv provided")
+    db_id_list_all_studies = pull_node_ids_all_studies_dcc(  # <-- DCC variant
         driver=driver,
         studies_dataframe=ingested_studies_dataframe[["study_id", "node"]],
         logger=logger,
     )
 
-    logger.info("Start comparing db pulled id with ids in tsv files")
-    comparison_df = compare_id_input_db(
+    logger.info("Start comparing db pulled guids with guids in tsv files")
+    comparison_df = compare_id_input_db_dcc(
         db_id_pulled_dict=db_id_list_all_studies,
         parsed_tsv_file_df=ingested_studies_dataframe,
-        logger=logger,
     )
 
     merged_summary_table = pd.merge(
         studies_dataframe, comparison_df, on=["study_id", "node"], how="outer"
     )
     merged_summary_table.drop(columns=["tsv_id"], inplace=True)
-
-    # sort the df order based on study id and node
     merged_summary_table = merged_summary_table.sort_values(
         by=["study_id", "node"], ascending=True
     )
-    # close driver
-    driver.close()
     return merged_summary_table
 
 
@@ -1508,14 +1592,14 @@ def query_db_to_csv(
     # create the output dir if not exist
     os.makedirs(output_dir, exist_ok=True)
 
-    #logger.info("Getting uri, username and password parameter from AWS")
+    # logger.info("Getting uri, username and password parameter from AWS")
     ## get uri, username, and password value
-    #uri, username, password = cypher_query_parameters(
+    # uri, username, password = cypher_query_parameters(
     #    uri_parameter=uri_parameter,
     #    username_parameter=username_parameter,
     #    password_parameter=password_parameter,
     #    logger=logger,
-    #)
+    # )
 
     # driver instance
     logger.info("Creating GraphDatabase driver using uri, username, and password")
@@ -2085,18 +2169,24 @@ def convert_csv_to_tsv_dcc(db_pulled_outdir: str, output_dir: str) -> None:
     for file_path in csv_list:
         logger.info(f"processing csv file: {file_path}")
         if has_contents(file_path):
-            logger.info(f"Pivoting long df to wide df and cleaning the data for file: {file_path}")
+            logger.info(
+                f"Pivoting long df to wide df and cleaning the data for file: {file_path}"
+            )
             wider_df = pivot_long_df_wide_clean_dcc(file_path=file_path)
 
             if wider_df is None or wider_df.empty:
-                logger.info(f"Empty dataframe after pivot for file: {file_path}, skipping")
+                logger.info(
+                    f"Empty dataframe after pivot for file: {file_path}, skipping"
+                )
                 continue
 
             logger.info(f"Setting up links in wide df for file: {file_path}")
             wider_df = wide_df_setup_link_dcc(df_wide=wider_df)
 
             if wider_df is None or wider_df.empty:
-                logger.info(f"Empty dataframe after link setup for file: {file_path}, skipping")
+                logger.info(
+                    f"Empty dataframe after link setup for file: {file_path}, skipping"
+                )
                 continue
 
             logger.info(f"Writing tsv files for all studies from file: {file_path}")
@@ -2138,23 +2228,32 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
         # Only merge linkedNodeId if it exists and has non-null values
         if "linkedNodeId" in df_long.columns and df_long["linkedNodeId"].notna().any():
             df_wide = df_wide.merge(
-                df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(), on="startNodeId"
+                df_long[["startNodeId", "linkedNodeId"]].drop_duplicates(),
+                on="startNodeId",
             )
         else:
             df_wide["linkedNodeId"] = None
 
-        if "linkedNodeLabels" in df_long.columns and df_long["linkedNodeLabels"].notna().any():
+        if (
+            "linkedNodeLabels" in df_long.columns
+            and df_long["linkedNodeLabels"].notna().any()
+        ):
             df_wide = df_wide.merge(
-                df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(), on="startNodeId"
+                df_long[["startNodeId", "linkedNodeLabels"]].drop_duplicates(),
+                on="startNodeId",
             )
             df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
             df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
         else:
             df_wide["linkedNodeLabels"] = None
 
-        if "dbgap_accession" in df_long.columns and df_long["dbgap_accession"].notna().any():
+        if (
+            "dbgap_accession" in df_long.columns
+            and df_long["dbgap_accession"].notna().any()
+        ):
             df_wide = df_wide.merge(
-                df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(), on="startNodeId"
+                df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
+                on="startNodeId",
             )
         else:
             df_wide["dbgap_accession"] = None
@@ -2186,7 +2285,10 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
     if "study" not in df_wide["type"].unique().tolist():
 
         # Guard against missing link columns
-        if "linkedNodeLabels" not in df_wide.columns or df_wide["linkedNodeLabels"].isna().all():
+        if (
+            "linkedNodeLabels" not in df_wide.columns
+            or df_wide["linkedNodeLabels"].isna().all()
+        ):
             df_wide["study"] = df_wide.get("dbgap_accession", None)
             if "dbgap_accession" in df_wide.columns:
                 df_wide.drop(columns=["dbgap_accession"], inplace=True)
@@ -2209,7 +2311,11 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
 
         df_wide_links = df_wide_links.merge(df_wide.drop_duplicates(), on="guid")
         df_wide_links = df_wide_links.drop(
-            columns=[c for c in ["linkedNodeId", "linkedNodeLabels"] if c in df_wide_links.columns]
+            columns=[
+                c
+                for c in ["linkedNodeId", "linkedNodeLabels"]
+                if c in df_wide_links.columns
+            ]
         )
         df_wide = df_wide_links
         df_wide["study"] = df_wide["dbgap_accession"]
@@ -2223,7 +2329,7 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
 
 def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None:
     """writes tsv files per study per node to a study folder under output_dir"""
-    
+
     # Guard against empty dataframe
     if wider_df is None or wider_df.empty:
         logger.info("Received empty dataframe, skipping write")
@@ -2240,7 +2346,9 @@ def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None
     os.makedirs(output_dir, exist_ok=True)
 
     if "study" not in wider_df.columns or wider_df["study"].dropna().empty:
-        logger.info(f"No study column or no values in study column for node {node_label}, skipping write")
+        logger.info(
+            f"No study column or no values in study column for node {node_label}, skipping write"
+        )
         return None
 
     # there should only be one study value in the wider_df

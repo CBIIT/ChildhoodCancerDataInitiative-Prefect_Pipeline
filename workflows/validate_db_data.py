@@ -86,6 +86,7 @@ def validate_db_data(
         logger.info("No ingestion files folder path provided")
 
     if tsv_folder != "":
+        driver = GraphDatabase.driver(uri, auth=(username, password))
         # validate db info with files in tsv folder
         logger.info("Reading tsv files and validating records between tsv files and DB")
         validate_df = validate_DB_with_input_tsvs_w_secrets(
