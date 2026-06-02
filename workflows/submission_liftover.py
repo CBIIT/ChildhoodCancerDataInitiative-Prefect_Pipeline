@@ -76,6 +76,48 @@ def parse_ccdi_manifest_to_tsv(manifest_path: str) -> str:
             pass
     return output_folder
 
+
+@task(name="Parse CCDI DCC manifest to tsv sets", log_prints=True)
+def parse_ccdi_dcc_manifest_to_tsv(manifest_path: str) -> str:
+    """Read the CCDI DCC metadata manifest excel file and generate a set of tsv files that are not empty
+
+    Args:
+        manifest_path (str): File path of CCDI DCC metadata manifest
+
+    Returns:
+        str: a folder name contains a set of tsv files derived from CCDI DCC metadata manifest
+    """
+    manifest_obj = CheckCCDI(manifest_path)
+    sheet_names = manifest_obj.get_sheetnames()
+    nodes_to_ignore = ["README and INSTRUCTIONS", "Dictionary", "Terms and Value Sets"]
+    sheet_names_readable = [i for i in sheet_names if i not in nodes_to_ignore]
+    output_folder = os.path.basename(manifest_path).split(".")[0] + "_tsv_files"
+    os.makedirs(output_folder, exist_ok=True)
+    for sheet in sheet_names_readable:
+        sheet_df = manifest_obj.read_sheet_na(sheetname=sheet)
+        sheet_df.drop(["type"], axis=1, inplace=True)
+        sheet_df.dropna(how="all", inplace=True)
+        # if the dataframe is not empty
+        if not sheet_df.empty:
+            sheet_filename = sheet + ".tsv"
+            sheet_filepath = os.path.join(output_folder, sheet_filename)
+            sheet_columns = sheet_df.columns.tolist()
+            col_keep = []
+            for col in sheet_columns:
+                if col == "guid" or col.endswith(".guid"):
+                    pass
+                else:
+                    col_keep.append(col)
+            sheet_df = sheet_df[col_keep]
+            # insert type column back to the df
+            sheet_df.insert(0, "type", [sheet] * sheet_df.shape[0])
+            sheet_df.to_csv(sheet_filepath, sep="\t", index=False)
+            print(f"Saves sheet {sheet} to {sheet_filepath}")
+        else:
+            pass
+    return output_folder
+
+
 @flow(name="Submission liftover", log_prints=True)
 def submission_liftover(
     bucket: str,
@@ -91,7 +133,7 @@ def submission_liftover(
 
     Args:
         bucket (str): bucket name
-        submission_path (str): folder path contains a set of tsv files under bucket, e.g. "submissions/submission_tsv_files/" OR file path of CCDI metadata manifest (The lift_from_acrynom must be CCDI in this case)
+        submission_path (str): folder path contains a set of tsv files under bucket, e.g. "submissions/submission_tsv_files/" OR file path of CCDI metadata manifest (The lift_from_acronym must be ccdi in this case) OR file path of CCDI-DCC metadata manifest (The lift_from_acronym must be ccdi_dcc in this case)
         lift_from_acronym (AcrynomDropDown): lift from acronym. Choose one from the dropdown list
         lift_from_tag (str): tag of lift from. This can be left empty if lift_from_acronym is UNKNOWN
         lift_to_acronym (AcrynomDropDown): lift to acronym. Choose one from the dropdown list
@@ -99,11 +141,12 @@ def submission_liftover(
         liftover_mapping_filepath (str): Mapping file path under bucket, e.g., "mapping_files/ccdi_2.1.0_to_cds_6.0.2_mapping.tsv"
         runner (str): unique runner identifier
     """
+
     logger = get_run_logger()
 
     getmodel = GetDataModel()
 
-    # define the upload path for outputs in the bucket 
+    # define the upload path for outputs in the bucket
     upload_path = os.path.join(runner, "liftover_pipeline_output_" + get_time())
 
     # downloadi lift to models files first
@@ -119,23 +162,23 @@ def submission_liftover(
     lift_to_model_file = f"{lift_to_tag}_{lift_to_model_file}"
     lift_to_props_file = f"{lift_to_tag}_{lift_to_props_file}"
     logger.info(
-        f"Model files have been renamed into: {lift_to_tag}_{lift_to_model_file} and {lift_to_tag}_{lift_to_props_file}"
+        f"Model files have been renamed into: {lift_to_model_file} and {lift_to_props_file}"
     )
 
     if lift_from_acronym != "unknown":
         # download the lift from model and props file. Then rename them
-        lift_from_model_file, list_from_props_file = getmodel.dl_model_files(
+        lift_from_model_file, lift_from_props_file = getmodel.dl_model_files(
             commons_acronym=lift_from_acronym, tag=lift_from_tag
         )
         logger.info(
-            f"downloaded lift from model file and props file: {lift_from_model_file}, {list_from_props_file}"
+            f"downloaded lift from model file and props file: {lift_from_model_file}, {lift_from_props_file}"
         )
         os.rename(lift_from_model_file, f"{lift_from_tag}_{lift_from_model_file}")
-        os.rename(list_from_props_file, f"{lift_from_tag}_{list_from_props_file}")
+        os.rename(lift_from_props_file, f"{lift_from_tag}_{lift_from_props_file}")
         lift_from_model_file = f"{lift_from_tag}_{lift_from_model_file}"
-        list_from_props_file = f"{lift_from_tag}_{list_from_props_file}"
+        lift_from_props_file = f"{lift_from_tag}_{lift_from_props_file}"
         logger.info(
-            f"Model files have been renamed into: {lift_from_tag}_{lift_from_model_file} and {lift_from_tag}_{list_from_props_file}"
+            f"Model files have been renamed into: {lift_from_model_file} and {lift_from_props_file}"
         )
     else:
         logger.info(
@@ -152,6 +195,19 @@ def submission_liftover(
         logger.info(f"Downloaded CCDI manifest file {ccdi_manifest} from bucket {bucket}")
         # parse ccdi manifest into a set of tsv files
         submission_path = parse_ccdi_manifest_to_tsv(manifest_path=ccdi_manifest)
+        # upload the parsed tsv files to the bucket
+        folder_ul(
+            bucket=bucket,
+            local_folder=submission_path,
+            destination=upload_path,
+            sub_folder="",
+        )
+    elif lift_from_acronym == "ccdi_dcc":
+        file_dl(bucket=bucket, filename=submission_path)
+        ccdi_dcc_manifest = os.path.basename(submission_path)
+        logger.info(f"Downloaded CCDI-DCC manifest file {ccdi_dcc_manifest} from bucket {bucket}")
+        # parse ccdi-dcc manifest into a set of tsv files
+        submission_path = parse_ccdi_dcc_manifest_to_tsv(manifest_path=ccdi_dcc_manifest)
         # upload the parsed tsv files to the bucket
         folder_ul(
             bucket=bucket,
