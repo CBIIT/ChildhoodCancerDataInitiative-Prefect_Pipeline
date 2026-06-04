@@ -40,70 +40,105 @@ def move_id_to_front(df, id_column_name):
 def generate_ids_task(sheet_dfs):
     # --- STUDY ID Generation ---
     if 'study' in sheet_dfs:
+
+        if ('phs_accession' not in sheet_dfs['study'].columns or 
+            'study_acronym' not in sheet_dfs['study'].columns or
+            sheet_dfs['study']['phs_accession'].isnull().all() or
+            sheet_dfs['study']['study_acronym'].isnull().all()):
+            print('Missing required study fields (phs_accession or study_acronym), skipping liftover ID generation')
+            return sheet_dfs
+            
         sheet_dfs['study']['study_id'] = sheet_dfs['study']['phs_accession'] + "_" + sheet_dfs['study']['study_acronym']
-        gc_study_id = sheet_dfs['study']['study_id'].iloc[0]
+        gc_study_id = str(sheet_dfs['study']['study_id'].iloc[0])
         print(f"Successfully generated study_id: {gc_study_id}")
         
     else:
         print('No study node provided, skipping liftover ID generation')
         return sheet_dfs
         
+
     # --- INVESTIGATOR ID Generation ---
     if 'investigator' in sheet_dfs:
         df = sheet_dfs['investigator'].copy()
-        df['investigator_id'] = gc_study_id + "_" + df['primary_investigator_email']
-        sheet_dfs['investigator'] = move_id_to_front(df, 'investigator_id')
-        print(f"Sample Investigator ID created: {df['investigator_id'].iloc[0]}")
+
+        if ('primary_investigator_email' not in df.columns or
+            df['primary_investigator_email'].isnull().all()):
+            print('Missing required investigator field (primary_investigator_email), skipping investigator ID generation')
+       
+        else:
+            df['investigator_id'] = gc_study_id + "_" + df['primary_investigator_email']
+            sheet_dfs['investigator'] = move_id_to_front(df, 'investigator_id')
+            print(f"Sample Investigator ID created: {df['investigator_id'].iloc[0]}")
         
+
     # --- PARTICIPANT ID Generation ---
     if 'participant' in sheet_dfs:
         df = sheet_dfs['participant'].copy()
-        df['study_participant_id'] = gc_study_id + "_" + df['participant_id']
-        sheet_dfs['participant'] = move_id_to_front(df, 'study_participant_id')
-        print(f"Generated {len(df)} study_participant_id values (e.g., {df['study_participant_id'].iloc[0]})")
+
+        if ('participant_id' not in df.columns or
+            df['participant_id'].isnull().all()):
+            print('Missing required participant field (participant_id), skipping participant ID generation')
         
+        else:
+            df['study_participant_id'] = gc_study_id + "_" + df['participant_id']
+            sheet_dfs['participant'] = move_id_to_front(df, 'study_participant_id')
+            print(f"Generated {len(df)} study_participant_id values (e.g., {df['study_participant_id'].iloc[0]})")
+        
+
     # --- DIAGNOSIS ID Generation ---
     if 'diagnosis' in sheet_dfs:
         if sheet_dfs['diagnosis']['participant.study_participant_id'].notnull().any():
             df = sheet_dfs['diagnosis'].copy()
+
             df['participant.study_participant_id'] = gc_study_id + "_" + df['participant.study_participant_id']
             df['study_diagnosis_id'] = df['participant.study_participant_id'] + "_" + df['diagnosis_id']
             sheet_dfs['diagnosis'] = move_id_to_front(df, 'study_diagnosis_id')
+
             if sheet_dfs['diagnosis']['participant.study_participant_id'].isnull().any():
                 print("Some liftover diagnosis IDs skipped because some participant IDs were missing.")
             print(f"Generated {len(df)} study_diagnosis_id values (e.g., {df['study_diagnosis_id'].iloc[0]})")
-            
         elif sheet_dfs['diagnosis']['participant.study_participant_id'].isnull().all():
             print("Missing participant IDs, skipping liftover diagnosis ID generation")
 
+
      # --- TREATMENT ID Generation ---
     if 'treatment' in sheet_dfs:
-        if sheet_dfs['treatment']['therapeutic_agents'].notnull().any():
+        if (sheet_dfs['treatment']['therapeutic_agents'].notnull().any() and
+            sheet_dfs['treatment']['participant.study_participant_id'].notnull().any()):
             df = sheet_dfs['treatment'].copy()
-            df['treatment_id'] = gc_study_id + "_" + df['participant.study_participant_id'] + df['therapeutic_agents']
+
+            df['treatment_id'] = gc_study_id + "_" + df['participant.study_participant_id'] + "_" + df['therapeutic_agents']
             sheet_dfs['treatment'] = move_id_to_front(df, 'treatment_id')
+
             if sheet_dfs['treatment']['therapeutic_agents'].isnull().any():
                 print("Some liftover treatment IDs skipped because some treatment agents were missing.")
             print(f"Generated {len(df)} treatment_id values (e.g., {df['treatment_id'].iloc[0]})")
         else:
-            print('Missing treatment agents, skipping treatment ID generation')
+            print('Missing treatment fields (therapeutic_agents or participant.study_participant_id), skipping treatment ID generation')
+
 
     # --- GENOMIC INFO ID Generation --
     if 'genomic_info' in sheet_dfs:
-        df = sheet_dfs['genomic_info'].copy()
-        
-        def build_genomic_id(row):
-            file_val = str(row.get('file.file_id', "")).strip()
-            lib = row.get('library_id', "")
-            lib_val = str(lib).strip()
+        if sheet_dfs['genomic_info']['file.file_id'].notnull().any():
+            df = sheet_dfs['genomic_info'].copy()
             
-            if lib_val and pd.notnull(lib):
-                return f"{file_val}_{lib_val}"
-            else:
-                return file_val
-        df['genomic_info_id'] = df.apply(build_genomic_id, axis=1)
-        sheet_dfs['genomic_info'] = move_id_to_front(df, 'genomic_info_id')
-        print(f"Generated {len(df)} genomic_info_id values (e.g., {df['genomic_info_id'].iloc[0]})")
+            def build_genomic_id(row):
+                file_val = str(row.get('file.file_id', "")).strip()
+                lib = row.get('library_id', "")
+                lib_val = str(lib).strip()
+                
+                if lib_val and pd.notnull(lib):
+                    return f"{file_val}_{lib_val}"
+                else:
+                    return file_val
+            df['genomic_info_id'] = df.apply(build_genomic_id, axis=1)
+            sheet_dfs['genomic_info'] = move_id_to_front(df, 'genomic_info_id')
+
+            if sheet_dfs['genomic_info']['file.file_id'].isnull().any():
+                print("Some liftover genomic_info IDs skipped because some file IDs were missing.")
+            print(f"Generated {len(df)} genomic_info_id values (e.g., {df['genomic_info_id'].iloc[0]})")
+        else:
+            print('Missing genomic_info field (file.file_id), skipping genomic_info ID generation')
         
     return sheet_dfs
 
