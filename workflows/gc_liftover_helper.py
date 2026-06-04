@@ -2,6 +2,7 @@ from prefect import flow, task, get_run_logger
 import os
 import pandas as pd
 import sys
+import re
 from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_time, CheckCCDI, CCDI_DCC_Tags
 
 @task (name="Load TSVs from Folder", log_prints=True)
