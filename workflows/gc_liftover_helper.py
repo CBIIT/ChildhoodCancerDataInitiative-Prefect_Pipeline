@@ -104,7 +104,6 @@ def generate_ids_task(sheet_dfs):
      # --- TREATMENT ID Generation ---
     if 'treatment' in sheet_dfs:
         if (sheet_dfs['treatment']['therapeutic_agents'].notnull().any() and
-            'participant.study_participant_id' in sheet_dfs['treatment'].columns and
             sheet_dfs['treatment']['participant.study_participant_id'].notnull().any()):
             df = sheet_dfs['treatment'].copy()
 
