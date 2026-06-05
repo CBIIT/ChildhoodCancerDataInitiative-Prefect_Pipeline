@@ -87,7 +87,9 @@ def generate_ids_task(sheet_dfs):
 
     # --- DIAGNOSIS ID Generation ---
     if 'diagnosis' in sheet_dfs:
-        if sheet_dfs['diagnosis']['participant.study_participant_id'].notnull().any():
+        if ('participant.study_participant_id' in sheet_dfs['diagnosis'].columns and
+            'diagnosis_id' in sheet_dfs['diagnosis'].columns and
+            sheet_dfs['diagnosis']['participant.study_participant_id'].notnull().any()):
             df = sheet_dfs['diagnosis'].copy()
 
             df['participant.study_participant_id'] = gc_study_id + "_" + df['participant.study_participant_id']
@@ -103,7 +105,9 @@ def generate_ids_task(sheet_dfs):
 
      # --- TREATMENT ID Generation ---
     if 'treatment' in sheet_dfs:
-        if (sheet_dfs['treatment']['therapeutic_agents'].notnull().any() and
+        if ('therapeutic_agents' in sheet_dfs['treatment'].columns and
+            'participant.study_participant_id' in sheet_dfs['treatment'].columns and
+            sheet_dfs['treatment']['therapeutic_agents'].notnull().any() and
             sheet_dfs['treatment']['participant.study_participant_id'].notnull().any()):
             df = sheet_dfs['treatment'].copy()
 
@@ -119,7 +123,8 @@ def generate_ids_task(sheet_dfs):
 
     # --- GENOMIC INFO ID Generation --
     if 'genomic_info' in sheet_dfs:
-        if sheet_dfs['genomic_info']['file.file_id'].notnull().any():
+        if ('file.file_id' in sheet_dfs['genomic_info'].columns and
+            sheet_dfs['genomic_info']['file.file_id'].notnull().any()):
             df = sheet_dfs['genomic_info'].copy()
             
             def build_genomic_id(row):
