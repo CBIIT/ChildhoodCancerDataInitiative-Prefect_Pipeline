@@ -569,7 +569,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         ##############
 
         # This section will use information found in the diagnosis.diagnosis property and based on the cross-reference file
-        # found on GitHub, it will create the diagnosis category values.
+        # found on GitHub, it will create the diagnosis category and diagnosis classification system values.
 
         # directory path to the cross-reference file
         diagnosis_mapping_path = "docs/uniqDx2Dx_cat.tsv"
@@ -595,6 +595,17 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         diagnosis_mapping.get(row["diagnosis"], "Not Reported")
                         if pd.isna(row["diagnosis_category"])
                         else row["diagnosis_category"]
+                    ),
+                    axis=1,
+                )
+                # map the diagnosis column to the diagnosis_classification_system column, based on the dataframe diagnosis_mapping,
+                # which has the same column headers found in the df object, diagnosis and diagnosis_classification_system.
+                # Only update where diagnosis_classification_system is null
+                df["diagnosis_classification_system"] = df.apply(
+                    lambda row: (
+                        diagnosis_mapping.get(row["diagnosis"], "Not Reported")
+                        if pd.isna(row["diagnosis_classification_system"])
+                        else row["diagnosis_classification_system"]
                     ),
                     axis=1,
                 )

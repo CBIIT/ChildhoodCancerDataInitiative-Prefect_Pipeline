@@ -1,4 +1,4 @@
-diagnosis	diagnosis_category	source
+diagnosis	diagnosis_category	diagnosis_classification_system
 Abdominal fibromatosis	Fibromatous neoplasms	ICD-O-3.2
 Acinar cell carcinoma	Acinar cell neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Acute erythroid leukemia	Myeloid leukemias	ICD-O-3.2;WHO5 Pediatric Tumor
