@@ -738,7 +738,7 @@ def submit(nodes: list, project_id: str, secret_name_path: str, secret_key_name:
         # start with 50 at a time?
         errors = []
         successes = []
-        chunk_size = 50
+        chunk_size = min(len(responses), 50)
 
         for chunk in range(0, len(responses), chunk_size):
             error_temp, success_temp = response_recorder(
