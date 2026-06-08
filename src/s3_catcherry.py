@@ -569,17 +569,22 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         ##############
 
         # This section will use information found in the diagnosis.diagnosis property and based on the cross-reference file
-        # found on GitHub, it will create the diagnosis category values.
+        # found on GitHub, it will create the diagnosis category and diagnosis classification system values.
 
         # directory path to the cross-reference file
         diagnosis_mapping_path = "docs/uniqDx2Dx_cat.tsv"
 
         # read in the cross-reference file
-        diagnosis_mapping = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
+        diagnosis_mapping_df = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
 
-        # Create a mapping dictionary
-        diagnosis_mapping = diagnosis_mapping.set_index("diagnosis")[
+        # Create a mapping dictionary for diagnosis to diagnosis category, with diagnosis as the key and diagnosis category as the value.
+        diagnosis_mapping = diagnosis_mapping_df.set_index("diagnosis")[
             "diagnosis_category"
+        ].to_dict()
+
+        # Create a mapping dictionary for diagnosis to diagnosis classification system, with diagnosis as the key and diagnosis classification system as the value. 
+        diagnosis_classification_mapping = diagnosis_mapping_df.set_index("diagnosis")[
+            "diagnosis_classification_system"
         ].to_dict()
 
         catcherr_logger.info("Transforming diagnosis to diagnosis category")
@@ -595,6 +600,17 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         diagnosis_mapping.get(row["diagnosis"], "Not Reported")
                         if pd.isna(row["diagnosis_category"])
                         else row["diagnosis_category"]
+                    ),
+                    axis=1,
+                )
+                # map the diagnosis column to the diagnosis_classification_system column, based on the dataframe diagnosis_mapping,
+                # which has the same column headers found in the df object, diagnosis and diagnosis_classification_system.
+                # Only update where diagnosis_classification_system is null
+                df["diagnosis_classification_system"] = df.apply(
+                    lambda row: (
+                        diagnosis_classification_mapping.get(row["diagnosis"], "Not Reported")
+                        if pd.isna(row["diagnosis_classification_system"])
+                        else row["diagnosis_classification_system"]
                     ),
                     axis=1,
                 )
