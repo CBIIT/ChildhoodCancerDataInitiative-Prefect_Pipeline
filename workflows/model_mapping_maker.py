@@ -76,8 +76,8 @@ def build_mapping(df_from: pd.DataFrame, df_to: pd.DataFrame) -> pd.DataFrame:
 # ── user input ────────────────────────────────────────────────────────────────
 
 def user_input_location(df, value_node_col, value_property_col,
-                         missing_node_col, missing_property_col,
-                         missing_version_col, base_mode, direction):
+                        missing_node_col, missing_property_col,
+                        missing_version_col, base_mode, direction):
     logger = get_run_logger()
 
     df_missing = df[df[missing_property_col].isna()]
@@ -142,7 +142,7 @@ def expand_semicolon_nodes(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def clean_up_partial_dups(df, empty_node_col, empty_prop_col,
-                           value_node_col, value_prop_col) -> pd.DataFrame:
+                        value_node_col, value_prop_col) -> pd.DataFrame:
     indexes_to_remove = []
     for index, row in df.iterrows():
         if pd.isna(row[empty_node_col]) or pd.isna(row[empty_prop_col]):
@@ -253,9 +253,10 @@ def runner(
     mapping_df = clean_up_partial_dups(mapping_df, "lift_from_node", "lift_from_property", "lift_to_node",   "lift_to_property")
     mapping_df = clean_up_partial_dups(mapping_df, "lift_to_node",   "lift_to_property",   "lift_from_node", "lift_from_property")
 
-    for ver_col, yaml_data in [("lift_from_version", yaml_old), ("lift_to_version", yaml_new)]:
-        if mapping_df[ver_col].replace("", pd.NA).isna().any():
-            mapping_df[ver_col] = get_version(yaml_data)
+    # Remove as we don't need to write over the version data, it already exists in the input and we want to keep it consistent with the user input.
+    # for ver_col, yaml_data in [("lift_from_version", yaml_old), ("lift_to_version", yaml_new)]:
+    #     if mapping_df[ver_col].replace("", pd.NA).isna().any():
+    #         mapping_df[ver_col] = get_version(yaml_data)
 
     mapping_df = mapping_df.fillna("").drop_duplicates()
 
