@@ -12,7 +12,7 @@ def load_tsvs_from_folder(folder_path):
         if file.endswith(".tsv"):
             file_path = os.path.join(folder_path, file)
             file_name = re.sub(r'_\d{4}-\d{2}-\d{2}', '', file).replace(".tsv", "")
-            sheet_dfs[file_name] = pd.read_csv(file_path, sep="\t")
+            sheet_dfs[file_name] = pd.read_csv(file_path, sep="\t").convert_dtypes()
     return sheet_dfs
 
 @task(name= "Save TSVs to Folder", log_prints=True)
@@ -63,7 +63,18 @@ def generate_ids_task(sheet_dfs):
     else:
         print('No study node provided, skipping liftover ID generation')
         return sheet_dfs
+    
+    # --- CONSENT Reformatting ---
+    if 'consent_group' in sheet_dfs:
+        df = sheet_dfs['consent_group'].copy()
+
+        if ('consent_group_number' not in df.columns or df['consent_group_number'].isnull().all()):
+            print('Missing required consent group field (consent_group_number), skipping consent group number reformatting')
         
+        else:
+            df['study_consent_number'] = df['consent_group_number'].astype(str).str.strip().str.replace('c', '', regex=False)
+            print(f"Reformatted consent group number(s): e.g. {df['study_consent_number'].iloc[0]}")
+            sheet_dfs['consent_group'] = df
 
     # --- INVESTIGATOR ID Generation ---
     if 'investigator' in sheet_dfs:
@@ -85,13 +96,24 @@ def generate_ids_task(sheet_dfs):
 
         if ('participant_id' not in df.columns or
             df['participant_id'].isnull().all()):
-            print('Missing required participant field (participant_id), skipping participant ID generation')
+            print('Missing required participant field (participant_id), skipping participant ID generation in participant sheet')
         
         else:
             df['study_participant_id'] = gc_study_id + "_" + df['participant_id']
             sheet_dfs['participant'] = move_id_to_front(df, 'study_participant_id')
-            print(f"Generated {len(df)} study_participant_id values (e.g., {df['study_participant_id'].iloc[0]})")
+            print(f"Generated {len(df)} study_participant_id values (e.g., {df['study_participant_id'].iloc[0]}) in participant sheet")
         
+    if 'sample' in sheet_dfs:
+        df = sheet_dfs['sample'].copy()
+
+        if ('participant.study_participant_id' not in df.columns or
+            df['participant.study_participant_id'].isnull().all()):
+            print('Missing required participant field (participant.study_participant_id), skipping participant ID generation in sample sheet')
+        
+        else:
+            df['participant.study_participant_id'] = gc_study_id + "_" + df['participant.study_participant_id']
+            sheet_dfs['sample'] = df
+            print(f"Generated {len(df)} study_participant_id values (e.g., {df['participant.study_participant_id'].iloc[0]}) in sample sheet")
 
     # --- DIAGNOSIS ID Generation ---
     if 'diagnosis' in sheet_dfs:
@@ -161,7 +183,7 @@ def generate_ids_task(sheet_dfs):
         df = sheet_dfs['image'].copy()
         unreported_cols = ['organ_or_tissue', 'imaging_equipment_manufacturer', 'citation_or_DOI']
         for col in unreported_cols:
-            df[col] = df[col].fillna('Not Reported') if col in df.columns else 'Not Reported'
+            df[col] = df[col].astype('string').fillna('Not Reported') if col in df.columns else 'Not Reported'
         sheet_dfs['image'] = df
         
     return sheet_dfs
