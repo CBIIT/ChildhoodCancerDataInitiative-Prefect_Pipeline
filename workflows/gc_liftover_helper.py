@@ -40,17 +40,25 @@ def move_id_to_front(df, id_column_name):
 def generate_ids_task(sheet_dfs):
     # --- STUDY ID Generation ---
     if 'study' in sheet_dfs:
+        df = sheet_dfs['study'].copy()
 
-        if ('phs_accession' not in sheet_dfs['study'].columns or 
-            'study_acronym' not in sheet_dfs['study'].columns or
-            sheet_dfs['study']['phs_accession'].isnull().all() or
-            sheet_dfs['study']['study_acronym'].isnull().all()):
+        if ('phs_accession' not in df.columns or df['phs_accession'].isnull().all() or
+            'study_acronym' not in df.columns or df['study_acronym'].isnull().all()):
             print('Missing required study fields (phs_accession or study_acronym), skipping liftover ID generation')
             return sheet_dfs
-            
-        sheet_dfs['study']['study_id'] = sheet_dfs['study']['phs_accession'] + "_" + sheet_dfs['study']['study_acronym']
-        gc_study_id = str(sheet_dfs['study']['study_id'].iloc[0])
-        print(f"Successfully generated study_id: {gc_study_id}")
+        
+        else:
+            df['study_id'] = df['phs_accession'] + "_" + df['study_acronym']
+            sheet_dfs['study'] = df
+            gc_study_id = str(df['study_id'].iloc[0])
+            print(f"Successfully generated study_id: {gc_study_id}")
+
+        sheets = ['consent_group', 'investigator', 'participant', 'sample', 'file']
+        for sheet in sheets:
+            if sheet in sheet_dfs:
+                df = sheet_dfs[sheet].copy()
+                df['study.study_id'] = gc_study_id
+                sheet_dfs[sheet] = df
         
     else:
         print('No study node provided, skipping liftover ID generation')
@@ -87,8 +95,10 @@ def generate_ids_task(sheet_dfs):
 
     # --- DIAGNOSIS ID Generation ---
     if 'diagnosis' in sheet_dfs:
-        if sheet_dfs['diagnosis']['participant.study_participant_id'].notnull().any():
-            df = sheet_dfs['diagnosis'].copy()
+        df = sheet_dfs['diagnosis'].copy()
+        if ('participant.study_participant_id' in df.columns and
+            'diagnosis_id' in df.columns and
+            df['participant.study_participant_id'].notnull().any()):
 
             df['participant.study_participant_id'] = gc_study_id + "_" + df['participant.study_participant_id']
             df['study_diagnosis_id'] = df['participant.study_participant_id'] + "_" + df['diagnosis_id']
@@ -97,17 +107,21 @@ def generate_ids_task(sheet_dfs):
             if sheet_dfs['diagnosis']['participant.study_participant_id'].isnull().any():
                 print("Some liftover diagnosis IDs skipped because some participant IDs were missing.")
             print(f"Generated {len(df)} study_diagnosis_id values (e.g., {df['study_diagnosis_id'].iloc[0]})")
-        elif sheet_dfs['diagnosis']['participant.study_participant_id'].isnull().all():
+        elif ('participant.study_participant_id' in df.columns and
+              df['participant.study_participant_id'].isnull().all()):
             print("Missing participant IDs, skipping liftover diagnosis ID generation")
+        else:
+            print("Missing diagnosis fields (participant.study_participant_id or diagnosis_id), skipping liftover diagnosis ID generation")
 
 
      # --- TREATMENT ID Generation ---
     if 'treatment' in sheet_dfs:
-        if (sheet_dfs['treatment']['therapeutic_agents'].notnull().any() and
-            sheet_dfs['treatment']['participant.study_participant_id'].notnull().any()):
+        if ('therapeutic_agents' in sheet_dfs['treatment'].columns and sheet_dfs['treatment']['therapeutic_agents'].notnull().any() and
+            'participant.study_participant_id' in sheet_dfs['treatment'].columns and sheet_dfs['treatment']['participant.study_participant_id'].notnull().any()):
             df = sheet_dfs['treatment'].copy()
 
-            df['treatment_id'] = gc_study_id + "_" + df['participant.study_participant_id'] + "_" + df['therapeutic_agents']
+            df['participant.study_participant_id'] = gc_study_id + "_" + df['participant.study_participant_id']
+            df['treatment_id'] = df['participant.study_participant_id'] + "_" + df['therapeutic_agents']
             sheet_dfs['treatment'] = move_id_to_front(df, 'treatment_id')
 
             if sheet_dfs['treatment']['therapeutic_agents'].isnull().any():
@@ -119,7 +133,8 @@ def generate_ids_task(sheet_dfs):
 
     # --- GENOMIC INFO ID Generation --
     if 'genomic_info' in sheet_dfs:
-        if sheet_dfs['genomic_info']['file.file_id'].notnull().any():
+        if ('file.file_id' in sheet_dfs['genomic_info'].columns and
+            sheet_dfs['genomic_info']['file.file_id'].notnull().any()):
             df = sheet_dfs['genomic_info'].copy()
             
             def build_genomic_id(row):
@@ -139,6 +154,15 @@ def generate_ids_task(sheet_dfs):
             print(f"Generated {len(df)} genomic_info_id values (e.g., {df['genomic_info_id'].iloc[0]})")
         else:
             print('Missing genomic_info field (file.file_id), skipping genomic_info ID generation')
+
+
+    # --- IMAGE NOT REPORTED Generation --
+    if 'image' in sheet_dfs:
+        df = sheet_dfs['image'].copy()
+        unreported_cols = ['organ_or_tissue', 'imaging_equipment_manufacturer', 'citation_or_DOI']
+        for col in unreported_cols:
+            df[col] = df[col].fillna('Not Reported') if col in df.columns else 'Not Reported'
+        sheet_dfs['image'] = df
         
     return sheet_dfs
 
