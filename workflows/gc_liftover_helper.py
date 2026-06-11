@@ -14,6 +14,20 @@ def load_tsvs_from_folder(folder_path):
         'sample.sample_age_at_collection', 
         'consent_group.consent_group_number'
     }
+
+    str_cols = {
+    'study.phs_accession',
+    'study.study_acronym',
+    'investigator.primary_investigator_email',
+    'participant.participant_id',
+    'sample.participant.study_participant_id',
+    'diagnosis.participant.study_participant_id',
+    'diagnosis.diagnosis_id',
+    'treatment.participant.study_participant_id',
+    'treatment.therapeutic_agents',
+    'genomic_info.file.file_id',
+    'genomic_info.library_id',
+}
     
     sheet_dfs = {}
     for file in os.listdir(folder_path):
@@ -26,6 +40,8 @@ def load_tsvs_from_folder(folder_path):
             for col in df.columns:
                 if f"{file_name}.{col}" in int_cols:
                     df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
+                elif f"{file_name}.{col}" in str_cols:
+                    df[col] = df[col].astype(str).str.strip()
             
             sheet_dfs[file_name] = df
     return sheet_dfs
