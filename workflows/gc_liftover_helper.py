@@ -26,6 +26,8 @@ def load_tsvs_from_folder(folder_path):
             for col in df.columns:
                 if f"{file_name}.{col}" in int_cols:
                     df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
+                elif f"{file_name}.{col}" not in int_cols:
+                    df[col] = df[col].astype(str).str.strip()
             
             sheet_dfs[file_name] = df
     return sheet_dfs
