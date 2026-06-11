@@ -12,6 +12,7 @@ jmespath==1.1.0
 Markdown==3.10.2
 ctos-meval==1.1.0
 neo4j==6.2.0
+neo4j-viz==1.0.0
 numpy==2.4.4
 openpyxl==3.1.5
 pandas==2.2.3
