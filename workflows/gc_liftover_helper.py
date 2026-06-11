@@ -5,14 +5,29 @@ import sys
 import re
 from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_time, CheckCCDI, CCDI_DCC_Tags
 
-@task (name="Load TSVs from Folder", log_prints=True)
+@task(name="Load TSVs from Folder", log_prints=True)
 def load_tsvs_from_folder(folder_path):
+    int_cols = {
+        'genomic_info.bases', 
+        'genomic_info.number_of_reads', 
+        'diagnosis.age_at_diagnosis', 
+        'sample.sample_age_at_collection', 
+        'consent_group.consent_group_number'
+    }
+    
     sheet_dfs = {}
     for file in os.listdir(folder_path):
         if file.endswith(".tsv"):
             file_path = os.path.join(folder_path, file)
             file_name = re.sub(r'_\d{4}-\d{2}-\d{2}', '', file).replace(".tsv", "")
-            sheet_dfs[file_name] = pd.read_csv(file_path, sep="\t").convert_dtypes()
+            
+            df = pd.read_csv(file_path, sep="\t")
+            
+            for col in df.columns:
+                if f"{file_name}.{col}" in int_cols:
+                    df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
+            
+            sheet_dfs[file_name] = df
     return sheet_dfs
 
 @task(name= "Save TSVs to Folder", log_prints=True)
