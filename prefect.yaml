@@ -2104,12 +2104,10 @@ deployments:
       bucket: "ccdi-validation"
       runner: "your_uniq_id"
       old_model_repository: "ccdi-model"
-      new_model_repository: "ccdi-model"
-      old_model_file_location: "model-desc/ccdi-model.yml"
-      new_model_file_location: "model-desc/ccdi-model.yml"
-      old_model_version: ""
-      new_model_version: ""
-      base_mode:  False 
+      new_model_repository: "cds-model"
+      old_model_version: "1.0.0"
+      new_model_version: "11.0.4-GC_Release"
+      base_mode: True 
       mapping_file: "path_to/mapping_file/in/s3_bucket.tsv"
 
     # pull action to overwrite from file pull action

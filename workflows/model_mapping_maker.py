@@ -5,6 +5,9 @@ import os
 from prefect import flow, get_run_logger, pause_flow_run
 from prefect.input import RunInput
 from src.utils import get_time, file_dl, file_ul
+from meval.parser import ModelParser
+import requests
+
 
 
 class InputValues(RunInput):
@@ -19,45 +22,71 @@ COLUMNS = [
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-def read_yaml_from_github(url):
+# def read_yaml_from_github(url):
+#     response = requests.get(url)
+#     response.raise_for_status()
+#     return yaml.safe_load(response.text)
+
+
+# def get_version(yaml_data):
+#     version = yaml_data.get("Version", "insert version")
+#     return version.replace("v.", "").replace("v", "")
+
+def pull_model_data_files(model, version, file_type, output_file):
+    if file_type == "model":
+        url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}.yml"
+    elif file_type == "props":
+        url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}-{file_type}.yml"
     response = requests.get(url)
     response.raise_for_status()
-    return yaml.safe_load(response.text)
 
+    with open(output_file, 'w') as f:
+        f.write(response.text)
 
-def get_version(yaml_data):
-    version = yaml_data.get("Version", "insert version")
-    return version.replace("v.", "").replace("v", "")
-
+    return output_file
 
 # ── extraction ────────────────────────────────────────────────────────────────
 
-def extract_properties(yaml_data, side: str) -> pd.DataFrame:
-    """side is either 'from' or 'to'."""
-    version = get_version(yaml_data)
-    rows = [
-        {f"lift_{side}_node": node, f"lift_{side}_property": prop, f"lift_{side}_version": version}
-        for node, props in yaml_data["Nodes"].items()
-        for prop in props["Props"]
-    ]
-    return pd.DataFrame(rows)
+def parse_model(model_parsed, version):
+    rows = []
+
+    for node in model_parsed.get_node_list():
+        for prop in model_parsed.get_node_props_list(node):
+            rows.append({"node": node, "property": prop, "version": version})
+
+    for node in model_parsed.get_node_list():
+        for parent in model_parsed.get_parent_nodes(node):
+            key_prop = model_parsed.get_node_key_prop(parent)
+            rows.append({"node": node, "property": f"{parent}.{key_prop}_id", "version": version})
+
+    return pd.DataFrame(rows, columns=["node", "property", "version"])
+
+# def extract_properties(yaml_data, side: str) -> pd.DataFrame:
+#     """side is either 'from' or 'to'."""
+#     version = get_version(yaml_data)
+#     rows = [
+#         {f"lift_{side}_node": node, f"lift_{side}_property": prop, f"lift_{side}_version": version}
+#         for node, props in yaml_data["Nodes"].items()
+#         for prop in props["Props"]
+#     ]
+#     return pd.DataFrame(rows)
 
 
-def extract_relationships(yaml_data, side: str) -> pd.DataFrame:
-    """side is either 'from' or 'to'."""
-    version = get_version(yaml_data)
-    rows = [
-        {
-            f"lift_{side}_node": src,
-            f"lift_{side}_property": f"{dst}.{dst}_id",
-            f"lift_{side}_version": version,
-        }
-        for rel in yaml_data["Relationships"].values()
-        for ends in rel["Ends"]
-        for src, dst in [(ends.get("Src"), ends.get("Dst"))]
-        if src and dst
-    ]
-    return pd.DataFrame(rows)
+# def extract_relationships(yaml_data, side: str) -> pd.DataFrame:
+#     """side is either 'from' or 'to'."""
+#     version = get_version(yaml_data)
+#     rows = [
+#         {
+#             f"lift_{side}_node": src,
+#             f"lift_{side}_property": f"{dst}.{dst}_id",
+#             f"lift_{side}_version": version,
+#         }
+#         for rel in yaml_data["Relationships"].values()
+#         for ends in rel["Ends"]
+#         for src, dst in [(ends.get("Src"), ends.get("Dst"))]
+#         if src and dst
+#     ]
+#     return pd.DataFrame(rows)
 
 
 # ── merging ───────────────────────────────────────────────────────────────────
@@ -206,13 +235,11 @@ def build_comparison(df: pd.DataFrame, old_version: str, new_version: str) -> pd
 def runner(
     bucket: str,
     runner: str,
-    old_model_repository: str = "ccdi-model",
-    new_model_repository: str = "ccdi-model",
-    old_model_version: str = "",
-    new_model_version: str = "",
-    old_model_file_location: str = "model-desc/ccdi-model.yml",
-    new_model_file_location: str = "model-desc/ccdi-model.yml",
-    base_mode: bool = False,
+    old_model_repository: str = "ccdi-dcc-model",
+    new_model_repository: str = "cds-model",
+    old_model_version: str = "1.0.0",
+    new_model_version: str = "11.0.4-GC_Release",
+    base_mode: bool = True,
     mapping_file: str = "path_to/mapping_file/in/s3_bucket.tsv",
 ):
     logger = get_run_logger()
@@ -226,22 +253,46 @@ def runner(
         file_dl(bucket, mapping_file)
 
     # ── fetch models ──────────────────────────────────────────────────────────
-    old_url = f"https://raw.githubusercontent.com/CBIIT/{old_model_repository}/{old_model_version}/{old_model_file_location}"
-    new_url = f"https://raw.githubusercontent.com/CBIIT/{new_model_repository}/{new_model_version}/{new_model_file_location}"
 
-    yaml_old = read_yaml_from_github(old_url)
+    old_model_file_yaml = pull_model_data_files(model=old_model_repository, version=old_model_version, file_type="model", output_file="old_model.yaml")
     logger.info(f"{old_model_repository} at {old_model_version} found.")
-    yaml_new = read_yaml_from_github(new_url)
-    logger.info(f"{new_model_repository} at {new_model_version} found.")
+    
+    old_props_file_yaml = pull_model_data_files(model=old_model_repository, version=old_model_version, file_type="props", output_file="old_props.yaml")
+    logger.info(f"{old_model_repository} properties at {old_model_version} found.")
+        
+    new_model_file_yaml = pull_model_data_files(model=new_model_repository, version=new_model_version, file_type="model", output_file="new_model.yaml")
+    logger.info(f"{new_model_repository} at {new_model_version} found.")    
+    
+    new_props_file_yaml = pull_model_data_files(model=new_model_repository, version=new_model_version, file_type="props", output_file="new_props.yaml")
+    logger.info(f"{new_model_repository} properties at {new_model_version} found.")
+
+
+    # ── Create MDF objects via MEVAL (mdf) parsing ─────────────────────────────────
+    model_parsed_old = ModelParser(
+        model_file=old_model_file_yaml,
+        props_file=old_props_file_yaml,
+        handle=old_model_version
+    )
+
+    model_parsed_new = ModelParser(
+        model_file=new_model_file_yaml,
+        props_file=new_props_file_yaml,
+        handle=new_model_version
+    )
+
+    df_old = parse_model(model_parsed_old, old_model_version)
+    df_new = parse_model(model_parsed_new, new_model_version)
+
 
     # ── build or load mapping ─────────────────────────────────────────────────
     if mapping_file:
         mapping_df = pd.read_csv(os.path.basename(mapping_file), sep="\t")
         mapping_df.columns = COLUMNS
     else:
-        props_df = build_mapping(extract_properties(yaml_old, "from"), extract_properties(yaml_new, "to"))
-        rels_df  = build_mapping(extract_relationships(yaml_old, "from"), extract_relationships(yaml_new, "to"))
-        mapping_df = pd.concat([props_df, rels_df], ignore_index=True)
+        df_from = df_old.rename(columns={"node": "lift_from_node", "property": "lift_from_property", "version": "lift_from_version"})
+        df_to   = df_new.rename(columns={"node": "lift_to_node",   "property": "lift_to_property",   "version": "lift_to_version"})
+
+        mapping_df = build_mapping(df_from, df_to)
 
         user_input_location(mapping_df, "lift_from_node", "lift_from_property", "lift_to_node",   "lift_to_property",   "lift_to_version",   base_mode, "fromto")
         user_input_location(mapping_df, "lift_to_node",   "lift_to_property",   "lift_from_node", "lift_from_property", "lift_from_version", base_mode, "tofrom")
