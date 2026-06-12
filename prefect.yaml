@@ -2103,7 +2103,7 @@ deployments:
     parameters:
       bucket: "ccdi-validation"
       runner: "your_uniq_id"
-      old_model_repository: "ccdi-model"
+      old_model_repository: "ccdi-dcc-model"
       new_model_repository: "cds-model"
       old_model_version: "1.0.0"
       new_model_version: "11.0.4-GC_Release"
