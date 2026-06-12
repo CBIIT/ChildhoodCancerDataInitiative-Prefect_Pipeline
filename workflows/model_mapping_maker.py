@@ -22,16 +22,6 @@ COLUMNS = [
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-# def read_yaml_from_github(url):
-#     response = requests.get(url)
-#     response.raise_for_status()
-#     return yaml.safe_load(response.text)
-
-
-# def get_version(yaml_data):
-#     version = yaml_data.get("Version", "insert version")
-#     return version.replace("v.", "").replace("v", "")
-
 def pull_model_data_files(model, version, file_type, output_file):
     if file_type == "model":
         url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}.yml"
@@ -288,11 +278,6 @@ def runner(
     mapping_df = expand_semicolon_nodes(mapping_df)
     mapping_df = clean_up_partial_dups(mapping_df, "lift_from_node", "lift_from_property", "lift_to_node",   "lift_to_property")
     mapping_df = clean_up_partial_dups(mapping_df, "lift_to_node",   "lift_to_property",   "lift_from_node", "lift_from_property")
-
-    # Remove as we don't need to write over the version data, it already exists in the input and we want to keep it consistent with the user input.
-    # for ver_col, yaml_data in [("lift_from_version", yaml_old), ("lift_to_version", yaml_new)]:
-    #     if mapping_df[ver_col].replace("", pd.NA).isna().any():
-    #         mapping_df[ver_col] = get_version(yaml_data)
 
     mapping_df = mapping_df.fillna("").drop_duplicates()
 
