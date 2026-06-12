@@ -7,28 +7,13 @@ from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_time, CheckCCD
 
 @task(name="Load TSVs from Folder", log_prints=True)
 def load_tsvs_from_folder(folder_path):
-    int_cols = {
-        'genomic_info.bases', 
-        'genomic_info.number_of_reads', 
-        'diagnosis.age_at_diagnosis', 
-        'sample.sample_age_at_collection', 
-        'consent_group.consent_group_number'
-    }
-    
     sheet_dfs = {}
     for file in os.listdir(folder_path):
         if file.endswith(".tsv"):
             file_path = os.path.join(folder_path, file)
             file_name = re.sub(r'_\d{4}-\d{2}-\d{2}', '', file).replace(".tsv", "")
-            
-            df = pd.read_csv(file_path, sep="\t")
-            
-            for col in df.columns:
-                if f"{file_name}.{col}" in int_cols:
-                    df[col] = pd.to_numeric(df[col], errors='coerce').astype('Int64')
-                elif f"{file_name}.{col}" not in int_cols:
-                    df[col] = df[col].astype(str).str.strip()
-            
+            df = pd.read_csv(file_path, sep="\t").astype(str).replace('nan', pd.NA)
+            df = df.drop_duplicates()
             sheet_dfs[file_name] = df
     return sheet_dfs
 
@@ -58,6 +43,7 @@ def generate_ids_task(sheet_dfs):
     # --- STUDY ID Generation ---
     if 'study' in sheet_dfs:
         df = sheet_dfs['study'].copy()
+        df = df.groupby('type', as_index=False).first()
 
         if ('phs_accession' not in df.columns or df['phs_accession'].isnull().all() or
             'study_acronym' not in df.columns or df['study_acronym'].isnull().all()):
@@ -97,12 +83,12 @@ def generate_ids_task(sheet_dfs):
     if 'investigator' in sheet_dfs:
         df = sheet_dfs['investigator'].copy()
 
-        if ('primary_investigator_email' not in df.columns or
-            df['primary_investigator_email'].isnull().all()):
-            print('Missing required investigator field (primary_investigator_email), skipping investigator ID generation')
+        if ('email' not in df.columns or
+            df['email'].isnull().all()):
+            print('Missing required investigator field (email), skipping investigator ID generation')
        
         else:
-            df['investigator_id'] = gc_study_id + "_" + df['primary_investigator_email']
+            df['investigator_id'] = gc_study_id + "_" + df['email']
             sheet_dfs['investigator'] = move_id_to_front(df, 'investigator_id')
             print(f"Sample Investigator ID created: {df['investigator_id'].iloc[0]}")
         
@@ -241,9 +227,3 @@ def generate_ids_flow(bucket: str, submission_path: str, runner: str) -> None:
     folder_ul(bucket=bucket, local_folder=output_folder, destination=runner, sub_folder="")
 
     logger.info("CCDI GC ID Post-Processing completed successfully.")
-
-
-
-
-
-
