@@ -167,7 +167,7 @@ def generate_ids_task(sheet_dfs):
                 lib = row.get('library_id', "")
                 lib_val = str(lib).strip()
                 
-                if lib_val and pd.notnull(lib):
+                if lib_val and pd.notnull(lib) and lib_val.lower() != 'not available':
                     return f"{file_val}_{lib_val}"
                 else:
                     return file_val
