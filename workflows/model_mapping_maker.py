@@ -37,7 +37,6 @@ def pull_model_data_files(model, version, file_type, output_file):
 
 # ── extraction ────────────────────────────────────────────────────────────────
 
-@task
 def parse_model(model_parsed, version):
     rows = []
     print(f"Starting to parse model for version: {version}")
