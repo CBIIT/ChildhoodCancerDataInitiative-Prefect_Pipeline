@@ -46,7 +46,6 @@ def parse_model(model_parsed, version):
     for node in node_list:
         print(f"Parsing node: {node}")
         for prop in model_parsed.get_node_props_list(node):
-            # print(f"Parsing property: {prop} of node: {node}")
             rows.append({"node": node, "property": prop, "version": version})
 
     for node in node_list:
@@ -61,7 +60,10 @@ def parse_model(model_parsed, version):
             )
             for parent in parent_nodes:
                 key_prop = model_parsed.get_node_key_prop(parent)
-                rows.append({"node": node, "property": f"{parent}.{key_prop}_id", "version": version})
+                if not key_prop:
+                    print(f"No key_prop found for parent '{parent}' of node '{node}', skipping.")
+                    continue
+                rows.append({"node": node, "property": f"{parent}.{key_prop}", "version": version})
 
     return pd.DataFrame(rows, columns=["node", "property", "version"])
 
