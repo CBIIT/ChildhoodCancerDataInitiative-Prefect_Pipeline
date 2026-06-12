@@ -37,6 +37,7 @@ def pull_model_data_files(model, version, file_type, output_file):
 
 # ── extraction ────────────────────────────────────────────────────────────────
 
+@task
 def parse_model(model_parsed, version):
     rows = []
     print(f"Starting to parse model for version: {version}")
@@ -48,7 +49,6 @@ def parse_model(model_parsed, version):
             rows.append({"node": node, "property": prop, "version": version})
 
     for node in node_list:
-        print(f"Things are getting pushed, right?")
         print(f"Parsing relationships for node: {node}")
         parent_nodes = model_parsed.get_parent_nodes(node)
         print(f"Parent nodes of node: {node} are: {parent_nodes}")
