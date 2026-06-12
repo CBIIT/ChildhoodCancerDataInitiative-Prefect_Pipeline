@@ -2,7 +2,7 @@ import yaml
 import requests
 import pandas as pd
 import os
-from prefect import flow, get_run_logger, pause_flow_run
+from prefect import flow, task, get_run_logger, pause_flow_run
 from prefect.input import RunInput
 from src.utils import get_time, file_dl, file_ul
 from meval.parser import ModelParser
@@ -47,15 +47,21 @@ def pull_model_data_files(model, version, file_type, output_file):
 
 # ── extraction ────────────────────────────────────────────────────────────────
 
+@task
 def parse_model(model_parsed, version):
     rows = []
+    logger = get_run_logger()
 
     for node in model_parsed.get_node_list():
+        logger.info(f"Parsing node: {node}")
         for prop in model_parsed.get_node_props_list(node):
+            logger.info(f"Parsing property: {prop} of node: {node}")
             rows.append({"node": node, "property": prop, "version": version})
 
     for node in model_parsed.get_node_list():
+        logger.info(f"Parsing relationships for node: {node}")
         for parent in model_parsed.get_parent_nodes(node):
+            logger.info(f"Parsing parent node: {parent} of node: {node}")
             # handle top level nodes without parents - skip as they won't have a parent property to map to
             if not parent:
                 continue
