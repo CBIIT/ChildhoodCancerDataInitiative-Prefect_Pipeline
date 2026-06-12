@@ -54,11 +54,14 @@ def parse_model(model_parsed, version):
         logger.info(f"Parent nodes of node: {node} are: {model_parsed.get_parent_nodes(node)}")
         for parent in model_parsed.get_parent_nodes(node):
             logger.info(f"Parsing parent node: {parent} of node: {node}")
-            # handle top level nodes without parents - skip as they won't have a parent property to map to
             if not parent:
-                logger.info(f"Node: {node} has no parent nodes, skipping relationship parsing for this node.")
+                logger.info(f"Node: {node} has no parent nodes, skipping.")
             else:
                 key_prop = model_parsed.get_node_key_prop(parent)
+                logger.info(f"key_prop for parent '{parent}': {repr(key_prop)}")  # repr() shows None vs empty string
+                if not key_prop:
+                    logger.warning(f"No key_prop found for parent '{parent}' of node '{node}', skipping.")
+                    continue
                 rows.append({"node": node, "property": f"{parent}.{key_prop}_id", "version": version})
 
     return pd.DataFrame(rows, columns=["node", "property", "version"])
