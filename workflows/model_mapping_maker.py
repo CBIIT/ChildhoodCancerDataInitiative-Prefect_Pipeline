@@ -73,33 +73,6 @@ def parse_model(model_parsed, version):
 
     return pd.DataFrame(rows, columns=["node", "property", "version"])
 
-# def extract_properties(yaml_data, side: str) -> pd.DataFrame:
-#     """side is either 'from' or 'to'."""
-#     version = get_version(yaml_data)
-#     rows = [
-#         {f"lift_{side}_node": node, f"lift_{side}_property": prop, f"lift_{side}_version": version}
-#         for node, props in yaml_data["Nodes"].items()
-#         for prop in props["Props"]
-#     ]
-#     return pd.DataFrame(rows)
-
-
-# def extract_relationships(yaml_data, side: str) -> pd.DataFrame:
-#     """side is either 'from' or 'to'."""
-#     version = get_version(yaml_data)
-#     rows = [
-#         {
-#             f"lift_{side}_node": src,
-#             f"lift_{side}_property": f"{dst}.{dst}_id",
-#             f"lift_{side}_version": version,
-#         }
-#         for rel in yaml_data["Relationships"].values()
-#         for ends in rel["Ends"]
-#         for src, dst in [(ends.get("Src"), ends.get("Dst"))]
-#         if src and dst
-#     ]
-#     return pd.DataFrame(rows)
-
 
 # ── merging ───────────────────────────────────────────────────────────────────
 
