@@ -40,28 +40,27 @@ def pull_model_data_files(model, version, file_type, output_file):
 @task
 def parse_model(model_parsed, version):
     rows = []
-    logger = get_run_logger()
-    logger.info(f"Starting to parse model for version: {version}")
+    print(f"Starting to parse model for version: {version}")
+    node_list = model_parsed.get_node_list()
 
-    for node in model_parsed.get_node_list():
-        logger.info(f"Parsing node: {node}")
+    for node in node_list:
+        print(f"Parsing node: {node}")
         for prop in model_parsed.get_node_props_list(node):
-            logger.info(f"Parsing property: {prop} of node: {node}")
+            # print(f"Parsing property: {prop} of node: {node}")
             rows.append({"node": node, "property": prop, "version": version})
 
-    for node in model_parsed.get_node_list():
-        logger.info(f"Parsing relationships for node: {node}")
-        logger.info(f"Parent nodes of node: {node} are: {model_parsed.get_parent_nodes(node)}")
-        for parent in model_parsed.get_parent_nodes(node):
-            logger.info(f"Parsing parent node: {parent} of node: {node}")
-            if not parent:
-                logger.info(f"Node: {node} has no parent nodes, skipping.")
-            else:
+    for node in node_list:
+        print(f"Parsing relationships for node: {node}")
+        parent_nodes = model_parsed.get_parent_nodes(node)
+        print(f"Parent nodes of node: {node} are: {parent_nodes}")
+        if len(parent_nodes) == 0:
+            print(f"Node: {node} has no parent nodes, skipping relationship parsing for this node.")
+        else:
+            print(
+                f"Node: {node} has parent nodes, parsing relationships for this node."
+            )
+            for parent in parent_nodes:
                 key_prop = model_parsed.get_node_key_prop(parent)
-                logger.info(f"key_prop for parent '{parent}': {repr(key_prop)}")  # repr() shows None vs empty string
-                if not key_prop:
-                    logger.warning(f"No key_prop found for parent '{parent}' of node '{node}', skipping.")
-                    continue
                 rows.append({"node": node, "property": f"{parent}.{key_prop}_id", "version": version})
 
     return pd.DataFrame(rows, columns=["node", "property", "version"])
