@@ -51,6 +51,7 @@ def pull_model_data_files(model, version, file_type, output_file):
 def parse_model(model_parsed, version):
     rows = []
     logger = get_run_logger()
+    logger.info(f"Starting to parse model, {model_parsed} for version: {version}")
 
     for node in model_parsed.get_node_list():
         logger.info(f"Parsing node: {node}")
