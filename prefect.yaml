@@ -2091,3 +2091,38 @@ deployments:
       name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
+
+  - name: TEST-model-mapping-maker-8gb-v3
+    version: null
+    tags: ["TEST","V3"]
+    description: null
+    entrypoint: workflows/model_mapping_maker.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      runner: "your_uniq_id"
+      old_model_repository: "ccdi-dcc-model"
+      new_model_repository: "cds-model"
+      old_model_version: "1.0.0"
+      new_model_version: "11.0.4-GC_Release"
+      base_mode: True 
+      mapping_file: "path_to/mapping_file/in/s3_bucket.tsv"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-2474_Refactor_MMM
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {} 
