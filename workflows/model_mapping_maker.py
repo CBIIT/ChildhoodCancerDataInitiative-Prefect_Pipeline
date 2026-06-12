@@ -273,6 +273,7 @@ def runner(
 
         mapping_df = build_mapping(df_from, df_to)
 
+    if not base_mode:
         user_input_location(mapping_df, "lift_from_node", "lift_from_property", "lift_to_node",   "lift_to_property",   "lift_to_version",   base_mode, "fromto")
         user_input_location(mapping_df, "lift_to_node",   "lift_to_property",   "lift_from_node", "lift_from_property", "lift_from_version", base_mode, "tofrom")
 
