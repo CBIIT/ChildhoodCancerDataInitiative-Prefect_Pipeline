@@ -1,4 +1,4 @@
-bento-mdf==0.13.0
+bento-mdf==0.13.1
 boto3==1.42.70
 botocore==1.42.70
 deepdiff==9.0.0
@@ -10,7 +10,9 @@ hyperframe==6.1.0
 importlib_metadata==8.7.1
 jmespath==1.1.0
 Markdown==3.10.2
-neo4j==6.1.0
+ctos-meval==1.1.1
+neo4j==6.2.0
+neo4j-viz==1.0.0
 numpy==2.4.4
 openpyxl==3.1.5
 pandas==2.2.3
