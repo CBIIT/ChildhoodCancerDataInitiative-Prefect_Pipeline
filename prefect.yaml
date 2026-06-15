@@ -31,7 +31,7 @@ deployments:
   - name: bucket-reader-2gb-v3
     version: null
     tags: ["Production","V3","DCC","Centralized Worker"]
-    description: null
+    description: Pipeline to read data and high level stats from an S3 bucket.
     entrypoint: workflows/bucket_reader.py:reader
     schedule: null
 
@@ -62,7 +62,7 @@ deployments:
   - name: ccdi-data-curation-2gb-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to curate CCDI data 2gb.
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
 
@@ -91,7 +91,7 @@ deployments:
   - name: ccdi-data-curation-8gb-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to curate CCDI data 8gb.
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
 
@@ -120,7 +120,7 @@ deployments:
   - name: ccdi-data-curation-16gb-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to curate CCDI data 16gb.
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
 
@@ -149,7 +149,7 @@ deployments:
   - name: ccdi-data-curation-32gb-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to curate CCDI data 32gb.
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
 
@@ -178,7 +178,7 @@ deployments:
   - name: ccdi-data-curation-60gb-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to curate CCDI data 60gb.
     entrypoint: workflows/s3-Prefect-Pipeline.py:runner
     schedule: null
 
@@ -207,7 +207,7 @@ deployments:
   - name: template-exampler-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to generate example CCDI submission files of fake data.
     entrypoint: workflows/Template_Exampler.py:run_template_exampler
     schedule: null
 
@@ -236,7 +236,7 @@ deployments:
   - name: ccdi-file-copier-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to move files from one location to another.
     entrypoint: workflows/File_Mover.py:file_mover
     schedule: null
 
@@ -261,38 +261,10 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: get-parameter-2gb-v3
-    version: null
-    tags: ["Test", "V3"]
-    description: null
-    entrypoint: workflows/get_aws_parameter.py:get_aws_parameter
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      parameter_name: "prefect-test"
-
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
-
   - name: pull-neo4j-data-16gb-c3dc-v3
     version: null
     tags: ["Production","C3DC", "DEV", "V3"]
-    description: null
+    description: Pipeline to pull data from a Neo4j database.
     entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
     schedule: null
 
@@ -326,7 +298,7 @@ deployments:
   - name: ccdi-template-liftover-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to perform liftover of CCDI manifest files.
     entrypoint: workflows/ccdi_manifest_liftover.py:manifest_liftover
     schedule: null
 
@@ -356,7 +328,7 @@ deployments:
   - name: dcf-index-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to create a DCF indexing manifest file.
     entrypoint: workflows/dcf_indexing.py:dcf_index_manifest
     schedule: null
 
@@ -384,7 +356,7 @@ deployments:
   - name: fetch-size-md5sum-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to fetch the size and MD5 checksum of files in a specified location.
     entrypoint: workflows/fetch_size_md5sum.py:get_size_md5sum
     schedule: null
 
@@ -412,7 +384,7 @@ deployments:
   - name: file-remover-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to remove files from a specified location.
     entrypoint: workflows/File_Remover.py:run_file_remover
     schedule: null
 
@@ -439,7 +411,7 @@ deployments:
   - name: get-parameter-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to retrieve an AWS parameter. To be deprecated in favor of AWS Secrets Manager for better security practices.
     entrypoint: workflows/get_aws_parameter.py:get_aws_parameter
     schedule: null
 
@@ -467,7 +439,7 @@ deployments:
   - name: join-tsv-to-manifest-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to join tsv files into a manifest file for CCDI submission.
     entrypoint: workflows/db_tsv_to_manifest.py:join_tsv_to_manifest
     schedule: null
 
@@ -495,7 +467,7 @@ deployments:
   - name: mci-release-manifest-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to create a release manifest for MCI release. This pipeline takes in a template manifest and fills in the file information based on the files present in the specified S3 bucket.
     entrypoint: workflows/mci_release_run.py:mci_release_manifest
     schedule: null
 
@@ -524,7 +496,7 @@ deployments:
   - name: model-to-submission-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Pipeline to convert a model output file to a submission manifest file.
     entrypoint: workflows/model_to_submission.py:create_submission_manifest
     schedule: null
 
@@ -552,7 +524,7 @@ deployments:
   - name: new-model-validation-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Validation pipeline to validate new models.
     entrypoint: workflows/new_model_validation.py:validate_new_model
     schedule: null
 
@@ -580,7 +552,7 @@ deployments:
   - name: submission-cruncher-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: A pipeline to concatenate two CCDI manifest files into a final submission manifest file.
     entrypoint: workflows/Submission_Cruncher.py:submission_cruncher
     schedule: null
 
@@ -608,7 +580,7 @@ deployments:
   - name: file-mover-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: A file mover pipeline to move files between locations. This version includes deletion of original files after copying.
     entrypoint: workflows/file_mover_delete.py:file_mover_delete
     schedule: null
 
@@ -636,7 +608,7 @@ deployments:
   - name: generic-file-mover-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Generic pipeline to move files between locations.
     entrypoint: workflows/file_mover_delete.py:file_mover_delete_complete_input
     schedule: null
 
@@ -664,7 +636,7 @@ deployments:
   - name: ccdi-to-sra-v3
     version: null
     tags: ["TEST","V3"]
-    description: null
+    description: Specific pipeline to convert CCDI submission metadata to SRA metadata.
     entrypoint: workflows/ccdi_to_sra.py:run_ccdi_to_sra
     schedule: null
 
@@ -692,7 +664,7 @@ deployments:
   - name: DB-props-uniq-report-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Report unique values for properties in the database
     entrypoint: src/neo4j_data_tools.py:report_unique_values_properties
     schedule: null
 
@@ -720,7 +692,7 @@ deployments:
   - name: bucket-content-search-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: List contents of a bucket and output as a tsv file to S3
     entrypoint: src/search_bucket_content.py:search_buckets_content
     schedule: null
 
@@ -749,7 +721,7 @@ deployments:
   - name: ccdi-gdc-import-v3
     version: null
     tags: ["Production","V3"] 
-    description: null
+    description: Import metadata files to GDC using the GDC client.
     entrypoint: workflows/gdc_import.py:runner
     schedule: null
 
@@ -786,7 +758,7 @@ deployments:
   - name: ccdi-gdc-file-upload-v3
     version: null
     tags: [ "Production","V3" ]
-    description: null
+    description: Upload files to GDC using the GDC client.
     entrypoint: workflows/gdc_file_upload.py:runner
     schedule: null
 
@@ -824,7 +796,7 @@ deployments:
   - name: compare-dataframes-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: A simple flow to compare two dataframes and output the differences between them.
     entrypoint: workflows/compare_dataframes.py:compare_dataframes_runner
     schedule: null
 
@@ -890,7 +862,7 @@ deployments:
   - name: liftover-generic
     version: null
     tags: [ "Production", "V3", "CCDI", "CDS" ]
-    description: null
+    description: Generic liftover for metadata between projects using a provided mapping file
     entrypoint: workflows/submission_liftover.py:submission_liftover
     schedule: null
 
@@ -951,7 +923,7 @@ deployments:
   - name: ccdi-cog_igm-transform-V3
     version: null
     tags: ["MCI", "V3"]
-    description: null
+    description: Transform from IGM format to CCDI for COG submission using the cog_and_igm form parsing method
     entrypoint: workflows/cog_igm_transformer.py:cog_igm_transform
     schedule: null
 
@@ -983,7 +955,7 @@ deployments:
   - name: ccdi-data-catalog-counts
     version: null
     tags: ["V3"]
-    description: null
+    description: Generate counts for the data catalog using the CCDI-DCC model
     entrypoint: workflows/data_catalog_stats.py:data_catalog_stats
     schedule: null
 
@@ -1015,7 +987,7 @@ deployments:
   - name: pull_n_join_manifest_single_study
     version: null
     tags: ["Production", "V3"]
-    description: null
+    description: Pull and join manifest for a single study using the DCC metadata templates and validation rules
     entrypoint: workflows/pull_n_join_manifest_single_study.py:pull_n_join_manifest_single_study
     schedule: null
 
@@ -1046,7 +1018,7 @@ deployments:
   - name: hello-world-v3
     version: null
     tags: ["Production","V3"]
-    description: null
+    description: Hello world flow to test deployment configuration and flow execution
     entrypoint: workflows/hello_world.py:hello_flow
     schedule: null
 
@@ -1068,7 +1040,7 @@ deployments:
   - name: gc-liftover-helper
     version: null
     tags: ["Production", "Liftover", "CCDI", "DCC"]
-    description: null
+    description: Helper flow to perform post-liftover operations on CCDI data for GC submission preparation
     entrypoint: workflows/gc_liftover_helper.py:generate_ids_flow
     schedule: null
 
@@ -1098,7 +1070,7 @@ deployments:
   - name: model-to-submission-ccdi-dcc-v3
     version: null
     tags: ["DCC","Prod","V3", "Python3.13"]
-    description: null
+    description: Creates the CCDI-DCC xlsx manifest for submission using the CCDI-DCC model
     entrypoint: workflows/model_to_submission_ccdi_dcc.py:create_submission_manifest
     schedule: null
 
@@ -1126,7 +1098,7 @@ deployments:
   - name: new-model-validation-ccdi-dcc-v3
     version: null
     tags: ["DCC","Prod","V3", "Python3.13"]
-    description: null
+    description: Creates a small manifest of fake data using the DCC metadata templates and validation rules as an example of how to use the templates and rules for submission preparation and validates a model using the DCC validation rules as an example of how to validate a model for submission preparation
     entrypoint: workflows/new_model_validation_ccdi_dcc.py:validate_new_dcc_model
     schedule: null
 
@@ -1154,7 +1126,7 @@ deployments:
   - name: template-exampler-ccdi-dcc-v3
     version: null
     tags: ["DCC","Prod","V3","Python3.13"]
-    description: null
+    description: Create a small manifest of fake data using the DCC metadata templates and validation rules as an example of how to use the templates and rules for submission preparation
     entrypoint: workflows/Template_Exampler_ccdi_dcc.py:run_template_exampler_dcc
     schedule: null
 
@@ -1183,7 +1155,7 @@ deployments:
   - name: liftover-generic-CCDI-DCC
     version: null
     tags: [ "Production", "V3", "CCDI", "DCC" ]
-    description: null
+    description: Liftover pipeline to convert from CCDI-DCC model to another using a mapping file for guidance.
     entrypoint: workflows/submission_liftover.py:submission_liftover_ccdi_to_dcc
     schedule: null
 
@@ -1212,7 +1184,7 @@ deployments:
   - name: dcc-data-curation-16gb-v3
     version: null
     tags: ["Production", "DCC", "V3"]
-    description: null
+    description: Curatation pipeline to prepare CCDI data for DCC submission, using DCC metadata templates and validation rules
     entrypoint: workflows/s3-Prefect-Pipeline-dcc.py:runner_dcc
     schedule: null
 
@@ -1242,7 +1214,7 @@ deployments:
   - name: dcc-data-curation-SRA-16gb-v3
     version: null
     tags: ["Production", "DCC", "SRA", "V3"]
-    description: null
+    description: Curatation pipeline to prepare CCDI data with SRA submission added on still using DCC metadata templates and validation rules
     entrypoint: workflows/s3-Prefect-Pipeline-dcc.py:runner_dcc_w_SRA
     schedule: null
 
@@ -1271,7 +1243,7 @@ deployments:
   - name: secret-test-ccdi-dcc-v3
     version: null
     tags: ["PROD", "DCC", "CENTRAL WORKERS", "V3"]
-    description: null
+    description: Test access to secrets in the Centralized Worker environments
     entrypoint: workflows/secret_test.py:secret_pipeline
     schedule: null
 
@@ -1301,7 +1273,7 @@ deployments:
   - name: dcc-db_diff-v3
     version: null
     tags: ["Production","DCC","Centralized Worker","V3"]
-    description: null
+    description: Compare two databases and report differences
     entrypoint: workflows/db_diff_central_worker.py:db_diff
     schedule: null
 
@@ -1340,7 +1312,7 @@ deployments:
   - name: COG_comparer
     version: null
     tags: ["PROD", "DCC", "CENTRAL WORKERS", "V3"]
-    description: null
+    description: Compare CCDI COG data with DCC data
     entrypoint: workflows/cog_comparer.py:cog_comparer
     schedule: null
 
@@ -1371,7 +1343,7 @@ deployments:
   - name: dcc-entry-remover-16gb-v3
     version: null
     tags: ["Production", "DCC", "V3", "Centralized Worker"]
-    description: null
+    description: Remove entries from CCDI-DCC metadata manifests based on an input file with entry identifiers to remove
     entrypoint: workflows/entry_remover.py:entry_remover
     schedule: null
 
@@ -1403,7 +1375,7 @@ deployments:
   - name: ccdi-cog_igm-transform-V3_v2
     version: null
     tags: ["PROD", "MCI", "V3"]
-    description: null
+    description: Transform CCDI COG and IGM data to DCC format
     entrypoint: workflows/cog_igm_transformer_v2.py:cog_igm_transform
     
     parameters:
@@ -1437,7 +1409,7 @@ deployments:
   - name: db-stats-v3
     version: null
     tags: ["Production","DCC","Centralized Worker","V3"]
-    description: null
+    description: Pull database stats based on DCC model
     entrypoint: workflows/db_stats.py:pull_db_stats
     schedule: null
 
@@ -1465,7 +1437,7 @@ deployments:
   - name: validate-db-data-32gb-v3
     version: null
     tags: ["Production","Centralized Worker","DCC","V3"]
-    description: null
+    description: Validate a memgraph database data
     entrypoint: workflows/validate_db_data.py:validate_db_data
     schedule: null
 
@@ -1493,7 +1465,7 @@ deployments:
   - name: join-tsv-to-manifest-v3-dcc
     version: null
     tags: ["Production","DCC","Centralized Worker","V3"]
-    description: null
+    description: Join the exported model TSV back to the manifest template for CCDI-DCC
     entrypoint: workflows/db_tsv_to_manifest.py:join_tsv_to_manifest
     schedule: null
 
@@ -1524,7 +1496,7 @@ deployments:
   - name: pull_n_join_manifest_single_study-dcc
     version: null
     tags: ["Production", "DCC", "Centralized Worker", "V3"]
-    description: null
+    description: Pull and join CCDI-DCC manifest for a single study with DCC template
     entrypoint: workflows/pull_n_join_manifest_single_study.py:pull_n_join_manifest_single_study
     schedule: null
 
@@ -1560,7 +1532,7 @@ deployments:
   - name: pull-db-data-32gb-v3
     version: null
     tags: ["Production","V3", "DCC", "Centralized Worker"]
-    description: null
+    description: Pull memgraph database data for export via centralized worker
     entrypoint: workflows/pull_db_data.py:pull_db_data
     schedule: null
 
@@ -1594,7 +1566,7 @@ deployments:
   - name: pull-neo4j-data-32gb-ccdi-v3
     version: null
     tags: ["Production","V3", "CCDI", "Sandbox", "Centralized Worker"]
-    description: null
+    description: Pull Neo4j data for CCDI V3
     entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
     schedule: null
 
@@ -1625,40 +1597,40 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: pull_n_join_ccdi_manifest_single_study
-    version: null
-    tags: ["Production", "V3", "CCDI", "Centralized Worker"]
-    description: null
-    entrypoint: workflows/pull_n_join_manifest_single_study.py:pull_neo4j_join_manifest_single_study
-    schedule: null
+  # - name: pull_n_join_ccdi_manifest_single_study
+  #   version: null
+  #   tags: ["Production", "V3", "DCC", "Centralized Worker"]
+  #   description: Pull and join CCDI manifest for a single study
+  #   entrypoint: workflows/pull_n_join_manifest_single_study.py:pull_neo4j_join_manifest_single_study
+  #   schedule: null
 
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
-      study_id: "phs002790"
-      ccdi_template_tag: "3.1.0"
+  #   # flow-specific parameters
+  #   parameters:
+  #     bucket: "ccdi-validation"
+  #     study_id: "phs002790"
+  #     ccdi_template_tag: "3.1.0"
     
-    # pull action to overwrite from file pull action
-    pull:
-    - prefect.deployments.steps.git_clone:
-        id: clone-step
-        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: main
-    - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_python3.13_prefect3.txt
-        directory: "{{ clone-step.directory }}"
-        stream_output: False
+  #   # pull action to overwrite from file pull action
+  #   pull:
+  #   - prefect.deployments.steps.git_clone:
+  #       id: clone-step
+  #       repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+  #       branch: main
+  #   - prefect.deployments.steps.pip_install_requirements:
+  #       requirements_file: requirements_python3.13_prefect3.txt
+  #       directory: "{{ clone-step.directory }}"
+  #       stream_output: False
 
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
+  #   # infra-specific fields
+  #   work_pool:
+  #     name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
+  #     work_queue_name: null
+  #     job_variables: {}
 
   - name: daap-db-index-creation-32gb-v3
     version: null
     tags: ["Production","DaaP","V3", "Centralized Worker"]
-    description: null
+    description: Create database indexes for Memgraph databases
     entrypoint: workflows/db_index_creation.py:db_index_creation_flow
     schedule: null
 
@@ -1693,7 +1665,7 @@ deployments:
   - name: mci_gdc_transformer-v3
     version: null
     tags: ["PROD", "V3"]
-    description: null
+    description: Transform MCI data in DCC format to GDC format for submission to GDC
     entrypoint: workflows/mci_gdc_transform.py:mci_gdc_transform
     schedule: null
 
@@ -1725,7 +1697,7 @@ deployments:
   - name: memgraph_promotion_v3
     version: null
     tags: ["Production", "V3", "DCC", "Centralized Worker", "Database Promotion"]
-    description: null
+    description: Promote Memgraph database from source to target environment database
     entrypoint: workflows/memgraph_transfer_promotion.py:memgraph_transfer_promotion
     schedule: null
 
@@ -1771,7 +1743,7 @@ deployments:
       job_variables: {}   
 
   - name: KF-Data-Sync-Manifest-Generator-v3
-    version: null
+    version: Generate a manifest for KF Data Sync given a file with ids and upload to S3
     tags: ["Production","V3","DCC", "Centralized Worker"]
     description: null
     entrypoint: workflows/kf_data_sync_manifest_generator.py:kf_data_sync_manifest_generator
@@ -1804,7 +1776,7 @@ deployments:
   - name: model-mapping-maker-8gb-v3
     version: null
     tags: ["Production","MDF","MEVAL","Centralized Worker","V3"]
-    description: null
+    description: Create a mapping file between two models based on user input and upload to S3
     entrypoint: workflows/model_mapping_maker.py:runner
     schedule: null
 
