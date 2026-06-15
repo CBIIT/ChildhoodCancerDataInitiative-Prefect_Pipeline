@@ -23,6 +23,11 @@ def save_tsvs_to_folder(sheet_dfs, output_path):
     os.makedirs(output_path, exist_ok=True)
     
     for name, df in sheet_dfs.items():
+        # collect actual data (non-type/non-key) columns and check if empty
+        empty_cols = [col for col in df.columns if '.' not in col and col != 'type']
+        if df[empty_cols].dropna(how='all').empty:
+            print(f"Skipping {name}.tsv — no data in non-key columns")
+            continue
         file_path = os.path.join(output_path, f"{name}.tsv")
         df.to_csv(file_path, sep="\t", index=False)
 
@@ -91,7 +96,43 @@ def generate_ids_task(sheet_dfs):
             df['investigator_id'] = gc_study_id + "_" + df['email']
             sheet_dfs['investigator'] = move_id_to_front(df, 'investigator_id')
             print(f"Sample Investigator ID created: {df['investigator_id'].iloc[0]}")
-        
+
+    # --- INVESTIGATOR NAME Generation ---
+        def parse_name(full_name):
+            title, first, middle, last, suffix = None, None, None, None, None
+            if pd.notna(full_name) and str(full_name).strip():
+
+                clean_name = str(full_name).replace(',', '')
+                parsed_name = str(clean_name).strip().split()
+
+                prefixes = {'Dr.', 'Dr', 'Mr.', 'Mr', 'Mrs.', 'Mrs', 'Ms.', 
+                            'Ms', 'Miss', 'Sir', 'Dame', 'Lord', 'Lady'}
+                suffixes = {'Jr.', 'Jr', 'Sr.', 'Sr', 'II', 'III', 'IV', 
+                            'MD', 'M.D.', 'PhD', 'Ph.D.', 'DO', 'D.O.'}
+
+                if parsed_name and parsed_name[0] in prefixes:
+                    title = parsed_name.pop(0)
+
+                if parsed_name and parsed_name[-1] in suffixes:
+                    suffix = parsed_name.pop(-1)
+
+                if len(parsed_name) > 2:
+                    first, middle, last = parsed_name[0], parsed_name[1], " ".join(parsed_name[2:])
+                elif len(parsed_name) == 2:
+                    first, last = parsed_name[0], parsed_name[1]
+                elif len(parsed_name) == 1:
+                    last = parsed_name[0]
+
+            return title, first, middle, last, suffix
+
+        # where primary_investigator_name is not null, parse/populate the name fields
+        if 'primary_investigator_name' in df.columns:
+            name_cols = ['title', 'first_name', 'middle_name', 'last_name', 'suffix']
+            mask = df['primary_investigator_name'].notna()
+            parsed = df.loc[mask, 'primary_investigator_name'].apply(parse_name)
+            df.loc[mask, name_cols] = pd.DataFrame(parsed.tolist(), index=parsed.index, columns=name_cols)
+            sheet_dfs['investigator'] = df
+            
 
     # --- PARTICIPANT ID Generation ---
     if 'participant' in sheet_dfs:
