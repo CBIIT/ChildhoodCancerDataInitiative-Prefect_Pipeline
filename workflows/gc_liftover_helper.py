@@ -102,13 +102,13 @@ def generate_ids_task(sheet_dfs):
             title, first, middle, last, suffix = None, None, None, None, None
             if pd.notna(full_name) and str(full_name).strip():
 
-                parsed_name = str(full_name).strip().split()
+                clean_name = str(full_name).replace(',', '')
+                parsed_name = str(clean_name).strip().split()
 
                 prefixes = {'Dr.', 'Dr', 'Mr.', 'Mr', 'Mrs.', 'Mrs', 'Ms.', 
                             'Ms', 'Miss', 'Sir', 'Dame', 'Lord', 'Lady'}
-                suffixes = {'Jr.', 'Sr.', 'II', 'III', 'IV', 'DO', 'D.O.',
-                            'MD', 'M.D.', ',MD', ',M.D.', 
-                            'PhD', 'Ph.D.',',PhD', ',Ph.D.'}
+                suffixes = {'Jr.', 'Jr', 'Sr.', 'Sr', 'II', 'III', 'IV', 
+                            'MD', 'M.D.', 'PhD', 'Ph.D.', 'DO', 'D.O.'}
 
                 if parsed_name and parsed_name[0] in prefixes:
                     title = parsed_name.pop(0)
@@ -125,11 +125,13 @@ def generate_ids_task(sheet_dfs):
 
             return title, first, middle, last, suffix
 
+        # where primary_investigator_name is not null, parse/populate the name fields
         if 'primary_investigator_name' in df.columns:
-            parsed_names_list = df['primary_investigator_name'].apply(parse_name).tolist()
-            df[['title', 'first_name', 'middle_name', 'last_name', 'suffix']] = pd.DataFrame(parsed_names_list, index=df.index)
+            name_cols = ['title', 'first_name', 'middle_name', 'last_name', 'suffix']
+            mask = df['primary_investigator_name'].notna()
+            parsed = df.loc[mask, 'primary_investigator_name'].apply(parse_name)
+            df.loc[mask, name_cols] = pd.DataFrame(parsed.tolist(), index=parsed.index, columns=name_cols)
             sheet_dfs['investigator'] = df
-            print("Parsed primary investigator names into first, middle, and last_name columns")
             
 
     # --- PARTICIPANT ID Generation ---
