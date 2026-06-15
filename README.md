@@ -4,11 +4,14 @@ This repo contains the source code for a Prefect workflow that is deployed in th
 
 ## Contents
 
-- [Workflow overlook](#workflow-overlook)
-- [Prefect login instruction](#prefect-login-instruction)
-- [Exucute a workflow](#execute-a-workflow)
-- [Workflow outputs](#workflow-outputs)
-- [Download workflow outputs](#download-workflow-outputs)
+- [ChildhoodCancerDataInitiative-Prefect\_Pipeline](#childhoodcancerdatainitiative-prefect_pipeline)
+  - [Contents](#contents)
+    - [Workflow overlook](#workflow-overlook)
+    - [Deployment documentation](#deployment-documentation)
+    - [Prefect login instruction](#prefect-login-instruction)
+    - [Execute a workflow](#execute-a-workflow)
+    - [Workflow outputs](#workflow-outputs)
+    - [Download workflow outputs](#download-workflow-outputs)
 
 ---
 ### Workflow overlook
@@ -22,6 +25,13 @@ The current workflow contains 6 subflow/steps during execution. All these steps 
 - [CCDI_to_CDS](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CCDI_to_CDS_ConverteRy)
 - [CCDI_to_Index](https://github.com/CBIIT/ChildhoodCancerDataInitiative-CCDI_IndexeRy)
 - [CCDI_to_TabBreakeR](https://github.com/CBIIT/ChildhoodCancerDataInitiative-TabBreakeR)
+
+### Deployment documentation
+
+This repository contains **59 deployments** in `prefect.yaml` for CCDI and DCC operational workflows.
+
+- For high-level documentation of every deployment (name, entrypoint, tags, work pool, key parameters), see [Deployment_README.md](./Deployment_README.md).
+- If details in docs and YAML differ, treat `prefect.yaml` as the source of truth.
 
 ### Prefect login instruction
 
