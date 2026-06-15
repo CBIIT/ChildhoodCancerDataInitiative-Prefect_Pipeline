@@ -1022,7 +1022,7 @@ deployments:
       gdc_client_path: "bullenca/file_upload_test/gdc-client"
       node_type: "submitted_aligned_reads"
       runner: ""
-      secret_name_path: "ccdi/nonprod/inventory/gdc-token"
+      secret_name_path: "ccdi/dcc/gdc/submission"
       secret_key_name: "gdc-token"
       upload_part_size_mb: 6
       n_processes: 40
