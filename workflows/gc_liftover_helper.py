@@ -23,11 +23,19 @@ def save_tsvs_to_folder(sheet_dfs, output_path):
     os.makedirs(output_path, exist_ok=True)
     
     for name, df in sheet_dfs.items():
+
         # collect actual data (non-type/non-key) columns and check if empty
         empty_cols = [col for col in df.columns if '.' not in col and col != 'type']
         if df[empty_cols].dropna(how='all').empty:
             print(f"Skipping {name}.tsv — no data in non-key columns")
             continue
+
+        # drop empty rows with no actual data (non-type/non-key) columns
+        key_cols = {'type', 'study.study_id'}
+        data_cols = [col for col in df.columns if col not in key_cols]
+        df = df[df[data_cols].notna().any(axis=1)]
+
+        # save as TSV files
         file_path = os.path.join(output_path, f"{name}.tsv")
         df.to_csv(file_path, sep="\t", index=False)
 
