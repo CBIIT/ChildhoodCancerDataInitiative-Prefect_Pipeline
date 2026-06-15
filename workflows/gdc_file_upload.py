@@ -449,7 +449,7 @@ def runner(
                     f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(matched), chunk_size))}"
                 )
                 subresponses = uploader_handler(
-                    matched,
+                    matched[chunk : chunk + chunk_size].reset_index(drop=True),
                     gdc_client_exe_path,
                     token_path,
                     upload_part_size_mb,
