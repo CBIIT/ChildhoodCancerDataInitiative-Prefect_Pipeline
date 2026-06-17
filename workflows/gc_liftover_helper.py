@@ -116,7 +116,7 @@ def generate_ids_task(sheet_dfs):
                 prefixes = {'Dr.', 'Dr', 'Mr.', 'Mr', 'Mrs.', 'Mrs', 'Ms.', 
                             'Ms', 'Miss', 'Sir', 'Dame', 'Lord', 'Lady'}
                 suffixes = {'Jr.', 'Jr', 'Sr.', 'Sr', 'II', 'III', 'IV', 
-                            'MD', 'M.D.', 'PhD', 'Ph.D.', 'DO', 'D.O.'}
+                            'MD', 'M.D.', 'PhD', 'Ph.D', 'Ph.D.', 'DO', 'D.O.'}
 
                 if parsed_name and parsed_name[0] in prefixes:
                     title = parsed_name.pop(0)
