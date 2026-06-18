@@ -350,6 +350,12 @@ def runner(
 
     elif process_type == "check_status":
 
+        runner_logger.info("Grabbing Public IP address ....")
+        runner_logger.info(requests.get("https://ifconfig.me").text)
+        
+        runner_logger.info("Grabbing Public IP address another way....")
+        runner_logger.info(requests.get("https://ipinfo.io/ip").text)
+        
         runner_logger.info(f">>> Checking GDC API status ....")
 
         # check that GDC API status is OK
