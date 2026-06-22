@@ -135,8 +135,8 @@ def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: st
 
         if len(json.loads(response.text)["data"][node_type]) == n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
-            runner_logger.info("Sleeping for 20 seconds to avoid timeouts...")
-            time.sleep(20)
+            runner_logger.info("Sleeping for 60 seconds to avoid timeouts...")
+            time.sleep(60)
         elif len(json.loads(response.text)["data"][node_type]) < n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
             runner_logger.info(
