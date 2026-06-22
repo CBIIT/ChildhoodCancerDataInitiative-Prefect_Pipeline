@@ -394,13 +394,21 @@ def runner(
             runner_logger.error(f"Error with curl command: {e}")
         
         # try openssl commands
-        try:
+        """try:
             runner_logger.info("Command: openssl s_client -connect api.gdc.cancer.gov:443 -servername api.gdc.cancer.gov -tls1_2  -cipher 'ECDHE-RSA-AES256-GCM-SHA384'")
             runner_logger.info(ShellOperation(commands=["openssl s_client -connect api.gdc.cancer.gov:443 -servername api.gdc.cancer.gov -tls1_2  -cipher 'ECDHE-RSA-AES256-GCM-SHA384'"]).run()
             )
         except Exception as e:
-            runner_logger.error(f"Error with openssl command: {e}")
+            runner_logger.error(f"Error with openssl command: {e}")"""
             
+        try:
+            import ssl
+            runner_logger.info("Command: ssl.OPENSSL_VERSION")
+            print(ssl.OPENSSL_VERSION)
+        except Exception as e:
+            runner_logger.error(f"Error with ssl module: {e}")
+        
+        
         try:
             runner_logger.info("Command: openssl s_client -connect api.gdc.cancer.gov:443 -servername api.gdc.cancer.gov -tls1_2  -cipher 'ECDHE-RSA-AES128-GCM-SHA256'")
             runner_logger.info(ShellOperation(commands=["openssl s_client -connect api.gdc.cancer.gov:443 -servername api.gdc.cancer.gov -tls1_2  -cipher 'ECDHE-RSA-AES128-GCM-SHA256'"]).run()
@@ -408,13 +416,6 @@ def runner(
         except Exception as e:
             runner_logger.error(f"Error with openssl command: {e}")
             
-        
-        try:
-            import ssl
-            runner_logger.info("Command: ssl.OPENSSL_VERSION")
-            print(ssl.OPENSSL_VERSION)
-        except Exception as e:
-            runner_logger.error(f"Error with ssl module: {e}")
         
         # check that GDC API status is OK
         runner_logger.info(
