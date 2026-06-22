@@ -361,6 +361,54 @@ def runner(
         # check that GDC API status is OK
         runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
 
+        # check dig
+        try:
+            runner_logger.info(ShellOperation(commands=["dig +short api.gdc.cancer.gov"]).run()
+            )
+        except Exception as e:
+            runner_logger.error(f"Error with dig command: {e}")
+        
+        # check traceroute
+        try:
+            runner_logger.info(ShellOperation(commands=["traceroute -T -p 443 api.gdc.cancer.gov"]).run()
+            )
+        except Exception as e:
+            runner_logger.error(f"Error with traceroute command: {e}")
+        
+        # check mtroute
+        try:
+            runner_logger.info(ShellOperation(commands=["mtr -T -P 443 -rwzbc 20 api.gdc.cancer.gov"]).run()
+            )
+        except Exception as e:
+            runner_logger.error(f"Error with mtroute command: {e}")
+        
+        # check other API
+        try:
+            runner_logger.info(ShellOperation(commands=["curl -vk --tlsv1.2 --tls-max 1.2 https://api.gdc.cancer.gov/status"]).run()
+            )
+        except Exception as e:
+            runner_logger.error(f"Error with curl command: {e}")
+        
+        # try openssl commands
+        try:
+            runner_logger.info(ShellOperation(commands=["openssl s_client -connect api.gdc.cancer.gov:443 -servername api.gdc.cancer.gov -tls1_2  -cipher 'ECDHE-RSA-AES256-GCM-SHA384'"]).run()
+            )
+        except Exception as e:
+            runner_logger.error(f"Error with openssl command: {e}")
+            
+        try:
+            runner_logger.info(ShellOperation(commands=["openssl s_client -connect api.gdc.cancer.gov:443 -servername api.gdc.cancer.gov -tls1_2  -cipher 'ECDHE-RSA-AES128-GCM-SHA256'"]).run()
+            )
+        except Exception as e:
+            runner_logger.error(f"Error with openssl command: {e}")
+            
+        
+        try:
+            import ssl
+            print(ssl.OPENSSL_VERSION)
+        except Exception as e:
+            runner_logger.error(f"Error with ssl module: {e}")
+        
         # check that GDC API status is OK
         runner_logger.info(
             requests.get("https://api.gdc.cancer.gov/v0/submissions").text
