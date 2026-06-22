@@ -95,7 +95,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: st
     # may need to increase max number to avoid missing data if more data added in future
 
     # number nodes to query
-    n_query = 500
+    n_query = 250
 
     for offset in range(0, 500000, n_query):
         time.sleep(2)
@@ -135,8 +135,8 @@ def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: st
 
         if len(json.loads(response.text)["data"][node_type]) == n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
-            runner_logger.info("Sleeping for 60 seconds to avoid timeouts...")
-            time.sleep(60)
+            runner_logger.info("Sleeping for 10 seconds to avoid timeouts...")
+            time.sleep(10)
         elif len(json.loads(response.text)["data"][node_type]) < n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
             runner_logger.info(
