@@ -1044,6 +1044,52 @@ deployments:
       name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
+      
+  - name: TEST-ccdi-gdc-file-upload-v3_2_API_check
+    version: null
+    tags: [ "TEST","V3" ]
+    description: null
+    entrypoint: workflows/gdc_file_upload.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-validation"
+      project_id: "CCDI-MCI"
+      manifest_path: ""
+      gdc_client_path: "bullenca/file_upload_test/gdc-client"
+      node_type: "submitted_aligned_reads"
+      runner: ""
+      secret_name_path: "ccdi/dcc/gdc/submission"
+      secret_key_name: "gdc-token"
+      upload_part_size_mb: 6
+      n_processes: 40
+      process_type: "upload_files"
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.deployments.steps.run_shell_script:
+      script: |
+        apt-get update -y
+        apt-get install -y apt-utils
+        apt-get install -y curl
+        apt-get install -y traceroute
+        apt-get install -y dnsutils
+        apt-get install -y mtr
+    - prefect.deployments.steps.git_clone:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: gdc_sub_patch
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements_python3.13_prefect3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
 
   # - name: ccdi-neo4j-db_diff-v3
   #   version: null
