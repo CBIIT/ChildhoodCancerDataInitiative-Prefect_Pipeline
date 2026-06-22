@@ -1069,13 +1069,13 @@ deployments:
     # pull action to overwrite from file pull action
     pull:
     - prefect.deployments.steps.run_shell_script:
-      script: |
-        apt-get update -y
-        apt-get install -y apt-utils
-        apt-get install -y curl
-        apt-get install -y traceroute
-        apt-get install -y dnsutils
-        apt-get install -y mtr
+        script: |
+          apt-get update -y
+          apt-get install -y apt-utils
+          apt-get install -y curl
+          apt-get install -y traceroute
+          apt-get install -y dnsutils
+          apt-get install -y mtr
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
