@@ -135,7 +135,7 @@ def retrieve_current_nodes(project_id: str, node_type: str, secret_name_path: st
 
         if len(json.loads(response.text)["data"][node_type]) == n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
-            time.sleep(5)
+            time.sleep(10)
         elif len(json.loads(response.text)["data"][node_type]) < n_query:
             offset_returns += json.loads(response.text)["data"][node_type]
             runner_logger.info(
