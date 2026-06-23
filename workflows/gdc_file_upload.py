@@ -21,6 +21,27 @@ from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret
 from src.gdc_utils import retrieve_current_nodes
 
 
+@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10)
+def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_process):
+    """Upload file to GDC with gdc-client
+
+    Args:
+        id (str): ID of the file to upload
+        gdc_client_exe_path (str): Path to the gdc-client executable
+        token_file (str): Path to the token file for authentication
+        part_size (int): Size of each upload part
+        n_process (int): Number of processes to use for upload
+
+    Returns:
+        str: Response from the gdc-client upload command"""
+    response = ShellOperation(
+        commands=[
+            f"{gdc_client_exe_path} upload {id} -t {token_file} -c {part_size} -n {n_process}"
+        ],
+        stream_output=False,
+    ).run()
+    return response
+
 @task(name="env_setup")
 def env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_path):
     """Setup gdc-client and other env objects
@@ -250,15 +271,10 @@ def uploader_handler(
                     chunk_size = int(part_size * 1024 * 1024)
 
                 # upload files with gdc-client to maximize efficient upload
-                response = ShellOperation(
-                    commands=[
-                        f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"
-                    ],
-                    stream_output=False,
-                ).run()
+                response = file_upload_gdc_client(row["id"], gdc_client_exe_path, token_file, chunk_size, n_process)
 
                 # check uploads results from streamed output
-                if f"pload finished for file {row['id']}" in response[-1]:
+                if f"Upload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"✅ Upload finished for file {row['id']}")
                     df.loc[index, "status"] = "success"
                 else:
