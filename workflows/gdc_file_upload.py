@@ -485,6 +485,21 @@ def runner(
 
         # compare md5sum and file_name to already uploaded files
         already_uploaded_df = pd.DataFrame(already_uploaded)
+        
+        # save already uploaded data to working dir
+        already_uploaded_df.to_csv(
+            f"{working_dir}/{file_name.replace('.tsv', '')}_already_uploaded_in_gdc_{dt}.tsv",
+            sep="\t",
+            index=False,
+        )
+        
+        # upload already uploaded data to S3 in case of crash or cancellation
+        file_ul(
+            bucket=bucket,
+            output_folder=runner,
+            sub_folder="",
+            newfile=f"{working_dir}/{file_name.replace('.tsv', '')}_already_uploaded_in_gdc_{dt}.tsv",
+        )
 
         runner_logger.info(
             f">>> Parsing entity metadata for nodes already submitted to GDC, mathcing UUIDs ...."
