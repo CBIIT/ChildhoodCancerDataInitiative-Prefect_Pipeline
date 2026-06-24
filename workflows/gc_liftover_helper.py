@@ -7,7 +7,9 @@ from src.utils import folder_dl, file_dl, folder_ul, file_ul, get_time, CheckCCD
 
 @task(name="Load TSVs from Folder", log_prints=True)
 def load_tsvs_from_folder(folder_path):
+    files_loaded = 0
     sheet_dfs = {}
+
     for file in os.listdir(folder_path):
         if file.endswith(".tsv"):
             file_path = os.path.join(folder_path, file)
@@ -15,15 +17,28 @@ def load_tsvs_from_folder(folder_path):
             df = pd.read_csv(file_path, sep="\t").astype(str).replace('nan', pd.NA)
             df = df.drop_duplicates()
             sheet_dfs[file_name] = df
+            files_loaded += 1
+        else:
+            print(f"Skipping {file} — not a TSV file")
+
+    # report input metrics
+    if files_loaded > 0:
+        print(f"Loaded {files_loaded} file(s) from {folder_path}")
+    else:
+        raise ValueError(
+            "ALERT: No files were found in the specified folder. "
+            "Please check the input folder for valid TSV files."
+        )
+    
     return sheet_dfs
 
 @task(name= "Save TSVs to Folder", log_prints=True)
 def save_tsvs_to_folder(sheet_dfs, output_path):
     """Saves the given sheet dataframes to TSV files in the specified output folder."""
     os.makedirs(output_path, exist_ok=True)
-    
-    for name, df in sheet_dfs.items():
+    files_saved = 0
 
+    for name, df in sheet_dfs.items():
         # collect actual data (non-type/non-key) columns and check if empty
         empty_cols = [col for col in df.columns if '.' not in col and col != 'type']
         if df[empty_cols].dropna(how='all').empty:
@@ -38,6 +53,16 @@ def save_tsvs_to_folder(sheet_dfs, output_path):
         # save as TSV files
         file_path = os.path.join(output_path, f"{name}.tsv")
         df.to_csv(file_path, sep="\t", index=False)
+        files_saved += 1
+
+    # report output metrics
+    if files_saved > 0:
+        print(f"Saved {files_saved} file(s) to {output_path}")
+    else:
+        raise ValueError(
+        "ALERT: No valid data was found across all input sheets. "
+        "Please check the input files for empty rows or missing data."
+    )
 
 def move_id_to_front(df, id_column_name):
     """Moves the specified ID column to the first position."""
@@ -179,14 +204,28 @@ def generate_ids_task(sheet_dfs):
             sheet_dfs['diagnosis'] = move_id_to_front(df, 'study_diagnosis_id')
 
             if sheet_dfs['diagnosis']['participant.study_participant_id'].isnull().any():
-                print("Some liftover diagnosis IDs skipped because some participant IDs were missing.")
+                print("Some liftover diagnosis IDs may be skipped because some participant IDs were missing.")
             print(f"Generated {len(df)} study_diagnosis_id values (e.g., {df['study_diagnosis_id'].iloc[0]})")
+
         elif ('participant.study_participant_id' in df.columns and
               df['participant.study_participant_id'].isnull().all()):
             print("Missing participant IDs, skipping liftover diagnosis ID generation")
         else:
             print("Missing diagnosis fields (participant.study_participant_id or diagnosis_id), skipping liftover diagnosis ID generation")
 
+        # if there is a sample.sample_id but no participant.study_participant_id
+        df = sheet_dfs['diagnosis'].copy()
+        if ('diagnosis_id' in df.columns and
+            'sample.sample_id' in df.columns and 
+            df['sample.sample_id'].notnull().any()):
+            
+            mask = df['participant.study_participant_id'].isnull() & df['sample.sample_id'].notnull()
+            df.loc[mask, 'study_diagnosis_id'] = df.loc[mask, 'sample.sample_id'] + "_" + df.loc[mask, 'diagnosis_id']
+            sheet_dfs['diagnosis'] = df
+
+            if mask.sum() > 0:
+                example_id = df.loc[mask, 'study_diagnosis_id'].iloc[0]
+                print(f"Generated {mask.sum()} study_diagnosis_id values from sample_ids (e.g., {example_id})")
 
      # --- TREATMENT ID Generation ---
     if 'treatment' in sheet_dfs:
