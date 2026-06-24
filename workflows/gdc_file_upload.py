@@ -191,7 +191,7 @@ def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
     log_prints=True,
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
 )
-def uploader_handler(
+def     uploader_handler(
     df: pd.DataFrame,
     gdc_client_exe_path: str,
     token_file: str,
@@ -469,6 +469,7 @@ def runner(
 
         #file_metadata = read_input(file_name)
         matched = read_input(file_name)
+        matched["status"] = ""
 
         # chdir to working path
         os.chdir(working_dir)
