@@ -21,7 +21,7 @@ from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret
 from src.gdc_utils import retrieve_current_nodes
 
 
-@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10)
+#@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10)
 def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_process):
     """Upload file to GDC with gdc-client
 
@@ -186,11 +186,11 @@ def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
     return not_found_in_gdc, already_submitted, manifest_df
 
 
-@flow(
+"""@flow(
     name="gdc_upload_file_upload",
     log_prints=True,
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
-)
+)"""
 def     uploader_handler(
     df: pd.DataFrame,
     gdc_client_exe_path: str,
