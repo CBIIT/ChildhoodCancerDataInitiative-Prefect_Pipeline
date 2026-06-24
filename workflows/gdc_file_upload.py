@@ -467,13 +467,14 @@ def runner(
 
         runner_logger.info(f">>> Reading input file {file_name} ....")
 
-        file_metadata = read_input(file_name)
+        #file_metadata = read_input(file_name)
+        matched = read_input(file_name)
 
         # chdir to working path
         os.chdir(working_dir)
 
         # perform query for UUIDs and files already uploaded to GDC
-        runner_logger.info(
+        """runner_logger.info(
             f">>> Querying entity metadata for nodes already submitted to GDC ...."
         )
         already_uploaded = retrieve_current_nodes(
@@ -523,7 +524,7 @@ def runner(
 
         runner_logger.info(
             f">>> ✅ Parsing complete, of {len(file_metadata)} starting files,\n\t\t {len(matched)} files to upload,\n\t\t {len(already_submitted)} files were already submitted and validated,\n\t\t {len(not_found_in_gdc)} were not found to be submitted in GDC"
-        )
+        )"""
 
         if len(matched) > 0:
             # number of files to query S3 uploads and then upload consecutively in a flow
