@@ -204,14 +204,28 @@ def generate_ids_task(sheet_dfs):
             sheet_dfs['diagnosis'] = move_id_to_front(df, 'study_diagnosis_id')
 
             if sheet_dfs['diagnosis']['participant.study_participant_id'].isnull().any():
-                print("Some liftover diagnosis IDs skipped because some participant IDs were missing.")
+                print("Some liftover diagnosis IDs may be skipped because some participant IDs were missing.")
             print(f"Generated {len(df)} study_diagnosis_id values (e.g., {df['study_diagnosis_id'].iloc[0]})")
+
         elif ('participant.study_participant_id' in df.columns and
               df['participant.study_participant_id'].isnull().all()):
             print("Missing participant IDs, skipping liftover diagnosis ID generation")
         else:
             print("Missing diagnosis fields (participant.study_participant_id or diagnosis_id), skipping liftover diagnosis ID generation")
 
+        # if there is a sample.sample_id but no participant.study_participant_id
+        df = sheet_dfs['diagnosis'].copy()
+        if ('diagnosis_id' in df.columns and
+            'sample.sample_id' in df.columns and 
+            df['sample.sample_id'].notnull().any()):
+            
+            mask = df['participant.study_participant_id'].isnull() & df['sample.sample_id'].notnull()
+            df.loc[mask, 'study_diagnosis_id'] = df.loc[mask, 'sample.sample_id'] + "_" + df.loc[mask, 'diagnosis_id']
+            sheet_dfs['diagnosis'] = df
+
+            if mask.sum() > 0:
+                example_id = df.loc[mask, 'study_diagnosis_id'].iloc[0]
+                print(f"Generated {mask.sum()} study_diagnosis_id values from sample_ids (e.g., {example_id})")
 
      # --- TREATMENT ID Generation ---
     if 'treatment' in sheet_dfs:
