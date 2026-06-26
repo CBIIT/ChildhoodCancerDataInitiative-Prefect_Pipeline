@@ -359,10 +359,20 @@ def runner(
             ShellOperation(
                 commands=[
                     "rm -r /usr/local/data/GDC_file_upload_*",
+                    #"ls -l /usr/local/data/",  # confirm removal of GDC_file_upload working dirs
+                ]
+            ).run()
+        )
+        
+        runner_logger.info(
+            ShellOperation(
+                commands=[
                     "ls -l /usr/local/data/",  # confirm removal of GDC_file_upload working dirs
                 ]
             ).run()
         )
+        
+        return None
 
     elif process_type == "check_status":
 
