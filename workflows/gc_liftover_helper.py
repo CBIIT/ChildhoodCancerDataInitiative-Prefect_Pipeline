@@ -135,13 +135,11 @@ def generate_ids_task(sheet_dfs):
             title, first, middle, last, suffix = None, None, None, None, None
             if pd.notna(full_name) and str(full_name).strip():
 
-                clean_name = str(full_name).replace(',', '')
+                clean_name = str(full_name).replace(',', '').replace('.', '')
                 parsed_name = str(clean_name).strip().split()
 
-                prefixes = {'Dr.', 'Dr', 'Mr.', 'Mr', 'Mrs.', 'Mrs', 'Ms.', 
-                            'Ms', 'Miss', 'Sir', 'Dame', 'Lord', 'Lady'}
-                suffixes = {'Jr.', 'Jr', 'Sr.', 'Sr', 'II', 'III', 'IV', 
-                            'MD', 'M.D.', 'PhD', 'Ph.D', 'Ph.D.', 'DO', 'D.O.'}
+                prefixes = {'Dr', 'Mr', 'Mrs', 'Ms', 'Miss', 'Sir', 'Dame', 'Lord', 'Lady'}
+                suffixes = {'Jr', 'Sr', 'II', 'III', 'IV', 'MD', 'PhD', 'DO'}
 
                 if parsed_name and parsed_name[0] in prefixes:
                     title = parsed_name.pop(0)
@@ -226,6 +224,37 @@ def generate_ids_task(sheet_dfs):
             if mask.sum() > 0:
                 example_id = df.loc[mask, 'study_diagnosis_id'].iloc[0]
                 print(f"Generated {mask.sum()} study_diagnosis_id values from sample_ids (e.g., {example_id})")
+
+    #--- DIAGNOSIS ROW Consolidation ---
+
+        # load the data
+        df = sheet_dfs['diagnosis'].copy()
+
+        # select only rows with survival info    
+        # squash if multiple survival rows per id (any dead = dead, all alive = alive)
+        survival_df = (
+            df[df['vital_status'].notna()]
+            .groupby('participant.study_participant_id')['vital_status']
+            .apply(lambda x: 'Dead' if (x == 'Dead').any() else 'Alive')
+            .reset_index()
+        )
+
+        # select only rows with resection/biopsy site (if multiple sites, just keep the first)
+        site_df = (
+            df[df['site_of_resection_or_biopsy'].notna()]
+            .drop_duplicates(subset=['participant.study_participant_id'])
+            [['participant.study_participant_id', 'site_of_resection_or_biopsy']]
+        )
+
+        # drop hanging survival/site rows and empty columns for a cleaner merge
+        df = df[df['vital_status'].isna() & df['site_of_resection_or_biopsy'].isna()].copy()
+        df = df.drop(columns=['vital_status', 'site_of_resection_or_biopsy'])
+
+        # weave survival and site info in-line into the df
+        df = df.merge(survival_df, on='participant.study_participant_id', how='left')
+        df = df.merge(site_df, on='participant.study_participant_id', how='left')
+        sheet_dfs['diagnosis'] = df
+
 
      # --- TREATMENT ID Generation ---
     if 'treatment' in sheet_dfs:
