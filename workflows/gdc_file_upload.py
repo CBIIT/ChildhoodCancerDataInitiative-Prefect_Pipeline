@@ -279,6 +279,7 @@ def     uploader_handler(
                     df.loc[index, "status"] = "success"
                 else:
                     runner_logger.warning(f"Upload not successful for file {row['id']}")
+                    runner_logger.warning(f"Upload response: {response}")
                     df.loc[index, "status"] = (
                         "ERROR: NOT uploaded, Failure during upload"
                     )
