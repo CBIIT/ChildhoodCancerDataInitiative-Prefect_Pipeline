@@ -17,31 +17,11 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, task, get_run_logger
-from src.utils import get_time, folder_ul, file_ul, get_secret, set_s3_resource
+from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret, set_s3_resource
 from src.gdc_utils import retrieve_current_nodes
 
 
-def file_dl(bucket, filename):
-    """File download using bucket name and filename
-    filename is the key path in bucket
-    file is the basename
-    """
-    # Set the s3 resource object for local or remote execution
-    s3 = set_s3_resource()
-    source = s3.Bucket(bucket)
-    file_key = filename
-    file = os.path.basename(filename)
-    try:
-        source.download_file(file_key, file)
-    except ClientError as ex:
-        ex_code = ex.response["Error"]["Code"]
-        ex_message = ex.response["Error"]["Message"]
-        print(
-            f"ClientError occurred while downloading file {filename} from bucket {bucket}:\n{ex_code}, {ex_message}"
-        )
-        raise
-
-#@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10)
+@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10)
 def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_process):
     """Upload file to GDC with gdc-client
 
@@ -206,11 +186,11 @@ def matching_uuid(manifest_df: pd.DataFrame, entities_in_gdc: pd.DataFrame):
     return not_found_in_gdc, already_submitted, manifest_df
 
 
-"""@flow(
+@flow(
     name="gdc_upload_file_upload",
     log_prints=True,
     flow_run_name="gdc_upload_file_upload_" + f"{get_time()}",
-)"""
+)
 def uploader_handler(
     df: pd.DataFrame,
     gdc_client_exe_path: str,
