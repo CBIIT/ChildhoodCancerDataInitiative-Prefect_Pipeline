@@ -21,7 +21,7 @@ from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret, set_s3_
 from src.gdc_utils import retrieve_current_nodes
 
 
-#@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10)
+@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10)
 def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_process):
     """Upload file to GDC with gdc-client
 
