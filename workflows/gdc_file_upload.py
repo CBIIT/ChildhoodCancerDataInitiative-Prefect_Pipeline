@@ -280,6 +280,18 @@ def uploader_handler(
                 elif "Multipart upload finished for file" in response[-1]:
                     runner_logger.info(f"✅ Multipart upload finished for file {row['id']}")
                     df.loc[index, "status"] = "success"
+                elif "Connection reset by peer" in response[-1]:
+                    runner_logger.warning(f"⚠️ Connection reset by peer for file {row['id']}, retrying upload.")
+                    for retry in range(3):
+                        runner_logger.info(f"Retrying upload for file {row['id']}, attempt {retry + 1}")
+                        response = file_upload_gdc_client(row["id"], gdc_client_exe_path, token_file, chunk_size, n_process)
+                        if f"Upload finished for file {row['id']}" in response[-1] or "Multipart upload finished for file" in response[-1]:
+                            runner_logger.info(f"✅ Upload finished for file {row['id']} after retry")
+                            df.loc[index, "status"] = "success"
+                            break
+                    else:
+                        runner_logger.error(f"❌ Upload failed for file {row['id']} after retries")
+                        df.loc[index, "status"] = "ERROR: Connection reset by peer, Failure during upload"
                 else:
                     runner_logger.warning(f"Upload not successful for file {row['id']}")
                     runner_logger.warning(f"Upload response: {response}")
