@@ -277,6 +277,9 @@ def uploader_handler(
                 if f"Upload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"✅ Upload finished for file {row['id']}")
                     df.loc[index, "status"] = "success"
+                elif "Multipart upload finished for file" in response[-1]:
+                    runner_logger.info(f"✅ Multipart upload finished for file {row['id']}")
+                    df.loc[index, "status"] = "success"
                 else:
                     runner_logger.warning(f"Upload not successful for file {row['id']}")
                     runner_logger.warning(f"Upload response: {response}")
