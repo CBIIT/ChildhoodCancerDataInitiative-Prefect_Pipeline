@@ -1283,6 +1283,11 @@ def check_file_extension_type_match(file_df: DataFrame) -> str:
                 "txt",
                 "tsv",
             ]  # if the extension is longer than 6 characters, likely not a standard extension
+        elif "out" == file_extension:
+            inferred_type = [
+                "txt",
+                "tsv",
+            ]  # if there is an "out" extension, likely a text or tsv file
         elif "dcm" == file_extension:
             inferred_type = "dicom"
         elif "fq" == file_extension:
