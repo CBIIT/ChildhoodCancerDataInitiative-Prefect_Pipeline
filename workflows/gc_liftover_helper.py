@@ -104,18 +104,6 @@ def generate_ids_task(sheet_dfs):
     else:
         print('No study node provided, skipping liftover ID generation')
         return sheet_dfs
-    
-    # --- CONSENT Reformatting ---
-    if 'consent_group' in sheet_dfs:
-        df = sheet_dfs['consent_group'].copy()
-
-        if ('consent_group_number' not in df.columns or df['consent_group_number'].isnull().all()):
-            print('Missing required consent group field (consent_group_number), skipping consent group number reformatting')
-        
-        else:
-            df['study_consent_number'] = df['consent_group_number'].astype(str).str.strip().str.replace('c', '', regex=False)
-            print(f"Reformatted consent group number(s): e.g. {df['study_consent_number'].iloc[0]}")
-            sheet_dfs['consent_group'] = df
 
     # --- INVESTIGATOR ID Generation ---
     if 'investigator' in sheet_dfs:
@@ -272,6 +260,15 @@ def generate_ids_task(sheet_dfs):
         else:
             print('Missing treatment fields (therapeutic_agents or participant.study_participant_id), skipping treatment ID generation')
 
+    # --- SAMPLE TYPE Generation --
+    if 'sample' in sheet_dfs and 'sample_type' in sheet_dfs['sample'].columns:
+        df = sheet_dfs['sample'].copy()
+
+        df['sample_type'] = df['sample_type'].apply(
+            lambda x: 'blood' if pd.notna(x) and x.lower() == 'blood' else 'analyte'
+        )
+        
+        sheet_dfs['sample'] = df
 
     # --- GENOMIC INFO ID Generation --
     if 'genomic_info' in sheet_dfs:
