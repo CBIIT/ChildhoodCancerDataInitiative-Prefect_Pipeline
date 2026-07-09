@@ -50,6 +50,9 @@ def save_tsvs_to_folder(sheet_dfs, output_path):
         data_cols = [col for col in df.columns if col not in key_cols]
         df = df[df[data_cols].notna().any(axis=1)]
 
+        # drop duplicate rows
+        df = df.drop_duplicates()
+
         # save as TSV files
         file_path = os.path.join(output_path, f"{name}.tsv")
         df.to_csv(file_path, sep="\t", index=False)
