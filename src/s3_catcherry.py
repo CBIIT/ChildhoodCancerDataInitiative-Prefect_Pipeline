@@ -265,6 +265,13 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # This can be deprecated once submitters are using the new template
         #
         ##############
+        ##############
+        #
+        # New use case for CCDIDC-2548, to be used with CCDI-DCC model only
+        # Anatomic_site harmnozation based on the MCI_invalidAnatomicSiteMappings.tsv file found in the docs folder.
+        # While this applies to mainly MCI data, it can be used for any data as it might clean up anatomic_site values before the uberon mapping is applied.
+        #
+        ##############
         catcherr_logger.info(
             "Cleaning up anatomic_site column, removing 'C##.# : ' if present"
         )
@@ -295,6 +302,58 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             )
                             df.at[index, "anatomic_site"] = new_anatomic_site
             meta_dfs[node] = df
+
+        ##############
+        #
+        # MCI Anatomic_site to Harmonized Anatomic_site transformation
+        #
+        ##############
+
+        # Clean up anatomic_site values based on the MCI_invalidAnatomicSiteMappings.tsv file found in the docs folder.
+        mci_invalid_anatomic_site_mapping_path = "docs/MCI_invalidAnatomicSiteMappings.tsv"
+        mci_invalid_anatomic_site_mapping = pd.read_csv(
+            mci_invalid_anatomic_site_mapping_path, sep="\t", dtype=str
+        )
+
+        # create a mapping dictionary
+        mci_invalid_anatomic_site_dict = mci_invalid_anatomic_site_mapping.set_index("submitted_anatomic_site")["anatomic_site"].to_dict()
+        catcherr_logger.info(
+            "Cleaning up anatomic_site values based on MCI_invalidAnatomicSiteMappings.tsv"
+        )
+
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            if "anatomic_site" in df.columns:
+                # use the mapping dictionary to fill in the new anatomic_site values based on the submitted_anatomic_site values compared to the anatomic_site column.
+                # If there is no match, then leave the value as is.
+                # We have to go row by row to handle each value as some have multiple values separated by ;
+                for index, row in df.iterrows():
+                    anatomic_site_value = row["anatomic_site"]
+                    if pd.notna(anatomic_site_value):
+                        if ";" in anatomic_site_value:
+                            anatomic_site_list = anatomic_site_value.split(";")
+                            new_anatomic_site_list = []
+                            for anatomic_site in anatomic_site_list:
+                                new_anatomic_site = mci_invalid_anatomic_site_dict.get(
+                                    anatomic_site, anatomic_site
+                                )
+                                new_anatomic_site_list.append(new_anatomic_site)
+                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
+                            df.at[index, "anatomic_site"] = new_anatomic_site_value
+                        else:
+                            new_anatomic_site = mci_invalid_anatomic_site_dict.get(
+                                anatomic_site_value, anatomic_site_value
+                            )
+                            df.at[index, "anatomic_site"] = new_anatomic_site
+            meta_dfs[node] = df
+
+
+        ##############
+        #
+        # Anatomic_site from other systems to Harmonized Uberon Anatomic_site transformation
+        #
+        ##############
+
         # read in the anatomic_site_mapping_uberon.tsv file
         anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
         anatomic_site_mapping = pd.read_csv(
@@ -991,14 +1050,14 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     file=outf,
                                 )
 
-                    # create a metadata data frame from the bucket
-                    df_bucket = pd.DataFrame(
-                        {
-                            "file_path": s3_file_path,
-                            "file_name": s3_file_name,
-                            "file_size": s3_file_size,
-                        }
-                    )
+                        # create a metadata data frame from the bucket
+                        df_bucket = pd.DataFrame(
+                            {
+                                "file_path": s3_file_path,
+                                "file_name": s3_file_name,
+                                "file_size": s3_file_size,
+                            }
+                        )
 
                     # find bad url locs based on the full file path and whether it can be found in the url bucket manifest.
                     bad_url_locs = df["file_url"].isin(df_bucket["file_path"])
@@ -1012,10 +1071,15 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
                             # filter the bucket df to see if there is exactly one file value that matches both name and file size
                             filtered_df = df_bucket[
-                                df_bucket["file_name"] == file_name_find
+                                (df_bucket["file_name"] == file_name_find) &
+                                (df_bucket["file_size"] == int(file_size_find)) &
+                                (~df_bucket["file_name"].str.startswith(file_name_find + "."))  # exclude file.bam.bai when looking for file.bam
                             ]
+
+                            # additional exact match guard — filters out files where the bucket name
+                            # is a superset of the search name (e.g. file.bam.bai when looking for file.bam)
                             filtered_df = filtered_df[
-                                filtered_df["file_size"] == int(file_size_find)
+                                filtered_df["file_name"].apply(lambda x: x == file_name_find)
                             ]
 
                             if len(filtered_df) == 1:
