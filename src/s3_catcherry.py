@@ -310,13 +310,17 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         ##############
 
         # Clean up anatomic_site values based on the MCI_invalidAnatomicSiteMappings.tsv file found in the docs folder.
-        mci_invalid_anatomic_site_mapping_path = "docs/MCI_invalidAnatomicSiteMappings.tsv"
+        mci_invalid_anatomic_site_mapping_path = (
+            "docs/MCI_invalidAnatomicSiteMappings.tsv"
+        )
         mci_invalid_anatomic_site_mapping = pd.read_csv(
             mci_invalid_anatomic_site_mapping_path, sep="\t", dtype=str
         )
 
         # create a mapping dictionary
-        mci_invalid_anatomic_site_dict = mci_invalid_anatomic_site_mapping.set_index("submitted_anatomic_site")["anatomic_site"].to_dict()
+        mci_invalid_anatomic_site_dict = mci_invalid_anatomic_site_mapping.set_index(
+            "submitted_anatomic_site"
+        )["anatomic_site"].to_dict()
         catcherr_logger.info(
             "Cleaning up anatomic_site values based on MCI_invalidAnatomicSiteMappings.tsv"
         )
@@ -346,7 +350,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             )
                             df.at[index, "anatomic_site"] = new_anatomic_site
             meta_dfs[node] = df
-
 
         ##############
         #
@@ -641,7 +644,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             "diagnosis_category"
         ].to_dict()
 
-        # Create a mapping dictionary for diagnosis to diagnosis classification system, with diagnosis as the key and diagnosis classification system as the value. 
+        # Create a mapping dictionary for diagnosis to diagnosis classification system, with diagnosis as the key and diagnosis classification system as the value.
         diagnosis_classification_mapping = diagnosis_mapping_df.set_index("diagnosis")[
             "diagnosis_classification_system"
         ].to_dict()
@@ -667,7 +670,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 # Only update where diagnosis_classification_system is null
                 df["diagnosis_classification_system"] = df.apply(
                     lambda row: (
-                        diagnosis_classification_mapping.get(row["diagnosis"], "Not Reported")
+                        diagnosis_classification_mapping.get(
+                            row["diagnosis"], "Not Reported"
+                        )
                         if pd.isna(row["diagnosis_classification_system"])
                         else row["diagnosis_classification_system"]
                     ),
@@ -728,20 +733,26 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             "\nThe following section will check the file_access values, and create derived values for acl and authz.\n----------",
             file=outf,
         )
-        
+
         # LOOKUP TABLES
         # confirm required dataframes(df) are present and create look up tables for consent tracing
         # if not, log that lookups will be skipped and set a variable "missing_df" to skip lookups
         catcherr_logger.info("Creating lookup tables for consent tracing")
-        if "consent_group" in meta_dfs and "participant" in meta_dfs and "sample" in meta_dfs:
+        if (
+            "consent_group" in meta_dfs
+            and "participant" in meta_dfs
+            and "sample" in meta_dfs
+        ):
             consent_group_df = meta_dfs["consent_group"].set_index("consent_group_id")
             participant_df = meta_dfs["participant"].set_index("participant_id")
             sample_df = meta_dfs["sample"].set_index("sample_id")
             missing_df = False
         else:
-            catcherr_logger.info("No participants or samples present in manifest - lookups will be skipped")
+            catcherr_logger.info(
+                "No participants or samples present in manifest - lookups will be skipped"
+            )
             missing_df = True
-        
+
         # LOOK UP FUNCTION
         def lookup_consent(node_df, node_file_id, catcherr_logger):
             """
@@ -751,47 +762,72 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             try:
                 # default look up (file ID --> sample ID --> participant ID)
                 participant_id = None
-                if "sample.sample_id" in node_df.columns and pd.notna(node_df.loc[node_file_id, "sample.sample_id"]):
+                if "sample.sample_id" in node_df.columns and pd.notna(
+                    node_df.loc[node_file_id, "sample.sample_id"]
+                ):
                     sample_id = node_df.loc[node_file_id, "sample.sample_id"]
                     if sample_id in sample_df.index:
-                        participant_id = sample_df.loc[sample_id, "participant.participant_id"]
-                    
+                        participant_id = sample_df.loc[
+                            sample_id, "participant.participant_id"
+                        ]
+
                         # in case of pdx/cell line detour (file ID --> sample ID --> pdx ID --> sample ID --> participant ID)
-                        if pd.isna(participant_id): 
-                            participant_id = deep_search(sample_id) 
+                        if pd.isna(participant_id):
+                            participant_id = deep_search(sample_id)
 
                 # in case of radiology files (file ID --> participant ID)
-                elif "participant.participant_id" in node_df.columns and pd.notna(node_df.loc[node_file_id, "participant.participant_id"]): 
-                    participant_id = node_df.loc[node_file_id, "participant.participant_id"]
-                    
+                elif "participant.participant_id" in node_df.columns and pd.notna(
+                    node_df.loc[node_file_id, "participant.participant_id"]
+                ):
+                    participant_id = node_df.loc[
+                        node_file_id, "participant.participant_id"
+                    ]
+
                 # in case of study-level files in generic / clinical files (file ID --> study ID --> consent)
-                elif "study.study_id" in node_df.columns and pd.notna(node_df.loc[node_file_id, "study.study_id"]):
+                elif "study.study_id" in node_df.columns and pd.notna(
+                    node_df.loc[node_file_id, "study.study_id"]
+                ):
                     num_consent_groups = len(consent_group_df)
                     if num_consent_groups > 1:
-                        consent_suffix = consent_group_df["consent_group_suffix"].to_list()
+                        consent_suffix = consent_group_df[
+                            "consent_group_suffix"
+                        ].to_list()
                         return consent_suffix
                     elif num_consent_groups == 1:
-                        consent_suffix = consent_group_df.iloc[0]["consent_group_suffix"]
+                        consent_suffix = consent_group_df.iloc[0][
+                            "consent_group_suffix"
+                        ]
                         return consent_suffix
                     else:
-                        catcherr_logger.error(f"No consent groups present; cannot determine consent suffix for study-level file.")
+                        catcherr_logger.error(
+                            f"No consent groups present; cannot determine consent suffix for study-level file."
+                        )
                         return None
-                    
+
                 # resume default look up, trace the participant ID --> the consent group ID --> suffix
                 consent_suffix = None
                 if pd.notna(participant_id) and participant_id in participant_df.index:
-                    consent_group_id = participant_df.loc[participant_id, "consent_group.consent_group_id"]
-                    if pd.notna(consent_group_id) and consent_group_id in consent_group_df.index:
-                        consent_suffix = consent_group_df.loc[consent_group_id, "consent_group_suffix"]
-            
+                    consent_group_id = participant_df.loc[
+                        participant_id, "consent_group.consent_group_id"
+                    ]
+                    if (
+                        pd.notna(consent_group_id)
+                        and consent_group_id in consent_group_df.index
+                    ):
+                        consent_suffix = consent_group_df.loc[
+                            consent_group_id, "consent_group_suffix"
+                        ]
+
             except Exception as e:
-                catcherr_logger.error(f"Error looking up consent code for file_id {node_file_id}: {e}")
+                catcherr_logger.error(
+                    f"Error looking up consent code for file_id {node_file_id}: {e}"
+                )
                 consent_suffix = None
 
             return consent_suffix
 
         # DEEP SEARCH HELPER LOOP FUNCTION
-        def deep_search(start_sample_id, max_attempts = 10):
+        def deep_search(start_sample_id, max_attempts=10):
             """
             traces a sample id through a chain of pdx/cell_line links until the final participant_id is found.
             """
@@ -802,9 +838,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 attempts = 0
 
                 # prepare lookup tables, abort if neither df is available
-                if "pdx" in meta_dfs: 
+                if "pdx" in meta_dfs:
                     pdx_df = meta_dfs["pdx"].set_index("pdx_id")
-                if "cell_line" in meta_dfs: 
+                if "cell_line" in meta_dfs:
                     cell_line_df = meta_dfs["cell_line"].set_index("cell_line_id")
                 if not ("pdx" in meta_dfs or "cell_line" in meta_dfs):
                     return None
@@ -814,49 +850,58 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 # (e.g. file -> sample -> cell_line -> sample -> PDX -> sample -> patient)
                 while pd.isna(participant_id) and attempts < max_attempts:
                     attempts += 1
-                    
+
                     # choose pdx or cell_line node to search in
-                    if "pdx.pdx_id" in sample_df.columns and pd.notna(sample_df.loc[sample_id, "pdx.pdx_id"]): 
+                    if "pdx.pdx_id" in sample_df.columns and pd.notna(
+                        sample_df.loc[sample_id, "pdx.pdx_id"]
+                    ):
                         search_key = sample_df.loc[sample_id, "pdx.pdx_id"]
                         search_node_df = pdx_df
                         search_node_col = "pdx_id"
-                        
-                    elif "cell_line.cell_line_id" in sample_df.columns and pd.notna(sample_df.loc[sample_id, "cell_line.cell_line_id"]): 
+
+                    elif "cell_line.cell_line_id" in sample_df.columns and pd.notna(
+                        sample_df.loc[sample_id, "cell_line.cell_line_id"]
+                    ):
                         search_key = sample_df.loc[sample_id, "cell_line.cell_line_id"]
                         search_node_df = cell_line_df
                         search_node_col = "cell_line_id"
-                    
+
                     # abort if neither pdx nor cell line is found
                     else:
                         return None
-                    
+
                     # trace celline or pdx to the next sample id
                     new_sample_id = search_node_df.loc[search_key, "sample.sample_id"]
-                            
+
                     # repeat loop with new sample id
                     sample_id = new_sample_id
-                    
+
                     # or stop loop if participant id is found
-                    participant_id = sample_df.loc[sample_id, "participant.participant_id"]
+                    participant_id = sample_df.loc[
+                        sample_id, "participant.participant_id"
+                    ]
 
             except Exception as e:
-                print(f"Error in deep_search for participant for sample_id:{start_sample_id}: {e}")
+                print(
+                    f"Error in deep_search for participant for sample_id:{start_sample_id}: {e}"
+                )
                 return None
 
             # return the participant id
             return participant_id
-
 
         # MAIN ACL/AUTHZ GENERATOR BLOCK
         # pull dbgap_accession from study node
         dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
 
         # iterate through each node
-        for node in dict_nodes: 
+        for node in dict_nodes:
             if "file_access" in meta_dfs[node].columns:
                 print(f"ACL/Authz, checking node: {node}")
                 df = meta_dfs[node]
-                lookup_df = df.set_index(f"{node}_id", drop=False)  # keep a lookup copy with id column
+                lookup_df = df.set_index(
+                    f"{node}_id", drop=False
+                )  # keep a lookup copy with id column
                 file_id_col = f"{node}_id"
 
                 # for each row in node, assign an acl/authz value
@@ -871,27 +916,42 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     elif file_access_value == "Controlled":
                         # skip if lookup dataframe missing
                         if missing_df:
-                            catcherr_logger.info(f"Skipping ACL/Authz update for {node_file_id} - no samples or participants in manifest for consent lookup")
-                            continue 
-                        
+                            catcherr_logger.info(
+                                f"Skipping ACL/Authz update for {node_file_id} - no samples or participants in manifest for consent lookup"
+                            )
+                            continue
+
                         # get consent number
-                        consent_number = lookup_consent(lookup_df, node_file_id, catcherr_logger=catcherr_logger)
+                        consent_number = lookup_consent(
+                            lookup_df, node_file_id, catcherr_logger=catcherr_logger
+                        )
 
                         # abort if consent number is missing
-                        if not isinstance(consent_number, list): # single consent per file (most cases)
-                            consent_missing = pd.isna(consent_number) or str(consent_number).strip() == ""
-                        else: # multiple consents per file (study-level files)
-                            consent_missing = len(consent_number) == 0 or any(pd.isna(cn) or str(cn).strip() == "" for cn in consent_number)
+                        if not isinstance(
+                            consent_number, list
+                        ):  # single consent per file (most cases)
+                            consent_missing = (
+                                pd.isna(consent_number)
+                                or str(consent_number).strip() == ""
+                            )
+                        else:  # multiple consents per file (study-level files)
+                            consent_missing = len(consent_number) == 0 or any(
+                                pd.isna(cn) or str(cn).strip() == ""
+                                for cn in consent_number
+                            )
                         if consent_missing:
-                            catcherr_logger.error(f"Could not determine consent for {node_file_id}; skipping ACL/Authz update.")
+                            catcherr_logger.error(
+                                f"Could not determine consent for {node_file_id}; skipping ACL/Authz update."
+                            )
                             continue
 
                         # helper functions to format the acl/authz
                         def format_acl(suffix):
                             return f"'{dbgap_accession}.{suffix}'"
+
                         def format_authz(suffix):
                             return f"'/programs/{dbgap_accession}.{suffix}'"
-                        
+
                         # construct acl and authz values based on consent number
                         if isinstance(consent_number, list):
                             acl = [format_acl(cn) for cn in consent_number]
@@ -901,7 +961,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         else:
                             acl_value = f"[{format_acl(consent_number)}]"
                             authz_value = f"[{format_authz(consent_number)}]"
-                        
+
                         # assign acl and authz values
                         df.at[index, "acl"] = acl_value
                         df.at[index, "authz"] = authz_value
@@ -909,7 +969,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     else:
                         print(
                             f"\tERROR: The value for file_access is missing for {node} node at row {index + 1}.\n",
-                            file=outf, 
+                            file=outf,
                         )
 
                 meta_dfs[node] = df
@@ -975,141 +1035,102 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             file=outf,
         )
 
-        # check each node
         for node in dict_nodes:
-            # for a column called file_url
-            if "file_url" in meta_dfs[node].columns:
-                catcherr_logger.info(f"Fix url paths, checking node: {node}")
-                df = meta_dfs[node]
+            if "file_url" not in meta_dfs[node].columns:
+                continue
 
-                # revert HTML code changes that might exist so that it can be handled with correct AWS calls
-                # this is then reverted after this section, which allows for this check to be made multiple times against the same file.
+            catcherr_logger.info(f"Fix url paths, checking node: {node}")
+            df = meta_dfs[node].copy()
 
-                df["file_url"] = df["file_url"].map(
-                    lambda x: (
-                        x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
-                        if isinstance(x, str)
-                        else x
-                    )
+            # revert HTML encoding so AWS calls work correctly
+            df["file_url"] = df["file_url"].map(
+                lambda x: (
+                    x.replace("%20", " ").replace("%2C", ",").replace("%23", "#")
+                    if isinstance(x, str)
+                    else x
                 )
+            )
 
-                print(f"{node}\n----------", file=outf)
+            print(f"{node}\n----------", file=outf)
 
-                # discover all possible base bucket urls in the file node
+            # discover all unique buckets referenced in file_url
+            node_urls = (
+                df["file_url"]
+                .dropna()
+                .apply(lambda x: x.split("/")[2])
+                .unique()
+                .tolist()
+            )
 
-                node_all_urls = df["file_url"].dropna()
-                node_urls = pd.DataFrame(node_all_urls)
-
-                node_urls["bucket"] = node_urls["file_url"].apply(
-                    lambda x: x.split("/")[2]
+            if not node_urls:
+                print(
+                    "ERROR: There is not a bucket associated with this node's files.",
+                    file=outf,
                 )
+                continue
 
-                node_urls = node_urls["bucket"].unique().tolist()
+            # ── accumulate metadata from ALL buckets before doing any lookups ─────
+            s3_file_path = []
+            s3_file_name = []
+            s3_file_size = []
 
-                # for each possible bucket based on the base urls in file_url
-                # go through and see if the values for the url can be filled in based on file_name and size
-                if len(node_urls) > 0:
-                    for node_url in node_urls:
-                        # create a blank list for bad url_locations
-                        bad_url_locs = []
+            s3_client = set_s3_session_client()
 
-                        # pull bucket metadata
-
-                        # Get s3 session setup
-                        s3_client = set_s3_session_client()
-
-                        # initialize file metadata from bucket
-                        s3_file_path = []
-                        s3_file_name = []
-                        s3_file_size = []
-
-                        # try and see if the bucket exists, if it does, obtain the metadata from it
-                        try:
-                            s3_client.head_bucket(Bucket=node_url)
-
-                            # create a paginator to itterate through each 1000 objs
-                            paginator = s3_client.get_paginator("list_objects_v2")
-                            response_iterator = paginator.paginate(Bucket=node_url)
-
-                            # pull out each response and obtain file name and size
-                            for response in response_iterator:
-                                if "Contents" in response:
-                                    for obj in response["Contents"]:
-                                        s3_file_path.append(
-                                            "s3://" + node_url + "/" + obj["Key"]
-                                        )
-                                        s3_file_name.append(
-                                            os.path.basename(obj["Key"])
-                                        )
-                                        s3_file_size.append(obj["Size"])
-
-                        except ClientError as e:
-                            if e.response["Error"]["Code"] == "404":
-                                print(
-                                    f"\tThe following bucket either does not exist or you do not have read access for it: {node_url}",
-                                    file=outf,
-                                )
-
-                        # create a metadata data frame from the bucket
-                        df_bucket = pd.DataFrame(
-                            {
-                                "file_path": s3_file_path,
-                                "file_name": s3_file_name,
-                                "file_size": s3_file_size,
-                            }
+            for node_url in node_urls:
+                try:
+                    s3_client.head_bucket(Bucket=node_url)
+                    paginator = s3_client.get_paginator("list_objects_v2")
+                    for response in paginator.paginate(Bucket=node_url):
+                        for obj in response.get("Contents", []):
+                            s3_file_path.append("s3://" + node_url + "/" + obj["Key"])
+                            s3_file_name.append(os.path.basename(obj["Key"]))
+                            s3_file_size.append(obj["Size"])
+                except ClientError as e:
+                    if e.response["Error"]["Code"] == "404":
+                        print(
+                            f"\tBucket does not exist or is not accessible: {node_url}",
+                            file=outf,
                         )
 
-                    # find bad url locs based on the full file path and whether it can be found in the url bucket manifest.
-                    bad_url_locs = df["file_url"].isin(df_bucket["file_path"])
+            df_bucket = pd.DataFrame(
+                {
+                    "file_path": s3_file_path,
+                    "file_name": s3_file_name,
+                    "file_size": s3_file_size,
+                }
+            )
 
-                    # Go through each bad location and determine if the correct url location can be determined on file_name and file_size.
-                    for loc in range(len(bad_url_locs)):
-                        # if the value is bad then fix
-                        if not bad_url_locs.iloc[loc]:
-                            file_name_find = df["file_name"][loc]
-                            file_size_find = df["file_size"][loc]
+            # ── find and fix bad urls ─────────────────────────────────────────────
+            bad_url_locs = ~df["file_url"].isin(df_bucket["file_path"])
 
-                            # filter the bucket df to see if there is exactly one file value that matches both name and file size
-                            filtered_df = df_bucket[
-                                (df_bucket["file_name"] == file_name_find) &
-                                (df_bucket["file_size"] == int(file_size_find)) &
-                                (~df_bucket["file_name"].str.startswith(file_name_find + "."))  # exclude file.bam.bai when looking for file.bam
-                            ]
+            for loc in df.index[bad_url_locs]:
+                file_name_find = df.at[loc, "file_name"]
+                file_size_find = df.at[loc, "file_size"]
 
-                            # additional exact match guard — filters out files where the bucket name
-                            # is a superset of the search name (e.g. file.bam.bai when looking for file.bam)
-                            filtered_df = filtered_df[
-                                filtered_df["file_name"].apply(lambda x: x == file_name_find)
-                            ]
+                # exact name match + size match
+                # the startswith guard explicitly excludes additive extensions:
+                # e.g. when looking for "file.bam", reject "file.bam.bai"
+                filtered_df = df_bucket[
+                    (df_bucket["file_name"] == file_name_find)
+                    & (df_bucket["file_size"] == int(file_size_find))
+                    & (~df_bucket["file_name"].str.startswith(file_name_find + "."))
+                ]
 
-                            if len(filtered_df) == 1:
-                                # output of url change
-
-                                print(
-                                    f"\tWARNING: The file location for the file, {file_name_find}, has been changed:",
-                                    file=outf,
-                                )
-                                print(
-                                    f"\t\t{df['file_url'][loc]} ---> {filtered_df['file_path'].values[0]}",
-                                    file=outf,
-                                )
-
-                                df["file_url"][loc] = filtered_df["file_path"].values[0]
-
-                            else:
-                                print(
-                                    f"\tERROR: There is an unresolvable issue with the file url for file: {file_name_find}",
-                                    file=outf,
-                                )
-
-                    # write back to the meta_dfs list
-                    meta_dfs[node] = df
-
-                else:
+                if len(filtered_df) == 1:
+                    new_url = filtered_df["file_path"].values[0]
                     print(
-                        "ERROR: There is not a bucket associated with this node's files.",
+                        f"\tWARNING: File location changed for {file_name_find}:",
                         file=outf,
                     )
+                    print(f"\t\t{df.at[loc, 'file_url']} ---> {new_url}", file=outf)
+                    df.at[loc, "file_url"] = new_url
+                else:
+                    print(
+                        f"\tERROR: Unresolvable file url for: {file_name_find}",
+                        file=outf,
+                    )
+
+            meta_dfs[node] = df
 
         ##############
         #
