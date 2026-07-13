@@ -916,8 +916,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     elif file_access_value == "Controlled":
                         # skip if lookup dataframe missing
                         if missing_df:
-                            catcherr_logger.info(
-                                f"Skipping ACL/Authz update for {node_file_id} - no samples or participants in manifest for consent lookup"
+                            print(
+                                f"Skipping ACL/Authz update for {node_file_id} - no samples or participants in manifest for consent lookup", file=outf
                             )
                             continue
 
@@ -940,8 +940,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                 for cn in consent_number
                             )
                         if consent_missing:
-                            catcherr_logger.error(
-                                f"Could not determine consent for {node_file_id}; skipping ACL/Authz update."
+                            print(
+                                f"Could not determine consent for {node_file_id}; skipping ACL/Authz update.",
+                                file=outf,
                             )
                             continue
 
