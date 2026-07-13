@@ -1104,28 +1104,25 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             bad_url_locs = ~df["file_url"].isin(df_bucket["file_path"])
 
             for loc in df.index[bad_url_locs]:
-                file_name_find = df.at[loc, "file_name"]
+                file_name_find = str(df.at[loc, "file_name"]).strip()
                 file_size_find = df.at[loc, "file_size"]
 
-                # exact name match + size match
                 filtered_df = df_bucket[
-                    (df_bucket["file_name"] == file_name_find) &
+                    (df_bucket["file_name"].str.strip() == file_name_find) &
                     (df_bucket["file_size"] == int(file_size_find))
                 ]
 
                 if len(filtered_df) == 1:
                     new_url = filtered_df["file_path"].values[0]
-                    print(
-                        f"\tWARNING: File location changed for {file_name_find}:",
-                        file=outf,
-                    )
+                    print(f"\tWARNING: File location changed for {file_name_find}:", file=outf)
                     print(f"\t\t{df.at[loc, 'file_url']} ---> {new_url}", file=outf)
                     df.at[loc, "file_url"] = new_url
+                elif len(filtered_df) == 0:
+                    print(f"\tERROR: No matching file found in bucket for: {file_name_find}", file=outf)
                 else:
-                    print(
-                        f"\tERROR: Unresolvable file url for: {file_name_find}",
-                        file=outf,
-                    )
+                    print(f"\tERROR: Multiple matches found for: {file_name_find}", file=outf)
+                    for _, row in filtered_df.iterrows():
+                        print(f"\t\t{row['file_path']}", file=outf)
 
             meta_dfs[node] = df
 
