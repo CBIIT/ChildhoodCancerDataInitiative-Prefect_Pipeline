@@ -1124,6 +1124,29 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     print(f"\tERROR: Empty file_size for {file_name_find} at row {loc}, skipping.", file=outf)
                     continue
 
+                # ── debug block for bam files ─────────────────────────────────────
+                if file_name_find.endswith(".bam"):
+                    print(f"\tDEBUG: Looking for bam file: {repr(file_name_find)}, size: {repr(file_size_find)}", file=outf)
+
+                    # step 1: name match only
+                    name_match = df_bucket[df_bucket["file_name"].str.strip() == file_name_find]
+                    print(f"\tDEBUG: Name-only matches ({len(name_match)}):", file=outf)
+                    for _, r in name_match.iterrows():
+                        print(f"\t\t{repr(r['file_name'])} | size={r['file_size']} | path={r['file_path']}", file=outf)
+
+                    # step 2: name + size match
+                    size_match = name_match[name_match["file_size"] == int(file_size_find)]
+                    print(f"\tDEBUG: Name+size matches ({len(size_match)}):", file=outf)
+                    for _, r in size_match.iterrows():
+                        print(f"\t\t{repr(r['file_name'])} | size={r['file_size']} | path={r['file_path']}", file=outf)
+
+                    # step 3: after endswith filter
+                    endswith_filter = size_match[~size_match["file_path"].str.endswith(f".{file_name_find}")]
+                    print(f"\tDEBUG: After endswith filter ({len(endswith_filter)}):", file=outf)
+                    for _, r in endswith_filter.iterrows():
+                        print(f"\t\t{repr(r['file_name'])} | size={r['file_size']} | path={r['file_path']}", file=outf)
+                # ── end debug block ───────────────────────────────────────────────
+
                 filtered_df = df_bucket[
                     (df_bucket["file_name"].str.strip() == file_name_find) &
                     (df_bucket["file_size"] == int(file_size_find)) &
