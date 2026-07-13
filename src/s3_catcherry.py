@@ -1104,17 +1104,31 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             )
 
             # ── find and fix bad urls ─────────────────────────────────────────────
-            bad_url_locs = ~df["file_url"].isin(df_bucket["file_path"])
+            bad_url_locs = (
+                ~df["file_url"].isin(df_bucket["file_path"]) &
+                df["file_url"].notna() &
+                (df["file_url"].str.strip() != "")
+            )
 
             for loc in df.index[bad_url_locs]:
                 file_name_find = str(df.at[loc, "file_name"]).strip()
                 file_size_find = df.at[loc, "file_size"]
 
+                # skip if file_name itself is empty or NaN
+                if not file_name_find or file_name_find == "nan":
+                    print(f"\tERROR: Empty file_name at row {loc}, skipping.", file=outf)
+                    continue
+
+                # skip if file_size is empty or NaN
+                if pd.isna(file_size_find) or str(file_size_find).strip() == "":
+                    print(f"\tERROR: Empty file_size for {file_name_find} at row {loc}, skipping.", file=outf)
+                    continue
+
                 filtered_df = df_bucket[
                     (df_bucket["file_name"].str.strip() == file_name_find) &
                     (df_bucket["file_size"] == int(file_size_find)) &
                     (~df_bucket["file_path"].str.endswith(f".{file_name_find}"))
-]
+                ]
 
                 if len(filtered_df) == 1:
                     new_url = filtered_df["file_path"].values[0]
