@@ -1108,12 +1108,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 file_size_find = df.at[loc, "file_size"]
 
                 # exact name match + size match
-                # the startswith guard explicitly excludes additive extensions:
-                # e.g. when looking for "file.bam", reject "file.bam.bai"
                 filtered_df = df_bucket[
-                    (df_bucket["file_name"] == file_name_find)
-                    & (df_bucket["file_size"] == int(file_size_find))
-                    & (~df_bucket["file_name"].str.startswith(file_name_find + "."))
+                    (df_bucket["file_name"] == file_name_find) &
+                    (df_bucket["file_size"] == int(file_size_find))
                 ]
 
                 if len(filtered_df) == 1:
