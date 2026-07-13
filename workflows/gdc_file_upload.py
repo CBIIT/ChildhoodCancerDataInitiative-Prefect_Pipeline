@@ -21,7 +21,7 @@ from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret, set_s3_
 from src.gdc_utils import retrieve_current_nodes
 
 
-@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10)
+@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10, timeout_seconds=1200)
 def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_process):
     """Upload file to GDC with gdc-client
 
@@ -271,7 +271,12 @@ def uploader_handler(
                     chunk_size = int(part_size * 1024 * 1024)
 
                 # upload files with gdc-client to maximize efficient upload
-                response = file_upload_gdc_client(row["id"], gdc_client_exe_path, token_file, chunk_size, n_process)
+                try:
+                    response = file_upload_gdc_client(row["id"], gdc_client_exe_path, token_file, chunk_size, n_process)
+                except TimeoutError as e:
+                    runner_logger.error(f"❌ Upload failed for file {row['id']} with error: {e}")
+                    df.loc[index, "status"] = f"ERROR: {e}"
+                    continue
 
                 # check uploads results from streamed output
                 if f"Upload finished for file {row['id']}" in response[-1]:
