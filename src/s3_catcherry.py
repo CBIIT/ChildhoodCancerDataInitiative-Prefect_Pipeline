@@ -1082,6 +1082,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     paginator = s3_client.get_paginator("list_objects_v2")
                     for response in paginator.paginate(Bucket=node_url):
                         for obj in response.get("Contents", []):
+                            # skip S3 "folder" placeholder objects (empty key or trailing slash)
+                            if not obj["Key"] or obj["Key"].endswith("/"):
+                                continue
                             s3_file_path.append("s3://" + node_url + "/" + obj["Key"])
                             s3_file_name.append(os.path.basename(obj["Key"]))
                             s3_file_size.append(obj["Size"])
