@@ -1109,8 +1109,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
                 filtered_df = df_bucket[
                     (df_bucket["file_name"].str.strip() == file_name_find) &
-                    (df_bucket["file_size"] == int(file_size_find))
-                ]
+                    (df_bucket["file_size"] == int(file_size_find)) &
+                    (~df_bucket["file_path"].str.endswith(f".{file_name_find}"))
+]
 
                 if len(filtered_df) == 1:
                     new_url = filtered_df["file_path"].values[0]
