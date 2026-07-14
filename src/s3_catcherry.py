@@ -1196,6 +1196,21 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
+        # Keep md5sum values in lower case
+        #
+        ##############
+
+        catcherr_logger.info("Lowercasing md5sum values")
+
+        for node in dict_nodes:
+            if "md5sum" in meta_dfs[node].columns:
+                catcherr_logger.info(f"Lowercasing md5sum, checking node: {node}")
+                df = meta_dfs[node]
+                df["md5sum"] = df["md5sum"].str.lower()
+                meta_dfs[node] = df
+
+        ##############
+        #
         # Assign guids to files
         #
         ##############
