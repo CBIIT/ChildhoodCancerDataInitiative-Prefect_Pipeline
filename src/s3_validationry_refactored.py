@@ -1440,15 +1440,30 @@ def validate_objs_loc_size(
     df_file["if_bucket_readable"] = df_file["file_url"].apply(
         lambda x: True if parse_file_url(x)[0] in readable_bucket_list else False
     )
-    # extract a list of url with readable bucket list only
-    uri_list = df_file.loc[df_file["if_bucket_readable"] == True, "file_url"].tolist()
+
+    # extract a list of urls with readable buckets only, filtering out empty/invalid urls
+    readable_mask = (
+        (df_file["if_bucket_readable"] == True) &
+        df_file["file_url"].notna() &
+        (df_file["file_url"].str.strip() != "")
+    )
+    uri_list = df_file.loc[readable_mask, "file_url"].tolist()
+
     if_exist = []
     bucket_obj_size = []
     s3_client = set_s3_session_client()
     print(f"Number of uri to be tested: {len(uri_list)}")
     progress_bar = 1
     for i in uri_list:
-        # avoid using task, try to avoid crash in prefect
+        # skip any urls that would produce an empty S3 key
+        parsed_bucket, parsed_key = parse_file_url(i)
+        if not parsed_key or parsed_key.strip() == "":
+            print(f"WARNING: Skipping invalid URI with empty key: {repr(i)}")
+            if_exist.append(False)
+            bucket_obj_size.append(None)
+            progress_bar += 1
+            continue
+
         i_if_exist, i_size = validate_single_manifest_obj_in_bucket.fn(
             s3_uri=i, s3_client=s3_client
         )
@@ -1456,14 +1471,10 @@ def validate_objs_loc_size(
         bucket_obj_size.append(i_size)
         if progress_bar % 100 == 0:
             print(f"progress: {progress_bar}/{len(uri_list)}")
-        else:
-            pass
         progress_bar += 1
 
-    df_file.loc[df_file["if_bucket_readable"] == True, "if_exist"] = if_exist
-    df_file.loc[df_file["if_bucket_readable"] == True, "bucket_obj_size"] = (
-        bucket_obj_size
-    )
+    df_file.loc[readable_mask, "if_exist"] = if_exist
+    df_file.loc[readable_mask, "bucket_obj_size"] = bucket_obj_size
     df_file["size_compare"] = df_file["file_size"] == df_file["bucket_obj_size"]
     s3_client.close()
     return df_file
