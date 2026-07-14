@@ -317,38 +317,52 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             mci_invalid_anatomic_site_mapping_path, sep="\t", dtype=str
         )
 
-        # create a mapping dictionary
+        # create mapping dictionaries for both anatomic_site and laterality
         mci_invalid_anatomic_site_dict = mci_invalid_anatomic_site_mapping.set_index(
             "submitted_anatomic_site"
         )["anatomic_site"].to_dict()
+
+        mci_invalid_laterality_dict = mci_invalid_anatomic_site_mapping.set_index(
+            "submitted_anatomic_site"
+        )["laterality"].to_dict()
+
         catcherr_logger.info(
-            "Cleaning up anatomic_site values based on MCI_invalidAnatomicSiteMappings.tsv"
+            "Cleaning up anatomic_site and laterality values based on MCI_invalidAnatomicSiteMappings.tsv"
         )
 
         for node in dict_nodes:
             df = meta_dfs[node]
             if "anatomic_site" in df.columns:
-                # use the mapping dictionary to fill in the new anatomic_site values based on the submitted_anatomic_site values compared to the anatomic_site column.
-                # If there is no match, then leave the value as is.
-                # We have to go row by row to handle each value as some have multiple values separated by ;
                 for index, row in df.iterrows():
                     anatomic_site_value = row["anatomic_site"]
                     if pd.notna(anatomic_site_value):
                         if ";" in anatomic_site_value:
                             anatomic_site_list = anatomic_site_value.split(";")
                             new_anatomic_site_list = []
+                            new_laterality_list = []
                             for anatomic_site in anatomic_site_list:
                                 new_anatomic_site = mci_invalid_anatomic_site_dict.get(
                                     anatomic_site, anatomic_site
                                 )
                                 new_anatomic_site_list.append(new_anatomic_site)
-                            new_anatomic_site_value = ";".join(new_anatomic_site_list)
-                            df.at[index, "anatomic_site"] = new_anatomic_site_value
+                                # only apply laterality if the submitted value had a mapping
+                                if anatomic_site in mci_invalid_laterality_dict:
+                                    new_laterality = mci_invalid_laterality_dict.get(anatomic_site)
+                                    if pd.notna(new_laterality):
+                                        new_laterality_list.append(new_laterality)
+                            df.at[index, "anatomic_site"] = ";".join(new_anatomic_site_list)
+                            if new_laterality_list and "laterality" in df.columns:
+                                df.at[index, "laterality"] = ";".join(new_laterality_list)
                         else:
                             new_anatomic_site = mci_invalid_anatomic_site_dict.get(
                                 anatomic_site_value, anatomic_site_value
                             )
                             df.at[index, "anatomic_site"] = new_anatomic_site
+                            # only apply laterality if the submitted value had a mapping
+                            if anatomic_site_value in mci_invalid_laterality_dict and "laterality" in df.columns:
+                                new_laterality = mci_invalid_laterality_dict.get(anatomic_site_value)
+                                if pd.notna(new_laterality):
+                                    df.at[index, "laterality"] = new_laterality
             meta_dfs[node] = df
 
         ##############
