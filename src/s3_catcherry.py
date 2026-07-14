@@ -1125,34 +1125,24 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     print(f"\tERROR: Empty file_size for {file_name_find} at row {loc}, skipping.", file=outf)
                     continue
 
-                # ── debug block for bam files ─────────────────────────────────────
-                if file_name_find.endswith(".bam"):
-                    print(f"\tDEBUG: Looking for bam file: {repr(file_name_find)}, size: {repr(file_size_find)}", file=outf)
-
-                    # step 1: name match only
-                    name_match = df_bucket[df_bucket["file_name"].str.strip() == file_name_find]
-                    print(f"\tDEBUG: Name-only matches ({len(name_match)}):", file=outf)
-                    for _, r in name_match.iterrows():
-                        print(f"\t\t{repr(r['file_name'])} | size={r['file_size']} | path={r['file_path']}", file=outf)
-
-                    # step 2: name + size match
-                    size_match = name_match[name_match["file_size"] == int(file_size_find)]
-                    print(f"\tDEBUG: Name+size matches ({len(size_match)}):", file=outf)
-                    for _, r in size_match.iterrows():
-                        print(f"\t\t{repr(r['file_name'])} | size={r['file_size']} | path={r['file_path']}", file=outf)
-
-                    # step 3: after endswith filter
-                    endswith_filter = size_match[~size_match["file_path"].str.endswith(f".{file_name_find}")]
-                    print(f"\tDEBUG: After endswith filter ({len(endswith_filter)}):", file=outf)
-                    for _, r in endswith_filter.iterrows():
-                        print(f"\t\t{repr(r['file_name'])} | size={r['file_size']} | path={r['file_path']}", file=outf)
-                # ── end debug block ───────────────────────────────────────────────
-
-                filtered_df = df_bucket[
-                    (df_bucket["file_name"].str.strip() == file_name_find) &
-                    (df_bucket["file_size"] == int(file_size_find)) &
-                    (~df_bucket["file_path"].str.endswith(f".{file_name_find}"))
+                # match on name only first
+                name_match_df = df_bucket[
+                    df_bucket["file_name"].str.strip() == file_name_find
                 ]
+
+                # then try to narrow down by size
+                size_match_df = name_match_df[
+                    name_match_df["file_size"].astype(int) == int(float(file_size_find))
+                ]
+
+                # use size match if available, otherwise fall back to name-only if unambiguous
+                if len(size_match_df) == 1:
+                    filtered_df = size_match_df
+                elif len(size_match_df) == 0 and len(name_match_df) == 1:
+                    print(f"\tWARNING: Size mismatch for {file_name_find} (manifest: {file_size_find}, bucket: {name_match_df['file_size'].values[0]}), but only one name match found, applying url.", file=outf)
+                    filtered_df = name_match_df
+                else:
+                    filtered_df = size_match_df  # ambiguous — multiple name matches, require size to disambiguate
 
                 if len(filtered_df) == 1:
                     new_url = filtered_df["file_path"].values[0]
