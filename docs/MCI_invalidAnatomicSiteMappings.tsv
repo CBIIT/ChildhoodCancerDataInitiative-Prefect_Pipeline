@@ -1,191 +1,384 @@
 Release_liftover_manifest	submitted_anatomic_site	anatomic_site	laterality
-Release 47 liftover	"Connective, subcutaneous and other soft tissues of pelvis"	pelvis connective tissue	
-Release 47 liftover	Overlapping lesion of male genital organs	male reproductive organ	
-Release 47 liftover	"Overlapping lesion of connective, subcutaneous and other soft tissues"	connective tissue	
-Release 47 liftover	"Connective, subcutaneous and other soft tissues of abdomen"	abdomen connective tissue	
-Release 47 liftover	UNKNOWN PRIMARY SITE	Unknown	
-Release 47 liftover	Peripheral nerves and autonomic nervous system of lower limb and hip	peripheral nervous system;autonomic nervous system;leg;hip	
-Release 47 liftover	Peripheral nerves and autonomic nervous system of pelvis	peripheral nervous system;autonomic nervous system;pelvic complex	
-Release 47 liftover	"Peritoneum, NOS"	peritoneum	
-Release 47 liftover	Overlapping lesion of peripheral nerves and autonomic nervous system	peripheral nervous system;autonomic nervous system	
-Release 47 liftover	Overlapping lesion of lung	lung	
-Release 47 liftover	Mesentery	mesentery	
-Release 47 liftover	Overlapping lesion of endocrine glands and related structures	endocrine gland	
-Release 47 liftover	Overlapping lesion of brain and central nervous system	brain;central nervous system	
-Release 47 liftover	insect thorax	thorax	
-Release 47 liftover	Peripheral nerves and autonomic nervous system of upper limb and shoulder	peripheral nervous system;autonomic nervous system;arm;shoulder	
-Release 47 liftover	"Overlapping lesion of heart, mediastinum and pleura"	heart;mediastinum;pleura	
-Release 47 liftover	Lymph nodes of multiple regions	lymph node	
-Release 47 liftover	Descended testis	testis	
-Release 47 liftover	"Overlapping lesion of lip, oral cavity and pharynx"	lip;oral cavity;pharynx	
-Release 47 liftover	Peripheral nerves and autonomic nervous system of thorax	peripheral nervous system;autonomic nervous system;thorax	
-Release 47 liftover	Overlapping lesion of skin	skin epidermis	
-Release 47 liftover	"Overlapping lesion of rectum, anus and anal canal"	rectum;anus;anal canal	
-Release 47 liftover	Overlapping lesion of nasopharynx	nasopharynx	
-Release 47 liftover	"Thigh, NOS"	leg	
-Release 47 liftover	Overlapping lesion of brain	brain	
-Release 47 liftover	PERIPHERAL NERVES AND AUTONOMIC NERVOUS SYSTEM	peripheral nervous system;autonomic nervous system	
-Release 47 liftover	"Peripheral nerves and autonomic nervous system of trunk, NOS"	peripheral nervous system;autonomic nervous system;trunk	
-Release 47 liftover	Overlapping lesion of respiratory system and intrathoracic organs	respiratory system;thoracic segment organ	
-Release 47 liftover	Peripheral nerves and autonomic nervous system of abdomen	peripheral nervous system;autonomic nervous system;abdomen	
-Release 47 liftover	"C49.2 : Connective, subcutaneous and other soft tissues of lower limb and hip;C76.5 : Thigh, NOS"	hip connective tissue;leg	
-Release 47 liftover	"C48.2 : Peritoneum, NOS;C49.9 : Connective, subcutaneous and other soft tissues, NOS"	connective tissue;peritoneum	
-Release 50	"Ankle, NOS"	ankle joint	
-Release 50	"Anus, NOS (excludes skin of anus and perianal skin C44.5)"	anus	
+Azenta WGS Set #5	Abdomen	abdomen	
+Azenta WGS set #1 	abdomen-anterior	abdomen	
+Azenta WGS set #1 	abdomen-lower	abdomen	
+Azenta WGS set #3	abdomen-right	abdomen	Right
+Azenta WGS Set #4	Abdomen-right lower	abdomen	Right
+Azenta WGS set #2	Abdomen-right upper	abdomen	Right
+Azenta WGS set #1 	Adrenal gland/adrenal cortex	adrenal cortex	
+Azenta WGS set #1 	Adrenal gland/adrenal cortex-left	adrenal cortex	Left
+Azenta WGS Set #5	Adrenal gland/adrenal cortex-left	adrenal cortex	Left
+Azenta WGS set #1 	Adrenal gland/adrenal cortex-right	adrenal cortex	Right
+Azenta WGS Set #5	Adrenal gland/adrenal cortex-right	adrenal cortex	Right
+Release 50	Ankle, NOS	ankle joint	
+Release 50	Anus, NOS (excludes skin of anus and perianal skin C44.5)	anus	
+Azenta WGS set #3	Appendix	vermiform appendix	
+Azenta WGS set #3	Arm-left	arm	Left
+Azenta WGS set #3	Arm-right	arm	Right
+Azenta WGS Set #4	Arm-right upper	arm	Right
+Azenta WGS set #3	Bladder	urinary bladder	
+Azenta WGS Set #4	Bladder-right	urinary bladder	Right
+Azenta WGS Set #5	Blood	blood	
 Release 50	Bone	bone element	
+Azenta WGS Set #5	Bone marrow	bone marrow	
+Azenta WGS Set #4	Bone, frontal-right	bone element	Right
+Azenta WGS set #3	Bone, mandible-left	mandible	Left
+Azenta WGS set #3	Bone, skull	skull	
+Azenta WGS Set #5	Bone, spine	vertebral column	
 Release 50	Bones of skull and face and associated joints (excludes mandible C41.1)	skull	
-Release 50	"brain, NOS Intracranial site Cranial fossa, NOS Anterior cranial fossa Middle cranial fossa Posterior cranial fossa Suprasellar"	brain;cranial fossa	
-Release 50	"Calf, NOS"	calf	
+Azenta WGS Set #5	Brain  	brain	
+Azenta WGS set #3	brain  -left	brain	Left
+Azenta WGS Set #5	Brain  -left	brain	Left
+Azenta WGS set #3	brain  -left anterior	brain	Left
+Azenta WGS set #2	Brain  -midline	brain	Midline
+Azenta WGS Set #5	Brain  -posterior	brain	
+Azenta WGS set #3	brain  -right	brain	Right
+Azenta WGS Set #5	Brain  -right	brain	Right
+Azenta WGS set #3	brain  -supra	brain	
+Azenta WGS set #1 	Brain -midline	brain  	Midline
+Azenta WGS set #3	brain, 3rd ventricle	third ventricle	
+Azenta WGS Set #5	Brain, 3rd ventricle	third ventricle	
+Azenta WGS set #1 	Brain, 3rd ventricle-posterior	third ventricle	
+Azenta WGS Set #5	Brain, 3rd ventricle-right	third ventricle	Right
+Azenta WGS set #3	brain, 4th ventricle	fourth ventricle	
+Azenta WGS Set #5	Brain, 4th ventricle	fourth ventricle	
+Azenta WGS set #2	Brain, 4th ventricle-midline	fourth ventricle	Midline
+Azenta WGS set #3	brain, brain stem	brainstem	
+Azenta WGS Set #5	Brain, brain stem	brainstem	
+Azenta WGS set #3	brain, brain stem-left	brainstem	Left
+Azenta WGS set #2	Brain, brain stem-midline	brainstem	Midline
+Azenta WGS set #2	Brain, brain stem-right	brainstem	Right
+Azenta WGS set #3	brain, cerebellum	cerebellum	
+Azenta WGS Set #5	Brain, cerebellum	cerebellum	
+Azenta WGS set #3	brain, cerebellum-left	cerebellum	Left
+Azenta WGS Set #5	Brain, cerebellum-left	cerebellum	Left
+Azenta WGS set #1 	Brain, cerebellum-midline	cerebellum	Midline
+Azenta WGS set #3	brain, cerebellum-right	cerebellum	Right
+Azenta WGS Set #5	Brain, cerebellum-right	cerebellum	Right
+Azenta WGS Set #5	Brain, cerebrum	cerebral hemisphere	
+Azenta WGS set #3	brain, cerebrum-left	cerebral hemisphere	Left
+Azenta WGS Set #5	Brain, cerebrum-left	cerebral hemisphere	Left
+Azenta WGS set #2	Brain, cerebrum-right	cerebral hemisphere	Right
+Azenta WGS set #3	brain, frontal lobe	frontal lobe	
+Azenta WGS Set #5	Brain, frontal lobe	frontal lobe	
+Azenta WGS set #3	brain, frontal lobe-left	frontal lobe	Left
+Azenta WGS Set #5	Brain, frontal lobe-left	frontal lobe	Left
+Azenta WGS set #3	brain, frontal lobe-right	frontal lobe	Right
+Azenta WGS Set #5	Brain, frontal lobe-right	frontal lobe	Right
+Azenta WGS set #2	Brain, frontal lobe-right posterior	frontal lobe	Right
+Release 50	brain, NOS Intracranial site Cranial fossa, NOS Anterior cranial fossa Middle cranial fossa Posterior cranial fossa Suprasellar	brain;cranial fossa	
+Azenta WGS set #1 	Brain, occipital lobe	occipital lobe	
+Azenta WGS set #3	brain, occipital lobe-left	occipital lobe	Left
+Azenta WGS Set #5	Brain, occipital lobe-left	occipital lobe	Left
+Azenta WGS set #3	brain, occipital lobe-right	occipital lobe	Right
+Azenta WGS Set #5	Brain, occipital lobe-right	occipital lobe	Right
+Azenta WGS set #3	brain, parietal lobe	parietal lobe	
+Azenta WGS Set #5	Brain, parietal lobe	parietal lobe	
+Azenta WGS set #3	brain, parietal lobe-left	parietal lobe	Left
+Azenta WGS Set #5	Brain, parietal lobe-left	parietal lobe	Left
+Azenta WGS set #3	brain, parietal lobe-right	parietal lobe	Right
+Azenta WGS Set #5	Brain, parietal lobe-right	parietal lobe	Right
+Azenta WGS set #3	brain, posterior fossa	posterior cranial fossa	
+Azenta WGS Set #5	Brain, posterior fossa	posterior cranial fossa	
+Azenta WGS set #1 	Brain, posterior fossa-anterior	posterior cranial fossa	
+Azenta WGS set #1 	Brain, posterior fossa-left	posterior cranial fossa	Left
+Azenta WGS set #1 	Brain, posterior fossa-midline	posterior cranial fossa	Midline
+Azenta WGS set #1 	Brain, posterior fossa-midline	posterior cranial fossa	Midline
+Azenta WGS set #1 	Brain, posterior fossa-right	posterior cranial fossa	Right
+Azenta WGS set #1 	Brain, temporal lobe	temporal lobe	
+Azenta WGS Set #5	Brain, temporal lobe	temporal lobe	
+Azenta WGS set #3	brain, temporal lobe-left	temporal lobe	Left
+Azenta WGS Set #5	Brain, temporal lobe-left	temporal lobe	Left
+Azenta WGS Set #4	Brain, temporal lobe-left anterior	temporal lobe	Left
+Azenta WGS Set #5	Brain, temporal lobe-left anterior	temporal lobe	Left anterior
+Azenta WGS Set #4	Brain, temporal lobe-left medial	temporal lobe	Left
+Azenta WGS set #3	brain, temporal lobe-posterior	temporal lobe	
+Azenta WGS set #3	brain, temporal lobe-right	temporal lobe	Right
+Azenta WGS Set #5	Brain, temporal lobe-right	temporal lobe	Right
+Azenta WGS Set #5	Brain, temporal lobe-right lower	temporal lobe	Right
+Azenta WGS set #3	brain, thalamus	thalamic complex	
+Azenta WGS Set #5	Brain, thalamus	thalamic complex	
+Azenta WGS set #3	brain, thalamus-left	thalamic complex	Left
+Azenta WGS Set #5	Brain, thalamus-left	thalamic complex	Left
+Azenta WGS set #3	brain, thalamus-right	thalamic complex	Right
+Azenta WGS Set #5	Brain, thalamus-right	thalamic complex	Right
+Azenta WGS set #3	brain, ventricle	brain ventricle	
+Azenta WGS Set #5	Brain, ventricle	brain ventricle	
+Azenta WGS set #3	brain, ventricle-left	brain ventricle	Left
+Azenta WGS set #3	brain, ventricle-left lateral	brain ventricle	Left
+Azenta WGS set #2	Brain, ventricle-right	brain ventricle	Right
+Azenta WGS Set #5	Brain, ventricle-right	brain ventricle	Right
+Azenta WGS set #2	Brain, ventricle-right lateral	brain ventricle	Right
+Azenta WGS Set #4	Breast-right	breast	Right
+Release 47 liftover	C48.2 : Peritoneum, NOS;C49.9 : Connective, subcutaneous and other soft tissues, NOS	connective tissue;peritoneum	
+Release 47 liftover	C49.2 : Connective, subcutaneous and other soft tissues of lower limb and hip;C76.5 : Thigh, NOS	hip connective tissue;leg	
+Release 50	Calf, NOS	calf	
+Azenta WGS Set #5	Cecum	caecum	
 Release 50	cerebrospinal fluid (documented by spinal tap)	cerebrospinal fluid	
-Release 50	"Connective, subcutaneous and other soft tissues of head, face, and neck (excludes connective tissue of orbit C69.6 and nasal cartilage C30.0)"	head connective tissue	
-Release 50	"Connective, subcutaneous and other soft tissues of thorax (excludes thymus C37.9, heart and mediastinum C38._)"	thoracic segment connective tissue	
+Azenta WGS set #1 	Cervix and Uterus	uterine cervix;uterus	
+Azenta WGS set #1 	Chest-left	chest	Left
+Azenta WGS set #3	chest-right	chest	Right
+Azenta WGS Set #4	Colon, sigmoid	sigmoid colon	
+Azenta WGS Set #5	Colon-right	colon	Right
+Release 47 liftover	Connective, subcutaneous and other soft tissues of abdomen	abdomen connective tissue	
+Release 50	Connective, subcutaneous and other soft tissues of head, face, and neck (excludes connective tissue of orbit C69.6 and nasal cartilage C30.0)	head connective tissue	
+Release 47 liftover	Connective, subcutaneous and other soft tissues of pelvis	pelvis connective tissue	
+Release 50	Connective, subcutaneous and other soft tissues of thorax (excludes thymus C37.9, heart and mediastinum C38._)	thoracic segment connective tissue	
 Release 50	CSF	cerebrospinal fluid	
+Release 47 liftover	Descended testis	testis	
 Release 50	Distant brain parenchyma	brain;parenchyma of central nervous system	
 Release 50	Distant Lymph Node	lymph node	
 Release 50	Distant lymph node(s)	lymph node	
 Release 50	Extra CNS	Unknown	
-Release 50	"Foot, NOS"	foot	
-Release 50	"Greater curvature of stomach, NOS (not classifiable to C16.0 to C16.4)"	greater curvature of stomach	
+Azenta WGS set #3	Eye, orbit	orbital cavity	
+Azenta WGS set #3	Eye, orbit-left	orbital cavity	Left
+Azenta WGS Set #5	Eye, orbit-left	orbital cavity	Left
+Azenta WGS set #3	Eye, orbit-right	orbital cavity	Right
+Azenta WGS Set #5	Eye, orbit-right	orbital cavity	Right
+Azenta WGS set #3	Eye-left	eye	Left
+Azenta WGS Set #4	Eye-left upper	eye	Left
+Azenta WGS set #3	Eye-right	eye	Right
+Azenta WGS set #3	Eye-right lower	eye	Right
+Azenta WGS set #1 	Fallopian tube and ovary-left	fallopian tube;ovary	Left
+Azenta WGS set #1 	Fallopian tube and ovary-right	fallopian tube;ovary	Right
+Release 50	Foot, NOS	foot	
+Release 50	Greater curvature of stomach, NOS (not classifiable to C16.0 to C16.4)	greater curvature of stomach	
+Azenta WGS set #1 	Groin-right	inguinal part of abdomen	Right
+Azenta WGS Set #4	Heart, pericardium	heart;pericardium	
 Release 50	Ileum (excludes ileocecal valve C18.0)	ileum	
-Release 50	"Lip, NOS (excludes skin of lip C44.0)"	lip	
+Release 47 liftover	insect thorax	chest	
+Azenta WGS set #3	Kidney-left	kidney	Left
+Azenta WGS set #3	Kidney-right	kidney	Right
+Azenta WGS Set #4	Kidney-right upper	kidney	Right
+Azenta WGS Set #4.1	Leg-left	leg	Left
+Release 50	Lip, NOS (excludes skin of lip C44.0)	lip	
+Azenta WGS Set #4	Liver-right	liver	Right
+Azenta WGS Set #4	Liver-right	liver	Right
+Azenta WGS Set #4	Lung, lobe	lung	
+Azenta WGS set #3	Lung, lobe-left upper	upper lobe of lung	Left
+Azenta WGS set #1 	Lung, lobe-right lower	lower lobe of right lung	Right
+Azenta WGS Set #5	Lung, lobe-right lower	lower lobe of right lung	Right
+Azenta WGS set #1 	Lung-left	lung	Left
+Azenta WGS Set #4	Lung-left lower	lower lobe of lung	Left
+Azenta WGS set #1 	Lung-right	lung	Right
+Azenta WGS Set #5	Lymph node	lymph node	
 Release 50	Lymph Node(s)	lymph node	
+Azenta WGS set #1 	lymph node-left	lymph node	Left
+Azenta WGS Set #5	Lymph node-left	lymph node	Left
+Azenta WGS set #3	lymph node-right	lymph node	Right
+Release 47 liftover	Lymph nodes of multiple regions	lymph node	
+Azenta WGS set #2	Mediastinum-left	mediastinum	Left
+Azenta WGS Set #4	Mediastinum-posterior	posterior mediastinum	
 Release 50	Meninges (documented by imaging)	meningeal cluster	
-Release 50	"Nasal cavity (excludes nose, NOS C76.0)"	nasal cavity	
+Release 47 liftover	Mesentery	mesentery	
+Release 50	Nasal cavity (excludes nose, NOS C76.0)	nasal cavity	
+Azenta WGS set #1 	Nasal cavity-anterior	nasal cavity	
+Azenta WGS set #3	Nasal cavity-left	nasal cavity	Left
+Azenta WGS set #3	Nasal cavity-midline	nasal cavity	Midline
+Azenta WGS set #3	Nasal cavity-right	nasal cavity	Right
+Azenta WGS Set #5	Nasal cavity-right	nasal cavity	Right
+Azenta WGS Set #5	Nasopharynx	nasopharynx	
+Azenta WGS set #2	Nasopharynx-right	nasopharynx	Right
+Azenta WGS Set #5	Neck-left	neck	Left
+Azenta WGS Set #5	Omentum	omentum	
 Release 50	Other	Unknown	
-Release 50	"Overlapping lesion of bones, joints and articular cartilage of limbs"	limb bone;limb joint	
-Release 50	"Overlapping lesion of heart, mediastinum, and pleura"	heart;mediastinum;pleura	
+Azenta WGS set #3	Ovary-left	ovary	Left
+Azenta WGS Set #5	Ovary-left	ovary	Left
+Azenta WGS set #1 	Ovary-right	ovary	Right
+Release 50	Overlapping lesion of bones, joints and articular cartilage of limbs	limb bone;limb joint	
+Release 47 liftover	Overlapping lesion of brain	brain	
+Release 47 liftover	Overlapping lesion of brain and central nervous system	brain;central nervous system	
+Release 47 liftover	Overlapping lesion of connective, subcutaneous and other soft tissues	connective tissue	
+Release 47 liftover	Overlapping lesion of endocrine glands and related structures	endocrine gland	
+Release 47 liftover	Overlapping lesion of heart, mediastinum and pleura	heart;mediastinum;pleura	
+Release 50	Overlapping lesion of heart, mediastinum, and pleura	heart;mediastinum;pleura	
+Release 47 liftover	Overlapping lesion of lip, oral cavity and pharynx	lip;oral cavity;pharynx	
+Release 47 liftover	Overlapping lesion of lung	lung	
+Release 47 liftover	Overlapping lesion of male genital organs	male reproductive organ	
+Release 47 liftover	Overlapping lesion of nasopharynx	nasopharynx	
+Release 47 liftover	Overlapping lesion of peripheral nerves and autonomic nervous system	peripheral nervous system;autonomic nervous system	
+Release 47 liftover	Overlapping lesion of rectum, anus and anal canal	rectum;anus;anal canal	
+Release 47 liftover	Overlapping lesion of respiratory system and intrathoracic organs	respiratory system;thoracic segment organ	
 Release 50	Overlapping lesion of retroperitoneum and peritoneum	retroperitoneal space;peritoneum	
+Release 47 liftover	Overlapping lesion of skin	skin of body	
+Azenta WGS set #3	Parotid gland-right	parotid gland	Right
+Azenta WGS set #3	Pelvis	pelvic region of trunk	
+Azenta WGS set #3	Pelvis-right	pelvic region of trunk	Right
 Release 50	Pericardium	pericardium	
+Release 47 liftover	PERIPHERAL NERVES AND AUTONOMIC NERVOUS SYSTEM	peripheral nervous system;autonomic nervous system	
+Release 47 liftover	Peripheral nerves and autonomic nervous system of abdomen	peripheral nervous system;autonomic nervous system;abdomen	
+Release 47 liftover	Peripheral nerves and autonomic nervous system of lower limb and hip	peripheral nervous system;autonomic nervous system;leg;hip	
+Release 47 liftover	Peripheral nerves and autonomic nervous system of pelvis	peripheral nervous system;autonomic nervous system;pelvic region of trunk	
+Release 47 liftover	Peripheral nerves and autonomic nervous system of thorax	peripheral nervous system;autonomic nervous system;chest	
+Release 47 liftover	Peripheral nerves and autonomic nervous system of trunk, NOS	peripheral nervous system;autonomic nervous system;trunk	
+Release 47 liftover	Peripheral nerves and autonomic nervous system of upper limb and shoulder	peripheral nervous system;autonomic nervous system;arm;shoulder	
+Release 47 liftover	Peritoneum, NOS	peritoneum	
+Azenta WGS Set #4	Pharynx-left	pharynx	Left
+Azenta WGS set #3	Pineal Gland	pineal body	
+Azenta WGS Set #5	Pineal Gland	pineal body	
+Azenta WGS set #3	Pleura-left	pleura	Left
+Azenta WGS Set #5	Pleura-left	pleura	Left
+Azenta WGS set #1 	posterior cranial fossa	posterior cranial fossa	
+Azenta WGS set #3	Prostate	prostate gland	
+Azenta WGS Set #5	Prostate	prostate gland	
 Release 50	Regional Lymph Node	lymph node	
 Release 50	Regional nodes	lymph node	
 Release 50	Retroperitoneal Lymph Node	retroperitoneal space;lymph node	
-Release 50	"Skin, NOS (excludes skin of labia majora C51.0, skin of vulva C51.9, skin of penis C60.9 and skin of scrotum C63.2)"	skin of body	
-Release 50	"Soft palate, NOS (excludes nasopharyngeal surface of soft palate C11.3)"	soft palate	
-Release 50	"Spine, Whole"	vertebral column	
-Release 50	"Tonsil, NOS (excludes lingual tonsil C02.4 and pharyngeal tonsil C11.1)"	tonsil	
-Release 50	Vertebral column (excludes sacrum and coccyx C41.4)	vertebral column	
-Azenta WGS set #3	"brain, posterior fossa"	posterior cranial fossa	
-Azenta WGS set #3	"brain, ventricle"	brain ventricle	
-Azenta WGS set #3	"Soft tissue, arm-left"	arm	Left
-Azenta WGS set #3	"Soft tissue, orbit-right"	orbital cavity	Right
-Azenta WGS set #3	"Soft tissue, orbit-left"	orbital cavity	Left
-Azenta WGS set #3	"Soft tissue, hip-right"	hip	Right
-Azenta WGS set #3	"brain, frontal lobe-right"	frontal lobe	Right
-Azenta WGS set #3	"brain, ventricle-left lateral"	brain ventricle	Left
-Azenta WGS set #3	Pelvis-right	pelvic region of trunk	Right
-Azenta WGS set #3	Pineal Gland	pineal body	
-Azenta WGS set #3	"brain, thalamus-left"	thalamic complex	Left
-Azenta WGS set #3	"brain, thalamus-right"	thalamic complex	Right
-Azenta WGS set #3	"Soft tissue, orbit-right lateral"	orbital cavity	Right
-Azenta WGS set #3	"brain, temporal lobe-right"	temporal lobe	Right
-Azenta WGS set #3	"Soft tissue, back"	trunk	
-Azenta WGS set #3	Testicle-left	testis	Left
-Azenta WGS set #3	Testicle-right	testis	Right
-Azenta WGS set #3	"brain, cerebellum"	cerebellum	
-Azenta WGS set #3	"brain, brain stem"	brainstem	
-Azenta WGS set #3	brain  -left	brain	Left
-Azenta WGS set #3	"brain, parietal lobe"	parietal lobe	
-Azenta WGS set #3	Testicle	testis	
-Azenta WGS set #3	"brain, cerebellum-right"	cerebellum	Right
-Azenta WGS set #3	Soft tissue-right upper	Unknown	
-Azenta WGS set #3	"Eye, orbit-left"	orbital cavity	Left
-Azenta WGS set #3	"brain, parietal lobe-left"	parietal lobe	Left
-Azenta WGS set #3	"brain, cerebellum-left"	cerebellum	Left
-Azenta WGS set #3	"Soft tissue, orbit-left anterior"	orbital cavity	Left
-Azenta WGS set #3	Testicle-right upper	testis	Right
-Azenta WGS set #3	"Soft tissue, mandible-right"	mandible	Right
-Azenta WGS set #3	"brain, 4th ventricle"	brain ventricle	
-Azenta WGS set #3	"Soft tissue, face/head-left"	head	Left
-Azenta WGS set #3	"brain, frontal lobe"	frontal lobe	
-Azenta WGS set #3	"Soft tissue, buttock-left"	buttock	Left
-Azenta WGS set #3	"Soft tissue, chest-left"	chest	Left
-Azenta WGS set #3	"brain, temporal lobe-left"	temporal lobe	Left
-Azenta WGS set #3	"Soft tissue, chest-right"	chest	Right
-Azenta WGS set #3	lymph node-right	lymph node	Right
-Azenta WGS set #3	"brain, 3rd ventricle"	brain ventricle	
-Azenta WGS set #3	"brain, frontal lobe-left"	frontal lobe	Left
-Azenta WGS set #3	"brain, parietal lobe-right"	parietal lobe	Right
-Azenta WGS set #3	"brain, brain stem-left"	brainstem	Left
-Azenta WGS set #3	"Soft tissue, spine"	vertebral column	
-Azenta WGS set #3	"brain, occipital lobe-left"	occipital lobe	Left
-Azenta WGS set #3	brain  -right	brain	Right
-Azenta WGS set #3	"Soft tissue, elbow-right"	elbow	Right
-Azenta WGS set #3	"Soft tissue, leg-left"	leg	Left
-Azenta WGS set #3	"Soft tissue, face/head-right"	head	Right
-Azenta WGS set #3	"Soft tissue, nasal cavity-left"	nasal cavity	Left
-Azenta WGS set #3	Kidney-left	kidney	Left
-Azenta WGS set #3	"Soft tissue, leg-right"	leg	Right
-Azenta WGS set #3	Kidney-right	kidney	Right
-Azenta WGS set #3	"Soft tissue, back-right upper"	trunk	Right
-Azenta WGS set #3	"Soft tissue, hand-right"	hand	Right
-Azenta WGS set #3	"Soft tissue, thigh-left posterior"	thigh	Left
-Azenta WGS set #3	Nasal cavity-left	nasal cavity	Left
-Azenta WGS set #3	"Soft tissue, foot-left"	foot	Left
-Azenta WGS set #3	"Soft tissue, scalp"	scalp	
-Azenta WGS set #3	"Soft tissue, neck-left"	neck	Left
-Azenta WGS set #3	brain  -left anterior	brain	Left
-Azenta WGS set #3	"brain, ventricle-left"	brain ventricle	Left
-Azenta WGS set #3	"Eye, orbit-right"	orbital cavity	Right
-Azenta WGS set #3	"Eye, orbit"	orbital cavity	
-Azenta WGS set #3	"Soft tissue, pelvis-left"	pelvic region of trunk	Left
-Azenta WGS set #3	Nasal cavity-right	nasal cavity	Right
-Azenta WGS set #3	Soft tissue	connective tissue	
-Azenta WGS set #3	Eye-right lower	eye	Right
-Azenta WGS set #3	abdomen-right	abdomen	Right
-Azenta WGS set #3	"Soft tissue, calf-right"	calf	Right
-Azenta WGS set #3	"Soft tissue, back-left upper"	trunk	Left
-Azenta WGS set #3	"Soft tissue, back-right lower"	trunk	Right
-Azenta WGS set #3	"Soft tissue, neck-right"	neck	Right
-Azenta WGS set #3	Pelvis	pelvic region of trunk	
-Azenta WGS set #3	Thyroid-right	thyroid gland	Right
-Azenta WGS set #3	Eye-right	eye	Right
-Azenta WGS set #3	"Soft tissue, neck-posterior"	neck	
-Azenta WGS set #3	Arm-right	arm	Right
-Azenta WGS set #3	Thyroid-right upper	thyroid gland	Right
-Azenta WGS set #3	"Soft tissue, forearm-right"	arm	Right
-Azenta WGS set #3	"Soft tissue, spine-para"	vertebral column	
-Azenta WGS set #3	"Soft tissue, thigh-left"	thigh	Left
-Azenta WGS set #3	"Lung, lobe-left upper"	upper lobe of lung	Left
-Azenta WGS set #3	Arm-left	arm	Left
-Azenta WGS set #3	"brain, temporal lobe-posterior"	temporal lobe	
-Azenta WGS set #3	"Soft tissue, pelvis"	pelvic region of trunk	
-Azenta WGS set #3	"Soft tissue, nasal cavity-right"	nasal cavity	Right
-Azenta WGS set #3	"Soft tissue, hip-left"	hip	Left
-Azenta WGS set #3	"Soft tissue, back-left"	trunk	Left
-Azenta WGS set #3	Nasal cavity-midline	nasal cavity	Midline
-Azenta WGS set #3	"Soft tissue, mouth"	mouth	
-Azenta WGS set #3	"Soft tissue, armpit-right"	axilla	Right
-Azenta WGS set #3	Thyroid-left	thyroid gland	Left
-Azenta WGS set #3	"Soft tissue, thigh-right"	thigh	Right
-Azenta WGS set #3	"brain, cerebrum-left"	cerebral hemisphere	Left
-Azenta WGS set #3	"Soft tissue, ear-left"	ear	Left
-Azenta WGS set #3	"Soft tissue, retroperitoneum"	retroperitoneal space	
-Azenta WGS set #3	"Bone, skull"	skull	
-Azenta WGS set #3	Parotid gland-right	parotid gland	Right
-Azenta WGS set #3	Eye-left	eye	Left
-Azenta WGS set #3	"Soft tissue, ear-right"	ear	Right
-Azenta WGS set #3	"brain, thalamus"	thalamic complex	
-Azenta WGS set #3	"Soft tissue, face/head"	head	
-Azenta WGS set #3	"Soft tissue, testicle-left"	testis	Left
-Azenta WGS set #3	"Soft tissue, arm-right"	arm	Right
-Azenta WGS set #3	"Soft tissue, hand-left"	hand	Left
-Azenta WGS set #3	"Soft tissue, arm"	arm	
-Azenta WGS set #3	"brain, occipital lobe-right"	occipital lobe	Right
-Azenta WGS set #3	Prostate	prostate gland	
-Azenta WGS set #3	"Soft tissue, foot-right"	foot	Right
-Azenta WGS set #3	"Bone, mandible-left"	mandible	Left
-Azenta WGS set #3	"Soft tissue, knee-right"	knee	Right
-Azenta WGS set #3	brain  -supra	brain	
-Azenta WGS set #3	Pleura-left	pleura	Left
-Azenta WGS set #3	"Soft tissue, abdomen-right"	abdomen	Right
-Azenta WGS set #3	"Soft tissue, armpit-left"	axilla	Left
-Azenta WGS set #3	"Soft tissue, mandible-left"	mandible	Left
-Azenta WGS set #3	"Soft tissue, shoulder-right"	shoulder	Right
-Azenta WGS set #3	Ovary-left	ovary	Left
-Azenta WGS set #3	chest-right	chest	Right
-Azenta WGS set #3	"Soft tissue, maxilla-left"	maxilla	Left
-Azenta WGS set #3	Bladder	urinary bladder	
 Azenta WGS set #3	Retroperitoneum	retroperitoneal space	
-Azenta WGS set #3	Appendix	vermiform appendix	
-Azenta WGS set #3	"Skin, arm/hand-left upper"	arm;hand;forelimb skin	Left
-Azenta WGS set #3	"Skin, head/neck"	head;neck;head or neck skin	
+Azenta WGS Set #4	Retroperitoneum-right	retroperitoneal space	Right
+Azenta WGS Set #4	Sinus-left	paranasal sinus	Left
+Azenta WGS set #3	Skin, arm/hand-left upper	arm;hand;skin of body	Left
+Azenta WGS set #2	Skin, back-lower	skin of trunk	
+Azenta WGS set #2	Skin, buttock-left	buttock;skin of body	
+Azenta WGS set #3	Skin, head/neck	head;neck;head or neck skin	
+Azenta WGS set #2	Skin, head/neck-right	head;neck;head or neck skin	Right
+Azenta WGS Set #4	Skin, leg/foot-left	leg;foot;skin of body	Left
+Azenta WGS Set #5	Skin, leg/foot-right	leg;foot;skin of body	Right
+Release 50	Skin, NOS (excludes skin of labia majora C51.0, skin of vulva C51.9, skin of penis C60.9 and skin of scrotum C63.2)	skin of body	
+Azenta WGS Set #4	Small bowel/small intestine	small intestine	
+Azenta WGS Set #4	Small bowel/small intestine	small intestine	
+Azenta WGS Set #4	Small bowel/small intestine	small intestine	
+Azenta WGS Set #5	Small bowel/small intestine	small intestine	
+Release 50	Soft palate, NOS (excludes nasopharyngeal surface of soft palate C11.3)	soft palate	
+Azenta WGS set #3	Soft tissue	connective tissue	
+Azenta WGS set #1 	Soft tissue, abdomen	abdomen	
+Azenta WGS set #2	Soft tissue, abdomen-left lower	abdomen	Left
+Azenta WGS set #3	Soft tissue, abdomen-right	abdomen	Right
+Azenta WGS Set #4	Soft tissue, abdomen-right lower	abdomen	Right
+Azenta WGS Set #4	Soft tissue, ankle-right	ankle joint	Right
+Azenta WGS set #3	Soft tissue, arm	arm	
+Azenta WGS set #3	Soft tissue, arm-left	arm	Left
+Azenta WGS set #3	Soft tissue, armpit-left	axilla	Left
+Azenta WGS Set #5	Soft tissue, armpit-left	axilla	Left
+Azenta WGS set #3	Soft tissue, armpit-right	axilla	Right
+Azenta WGS set #3	Soft tissue, arm-right	arm	Right
+Azenta WGS Set #5	Soft tissue, arm-right upper	arm	Right
+Azenta WGS set #3	Soft tissue, back	trunk	
+Azenta WGS set #3	Soft tissue, back-left	trunk	Left
+Azenta WGS Set #5	Soft tissue, back-left	trunk	Left
+Azenta WGS set #3	Soft tissue, back-left upper	trunk	Left
+Azenta WGS Set #5	Soft tissue, back-left upper	trunk	Left
+Azenta WGS set #1 	Soft tissue, back-lower	trunk	
+Azenta WGS set #3	Soft tissue, back-right lower	trunk	Right
+Azenta WGS set #3	Soft tissue, back-right upper	trunk	Right
+Azenta WGS set #3	Soft tissue, buttock-left	buttock	Left
+Azenta WGS Set #5	Soft tissue, buttock-left	buttock	Left
+Azenta WGS set #1 	Soft tissue, buttock-right	buttock	Right
+Azenta WGS Set #5	Soft tissue, buttock-right	buttock	Right
+Azenta WGS set #1 	Soft tissue, calf-left	calf	Left
+Azenta WGS set #1 	Soft tissue, calf-left posterior	calf	Left
+Azenta WGS set #3	Soft tissue, calf-right	calf	Right
+Azenta WGS set #2	Soft tissue, chest	chest	
+Azenta WGS set #3	Soft tissue, chest-left	chest	Left
+Azenta WGS Set #4	Soft tissue, chest-midline	chest	Midline
+Azenta WGS set #3	Soft tissue, chest-right	chest	Right
+Azenta WGS Set #5	Soft tissue, chest-right upper	chest	Right
+Azenta WGS set #3	Soft tissue, ear-left	ear	Left
+Azenta WGS Set #5	Soft tissue, ear-left	ear	Left
+Azenta WGS set #3	Soft tissue, ear-right	ear	Right
+Azenta WGS Set #5	Soft tissue, ear-right	ear	Right
+Azenta WGS set #3	Soft tissue, elbow-right	elbow	Right
+Azenta WGS set #3	Soft tissue, face/head	head	
+Azenta WGS set #3	Soft tissue, face/head-left	head	Left
+Azenta WGS set #3	Soft tissue, face/head-right	head	Right
+Azenta WGS set #3	Soft tissue, foot-left	foot	Left
+Azenta WGS Set #5	Soft tissue, foot-left	foot	Left
+Azenta WGS set #3	Soft tissue, foot-right	foot	Right
+Azenta WGS set #2	Soft tissue, forearm-left	arm	Left
+Azenta WGS set #3	Soft tissue, forearm-right	arm	Right
+Azenta WGS Set #5	Soft tissue, forearm-right	arm	Right
+Azenta WGS set #3	Soft tissue, hand-left	hand	Left
+Azenta WGS set #3	Soft tissue, hand-right	hand	Right
+Azenta WGS set #3	Soft tissue, hip-left	hip	Left
+Azenta WGS set #3	Soft tissue, hip-right	hip	Right
+Azenta WGS Set #4	Soft tissue, knee-left	knee	Left
+Azenta WGS set #3	Soft tissue, knee-right	knee	Right
+Azenta WGS set #3	Soft tissue, leg-left	leg	Left
+Azenta WGS Set #5	Soft tissue, leg-left	leg	Left
+Azenta WGS Set #4	Soft tissue, leg-left distal	leg	Left
+Azenta WGS Set #4	Soft tissue, leg-left lower	leg	Left
+Azenta WGS set #3	Soft tissue, leg-right	leg	Right
+Azenta WGS Set #4.1	Soft tissue, leg-right proximal	leg	Right
+Azenta WGS set #3	Soft tissue, mandible-left	mandible	Left
+Azenta WGS Set #5	Soft tissue, mandible-left	mandible	Left
+Azenta WGS set #3	Soft tissue, mandible-right	mandible	Right
+Azenta WGS set #3	Soft tissue, maxilla-left	maxilla	Left
+Azenta WGS Set #5	Soft tissue, maxilla-left	maxilla	Left
+Azenta WGS set #2	Soft tissue, maxilla-right	maxilla	Right
+Azenta WGS Set #4	Soft tissue, mediastinum	mediastinum	
+Azenta WGS set #3	Soft tissue, mouth	mouth	
+Azenta WGS Set #5	Soft tissue, mouth	mouth	
+Azenta WGS Set #5	Soft tissue, mouth-right	mouth	Right
+Azenta WGS Set #4	Soft tissue, nasal cavity	nasal cavity	
+Azenta WGS Set #5	Soft tissue, nasal cavity	nasal cavity	
+Azenta WGS set #3	Soft tissue, nasal cavity-left	nasal cavity	Left
+Azenta WGS set #3	Soft tissue, nasal cavity-right	nasal cavity	Right
+Azenta WGS set #1 	Soft tissue, neck	neck	
+Azenta WGS set #3	Soft tissue, neck-left	neck	Left
+Azenta WGS Set #5	Soft tissue, neck-left	neck	Left
+Azenta WGS set #3	Soft tissue, neck-posterior	neck	
+Azenta WGS set #3	Soft tissue, neck-right	neck	Right
+Azenta WGS Set #4	Soft tissue, nose-left lower	nose	Left
+Azenta WGS set #3	Soft tissue, orbit-left	orbital cavity	Left
+Azenta WGS Set #5	Soft tissue, orbit-left	orbital cavity	Left
+Azenta WGS set #3	Soft tissue, orbit-left anterior	orbital cavity	Left
+Azenta WGS set #3	Soft tissue, orbit-right	orbital cavity	Right
+Azenta WGS set #3	Soft tissue, orbit-right lateral	orbital cavity	Right
+Azenta WGS set #3	Soft tissue, pelvis	pelvic region of trunk	
+Azenta WGS Set #5	Soft tissue, pelvis	pelvic region of trunk	
+Azenta WGS set #3	Soft tissue, pelvis-left	pelvic region of trunk	Left
+Azenta WGS Set #5	Soft tissue, peritoneum	peritoneum	
+Azenta WGS set #3	Soft tissue, retroperitoneum	retroperitoneal space	
+Azenta WGS Set #4	Soft tissue, retroperitoneum-left	retroperitoneal space	Left
+Azenta WGS set #1 	Soft tissue, rib	trunk	
+Azenta WGS set #3	Soft tissue, scalp	scalp	
+Azenta WGS Set #5	Soft tissue, scalp	scalp	
+Azenta WGS Set #4	Soft tissue, scalp-left	scalp	Left
+Azenta WGS Set #5	Soft tissue, shoulder-left	shoulder	Left
+Azenta WGS set #3	Soft tissue, shoulder-right	shoulder	Right
+Azenta WGS Set #4	Soft tissue, sinus-right	paranasal sinus	Right
+Azenta WGS set #3	Soft tissue, spine	spinal cord	
+Azenta WGS Set #5	Soft tissue, spine	spinal cord	
+Azenta WGS Set #4	Soft tissue, spine-anterior	spinal cord	
+Azenta WGS set #3	Soft tissue, spine-para	spinal cord	
+Azenta WGS set #2	Soft tissue, spine-right	spinal cord	Right
+Azenta WGS set #3	Soft tissue, testicle-left	testis	Left
+Azenta WGS Set #5	Soft tissue, testicle-left	testis	Left
+Azenta WGS set #2	Soft tissue, testicle-right	testis	Right
+Azenta WGS set #3	Soft tissue, thigh-left	leg	Left
+Azenta WGS Set #5	Soft tissue, thigh-left	leg	Left
+Azenta WGS set #3	Soft tissue, thigh-left posterior	leg	Left
+Azenta WGS set #3	Soft tissue, thigh-right	leg	Right
+Azenta WGS set #2	Soft tissue, thigh-right anterior	leg	Right
+Azenta WGS Set #4	Soft tissue, thigh-right posterior	leg	Right
+Azenta WGS set #1 	Soft tissue, thorax-left	chest	Left
+Azenta WGS Set #4	Soft tissue, thorax-right	chest	Right
+Azenta WGS set #3	Soft tissue-right upper	connective tissue	
+Azenta WGS Set #4	Spermatic cord-left	spermatic cord	Left
+Azenta WGS Set #5	Spinal cord	spinal cord	
+Azenta WGS set #1 	Spinal cord-left	spinal cord	Left
+Azenta WGS set #1 	Spinal cord-lower	spinal cord	
+Azenta WGS Set #5	Spinal cord-para	spinal cord	
+Release 50	Spine, Whole	vertebral column	
+Azenta WGS set #3	Testicle	testis	
+Azenta WGS set #3	Testicle-left	testis	Left
+Azenta WGS Set #5	Testicle-left	testis	Left
+Azenta WGS set #3	Testicle-right	testis	Right
+Azenta WGS set #3	Testicle-right upper	testis	Right
+Azenta WGS set #1 	thigh	leg	
+Release 47 liftover	Thigh, NOS	leg	
+Azenta WGS Set #4.1	Thorax	chest	 
+Azenta WGS set #1 	Thorax-left posterior	chest	Left
+Azenta WGS set #1 	Thorax-left posterior	chest	Left
+Azenta WGS set #1 	Thyroid	thyroid gland	
+Azenta WGS set #3	Thyroid-left	thyroid gland	Left
+Azenta WGS set #3	Thyroid-right	thyroid gland	Right
+Azenta WGS Set #5	Thyroid-right	thyroid gland	Right
+Azenta WGS set #3	Thyroid-right upper	thyroid gland	Right
+Azenta WGS set #2	Tongue-posterior	tongue	
+Azenta WGS Set #5	Tongue-right	tongue	Right
+Release 50	Tonsil, NOS (excludes lingual tonsil C02.4 and pharyngeal tonsil C11.1)	tonsil	
+Release 47 liftover	UNKNOWN PRIMARY SITE	Unknown	
+Azenta WGS Set #5	Vein	vein	
+Release 50	Vertebral column (excludes sacrum and coccyx C41.4)	vertebral column	
+Azenta WGS set #2	Vulva, labia-right	genital labium	Right
