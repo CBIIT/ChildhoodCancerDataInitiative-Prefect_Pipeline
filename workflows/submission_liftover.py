@@ -264,7 +264,7 @@ def submission_liftover(
                 f"Tag found in mapping file {mapping_file} match the lift to tag {lift_to_tag}"
             )
 
-    liftover_output, logger_file_name = liftover_to_tsv(
+    liftover_output, logger_file_name, unlifted_props_filename = liftover_to_tsv(
         mapping_file=mapping_file,
         submission_folder=submission_path,
         lift_to_model=lift_to_model_file,
@@ -283,6 +283,15 @@ def submission_liftover(
         sub_folder="",
         newfile=logger_file_name,
     )
+    if unlifted_props_filename is not None:
+        file_ul(
+            bucket=bucket,
+            output_folder=upload_path,
+            sub_folder="",
+            newfile=unlifted_props_filename,
+        )
+    else:
+        pass
     logger.info(
         f"Uploaded liftover output folder {liftover_output} to bucket {bucket} at {upload_path}"
     )
