@@ -48,7 +48,7 @@ def find_non_empty_props(tsv_folder: str) -> dict:
 @task(log_prints=True)
 def find_unlifted_props(
     tsv_folder: str, liftover_mapping_filepath: str, logger
-) -> dict:
+) -> str|None:
     """This returns a dictionary of unlifted props with node as key and a list of unlifted props as value
 
     Args:
@@ -98,11 +98,14 @@ def find_unlifted_props(
         ).replace("\n", "\n\t")
         logger.warning(f"Unlifted props: \n\t{print_unlifted_df}")
         print(f"Unlifted props: \n\t{print_unlifted_df}")
+        # create a file of unlifted props
+        unlifted_props_filename = "unlifted_props_" + get_date() + ".tsv"
+        unlifted_props.to_csv(unlifted_props_filename, sep="\t", index=False)
+        return unlifted_props_filename
     else:
         logger.info(f"All non-empty props in submission tsv files are lifted.")
         print(f"All non-empty props in submission tsv files are lifted.")
-
-    return None
+        return None
 
 
 def model_to_df(model_file: str, props_file: str, node_type: str) -> DataFrame:
@@ -403,7 +406,7 @@ def liftover_to_tsv(
     non_empty_props = find_non_empty_props(tsv_folder=submission_folder)
 
     # find unlifted props, and report in log file
-    find_unlifted_props(
+    unlifted_props_filename = find_unlifted_props(
         tsv_folder=submission_folder,
         liftover_mapping_filepath=mapping_file,
         logger=logger,
@@ -439,4 +442,4 @@ def liftover_to_tsv(
             logger=logger,
         )
 
-    return output_folder, log_name
+    return output_folder, log_name, unlifted_props_filename
