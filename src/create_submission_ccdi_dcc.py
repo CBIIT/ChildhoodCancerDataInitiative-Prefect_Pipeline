@@ -521,8 +521,7 @@ class ManifestSheet:
         # format required and nonrequired property cell
         row_number = 1
         for row in dataframe_to_rows(dict_df, index=False, header=True):
-            # if prop is guid, file_url, dcf_indexd_guid, authz, acl or other properties that are required in the model but not required from the user at the time of submission, use blue background with black font style
-            if row[0] in ["guid", "file_url", "dcf_indexd_guid", "authz", "acl", "study_status_id","repository_name","version","release_status","number_of_participants","number_of_samples","number_of_files","total_size_of_data_files","promotion_status"]:
+            if row[0] in ["file_url", "dcf_indexd_guid", "authz", "acl"]:
                 sheet_dictionary["A" + str(row_number)].font = (
                     ManifestStyle.meta_index_font
                 )
@@ -810,8 +809,7 @@ class ManifestSheet:
                 logger=logger,
             )
             if if_h_prop_req:
-                # list of properties we want in the blue background with black font style. These are the properties that are required in the model but not required from the user at the time of submission.
-                if h_prop in ["guid","file_url", "dcf_indexd_guid", "authz", "acl", "study_status_id","repository_name","version","release_status","number_of_participants","number_of_samples","number_of_files","total_size_of_data_files","promotion_status"]:
+                if h_prop in ["guid","file_url", "dcf_indexd_guid", "authz", "acl"]:
                     ws_node[cell_h_col].fill = ManifestStyle.meta_index_pattern
                     ws_node[cell_h_col].font = ManifestStyle.meta_index_font
                 else:
