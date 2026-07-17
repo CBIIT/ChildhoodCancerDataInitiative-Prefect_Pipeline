@@ -1,4 +1,5 @@
 import yaml
+from openpyxl.styles import Font, PatternFill
 from dataclasses import dataclass
 from pathlib import Path
 import numpy as np
@@ -13,7 +14,6 @@ from openpyxl import Workbook
 from typing import Any, TypeVar, Dict, List
 from src.utils import get_github_token
 from bento_mdf import MDFReader
-from src.create_submission import ManifestStyle
 import bento_meta
 
 
@@ -36,6 +36,25 @@ class DCCModelEndpoint:
         "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/main/model-desc/terms.yml"
     )
 
+@dataclass
+class ManifestStyle:
+    """Class for keeping track of style inventory"""
+
+    # Metadata sheet style
+    meta_linking_font: Any = Font(bold=True)
+    meta_linking_pattern: Any = PatternFill(fill_type="solid", fgColor="DCD0FF")
+    meta_index_font: Any = Font(bold=True)
+    meta_index_pattern: Any = PatternFill(fill_type="solid", fgColor="DEFFF7")
+    # Dictionary sheet style
+    dict_header_pattern: Any = PatternFill(fill_type="solid", fgColor="000000")
+    dict_header_font: Any = Font(bold=False, color="ffffff")
+    # required prop style
+    required_pattern: Any = PatternFill(fill_type="solid", fgColor="FFF2CC")
+    required_font: Any = Font(bold=True)
+    nonrequired_font: Any = Font(color="595959")
+    # terms sheet pattern
+    term_pattern_A: Any = PatternFill(fill_type="solid", fgColor="EEDDDC")
+    term_pattern_B: Any = PatternFill(fill_type="solid", fgColor="DEE6F0")
 
 class GetDCCModel:
 

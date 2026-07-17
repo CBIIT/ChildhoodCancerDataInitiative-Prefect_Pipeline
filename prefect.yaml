@@ -1808,11 +1808,11 @@ deployments:
       work_queue_name: null
       job_variables: {} 
 
-  - name: TEST-new-model-validation-v3
+  - name: TEST-new-model-validation-ccdi-dcc-v3
     version: null
-    tags: ["TEST","V3", "DCC", "Centralized Worker","DCC v2.0.0"]
-    description: Validation pipeline to validate new models.
-    entrypoint: workflows/new_model_validation.py:validate_new_model
+    tags: ["DCC","Prod","V3", "Python3.13","TEST", "Centralized Worker","DCC v2.0.0"]
+    description: Creates a small manifest of fake data using the DCC metadata templates and validation rules as an example of how to use the templates and rules for submission preparation and validates a model using the DCC validation rules as an example of how to validate a model for submission preparation
+    entrypoint: workflows/new_model_validation_ccdi_dcc.py:validate_new_dcc_model
     schedule: null
 
     # flow-specific parameters
@@ -1832,6 +1832,6 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
+      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
