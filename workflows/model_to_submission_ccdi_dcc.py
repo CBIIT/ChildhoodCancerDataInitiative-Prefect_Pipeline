@@ -77,7 +77,7 @@ def check_enum_duplicates(enum_url_list: list[str])->None:
             print(f"Failed to parse YAML for URL {i}: {e}")
 
     return None
-                         
+
 
 @flow(
     name="DCC Model to Submission",
