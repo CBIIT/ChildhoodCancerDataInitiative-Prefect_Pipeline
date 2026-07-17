@@ -1101,7 +1101,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             if not obj["Key"] or obj["Key"].endswith("/"):
                                 continue
                             s3_file_path.append("s3://" + node_url + "/" + obj["Key"])
-                            s3_file_name.append(os.path.basename(obj["Key"]))
+                            s3_file_name.append(str(os.path.basename(obj["Key"])))  # ensure string
                             s3_file_size.append(obj["Size"])
                 except ClientError as e:
                     if e.response["Error"]["Code"] == "404":
@@ -1113,10 +1113,19 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             df_bucket = pd.DataFrame(
                 {
                     "file_path": s3_file_path,
-                    "file_name": s3_file_name,
+                    "file_name": [str(f) for f in s3_file_name],  # ensure all values are strings
                     "file_size": s3_file_size,
                 }
             )
+
+            # guard against empty bucket — nothing to match against
+            if df_bucket.empty:
+                print(
+                    f"\tERROR: No files found in any accessible bucket for node: {node}",
+                    file=outf,
+                )
+                meta_dfs[node] = df
+                continue
 
             # ── find and fix bad urls ─────────────────────────────────────────────
             bad_url_locs = (
@@ -1141,7 +1150,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
                 # match on name only first
                 name_match_df = df_bucket[
-                    df_bucket["file_name"].str.strip() == file_name_find
+                    df_bucket["file_name"].astype(str).str.strip() == file_name_find
                 ]
 
                 # then try to narrow down by size
