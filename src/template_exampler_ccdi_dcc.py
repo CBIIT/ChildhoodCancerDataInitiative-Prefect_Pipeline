@@ -153,7 +153,7 @@ def populate_exampler(
                         for k in range(entry_count)
                     ]
                 else:
-                    logger.error(
+                    logger.warning(
                         f"Property {m} in Node {j} has an unknown property type of {m_type}. Therefore this property is left empty in the output"
                     )
                     j_populated_df[m] = ["" for k in range(entry_count)]
