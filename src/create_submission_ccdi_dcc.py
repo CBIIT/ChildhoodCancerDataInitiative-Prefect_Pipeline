@@ -254,6 +254,8 @@ class GetDCCModel:
             "publication",
             "consent_group",
             "participant",
+            "cell_line",
+            "pdx",
             "diagnosis",
             "survival",
             "treatment_chemotherapy",
@@ -261,7 +263,6 @@ class GetDCCModel:
             "treatment_surgery",
             "treatment_other",
             "treatment_response",
-            "synonym",
             "family_relationship",
             "medical_history",
             "exposure",
@@ -269,14 +270,13 @@ class GetDCCModel:
             "genetic_analysis",
             "laboratory_test",
             "sample",
-            "cell_line",
-            "pdx",
             "sequencing_file",
             "clinical_measure_file",
             "methylation_array_file",
             "cytogenomic_file",
             "pathology_file",
             "generic_file",
+            "synonym",
         ]
         to_append = []
         for i in preferred_nodes:
