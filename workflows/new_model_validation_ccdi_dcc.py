@@ -10,6 +10,8 @@ from src.s3_validationry_refactored import ValidationRy_new
 from src.utils import get_date, get_time, file_ul, file_dl
 from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
+from workflow.validate_submission import download_model_files
+from s3_Prefect_Pipeline_dcc import ModelParser, get_enum_props_dict, get_enum_string_property_array, get_rel_from_mdf
 
 
 @flow(
@@ -41,7 +43,7 @@ def validate_new_dcc_model(
     # generate new submission manifest file using model files
     # downloaded from Github
     try:
-        create_submission_manifest(bucket=bucket, runner=new_model_validation_out, release_title=release_title)
+        model_version = create_submission_manifest(bucket=bucket, runner=new_model_validation_out, release_title=release_title)
         runner_logger.info(f"New model submission file has been created and uploaded")
     except:
         runner_logger.error("Creating submission manifest file using new model FAILED")
@@ -97,17 +99,25 @@ def validate_new_dcc_model(
         new_model_validation_out, "validation_output_" + currenttime
     )
 
-    runner_logger.info(
-        f"Validation step has started. Validation report will be uploaded to bucket {bucket} at {validation_output_folder}\n"
-        f"{bucket}\n"
-        f"{exampler_file}\n"
-        f"{manifest_file}\n"
-        f"{validation_output_folder}\n"
-    )
-
-
     try:
-        validation_out_file = ValidationRy_new(file_path=exampler_file, template_path=manifest_file)
+        dcc_model_yml, dcc_props_yml = download_model_files(
+                commons_acronym="ccdi_dcc", tag=model_version
+            )
+        print(dcc_model_yml, dcc_props_yml)
+        dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
+        print("dcc mdf model created")
+        enum_props_dict = get_enum_props_dict(dcc_model)
+        enum_string_props = get_enum_string_property_array(dcc_model)
+        model_rel_list = get_rel_from_mdf(dcc_model)
+
+
+        validation_out_file = ValidationRy_new(
+            file_path=exampler_file,
+            template_path=manifest_file,
+            enum_props_dict=enum_props_dict,
+            enum_string_props=enum_string_props,
+            model_rel_list=model_rel_list,
+        )
         file_ul(
             bucket=bucket,
             output_folder=validation_output_folder,
@@ -126,9 +136,3 @@ def validate_new_dcc_model(
     return None
 
 
-if __name__=="__main__":
-    bucket="my-source-bucket"
-    runner="QL"
-    release_title="my new model release"
-
-    validate_new_model(bucket=bucket, runner=runner, release_title=release_title)

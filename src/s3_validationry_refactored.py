@@ -2195,10 +2195,10 @@ def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -
     flow_run_name="CCDI_ValidationRy_refactor" + f"{get_time()}",
 )
 def ValidationRy_new(file_path: str, 
-                     template_path: str, 
-                     enum_props_dict: dict[str, list[str]], 
-                     enum_string_props: list[str], 
-                     model_rel_list: list[dict[str, str]]) -> None:
+                    template_path: str, 
+                    enum_props_dict: dict[str, list[str]], 
+                    enum_string_props: list[str], 
+                    model_rel_list: list[dict[str, str]]) -> None:
     validation_logger = get_run_logger()
 
     todays_date = get_date()
