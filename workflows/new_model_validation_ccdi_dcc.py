@@ -96,6 +96,16 @@ def validate_new_dcc_model(
     validation_output_folder =  os.path.join(
         new_model_validation_out, "validation_output_" + currenttime
     )
+
+    runner_logger.info(
+        f"Validation step has started. Validation report will be uploaded to bucket {bucket} at {validation_output_folder}\n"
+        f"{bucket}\n"
+        f"{exampler_file}\n"
+        f"{manifest_file}\n"
+        f"{validation_output_folder}\n"
+    )
+
+
     try:
         validation_out_file = ValidationRy_new(file_path=exampler_file, template_path=manifest_file)
         file_ul(
