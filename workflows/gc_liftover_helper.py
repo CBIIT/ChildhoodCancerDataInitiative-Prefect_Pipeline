@@ -15,6 +15,7 @@ def load_tsvs_from_folder(folder_path):
             file_path = os.path.join(folder_path, file)
             file_name = re.sub(r'_\d{4}-\d{2}-\d{2}', '', file).replace(".tsv", "")
             df = pd.read_csv(file_path, sep="\t").astype(str).replace('nan', pd.NA)
+            df = df.replace(';', '|', regex=True)
             df = df.drop_duplicates()
             sheet_dfs[file_name] = df
             files_loaded += 1
