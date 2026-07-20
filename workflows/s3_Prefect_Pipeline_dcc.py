@@ -39,8 +39,7 @@ from src.utils import (
     CCDI_DCC_Tags,
 )
 # add the submodule root to the path so Python can find it
-# go up to repo root, then into the submodule
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "prefect-toolkit"))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "prefect-toolkit"))
 from workflow.validate_submission import download_model_files
 
 
