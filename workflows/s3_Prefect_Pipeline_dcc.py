@@ -39,7 +39,7 @@ from src.utils import (
     CCDI_DCC_Tags,
 )
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
-from prefect_toolkit.workflow.validate_submission import download_model_files
+from workflow.validate_submission import download_model_files
 
 
 class ModelParser:
