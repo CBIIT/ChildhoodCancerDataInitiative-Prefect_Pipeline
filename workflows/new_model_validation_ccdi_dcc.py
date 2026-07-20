@@ -12,8 +12,10 @@ from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
 from workflows.s3_Prefect_Pipeline_dcc import ModelParser, get_enum_props_dict, get_enum_string_property_array, get_rel_from_mdf
 
-sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
-from prefect_toolkit.workflow.validate_submission import download_model_files
+# add the submodule root to the path so Python can find it
+# go up to repo root, then into the submodule
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "prefect-toolkit"))
+from workflow.validate_submission import download_model_files
 
 @flow(
     name="New DCC Model Validation",

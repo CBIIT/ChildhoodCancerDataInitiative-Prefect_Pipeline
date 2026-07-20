@@ -38,9 +38,8 @@ from src.utils import (
     ccdi_to_dcf_index,
     CCDI_DCC_Tags,
 )
-# add the submodule root to the path so Python can find it
-sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "prefect-toolkit"))
-from workflow.validate_submission import download_model_files
+sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
+from prefect_toolkit.workflow.validate_submission import download_model_files
 
 
 class ModelParser:
