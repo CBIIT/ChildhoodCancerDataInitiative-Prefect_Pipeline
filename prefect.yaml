@@ -1185,7 +1185,7 @@ deployments:
     version: null
     tags: ["Production", "DCC", "V3"]
     description: Curatation pipeline to prepare CCDI data for DCC submission, using DCC metadata templates and validation rules
-    entrypoint: workflows/s3-Prefect-Pipeline-dcc.py:runner_dcc
+    entrypoint: workflows/s3_Prefect_Pipeline_dcc.py:runner_dcc
     schedule: null
 
     # flow-specific parameters
@@ -1215,7 +1215,7 @@ deployments:
     version: null
     tags: ["Production", "DCC", "SRA", "V3"]
     description: Curatation pipeline to prepare CCDI data with SRA submission added on still using DCC metadata templates and validation rules
-    entrypoint: workflows/s3-Prefect-Pipeline-dcc.py:runner_dcc_w_SRA
+    entrypoint: workflows/s3_Prefect_Pipeline_dcc.py:runner_dcc_w_SRA
     schedule: null
 
     # flow-specific parameters

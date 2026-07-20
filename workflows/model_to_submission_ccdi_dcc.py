@@ -255,9 +255,9 @@ def create_submission_manifest(bucket: str, runner: str, release_title: str) -> 
         newfile=output_wb_name,
     )
     runner_logger.info(
-        f"Uploaded submiassion manifest file {output_wb_name} to the bucket {bucket} at {output_folder}"
+        f"Uploaded submission manifest file {output_wb_name} to the bucket {bucket} at {output_folder}"
     )
-    return None
+    return model_version
 
 
 if __name__ == "__main__":
