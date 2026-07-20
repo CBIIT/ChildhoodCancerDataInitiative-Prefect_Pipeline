@@ -14,7 +14,7 @@ from workflows.s3_Prefect_Pipeline_dcc import ModelParser, get_enum_props_dict, 
 
 # add the submodule root to the path so Python can find it
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
-from prefect_toolkit.workflow.validate_submission import download_model_files
+from workflow.validate_submission import download_model_files
 
 @flow(
     name="New DCC Model Validation",
