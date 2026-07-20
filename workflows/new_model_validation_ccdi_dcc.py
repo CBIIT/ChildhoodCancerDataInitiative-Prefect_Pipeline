@@ -2,8 +2,6 @@ import os
 import sys
 import traceback
 
-parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-sys.path.append(parent_dir)
 from model_to_submission_ccdi_dcc import create_submission_manifest
 from src.template_exampler_ccdi_dcc import make_template_example
 from src.s3_validationry_refactored import ValidationRy_new
@@ -13,6 +11,8 @@ from requests.exceptions import ConnectionError
 from workflows.s3_Prefect_Pipeline_dcc import ModelParser, get_enum_props_dict, get_enum_string_property_array, get_rel_from_mdf
 
 # add the submodule root to the path so Python can find it
+parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+sys.path.append(parent_dir)
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from workflow.validate_submission import download_model_files
 
