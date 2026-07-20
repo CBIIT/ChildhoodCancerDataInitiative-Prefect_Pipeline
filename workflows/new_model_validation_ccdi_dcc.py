@@ -10,9 +10,10 @@ from src.s3_validationry_refactored import ValidationRy_new
 from src.utils import get_date, get_time, file_ul, file_dl
 from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
-from prefect_toolkit.workflow.validate_submission import download_model_files
 from workflows.s3_Prefect_Pipeline_dcc import ModelParser, get_enum_props_dict, get_enum_string_property_array, get_rel_from_mdf
 
+sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
+from prefect_toolkit.workflow.validate_submission import download_model_files
 
 @flow(
     name="New DCC Model Validation",
