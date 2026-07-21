@@ -604,6 +604,7 @@ class ManifestSheet:
                 np.nan,
                 np.nan,
                 "VERSION",
+                np.nan,
             ],
             "col2": [
                 np.nan,
@@ -641,8 +642,8 @@ class ManifestSheet:
                 "Contact us at CCDIHelpDesk@mail.nih.gov",
                 np.nan,
             ],
-            "col3": [model_version] + [np.nan] * 31,
-            "col4": [np.nan] * 32,
+            "col3": [model_version] + [np.nan] * 33,
+            "col4": [np.nan] * 34,
         }
 
         # the bottom df for the release history info
