@@ -800,19 +800,17 @@ class ManifestSheet:
         # linking properties
         cols_linking = [
             get_column_letter(i + 1)
-            for i in range(len( parent_nodes_extended))
+            for i in range(len(["type"] + parent_nodes_extended))
         ]
         for col in cols_linking:
             ws_node.column_dimensions[col].width = 25
             cell_col = col + "1"
             ws_node[cell_col].fill = ManifestStyle.meta_linking_pattern
             ws_node[cell_col].font = ManifestStyle.meta_linking_font
-
         # type property
-        ws_node.column_dimensions["A"].width = 25
-        ws_node["A1"].fill = ManifestStyle.meta_type_pattern
-        ws_node["A1"].font = ManifestStyle.meta_type_font
-        
+        ws_node.column_dimensions["type"].width = 25
+        ws_node["type"].fill = ManifestStyle.meta_type_pattern
+        ws_node["type"].font = ManifestStyle.meta_type_font
         # node props
         for h in range(len(node_props)):
             h_col_name = get_column_letter(
