@@ -42,9 +42,9 @@ class ManifestStyle:
 
     # Metadata sheet style
     meta_linking_font: Any = Font(bold=True)
-    meta_linking_pattern: Any = PatternFill(fill_type="solid", fgColor="ffb4d9")
+    meta_linking_pattern: Any = PatternFill(fill_type="solid", fgColor="DCD0FF")
     meta_type_font: Any = Font(bold=True)
-    meta_type_pattern: Any = PatternFill(fill_type="solid", fgColor="DCD0FF")
+    meta_type_pattern: Any = PatternFill(fill_type="solid", fgColor="ffb4d9")
     meta_index_font: Any = Font(bold=True)
     meta_index_pattern: Any = PatternFill(fill_type="solid", fgColor="DEFFF7")
     # Dictionary sheet style
@@ -797,7 +797,7 @@ class ManifestSheet:
         ws_node.append([node])
 
         # add styles to the header
-        # linking properties
+        # type and linking properties
         cols_linking = [
             get_column_letter(i + 1)
             for i in range(len(["type"] + parent_nodes_extended))
@@ -805,12 +805,12 @@ class ManifestSheet:
         for col in cols_linking:
             ws_node.column_dimensions[col].width = 25
             cell_col = col + "1"
-            ws_node[cell_col].fill = ManifestStyle.meta_linking_pattern
-            ws_node[cell_col].font = ManifestStyle.meta_linking_font
-        # # type property
-        # ws_node.column_dimensions["type"].width = 25
-        # ws_node["type"].fill = ManifestStyle.meta_type_pattern
-        # ws_node["type"].font = ManifestStyle.meta_type_font
+            if col == "A":
+                ws_node[cell_col].fill = ManifestStyle.meta_type_pattern
+                ws_node[cell_col].font = ManifestStyle.meta_type_font
+            else:
+                ws_node[cell_col].fill = ManifestStyle.meta_linking_pattern
+                ws_node[cell_col].font = ManifestStyle.meta_linking_font
         # node props
         for h in range(len(node_props)):
             h_col_name = get_column_letter(
