@@ -855,6 +855,7 @@ class ManifestSheet:
             ws_node[cell_k_col].fill = ManifestStyle.meta_index_pattern
             ws_node[cell_k_col].font = ManifestStyle.meta_index_font
 
+        # add comments to header cells with the property description from the Dictionary
         # self._add_column_comments(
         #     ws=ws_node,
         #     node_sheet_header=node_sheet_header,
