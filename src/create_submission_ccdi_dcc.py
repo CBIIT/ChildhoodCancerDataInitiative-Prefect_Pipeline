@@ -10,6 +10,7 @@ from openpyxl.utils import get_column_letter, quote_sheetname, absolute_coordina
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.comments import Comment
 from openpyxl import Workbook
 from typing import Any, TypeVar, Dict, List
 from src.utils import get_github_token
@@ -853,6 +854,14 @@ class ManifestSheet:
             cell_k_col = k_col_name + "1"
             ws_node[cell_k_col].fill = ManifestStyle.meta_index_pattern
             ws_node[cell_k_col].font = ManifestStyle.meta_index_font
+
+        self._add_column_comments(
+            ws=ws_node,
+            node_sheet_header=node_sheet_header,
+            node_name=node,
+            prop_dict_df=prop_dict_df,
+        )
+
         # freeze first row
         ws_node.freeze_panes = "A2"
         return None
@@ -883,3 +892,25 @@ class ManifestSheet:
         )
         sort_sheet_index = self._get_sheets_order(expected_name_order=sheets_order)
         self.workbook._sheets = [self.workbook._sheets[i] for i in sort_sheet_index]
+
+    def _add_column_comments(
+        self,
+        ws: ExcelSheet,
+        node_sheet_header: list,
+        node_name: str,
+        prop_dict_df: DataFrame,
+        ) -> None:
+        """Adds hover comments to header cells with the property description from the Dictionary"""
+        # build a lookup of {property: description} for this node from the dict df
+        node_prop_desc = prop_dict_df[prop_dict_df["Node"] == node_name].set_index("Property")["Description"].to_dict()
+
+        for col_idx, col_name in enumerate(node_sheet_header, start=1):
+            # strip the node prefix for linking columns like "participant.participant_id"
+            prop_name = col_name.split(".")[-1] if "." in col_name else col_name
+            description = node_prop_desc.get(prop_name)
+            if description and pd.notna(description):
+                cell = ws.cell(row=1, column=col_idx)
+                comment = Comment(str(description), "Model Definition")
+                comment.width = 400
+                comment.height = 150
+                cell.comment = comment
