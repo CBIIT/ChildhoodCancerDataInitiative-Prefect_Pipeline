@@ -45,7 +45,7 @@ def validate_new_dcc_model(
     # generate new submission manifest file using model files
     # downloaded from Github
     try:
-        model_version = create_submission_manifest(bucket=bucket, runner=new_model_validation_out, release_title=release_title)
+        create_submission_manifest(bucket=bucket, runner=new_model_validation_out, release_title=release_title)
         runner_logger.info(f"New model submission file has been created and uploaded")
     except:
         runner_logger.error("Creating submission manifest file using new model FAILED")
@@ -102,6 +102,7 @@ def validate_new_dcc_model(
     )
 
     try:
+        model_version = "main"
         dcc_model_yml, dcc_props_yml = download_model_files(
                 commons_acronym="ccdi_dcc", tag=model_version
             )
