@@ -596,7 +596,7 @@ class ManifestSheet:
                 "REQUIRED DATA FOR DATA FILES",
                 np.nan,
                 "DICTIONARY, TERMS AND VALUE SETS",
-                "STRUCTURED COLUMNS ",
+                np.nan,
                 np.nan,
                 np.nan,
                 np.nan,
