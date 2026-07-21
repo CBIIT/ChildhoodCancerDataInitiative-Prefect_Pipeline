@@ -15,6 +15,7 @@ from workflows.s3_Prefect_Pipeline_dcc import ModelParser, get_enum_props_dict, 
 
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from workflow.validate_submission import download_model_files
+from src.commons.datamodel import GetDataModel
 
 @flow(
     name="New DCC Model Validation",
@@ -102,7 +103,7 @@ def validate_new_dcc_model(
     )
 
     try:
-        model_version = "main"
+        model_version = GetDataModel.get_latest_tag(commons_acronym="ccdi_dcc")
         dcc_model_yml, dcc_props_yml = download_model_files(
                 commons_acronym="ccdi_dcc", tag=model_version
             )
