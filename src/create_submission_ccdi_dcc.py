@@ -44,7 +44,7 @@ class ManifestStyle:
     meta_linking_font: Any = Font(bold=True)
     meta_linking_pattern: Any = PatternFill(fill_type="solid", fgColor="DCD0FF")
     meta_type_font: Any = Font(bold=True)
-    meta_type_pattern: Any = PatternFill(fill_type="solid", fgColor="ffb4d9")
+    meta_type_pattern: Any = PatternFill(fill_type="solid", fgColor="FFCEE6")
     meta_index_font: Any = Font(bold=True)
     meta_index_pattern: Any = PatternFill(fill_type="solid", fgColor="DEFFF7")
     # Dictionary sheet style
