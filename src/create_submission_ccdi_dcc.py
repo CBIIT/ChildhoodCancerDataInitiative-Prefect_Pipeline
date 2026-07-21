@@ -585,7 +585,6 @@ class ManifestSheet:
                 np.nan,
                 np.nan,
                 np.nan,
-                np.nan,
                 "REQUIRED DATA",
                 np.nan,
                 np.nan,
