@@ -1112,6 +1112,7 @@ deployments:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
+          include_submodules: True
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
@@ -1807,32 +1808,3 @@ deployments:
       name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {} 
-
-  - name: TEST-new-model-validation-ccdi-dcc-v3
-    version: null
-    tags: ["DCC","Prod","V3", "Python3.13","TEST", "Centralized Worker","DCC v2.0.0"]
-    description: Creates a small manifest of fake data using the DCC metadata templates and validation rules as an example of how to use the templates and rules for submission preparation and validates a model using the DCC validation rules as an example of how to validate a model for submission preparation
-    entrypoint: workflows/new_model_validation_ccdi_dcc.py:validate_new_dcc_model
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-validation"
-
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2576_Model_Sub_DCC2.0.0
-          include_submodules: True
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
