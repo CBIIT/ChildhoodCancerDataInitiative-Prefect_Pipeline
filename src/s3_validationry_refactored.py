@@ -521,7 +521,7 @@ def validate_integer_numeric_checks_one_sheet(
             # if the warning flag was tripped
             if WARN_FLAG:
                 WARN_FLAG = False
-                property_dict["check"] = "Error"
+                property_dict["check"] = "ERROR"
                 # itterate over that list and print out the values
                 enum_print = ",".join([str(i) for i in error_rows])
                 property_dict["error row"] = enum_print
@@ -791,7 +791,7 @@ def validate_age_one_sheet(node_name: str, file_object):
         # if the warning flag was tripped
         if WARN_FLAG:
             WARN_FLAG = False
-            property_dict["check"] = "Error"
+            property_dict["check"] = "ERROR"
             # itterate over that list and print out the values
             enum_print = ",".join([str(i) for i in error_rows])
             property_dict["error row"] = enum_print
