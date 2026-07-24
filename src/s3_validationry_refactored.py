@@ -1193,6 +1193,7 @@ def validate_duplicate_md5sum_one_sheet(node_name: str, file_object):
             check_df["file_sizes"] = check_df["file_sizes"].str.wrap(45)
             check_df["md5sum"] = check_df["md5sum"].str.wrap(32)
             check_df["error row"] = check_df["error row"].str.wrap(30)
+            check_df["check"] = check_df["check"].str.wrap(30)
         else:
             pass
         print_str = (
