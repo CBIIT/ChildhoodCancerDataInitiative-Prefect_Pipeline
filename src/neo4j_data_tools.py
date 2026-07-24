@@ -1208,7 +1208,7 @@ def compare_id_input_db_dcc(
             comparison_df.loc[i, "count_check"] = "Unequal"
             logger.warning(
                 f"Study {i_study_id} node {i_node} ingestion file contains "
-                f"different number of entries compared to neo4j DB"
+                f"different number of entries compared to DB"
             )
         db_missing_guids = [g for g in i_node_guid if g not in db_node_guid]
         if len(db_missing_guids) > 0:
@@ -1216,13 +1216,13 @@ def compare_id_input_db_dcc(
             comparison_df.loc[i, "id_check"] = "Fail"
             logger.error(
                 f"Study {i_study_id} node {i_node} ingestion has guids not "
-                f"found in neo4j DB: {*db_missing_guids,}"
+                f"found in DB: {*db_missing_guids,}"
             )
         else:
             comparison_df.loc[i, "id_check"] = "Pass"
             logger.info(
                 f"Study {i_study_id} node {i_node} ingestion has all guids "
-                f"found in neo4j DB"
+                f"found in DB"
             )
     return comparison_df
 
