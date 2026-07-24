@@ -1156,25 +1156,40 @@ def validate_duplicate_md5sum_one_sheet(node_name: str, file_object):
             # group by md5sum and check if there are different file_names or file_sizes
             grouped = duplicate_md5sum_df.groupby('md5sum')
             for md5sum, group in grouped:
-                if group['file_name'].nunique() > 1 or group['file_size'].nunique() > 1:
+                if group['file_name'].nunique() > 1 and group['file_size'].nunique() > 1:
                     WARN_FLAG = True
                     property_dict["node"] = node_name
                     property_dict["md5sum"] = md5sum
-                    property_dict["file_names"] = ', '.join(group['file_name'].unique())
-                    property_dict["file_sizes"] = ', '.join(group['file_size'].astype(str).unique())
-                    property_dict["error row"] = ', '.join((group.index + 2).astype(str).tolist())
+                    property_dict["file_names"] = ', '.join(group['file_name'])
+                    property_dict["file_sizes"] = ', '.join(group['file_size'].astype(str))
+                    property_dict["error row"] = ','.join((group.index + 2).astype(str).tolist())
+                    property_dict["check"] = "ERROR"
+                    check_list.append(property_dict)
+                elif group['file_name'].nunique() > 1 or group['file_size'].nunique() > 1:
+                    WARN_FLAG = True
+                    property_dict["node"] = node_name
+                    property_dict["md5sum"] = md5sum
+                    # keep ordered lists of file_names and file_sizes, and error rows (offset by 2), NOT unique
+                    property_dict["file_names"] = ', '.join(group['file_name'])
+                    property_dict["file_sizes"] = ', '.join(group['file_size'].astype(str))
+                    property_dict["error row"] = ','.join((group.index + 2).astype(str).tolist())
+                    property_dict["check"] = "ERROR\nDuplicate md5sum with same file_name AND/OR file_size, may be empty template rows, check if expected"
+                    check_list.append(property_dict)
+                elif group['file_name'].nunique() == 1 and group['file_size'].nunique() == 1:
+                    # if the file_name and file_size are the same, then it is not an error, but we can log it as a warning
+                    WARN_FLAG = True
+                    property_dict["node"] = node_name
+                    property_dict["md5sum"] = md5sum
+                    property_dict["file_names"] = ', '.join(group['file_name'])
+                    property_dict["file_sizes"] = ', '.join(group['file_size'].astype(str))
+                    property_dict["error row"] = ','.join((group.index + 2).astype(str).tolist())
+                    property_dict["check"] = "ERROR\nDuplicate md5sum with same file_name and file_size, may be empty template rows, check if expected"
                     check_list.append(property_dict)
                 else:
                     pass
         else:
             pass
 
-        # if the warning flag was tripped
-        if WARN_FLAG:
-            WARN_FLAG = False
-            property_dict["check"] = "ERROR"
-        else:
-            property_dict["check"] = "PASS"
 
         check_df = pd.DataFrame.from_records(check_list)
         if check_df.shape[0] > 0:
@@ -1192,9 +1207,7 @@ def validate_duplicate_md5sum_one_sheet(node_name: str, file_object):
             + "\n"
         )
     else:
-        print_str = (
-            print_str + f"INFO: node {node_name} file contains no md5sum property\n"
-        )
+        pass
     return print_str
 
 def extract_object_file_meta(nodes_list: list[str], file_object):
