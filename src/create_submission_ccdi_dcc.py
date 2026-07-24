@@ -1,4 +1,5 @@
 import yaml
+from openpyxl.styles import Font, PatternFill
 from dataclasses import dataclass
 from pathlib import Path
 import numpy as np
@@ -9,11 +10,11 @@ from openpyxl.utils import get_column_letter, quote_sheetname, absolute_coordina
 from openpyxl.utils.dataframe import dataframe_to_rows
 from openpyxl.workbook.defined_name import DefinedName
 from openpyxl.worksheet.datavalidation import DataValidation
+from openpyxl.comments import Comment
 from openpyxl import Workbook
 from typing import Any, TypeVar, Dict, List
 from src.utils import get_github_token
 from bento_mdf import MDFReader
-from src.create_submission import ManifestStyle
 import bento_meta
 
 
@@ -36,6 +37,27 @@ class DCCModelEndpoint:
         "https://raw.githubusercontent.com/CBIIT/ccdi-dcc-model/main/model-desc/terms.yml"
     )
 
+@dataclass
+class ManifestStyle:
+    """Class for keeping track of style inventory"""
+
+    # Metadata sheet style
+    meta_linking_font: Any = Font(bold=True)
+    meta_linking_pattern: Any = PatternFill(fill_type="solid", fgColor="DCD0FF")
+    meta_type_font: Any = Font(bold=True)
+    meta_type_pattern: Any = PatternFill(fill_type="solid", fgColor="FFCEE6")
+    meta_index_font: Any = Font(bold=True)
+    meta_index_pattern: Any = PatternFill(fill_type="solid", fgColor="DEFFF7")
+    # Dictionary sheet style
+    dict_header_pattern: Any = PatternFill(fill_type="solid", fgColor="000000")
+    dict_header_font: Any = Font(bold=False, color="ffffff")
+    # required prop style
+    required_pattern: Any = PatternFill(fill_type="solid", fgColor="FFF2CC")
+    required_font: Any = Font(bold=True)
+    nonrequired_font: Any = Font(color="595959")
+    # terms sheet pattern
+    term_pattern_A: Any = PatternFill(fill_type="solid", fgColor="EEDDDC")
+    term_pattern_B: Any = PatternFill(fill_type="solid", fgColor="DEE6F0")
 
 class GetDCCModel:
 
@@ -235,6 +257,8 @@ class GetDCCModel:
             "publication",
             "consent_group",
             "participant",
+            "pdx",
+            "cell_line",
             "diagnosis",
             "survival",
             "treatment_chemotherapy",
@@ -242,7 +266,6 @@ class GetDCCModel:
             "treatment_surgery",
             "treatment_other",
             "treatment_response",
-            "synonym",
             "family_relationship",
             "medical_history",
             "exposure",
@@ -250,14 +273,13 @@ class GetDCCModel:
             "genetic_analysis",
             "laboratory_test",
             "sample",
-            "cell_line",
-            "pdx",
             "sequencing_file",
             "clinical_measure_file",
             "methylation_array_file",
             "cytogenomic_file",
             "pathology_file",
             "generic_file",
+            "synonym",
         ]
         to_append = []
         for i in preferred_nodes:
@@ -521,8 +543,7 @@ class ManifestSheet:
         # format required and nonrequired property cell
         row_number = 1
         for row in dataframe_to_rows(dict_df, index=False, header=True):
-            # if prop is guid, file_url, dcf_indexd_guid, authz, or acl
-            if row[0] in ["guid", "file_url", "dcf_indexd_guid", "authz", "acl"]:
+            if row[0] in ["file_url", "dcf_indexd_guid", "authz", "acl", "study_status_id","repository_name","version","release_status","number_of_participants","number_of_samples","number_of_files","total_size_of_data_files","promotion_status"]:
                 sheet_dictionary["A" + str(row_number)].font = (
                     ManifestStyle.meta_index_font
                 )
@@ -558,8 +579,10 @@ class ManifestSheet:
                 "INSTRUCTIONS FOR SUBMISSION METADATA TEMPLATE",
                 np.nan,
                 np.nan,
-                "STRUCTURED COLUMNS",
+                "TYPE COLUMNS",
                 np.nan,
+                np.nan,
+                "RELATIONSHIP COLUMNS",
                 np.nan,
                 np.nan,
                 np.nan,
@@ -573,7 +596,7 @@ class ManifestSheet:
                 "REQUIRED DATA FOR DATA FILES",
                 np.nan,
                 "DICTIONARY, TERMS AND VALUE SETS",
-                "STRUCTURED COLUMNS ",
+                np.nan,
                 np.nan,
                 np.nan,
                 np.nan,
@@ -581,7 +604,7 @@ class ManifestSheet:
                 "NEED HELP? HAVE A QUESTION? HAVE FEEDBACK?",
                 np.nan,
                 np.nan,
-                "VERSION",
+                "VERSION"
             ],
             "col2": [
                 np.nan,
@@ -593,8 +616,10 @@ class ManifestSheet:
                 "Please do not delete columns, please keep the columns in the same order.",
                 "Please fill out the required fields (see below).",
                 np.nan,
-                "The structured fields are denoted by BOLD black font with a purple background.",
+                "The type fields are denoted by BOLD black font with a pink background.",
                 "The first column, type, is a value that notes the tab you are in. Please do not replace with other text and make sure each row has the value for that node.",
+                np.nan,
+                "The relationship fields are denoted by BOLD black font with a purple background.",
                 "When linking data from one tab to another, if there are multiple linking columns [node.node_id], please try to only link to one node.",
                 "While linking can happen at multiple levels, it is best practice to link it to the lowest level as the parent node should eventually create that same linkage.",
                 np.nan,
@@ -617,8 +642,8 @@ class ManifestSheet:
                 "Contact us at CCDIHelpDesk@mail.nih.gov",
                 np.nan,
             ],
-            "col3": [model_version] + [np.nan] * 31,
-            "col4": [np.nan] * 32,
+            "col3": [model_version] + [np.nan] * 33,
+            "col4": [np.nan] * 34,
         }
 
         # the bottom df for the release history info
@@ -785,8 +810,12 @@ class ManifestSheet:
         for col in cols_linking:
             ws_node.column_dimensions[col].width = 25
             cell_col = col + "1"
-            ws_node[cell_col].fill = ManifestStyle.meta_linking_pattern
-            ws_node[cell_col].font = ManifestStyle.meta_linking_font
+            if col == "A":
+                ws_node[cell_col].fill = ManifestStyle.meta_type_pattern
+                ws_node[cell_col].font = ManifestStyle.meta_type_font
+            else:
+                ws_node[cell_col].fill = ManifestStyle.meta_linking_pattern
+                ws_node[cell_col].font = ManifestStyle.meta_linking_font
         # node props
         for h in range(len(node_props)):
             h_col_name = get_column_letter(
@@ -810,7 +839,7 @@ class ManifestSheet:
                 logger=logger,
             )
             if if_h_prop_req:
-                if h_prop in ["file_url", "dcf_indexd_guid", "authz", "acl"]:
+                if h_prop in ["guid","file_url", "dcf_indexd_guid", "authz", "acl", "study_status_id","repository_name","version","release_status","number_of_participants","number_of_samples","number_of_files","total_size_of_data_files","promotion_status"]:
                     ws_node[cell_h_col].fill = ManifestStyle.meta_index_pattern
                     ws_node[cell_h_col].font = ManifestStyle.meta_index_font
                 else:
@@ -827,6 +856,15 @@ class ManifestSheet:
             cell_k_col = k_col_name + "1"
             ws_node[cell_k_col].fill = ManifestStyle.meta_index_pattern
             ws_node[cell_k_col].font = ManifestStyle.meta_index_font
+
+        # add comments to header cells with the property description from the Dictionary
+        self._add_column_comments(
+            ws=ws_node,
+            node_sheet_header=node_sheet_header,
+            node_name=node,
+            prop_dict_df=prop_dict_df,
+        )
+
         # freeze first row
         ws_node.freeze_panes = "A2"
         return None
@@ -857,3 +895,25 @@ class ManifestSheet:
         )
         sort_sheet_index = self._get_sheets_order(expected_name_order=sheets_order)
         self.workbook._sheets = [self.workbook._sheets[i] for i in sort_sheet_index]
+
+    def _add_column_comments(
+        self,
+        ws: ExcelSheet,
+        node_sheet_header: list,
+        node_name: str,
+        prop_dict_df: DataFrame,
+        ) -> None:
+        """Adds hover comments to header cells with the property description from the Dictionary"""
+        # build a lookup of {property: description} for this node from the dict df
+        node_prop_desc = prop_dict_df[prop_dict_df["Node"] == node_name].set_index("Property")["Description"].to_dict()
+
+        for col_idx, col_name in enumerate(node_sheet_header, start=1):
+            # strip the node prefix for linking columns like "participant.participant_id"
+            prop_name = col_name.split(".")[-1] if "." in col_name else col_name
+            description = node_prop_desc.get(prop_name)
+            if description and pd.notna(description):
+                cell = ws.cell(row=1, column=col_idx)
+                comment = Comment(str(description), "Model Definition")
+                comment.width = 400
+                comment.height = 150
+                cell.comment = comment

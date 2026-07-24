@@ -2,6 +2,7 @@ import os
 import sys
 import traceback
 
+# add the submodule root to the path so Python can find it
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from model_to_submission_ccdi_dcc import create_submission_manifest
@@ -10,7 +11,11 @@ from src.s3_validationry_refactored import ValidationRy_new
 from src.utils import get_date, get_time, file_ul, file_dl
 from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
+from workflows.s3_Prefect_Pipeline_dcc import ModelParser, get_enum_props_dict, get_enum_string_property_array, get_rel_from_mdf
 
+sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
+from workflow.validate_submission import download_model_files
+from src.commons.datamodel import GetDataModel
 
 @flow(
     name="New DCC Model Validation",
@@ -96,8 +101,27 @@ def validate_new_dcc_model(
     validation_output_folder =  os.path.join(
         new_model_validation_out, "validation_output_" + currenttime
     )
+
     try:
-        validation_out_file = ValidationRy_new(file_path=exampler_file, template_path=manifest_file)
+        model_version = GetDataModel.get_latest_tag(commons_acronym="ccdi_dcc")
+        dcc_model_yml, dcc_props_yml = download_model_files(
+                commons_acronym="ccdi_dcc", tag=model_version
+            )
+        print(dcc_model_yml, dcc_props_yml)
+        dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
+        print("dcc mdf model created")
+        enum_props_dict = get_enum_props_dict(dcc_model)
+        enum_string_props = get_enum_string_property_array(dcc_model)
+        model_rel_list = get_rel_from_mdf(dcc_model)
+
+
+        validation_out_file = ValidationRy_new(
+            file_path=exampler_file,
+            template_path=manifest_file,
+            enum_props_dict=enum_props_dict,
+            enum_string_props=enum_string_props,
+            model_rel_list=model_rel_list,
+        )
         file_ul(
             bucket=bucket,
             output_folder=validation_output_folder,
@@ -116,9 +140,3 @@ def validate_new_dcc_model(
     return None
 
 
-if __name__=="__main__":
-    bucket="my-source-bucket"
-    runner="QL"
-    release_title="my new model release"
-
-    validate_new_model(bucket=bucket, runner=runner, release_title=release_title)
