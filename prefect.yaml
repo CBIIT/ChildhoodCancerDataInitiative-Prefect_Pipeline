@@ -1181,9 +1181,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST_md5-dcc-data-curation-16gb-v3
+  - name: dcc-data-curation-16gb-v3
     version: null
-    tags: ["TEST", "DCC", "V3"]
+    tags: ["Production", "DCC", "V3"]
     description: Curatation pipeline to prepare CCDI data for DCC submission, using DCC metadata templates and validation rules
     entrypoint: workflows/s3-Prefect-Pipeline-dcc.py:runner_dcc
     schedule: null
@@ -1198,7 +1198,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC2598_md5sum
+          branch: main
           include_submodules: True
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
