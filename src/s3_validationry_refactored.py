@@ -2353,6 +2353,10 @@ def ValidationRy_new(file_path: str,
     validation_logger.info("Checking age_at PII")
     validate_age(nodes_to_validate, file_path, output_file)
 
+    # validate age
+    validation_logger.info("Checking for duplicate md5sum values in file nodes")
+    validate_duplicate_md5sum(nodes_to_validate, file_path, output_file)
+
     # validate proband status if family data is present
     if "family_relationship" in nodes_to_validate:
         validation_logger.info("Checking proband status in family data")
