@@ -1147,8 +1147,6 @@ def validate_duplicate_md5sum_one_sheet(node_name: str, file_object):
     check_list = []
     # for those properties
     if 'md5sum' in properties:
-        property_dict = {}
-        WARN_FLAG = False
         # check data frame for duplicate md5sum values
         duplicate_md5sum_df = node_df[node_df.duplicated(subset=['md5sum'], keep=False)]
         # if there are any duplicate md5sum values
@@ -1156,6 +1154,7 @@ def validate_duplicate_md5sum_one_sheet(node_name: str, file_object):
             # group by md5sum and check if there are different file_names or file_sizes
             grouped = duplicate_md5sum_df.groupby('md5sum')
             for md5sum, group in grouped:
+                property_dict = {}
                 if group['file_name'].nunique() > 1 or group['file_size'].nunique() > 1:
                     property_dict["node"] = node_name
                     property_dict["md5sum"] = md5sum
