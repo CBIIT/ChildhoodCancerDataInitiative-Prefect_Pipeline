@@ -1041,7 +1041,7 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
+      name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
       
