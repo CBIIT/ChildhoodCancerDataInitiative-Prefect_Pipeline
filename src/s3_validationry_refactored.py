@@ -1109,6 +1109,104 @@ def validate_unique_key_across_study(
     return None
 
 
+@flow(name="Validate duplicate md5sum", log_prints=True, task_runner=ConcurrentTaskRunner())
+def validate_duplicate_md5sum(node_list: list[str], file_path: str, output_file: str):
+    section_title = (
+        "\n\n"
+        + header_str("Duplicate md5sum Check")
+        + "\nThis section will display locations in md5sum properties which contain duplicate md5sums across files with different file_names and file_sizes:\n----------\n"
+    )
+
+    # create file_object and template_object
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+
+    validate_str_future = validate_duplicate_md5sum_one_sheet.map(node_list, file_object)
+    validate_str = "".join([i.result() for i in validate_str_future])
+    return_str = section_title + validate_str
+    with open(output_file, "a+") as outf:
+        outf.write(return_str)
+    return None
+
+
+@task(
+    name="Validate duplicate md5sum of one sheet",
+    log_prints=True,
+    task_run_name="Validate duplicate md5sum of node {node_name}",
+)
+def validate_duplicate_md5sum_one_sheet(node_name: str, file_object):
+    """check if there are duplicate md5sum values across files with different names and sizes"""
+
+    # create data frame of tab
+    node_df = file_object.read_sheet_na(sheetname=node_name)
+
+    # pull the properties of the tab
+    properties = node_df.columns
+
+
+    print_str = f"\n\t{node_name}\n\t----------\n\t"
+    check_list = []
+    # for those properties
+    if 'md5sum' in properties:
+        # check data frame for duplicate md5sum values
+        duplicate_md5sum_df = node_df[node_df.duplicated(subset=['md5sum'], keep=False)]
+        # if there are any duplicate md5sum values
+        if not duplicate_md5sum_df.empty:
+            # group by md5sum and check if there are different file_names or file_sizes
+            grouped = duplicate_md5sum_df.groupby('md5sum')
+            for md5sum, group in grouped:
+                property_dict = {}
+                if group['file_name'].nunique() > 1 and group['file_size'].nunique() > 1:
+                    property_dict["node"] = node_name
+                    property_dict["md5sum"] = md5sum
+                    property_dict["file_names"] = ', '.join(group['file_name'])
+                    property_dict["file_sizes"] = ', '.join(group['file_size'].astype(str))
+                    property_dict["error row"] = ','.join((group.index + 2).astype(str).tolist())
+                    property_dict["check"] = "ERROR"
+                    check_list.append(property_dict)
+                elif group['file_name'].nunique() > 1 or group['file_size'].nunique() > 1:
+                    property_dict["node"] = node_name
+                    property_dict["md5sum"] = md5sum
+                    # keep ordered lists of file_names and file_sizes, and error rows (offset by 2), NOT unique
+                    property_dict["file_names"] = ', '.join(group['file_name'])
+                    property_dict["file_sizes"] = ', '.join(group['file_size'].astype(str))
+                    property_dict["error row"] = ','.join((group.index + 2).astype(str).tolist())
+                    property_dict["check"] = "ERROR: Duplicate md5sum with same file_name OR file_size, may be empty template rows, check if expected"
+                    check_list.append(property_dict)
+                elif group['file_name'].nunique() == 1 and group['file_size'].nunique() == 1:
+                    # if the file_name and file_size are the same, log as error with a warning message, as this may be empty template rows
+                    property_dict["node"] = node_name
+                    property_dict["md5sum"] = md5sum
+                    property_dict["file_names"] = ', '.join(group['file_name'])
+                    property_dict["file_sizes"] = ', '.join(group['file_size'].astype(str))
+                    property_dict["error row"] = ','.join((group.index + 2).astype(str).tolist())
+                    property_dict["check"] = "ERROR: Duplicate md5sum with same file_name and file_size, may be empty template rows, check if expected"
+                    check_list.append(property_dict)
+                else:
+                    pass
+        else:
+            pass
+
+
+        check_df = pd.DataFrame.from_records(check_list)
+        if check_df.shape[0] > 0:
+            check_df["file_names"] = check_df["file_names"].str.wrap(45)
+            check_df["file_sizes"] = check_df["file_sizes"].str.wrap(45)
+            check_df["md5sum"] = check_df["md5sum"].str.wrap(32)
+            check_df["error row"] = check_df["error row"].str.wrap(30)
+            check_df["check"] = check_df["check"].str.wrap(30)
+        else:
+            pass
+        print_str = (
+            print_str
+            + check_df.to_markdown(tablefmt="rounded_grid", index=False).replace(
+                "\n", "\n\t"
+            )
+            + "\n"
+        )
+    else:
+        pass
+    return print_str
+
 def extract_object_file_meta(nodes_list: list[str], file_object):
     file_node_props = [
         "file_id",
@@ -2264,6 +2362,10 @@ def ValidationRy_new(file_path: str,
     # validate age
     validation_logger.info("Checking age_at PII")
     validate_age(nodes_to_validate, file_path, output_file)
+
+    # validate age
+    validation_logger.info("Checking for duplicate md5sum values in file nodes")
+    validate_duplicate_md5sum(nodes_to_validate, file_path, output_file)
 
     # validate proband status if family data is present
     if "family_relationship" in nodes_to_validate:
