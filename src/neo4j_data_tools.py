@@ -126,11 +126,11 @@ RETURN
 """
     all_nodes_entries_study_cypher_query: str = """
 MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(node)
-RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
-"""
+RETURN labels(node) AS NodeLabel, COUNT(DISTINCT node) AS NodeCount
+""" 
     node_id_cypher_query_query: str = """
 MATCH (study:study{{study_id:"{study_id}"}})<-[*1..7]-(node:{node})
-RETURN node.guid AS id
+RETURN DISTINCT node.guid AS id 
 """
     node_property_uniq_value: str = """
 MATCH (n:{node})
