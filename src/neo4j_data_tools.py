@@ -126,11 +126,11 @@ RETURN
 """
     all_nodes_entries_study_cypher_query: str = """
 MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(node)
-RETURN labels(node) AS NodeLabel, COUNT(node) AS NodeCount
-"""
+RETURN labels(node) AS NodeLabel, COUNT(DISTINCT node) AS NodeCount
+""" 
     node_id_cypher_query_query: str = """
 MATCH (study:study{{study_id:"{study_id}"}})<-[*1..7]-(node:{node})
-RETURN node.guid AS id
+RETURN DISTINCT node.guid AS id 
 """
     node_property_uniq_value: str = """
 MATCH (n:{node})
@@ -1200,7 +1200,7 @@ def compare_id_input_db_dcc(
         i_node = comparison_df.loc[i, "node"]
         i_node_guid = comparison_df.loc[i, "tsv_id"]  # still tsv_id in parsed df
         i_node_guid_count = comparison_df.loc[i, "tsv_count"]
-        db_node_guid_count = len(db_id_pulled_dict[i_study_id][i_node])
+        db_node_guid_count = len(set(db_id_pulled_dict[i_study_id][i_node]))
         db_node_guid = db_id_pulled_dict[i_study_id][i_node]
         if i_node_guid_count == db_node_guid_count:
             comparison_df.loc[i, "count_check"] = "Equal"
