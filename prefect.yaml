@@ -68,7 +68,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
 
     # pull action to overwrite from file pull action
@@ -97,7 +97,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
 
     # pull action to overwrite from file pull action
@@ -126,7 +126,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
 
     # pull action to overwrite from file pull action
@@ -155,7 +155,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
 
     # pull action to overwrite from file pull action
@@ -184,7 +184,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       file_path: "inputs/CCDI_Submission_Template_v1.9.1_20Exampler.xlsx"
 
     # pull action to overwrite from file pull action
@@ -213,7 +213,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       number_of_entries: 20
 
     # pull action to overwrite from file pull action
@@ -242,7 +242,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -304,7 +304,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       lift_to_tag: "1.9.1"
       liftover_mapping_filepath: "Model_Mapping_Maker/1.7.2-1.9.1/model_mapping_maker_20240718_T133843/1.7.2_1.9.1_MAPPING_20240718.tsv"
 
@@ -334,7 +334,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -362,7 +362,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -445,7 +445,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -473,7 +473,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       template_tag: "2.1.0"
 
     # pull action to overwrite from file pull action
@@ -502,7 +502,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -530,7 +530,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -558,7 +558,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -586,7 +586,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -614,7 +614,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -642,7 +642,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -670,7 +670,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -698,7 +698,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -727,7 +727,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       file_path: ""
       runner: ""
       node_type: "case"
@@ -764,7 +764,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       project_id: "CCDI-MCI"
       manifest_path: ""
       gdc_client_path: "bullenca/file_upload_test/gdc-client"
@@ -802,7 +802,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: "your_uniq_id"
       file_path_1: ""
       file_path_2: ""
@@ -835,7 +835,7 @@ deployments:
     
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       uri_parameter: "uri"
       username_parameter: "username"
       password_parameter: "password"
@@ -868,7 +868,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       lift_from_tag: ""
 
     # pull action to overwrite from file pull action
@@ -898,7 +898,7 @@ deployments:
     
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       uri_parameter: "uri"
       username_parameter: "username"
       password_parameter: "password"
@@ -929,7 +929,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: ""
       manifest_path: ""
       form_parsing: "cog_and_igm"
@@ -961,7 +961,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       workbook_path: ""
       phs: "phs002790"
       upload_path: ""
@@ -993,7 +993,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       study_id: "phs002790"
       dcc_template_tag: "3.1.0"
     
@@ -1046,7 +1046,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       submission_path: ""
       runner: "" 
     
@@ -1076,7 +1076,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -1104,7 +1104,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -1133,7 +1133,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       number_of_entries: 20
 
     # pull action to overwrite from file pull action
@@ -1162,7 +1162,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -1191,7 +1191,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       template_tag: "1.0.0"
       
     # pull action to overwrite from file pull action
@@ -1221,7 +1221,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       template_tag: "1.0.0"
       
     # pull action to overwrite from file pull action
@@ -1280,7 +1280,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: "your_uniq_id"
       database_1_account_id: "aws_account_id_1"
       database_1_secret_path: "ccdi/nonprod/inventory/neo4j-db-creds"
@@ -1319,7 +1319,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       old_tranche_path: ""
       new_tranche_path: ""
       output_path: ""
@@ -1350,7 +1350,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: "runner_id"
       file_path: "path/to/file"
       directory_path: "path/to/directory"
@@ -1380,7 +1380,7 @@ deployments:
     entrypoint: workflows/cog_igm_transformer_v2.py:cog_igm_transform
     
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: ""
       manifest_path: ""
       form_parsing: "cog_and_igm"
@@ -1416,7 +1416,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -1444,7 +1444,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
 
     # pull action to overwrite from file pull action
     pull:
@@ -1472,7 +1472,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: ""
       tsv_folder_path: "path/to/tsv_folder"
       dcc_template_tag: "1.0.0"
@@ -1503,7 +1503,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: ""
       database_account_id: "aws_account_id"
       database_secret_path: "secret_path"
@@ -1539,7 +1539,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: "ccdi-sandbox-export"
       database_account_id: "aws_account_id"
       database_secret_path: "secret_path"
@@ -1573,7 +1573,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: "ccdi-sandbox-export"
       database_account_id: "aws_account_id"
       database_secret_path: "secret_path"
@@ -1607,7 +1607,7 @@ deployments:
 
   #   # flow-specific parameters
   #   parameters:
-  #     bucket: "ccdi-validation"
+  #     bucket: "ccdi-dcc"
   #     study_id: "phs002790"
   #     ccdi_template_tag: "3.1.0"
     
@@ -1637,7 +1637,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: "ccdi-sandbox-export"
       file_path: "directory/path/to/file.cypherl"
       database_target_account_id: "aws_account_id"
@@ -1672,7 +1672,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       manifest_file: ""
       runner: ""
       data_cleanup: "no"
@@ -1704,7 +1704,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: ""
       file_path: "directory/path/to/file.cypherl"
       mode: "export"
@@ -1752,7 +1752,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       file_path: "path/to/file"
       runner: "runner_id"
       kf_data_sync_bucket: "kidsfirst-datasync-collaboration-datasync-manifests"
@@ -1783,7 +1783,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-validation"
+      bucket: "ccdi-dcc"
       runner: "your_uniq_id"
       old_model_repository: "ccdi-dcc-model"
       new_model_repository: "cds-model"
