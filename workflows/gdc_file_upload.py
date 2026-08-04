@@ -6,6 +6,8 @@
 #
 ##############
 
+import token
+
 import requests
 import os
 from prefect_shell import ShellOperation
@@ -512,7 +514,10 @@ def runner(
     elif process_type == "upload_files":
 
         #### TESTING
+        print("Testing original setup")
+        
         token = get_secret(secret_name_path, secret_key_name).strip()
+
         
         headers = {"X-Auth-Token": token}
         url = "https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/0799f6e4-17c1-4768-b99b-044736f3261d"
@@ -521,8 +526,20 @@ def runner(
 
         # Print the response
         print(url)
+        print(len(token))
         print(response.status_code)
         print(response.text)
+
+        print("Testing unmodified token")
+
+        token2 = get_secret(secret_name_path, secret_key_name)
+        print(len(token2))
+        headers2 = {"X-Auth-Token": token2}
+
+        response2 = requests.get(url, headers=headers2)
+        print(response2.status_code)
+        print(response2.text)
+        
 
         # setup env
         token_path, token_dir, gdc_client_exe_path, working_dir, dt = env_setup(
