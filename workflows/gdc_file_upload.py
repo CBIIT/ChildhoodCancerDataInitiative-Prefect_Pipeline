@@ -37,16 +37,13 @@ def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_pro
     Returns:
         str: Response from the gdc-client upload command"""
     # return response and stream output from running tool to console
-    command = ShellOperation(
+    response = ShellOperation(
         commands=[
             f"{gdc_client_exe_path} upload {id} -t {token_file} -c {part_size} -n {n_process} --debug"
         ],
         stream_output=True,
-    )
-    runner_logger = get_run_logger()
-    runner_logger.info(f"Running command: {command.commands}")
-    command.run()
-    return command
+    ).run()
+    return response
 
 @task(name="env_setup")
 def env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_path):
@@ -513,32 +510,6 @@ def runner(
 
     elif process_type == "upload_files":
 
-        #### TESTING
-        print("Testing original setup")
-        
-        token = get_secret(secret_name_path, secret_key_name).strip()
-
-        
-        headers = {"X-Auth-Token": token}
-        url = "https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/0799f6e4-17c1-4768-b99b-044736f3261d"
-
-        response = requests.get(url, headers=headers)
-
-        # Print the response
-        print(url)
-        print(len(token))
-        print(response.status_code)
-        print(response.text)
-
-        print("Testing unmodified token")
-
-        token2 = get_secret(secret_name_path, secret_key_name)
-        print(len(token2))
-        headers2 = {"X-Auth-Token": token2}
-
-        response2 = requests.get(url, headers=headers2)
-        print(response2.status_code)
-        print(response2.text)
         
 
         # setup env
