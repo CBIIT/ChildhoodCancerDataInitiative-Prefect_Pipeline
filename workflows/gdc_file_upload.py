@@ -34,13 +34,17 @@ def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_pro
 
     Returns:
         str: Response from the gdc-client upload command"""
-    response = ShellOperation(
+    # return response and stream output from running tool to console
+    command = ShellOperation(
         commands=[
             f"{gdc_client_exe_path} upload {id} -t {token_file} -c {part_size} -n {n_process}"
         ],
         stream_output=True,
-    ).run()
-    return response
+    )
+    runner_logger = get_run_logger()
+    runner_logger.info(f"Running command: {command.commands}")
+    command.run()
+    return command
 
 @task(name="env_setup")
 def env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_path):
