@@ -21,7 +21,7 @@ from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret, set_s3_
 from src.gdc_utils import retrieve_current_nodes
 
 
-#@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10, timeout_seconds=1200)
+@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10, timeout_seconds=1200)
 def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_process):
     """Upload file to GDC with gdc-client
 
@@ -510,6 +510,19 @@ def runner(
         )
 
     elif process_type == "upload_files":
+
+        #### TESTING
+        token = get_secret(secret_name_path, secret_key_name).strip()
+        
+        headers = {"X-Auth-Token": token}
+        url = "https://api.gdc.cancer.gov/v0/submission/CCDI/MCI/entities/0799f6e4-17c1-4768-b99b-044736f3261d"
+
+        response = requests.get(url, headers=headers)
+
+        # Print the response
+        print(url)
+        print(response.status_code)
+        print(response.text)
 
         # setup env
         token_path, token_dir, gdc_client_exe_path, working_dir, dt = env_setup(
