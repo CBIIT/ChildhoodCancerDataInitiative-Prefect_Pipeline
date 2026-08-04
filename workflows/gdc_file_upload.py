@@ -39,7 +39,7 @@ def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_pro
     # return response and stream output from running tool to console
     command = ShellOperation(
         commands=[
-            f"{gdc_client_exe_path} upload {id} -t {token_file} -c {part_size} -n {n_process}"
+            f"{gdc_client_exe_path} upload {id} -t {token_file} -c {part_size} -n {n_process} --debug"
         ],
         stream_output=True,
     )
