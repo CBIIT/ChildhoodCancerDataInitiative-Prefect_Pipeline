@@ -38,7 +38,7 @@ def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_pro
         commands=[
             f"{gdc_client_exe_path} upload {id} -t {token_file} -c {part_size} -n {n_process}"
         ],
-        stream_output=False,
+        stream_output=True,
     ).run()
     return response
 
