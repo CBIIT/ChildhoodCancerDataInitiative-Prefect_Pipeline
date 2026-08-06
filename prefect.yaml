@@ -1752,7 +1752,7 @@ deployments:
 
     # flow-specific parameters
     parameters:
-      bucket: "ccdi-dcc"
+      bucket: "ccdi-inventory-prod-sync"
       runner: ""
       file_path: "directory/path/to/file.cypherl"
       mode: "export"
