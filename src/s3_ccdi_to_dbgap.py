@@ -825,7 +825,7 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         Path(non_gru_dir_path).mkdir(parents=True, exist_ok=True)
         # make a file in the non_gru directory
         with open(os.path.join(non_gru_dir_path, "!!!NON-GRU_STUDY!!!.txt"), "w") as f:
-            f.write(f"This is study either contains non-GRU consent or has consent group other than GRU. Here are the consent group values found in the manifest:{consent_values_list}")
+            f.write(f"This study either contains non-GRU consent or has consent group other than GRU. Here are the consent group values found in the manifest:{consent_values_list}\n\n Please check with dbGaP for acceptable consent group names (SC_DD.xlsx) before submission.")
         logger.warning(
             f"This is a Non-GRU Study. Created an output folder if not exist at {non_gru_dir_path}"
         )
