@@ -49,7 +49,7 @@ def run_template_exampler_dcc(
         else:
             manifest_version = dcc_manifest_version
             manifest_file = dcc_tag.download_tag_manifest(
-                tag=ccdi_manifest_version, logger=runner_logger
+                tag=manifest_version, logger=runner_logger
             )
     else:
         available_tags = dcc_tag.get_tags_only()
