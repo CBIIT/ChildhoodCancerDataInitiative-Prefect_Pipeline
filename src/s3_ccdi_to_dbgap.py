@@ -642,12 +642,26 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
         for _, row in consent_df.iterrows():
             number = row['consent_group_suffix'].replace('c', '')
             name = row['consent_group_name']
+            if name == "GRU":
+                name = "General Research Use (GRU)"
+            else:
+                pass
             consent_values_list.append(f"{number}={name}")
         logger.info(f"Generated Consent Definitions: {consent_values_list}")
 
     else:
         logger.error("consent_group information missing from consent sheet")
         sys.exit()
+
+    # add non-gru flag because it requires data curators to check with dbGaP for acceptable consent group names if the consent group is not GRU
+    # Because consent_group is a node between study and participants, this is an enforced data node that must exist if participant node exists.
+    # Therefore, we can assume that consent_value_list is not empty
+    non_gru = False
+    if consent_values_list != ["1=General Research Use (GRU)"]:
+        non_gru = True
+        # either the only item in consent_values_list is not GRU, or there are other consent group items that are not GRU
+    else:
+        pass
 
     # this has been commented out/reworked to handle multiple consent groups
     #if pd.isna(study_consent):
@@ -806,15 +820,15 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     logger.info(f"Created an output folder if not exist at {output_dir_path}")
 
     # create flag directory for non-GRU consent
-    #if non_gru:
-    #    non_gru_dir_path = os.path.join(output_dir_path, "!!!NON-GRU_STUDY!!!")
-    #    Path(non_gru_dir_path).mkdir(parents=True, exist_ok=True)
-    #    # make a file in the non_gru directory
-    #    with open(os.path.join(non_gru_dir_path, "!!!NON-GRU_STUDY!!!.txt"), "w") as f:
-    #        f.write(f"This is a Non-GRU Study. It is {study_consent}.")
-    #    logger.warning(
-    #        f"This is a Non-GRU Study. Created an output folder if not exist at {non_gru_dir_path}"
-    #    )
+    if non_gru:
+        non_gru_dir_path = os.path.join(output_dir_path, "!!!NON-GRU_STUDY!!!")
+        Path(non_gru_dir_path).mkdir(parents=True, exist_ok=True)
+        # make a file in the non_gru directory
+        with open(os.path.join(non_gru_dir_path, "!!!NON-GRU_STUDY!!!.txt"), "w") as f:
+            f.write(f"This is study either contains non-GRU consent or has consent group other than GRU. Here are the consent group values found in the manifest:{consent_values_list}")
+        logger.warning(
+            f"This is a Non-GRU Study. Created an output folder if not exist at {non_gru_dir_path}"
+        )
 
     # write dd files
     subject_consent_dd_df.to_excel(
