@@ -123,6 +123,10 @@ def submission_cruncher(
 
     file = os.path.basename(file_path)
 
+    logger.info(
+        f"Splitting {file} into chunks of {row_numbers} rows each"
+    )
+
     output_folder = split_file(filepath=file, rows_per_file=row_numbers)
 
     logger.info(
