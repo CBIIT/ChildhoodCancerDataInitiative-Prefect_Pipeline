@@ -3,7 +3,7 @@ import csv
 import math
 from datetime import datetime
 import prefect
-from prefect import flow, task
+from prefect import flow, task, get_run_logger
 from src.utils import file_dl, get_time, folder_ul
 
 
@@ -124,5 +124,9 @@ def submission_cruncher(
     file = os.path.basename(file_path)
 
     output_folder = split_file(filepath=file, rows_per_file=row_numbers)
+
+    logger.info(
+        f"Uploading output folder {output_folder} to {bucket} in {runner}"
+    )
 
     folder_ul(bucket=bucket, local_folder=output_folder, destination=runner, sub_folder="")
