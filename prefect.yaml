@@ -1859,7 +1859,7 @@ deployments:
 
   - name: table-snipper-8gb-v3
     version: null
-    tags: ["TEST","SVB","CCDIDC-2627","Centralized Worker","V3"]
+    tags: ["Production","Centralized Worker","V3"]
     description: Split a large CSV or TSV file into smaller chunks
     entrypoint: workflows/table_snipper.py:submission_cruncher
     schedule: null
