@@ -1824,7 +1824,7 @@ deployments:
 
   - name: model-mapping-maker-8gb-v3
     version: null
-    tags: ["Production","MDF","MEVAL","Centralized Worker","V3"]
+    tags: ["Production","MDF","Centralized Worker","V3"]
     description: Create a mapping file between two models based on user input and upload to S3
     entrypoint: workflows/model_mapping_maker.py:runner
     schedule: null
@@ -1846,6 +1846,37 @@ deployments:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
           branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {} 
+
+  - name: table-snipper-8gb-v3
+    version: null
+    tags: ["TEST","SVB","CCDIDC-2627","Centralized Worker","V3"]
+    description: Split a large CSV or TSV file into smaller chunks
+    entrypoint: workflows/table_snipper.py:submission_cruncher
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-dcc"
+      file_path: "path/to/your/file.csv"
+      runner: "your_uniq_id"
+      row_numbers: 100000
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-2627-Table_Snipper
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
