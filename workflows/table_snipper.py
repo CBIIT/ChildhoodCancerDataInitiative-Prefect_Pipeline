@@ -71,10 +71,9 @@ def split_and_write_files(
 
     return total_files
 
-@flow(name="Split CSV/TSV File")
+@flow(name="Split CSV or TSV File")
 def split_file(filepath: str, rows_per_file: int):
     logger = prefect.get_run_logger()
-
     delimiter = detect_delimiter(filepath)
     headers, rows = read_file(filepath, delimiter)
     output_folder = create_output_folder(filepath)
