@@ -244,7 +244,7 @@ def process_manifest(
     logger.info(f"Starting manifest deduplication for file: {file_path}")
 
     logger.info(f"Downloading file from bucket={bucket}, path={file_path}")
-    file_dl(bucket=bucket, file_path=file_path)
+    file_dl(bucket=bucket, filename=file_path)
 
     file_name = Path(file_path).name
     output_file = f"{file_name}_deduped_{timestamp}.xlsx"
