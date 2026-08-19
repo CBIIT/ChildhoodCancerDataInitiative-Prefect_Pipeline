@@ -73,19 +73,31 @@ def resolve_node_id(
         file_name = file_name_vals[0] if len(file_name_vals) == 1 else None
 
         if file_name:
-            # check if all ids are just variations of the file_name
+            # Remove the file extension
+            file_name_without_ext = os.path.splitext(str(file_name))[0]
+
+            # Check if all IDs are variations of either:
+            # 1. The full file name
+            # 2. The file name without the extension
             all_variations = all(
-                file_name in str(id_val) or str(id_val) in file_name
+                (
+                    str(id_val) in str(file_name)
+                    or str(file_name) in str(id_val)
+                    or str(id_val) in file_name_without_ext
+                    or file_name_without_ext in str(id_val)
+                )
                 for id_val in id_values
             )
+
             if all_variations:
                 return file_name, warnings
 
-    # ids are not simple file_name variations — return list and warn
+    # IDs are not simple file_name variations — return list and warn
     warnings.append(
         f"Could not resolve {node_id_col} to file_name. "
         f"Unique IDs found: {id_values}. Manual review required."
     )
+
     return ";".join(str(i) for i in id_values), warnings
 
 @task
