@@ -1887,3 +1887,33 @@ deployments:
       name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {} 
+
+  - name: file_entry_deduplicator-8gb-v3
+    version: null
+    tags: ["Production","Centralized Worker","V3"]
+    description: Deduplicate *_file tabs in a manifest Excel file
+    entrypoint: workflows/file_entry_deduplicator.py:process_manifest
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-dcc"
+      file_path: "path/to/your/file.xlsx"
+      runner: "your_uniq_id"
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-2630_File_entry_conjoin
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {} 
