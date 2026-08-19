@@ -186,7 +186,7 @@ def merge_duplicate_file_rows(
         f"{len(df_merged_dupes)} merged rows.")
     return df_final, all_warnings
 
-
+@task
 def write_sheets_preserve_formatting(
     all_sheets: dict, input_file: str, output_file: str
 ) -> None:
