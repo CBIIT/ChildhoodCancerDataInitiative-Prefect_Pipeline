@@ -8,7 +8,7 @@ from pathlib import Path
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from prefect import task, flow, get_run_logger
-from src import get_time, file_dl, folder_ul
+from src.utils import get_time, file_dl, folder_ul
 
 timestamp = get_time()
 
