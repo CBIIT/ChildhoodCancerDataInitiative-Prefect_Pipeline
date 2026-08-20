@@ -253,58 +253,90 @@ def process_manifest(
         file_path (str): Path to the input manifest Excel file.
     """
     logger = get_run_logger()
-    logger.info(f"Starting manifest deduplication for file: {file_path}")
+    log_lines = []  # accumulate log messages for the output log file
 
-    logger.info(f"Downloading file from bucket={bucket}, path={file_path}")
+    def log(msg: str) -> None:
+        """Log to both Prefect logger and the output log file."""
+        logger.info(msg)
+        log_lines.append(msg)
+
+    log(f"Starting manifest deduplication for file: {file_path}")
+    log(f"Downloading file from bucket={bucket}, path={file_path}")
     file_dl(bucket=bucket, filename=file_path)
 
     file_name = Path(file_path).name
     output_file = f"{file_name}_deduped_{timestamp}.xlsx"
     output_file_log = f"{file_name}_deduped_{timestamp}.log"
 
+    log(f"Input file: {file_name}")
+
     file_tabs = find_file_tabs(file_name)
     if not file_tabs:
-        logger.info("No *_file tabs found in the manifest.")
+        log("No *_file tabs found in the manifest.")
         return
 
-    logger.info(f"Found file tabs: {file_tabs}")
+    log(f"Found file tabs: {file_tabs}")
 
     all_warnings = []
 
-    logger.info(f"Reading Excel file: {file_name}")
-    # read all sheets up front
+    log(f"Reading Excel file: {file_name}")
     all_sheets = pd.read_excel(file_name, sheet_name=None, dtype=str)
 
     for tab in file_tabs:
-        logger.info(f"\nProcessing tab: {tab}")
+        log(f"\nProcessing tab: {tab}")
         df = all_sheets[tab]
+        original_row_count = len(df)
+        log(f"[{tab}] Total rows before deduplication: {original_row_count}")
 
         df_merged, warnings = merge_duplicate_file_rows(df=df, tab_name=tab)
+        merged_row_count = len(df_merged)
         all_sheets[tab] = df_merged
         all_warnings.extend(warnings)
 
-    logger.info(f"\nDeduplication complete. Writing output to: {output_file}")
-    # write all sheets back with formatting preserved
+        # capture per-tab summary
+        duplicated_mask = df.duplicated(subset=["md5sum", "file_url", "dcf_indexd_guid"], keep=False)
+        dupe_count = duplicated_mask.sum()
+        if dupe_count > 0:
+            group_count = df[duplicated_mask].groupby(
+                [k for k in ["md5sum", "file_url", "dcf_indexd_guid"] if k in df.columns],
+                dropna=False
+            ).ngroups
+            log(f"[{tab}] Found {dupe_count} duplicate rows across {group_count} groups.")
+            log(f"[{tab}] Reduced {dupe_count} duplicate rows to {merged_row_count - (original_row_count - dupe_count)} merged rows.")
+        else:
+            log(f"[{tab}] No duplicate rows found.")
+
+        log(f"[{tab}] Total rows after deduplication: {merged_row_count}")
+
+    log(f"\nDeduplication complete. Writing output to: {output_file}")
     write_sheets_preserve_formatting(
         all_sheets=all_sheets,
         input_file=file_name,
         output_file=output_file,
     )
 
-    logger.info(f"Writing warnings log to: {output_file_log}")
+    log(f"Writing warnings log to: {output_file_log}")
     with open(output_file_log, "w") as log_file:
+        # ── run summary ───────────────────────────────────────────────────────
+        print("=" * 60, file=log_file)
+        print("DEDUPLICATION RUN SUMMARY", file=log_file)
+        print("=" * 60, file=log_file)
+        for line in log_lines:
+            print(line, file=log_file)
+
+        # ── warnings ──────────────────────────────────────────────────────────
+        print(f"\n{'=' * 60}", file=log_file)
         if all_warnings:
-            print(f"\n{'='*60}", file=log_file)
             print("WARNINGS — Manual review required:", file=log_file)
-            print("="*60, file=log_file)
+            print("=" * 60, file=log_file)
             for w in all_warnings:
                 print(f"  ⚠  {w}", file=log_file)
         else:
-            print("\nNo warnings — all duplicates merged cleanly.", file=log_file)
+            print("No warnings — all duplicates merged cleanly.", file=log_file)
 
     logger.info(f"Deduplication process completed. Output files: {output_file}, {output_file_log}")
     logger.info(f"Moving output files to bucket={bucket}, destination={runner}/{timestamp}")
-    # Create an output directory for the deduplicated files and then move the files there
+
     output_directory = os.path.join(f"deduplicated_{timestamp}")
     os.makedirs(output_directory, exist_ok=True)
     shutil.move(file_name, output_directory)
