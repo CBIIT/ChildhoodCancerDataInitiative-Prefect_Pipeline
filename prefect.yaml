@@ -1906,7 +1906,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2630_File_entry_conjoin
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
@@ -1914,6 +1914,6 @@ deployments:
 
     # infra-specific fields
     work_pool:
-      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
+      name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {} 
