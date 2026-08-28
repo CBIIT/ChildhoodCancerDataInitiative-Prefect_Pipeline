@@ -92,51 +92,126 @@ class ModelSnapshot:
     def compare(self, other: "ModelSnapshot") -> pd.DataFrame:
         """
         Compare this snapshot (from) against another snapshot (to).
-        Detects: ADDITION, DELETION, CHANGED (type, required, is_key, value_set_terms).
+        Detects: ADDITION, DELETION, CHANGED (type, required, is_key, value_set_terms, parent_nodes).
+        For value_set_terms changes, only shows the values that are added or removed.
         Returns a dataframe of differences only — identical entries are skipped.
         """
         from_keys = set(self.get_all_properties())
         to_keys = set(other.get_all_properties())
         all_keys = from_keys | to_keys
 
+        # also compare nodes directly for parent_node changes
+        all_node_names = set(self.nodes.keys()) | set(other.nodes.keys())
+
         rows = []
+
+        # ── property-level comparison ─────────────────────────────────────────────
         for node_name, prop_name in sorted(all_keys):
             from_prop = self.get_property(node_name, prop_name)
             to_prop = other.get_property(node_name, prop_name)
 
             if from_prop and not to_prop:
                 change_type = "DELETION"
-            elif not from_prop and to_prop:
+                rows.append({
+                    "node":                 node_name,
+                    "property":             prop_name,
+                    "change_type":          change_type,
+                    "from_type":            from_prop.prop_type,
+                    "to_type":              "",
+                    "from_required":        from_prop.required,
+                    "to_required":          "",
+                    "from_is_key":          from_prop.is_key,
+                    "to_is_key":            "",
+                    "from_value_set_terms": ";".join(from_prop.value_set_terms),
+                    "to_value_set_terms":   "",
+                    "from_version":         self.version,
+                    "to_version":           other.version,
+                })
+                continue
+
+            if not from_prop and to_prop:
                 change_type = "ADDITION"
-            else:
-                # both exist — check for differences
-                changes = []
-                if from_prop.prop_type != to_prop.prop_type:
-                    changes.append("type")
-                if from_prop.required != to_prop.required:
-                    changes.append("required")
-                if from_prop.is_key != to_prop.is_key:
-                    changes.append("is_key")
-                if set(from_prop.value_set_terms) != set(to_prop.value_set_terms):
-                    changes.append("value_set_terms")
-                if not changes:
-                    continue  # identical — skip
-                change_type = "CHANGED:" + ",".join(changes)
+                rows.append({
+                    "node":                 node_name,
+                    "property":             prop_name,
+                    "change_type":          change_type,
+                    "from_type":            "",
+                    "to_type":              to_prop.prop_type,
+                    "from_required":        "",
+                    "to_required":          to_prop.required,
+                    "from_is_key":          "",
+                    "to_is_key":            to_prop.is_key,
+                    "from_value_set_terms": "",
+                    "to_value_set_terms":   ";".join(to_prop.value_set_terms),
+                    "from_version":         self.version,
+                    "to_version":           other.version,
+                })
+                continue
+
+            # both exist — check for differences
+            changes = []
+            if from_prop.prop_type != to_prop.prop_type:
+                changes.append("type")
+            if from_prop.required != to_prop.required:
+                changes.append("required")
+            if from_prop.is_key != to_prop.is_key:
+                changes.append("is_key")
+
+            # compute only the delta for value_set_terms
+            from_terms = set(from_prop.value_set_terms)
+            to_terms = set(to_prop.value_set_terms)
+            removed_terms = from_terms - to_terms  # in old but not new
+            added_terms = to_terms - from_terms    # in new but not old
+            if removed_terms or added_terms:
+                changes.append("value_set_terms")
+
+            if not changes:
+                continue  # identical — skip
 
             rows.append({
-                "node":                node_name,
-                "property":            prop_name,
-                "change_type":         change_type,
-                "from_type":           from_prop.prop_type if from_prop else "",
-                "to_type":             to_prop.prop_type if to_prop else "",
-                "from_required":       from_prop.required if from_prop else "",
-                "to_required":         to_prop.required if to_prop else "",
-                "from_is_key":         from_prop.is_key if from_prop else "",
-                "to_is_key":           to_prop.is_key if to_prop else "",
-                "from_value_set_terms": ";".join(from_prop.value_set_terms) if from_prop else "",
-                "to_value_set_terms":   ";".join(to_prop.value_set_terms) if to_prop else "",
-                "from_version":        self.version,
-                "to_version":          other.version,
+                "node":                 node_name,
+                "property":             prop_name,
+                "change_type":          "CHANGED:" + ",".join(changes),
+                "from_type":            from_prop.prop_type,
+                "to_type":              to_prop.prop_type,
+                "from_required":        from_prop.required,
+                "to_required":          to_prop.required,
+                "from_is_key":          from_prop.is_key,
+                "to_is_key":            to_prop.is_key,
+                "from_value_set_terms": ";".join(sorted(removed_terms)),  # only removed values
+                "to_value_set_terms":   ";".join(sorted(added_terms)),    # only added values
+                "from_version":         self.version,
+                "to_version":           other.version,
+            })
+
+        # ── parent node relationship comparison ───────────────────────────────────
+        for node_name in sorted(all_node_names):
+            from_node = self.get_node(node_name)
+            to_node = other.get_node(node_name)
+
+            from_parents = set(from_node.parent_nodes) if from_node else set()
+            to_parents = set(to_node.parent_nodes) if to_node else set()
+
+            removed_parents = from_parents - to_parents
+            added_parents = to_parents - from_parents
+
+            if not removed_parents and not added_parents:
+                continue  # no relationship changes
+
+            rows.append({
+                "node":                 node_name,
+                "property":             "parent_nodes",
+                "change_type":          "CHANGED:parent_nodes",
+                "from_type":            "relationship",
+                "to_type":              "relationship",
+                "from_required":        "",
+                "to_required":          "",
+                "from_is_key":          "",
+                "to_is_key":            "",
+                "from_value_set_terms": ";".join(sorted(removed_parents)),  # parents removed
+                "to_value_set_terms":   ";".join(sorted(added_parents)),    # parents added
+                "from_version":         self.version,
+                "to_version":           other.version,
             })
 
         return pd.DataFrame(rows)
@@ -218,62 +293,6 @@ def pull_model_data_files(model, version, file_type, output_file):
     return output_file
 
 
-# # ── extraction ────────────────────────────────────────────────────────────────
-
-# @task
-# def parse_model(model_parsed, version):
-#     logger = get_run_logger()
-#     rows = []
-#     logger.info(f"Starting to parse model for version: {version}")
-#     # Get list of nodes in the model
-#     node_list = model_parsed.get_node_list()
-
-#     # For each node
-#     for node in node_list:
-#         logger.info(f"Parsing node: {node}")
-#         # Get list of properties for the node
-#         props = model_parsed.get_node_props_list(node)
-#         # Get list of parent nodes for the current node
-#         parent_nodes = model_parsed.get_parent_nodes(node)
-
-#         logger.info(f"Parent nodes of node: {node} are: {parent_nodes}")
-#         if len(parent_nodes) == 0:
-#             logger.info(
-#                 f"Node: {node} has no parent nodes, skipping relationship parsing for this node."
-#             )
-#         else:
-#             logger.info(
-#                 f"Node: {node} has parent nodes, parsing relationships for this node."
-#             )
-#             for parent in parent_nodes:
-#                 key_prop = model_parsed.get_node_key_prop(parent)
-#                 if not key_prop:
-#                     logger.warning(
-#                         f"No key_prop found for parent '{parent}' of node '{node}', skipping."
-#                     )
-#                     continue
-
-#         # For each property of the node
-#         for prop in props:
-#             # Get the requiredness of the property
-#             requiredness = model_parsed.get_prop_requiredness(node, prop)
-#             # Check if key property of the node
-#             key_prop = model_parsed.if_prop_key(node, prop)
-#             # Get the type of the property
-#             prop_type = model_parsed.get_prop_type(node, prop)
-#             #if property is a value set, get its terms
-#             if prop_type == "value_set" or prop_type == "list":
-#                 value_set_terms = model_parsed.get_value_set_terms(node, prop)
-#                 if value_set_terms == "":
-#                     value_set_terms = "not enumerated"
-
-#             # Insert something about the CDE values and versions
-#             # This will require going to the bento-mdf repo code to pull it
-
-
-
-#     return 
-
 
 
 # ── main flow ─────────────────────────────────────────────────────────────────
@@ -352,10 +371,6 @@ def runner(
     snapshot_old = parse_model(model_parsed_old, old_model_version)
     snapshot_new = parse_model(model_parsed_new, new_model_version)
 
-    # # query individual nodes or properties
-    # node = snapshot_old.get_node("sample")
-    # prop = snapshot_old.get_property("sample", "sample_id")
-
     # flat dataframe for the full model
     df_old = snapshot_old.to_dataframe()
 
@@ -365,14 +380,6 @@ def runner(
     # ── save & upload ─────────────────────────────────────────────────────────
     prefix = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}"
 
-    # mapping_file_name = f"{prefix}_MAPPING_{current_date}.tsv"
-    # mapping_df.to_csv(mapping_file_name, sep="\t", index=False)
-    # file_ul(
-    #     bucket=bucket,
-    #     output_folder=output_folder,
-    #     sub_folder="",
-    #     newfile=mapping_file_name,
-    # )
 
     comparison_file_name = f"{prefix}_comparison_{current_date}.tsv"
     diff_df.to_csv(comparison_file_name, sep="\t", index=False)
