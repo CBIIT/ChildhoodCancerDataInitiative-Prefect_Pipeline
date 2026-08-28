@@ -173,7 +173,7 @@ def parse_model(model_parsed, version: str) -> ModelSnapshot:
 
         # ── properties ────────────────────────────────────────────────────────
         for prop in model_parsed.get_node_props_list(node_name):
-            required    = model_parsed.get_prop_requiredness(node_name, prop)
+            required    = model_parsed.if_prop_required(node_name, prop)
             is_key      = model_parsed.if_prop_key(node_name, prop)
             prop_type   = model_parsed.get_prop_type(node_name, prop)
 
