@@ -179,7 +179,7 @@ def parse_model(model_parsed, version: str) -> ModelSnapshot:
 
             value_set_terms = []
             if prop_type in ("value_set", "list"):
-                raw_terms = model_parsed.get_value_set_terms(node_name, prop)
+                raw_terms = model_parsed.get_permissible_values(node_name, prop)
                 if raw_terms and raw_terms != "":
                     value_set_terms = raw_terms if isinstance(raw_terms, list) else [raw_terms]
                 else:
