@@ -1922,7 +1922,7 @@ deployments:
     version: null
     tags: ["TEST","MDF","SVB","CCDIDC-2650","Centralized Worker","V3"]
     description: Create a mapping file between two models, find the diffs and then apply it to the current data to see what must change.
-    entrypoint: workflows/model_mapping_maker.py:runner
+    entrypoint: workflows/model_data_compare.py:runner
     schedule: null
 
     # flow-specific parameters
