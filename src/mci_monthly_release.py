@@ -67,9 +67,10 @@ def read_mci_staging_folder(bucket_path: str):
 @flow(name="find newly added", log_prints=True)
 def find_newly_added(bucket_path: str, prev_pulled_list:str):
     prev_file_list = pd.read_csv(prev_pulled_list, header=None)[0].tolist()
+    prev_file_list = [i for i in prev_file_list if i != "" and i is not None]
     # run read_mci_staging_folder
     bucket_name, download_list, latest_pull_name = read_mci_staging_folder(bucket_path=bucket_path) 
-    diff_list = [i for i in download_list if i["filename"] not in prev_file_list]
+    diff_list = [i for i in download_list if i["filename"] not in prev_file_list and i["filename"] != ""]
     print(f"Newly added file counts: {len(diff_list)}")
     # create a file containing only diff filenames
     run_date= get_date()

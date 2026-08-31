@@ -10,7 +10,7 @@ from src.mci_monthly_release import (
     ProceedtoMergeInput,
     MCIInputDescriptionMD,
 )
-from src.utils import file_dl, CCDI_Tags, get_time, file_ul, get_date
+from src.utils import file_dl, get_time, file_ul, get_date, CCDI_DCC_Tags
 from src.file_mover import parse_file_url
 from src.submission_cruncher import concatenate_submissions
 
@@ -19,16 +19,16 @@ from src.submission_cruncher import concatenate_submissions
 def mci_release_manifest(
     bucket: str,
     mci_manifests_bucket_path: str,
-    template_tag: str,
     previous_pull_list_path: str,
     runner: str,
+    template_tag: str = "1.0.0",
 ) -> None:
     """Pipeline that finds newly added manifests in a given bucket folder and combines them into a single CCDI manifest
 
     Args:
         bucket (str): Bucket name of where output goes to
         mci_manifests_bucket_path (str): Bucket path where newly added manifests are
-        template_tag (str): A CCDI template tag to use for combining new manifests
+        template_tag (str): A CCDI-DCC template tag to use for combining new manifests. Default is 1.0.0
         previous_pull_list_path (str): A file path in the given bucket that contains a list of previously pulled file names
         runner (str): Unique runner name
     """    
@@ -101,7 +101,7 @@ def mci_release_manifest(
         )
 
         # download the template of a given tag
-        template_name = CCDI_Tags().download_tag_manifest(
+        template_name = CCDI_DCC_Tags().download_tag_manifest(
             tag=template_tag, logger=logger
         )
 
