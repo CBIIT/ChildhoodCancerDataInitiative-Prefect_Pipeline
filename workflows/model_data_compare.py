@@ -5,6 +5,7 @@ from prefect import flow, task, get_run_logger, pause_flow_run
 from prefect.input import RunInput
 from src.utils import get_secret_centralized_worker, get_time, file_dl, file_ul
 from meval.parser import ModelParser
+from bento_mdf.diff import diff_models  
 import requests
 from dataclasses import dataclass, field
 from neo4j import GraphDatabase, basic_auth
@@ -221,7 +222,7 @@ def query_node_property(driver, node: str, prop: str) -> list[dict]:
         result = session.run(query)
         return [dict(record) for record in result]
 
-
+@task("Check DB data against diff")
 def check_data_against_diff(
     driver,
     diff_df: pd.DataFrame,
@@ -442,10 +443,12 @@ def runner(
         handle=new_model_version,
     )
 
-    snapshot_old = parse_model(model_parsed_old, old_model_version)
-    snapshot_new = parse_model(model_parsed_new, new_model_version)
+    # snapshot_old = parse_model(model_parsed_old, old_model_version)
+    # snapshot_new = parse_model(model_parsed_new, new_model_version)
 
-    diff_df = snapshot_old.compare(snapshot_new)
+    # diff_df = snapshot_old.compare(snapshot_new)
+
+    diff_df = diff_models(model_parsed_new.model, model_parsed_old.model, objects_as_dicts = True, include_summary = True)
 
     # ── save model comparison ─────────────────────────────────────────────────
     comparison_file_name = f"{prefix}_comparison_{current_date}.tsv"
@@ -481,7 +484,7 @@ def runner(
             data_report_df = check_data_against_diff(
                 driver=driver,
                 diff_df=diff_df,
-                snapshot_new=snapshot_new,
+                snapshot_new=model_parsed_new.model,
                 logger=logger,
             )
         finally:
