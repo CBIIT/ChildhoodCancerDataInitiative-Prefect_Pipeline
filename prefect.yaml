@@ -1933,7 +1933,7 @@ deployments:
       new_model_repository: "ccdi-dcc-model"
       old_model_version: "1.0.0"
       new_model_version: "2.0.0"
-      database_source_account_name: ""
+      check_against_database: false
       database_source_account_id: ""
       database_source_secret_path: ""
       database_source_secret_key_ip: ""
