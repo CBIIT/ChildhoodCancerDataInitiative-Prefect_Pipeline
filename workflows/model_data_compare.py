@@ -200,14 +200,14 @@ class ModelSnapshot:
 
 def query_node_property(driver, node: str, prop: str) -> list[dict]:
     """
-    Query all records for a given node and property from the Neo4j database.
+    Query all records for a given node and property from the database.
     Traverses up to the study node to retrieve study_id.
     Returns a list of dicts with: study_id, node, property, guid, current_value.
     """
     query = f"""
         MATCH (n:{node})
         WHERE n.{prop} IS NOT NULL
-        OPTIONAL MATCH path = (n)-[:of_{node}*0..]->(s:study)
+        OPTIONAL MATCH path = (n)-[*0..5]->(s:study)
         WITH n,
             coalesce(s.study_id, 'unknown') AS study_id
         RETURN
