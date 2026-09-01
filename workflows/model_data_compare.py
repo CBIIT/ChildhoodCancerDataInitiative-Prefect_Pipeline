@@ -167,13 +167,15 @@ def flatten_diff_to_dataframe(
 
 
 # ── database querying ─────────────────────────────────────────────────────────
-@task(name="Query node property", log_prints=True)
+@task(name="Query node property", log_prints=True, cache_policy=NO_CACHE)
 def query_node_property(driver, node: str, prop: str) -> list[dict]:
     """
     Query all records for a given node and property from the database.
     Traverses up to the study node to retrieve study_id.
     Returns a list of dicts with: study_id, node, property, guid, current_value.
     """
+    logger = get_run_logger()
+    logger.info(f"Querying node property: node={node}, prop={prop}")
     query = f"""
         MATCH (n:{node})
         WHERE n.{prop} IS NOT NULL
@@ -192,7 +194,7 @@ def query_node_property(driver, node: str, prop: str) -> list[dict]:
         return [dict(record) for record in result]
 
 
-@task(name="Check DB data against diff", cache_policy=NO_CACHE)
+@flow(name="Check DB data against diff", cache_policy=NO_CACHE)
 def check_data_against_diff(
     driver,
     diff_df: pd.DataFrame,
