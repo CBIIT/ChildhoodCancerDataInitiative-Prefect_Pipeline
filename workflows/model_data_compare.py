@@ -460,6 +460,7 @@ def runner(
     prefix = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}"
 
     # ── fetch model files ─────────────────────────────────────────────────────
+    logger.info(f"Fetching model files for {old_model_repository} at {old_model_version} and {new_model_repository} at {new_model_version}.")
     old_model_file_yaml = pull_model_data_files(
         model=old_model_repository, version=old_model_version,
         file_type="model", output_file="old_model.yaml",
@@ -485,6 +486,7 @@ def runner(
     logger.info(f"{new_model_repository} properties at {new_model_version} found.")
 
     # ── parse models via meval ModelParser (for ModelSnapshot) ───────────────
+    logger.info(f"Parsing models via meval ModelParser for {old_model_repository} at {old_model_version} and {new_model_repository} at {new_model_version}.")
     model_parsed_old = ModelParser(
         model_file=old_model_file_yaml, props_file=old_props_file_yaml,
         handle=old_model_version,
@@ -498,9 +500,11 @@ def runner(
     snapshot_new = parse_model(model_parsed_new, new_model_version)
 
     # ── our own structured comparison (used for DB querying) ─────────────────
+    logger.info(f"Comparing snapshots for {old_model_repository} at {old_model_version} and {new_model_repository} at {new_model_version}.")
     diff_df = snapshot_old.compare(snapshot_new)
 
     # ── bento-mdf diff_models comparison (richer attribute-level diff) ────────
+    logger.info(f"Performing bento-mdf diff_models comparison for {old_model_repository} at {old_model_version} and {new_model_repository} at {new_model_version}.")
     mdf_old = MDFReader(old_model_file_yaml, old_props_file_yaml, handle=old_model_version)
     mdf_new = MDFReader(new_model_file_yaml, new_props_file_yaml, handle=new_model_version)
 
@@ -519,7 +523,7 @@ def runner(
     )
 
     # ── save outputs ──────────────────────────────────────────────────────────
-
+    logger.info(f"Saving comparison outputs for {old_model_repository} at {old_model_version} and {new_model_repository} at {new_model_version}.")
     # our structured comparison
     comparison_file_name = f"{prefix}_comparison_{current_date}.tsv"
     diff_df.to_csv(comparison_file_name, sep="\t", index=False)
