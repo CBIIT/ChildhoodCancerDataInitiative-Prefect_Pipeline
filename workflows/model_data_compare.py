@@ -9,6 +9,7 @@ from bento_mdf import MDFReader
 from bento_mdf.diff import diff_models
 from dataclasses import dataclass, field
 from neo4j import GraphDatabase, basic_auth
+from prefect.cache_policies import NO_CACHE
 
 
 class InputValues(RunInput):
@@ -378,7 +379,7 @@ def query_node_property(driver, node: str, prop: str) -> list[dict]:
         return [dict(record) for record in result]
 
 
-@task(name="Check DB data against diff")
+@task(name="Check DB data against diff", cache_policy= NO_CACHE)
 def check_data_against_diff(
     driver,
     diff_df: pd.DataFrame,

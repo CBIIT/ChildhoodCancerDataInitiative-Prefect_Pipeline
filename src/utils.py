@@ -1591,7 +1591,7 @@ def get_secret(secret_name_path: str, secret_key_name: str):
     return json.loads(get_secret_value_response["SecretString"])[secret_key_name]
 
 
-@task(name="get secret from secrets manager in an external account", log_prints=True)
+@task(name="get secret from secrets manager in an external account", log_prints=True, cache_policy=NO_CACHE)
 def get_secret_centralized_worker(
     secret_path_name: str, secret_key_name: str, account: str
 ):
