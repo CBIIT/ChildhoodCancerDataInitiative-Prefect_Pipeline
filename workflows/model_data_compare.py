@@ -167,7 +167,7 @@ def flatten_diff_to_dataframe(
 
 
 # ── database querying ─────────────────────────────────────────────────────────
-@task(name="Query node property", log_prints=True, cache_policy=NO_CACHE)
+@task(name="Query node property", log_prints=True, cache_policy = NO_CACHE)
 def query_node_property(driver, node: str, prop: str) -> list[dict]:
     """
     Query all records for a given node and property from the database.
