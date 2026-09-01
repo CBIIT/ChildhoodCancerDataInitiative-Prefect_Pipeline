@@ -193,7 +193,7 @@ def query_node_property(driver, node: str, prop: str) -> list[dict]:
         return [dict(record) for record in result]
 
 
-@flow(name="Check DB data against diff", cache_policy=NO_CACHE)
+@flow(name="Check DB data against diff")
 def check_data_against_diff(
     driver,
     diff_df: pd.DataFrame,
@@ -292,6 +292,7 @@ def check_data_against_diff(
     name="Model Data Compare",
     log_prints=True,
     flow_run_name="{runner}_" + f"{get_time()}",
+    cache_policy=NO_CACHE
 )
 def runner(
     bucket: str,
