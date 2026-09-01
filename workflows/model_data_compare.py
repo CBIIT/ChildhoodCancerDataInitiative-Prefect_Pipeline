@@ -88,6 +88,7 @@ class ModelSnapshot:
         return df
 
     def compare(self, other: "ModelSnapshot") -> pd.DataFrame:
+        logger = get_run_logger()
         from_keys = set(self.get_all_properties())
         to_keys = set(other.get_all_properties())
         all_keys = from_keys | to_keys
@@ -96,106 +97,127 @@ class ModelSnapshot:
         rows = []
 
         for node_name, prop_name in sorted(all_keys):
-            from_prop = self.get_property(node_name, prop_name)
-            to_prop = other.get_property(node_name, prop_name)
+            try:
+                from_prop = self.get_property(node_name, prop_name)
+                to_prop = other.get_property(node_name, prop_name)
 
-            if from_prop and not to_prop:
+                logger.info(
+                    f"Comparing node={node_name}, property={prop_name}"
+                )
+
+                if from_prop and not to_prop:
+                    rows.append({
+                        "node":                 node_name,
+                        "property":             prop_name,
+                        "change_type":          "DELETION",
+                        "from_type":            from_prop.prop_type,
+                        "to_type":              "",
+                        "from_required":        from_prop.required,
+                        "to_required":          "",
+                        "from_is_key":          from_prop.is_key,
+                        "to_is_key":            "",
+                        "from_value_set_terms": ";".join(from_prop.value_set_terms),
+                        "to_value_set_terms":   "",
+                        "from_version":         self.version,
+                        "to_version":           other.version,
+                    })
+                    continue
+
+                if not from_prop and to_prop:
+                    rows.append({
+                        "node":                 node_name,
+                        "property":             prop_name,
+                        "change_type":          "ADDITION",
+                        "from_type":            "",
+                        "to_type":              to_prop.prop_type,
+                        "from_required":        "",
+                        "to_required":          to_prop.required,
+                        "from_is_key":          "",
+                        "to_is_key":            to_prop.is_key,
+                        "from_value_set_terms": "",
+                        "to_value_set_terms":   ";".join(to_prop.value_set_terms),
+                        "from_version":         self.version,
+                        "to_version":           other.version,
+                    })
+                    continue
+
+                changes = []
+                if from_prop.prop_type != to_prop.prop_type:
+                    changes.append("type")
+                if from_prop.required != to_prop.required:
+                    changes.append("required")
+                if from_prop.is_key != to_prop.is_key:
+                    changes.append("is_key")
+
+                from_terms = set(from_prop.value_set_terms)
+                to_terms = set(to_prop.value_set_terms)
+                removed_terms = from_terms - to_terms
+                added_terms = to_terms - from_terms
+                if removed_terms or added_terms:
+                    changes.append("value_set_terms")
+
+                if not changes:
+                    continue
+
                 rows.append({
                     "node":                 node_name,
                     "property":             prop_name,
-                    "change_type":          "DELETION",
+                    "change_type":          "CHANGED:" + ",".join(changes),
                     "from_type":            from_prop.prop_type,
-                    "to_type":              "",
-                    "from_required":        from_prop.required,
-                    "to_required":          "",
-                    "from_is_key":          from_prop.is_key,
-                    "to_is_key":            "",
-                    "from_value_set_terms": ";".join(from_prop.value_set_terms),
-                    "to_value_set_terms":   "",
-                    "from_version":         self.version,
-                    "to_version":           other.version,
-                })
-                continue
-
-            if not from_prop and to_prop:
-                rows.append({
-                    "node":                 node_name,
-                    "property":             prop_name,
-                    "change_type":          "ADDITION",
-                    "from_type":            "",
                     "to_type":              to_prop.prop_type,
-                    "from_required":        "",
+                    "from_required":        from_prop.required,
                     "to_required":          to_prop.required,
-                    "from_is_key":          "",
+                    "from_is_key":          from_prop.is_key,
                     "to_is_key":            to_prop.is_key,
-                    "from_value_set_terms": "",
-                    "to_value_set_terms":   ";".join(to_prop.value_set_terms),
+                    "from_value_set_terms": ";".join(sorted(removed_terms)),
+                    "to_value_set_terms":   ";".join(sorted(added_terms)),
                     "from_version":         self.version,
                     "to_version":           other.version,
                 })
-                continue
 
-            changes = []
-            if from_prop.prop_type != to_prop.prop_type:
-                changes.append("type")
-            if from_prop.required != to_prop.required:
-                changes.append("required")
-            if from_prop.is_key != to_prop.is_key:
-                changes.append("is_key")
+            except Exception as e:
+                            logger.exception(
+                                f"Failed comparing node={node_name}, property={prop_name}: "
+                                f"{type(e).__name__}: {e}"
+                            )
+                            raise
 
-            from_terms = set(from_prop.value_set_terms)
-            to_terms = set(to_prop.value_set_terms)
-            removed_terms = from_terms - to_terms
-            added_terms = to_terms - from_terms
-            if removed_terms or added_terms:
-                changes.append("value_set_terms")
+            for node_name in sorted(all_node_names):
+                try:
+                    from_node = self.get_node(node_name)
+                    to_node = other.get_node(node_name)
+                    logger.debug(f"Comparing parent nodes for node={node_name}")
 
-            if not changes:
-                continue
+                    from_parents = set(from_node.parent_nodes) if from_node else set()
+                    to_parents = set(to_node.parent_nodes) if to_node else set()
+                    removed_parents = from_parents - to_parents
+                    added_parents = to_parents - from_parents
 
-            rows.append({
-                "node":                 node_name,
-                "property":             prop_name,
-                "change_type":          "CHANGED:" + ",".join(changes),
-                "from_type":            from_prop.prop_type,
-                "to_type":              to_prop.prop_type,
-                "from_required":        from_prop.required,
-                "to_required":          to_prop.required,
-                "from_is_key":          from_prop.is_key,
-                "to_is_key":            to_prop.is_key,
-                "from_value_set_terms": ";".join(sorted(removed_terms)),
-                "to_value_set_terms":   ";".join(sorted(added_terms)),
-                "from_version":         self.version,
-                "to_version":           other.version,
-            })
+                    if not removed_parents and not added_parents:
+                        continue
 
-        for node_name in sorted(all_node_names):
-            from_node = self.get_node(node_name)
-            to_node = other.get_node(node_name)
+                    rows.append({
+                        "node":                 node_name,
+                        "property":             "parent_nodes",
+                        "change_type":          "CHANGED:parent_nodes",
+                        "from_type":            "relationship",
+                        "to_type":              "relationship",
+                        "from_required":        "",
+                        "to_required":          "",
+                        "from_is_key":          "",
+                        "to_is_key":            "",
+                        "from_value_set_terms": ";".join(sorted(removed_parents)),
+                        "to_value_set_terms":   ";".join(sorted(added_parents)),
+                        "from_version":         self.version,
+                        "to_version":           other.version,
+                    })
 
-            from_parents = set(from_node.parent_nodes) if from_node else set()
-            to_parents = set(to_node.parent_nodes) if to_node else set()
-            removed_parents = from_parents - to_parents
-            added_parents = to_parents - from_parents
-
-            if not removed_parents and not added_parents:
-                continue
-
-            rows.append({
-                "node":                 node_name,
-                "property":             "parent_nodes",
-                "change_type":          "CHANGED:parent_nodes",
-                "from_type":            "relationship",
-                "to_type":              "relationship",
-                "from_required":        "",
-                "to_required":          "",
-                "from_is_key":          "",
-                "to_is_key":            "",
-                "from_value_set_terms": ";".join(sorted(removed_parents)),
-                "to_value_set_terms":   ";".join(sorted(added_parents)),
-                "from_version":         self.version,
-                "to_version":           other.version,
-            })
+                except Exception as e:
+                    logger.exception(
+                        f"Failed comparing node={node_name}, property=parent_nodes: "
+                        f"{type(e).__name__}: {e}"
+                    )
+                    raise
 
         return pd.DataFrame(rows)
 
@@ -500,8 +522,22 @@ def runner(
     snapshot_new = parse_model(model_parsed_new, new_model_version)
 
     # ── our own structured comparison (used for DB querying) ─────────────────
-    logger.info(f"Comparing snapshots for {old_model_repository} at {old_model_version} and {new_model_repository} at {new_model_version}.")
-    diff_df = snapshot_old.compare(snapshot_new)
+    logger.info(
+        f"Comparing snapshots for {old_model_repository} at {old_model_version} "
+        f"and {new_model_repository} at {new_model_version}."
+    )
+
+    try:
+        diff_df = snapshot_old.compare(snapshot_new)
+        logger.info(
+            f"Snapshot comparison completed successfully. "
+            f"Found {len(diff_df)} differences."
+        )
+    except Exception as e:
+        logger.exception(
+            f"Snapshot comparison failed: {type(e).__name__}: {e}"
+        )
+        raise
 
     # ── bento-mdf diff_models comparison (richer attribute-level diff) ────────
     logger.info(f"Performing bento-mdf diff_models comparison for {old_model_repository} at {old_model_version} and {new_model_repository} at {new_model_version}.")
