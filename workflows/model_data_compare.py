@@ -249,7 +249,7 @@ def flatten_diff_to_dataframe(diff_result: dict, from_version: str, to_version: 
         section = diff_result.get(ent_type, {})
 
         # removed entities
-        for key, val in section.get("removed", {}).items():
+        for key, val in (section.get("removed") or {}).items():
             rows.append({
                 "entity_type":  ent_type,
                 "key":          str(key),
@@ -262,7 +262,7 @@ def flatten_diff_to_dataframe(diff_result: dict, from_version: str, to_version: 
             })
 
         # added entities
-        for key, val in section.get("added", {}).items():
+        for key, val in (section.get("added") or {}).items():
             rows.append({
                 "entity_type":  ent_type,
                 "key":          str(key),
@@ -275,7 +275,7 @@ def flatten_diff_to_dataframe(diff_result: dict, from_version: str, to_version: 
             })
 
         # changed entities
-        for key, attr_dict in section.get("changed", {}).items():
+        for key, attr_dict in (section.get("changed") or {}).items():
             for attr, change in attr_dict.items():
                 rows.append({
                     "entity_type":  ent_type,
