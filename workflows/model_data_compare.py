@@ -1,12 +1,12 @@
 import requests
 import pandas as pd
 import os
-from prefect import flow, task, get_run_logger, pause_flow_run
+from prefect import flow, task, get_run_logger
 from prefect.input import RunInput
 from src.utils import get_secret_centralized_worker, get_time, file_dl, file_ul
 from meval.parser import ModelParser
-from bento_mdf.diff import diff_models  
-import requests
+from bento_mdf import MDFReader
+from bento_mdf.diff import diff_models
 from dataclasses import dataclass, field
 from neo4j import GraphDatabase, basic_auth
 
@@ -14,6 +14,9 @@ from neo4j import GraphDatabase, basic_auth
 class InputValues(RunInput):
     node: str
     property: str
+
+
+# ── dataclasses ───────────────────────────────────────────────────────────────
 
 @dataclass
 class PropertyRecord:
@@ -197,112 +200,73 @@ class ModelSnapshot:
         return pd.DataFrame(rows)
 
 
-# ── database querying ─────────────────────────────────────────────────────────
+# ── helpers ───────────────────────────────────────────────────────────────────
 
-def query_node_property(driver, node: str, prop: str) -> list[dict]:
+def pull_model_data_files(model, version, file_type, output_file):
+    if file_type == "model":
+        url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}.yml"
+    elif file_type == "props":
+        url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}-{file_type}.yml"
+    response = requests.get(url)
+    response.raise_for_status()
+
+    with open(output_file, "w") as f:
+        f.write(response.text)
+
+    return output_file
+
+
+def flatten_diff_to_dataframe(diff_result: dict, from_version: str, to_version: str) -> pd.DataFrame:
     """
-    Query all records for a given node and property from the database.
-    Traverses up to the study node to retrieve study_id.
-    Returns a list of dicts with: study_id, node, property, guid, current_value.
+    Flatten the nested dict returned by diff_models into a TSV-friendly dataframe.
+    Handles nodes, edges, props, and terms sections.
     """
-    query = f"""
-        MATCH (n:{node})
-        WHERE n.{prop} IS NOT NULL
-        OPTIONAL MATCH path = (n)-[*0..5]->(s:study)
-        WITH n,
-            coalesce(s.study_id, 'unknown') AS study_id
-        RETURN
-            study_id                    AS study_id,
-            '{node}'                    AS node,
-            '{prop}'                    AS property,
-            coalesce(n.guid, n.id, '')  AS guid,
-            n.{prop}                    AS current_value
-    """
-    with driver.session() as session:
-        result = session.run(query)
-        return [dict(record) for record in result]
+    rows = []
 
-@task("Check DB data against diff")
-def check_data_against_diff(
-    driver,
-    diff_df: pd.DataFrame,
-    snapshot_new: ModelSnapshot,
-    logger,
-) -> pd.DataFrame:
-    """
-    For each DELETION or CHANGED row in diff_df, query the database to find
-    records whose current values may be invalid under the new model.
+    for ent_type in ["nodes", "edges", "props", "terms"]:
+        section = diff_result.get(ent_type, {})
 
-    Returns a line-level report dataframe with columns:
-        study_id, node, property, guid, current_value, change_type, issue
-    """
-    # only check deletions and changes — additions don't affect existing data
-    actionable = diff_df[
-        diff_df["change_type"].str.startswith("DELETION") |
-        diff_df["change_type"].str.startswith("CHANGED")
-    ].copy()
+        # removed entities
+        for key, val in section.get("removed", {}).items():
+            rows.append({
+                "entity_type":  ent_type,
+                "key":          str(key),
+                "change_type":  "DELETION",
+                "attribute":    "",
+                "from_value":   str(val),
+                "to_value":     "",
+                "from_version": from_version,
+                "to_version":   to_version,
+            })
 
-    # skip parent_node relationship rows — not a queryable property
-    actionable = actionable[actionable["property"] != "parent_nodes"]
+        # added entities
+        for key, val in section.get("added", {}).items():
+            rows.append({
+                "entity_type":  ent_type,
+                "key":          str(key),
+                "change_type":  "ADDITION",
+                "attribute":    "",
+                "from_value":   "",
+                "to_value":     str(val),
+                "from_version": from_version,
+                "to_version":   to_version,
+            })
 
-    report_rows = []
-
-    for _, row in actionable.iterrows():
-        node      = row["node"]
-        prop      = row["property"]
-        change    = row["change_type"]
-
-        logger.info(f"Querying database for node={node}, property={prop}, change={change}")
-
-        try:
-            db_records = query_node_property(driver=driver, node=node, prop=prop)
-        except Exception as e:
-            logger.warning(f"Query failed for node={node}, property={prop}: {e}")
-            continue
-
-        if not db_records:
-            logger.info(f"No records found in database for node={node}, property={prop}")
-            continue
-
-        for record in db_records:
-            current_value = record.get("current_value")
-            issue = None
-
-            if change == "DELETION":
-                # property no longer exists in the new model — any value is invalid
-                issue = "Property deleted from model"
-
-            elif "value_set_terms" in change:
-                # check if the current value is in the removed terms
-                removed_terms = set(row["from_value_set_terms"].split(";")) if row["from_value_set_terms"] else set()
-                new_prop = snapshot_new.get_property(node, prop)
-                valid_terms = set(new_prop.value_set_terms) if new_prop else set()
-
-                if str(current_value) in removed_terms and str(current_value) not in valid_terms:
-                    issue = f"Value '{current_value}' removed from value set"
-
-            elif "type" in change:
-                # property type changed — flag all existing values for review
-                issue = f"Property type changed from '{row['from_type']}' to '{row['to_type']}'"
-
-            elif "required" in change:
-                # property became required — flag nulls
-                if current_value is None or current_value == "":
-                    issue = "Property is now required but value is missing"
-
-            # only include records where an issue was identified
-            if issue:
-                report_rows.append({
-                    "study_id":      record.get("study_id", "unknown"),
-                    "node":          node,
-                    "property":      prop,
-                    "guid":          record.get("guid", ""),
-                    "current_value": current_value,
-                    "change_type":   change,
-                    "issue":         issue,
+        # changed entities
+        for key, attr_dict in section.get("changed", {}).items():
+            for attr, change in attr_dict.items():
+                rows.append({
+                    "entity_type":  ent_type,
+                    "key":          str(key),
+                    "change_type":  "CHANGED",
+                    "attribute":    attr,
+                    "from_value":   str(change.get("removed", "")),
+                    "to_value":     str(change.get("added", "")),
+                    "from_version": from_version,
+                    "to_version":   to_version,
                 })
 
-    return pd.DataFrame(report_rows)
+    return pd.DataFrame(rows)
 
 
 # ── model parsing ─────────────────────────────────────────────────────────────
@@ -366,20 +330,107 @@ def parse_model(model_parsed, version: str) -> ModelSnapshot:
     return snapshot
 
 
-# ── helpers ───────────────────────────────────────────────────────────────────
+# ── database querying ─────────────────────────────────────────────────────────
 
-def pull_model_data_files(model, version, file_type, output_file):
-    if file_type == "model":
-        url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}.yml"
-    elif file_type == "props":
-        url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}-{file_type}.yml"
-    response = requests.get(url)
-    response.raise_for_status()
+def query_node_property(driver, node: str, prop: str) -> list[dict]:
+    """
+    Query all records for a given node and property from the database.
+    Traverses up to the study node to retrieve study_id.
+    Returns a list of dicts with: study_id, node, property, guid, current_value.
+    """
+    query = f"""
+        MATCH (n:{node})
+        WHERE n.{prop} IS NOT NULL
+        OPTIONAL MATCH path = (n)-[*0..5]->(s:study)
+        WITH n,
+            coalesce(s.study_id, 'unknown') AS study_id
+        RETURN
+            study_id                    AS study_id,
+            '{node}'                    AS node,
+            '{prop}'                    AS property,
+            coalesce(n.guid, n.id, '')  AS guid,
+            n.{prop}                    AS current_value
+    """
+    with driver.session() as session:
+        result = session.run(query)
+        return [dict(record) for record in result]
 
-    with open(output_file, "w") as f:
-        f.write(response.text)
 
-    return output_file
+@task(name="Check DB data against diff")
+def check_data_against_diff(
+    driver,
+    diff_df: pd.DataFrame,
+    snapshot_new: ModelSnapshot,
+    logger,
+) -> pd.DataFrame:
+    """
+    For each DELETION or CHANGED row in diff_df, query the database to find
+    records whose current values may be invalid under the new model.
+
+    Returns a line-level report dataframe with columns:
+        study_id, node, property, guid, current_value, change_type, issue
+    """
+    # only check deletions and changes — additions don't affect existing data
+    actionable = diff_df[
+        diff_df["change_type"].str.startswith("DELETION") |
+        diff_df["change_type"].str.startswith("CHANGED")
+    ].copy()
+
+    # skip parent_node relationship rows — not a queryable property
+    actionable = actionable[actionable["property"] != "parent_nodes"]
+
+    report_rows = []
+
+    for _, row in actionable.iterrows():
+        node   = row["node"]
+        prop   = row["property"]
+        change = row["change_type"]
+
+        logger.info(f"Querying database for node={node}, property={prop}, change={change}")
+
+        try:
+            db_records = query_node_property(driver=driver, node=node, prop=prop)
+        except Exception as e:
+            logger.warning(f"Query failed for node={node}, property={prop}: {e}")
+            continue
+
+        if not db_records:
+            logger.info(f"No records found in database for node={node}, property={prop}")
+            continue
+
+        for record in db_records:
+            current_value = record.get("current_value")
+            issue = None
+
+            if change == "DELETION":
+                issue = "Property deleted from model"
+
+            elif "value_set_terms" in change:
+                removed_terms = set(row["from_value_set_terms"].split(";")) if row["from_value_set_terms"] else set()
+                new_prop = snapshot_new.get_property(node, prop)
+                valid_terms = set(new_prop.value_set_terms) if new_prop else set()
+                if str(current_value) in removed_terms and str(current_value) not in valid_terms:
+                    issue = f"Value '{current_value}' removed from value set"
+
+            elif "type" in change:
+                issue = f"Property type changed from '{row['from_type']}' to '{row['to_type']}'"
+
+            elif "required" in change:
+                if current_value is None or current_value == "":
+                    issue = "Property is now required but value is missing"
+
+            if issue:
+                report_rows.append({
+                    "study_id":      record.get("study_id", "unknown"),
+                    "node":          node,
+                    "property":      prop,
+                    "guid":          record.get("guid", ""),
+                    "current_value": current_value,
+                    "change_type":   change,
+                    "issue":         issue,
+                })
+
+    return pd.DataFrame(report_rows)
 
 
 # ── main flow ─────────────────────────────────────────────────────────────────
@@ -408,7 +459,7 @@ def runner(
     output_folder = os.path.join(runner, "model_data_compare_" + current_date)
     prefix = f"{old_model_repository}_{old_model_version}_{new_model_repository}_{new_model_version}"
 
-    # ── fetch models ──────────────────────────────────────────────────────────
+    # ── fetch model files ─────────────────────────────────────────────────────
     old_model_file_yaml = pull_model_data_files(
         model=old_model_repository, version=old_model_version,
         file_type="model", output_file="old_model.yaml",
@@ -433,7 +484,7 @@ def runner(
     )
     logger.info(f"{new_model_repository} properties at {new_model_version} found.")
 
-    # ── parse models ──────────────────────────────────────────────────────────
+    # ── parse models via meval ModelParser (for ModelSnapshot) ───────────────
     model_parsed_old = ModelParser(
         model_file=old_model_file_yaml, props_file=old_props_file_yaml,
         handle=old_model_version,
@@ -443,18 +494,43 @@ def runner(
         handle=new_model_version,
     )
 
-    # snapshot_old = parse_model(model_parsed_old, old_model_version)
-    # snapshot_new = parse_model(model_parsed_new, new_model_version)
+    snapshot_old = parse_model(model_parsed_old, old_model_version)
+    snapshot_new = parse_model(model_parsed_new, new_model_version)
 
-    # diff_df = snapshot_old.compare(snapshot_new)
+    # ── our own structured comparison (used for DB querying) ─────────────────
+    diff_df = snapshot_old.compare(snapshot_new)
 
-    diff_df = diff_models(model_parsed_new.model, model_parsed_old.model, objects_as_dicts = True, include_summary = True)
+    # ── bento-mdf diff_models comparison (richer attribute-level diff) ────────
+    mdf_old = MDFReader(old_model_file_yaml, old_props_file_yaml, handle=old_model_version)
+    mdf_new = MDFReader(new_model_file_yaml, new_props_file_yaml, handle=new_model_version)
 
-    # ── save model comparison ─────────────────────────────────────────────────
+    bento_diff_result = diff_models(
+        mdf_old.model,
+        mdf_new.model,
+        objects_as_dicts=True,
+        include_summary=True,
+    )
+    logger.info(f"bento-mdf diff summary: {bento_diff_result.get('summary', {})}")
+
+    bento_diff_df = flatten_diff_to_dataframe(
+        diff_result=bento_diff_result,
+        from_version=old_model_version,
+        to_version=new_model_version,
+    )
+
+    # ── save outputs ──────────────────────────────────────────────────────────
+
+    # our structured comparison
     comparison_file_name = f"{prefix}_comparison_{current_date}.tsv"
     diff_df.to_csv(comparison_file_name, sep="\t", index=False)
     file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=comparison_file_name)
-    logger.info(f"Model comparison written to {comparison_file_name}")
+    logger.info(f"Structured comparison written to {comparison_file_name}")
+
+    # bento-mdf attribute-level diff
+    bento_comparison_file_name = f"{prefix}_bento_diff_{current_date}.tsv"
+    bento_diff_df.to_csv(bento_comparison_file_name, sep="\t", index=False)
+    file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=bento_comparison_file_name)
+    logger.info(f"Bento-mdf diff written to {bento_comparison_file_name}")
 
     # ── check against database ────────────────────────────────────────────────
     if check_against_database:
@@ -484,7 +560,7 @@ def runner(
             data_report_df = check_data_against_diff(
                 driver=driver,
                 diff_df=diff_df,
-                snapshot_new=model_parsed_new.model,
+                snapshot_new=snapshot_new,
                 logger=logger,
             )
         finally:
