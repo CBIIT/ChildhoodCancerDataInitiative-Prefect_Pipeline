@@ -43,6 +43,31 @@ def _serialize_value(val) -> str:
         return ";".join(str(v) for v in val)
     return str(val)
 
+def truncate_value_field(value: str, max_entries: int = 10, delimiter: str = ";") -> str:
+    """
+    Truncate a delimited value field to max_entries items.
+    Appends a note if truncation occurred.
+    """
+    if not value or not isinstance(value, str):
+        return value
+    parts = value.split(delimiter)
+    if len(parts) <= max_entries:
+        return value
+    truncated = delimiter.join(parts[:max_entries])
+    return f"{truncated} ... [{len(parts) - max_entries} more values truncated]"
+
+
+def truncate_diff_dataframe(df: pd.DataFrame, max_entries: int = 10) -> pd.DataFrame:
+    """
+    Truncate from_value and to_value columns in the diff dataframe
+    to avoid Excel line-break issues caused by long semicolon-delimited lists.
+    """
+    df = df.copy()
+    for col in ["from_value", "to_value"]:
+        if col in df.columns:
+            df[col] = df[col].apply(lambda x: truncate_value_field(x, max_entries))
+    return df
+
 @task(name="flatten diff to dataframe", log_prints=True)
 def flatten_diff_to_dataframe(
     diff_result: dict,
@@ -351,7 +376,7 @@ def runner(
     file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=comparison_file_name)
     logger.info(f"Comparison written to {comparison_file_name}")
 
-    # ── check against database ────────────────────────────────────────────────
+    # ── check against database (uses full untruncated diff_df) ───────────────
     if check_against_database:
         logger.info("Acquiring database credentials from AWS.")
         uri_source = get_secret_centralized_worker(
@@ -398,5 +423,13 @@ def runner(
             sub_folder="", newfile=data_report_file_name,
         )
         logger.info(f"Data report written to {data_report_file_name}")
+
+    # ── truncate for Excel readability before saving ──────────────────────────
+    diff_df_truncated = truncate_diff_dataframe(diff_df, max_entries=10)
+
+    comparison_file_name = f"{prefix}_comparison_truncated_{current_date}.tsv"
+    diff_df_truncated.to_csv(comparison_file_name, sep="\t", index=False)
+    file_ul(bucket=bucket, output_folder=output_folder, sub_folder="", newfile=comparison_file_name)
+    logger.info(f"Comparison written to {comparison_file_name}")
 
     logger.info(f"Done. Outputs written to {output_folder}")
