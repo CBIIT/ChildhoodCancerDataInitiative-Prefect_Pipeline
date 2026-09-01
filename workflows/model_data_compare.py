@@ -43,7 +43,7 @@ def _serialize_value(val) -> str:
         return ";".join(str(v) for v in val)
     return str(val)
 
-
+@task(name="flatten diff to dataframe", log_prints=True)
 def flatten_diff_to_dataframe(
     diff_result: dict,
     from_version: str,
@@ -72,7 +72,7 @@ def flatten_diff_to_dataframe(
                 "entity_type":  ent_type,
                 "key":          str(key),
                 "change_type":  "DELETION",
-                "attribute":    "node_existence",
+                "attribute":    f"{ent_type}_existence",
                 "from_value":   _serialize_value(val),
                 "to_value":     "",
                 "from_version": from_version,
@@ -85,7 +85,7 @@ def flatten_diff_to_dataframe(
                 "entity_type":  ent_type,
                 "key":          str(key),
                 "change_type":  "ADDITION",
-                "attribute":    "node_existence",
+                "attribute":    f"{ent_type}_existence",
                 "from_value":   "",
                 "to_value":     _serialize_value(val),
                 "from_version": from_version,
@@ -142,7 +142,7 @@ def flatten_diff_to_dataframe(
 
 
 # ── database querying ─────────────────────────────────────────────────────────
-
+@task(name="Query node property", log_prints=True)
 def query_node_property(driver, node: str, prop: str) -> list[dict]:
     """
     Query all records for a given node and property from the database.
