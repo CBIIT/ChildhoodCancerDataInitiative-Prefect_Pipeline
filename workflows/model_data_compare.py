@@ -291,8 +291,7 @@ def check_data_against_diff(
 @flow(
     name="Model Data Compare",
     log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",
-    cache_policy=NO_CACHE
+    flow_run_name="{runner}_" + f"{get_time()}"
 )
 def runner(
     bucket: str,
