@@ -66,12 +66,18 @@ class GetDCCModel:
         self.prop_file = prop_file
         self.term_file = term_file
         self.model =  self._read_model()
+        self.mdf_dict = self._read_mdf_dict()
 
     # fixed
     def _read_model(self):
         mdf = MDFReader(self.model_file, self.prop_file, handle="dcc")
         model = mdf.model
         return model
+
+    def _read_mdf_dict(self):
+        mdf = MDFReader(self.model_file, self.prop_file, handle="dcc")
+        mdf_dict = mdf.mdf
+        return mdf_dict
 
     def _list_nodes(self) -> list:
         """Returns a list of nodes of a model"""
@@ -80,7 +86,7 @@ class GetDCCModel:
 
     def _list_node_props(self, node_name: str) -> list:
         """Returns a list of prop names of a given node"""
-        node_props = list(self.model.nodes[node_name].props)
+        node_props = self.mdf_dict["Nodes"][node_name]["Props"]
         return node_props
 
     def _read_term(self) -> dict:
