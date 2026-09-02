@@ -64,6 +64,24 @@ def truncate_diff_dataframe(df: pd.DataFrame, max_entries: int = 10) -> pd.DataF
     return df
 
 
+def _parse_key(key: str) -> tuple[str, str]:
+    """
+    Parse a bento-mdf diff key string into (node, property).
+    Handles tuples of length 2 (props), 3 (edges), and plain strings (nodes/terms).
+    """
+    try:
+        key_parsed = eval(key)
+        if isinstance(key_parsed, tuple) and len(key_parsed) == 2:
+            return str(key_parsed[0]), str(key_parsed[1])
+        elif isinstance(key_parsed, tuple) and len(key_parsed) == 3:
+            # edges: (src, rel, dst)
+            return f"{key_parsed[0]} --[{key_parsed[1]}]--> {key_parsed[2]}", ""
+        else:
+            return str(key_parsed), ""
+    except Exception:
+        return key, ""
+
+
 # ── model loading ─────────────────────────────────────────────────────────────
 
 @task(name="Load MDFReader models", log_prints=True, cache_policy=NO_CACHE)
@@ -192,6 +210,148 @@ def flatten_diff_to_dataframe(
 
     logger.info(f"Diff contains {len(df)} meaningful rows after filtering.")
     return df
+
+
+# ── comparison report ─────────────────────────────────────────────────────────
+
+@task(name="Build comparison report", log_prints=True, cache_policy=NO_CACHE)
+def build_comparison_report(
+    diff_df: pd.DataFrame,
+    from_version: str,
+    to_version: str,
+) -> pd.DataFrame:
+    """
+    Build a clean human-readable comparison report from the diff dataframe.
+    - Drops terms entity_type rows (too granular for this report)
+    - Parses tuple keys into readable node/property columns
+    - Generates a human-readable description column for each change
+    - Truncates from_value/to_value to 10 entries for Excel readability
+    """
+    logger = get_run_logger()
+
+    # drop terms — too granular and noisy for the comparison report
+    df = diff_df[diff_df["entity_type"] != "terms"].copy()
+
+    rows = []
+    for _, row in df.iterrows():
+        ent_type    = row["entity_type"]
+        key         = row["key"]
+        change_type = row["change_type"]
+        attribute   = row["attribute"]
+        from_val    = row["from_value"]
+        to_val      = row["to_value"]
+
+        node, prop = _parse_key(key)
+
+        # build a human-readable description of the change
+        if change_type == "DELETION":
+            description = f"{ent_type.rstrip('s').capitalize()} removed from model"
+
+        elif change_type == "ADDITION":
+            description = f"{ent_type.rstrip('s').capitalize()} added to model"
+
+        elif change_type == "CHANGED":
+            if attribute == "value_domain":
+                description = f"Type changed: '{from_val}' → '{to_val}'"
+
+            elif attribute in ("value_set", "concept"):
+                from_terms = set(from_val.split(";")) if from_val else set()
+                to_terms   = set(to_val.split(";")) if to_val else set()
+                removed    = from_terms - to_terms
+                added      = to_terms - from_terms
+                parts = []
+                if removed:
+                    parts.append(f"{len(removed)} term(s) removed")
+                if added:
+                    parts.append(f"{len(added)} term(s) added")
+                description = "Value set changed: " + ", ".join(parts)
+
+            elif attribute == "is_required":
+                if to_val == "True":
+                    description = "Property became required"
+                else:
+                    description = "Property became optional"
+
+            elif attribute == "is_key":
+                description = f"Key status changed: '{from_val}' → '{to_val}'"
+
+            elif attribute == "is_deprecated":
+                description = f"Deprecated status changed: '{from_val}' → '{to_val}'"
+
+            elif attribute in ("src", "dst"):
+                description = f"Edge endpoint changed ({attribute}): '{from_val}' → '{to_val}'"
+
+            elif attribute.endswith("_existence"):
+                description = f"{ent_type.rstrip('s').capitalize()} existence changed"
+
+            else:
+                description = f"Attribute '{attribute}' changed: '{from_val}' → '{to_val}'"
+        else:
+            description = change_type
+
+        rows.append({
+            "entity_type":  ent_type,
+            "node":         node,
+            "property":     prop,
+            "change_type":  change_type,
+            "attribute":    attribute,
+            "description":  description,
+            "from_value":   truncate_value_field(from_val, max_entries=10),
+            "to_value":     truncate_value_field(to_val, max_entries=10),
+            "from_version": from_version,
+            "to_version":   to_version,
+        })
+
+    result = pd.DataFrame(rows, columns=[
+        "entity_type", "node", "property", "change_type",
+        "attribute", "description", "from_value", "to_value",
+        "from_version", "to_version",
+    ])
+    result = result.sort_values(
+        by=["entity_type", "change_type", "node", "property"],
+        ignore_index=True,
+    )
+
+    logger.info(f"Comparison report built with {len(result)} rows.")
+    return result
+
+
+# ── data report summary ───────────────────────────────────────────────────────
+
+@task(name="Build data report summary", log_prints=True, cache_policy=NO_CACHE)
+def build_data_report_summary(data_report_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Summarize the line-level data report into a higher-level view showing
+    which study, node, and property combinations need attention, and how many
+    records are affected.
+    """
+    logger = get_run_logger()
+
+    if data_report_df.empty:
+        logger.info("Data report is empty — no summary to build.")
+        return pd.DataFrame(columns=[
+            "study_id", "node", "property", "change_type",
+            "attribute", "issue", "affected_record_count",
+        ])
+
+    summary = (
+        data_report_df.groupby(
+            ["study_id", "node", "property", "change_type", "attribute", "issue"],
+            dropna=False,
+        )
+        .size()
+        .reset_index(name="affected_record_count")
+        .sort_values(
+            by=["study_id", "node", "property"],
+            ignore_index=True,
+        )
+    )
+
+    logger.info(
+        f"Data report summary built: {len(summary)} unique study/node/property/issue combinations "
+        f"across {data_report_df['study_id'].nunique()} studies."
+    )
+    return summary
 
 
 # ── database querying ─────────────────────────────────────────────────────────
@@ -422,6 +582,7 @@ def runner(
             driver.close()
             logger.info("Database driver closed.")
 
+        # ── save full line-level data report (existing output) ────────────────
         if data_report_df.empty:
             logger.info("No data issues found against the new model.")
         else:
@@ -434,7 +595,16 @@ def runner(
             output_folder=output_folder,
         )
 
-    # ── save full untruncated diff ────────────────────────────────────────────
+        # ── save summarized data report (new output) ──────────────────────────
+        data_report_summary = build_data_report_summary(data_report_df)
+        save_and_upload(
+            df=data_report_summary,
+            file_name=f"{prefix}_data_report_summary_{current_date}.tsv",
+            bucket=bucket,
+            output_folder=output_folder,
+        )
+
+    # ── save full untruncated diff (existing output) ──────────────────────────
     save_and_upload(
         df=diff_df,
         file_name=f"{prefix}_comparison_{current_date}.tsv",
@@ -442,11 +612,24 @@ def runner(
         output_folder=output_folder,
     )
 
-    # ── truncate for Excel readability and save separately ────────────────────
+    # ── save truncated diff for Excel (existing output) ───────────────────────
     diff_df_truncated = truncate_diff_dataframe(diff_df, max_entries=10)
     save_and_upload(
         df=diff_df_truncated,
         file_name=f"{prefix}_comparison_truncated_{current_date}.tsv",
+        bucket=bucket,
+        output_folder=output_folder,
+    )
+
+    # ── save human-readable comparison report (new output) ───────────────────
+    comparison_report = build_comparison_report(
+        diff_df=diff_df,
+        from_version=old_model_version,
+        to_version=new_model_version,
+    )
+    save_and_upload(
+        df=comparison_report,
+        file_name=f"{prefix}_comparison_report_{current_date}.tsv",
         bucket=bucket,
         output_folder=output_folder,
     )
