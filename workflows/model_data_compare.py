@@ -64,18 +64,28 @@ def truncate_diff_dataframe(df: pd.DataFrame, max_entries: int = 10) -> pd.DataF
     return df
 
 
-def _parse_key(key: str) -> tuple[str, str]:
+def _parse_key(key: str, ent_type: str = "") -> tuple[str, str]:
     """
     Parse a bento-mdf diff key string into (node, property).
     Handles tuples of length 2 (props), 3 (edges), and plain strings (nodes/terms).
+
+    For edges, the node column is the source node of the relationship,
+    and the property column is derived from the destination node as [dst].[dst]_id.
+
+    Example:
+        key = "('of_cell_line', 'cell_line', 'participant')"
+        returns: ("of_cell_line --[cell_line]--> participant", "participant.participant_id")
     """
     try:
         key_parsed = eval(key)
         if isinstance(key_parsed, tuple) and len(key_parsed) == 2:
             return str(key_parsed[0]), str(key_parsed[1])
         elif isinstance(key_parsed, tuple) and len(key_parsed) == 3:
-            # edges: (src, rel, dst)
-            return f"{key_parsed[0]} --[{key_parsed[1]}]--> {key_parsed[2]}", ""
+            # edges: (src_relationship, relationship_label, dst_node)
+            src, rel, dst = key_parsed
+            node = f"{src} --[{rel}]--> {dst}"
+            prop = f"{dst}.{dst}_id"
+            return node, prop
         else:
             return str(key_parsed), ""
     except Exception:
