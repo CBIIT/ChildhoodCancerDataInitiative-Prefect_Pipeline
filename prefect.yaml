@@ -1917,3 +1917,42 @@ deployments:
       name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {} 
+
+  - name: model-data-compare-v3
+    version: null
+    tags: ["TEST","MDF","SVB","CCDIDC-2650","Centralized Worker","V3"]
+    description: Create a mapping file between two models, find the diffs and then apply it to the current data to see what must change.
+    entrypoint: workflows/model_data_compare.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-dcc"
+      runner: "your_runner"
+      old_model_repository: "ccdi-dcc-model"
+      new_model_repository: "ccdi-dcc-model"
+      old_model_version: "1.0.0"
+      new_model_version: "2.0.0"
+      check_against_database: false
+      database_source_account_id: ""
+      database_source_secret_path: ""
+      database_source_secret_key_ip: ""
+      database_source_secret_key_username: ""
+      database_source_secret_key_password: ""
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: CCDIDC-2650-MvM_data_update
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {} 
