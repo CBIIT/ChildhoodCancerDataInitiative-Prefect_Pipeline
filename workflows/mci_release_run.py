@@ -1,6 +1,7 @@
 import os
 import sys
 from prefect import flow, get_run_logger, pause_flow_run
+from typing import Literal
 
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
@@ -10,10 +11,11 @@ from src.mci_monthly_release import (
     ProceedtoMergeInput,
     MCIInputDescriptionMD,
 )
-from src.utils import file_dl, get_time, file_ul, get_date, CCDI_DCC_Tags
+from src.utils import file_dl, get_time, file_ul, get_date, CCDI_DCC_Tags, CCDI_Tags
 from src.file_mover import parse_file_url
 from src.submission_cruncher import concatenate_submissions
 
+DropDownChoices = Literal["ccdi-dcc", "ccdi"]
 
 @flow(name="MCI monthly release manifest", log_prints=True)
 def mci_release_manifest(
@@ -21,6 +23,7 @@ def mci_release_manifest(
     mci_manifests_bucket_path: str,
     previous_pull_list_path: str,
     runner: str,
+    template_source: DropDownChoices,
     template_tag: str = "1.0.0",
 ) -> None:
     """Pipeline that finds newly added manifests in a given bucket folder and combines them into a single CCDI manifest
@@ -28,7 +31,8 @@ def mci_release_manifest(
     Args:
         bucket (str): Bucket name of where output goes to
         mci_manifests_bucket_path (str): Bucket path where newly added manifests are
-        template_tag (str): A CCDI-DCC template tag to use for combining new manifests. Default is 1.0.0
+        template_source (DropDownChoices): A CCDI or CCDI-DCC template source to use for combining new manifests
+        template_tag (str): A template tag/version to use for combining new manifests. Default is 1.0.0
         previous_pull_list_path (str): A file path in the given bucket that contains a list of previously pulled file names
         runner (str): Unique runner name
     """    
@@ -101,9 +105,21 @@ def mci_release_manifest(
         )
 
         # download the template of a given tag
-        template_name = CCDI_DCC_Tags().download_tag_manifest(
-            tag=template_tag, logger=logger
-        )
+        if template_source == "ccdi-dcc":
+            template_name = CCDI_DCC_Tags().download_tag_manifest(
+                tag=template_tag, logger=logger
+            )
+        elif template_source == "ccdi":
+            template_name = CCDI_Tags().download_tag_manifest(
+                tag=template_tag, logger=logger
+            )
+        else:
+            logger.error(
+                f"Invalid template source {template_source}. Please choose either ccdi-dcc or ccdi"
+            )
+            raise ValueError(
+                f"Invalid template source {template_source}. Please choose either ccdi-dcc or ccdi"
+            )
 
         # run submission cruncher
         # list all the files under submission_folder_path and filter list based on the file extension
