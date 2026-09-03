@@ -655,7 +655,7 @@ def runner(
         folder_ul(
             local_folder=f"{working_dir}",
             bucket=bucket,
-            destination=runner + "/",
+            destination=runner,
             sub_folder="",
         )
 
