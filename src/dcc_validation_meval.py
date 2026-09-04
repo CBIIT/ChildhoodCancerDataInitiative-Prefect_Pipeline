@@ -33,8 +33,8 @@ def meval_validation_summary(val_filepath: str) -> str:
         for record in records:
             # looks through messages key value
             record_messages = record.get("messages", {})
-            warning_messages = record_messages.get("warning", [])
-            error_messages = record_messages.get("error", [])
+            warning_messages = record_messages.get("warnings", [])
+            error_messages = record_messages.get("errors", [])
             if len(warning_messages) > 0 and len(error_messages) == 0:
                 warning_only_records += 1
             if len(error_messages) > 0:
