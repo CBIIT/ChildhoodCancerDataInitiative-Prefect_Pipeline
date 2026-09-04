@@ -365,7 +365,7 @@ def runner_dcc(
         # run meval validation
         runner_logger.info("Running MEVAL validation flow")
         try:
-            meval_validation_report = validate_submission_meval(
+            meval_validation_report, meval_val_summary = validate_submission_meval(
                 manifest_filepath=catcherr_out_file,
                 data_yml=dcc_model_yml,
                 props_yml=dcc_props_yml,
@@ -373,6 +373,7 @@ def runner_dcc(
             )
         except Exception as e:
             meval_validation_report = None
+            meval_val_summary = None
             runner_logger.error(f"MEVAL validation failed: {e}")
         runner_logger.info(f"Uploading MEVAL validation report to bucket {bucket}")
         ccdi_wf_outputs_ul(
@@ -382,6 +383,13 @@ def runner_dcc(
             output_log=None,
             sub_folder="6_MEVAL_validation_output",
         )
+        ccdi_wf_outputs_ul(
+                    bucket=bucket,
+                    output_folder=output_folder,
+                    output_path=meval_val_summary,
+                    output_log=None,
+                    sub_folder="6_MEVAL_validation_output",
+                )
     else:
         pass
 

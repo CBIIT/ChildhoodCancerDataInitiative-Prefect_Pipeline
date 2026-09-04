@@ -11,6 +11,47 @@ from bento_mdf import MDFReader
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from workflow.validate_submission import download_model_files
 
+
+def meval_validation_summary(val_filepath: str) -> str:
+    """Reads the meval validation report and create a short cut
+
+    Args:
+        val_filepath (str): filepath of validation report from meval record validation
+
+    Returns:
+        str: summary of the validation report
+    """
+    with open(val_filepath, "r") as f:
+        val_data = json.load(f)
+
+    summary_dict = {}
+    
+    for tsv_file, records in val_data.items():
+        total_records = len(records) # that's the number of rows that has warning or errors found
+        warning_only_records = 0
+        error_records = 0
+        for record in records:
+            # looks through messages key value
+            record_messages = record.get("messages", {})
+            warning_messages = record_messages.get("warning", [])
+            error_messages = record_messages.get("error", [])
+            if len(warning_messages) > 0 and len(error_messages) == 0:
+                warning_only_records += 1
+            if len(error_messages) > 0:
+                error_records += 1
+        summary_dict[tsv_file] = {
+            "rows_with_validation_messages": total_records,
+            "rows_with_warning_only": warning_only_records,
+            "rows_with_error": error_records
+        }
+    meval_summary_filename = f"meval_validation_summary_{get_time()}.json"
+    with open(meval_summary_filename, "w") as f:
+        json.dump(summary_dict, f, indent=4)
+    
+    return meval_summary_filename
+
+
+
 @flow(name="validate record with meval",
     log_prints=True,
     flow_run_name="meval_validation_" + f"{get_time()}",
@@ -50,7 +91,6 @@ def validate_submission_meval(manifest_filepath: str, data_yml: str, props_yml: 
         tsv_filepath = os.path.join(tsv_folder, f"{node}_wo_guid.tsv")
         df.to_csv(tsv_filepath, sep="\t", index=False)
 
-
     # get the filelist inside the tsv folder
     tsv_filelist = [os.path.join(tsv_folder, f) for f in os.listdir(tsv_folder) if f.endswith(".tsv")]
     print("Number of TSV files to be validated: ", len(tsv_filelist))
@@ -72,4 +112,7 @@ def validate_submission_meval(manifest_filepath: str, data_yml: str, props_yml: 
     record_val_filename = f"meval_validation_results_{get_time()}.json"
     with open(record_val_filename, "w") as f:
         json.dump(record_val, f, indent=4)
-    return record_val_filename
+
+    meval_val_summary = meval_validation_summary(record_val_filename)
+
+    return record_val_filename, meval_val_summary
