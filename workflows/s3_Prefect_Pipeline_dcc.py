@@ -371,9 +371,9 @@ def runner_dcc(
                 props_yml=dcc_props_yml,
                 model_handle="dcc"
             )
-        except:
+        except Exception as e:
             meval_validation_report = None
-            runner_logger.error("MEVAL validation failed.")
+            runner_logger.error(f"MEVAL validation failed: {e}")
         runner_logger.info(f"Uploading MEVAL validation report to bucket {bucket}")
         ccdi_wf_outputs_ul(
             bucket=bucket,
