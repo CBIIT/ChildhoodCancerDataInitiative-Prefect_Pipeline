@@ -13,7 +13,7 @@ from workflow.validate_submission import download_model_files
 
 @flow(name="validate record with meval",
     log_prints=True,
-    flow_run_name="{runner}_" + f"{get_time()}",
+    flow_run_name="meval_validation_" + f"{get_time()}",
 )
 def validate_submission_meval(manifest_filepath: str, data_yml: str, props_yml: str, model_handle:str = "dcc") -> str:
     """This flow parses the manifest into a set of tsv and validate the records using meval Validator class
