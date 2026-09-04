@@ -474,6 +474,7 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-dcc"
+      template_source: "ccdi"
       template_tag: "2.1.0"
 
     # pull action to overwrite from file pull action
@@ -1916,4 +1917,4 @@ deployments:
     work_pool:
       name: ccdi-dcc-60gb-prefect-3.4.19-python3.13
       work_queue_name: null
-      job_variables: {} 
+      job_variables: {}
