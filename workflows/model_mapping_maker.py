@@ -111,19 +111,26 @@ def reconcile_mapping(
     - Rows in the built file that are NOT covered are appended (net-new nodes/properties).
     A row is considered "covered" if its lift_from_node + lift_from_property pair
     already exists in the provided mapping.
+
+    NaN values are normalized to empty strings before building the key set so that
+    rows with missing lift_from values (NaN != NaN) are compared correctly instead
+    of always evaluating as "not covered".
     """
+    provided_normalized = mapping_provided[
+        ["lift_from_node", "lift_from_property"]
+    ].fillna("")
     provided_keys = set(
-        zip(mapping_provided["lift_from_node"], mapping_provided["lift_from_property"])
+        zip(provided_normalized["lift_from_node"], provided_normalized["lift_from_property"])
     )
 
+    built_normalized = mapping_built[["lift_from_node", "lift_from_property"]].fillna("")
+
     # only keep built rows whose from-key isn't already handled in the provided file
-    net_new = mapping_built[
-        ~mapping_built.apply(
-            lambda row: (row["lift_from_node"], row["lift_from_property"])
-            in provided_keys,
-            axis=1,
-        )
+    is_covered = [
+        (n, p) in provided_keys
+        for n, p in zip(built_normalized["lift_from_node"], built_normalized["lift_from_property"])
     ]
+    net_new = mapping_built[~pd.Series(is_covered, index=mapping_built.index)]
 
     reconciled = pd.concat([mapping_provided, net_new], ignore_index=True)
     return reconciled
@@ -213,6 +220,16 @@ def expand_semicolon_nodes(df: pd.DataFrame) -> pd.DataFrame:
 def clean_up_partial_dups(
     df, empty_node_col, empty_prop_col, value_node_col, value_prop_col
 ) -> pd.DataFrame:
+    """
+    Drops rows that have missing (node, property) values on one side when another
+    row already covers the same value-side pair with a complete match on the
+    empty side. Uses .loc (label-based) instead of .iloc (position-based) when
+    looking up candidate matches, since df.index[mask] returns labels, and those
+    labels are not guaranteed to be contiguous positions - especially after a
+    prior drop() call. The index is reset at the end so subsequent calls
+    (e.g. a second clean_up_partial_dups pass) always work with a clean,
+    contiguous index too.
+    """
     indexes_to_remove = []
     for index, row in df.iterrows():
         if pd.isna(row[empty_node_col]) or pd.isna(row[empty_prop_col]):
@@ -222,12 +239,16 @@ def clean_up_partial_dups(
             matching = df.index[mask].tolist()
             if len(matching) > 1:
                 for other_index in matching:
-                    other = df.iloc[other_index]
+                    other = df.loc[other_index]
                     if pd.isna(other[empty_node_col]) and pd.isna(
                         other[empty_prop_col]
                     ):
                         indexes_to_remove.append(index)
-    return df.drop(list(set(indexes_to_remove))).fillna("")
+    return (
+        df.drop(list(set(indexes_to_remove)))
+        .reset_index(drop=True)
+        .fillna("")
+    )
 
 
 # ── comparison ────────────────────────────────────────────────────────────────
@@ -380,29 +401,39 @@ def runner(
     else:
         mapping_df = mapping_built
 
-    if not base_mode:
-        user_input_location(
-            mapping_df,
-            "lift_from_node",
-            "lift_from_property",
-            "lift_to_node",
-            "lift_to_property",
-            "lift_to_version",
-            base_mode,
-            "fromto",
-        )
-        user_input_location(
-            mapping_df,
-            "lift_to_node",
-            "lift_to_property",
-            "lift_from_node",
-            "lift_from_property",
-            "lift_from_version",
-            base_mode,
-            "tofrom",
-        )
+    # NOTE: previously these three calls were nested under `if not base_mode:`,
+    # which meant:
+    #   1. In base_mode=True runs, rows missing a value on either side were
+    #      never resolved at all (the `if base_mode:` branch inside
+    #      user_input_location that auto-fills "remove" was unreachable code,
+    #      since the function was never even called in that mode).
+    #   2. mapping_df.drop_duplicates() never ran in base_mode=True runs either,
+    #      since it lived in the same skipped block.
+    # user_input_location already branches internally on base_mode (auto-fill
+    # "remove" vs. pause for interactive input), so these calls need to run
+    # unconditionally in both modes.
+    user_input_location(
+        mapping_df,
+        "lift_from_node",
+        "lift_from_property",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+        base_mode,
+        "fromto",
+    )
+    user_input_location(
+        mapping_df,
+        "lift_to_node",
+        "lift_to_property",
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        base_mode,
+        "tofrom",
+    )
 
-        mapping_df = mapping_df.drop_duplicates()
+    mapping_df = mapping_df.drop_duplicates()
 
     # ── post-process ──────────────────────────────────────────────────────────
     mapping_df = expand_semicolon_nodes(mapping_df)
