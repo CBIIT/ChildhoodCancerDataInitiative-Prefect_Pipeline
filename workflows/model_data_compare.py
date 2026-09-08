@@ -92,6 +92,24 @@ def _parse_key(key: str, ent_type: str = "") -> tuple[str, str]:
         return key, ""
 
 
+def _parse_edge_key(key: str) -> tuple[str, str, str] | None:
+    """
+    Parse an edge key string into (src_relationship, relationship_label, dst_node).
+    Returns None if the key is not a valid edge tuple.
+
+    Example:
+        key = "('of_pdx', 'pdx', 'sample')"
+        returns: ("of_pdx", "pdx", "sample")
+    """
+    try:
+        key_parsed = eval(key)
+        if isinstance(key_parsed, tuple) and len(key_parsed) == 3:
+            return str(key_parsed[0]), str(key_parsed[1]), str(key_parsed[2])
+    except Exception:
+        pass
+    return None
+
+
 # ── model loading ─────────────────────────────────────────────────────────────
 
 @task(name="Load MDFReader models", log_prints=True, cache_policy=NO_CACHE)
@@ -251,7 +269,7 @@ def build_comparison_report(
         from_val    = row["from_value"]
         to_val      = row["to_value"]
 
-        node, prop = _parse_key(key)
+        node, prop = _parse_key(key, ent_type=ent_type)
 
         # build a human-readable description of the change
         if change_type == "DELETION":
@@ -386,6 +404,37 @@ def query_node_property(driver, node: str, prop: str) -> list[dict]:
         return [dict(record) for record in result]
 
 
+def query_node_edge(driver, src_node: str, rel_label: str, dst_node: str) -> list[dict]:
+    """
+    Query all records where a relationship exists between src_node and dst_node
+    via the given relationship label. Traverses up to study for study_id.
+
+    For DELETION — checks that this relationship exists in the database
+    (meaning data still has the old linkage that no longer exists in the model).
+
+    Returns a list of dicts with:
+        study_id, src_node, dst_node, relationship, src_guid, dst_guid, dst_id_value
+    """
+    dst_id_prop = f"{dst_node}_id"
+    query = f"""
+        MATCH (src:{src_node})-[r:{rel_label}]->(dst:{dst_node})
+        OPTIONAL MATCH (src)-[*0..5]->(s:study)
+        WITH src, dst, r,
+            coalesce(s.study_id, 'unknown') AS study_id
+        RETURN
+            study_id                        AS study_id,
+            '{src_node}'                    AS src_node,
+            '{dst_node}'                    AS dst_node,
+            '{rel_label}'                   AS relationship,
+            coalesce(src.guid, src.id, '')  AS src_guid,
+            coalesce(dst.guid, dst.id, '')  AS dst_guid,
+            dst.{dst_id_prop}               AS dst_id_value
+    """
+    with driver.session() as session:
+        result = session.run(query)
+        return [dict(record) for record in result]
+
+
 @task(name="Check DB data against diff", log_prints=True, cache_policy=NO_CACHE)
 def check_data_against_diff(
     driver,
@@ -393,39 +442,40 @@ def check_data_against_diff(
     mdf_new: MDFReader,
 ) -> pd.DataFrame:
     """
-    For each DELETION or CHANGED props row in diff_df, query the database
-    to find records whose current values may be invalid under the new model.
+    For each DELETION or CHANGED row in diff_df that relates to props or edges,
+    query the database to find records whose current values or relationships
+    may be invalid under the new model.
 
     Returns a line-level report with:
         study_id, node, property, guid, current_value, change_type, attribute, issue
     """
     logger = get_run_logger()
+    report_rows = []
 
-    actionable = diff_df[
+    # ── prop-level checks ─────────────────────────────────────────────────────
+    actionable_props = diff_df[
         (diff_df["entity_type"] == "props") &
         (diff_df["change_type"].isin(["DELETION", "CHANGED"]))
     ].copy()
 
-    logger.info(f"Found {len(actionable)} actionable prop rows to check against database.")
-    report_rows = []
+    logger.info(f"Found {len(actionable_props)} actionable prop rows to check against database.")
 
-    for _, row in actionable.iterrows():
+    for _, row in actionable_props.iterrows():
         key      = row["key"]
         attr     = row["attribute"]
         change   = row["change_type"]
         from_val = row["from_value"]
         to_val   = row["to_value"]
 
-        # parse node and prop from the tuple key string
         try:
             key_parsed = eval(key)
             if isinstance(key_parsed, tuple) and len(key_parsed) == 2:
                 node, prop = key_parsed
             else:
-                logger.warning(f"Unexpected key format: {key}, skipping.")
+                logger.warning(f"Unexpected prop key format: {key}, skipping.")
                 continue
         except Exception:
-            logger.warning(f"Could not parse key: {key}, skipping.")
+            logger.warning(f"Could not parse prop key: {key}, skipping.")
             continue
 
         logger.info(f"Querying database for node={node}, property={prop}, change={change}, attribute={attr}")
@@ -472,6 +522,86 @@ def check_data_against_diff(
                     "attribute":     attr,
                     "issue":         issue,
                 })
+
+    # ── edge-level checks ─────────────────────────────────────────────────────
+    # only check DELETION and CHANGED edges — additions don't affect existing data
+    actionable_edges = diff_df[
+        (diff_df["entity_type"] == "edges") &
+        (diff_df["change_type"].isin(["DELETION", "CHANGED"]))
+    ].copy()
+
+    logger.info(f"Found {len(actionable_edges)} actionable edge rows to check against database.")
+
+    for _, row in actionable_edges.iterrows():
+        key    = row["key"]
+        change = row["change_type"]
+        attr   = row["attribute"]
+
+        edge_parts = _parse_edge_key(key)
+        if not edge_parts:
+            logger.warning(f"Could not parse edge key: {key}, skipping.")
+            continue
+
+        src_rel, rel_label, dst_node = edge_parts
+
+        # derive the actual src node label from the relationship name
+        # bento-mdf edge src is the relationship entity (e.g. of_pdx),
+        # but the actual graph node we want to query is the node the relationship hangs off.
+        # The src node label is typically the rel_label (e.g. pdx for of_pdx --[pdx]--> sample).
+        src_node = rel_label
+
+        logger.info(
+            f"Querying database for edge: ({src_node})-[{rel_label}]->({dst_node}), "
+            f"change={change}, attribute={attr}"
+        )
+
+        try:
+            db_records = query_node_edge(
+                driver=driver,
+                src_node=src_node,
+                rel_label=rel_label,
+                dst_node=dst_node,
+            )
+        except Exception as e:
+            logger.warning(
+                f"Edge query failed for ({src_node})-[{rel_label}]->({dst_node}): {e}"
+            )
+            continue
+
+        if not db_records:
+            logger.info(
+                f"No records found in database for edge ({src_node})-[{rel_label}]->({dst_node})"
+            )
+            continue
+
+        dst_id_prop = f"{dst_node}.{dst_node}_id"
+
+        for record in db_records:
+            dst_id_value = record.get("dst_id_value")
+
+            if change == "DELETION":
+                issue = (
+                    f"Relationship ({src_node})-[{rel_label}]->({dst_node}) removed from model "
+                    f"but still exists in database"
+                )
+            elif change == "CHANGED":
+                issue = (
+                    f"Relationship ({src_node})-[{rel_label}]->({dst_node}) changed in model "
+                    f"(attribute: {attr})"
+                )
+            else:
+                continue
+
+            report_rows.append({
+                "study_id":      record.get("study_id", "unknown"),
+                "node":          src_node,
+                "property":      dst_id_prop,
+                "guid":          record.get("src_guid", ""),
+                "current_value": dst_id_value,
+                "change_type":   change,
+                "attribute":     attr,
+                "issue":         issue,
+            })
 
     logger.info(f"Database check complete. Found {len(report_rows)} records with potential issues.")
     return pd.DataFrame(report_rows)
