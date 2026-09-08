@@ -69,21 +69,22 @@ def _parse_key(key: str, ent_type: str = "") -> tuple[str, str]:
     Parse a bento-mdf diff key string into (node, property).
     Handles tuples of length 2 (props), 3 (edges), and plain strings (nodes/terms).
 
-    For edges, the node column is the source node of the relationship,
-    and the property column is derived from the destination node as [dst].[dst]_id.
+    For edges, bento-mdf key format is (src_node, edge_label, dst_node).
+    The node column shows the full edge as: src_node --[edge_label]--> dst_node
+    The property column is derived from the destination node as [dst].[dst]_id.
 
     Example:
-        key = "('of_cell_line', 'cell_line', 'participant')"
-        returns: ("of_cell_line --[cell_line]--> participant", "participant.participant_id")
+        key = "('pdx', 'of_pdx', 'sample')"
+        returns: ("pdx --[of_pdx]--> sample", "sample.sample_id")
     """
     try:
         key_parsed = eval(key)
         if isinstance(key_parsed, tuple) and len(key_parsed) == 2:
             return str(key_parsed[0]), str(key_parsed[1])
         elif isinstance(key_parsed, tuple) and len(key_parsed) == 3:
-            # edges: (src_relationship, relationship_label, dst_node)
-            src, rel, dst = key_parsed
-            node = f"{src} --[{rel}]--> {dst}"
+            # edges: (src_node, edge_label, dst_node)
+            src, edge, dst = key_parsed
+            node = f"{src} --[{edge}]--> {dst}"
             prop = f"{dst}.{dst}_id"
             return node, prop
         else:
@@ -94,12 +95,12 @@ def _parse_key(key: str, ent_type: str = "") -> tuple[str, str]:
 
 def _parse_edge_key(key: str) -> tuple[str, str, str] | None:
     """
-    Parse an edge key string into (src_relationship, relationship_label, dst_node).
+    Parse an edge key string into (src_node, edge_label, dst_node).
     Returns None if the key is not a valid edge tuple.
 
     Example:
-        key = "('of_pdx', 'pdx', 'sample')"
-        returns: ("of_pdx", "pdx", "sample")
+        key = "('pdx', 'of_pdx', 'sample')"
+        returns: ("pdx", "of_pdx", "sample")
     """
     try:
         key_parsed = eval(key)
@@ -404,20 +405,17 @@ def query_node_property(driver, node: str, prop: str) -> list[dict]:
         return [dict(record) for record in result]
 
 
-def query_node_edge(driver, src_node: str, rel_label: str, dst_node: str) -> list[dict]:
+def query_node_edge(driver, src_node: str, edge_label: str, dst_node: str) -> list[dict]:
     """
     Query all records where a relationship exists between src_node and dst_node
-    via the given relationship label. Traverses up to study for study_id.
+    via the given edge label. Traverses up to study for study_id.
 
-    For DELETION — checks that this relationship exists in the database
-    (meaning data still has the old linkage that no longer exists in the model).
-
-    Returns a list of dicts with:
-        study_id, src_node, dst_node, relationship, src_guid, dst_guid, dst_id_value
+    Example: src_node='pdx', edge_label='of_pdx', dst_node='sample'
+    Cypher:  MATCH (src:pdx)-[r:of_pdx]->(dst:sample)
     """
     dst_id_prop = f"{dst_node}_id"
     query = f"""
-        MATCH (src:{src_node})-[r:{rel_label}]->(dst:{dst_node})
+        MATCH (src:{src_node})-[r:{edge_label}]->(dst:{dst_node})
         OPTIONAL MATCH (src)-[*0..5]->(s:study)
         WITH src, dst, r,
             coalesce(s.study_id, 'unknown') AS study_id
@@ -425,7 +423,7 @@ def query_node_edge(driver, src_node: str, rel_label: str, dst_node: str) -> lis
             study_id                        AS study_id,
             '{src_node}'                    AS src_node,
             '{dst_node}'                    AS dst_node,
-            '{rel_label}'                   AS relationship,
+            '{edge_label}'                  AS edge_label,
             coalesce(src.guid, src.id, '')  AS src_guid,
             coalesce(dst.guid, dst.id, '')  AS dst_guid,
             dst.{dst_id_prop}               AS dst_id_value
@@ -542,16 +540,10 @@ def check_data_against_diff(
             logger.warning(f"Could not parse edge key: {key}, skipping.")
             continue
 
-        src_rel, rel_label, dst_node = edge_parts
-
-        # derive the actual src node label from the relationship name
-        # bento-mdf edge src is the relationship entity (e.g. of_pdx),
-        # but the actual graph node we want to query is the node the relationship hangs off.
-        # The src node label is typically the rel_label (e.g. pdx for of_pdx --[pdx]--> sample).
-        src_node = rel_label
+        src_node, edge_label, dst_node = edge_parts  # correctly unpacked
 
         logger.info(
-            f"Querying database for edge: ({src_node})-[{rel_label}]->({dst_node}), "
+            f"Querying database for edge: ({src_node})-[{edge_label}]->({dst_node}), "
             f"change={change}, attribute={attr}"
         )
 
@@ -559,18 +551,18 @@ def check_data_against_diff(
             db_records = query_node_edge(
                 driver=driver,
                 src_node=src_node,
-                rel_label=rel_label,
+                edge_label=edge_label,
                 dst_node=dst_node,
             )
         except Exception as e:
             logger.warning(
-                f"Edge query failed for ({src_node})-[{rel_label}]->({dst_node}): {e}"
+                f"Edge query failed for ({src_node})-[{edge_label}]->({dst_node}): {e}"
             )
             continue
 
         if not db_records:
             logger.info(
-                f"No records found in database for edge ({src_node})-[{rel_label}]->({dst_node})"
+                f"No records found in database for edge ({src_node})-[{edge_label}]->({dst_node})"
             )
             continue
 
@@ -581,12 +573,12 @@ def check_data_against_diff(
 
             if change == "DELETION":
                 issue = (
-                    f"Relationship ({src_node})-[{rel_label}]->({dst_node}) removed from model "
+                    f"Relationship ({src_node})-[{edge_label}]->({dst_node}) removed from model "
                     f"but still exists in database"
                 )
             elif change == "CHANGED":
                 issue = (
-                    f"Relationship ({src_node})-[{rel_label}]->({dst_node}) changed in model "
+                    f"Relationship ({src_node})-[{edge_label}]->({dst_node}) changed in model "
                     f"(attribute: {attr})"
                 )
             else:
