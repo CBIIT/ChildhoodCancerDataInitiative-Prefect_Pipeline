@@ -767,7 +767,7 @@ def runner(
     )
     save_and_upload(
         df=comparison_report,
-        file_name=f"{prefix}_comparison_report_{current_date}.tsv",
+        file_name=f"{prefix}_comparison_report_summary_{current_date}.tsv",
         bucket=bucket,
         output_folder=output_folder,
     )
