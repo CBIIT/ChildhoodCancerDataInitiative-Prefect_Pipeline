@@ -78,12 +78,20 @@ def parse_model(model_parsed, version):
                 f"Node: {node} has parent nodes, parsing relationships for this node."
             )
             for parent in parent_nodes:
-                key_prop = model_parsed.get_node_key_prop(parent)
+                try:
+                    key_prop = model_parsed.get_node_key_prop(parent)
+                except Exception as e:
+                    logger.warning(
+                        f"get_node_key_prop failed for parent '{parent}' of node '{node}': {e}. Skipping."
+                    )
+                    continue
+
                 if not key_prop:
                     logger.warning(
                         f"No key_prop found for parent '{parent}' of node '{node}', skipping."
                     )
                     continue
+
                 rows.append(
                     {
                         "node": node,
