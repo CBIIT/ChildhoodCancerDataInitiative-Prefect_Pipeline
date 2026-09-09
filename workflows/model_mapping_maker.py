@@ -329,6 +329,7 @@ def runner(
         mapping_file = None
     if mapping_file:
         file_dl(bucket, mapping_file)
+        logger.info(f"Downloaded mapping file from S3: {mapping_file}")
 
     # ── fetch models ──────────────────────────────────────────────────────────
 
@@ -400,6 +401,7 @@ def runner(
     mapping_built = build_mapping(df_from, df_to)
 
     if mapping_file:
+        logger.info("Obtaining mapping file.")
         local_path = os.path.basename(mapping_file)
 
         # Validation of file existing
@@ -409,12 +411,14 @@ def runner(
                 f"Check that file_dl downloads to the current working directory."
             )
 
+        logger.info("Reading mapping file")
         mapping_provided = pd.read_csv(local_path, sep="\t")
         logger.info(
             f"Loaded provided mapping file with columns: {list(mapping_provided.columns)} "
             f"({len(mapping_provided.columns)} columns, {len(mapping_provided)} rows)"
         )
 
+        logger.info("Handling mapping file columns")
         if len(mapping_provided.columns) != len(COLUMNS):
             raise ValueError(
                 f"Provided mapping file has {len(mapping_provided.columns)} columns "
