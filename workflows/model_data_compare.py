@@ -84,7 +84,7 @@ def _parse_key(key: str, ent_type: str = "") -> tuple[str, str]:
         elif isinstance(key_parsed, tuple) and len(key_parsed) == 3:
             # edges: (edge_label, src_node, dst_node)
             edge, src, dst = key_parsed
-            node = f"{src} --[{edge}]--> {dst}"
+            node = f"{src} -[{edge}]-> {dst}"
             prop = f"{dst}.{dst}_id"
             return node, prop
         else:
@@ -422,7 +422,7 @@ def query_node_edge(driver, src_node: str, edge_label: str, dst_node: str) -> li
     dst_id_prop = f"{dst_node}_id"
     query = f"""
         MATCH (src:{src_node})-[r:{edge_label}]->(dst:{dst_node})
-        OPTIONAL MATCH (src)-[*0..5]->(s:study)
+        OPTIONAL MATCH (src)-[*1..6]->(s:study)
         WITH src, dst, r,
             coalesce(s.study_id, 'unknown') AS study_id
         RETURN
