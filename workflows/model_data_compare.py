@@ -69,12 +69,12 @@ def _parse_key(key: str, ent_type: str = "") -> tuple[str, str]:
     Parse a bento-mdf diff key string into (node, property).
     Handles tuples of length 2 (props), 3 (edges), and plain strings (nodes/terms).
 
-    For edges, bento-mdf key format is (src_node, edge_label, dst_node).
+    For edges, bento-mdf key format is (edge_label, src_node, dst_node).
     The node column shows the full edge as: src_node --[edge_label]--> dst_node
     The property column is derived from the destination node as [dst].[dst]_id.
 
     Example:
-        key = "('pdx', 'of_pdx', 'sample')"
+        key = "('of_pdx', 'pdx', 'sample')"
         returns: ("pdx --[of_pdx]--> sample", "sample.sample_id")
     """
     try:
@@ -82,8 +82,8 @@ def _parse_key(key: str, ent_type: str = "") -> tuple[str, str]:
         if isinstance(key_parsed, tuple) and len(key_parsed) == 2:
             return str(key_parsed[0]), str(key_parsed[1])
         elif isinstance(key_parsed, tuple) and len(key_parsed) == 3:
-            # edges: (src_node, edge_label, dst_node)
-            src, edge, dst = key_parsed
+            # edges: (edge_label, src_node, dst_node)
+            edge, src, dst = key_parsed
             node = f"{src} --[{edge}]--> {dst}"
             prop = f"{dst}.{dst}_id"
             return node, prop
@@ -98,18 +98,20 @@ def _parse_edge_key(key: str) -> tuple[str, str, str] | None:
     Parse an edge key string into (src_node, edge_label, dst_node).
     Returns None if the key is not a valid edge tuple.
 
+    bento-mdf edge key format is (edge_label, src_node, dst_node).
+
     Example:
-        key = "('pdx', 'of_pdx', 'sample')"
+        key = "('of_pdx', 'pdx', 'sample')"
         returns: ("pdx", "of_pdx", "sample")
     """
     try:
         key_parsed = eval(key)
         if isinstance(key_parsed, tuple) and len(key_parsed) == 3:
-            return str(key_parsed[0]), str(key_parsed[1]), str(key_parsed[2])
+            edge, src, dst = key_parsed
+            return str(src), str(edge), str(dst)  # reordered to (src, edge, dst) for Cypher clarity
     except Exception:
         pass
     return None
-
 
 # ── model loading ─────────────────────────────────────────────────────────────
 
