@@ -400,7 +400,27 @@ def runner(
     mapping_built = build_mapping(df_from, df_to)
 
     if mapping_file:
-        mapping_provided = pd.read_csv(os.path.basename(mapping_file), sep="\t")
+        local_path = os.path.basename(mapping_file)
+
+        # Validation of file existing
+        if not os.path.exists(local_path):
+            raise FileNotFoundError(
+                f"Expected mapping file at '{local_path}' after file_dl, but it wasn't found. "
+                f"Check that file_dl downloads to the current working directory."
+            )
+
+        mapping_provided = pd.read_csv(local_path, sep="\t")
+        logger.info(
+            f"Loaded provided mapping file with columns: {list(mapping_provided.columns)} "
+            f"({len(mapping_provided.columns)} columns, {len(mapping_provided)} rows)"
+        )
+
+        if len(mapping_provided.columns) != len(COLUMNS):
+            raise ValueError(
+                f"Provided mapping file has {len(mapping_provided.columns)} columns "
+                f"{list(mapping_provided.columns)}, but expected {len(COLUMNS)}: {COLUMNS}. "
+                f"Check the file's delimiter and column structure."
+            )
         mapping_provided.columns = COLUMNS
         mapping_df = reconcile_mapping(mapping_provided, mapping_built)
         logger.info(
