@@ -175,6 +175,8 @@ def flatten_diff_to_dataframe(
 
         # ── removed entities ──────────────────────────────────────────────────
         for key, val in (section.get("removed") or {}).items():
+            if ent_type == "edges":
+                logger.info(f"DEBUG edge key raw: {repr(key)}") 
             rows.append({
                 "entity_type":  ent_type,
                 "key":          str(key),
@@ -188,6 +190,8 @@ def flatten_diff_to_dataframe(
 
         # ── added entities ────────────────────────────────────────────────────
         for key, val in (section.get("added") or {}).items():
+            if ent_type == "edges":
+                logger.info(f"DEBUG edge key raw: {repr(key)}")
             rows.append({
                 "entity_type":  ent_type,
                 "key":          str(key),
