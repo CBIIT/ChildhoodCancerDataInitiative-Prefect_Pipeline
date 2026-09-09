@@ -30,7 +30,18 @@ def pull_model_data_files(model, version, file_type, output_file):
         url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}.yml"
     elif file_type == "props":
         url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}-{file_type}.yml"
+    else:
+        raise ValueError(f"Unknown file_type: {file_type}")
+
+    logger = get_run_logger()
+    logger.info(f"Fetching {file_type} file from: {url}")
+
     response = requests.get(url)
+    if not response.ok:
+        logger.error(
+            f"Failed to fetch {file_type} file for {model}@{version}. "
+            f"URL: {url} | Status: {response.status_code} | Body: {response.text[:500]}"
+        )
     response.raise_for_status()
 
     with open(output_file, "w") as f:
