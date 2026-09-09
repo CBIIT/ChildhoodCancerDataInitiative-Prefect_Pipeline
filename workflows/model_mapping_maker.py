@@ -24,13 +24,24 @@ COLUMNS = [
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-
+@task(name="Pull model data files", log_prints=True)
 def pull_model_data_files(model, version, file_type, output_file):
     if file_type == "model":
         url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}.yml"
     elif file_type == "props":
         url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}-{file_type}.yml"
+    else:
+        raise ValueError(f"Unknown file_type: {file_type}")
+
+    logger = get_run_logger()
+    logger.info(f"Fetching {file_type} file from: {url}")
+
     response = requests.get(url)
+    if not response.ok:
+        logger.error(
+            f"Failed to fetch {file_type} file for {model}@{version}. "
+            f"URL: {url} | Status: {response.status_code} | Body: {response.text[:500]}"
+        )
     response.raise_for_status()
 
     with open(output_file, "w") as f:
@@ -42,7 +53,7 @@ def pull_model_data_files(model, version, file_type, output_file):
 # ── extraction ────────────────────────────────────────────────────────────────
 
 
-@task
+@task(name="Parse model", log_prints=True)
 def parse_model(model_parsed, version):
     logger = get_run_logger()
     rows = []
@@ -67,12 +78,20 @@ def parse_model(model_parsed, version):
                 f"Node: {node} has parent nodes, parsing relationships for this node."
             )
             for parent in parent_nodes:
-                key_prop = model_parsed.get_node_key_prop(parent)
+                try:
+                    key_prop = model_parsed.get_node_key_prop(parent)
+                except Exception as e:
+                    logger.warning(
+                        f"get_node_key_prop failed for parent '{parent}' of node '{node}': {e}. Skipping."
+                    )
+                    continue
+
                 if not key_prop:
                     logger.warning(
                         f"No key_prop found for parent '{parent}' of node '{node}', skipping."
                     )
                     continue
+
                 rows.append(
                     {
                         "node": node,
@@ -86,7 +105,7 @@ def parse_model(model_parsed, version):
 
 # ── merging ───────────────────────────────────────────────────────────────────
 
-
+@task(name="Build mapping", log_prints=True)
 def build_mapping(df_from: pd.DataFrame, df_to: pd.DataFrame) -> pd.DataFrame:
     merged = pd.merge(
         df_from,
@@ -100,7 +119,7 @@ def build_mapping(df_from: pd.DataFrame, df_to: pd.DataFrame) -> pd.DataFrame:
 
 # ── reconciliation ────────────────────────────────────────────────────────────
 
-
+@task(name="Reconcile mapping", log_prints=True)
 def reconcile_mapping(
     mapping_provided: pd.DataFrame, mapping_built: pd.DataFrame
 ) -> pd.DataFrame:
@@ -111,19 +130,26 @@ def reconcile_mapping(
     - Rows in the built file that are NOT covered are appended (net-new nodes/properties).
     A row is considered "covered" if its lift_from_node + lift_from_property pair
     already exists in the provided mapping.
+
+    NaN values are normalized to empty strings before building the key set so that
+    rows with missing lift_from values (NaN != NaN) are compared correctly instead
+    of always evaluating as "not covered".
     """
+    provided_normalized = mapping_provided[
+        ["lift_from_node", "lift_from_property"]
+    ].fillna("")
     provided_keys = set(
-        zip(mapping_provided["lift_from_node"], mapping_provided["lift_from_property"])
+        zip(provided_normalized["lift_from_node"], provided_normalized["lift_from_property"])
     )
 
+    built_normalized = mapping_built[["lift_from_node", "lift_from_property"]].fillna("")
+
     # only keep built rows whose from-key isn't already handled in the provided file
-    net_new = mapping_built[
-        ~mapping_built.apply(
-            lambda row: (row["lift_from_node"], row["lift_from_property"])
-            in provided_keys,
-            axis=1,
-        )
+    is_covered = [
+        (n, p) in provided_keys
+        for n, p in zip(built_normalized["lift_from_node"], built_normalized["lift_from_property"])
     ]
+    net_new = mapping_built[~pd.Series(is_covered, index=mapping_built.index)]
 
     reconciled = pd.concat([mapping_provided, net_new], ignore_index=True)
     return reconciled
@@ -209,10 +235,20 @@ def expand_semicolon_nodes(df: pd.DataFrame) -> pd.DataFrame:
                 rows.append(new_row)
     return pd.DataFrame(rows).reset_index(drop=True)
 
-
+@task(name="Clean up partial duplicates", log_prints=True)
 def clean_up_partial_dups(
     df, empty_node_col, empty_prop_col, value_node_col, value_prop_col
 ) -> pd.DataFrame:
+    """
+    Drops rows that have missing (node, property) values on one side when another
+    row already covers the same value-side pair with a complete match on the
+    empty side. Uses .loc (label-based) instead of .iloc (position-based) when
+    looking up candidate matches, since df.index[mask] returns labels, and those
+    labels are not guaranteed to be contiguous positions - especially after a
+    prior drop() call. The index is reset at the end so subsequent calls
+    (e.g. a second clean_up_partial_dups pass) always work with a clean,
+    contiguous index too.
+    """
     indexes_to_remove = []
     for index, row in df.iterrows():
         if pd.isna(row[empty_node_col]) or pd.isna(row[empty_prop_col]):
@@ -222,17 +258,21 @@ def clean_up_partial_dups(
             matching = df.index[mask].tolist()
             if len(matching) > 1:
                 for other_index in matching:
-                    other = df.iloc[other_index]
+                    other = df.loc[other_index]
                     if pd.isna(other[empty_node_col]) and pd.isna(
                         other[empty_prop_col]
                     ):
                         indexes_to_remove.append(index)
-    return df.drop(list(set(indexes_to_remove))).fillna("")
+    return (
+        df.drop(list(set(indexes_to_remove)))
+        .reset_index(drop=True)
+        .fillna("")
+    )
 
 
 # ── comparison ────────────────────────────────────────────────────────────────
 
-
+@task(name="Build comparison", log_prints=True)
 def build_comparison(
     df: pd.DataFrame, old_version: str, new_version: str
 ) -> pd.DataFrame:
@@ -297,6 +337,7 @@ def runner(
         mapping_file = None
     if mapping_file:
         file_dl(bucket, mapping_file)
+        logger.info(f"Downloaded mapping file from S3: {mapping_file}")
 
     # ── fetch models ──────────────────────────────────────────────────────────
 
@@ -368,7 +409,30 @@ def runner(
     mapping_built = build_mapping(df_from, df_to)
 
     if mapping_file:
-        mapping_provided = pd.read_csv(os.path.basename(mapping_file), sep="\t")
+        logger.info("Obtaining mapping file.")
+        local_path = os.path.basename(mapping_file)
+
+        # Validation of file existing
+        if not os.path.exists(local_path):
+            raise FileNotFoundError(
+                f"Expected mapping file at '{local_path}' after file_dl, but it wasn't found. "
+                f"Check that file_dl downloads to the current working directory."
+            )
+
+        logger.info("Reading mapping file")
+        mapping_provided = pd.read_csv(local_path, sep="\t")
+        logger.info(
+            f"Loaded provided mapping file with columns: {list(mapping_provided.columns)} "
+            f"({len(mapping_provided.columns)} columns, {len(mapping_provided)} rows)"
+        )
+
+        logger.info("Handling mapping file columns")
+        if len(mapping_provided.columns) != len(COLUMNS):
+            raise ValueError(
+                f"Provided mapping file has {len(mapping_provided.columns)} columns "
+                f"{list(mapping_provided.columns)}, but expected {len(COLUMNS)}: {COLUMNS}. "
+                f"Check the file's delimiter and column structure."
+            )
         mapping_provided.columns = COLUMNS
         mapping_df = reconcile_mapping(mapping_provided, mapping_built)
         logger.info(
@@ -380,29 +444,39 @@ def runner(
     else:
         mapping_df = mapping_built
 
-    if not base_mode:
-        user_input_location(
-            mapping_df,
-            "lift_from_node",
-            "lift_from_property",
-            "lift_to_node",
-            "lift_to_property",
-            "lift_to_version",
-            base_mode,
-            "fromto",
-        )
-        user_input_location(
-            mapping_df,
-            "lift_to_node",
-            "lift_to_property",
-            "lift_from_node",
-            "lift_from_property",
-            "lift_from_version",
-            base_mode,
-            "tofrom",
-        )
+    # NOTE: previously these three calls were nested under `if not base_mode:`,
+    # which meant:
+    #   1. In base_mode=True runs, rows missing a value on either side were
+    #      never resolved at all (the `if base_mode:` branch inside
+    #      user_input_location that auto-fills "remove" was unreachable code,
+    #      since the function was never even called in that mode).
+    #   2. mapping_df.drop_duplicates() never ran in base_mode=True runs either,
+    #      since it lived in the same skipped block.
+    # user_input_location already branches internally on base_mode (auto-fill
+    # "remove" vs. pause for interactive input), so these calls need to run
+    # unconditionally in both modes.
+    user_input_location(
+        mapping_df,
+        "lift_from_node",
+        "lift_from_property",
+        "lift_to_node",
+        "lift_to_property",
+        "lift_to_version",
+        base_mode,
+        "fromto",
+    )
+    user_input_location(
+        mapping_df,
+        "lift_to_node",
+        "lift_to_property",
+        "lift_from_node",
+        "lift_from_property",
+        "lift_from_version",
+        base_mode,
+        "tofrom",
+    )
 
-        mapping_df = mapping_df.drop_duplicates()
+    mapping_df = mapping_df.drop_duplicates()
 
     # ── post-process ──────────────────────────────────────────────────────────
     mapping_df = expand_semicolon_nodes(mapping_df)
