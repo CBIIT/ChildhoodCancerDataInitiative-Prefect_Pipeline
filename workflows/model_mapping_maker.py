@@ -24,7 +24,7 @@ COLUMNS = [
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-
+@task(name="Pull model data files", log_prints=True)
 def pull_model_data_files(model, version, file_type, output_file):
     if file_type == "model":
         url = f"https://raw.githubusercontent.com/CBIIT/{model}/{version}/model-desc/{model}.yml"
@@ -53,7 +53,7 @@ def pull_model_data_files(model, version, file_type, output_file):
 # ── extraction ────────────────────────────────────────────────────────────────
 
 
-@task
+@task(name="Parse model", log_prints=True)
 def parse_model(model_parsed, version):
     logger = get_run_logger()
     rows = []
@@ -105,7 +105,7 @@ def parse_model(model_parsed, version):
 
 # ── merging ───────────────────────────────────────────────────────────────────
 
-
+@task(name="Build mapping", log_prints=True)
 def build_mapping(df_from: pd.DataFrame, df_to: pd.DataFrame) -> pd.DataFrame:
     merged = pd.merge(
         df_from,
@@ -119,7 +119,7 @@ def build_mapping(df_from: pd.DataFrame, df_to: pd.DataFrame) -> pd.DataFrame:
 
 # ── reconciliation ────────────────────────────────────────────────────────────
 
-
+@task(name="Reconcile mapping", log_prints=True)
 def reconcile_mapping(
     mapping_provided: pd.DataFrame, mapping_built: pd.DataFrame
 ) -> pd.DataFrame:
@@ -235,7 +235,7 @@ def expand_semicolon_nodes(df: pd.DataFrame) -> pd.DataFrame:
                 rows.append(new_row)
     return pd.DataFrame(rows).reset_index(drop=True)
 
-
+@task(name="Clean up partial duplicates", log_prints=True)
 def clean_up_partial_dups(
     df, empty_node_col, empty_prop_col, value_node_col, value_prop_col
 ) -> pd.DataFrame:
@@ -272,7 +272,7 @@ def clean_up_partial_dups(
 
 # ── comparison ────────────────────────────────────────────────────────────────
 
-
+@task(name="Build comparison", log_prints=True)
 def build_comparison(
     df: pd.DataFrame, old_version: str, new_version: str
 ) -> pd.DataFrame:
