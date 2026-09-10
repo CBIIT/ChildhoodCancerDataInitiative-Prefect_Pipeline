@@ -287,7 +287,7 @@ def build_comparison_report(
 
         elif change_type == "CHANGED":
             if attribute == "value_domain":
-                description = f"Type changed: '{from_val}' → '{to_val}'"
+                description = f"Type changed: '{from_val}' -> '{to_val}'"
 
             elif attribute in ("value_set", "concept"):
                 from_terms = set(from_val.split(";")) if from_val else set()
@@ -308,19 +308,19 @@ def build_comparison_report(
                     description = "Property became optional"
 
             elif attribute == "is_key":
-                description = f"Key status changed: '{from_val}' → '{to_val}'"
+                description = f"Key status changed: '{from_val}' -> '{to_val}'"
 
             elif attribute == "is_deprecated":
-                description = f"Deprecated status changed: '{from_val}' → '{to_val}'"
+                description = f"Deprecated status changed: '{from_val}' -> '{to_val}'"
 
             elif attribute in ("src", "dst"):
-                description = f"Edge endpoint changed ({attribute}): '{from_val}' → '{to_val}'"
+                description = f"Edge endpoint changed ({attribute}): '{from_val}' -> '{to_val}'"
 
             elif attribute.endswith("_existence"):
                 description = f"{ent_type.rstrip('s').capitalize()} existence changed"
 
             else:
-                description = f"Attribute '{attribute}' changed: '{from_val}' → '{to_val}'"
+                description = f"Attribute '{attribute}' changed: '{from_val}' -> '{to_val}'"
         else:
             description = change_type
 
