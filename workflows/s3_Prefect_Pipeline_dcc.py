@@ -20,6 +20,7 @@ from src.s3_ccdi_to_dbgap import CCDI_to_dbGaP
 from src.s3_catcherry import CatchERRy
 from src.s3_validationry_refactored import ValidationRy_new
 from src.dcc_tabbreaker import tabBreakeRy_dcc
+from src.dcc_validation_meval import validate_submission_meval
 from src.utils import (
     get_time,
     get_manifest_phs,
@@ -360,6 +361,35 @@ def runner_dcc(
             output_log=tabbreaker_out_log,
             sub_folder="5_TabBreaker_output",
         )
+
+        # run meval validation
+        runner_logger.info("Running MEVAL validation flow")
+        try:
+            meval_validation_report, meval_val_summary = validate_submission_meval(
+                manifest_filepath=catcherr_out_file,
+                data_yml=dcc_model_yml,
+                props_yml=dcc_props_yml,
+                model_handle="dcc"
+            )
+        except Exception as e:
+            meval_validation_report = None
+            meval_val_summary = None
+            runner_logger.error(f"MEVAL validation failed: {e}")
+        runner_logger.info(f"Uploading MEVAL validation report to bucket {bucket}")
+        ccdi_wf_outputs_ul(
+            bucket=bucket,
+            output_folder=output_folder,
+            output_path=meval_validation_report,
+            output_log=None,
+            sub_folder="6_MEVAL_validation_output",
+        )
+        ccdi_wf_outputs_ul(
+                    bucket=bucket,
+                    output_folder=output_folder,
+                    output_path=meval_val_summary,
+                    output_log=None,
+                    sub_folder="6_MEVAL_validation_output",
+                )
     else:
         pass
 

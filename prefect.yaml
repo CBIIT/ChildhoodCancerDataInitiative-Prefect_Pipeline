@@ -474,6 +474,7 @@ deployments:
     # flow-specific parameters
     parameters:
       bucket: "ccdi-dcc"
+      template_source: "ccdi"
       template_tag: "2.1.0"
 
     # pull action to overwrite from file pull action
@@ -1920,7 +1921,7 @@ deployments:
 
   - name: model-data-compare-v3
     version: null
-    tags: ["TEST","MDF","SVB","CCDIDC-2650","Centralized Worker","V3"]
+    tags: ["Production","MDF","Centralized Worker","V3"]
     description: Create a mapping file between two models, find the diffs and then apply it to the current data to see what must change.
     entrypoint: workflows/model_data_compare.py:runner
     schedule: null
