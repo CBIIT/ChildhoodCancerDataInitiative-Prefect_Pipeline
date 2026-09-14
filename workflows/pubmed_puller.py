@@ -9,7 +9,19 @@ Searches PubMed via NCBI E-utilities for publications matching a combination of:
     - an optional publication date range
 
 ...and extracts DOIs plus basic metadata (PMID, title, journal, year, authors)
-into a CSV or JSON file, then uploads the result to a bucket.
+into CSV files, then uploads the whole output directory.
+
+Two modes:
+    1. Single query: pass phs_accession / authors / keywords / date_from / date_to
+        directly as flow parameters.
+    2. Batch: pass `query_file`, a local path to a CSV/TSV where each row is one
+        query (see `load_queries_from_file` for the expected columns). Individual
+        criteria parameters are ignored when `query_file` is given.
+
+Either way, the flow always writes a timestamped output directory containing
+one CSV per query plus a manifest.csv, and uploads that directory as a whole --
+never a single loose file -- so downstream handling doesn't need to special-case
+the single-query path.
 
 IMPORTANT NOTES
 ---------------
@@ -53,7 +65,7 @@ from typing import List, Optional
 import requests
 from prefect import flow, get_run_logger, task
 from prefect.tasks import task_input_hash
-from src.utils import get_time, file_ul
+from src.utils import get_time, folder_ul, file_dl
 
 NCBI_BASE = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils"
 
@@ -164,6 +176,64 @@ def build_query(
         query += f' AND ("{date_from}"[Date - Publication] : "{date_to}"[Date - Publication])'
 
     return query
+
+
+# --------------------------------------------------------------------------- #
+# Batch query file loading
+# --------------------------------------------------------------------------- #
+def _split_multi(value: Optional[str]) -> Optional[List[str]]:
+    """Split a semicolon-delimited cell (e.g. 'Jones;Smith J') into a list,
+    trimming whitespace and dropping empty entries. Returns None if empty."""
+    if not value:
+        return None
+    parts = [p.strip() for p in value.split(";") if p.strip()]
+    return parts or None
+
+
+@task
+def load_queries_from_file(query_file: str) -> List[dict]:
+    """
+    Read a CSV/TSV file where each row defines one PubMed query.
+
+    Delimiter is chosen from the file extension (.tsv -> tab, else comma).
+
+    Expected columns (case-insensitive, all optional per row, but at least
+    one of phs_accession/authors/keywords should be non-empty for a row to
+    produce results):
+        - label         optional; used to name that row's output file.
+                        Defaults to "query_<row number>".
+        - phs_accession a single dbGaP accession, e.g. phs000424
+        - authors       one or more names, semicolon-separated,
+                        e.g. "Jones;Smith J"
+        - keywords      one or more keywords, semicolon-separated,
+                        e.g. "childhood;cancer"
+        - date_from     "YYYY/MM/DD"
+        - date_to       "YYYY/MM/DD"
+    """
+    logger = get_run_logger()
+    path = Path(query_file)
+    delimiter = "\t" if path.suffix.lower() == ".tsv" else ","
+
+    with open(path, newline="", encoding="utf-8-sig") as f:
+        reader = csv.DictReader(f, delimiter=delimiter)
+        reader.fieldnames = [(fn or "").strip().lower() for fn in (reader.fieldnames or [])]
+        rows = list(reader)
+
+    queries = []
+    for i, row in enumerate(rows):
+        queries.append(
+            {
+                "label": (row.get("label") or f"query_{i + 1}").strip(),
+                "phs_accession": (row.get("phs_accession") or "").strip() or None,
+                "authors": _split_multi(row.get("authors")),
+                "keywords": _split_multi(row.get("keywords")),
+                "date_from": (row.get("date_from") or "").strip() or None,
+                "date_to": (row.get("date_to") or "").strip() or None,
+            }
+        )
+
+    logger.info(f"Loaded {len(queries)} quer{'y' if len(queries) == 1 else 'ies'} from {path}")
+    return queries
 
 
 # --------------------------------------------------------------------------- #
@@ -287,6 +357,81 @@ def save_results(records: List[dict], output_path: str) -> None:
     logger.info(f"Saved {len(records)} record(s) to {path.resolve()}")
 
 
+@task
+def write_manifest(summary_rows: List[dict], output_dir: Path) -> Path:
+    manifest_path = output_dir / "manifest.csv"
+    fieldnames = ["label", "query", "n_pmids", "n_missing_doi", "output_file", "error"]
+    with open(manifest_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(summary_rows)
+    return manifest_path
+
+
+# --------------------------------------------------------------------------- #
+# Per-query processing (plain helper, not a task -- it orchestrates tasks)
+# --------------------------------------------------------------------------- #
+def _sanitize_filename(label: str) -> str:
+    return "".join(c if (c.isalnum() or c in ("-", "_")) else "_" for c in label) or "query"
+
+
+def _process_query(query_spec: dict, email: str, api_key: Optional[str], output_dir: Path) -> dict:
+    logger = get_run_logger()
+    label = query_spec.get("label") or "query"
+
+    try:
+        query = build_query(
+            query_spec.get("phs_accession"),
+            query_spec.get("authors"),
+            query_spec.get("keywords"),
+            query_spec.get("date_from"),
+            query_spec.get("date_to"),
+        )
+    except ValueError as e:
+        logger.warning(f"[{label}] skipped: {e}")
+        return {
+            "label": label,
+            "query": None,
+            "n_pmids": 0,
+            "n_missing_doi": 0,
+            "output_file": None,
+            "error": str(e),
+        }
+
+    logger.info(f"[{label}] query: {query}")
+    output_file = output_dir / f"{_sanitize_filename(label)}.csv"
+
+    pmids = esearch(query, email, api_key)
+    logger.info(f"[{label}] found {len(pmids)} matching PMIDs")
+
+    if not pmids:
+        save_results([], str(output_file))
+        return {
+            "label": label,
+            "query": query,
+            "n_pmids": 0,
+            "n_missing_doi": 0,
+            "output_file": output_file.name,
+            "error": None,
+        }
+
+    records = efetch_details(pmids, email, api_key)
+    missing_doi = sum(1 for r in records if not r["doi"])
+    if missing_doi:
+        logger.warning(f"[{label}] {missing_doi} of {len(records)} records have no DOI in PubMed")
+
+    save_results(records, str(output_file))
+
+    return {
+        "label": label,
+        "query": query,
+        "n_pmids": len(pmids),
+        "n_missing_doi": missing_doi,
+        "output_file": output_file.name,
+        "error": None,
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Flow
 # --------------------------------------------------------------------------- #
@@ -294,60 +439,97 @@ def save_results(records: List[dict], output_path: str) -> None:
 def pubmed_doi_flow(
     bucket: str,
     runner: str,
+    query_file: Optional[str] = None,  # local path to a CSV/TSV of queries; see load_queries_from_file
     phs_accession: Optional[str] = None,
     authors: Optional[List[str]] = None,
     keywords: Optional[List[str]] = None,
     date_from: Optional[str] = None,  # "YYYY/MM/DD"
     date_to: Optional[str] = None,  # "YYYY/MM/DD"
-    email: str = "your_email@example.com",
-    api_key: Optional[str] = None, # NCBI API key for increased rate limits, kept optional, 
-    # as we don't want to feed this into Prefect at this time, 
+    email: Optional[str] = "your_email@example.com",
+    api_key: Optional[str] = None,  # NCBI API key for increased rate limits, kept optional,
+    # as we don't want to feed this into Prefect at this time,
     # we could set it up as a variable in Prefect later if need be.
 ) -> List[dict]:
     """
-    Search PubMed for records matching the given criteria and save DOIs + metadata.
+    Search PubMed for one or more queries and save DOIs + metadata.
 
-    At least one of phs_accession, authors, or keywords must be provided.
+    Two modes:
+        - Batch: pass `query_file` (a local CSV/TSV path). Each row becomes one
+            query. Individual phs_accession/authors/keywords/date_from/date_to
+            arguments are ignored (a warning is logged if both are given).
+        - Single: leave `query_file` as None and pass phs_accession/authors/
+            keywords/date_from/date_to directly.
+
+    Either way, results are written into one timestamped output directory
+    (one CSV per query + a manifest.csv), and that whole directory is
+    uploaded -- never a single loose file -- via `dir_ul`.
+
+    Returns a list of per-query summary dicts (label, query string, hit
+    count, missing-DOI count, output filename, error). The actual PMID/DOI
+    records live in the per-query CSV files, not in this return value.
     """
     logger = get_run_logger()
 
     time_str = get_time()
-    output_path = f"pubmed_results_{time_str}.csv"
+    output_dir = Path(f"pubmed_results_{time_str}")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    query = build_query(phs_accession, authors, keywords, date_from, date_to)
-    logger.info(f"PubMed query: {query}")
+    if query_file:
+        if phs_accession or authors or keywords or date_from or date_to:
+            logger.warning(
+                "query_file was provided; ignoring individual phs_accession/authors/"
+                "keywords/date_from/date_to arguments."
+            )
+        file_dl(bucket, query_file)
+        query_specs = load_queries_from_file(query_file)
+    else:
+        query_specs = [
+            {
+                "label": "query_1",
+                "phs_accession": phs_accession,
+                "authors": authors,
+                "keywords": keywords,
+                "date_from": date_from,
+                "date_to": date_to,
+            }
+        ]
 
-    pmids = esearch(query, email, api_key)
-    logger.info(f"Found {len(pmids)} matching PMIDs")
+    summary_rows = [
+        _process_query(spec, email, api_key, output_dir) for spec in query_specs
+    ]
 
-    if not pmids:
-        save_results([], output_path)
-        return []
+    manifest_path = write_manifest(summary_rows, output_dir)
+    logger.info(f"Wrote manifest for {len(summary_rows)} quer{'y' if len(summary_rows) == 1 else 'ies'} to {manifest_path}")
 
-    records = efetch_details(pmids, email, api_key)
-
-    missing_doi = sum(1 for r in records if not r["doi"])
-    if missing_doi:
-        logger.warning(f"{missing_doi} of {len(records)} records have no DOI in PubMed")
-
-    save_results(records, output_path)
-
-    # Upload file
-    file_ul(bucket=bucket, output_folder=runner, sub_folder="", newfile=output_path)
-
-    return records
+    # Upload the whole output directory -- always a directory, even for a
+    # single query -- so downstream handling never has to special-case this.
+    bucket_folder = f"{runner}/{output_dir.name}_{time_str}"
+    folder_ul(
+            local_folder=str(output_dir),
+            bucket=bucket,
+            destination=bucket_folder,
+            sub_folder="",
+        )
+    
+    return summary_rows
 
 
 if __name__ == "__main__":
-    # Example: papers mentioning the GTEx dbGaP accession and the keyword "eQTL"
+    # Example 1: single query (same as before)
     pubmed_doi_flow(
         bucket="my-bucket",
         runner="my-runner",
         phs_accession="phs000424",
         keywords=["eQTL"],
-        # authors=["Smith J", "Doe A"],
-        # date_from="2018/01/01",
-        # date_to="2024/12/31",
-        email="you@example.com",  # recommended by NCBI - use a real address
-        api_key=None,  # optional but recommended: https://www.ncbi.nlm.nih.gov/account/settings/
+        email="you@example.com",
+        api_key=None,
     )
+
+    # Example 2: batch mode from a CSV/TSV of queries
+    # pubmed_doi_flow(
+    #     bucket="my-bucket",
+    #     runner="my-runner",
+    #     query_file="/path/to/queries.csv",
+    #     email="you@example.com",
+    #     api_key=None,
+    # )
