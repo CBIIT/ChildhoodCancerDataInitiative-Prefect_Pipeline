@@ -431,11 +431,6 @@ def runner(
         runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
 
         # check that GDC API status is OK
-        runner_logger.info(
-            requests.get("https://api.gdc.cancer.gov/v0/submissions").text
-        )
-
-        # check that GDC API status is OK
         runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/projects").text)
 
         runner_logger.info(
