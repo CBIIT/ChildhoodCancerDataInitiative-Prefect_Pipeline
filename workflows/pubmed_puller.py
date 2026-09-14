@@ -445,7 +445,7 @@ def pubmed_doi_flow(
     keywords: Optional[List[str]] = None,
     date_from: Optional[str] = None,  # "YYYY/MM/DD"
     date_to: Optional[str] = None,  # "YYYY/MM/DD"
-    email: Optional[str] = "your_email@example.com",
+    email: Optional[str] = None,
     api_key: Optional[str] = None,  # NCBI API key for increased rate limits, kept optional,
     # as we don't want to feed this into Prefect at this time,
     # we could set it up as a variable in Prefect later if need be.

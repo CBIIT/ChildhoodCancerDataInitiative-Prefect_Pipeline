@@ -1936,7 +1936,7 @@ deployments:
       keywords: []
       date_from: null
       date_to: null
-      email: "your_email@example.com"
+      email: null
       api_key: null
 
     # pull action to overwrite from file pull action
@@ -1944,7 +1944,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2666-Pubmed_pulls
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
