@@ -139,7 +139,11 @@ def build_query(
             parts.append(f'("{phs_accession}"[Text Word] OR "{base_acc}"[Text Word])')
 
     if authors:
-        author_terms = " OR ".join(f'"{a}"[Author]' for a in authors)
+        # Deliberately unquoted: PubMed auto-truncates unquoted [Author] terms
+        # to match varying initials turns truncation
+        # OFF and requires an exact match with no initials at all, which will
+        # almost never hit a real citation.
+        author_terms = " OR ".join(f"{a}[Author]" for a in authors)
         parts.append(f"({author_terms})")
 
     if keywords:
