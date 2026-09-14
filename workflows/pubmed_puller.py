@@ -504,11 +504,10 @@ def pubmed_doi_flow(
 
     # Upload the whole output directory -- always a directory, even for a
     # single query -- so downstream handling never has to special-case this.
-    bucket_folder = f"{runner}/{output_dir.name}_{time_str}"
     folder_ul(
             local_folder=str(output_dir),
             bucket=bucket,
-            destination=bucket_folder,
+            destination=runner,
             sub_folder="",
         )
     
