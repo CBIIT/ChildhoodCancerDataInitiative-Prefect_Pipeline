@@ -481,6 +481,7 @@ def pubmed_doi_flow(
                 "keywords/date_from/date_to arguments."
             )
         file_dl(bucket, query_file)
+        query_file = Path(query_file).name
         query_specs = load_queries_from_file(query_file)
     else:
         query_specs = [
