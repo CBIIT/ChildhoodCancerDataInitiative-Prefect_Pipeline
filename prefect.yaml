@@ -1961,7 +1961,7 @@ deployments:
 
   - name: pubmed-doi-extraction-v3
     version: null
-    tags: ["TEST","CCDIDC-2666","Centralized Worker","V3"]
+    tags: ["Production","Centralized Worker","V3"]
     description: Extract DOIs and metadata from PubMed based on search criteria
     entrypoint: workflows/pubmed_puller.py:pubmed_doi_flow
     schedule: null
