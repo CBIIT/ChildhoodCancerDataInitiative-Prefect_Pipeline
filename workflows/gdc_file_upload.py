@@ -17,9 +17,31 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, task, get_run_logger
-from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret
+from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret, set_s3_resource
 from src.gdc_utils import retrieve_current_nodes
 
+
+@task(name="file_upload_gdc_client", retries=3, retry_delay_seconds=10, timeout_seconds=1200)
+def file_upload_gdc_client(id, gdc_client_exe_path, token_file, part_size, n_process):
+    """Upload file to GDC with gdc-client
+
+    Args:
+        id (str): ID of the file to upload
+        gdc_client_exe_path (str): Path to the gdc-client executable
+        token_file (str): Path to the token file for authentication
+        part_size (int): Size of each upload part
+        n_process (int): Number of processes to use for upload
+
+    Returns:
+        str: Response from the gdc-client upload command"""
+    # return response and stream output from running tool to console
+    response = ShellOperation(
+        commands=[
+            f"{gdc_client_exe_path} upload {id} -t {token_file} -c {part_size} -n {n_process}"
+        ],
+        stream_output=True,
+    ).run()
+    return response
 
 @task(name="env_setup")
 def env_setup(bucket, gdc_client_path, project_id, secret_key_name, secret_name_path):
@@ -250,19 +272,47 @@ def uploader_handler(
                     chunk_size = int(part_size * 1024 * 1024)
 
                 # upload files with gdc-client to maximize efficient upload
-                response = ShellOperation(
-                    commands=[
-                        f"{gdc_client_exe_path} upload {row['id']} -t {token_file} -c {chunk_size} -n {n_process}"
-                    ],
-                    stream_output=False,
-                ).run()
+                try:
+                    response = file_upload_gdc_client(row["id"], gdc_client_exe_path, token_file, chunk_size, n_process)
+                except TimeoutError as e:
+                    runner_logger.error(f"❌ Upload failed for file {row['id']} with error: {e}")
+                    df.loc[index, "status"] = f"ERROR: {e}"
+                    continue
 
                 # check uploads results from streamed output
-                if f"pload finished for file {row['id']}" in response[-1]:
+                if f"Upload finished for file {row['id']}" in response[-1]:
                     runner_logger.info(f"✅ Upload finished for file {row['id']}")
                     df.loc[index, "status"] = "success"
+                elif "Multipart upload finished for file" in response[-1]:
+                    runner_logger.info(f"✅ Multipart upload finished for file {row['id']}")
+                    df.loc[index, "status"] = "success"
+                elif "Connection reset by peer" in response[-1]:
+                    runner_logger.warning(f"⚠️ Connection reset by peer for file {row['id']}, retrying upload.")
+                    for retry in range(3):
+                        runner_logger.info(f"Retrying upload for file {row['id']}, attempt {retry + 1}")
+                        response = file_upload_gdc_client(row["id"], gdc_client_exe_path, token_file, chunk_size, n_process)
+                        if f"Upload finished for file {row['id']}" in response[-1] or "Multipart upload finished for file" in response[-1]:
+                            runner_logger.info(f"✅ Upload finished for file {row['id']} after retry")
+                            df.loc[index, "status"] = "success"
+                            break
+                    else:
+                        runner_logger.error(f"❌ Upload failed for file {row['id']} after retries")
+                        df.loc[index, "status"] = "ERROR: Connection reset by peer, Failure during upload"
+                elif "please try to resume" in response[-1]: #multipart upload fail
+                    runner_logger.warning(f"⚠️ Multipart upload failed for file {row['id']}, please try to resume.")
+                    for retry in range(3):
+                        runner_logger.info(f"Retrying upload for file {row['id']}, attempt {retry + 1}")
+                        response = file_upload_gdc_client(row["id"], gdc_client_exe_path, token_file, chunk_size, n_process)
+                        if f"Upload finished for file {row['id']}" in response[-1] or "Multipart upload finished for file" in response[-1]:
+                            runner_logger.info(f"✅ Upload finished for file {row['id']} after retry")
+                            df.loc[index, "status"] = "success"
+                            break
+                    else:
+                        runner_logger.error(f"❌ Upload failed for file {row['id']} after retries")
+                        df.loc[index, "status"] = "ERROR: Multipart upload failed, please try to resume"
                 else:
                     runner_logger.warning(f"Upload not successful for file {row['id']}")
+                    runner_logger.warning(f"Upload response: {response}")
                     df.loc[index, "status"] = (
                         "ERROR: NOT uploaded, Failure during upload"
                     )
@@ -342,23 +392,49 @@ def runner(
         runner_logger.info(
             ShellOperation(
                 commands=[
-                    "rm -r /usr/local/data/GDC_file_upload_*",
                     "ls -l /usr/local/data/",  # confirm removal of GDC_file_upload working dirs
+                    "ls -l /usr/local/data/GDC_file_upload_*",  # confirm removal of GDC_file_upload working dirs
+                    "ls /usr/local/data/"
                 ]
             ).run()
         )
 
+        
+        
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    "rm -r /usr/local/data/GDC_file_upload_*",
+                ]
+            ).run()
+        )
+
+        runner_logger.info(
+                f">>> Directory contents after removal of old GDC_file_upload working directories ...."
+                )
+        
+        runner_logger.info(
+            ShellOperation(
+                commands=[
+                    "ls -l /usr/local/data/",  # confirm removal of GDC_file_upload working dirs
+                ]
+            ).run()
+        )
+        
+        return None
+
     elif process_type == "check_status":
 
+        runner_logger.info("Grabbing Public IP address ....")
+        runner_logger.info(requests.get("https://ifconfig.me").text)
+        
+        runner_logger.info("Grabbing Public IP address another way....")
+        runner_logger.info(requests.get("https://ipinfo.io/ip").text)
+        
         runner_logger.info(f">>> Checking GDC API status ....")
 
         # check that GDC API status is OK
         runner_logger.info(requests.get("https://api.gdc.cancer.gov/status").text)
-
-        # check that GDC API status is OK
-        runner_logger.info(
-            requests.get("https://api.gdc.cancer.gov/v0/submissions").text
-        )
 
         # check that GDC API status is OK
         runner_logger.info(requests.get("https://api.gdc.cancer.gov/v0/projects").text)
@@ -390,66 +466,29 @@ def runner(
         runner_logger.info(f">>> Reading input file {file_name} ....")
 
         file_metadata = read_input(file_name)
+        file_metadata["status"] = ""
 
         # chdir to working path
         os.chdir(working_dir)
 
-        # perform query for UUIDs and files already uploaded to GDC
-        runner_logger.info(
-            f">>> Querying entity metadata for nodes already submitted to GDC ...."
-        )
-        already_uploaded = retrieve_current_nodes(
-            project_id=project_id,
-            node_type=node_type,
-            secret_name_path=secret_name_path,
-            secret_key_name=secret_key_name,
-        )
-
-        # compare md5sum and file_name to already uploaded files
-        already_uploaded_df = pd.DataFrame(already_uploaded)
-
-        runner_logger.info(
-            f">>> Parsing entity metadata for nodes already submitted to GDC, mathcing UUIDs ...."
-        )
-
-        not_found_in_gdc, already_submitted, matched = matching_uuid(
-            file_metadata, already_uploaded_df
-        )
-
-        # save not_found_in_gdc and already_submitted dataframes to working dir
-        not_found_in_gdc.to_csv(
-            f"{working_dir}/{file_name.replace('.tsv', '')}_not_found_in_gdc_{dt}.tsv",
-            sep="\t",
-            index=False,
-        )
-        already_submitted.to_csv(
-            f"{working_dir}/{file_name.replace('.tsv', '')}_already_submitted_{dt}.tsv",
-            sep="\t",
-            index=False,
-        )
-
-        runner_logger.info(
-            f">>> ✅ Parsing complete, of {len(file_metadata)} starting files,\n\t\t {len(matched)} files to upload,\n\t\t {len(already_submitted)} files were already submitted and validated,\n\t\t {len(not_found_in_gdc)} were not found to be submitted in GDC"
-        )
-
-        if len(matched) > 0:
+        if len(file_metadata) > 0:
             # number of files to query S3 uploads and then upload consecutively in a flow
             chunk_size = 20
 
             responses = []
 
             runner_logger.info(
-                f">>> Uploading {len(matched[matched.status == ''])} files in manifest ...."
+                f">>> Uploading {len(file_metadata[file_metadata.status == ''])} files in manifest ...."
             )
 
             # exclude for testing for now
-            for chunk in range(0, len(matched), chunk_size):
+            for chunk in range(0, len(file_metadata), chunk_size):
                 # query against indexd for the bucket URL of the file
                 runner_logger.info(
-                    f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(matched), chunk_size))}"
+                    f"Uploading files in chunk {round(chunk/chunk_size)+1} of {len(range(0, len(file_metadata), chunk_size))}"
                 )
                 subresponses = uploader_handler(
-                    matched,
+                    file_metadata[chunk : chunk + chunk_size].reset_index(drop=True),
                     gdc_client_exe_path,
                     token_path,
                     upload_part_size_mb,
@@ -459,7 +498,7 @@ def runner(
 
                 # upload intermediate subresponses to S3 in case of crash or cancellation
                 subresponses_df = pd.concat(responses)
-                int_out_fname = f'{working_dir}/{file_name.replace(".tsv", "")}_intermediate_upload_results_{dt}.tsv'
+                int_out_fname = f'{file_name.replace(".tsv", "")}_intermediate_upload_results_{dt}.tsv'
                 # save intermediate response file
                 subresponses_df.to_csv(
                     int_out_fname,
@@ -483,7 +522,7 @@ def runner(
                 index=False,
             )
         else:
-            matched.to_csv(
+            file_metadata.to_csv(
                 f"{working_dir}/{file_name}_upload_results_{dt}.tsv",
                 sep="\t",
                 index=False,
@@ -502,7 +541,7 @@ def runner(
         folder_ul(
             local_folder=f"{working_dir}",
             bucket=bucket,
-            destination=runner + "/",
+            destination=runner,
             sub_folder="",
         )
 
