@@ -1957,3 +1957,41 @@ deployments:
       name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {} 
+
+
+  - name: pubmed-doi-extraction-v3
+    version: null
+    tags: ["TEST","CCDIDC-2666","Centralized Worker","V3"]
+    description: Extract DOIs and metadata from PubMed based on search criteria
+    entrypoint: workflows/pubmed_puller.py:pubmed_doi_flow
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-dcc"
+      runner: "your_uniq_id"
+      query_file: "path/to/your/query_file.csv"
+      phs_accession: "phs002790"
+      authors: []
+      keywords: []
+      date_from: null
+      date_to: null
+      email: null
+      api_key: null
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
