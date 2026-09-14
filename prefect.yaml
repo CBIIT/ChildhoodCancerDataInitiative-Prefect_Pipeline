@@ -1930,6 +1930,7 @@ deployments:
     parameters:
       bucket: "ccdi-dcc"
       runner: "your_uniq_id"
+      query_file: "path/to/your/query_file.csv"
       phs_accession: "phs002790"
       authors: []
       keywords: []
