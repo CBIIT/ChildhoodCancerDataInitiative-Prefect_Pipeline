@@ -406,6 +406,10 @@ def runner(
                 ]
             ).run()
         )
+
+        runner_logger.info(
+                    f">>> Directory contents after removal of old GDC_file_upload working directories ...."
+                )
         
         runner_logger.info(
             ShellOperation(
