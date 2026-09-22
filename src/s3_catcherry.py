@@ -340,11 +340,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     submitted_diagnosis, submitted_diagnosis
                                 )
                                 new_diagnosis_list.append(new_diagnosis)
-                                # only apply laterality if the submitted value had a mapping
-                                if submitted_diagnosis in mci_invalid_laterality_dict:
-                                    new_laterality = mci_invalid_laterality_dict.get(submitted_diagnosis)
-                                    if pd.notna(new_laterality):
-                                        new_laterality_list.append(new_laterality)
                             df.at[index, "diagnosis"] = ";".join(new_diagnosis_list)
                         else:
                             new_diagnosis = mci_invalid_diagnosis_dict.get(
