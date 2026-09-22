@@ -332,20 +332,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                 for index, row in df.iterrows():
                     submitted_diagnosis_value = row["submitted_diagnosis"]
                     if pd.notna(submitted_diagnosis_value):
-                        if ";" in submitted_diagnosis_value:
-                            submitted_diagnosis_list = submitted_diagnosis_value.split(";")
-                            new_diagnosis_list = []
-                            for submitted_diagnosis in submitted_diagnosis_list:
-                                new_diagnosis = mci_invalid_diagnosis_dict.get(
-                                    submitted_diagnosis, submitted_diagnosis
-                                )
-                                new_diagnosis_list.append(new_diagnosis)
-                            df.at[index, "diagnosis"] = ";".join(new_diagnosis_list)
-                        else:
-                            new_diagnosis = mci_invalid_diagnosis_dict.get(
-                                submitted_diagnosis_value, submitted_diagnosis_value
-                            )
-                            df.at[index, "diagnosis"] = new_diagnosis
+                        new_diagnosis = mci_invalid_diagnosis_dict.get(
+                            submitted_diagnosis_value, submitted_diagnosis_value
+                        )
+                        df.at[index, "diagnosis"] = new_diagnosis
             meta_dfs[node] = df
 
 
