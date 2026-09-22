@@ -305,6 +305,42 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
+        # MCI submitted_diagnosis to Harmonized diagnosis transformation
+        #
+        ##############
+
+        # Clean up diagnosis values based on the MCI_invalidDiagnosisMappings.tsv file found in the docs folder.
+        mci_invalid_diagnosis_mapping_path = (
+            "docs/MCI_InvalidDiagnosisMappings.tsv"
+        )
+        mci_invalid_diagnosis_mapping = pd.read_csv(
+            mci_invalid_diagnosis_mapping_path, sep="\t", dtype=str
+        )
+
+        # create mapping dictionary for submitted_diagnosis to diagnosis
+        mci_invalid_diagnosis_dict = mci_invalid_diagnosis_mapping.set_index(
+            "submitted_diagnosis"
+        )["diagnosis"].to_dict()
+
+        catcherr_logger.info(
+            "Cleaning up diagnosis values based on MCI_InvalidDiagnosisMappings.tsv"
+        )
+
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            if "submitted_diagnosis" in df.columns:
+                for index, row in df.iterrows():
+                    submitted_diagnosis_value = row["submitted_diagnosis"]
+                    if pd.notna(submitted_diagnosis_value):
+                        new_diagnosis = mci_invalid_diagnosis_dict.get(
+                            submitted_diagnosis_value, submitted_diagnosis_value
+                        )
+                        df.at[index, "diagnosis"] = new_diagnosis
+            meta_dfs[node] = df
+
+
+        ##############
+        #
         # MCI Anatomic_site to Harmonized Anatomic_site transformation
         #
         ##############
