@@ -331,12 +331,16 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             if "submitted_diagnosis" in df.columns:
                 for index, row in df.iterrows():
                     submitted_diagnosis_value = row["submitted_diagnosis"]
-                    if pd.notna(submitted_diagnosis_value):
-                        # only apply if diagnosis is empty or NaN
-                        existing_diagnosis = df.at[index, "diagnosis"] if "diagnosis" in df.columns else None
-                        if pd.isna(existing_diagnosis) or existing_diagnosis == "":
+                    if (
+                        pd.notna(submitted_diagnosis_value)
+                        and submitted_diagnosis_value != ""
+                        and (
+                            pd.isna(row["diagnosis"])
+                            or row["diagnosis"] == ""
+                            )
+                        ):
                             new_diagnosis = mci_invalid_diagnosis_dict.get(
-                                submitted_diagnosis_value, submitted_diagnosis_value
+                                submitted_diagnosis_value, ""
                             )
                             df.at[index, "diagnosis"] = new_diagnosis
             meta_dfs[node] = df
@@ -387,7 +391,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             new_laterality_list = []
                             for anatomic_site in anatomic_site_list:
                                 new_anatomic_site = mci_invalid_anatomic_site_dict.get(
-                                    anatomic_site, anatomic_site
+                                    anatomic_site, ""
                                 )
                                 new_anatomic_site_list.append(new_anatomic_site)
                                 if anatomic_site in mci_invalid_laterality_dict:
@@ -401,11 +405,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                                     df.at[index, "laterality"] = ";".join(new_laterality_list)
                         else:
                             new_anatomic_site = mci_invalid_anatomic_site_dict.get(
-                                anatomic_site_value, anatomic_site_value
+                                anatomic_site_value, ""
                             )
                             df.at[index, "anatomic_site"] = new_anatomic_site
                             if anatomic_site_value in mci_invalid_laterality_dict and "laterality" in df.columns:
-                                new_laterality = mci_invalid_laterality_dict.get(anatomic_site_value)
+                                new_laterality = mci_invalid_laterality_dict.get(anatomic_site_value, "")
                                 existing_laterality = df.at[index, "laterality"]
                                 if pd.notna(new_laterality) and (pd.isna(existing_laterality) or existing_laterality == ""):
                                     df.at[index, "laterality"] = new_laterality
