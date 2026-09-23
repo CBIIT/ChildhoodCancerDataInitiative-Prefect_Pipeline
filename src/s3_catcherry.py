@@ -377,7 +377,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             df = meta_dfs[node]
             if "anatomic_site" in df.columns:
                 for index, row in df.iterrows():
-                    anatomic_site_value = row["submitted_anatomic_site"]
+                    anatomic_site_value = row["anatomic_site"]
                     if pd.notna(anatomic_site_value):
                         # only apply if anatomic_site target is empty or NaN
                         existing_anatomic_site = df.at[index, "anatomic_site"] if "anatomic_site" in df.columns else None
