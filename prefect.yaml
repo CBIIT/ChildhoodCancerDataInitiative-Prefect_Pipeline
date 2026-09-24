@@ -1068,9 +1068,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-- name: TEST-genetic-analysis-transform
+- name: genetic-analysis-transform
     version: null
-    tags: ["TEST", "Liftover", "DCC", "Genetic Analysis"]
+    tags: ["Prod", "Liftover", "DCC", "Genetic Analysis"]
     description: Post-liftover flow to split fusion genetic_analysis rows into separate partner rows
     entrypoint: workflows/genetic_analysis_transform.py:genetic_analysis_transform_flow
     schedule: null
