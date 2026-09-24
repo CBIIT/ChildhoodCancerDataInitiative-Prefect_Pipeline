@@ -1068,6 +1068,34 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
+- name: genetic-analysis-transform
+    version: null
+    tags: ["Prod", "Liftover", "DCC", "Genetic Analysis"]
+    description: Post-liftover flow to split fusion genetic_analysis rows into separate partner rows
+    entrypoint: workflows/genetic_analysis_transform.py:genetic_analysis_transform_flow
+    schedule: null
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-dcc"
+      submission_path: ""
+      runner: ""
+
+    # pull action to overwrite from file pull action
+    pull:
+      - prefect.deployments.steps.git_clone:
+          id: clone-step
+          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+          branch: main
+      - prefect.deployments.steps.pip_install_requirements:
+          requirements_file: requirements_python3.13_prefect3.txt
+          directory: "{{ clone-step.directory }}"
+          stream_output: False
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
+
   - name: model-to-submission-ccdi-dcc-v3
     version: null
     tags: ["DCC","Prod","V3", "Python3.13"]
