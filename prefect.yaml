@@ -1068,7 +1068,7 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-- name: genetic-analysis-transform
+  - name: genetic-analysis-transform
     version: null
     tags: ["Prod", "Liftover", "DCC", "Genetic Analysis"]
     description: Post-liftover flow to split fusion genetic_analysis rows into separate partner rows
@@ -1985,7 +1985,6 @@ deployments:
       name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {} 
-
 
   - name: pubmed-doi-extraction-v3
     version: null

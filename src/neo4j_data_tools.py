@@ -2356,6 +2356,9 @@ def write_wider_df_all_dcc(wider_df: DataFrame, output_dir: str, logger) -> None
     logger.info(f"Writing node {node_label} tsv files for study {study}")
     wider_df.drop(columns=["study"], inplace=True)
 
+    # drop duplicate rows to ensure unique entries before writing to file
+    wider_df = wider_df.drop_duplicates()
+
     # create the output directory if not exist
     study_folder = os.path.join(output_dir, study)
     os.makedirs(study_folder, exist_ok=True)
