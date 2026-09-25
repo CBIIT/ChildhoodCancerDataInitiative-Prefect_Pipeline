@@ -58,6 +58,23 @@ class ModelParser:
         self.props_file = props_file
         self.model = MDFReader(self.model_file, self.props_file, handle=handle).model
 
+def get_enum_list_type_props(model_instance: "MDFReader.model") -> list[str]:
+    """Generate a list of enum list type property names
+
+    Args:
+        model_instance (MDFReader.model): MDFReader.model instance
+
+    Returns:
+        list[str]: a list of property names, which are of enum list type
+    """
+    enum_list_type_props = []
+    for node in model_instance.nodes:
+        node_instance = model_instance.nodes[node]
+        for prop in node_instance.props:
+            if node_instance.props[prop].value_domain == "list":
+                if node_instance.props[prop].item_domain == "value_set":
+                    enum_list_type_props.append(prop)
+    return enum_list_type_props
 
 def get_enum_props_dict(model_instance: "MDFReader.model") -> dict[str, list[str]]:
     """Generate a dictionary of porperties, which has property name as key, and a list of permissible values (PV) as value
@@ -282,6 +299,7 @@ def runner_dcc(
             dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
             print("dcc mdf model created")
             enum_props_dict = get_enum_props_dict(dcc_model)
+            enum_list_type_props = get_enum_list_type_props(dcc_model)
             enum_string_props = get_enum_string_property_array(dcc_model)
             model_rel_list = get_rel_from_mdf(dcc_model)
             validation_out_file = ValidationRy_new(
@@ -289,6 +307,7 @@ def runner_dcc(
                 template_path=input_template,
                 enum_props_dict=enum_props_dict,
                 enum_string_props=enum_string_props,
+                enum_list_type_props=enum_list_type_props,
                 model_rel_list=model_rel_list
             )
         except Exception as e:

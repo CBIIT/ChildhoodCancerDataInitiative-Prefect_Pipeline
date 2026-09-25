@@ -282,6 +282,7 @@ def validate_terms_value_sets_one_sheet(
     checkccdi_object,
     enum_props_dict: dict[str, list[str]],
     enum_string_props: list[str],
+    enum_list_type_props: list[str],
 ) -> str:
     node_df = checkccdi_object.read_sheet_na(sheetname=node_name)
     properties = node_df.columns
@@ -315,8 +316,9 @@ def validate_terms_value_sets_one_sheet(
                     # pull out a complete list of all values in sub-arrays
                     uniq_item_toss = []
                     for unique_value in unique_values:
-                        # if there is a semi-colon
-                        if ";" in unique_value:
+                        # if property is a list type with enumerated values, and there is ; in the value
+                        # only parse the value if the property value_domain is list
+                        if ";" in unique_value and property in enum_list_type_props:
                             # make sure the semi-colon is not part of a pre-existing term. (This will help with most use cases, but there could be arrays that also have enums with semi-colons and that will just have to be handled manually.)
                             if (
                                 unique_value
@@ -451,6 +453,7 @@ def validate_terms_value_sets(
     file_path: str,
     enum_props_dict: dict[str, list[str]],
     enum_string_props: list[str],
+    enum_list_type_props: list[str],
     node_list: list[str],
     output_file: str,
 ) -> None:
@@ -462,7 +465,7 @@ def validate_terms_value_sets(
     
     file_object = CheckCCDI(ccdi_manifest=file_path)
     validate_str_future = validate_terms_value_sets_one_sheet.map(
-        node_list, file_object, unmapped(enum_props_dict), unmapped(enum_string_props)
+        node_list, file_object, unmapped(enum_props_dict), unmapped(enum_string_props), unmapped(enum_list_type_props)
     )
     validate_str = "".join([i.result() for i in validate_str_future])
     return_str = section_title + validate_str
@@ -2296,7 +2299,21 @@ def ValidationRy_new(file_path: str,
                     template_path: str, 
                     enum_props_dict: dict[str, list[str]], 
                     enum_string_props: list[str], 
+                    enum_list_type_props: list[str], 
                     model_rel_list: list[dict[str, str]]) -> None:
+    """Validates CCDI-DCC manifest
+
+    Args:
+        file_path (str): file path of a CCDI-DCC manifest
+        template_path (str): file path of a CCDI-DCC template
+        enum_props_dict (dict[str, list[str]]): dictionary of enumerated properties and their permissible values
+        enum_string_props (list[str]): list of properties with enumerated properties but allows free strings
+        enum_list_type_props (list[str]): list of properties that are of list type with enumerated values
+        model_rel_list (list[dict[str, str]]): list of relationships defined in the model
+
+    Returns:
+        None: this function writes validation results to an output file and does not return a value
+    """
     validation_logger = get_run_logger()
 
     todays_date = get_date()
@@ -2346,7 +2363,7 @@ def ValidationRy_new(file_path: str,
 
     # validate terms and value sets
     validation_logger.info("Checking term and value sets")
-    validate_terms_value_sets(file_path, enum_props_dict, enum_string_props, nodes_to_validate, output_file)
+    validate_terms_value_sets(file_path, enum_props_dict, enum_string_props, enum_list_type_props, nodes_to_validate, output_file)
     validation_logger.info("Term and value set validation completed successfully")
 
     # validate integer and numeric vlaues
