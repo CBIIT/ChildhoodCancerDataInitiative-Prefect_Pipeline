@@ -5,9 +5,15 @@ import sys
 parent_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 sys.path.append(parent_dir)
 from src.submission_cruncher import concatenate_submissions
-from src.utils import get_time, folder_dl, file_dl, file_ul, dl_ccdi_template
-
-
+from typing import Literal
+from src.utils import (
+    get_time,
+    folder_dl,
+    file_ul,
+    CCDI_DCC_Tags,
+    CCDI_Tags,
+)
+DropDownChoices = Literal["ccdi-dcc", "ccdi"]
 @flow(
     name="Submission Cruncher Flow",
     log_prints=True,
@@ -17,7 +23,8 @@ def submission_cruncher(
     bucket: str,
     submission_folder_path: str,
     runner: str,
-    template_path: str = "default_to_latest",
+    template_source: DropDownChoices,
+    template_tag: str,
 ) -> None:
     """Pipeline that combines all manifests in a bucket folder path into a single manifest
 
@@ -25,7 +32,8 @@ def submission_cruncher(
         bucket (str): Bucket name of where the manifests located in and the output goes to
         submission_folder_path (str): A folder path of the manifests folder
         runner (str): Unique runner name
-        template_path (str, optional): A CCDI template path in the given bucket to combine manifests. Defaults to "default_to_latest".
+        template_source (DropDownChoices): The source of the manifest template, either "ccdi-dcc" or "ccdi".
+        template_tag (str): The tag of the data model to use.
     """    
     runner_logger = get_run_logger()
 
@@ -35,16 +43,22 @@ def submission_cruncher(
     )
     folder_dl(bucket=bucket, remote_folder=submission_folder_path)
 
-    # dl template
-    if template_path != "default_to_latest":
-        runner_logger.info(f"User provided a template path in bucket {bucket}")
-        runner_logger.info(f"Downloading folder {template_path} from bucket {bucket}")
-        file_dl(bucket=bucket, filename=template_path)
-        template = os.path.basename(template_path)
+    # download the template of a given tag
+    if template_source == "ccdi-dcc":
+        template = CCDI_DCC_Tags().download_tag_manifest(
+            tag=template_tag, logger=runner_logger
+        )
+    elif template_source == "ccdi":
+        template = CCDI_Tags().download_tag_manifest(
+            tag=template_tag, logger=runner_logger
+        )
     else:
-        runner_logger.info(f"User didn't provided a template path in bucket {bucket}")
-        runner_logger.info("Downloading the latest CCDI template release")
-        template = dl_ccdi_template()
+        runner_logger.error(
+            f"Invalid template source {template_source}. Please choose either ccdi-dcc or ccdi"
+        )
+        raise ValueError(
+            f"Invalid template source {template_source}. Please choose either ccdi-dcc or ccdi"
+        )
 
     # list all the files under submission_folder_path and filter list based on the file extension
     submission_files = os.listdir(submission_folder_path)
