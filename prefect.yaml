@@ -1074,6 +1074,7 @@ deployments:
     description: Post-liftover flow to split fusion genetic_analysis rows into separate partner rows
     entrypoint: workflows/genetic_analysis_transform.py:genetic_analysis_transform_flow
     schedule: null
+
     # flow-specific parameters
     parameters:
       bucket: "ccdi-dcc"
@@ -1090,6 +1091,7 @@ deployments:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
           stream_output: False
+          
     # infra-specific fields
     work_pool:
       name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
