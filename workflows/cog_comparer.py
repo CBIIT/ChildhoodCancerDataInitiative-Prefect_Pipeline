@@ -7,6 +7,8 @@ import os
 import pandas as pd
 from prefect import flow, task, get_run_logger
 from src.utils import get_time, file_dl, folder_ul
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 
 # function to read in TSV file
@@ -305,9 +307,6 @@ def frontline_treatment_image(
         suffixes=(f"_{old_tranche_date}", f"_{new_tranche_date}"),
     ).sort_values(by="Count_" + new_tranche_date, ascending=False)
 
-    import seaborn as sns
-    import matplotlib.pyplot as plt
-
     plt.figure(figsize=(11, 6))
     # Example: df with a column "category"
     ax = sns.barplot(
@@ -385,9 +384,6 @@ def enroll_clin_trial_image(
     df_merged = df_merged.rename(
         columns={"NCI_MCI_FUP.PTNTENRLSEQELIGTREATASGNIND": "Value"}
     )
-
-    import seaborn as sns
-    import matplotlib.pyplot as plt
 
     plt.figure(figsize=(11, 6))
     ax = sns.barplot(
@@ -468,9 +464,6 @@ def match_therapy_molec_image(
         "Yes, using a commercially available therapy": "Yes, using a commercially\navailable therapy",
     }
     df_merged["Value"] = df_merged["Value"].replace(val_map)
-
-    import seaborn as sns
-    import matplotlib.pyplot as plt
 
     plt.figure(figsize=(11, 6))
     ax = sns.barplot(
