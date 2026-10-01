@@ -9,7 +9,7 @@ hyperframe==6.1.0
 importlib_metadata==8.7.1
 jmespath==1.1.0
 Markdown==3.10.2
-matplotlib==3.7.2
+matplotlib
 ctos-meval==1.2.1
 neo4j==6.2.0
 neo4j-viz==1.0.0
@@ -23,7 +23,7 @@ prefect-github==0.3.1
 prefect-shell==0.3.1
 python-dateutil==2.9.0.post0
 pytz==2025.2
-seaborn==0.12.2
+seaborn
 s3transfer==0.16.0
 sgqlc==18
 six==1.17.0
