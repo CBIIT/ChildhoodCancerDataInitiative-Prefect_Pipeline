@@ -1341,9 +1341,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-COG_comparer
+  - name: COG_comparer
     version: null
-    tags: ["TEST", "DCC", "CENTRAL WORKERS", "V3"]
+    tags: ["PROD", "DCC", "CENTRAL WORKERS", "V3"]
     description: Compare CCDI COG data with DCC data
     entrypoint: workflows/cog_comparer.py:cog_comparer
     schedule: null
@@ -1363,7 +1363,7 @@ deployments:
       - prefect.deployments.steps.git_clone:
           id: clone-step
           repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: CCDIDC-2989
+          branch: main
       - prefect.deployments.steps.pip_install_requirements:
           requirements_file: requirements_python3.13_prefect3.txt
           directory: "{{ clone-step.directory }}"
