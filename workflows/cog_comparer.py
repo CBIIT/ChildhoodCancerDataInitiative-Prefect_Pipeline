@@ -335,7 +335,8 @@ def cog_comparer(
 
 
     # map to completeness comparison the SaS Labels
-    sas_labels_df = read_tsv(sas_labels_path)
+    file_dl(sas_labels_path)
+    sas_labels_df = read_tsv(os.path.basename(sas_labels_path))
     sas_labels_df.columns = ['prop', 'label', 'cde']
     completeness_df = comparison_results['completeness_df'].merge(
         sas_labels_df,
