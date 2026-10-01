@@ -1341,9 +1341,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: COG_comparer
+  - name: TEST-COG_comparer
     version: null
-    tags: ["PROD", "DCC", "CENTRAL WORKERS", "V3"]
+    tags: ["TEST", "DCC", "CENTRAL WORKERS", "V3"]
     description: Compare CCDI COG data with DCC data
     entrypoint: workflows/cog_comparer.py:cog_comparer
     schedule: null
@@ -1353,7 +1353,10 @@ deployments:
       bucket: "ccdi-dcc"
       old_tranche_path: ""
       new_tranche_path: ""
-      output_path: ""
+      old_tranche_date: ""
+      new_tranche_date: ""
+      sas_labels_path: ""
+      runner: ""
       
     # pull action to overwrite from file pull action
     pull:
