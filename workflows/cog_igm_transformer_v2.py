@@ -195,7 +195,7 @@ def cog_igm_transform(
     # COG and IGM mapping to DCC model
     # rule source is determined by form_parsing selection
     if form_parsing in ["cog_only", "cog_and_igm"]:
-        if [i for i in os.listdir(f"{output_path}/COG/") if i.startswith('COG_JSON_table_conversion_decoded')]: # check decoded CIG TSV exists before running mapping
+        if [i for i in os.listdir(f"{output_path}/COG/") if i.startswith('COG_JSON_table_conversion_decoded')]: # check decoded COG TSV exists before running mapping
             rule_source = "COG"
             rules_file = "docs/mci_cog_igm_rules_dcc.xlsx"
             input_file = [i for i in os.listdir(f"{output_path}/COG/") if i.startswith('COG_JSON_table_conversion_decoded')][0]
