@@ -20,7 +20,7 @@ from prefect.task_runners import ConcurrentTaskRunner
 from prefect import unmapped
 from typing import TypeVar
 from importlib.metadata import version
-from pii_regex import date_regex, socsec_regex, phone_regex, phone_context_regex, zip_regex
+from src.pii_regex import date_regex, socsec_regex, phone_regex, phone_context_regex, zip_regex
 
 
 DataFrame = TypeVar("DataFrame")
