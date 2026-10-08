@@ -662,7 +662,7 @@ def validate_regex_one_sheet(
         for string_value in string_values:
             # if that value matches any of the regex
             for regex in all_regex:
-                if re.match(regex, string_value):
+                if re.search(regex, string_value):   # was: re.match(...)
                     bad_regex_strings.append(string_value)
                 else:
                     pass
