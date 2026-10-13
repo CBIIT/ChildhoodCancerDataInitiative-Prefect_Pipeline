@@ -65,6 +65,7 @@ Adenoid cystic carcinoma	Adenomas and adenocarcinomas;Other Solid Tumors	ICD-O-3
 Adenoma, NOS	Adenomas and adenocarcinomas;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Adenomatoid Odontogenic Tumor	Other Solid Tumors	WHO5 Pediatric Tumor
 Adenosarcoma	Complex mixed and stromal neoplasms	ICD-O-3.2
+Adnexal adenocarcinoma, NOS	Adnexal and skin appendage neoplasms	 ICD-O-3.2
 Adrenal cortical adenoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Adrenal cortical carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Adrenocortical Adenoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
@@ -89,6 +90,7 @@ Angiomyolipoma	Renal Tumors	WHO5 Pediatric Tumor
 Angiomyosarcoma	Myomatous neoplasms	ICD-O-3.2
 Angiomyxoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
 Angiosarcoma	Soft Tissue Tumors	WHO5 Pediatric Tumor
+Askin tumor	Odontogenic tumors	 ICD-O-3.2
 Astroblastoma	Gliomas	ICD-O-3.2
 Astroblastoma, MN1-altered	High-grade Gliomas;Low-grade Gliomas	WHO5 Pediatric Tumor
 Astrocytoma, anaplastic	Gliomas	ICD-O-3.2
@@ -277,6 +279,7 @@ Dysplastic cerebellar gangliocytoma (Lhermitte-Duclos disease)	Glioneuronal and 
 Dysplastic gangliocytoma of cerebellum (Lhermitte-Duclos)	Neuroepitheliomatous neoplasms	ICD-O-3.2
 Dysplastic Melanocytic Nevus	Other Solid Tumors	WHO5 Pediatric Tumor
 EBV-associated Smooth Muscle Tumor	Soft Tissue Tumors	WHO5 Pediatric Tumor
+Embryonal adenoma	Adenomas and adenocarcinomas	 ICD-O-3.2
 Embryonal carcinoma, NOS	Germ cell neoplasms	ICD-O-3.2
 Embryonal Rhabdomyosarcoma	Rhabdomyosarcoma	WHO5 Pediatric Tumor
 Embryonal rhabdomyosarcoma, NOS	Myomatous neoplasms	ICD-O-3.2
@@ -420,6 +423,7 @@ Infiltrating duct carcinoma, NOS	Adenomas and adenocarcinomas	ICD-O-3.2
 Infiltrating duct mixed with other types of carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Infiltrating ductular carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Inflammatory Myofibroblastic Tumor	Soft Tissue Tumors	WHO5 Pediatric Tumor
+Insulinoma, NOS	Adenomas and adenocarcinomas	 ICD-O-3.2
 Intracranial mesenchymal tumor, FET-CREB fusion-positive	CNS Sarcomas	WHO CNS5
 Intracranial Mesenchymal Tumors, FET::CREB Fusion-positive	CNS Sarcomas	WHO5 Pediatric Tumor
 Intraductal carcinoma and lobular carcinoma in situ	Adenomas and adenocarcinomas	ICD-O-3.2
@@ -527,6 +531,7 @@ Mesenchymoma, malignant	Complex mixed and stromal neoplasms	ICD-O-3.2
 Mesenchymoma, NOS	Complex mixed and stromal neoplasms	ICD-O-3.2
 Mesoblastic nephroma	Complex mixed and stromal neoplasms	ICD-O-3.2
 Mesothelioma, biphasic, malignant	Mesothelial neoplasms	ICD-O-3.2
+Mesothelioma, malignant	Mesothelial neoplasms	 ICD-O-3.2
 Metanephric Adenofibroma	Renal Tumors	WHO5 Pediatric Tumor
 Metastatic signet ring cell carcinoma	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Metastatic Tumor, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
@@ -545,6 +550,7 @@ Mucinous cystadenocarcinoma, NOS	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Mucinous cystic tumor of borderline malignancy	Cystic, mucinous and serous neoplasms	ICD-O-3.2
 Mucinous Tumor, NOS	Other Solid Tumors	WHO5 Pediatric Tumor
 Mucoepidermoid carcinoma	Mucoepidermoid neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
+Mucoepidermoid tumor	Mucoepidermoid neoplasms	 ICD-O-3.2
 Multinodular and vacuolating neuronal tumor	Glioneuronal and Neuronal Tumors	WHO CNS5
 Mycosis fungoides	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Myelodysplastic syndrome with excess blasts	Myelodysplastic syndromes	ICD-O-3.2
@@ -636,6 +642,7 @@ Osteosarcoma	Osteosarcoma	WHO5 Pediatric Tumor
 Osteosarcoma, NOS	Osseous and chondromatous neoplasms	ICD-O-3.2
 Other CNS Embryonal Tumors	Other CNS Embryonal Tumors	WHO5 Pediatric Tumor
 Other low-grade B-cell lymphomas of the CNS	Other CNS	WHO CNS5
+Oxyphilic adenocarcinoma	Adenomas and adenocarcinomas	 ICD-O-3.2
 Palmar/plantar type fibromatosis	Fibromatous neoplasms	ICD-O-3.2
 Pancreatic neuroendocrine tumor, nonfunctioning	Adenomas and adenocarcinomas	ICD-O-3.2
 Pancreatoblastoma	Complex mixed and stromal neoplasms;Other Solid Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
@@ -654,6 +661,7 @@ Papillary Renal Cell Carcinoma	Renal Tumors	WHO5 Pediatric Tumor
 Papillary Thyroid Carcinoma	Endocrine and Neuroendocrine Tumors	WHO5 Pediatric Tumor
 Papillary tumor of pineal region	Gliomas;Other Brain Tumors	ICD-O-3.2;WHO5 Pediatric Tumor
 Papillary urothelial carcinoma, non-invasive	Transitional cell papillomas and carcinomas	ICD-O-3.2
+Papillary urothelial neoplasm of low malignant potential	Transitional cell papillomas and carcinomas	 ICD-O-3.2
 Paraganglioma, malignant	Paragangliomas and glomus tumors	ICD-O-3.2
 Paraganglioma, NOS	Paragangliomas and glomus tumors;Other CNS	ICD-O-3.2;WHO5 Pediatric Tumor
 Parosteal osteosarcoma	Osseous and chondromatous neoplasms	ICD-O-3.2
@@ -790,6 +798,7 @@ Spinal Ependymoma	Ependymoma	WHO5 Pediatric Tumor
 Spinal ependymoma, MYCN-amplified	Ependymoma	WHO CNS5
 Spinal ependymoma, NOS or NEC	Ependymoma	WHO CNS5
 Spindle cell carcinoma, NOS	Epithelial neoplasms, NOS	ICD-O-3.2
+Spindle cell nevus, NOS	Nevi and melanomas	 ICD-O-3.2
 Spindle cell rhabdomyosarcoma	Myomatous neoplasms	ICD-O-3.2
 Spindle cell sarcoma	Soft tissue tumors and sarcomas, NOS	ICD-O-3.2
 Spindle Cell Sarcoma, NEC	Soft Tissue Tumors	WHO5 Pediatric Tumor
