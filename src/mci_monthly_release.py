@@ -46,8 +46,10 @@ def read_mci_staging_folder(bucket_path: str):
                 # This only exclude
                 if object_basename.startswith(".") or "P_____" in object_basename:
                     pass
-                else:
+                elif object_basename.endswith("_metadata.xlsx"): # only include xlsx files with _metadata in the filename
                     download_list.append({"object_key":object_key, "filename":object_basename})
+                else:
+                    pass
         else:
             pass
     print(f"Files in bucket path {bucket_path} counts: {len(download_list)}")
