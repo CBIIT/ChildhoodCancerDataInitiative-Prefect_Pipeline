@@ -322,20 +322,20 @@ RETURN
 
     # Query for study nodes
     stats_get_study_nodes: str = """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n)
+MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(n)
 UNWIND labels(n) AS NodeLabel
 RETURN DISTINCT NodeLabel
 """
 
     # Query to get all records per study in the database, with escaped curly braces
     stats_get_study_node_counts: str = """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(n:{node})
 RETURN labels(n) AS NodeType, COUNT(n) AS Value
 """
 
     # Query to get file size
     stats_get_study_node_file_size: str = """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.md5sum IS NOT NULL
 WITH n.md5sum AS md5, n.file_size AS fileSize, labels(n) as NodeType
 WITH md5, NodeType, MIN(fileSize) AS uniqueFileSize
@@ -346,7 +346,7 @@ RETURN
 
     # Query to get library strategies
     stats_get_study_library_strategy: str = """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL
 WITH study, COLLECT(DISTINCT n.library_strategy) AS Value, labels(n) as NodeType   
 RETURN NodeType, Value
@@ -354,7 +354,7 @@ RETURN NodeType, Value
 
     # Get file count by sequencing file library strategy
     stats_get_study_library_strategy_count: str = """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL AND n.file_url IS NOT NULL
 WITH n.library_strategy AS NodeType, n.dcf_indexd_guid AS dcfGuid
 WITH NodeType, COUNT(DISTINCT dcfGuid) AS Value
@@ -363,7 +363,7 @@ RETURN [NodeType] AS NodeType, Value
 
     # Get file count by sequencing file library strategy
     stats_get_study_library_strategy_size: str = """
-MATCH (study:study {{study_id: "{study_id}"}})-[*0..6]-(n:{node})
+MATCH (study:study {{study_id: "{study_id}"}})<-[*0..6]-(n:{node})
 WHERE n.file_size IS NOT NULL AND n.library_strategy IS NOT NULL AND n.file_url IS NOT NULL
 WITH n.library_strategy AS NodeType, n.file_url AS fileUrl, n.file_size AS fileSize
 WITH NodeType, fileUrl, MIN(fileSize) AS uniqueFileSize
