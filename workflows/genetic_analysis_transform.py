@@ -141,6 +141,7 @@ def transform_genetic_analysis(sheet_dfs: dict) -> dict:
             # construct the primary row (the first gene data)
             primary_row = base.copy()
             primary_row["alteration_location_role"] = "Five Prime Partner"
+            primary_row["genetic_analysis_id"] = f"{base['genetic_analysis_id']}_A"
             new_rows.append(primary_row)
 
             # construct partner row (fusion partner gene data)
@@ -149,6 +150,7 @@ def transform_genetic_analysis(sheet_dfs: dict) -> dict:
             partner_row["transcript"] = base["fusion_partner_transcript"]
             partner_row["alteration_region_number"] = base["fusion_partner_exon"]
             partner_row["alteration_location_role"] = "Three Prime Partner"
+            partner_row["genetic_analysis_id"] = f"{base['genetic_analysis_id']}_B"
             new_rows.append(partner_row)
 
         # if not a fusion record, carry the row through unchanged
@@ -195,7 +197,7 @@ def genetic_analysis_transform_flow(bucket: str, submission_path: str, runner: s
     fixed_dfs = transform_genetic_analysis(sheet_dfs)
 
     # save: convert fixed dataframes --> local TSVs
-    output_folder = f"output_id_fixed_{get_time()}" # create output folder
+    output_folder = f"ga_node_fixed_{get_time()}" # create output folder
     logger.info(f"Saving fixed TSVs to local folder: {output_folder}")
     save_tsvs_to_folder(fixed_dfs, output_folder) # populate folder with fixed TSVs
 
