@@ -1360,6 +1360,12 @@ def check_file_extension_type_match(file_df: DataFrame) -> str:
                 "txt",
                 "tsv",
             ]  # if there is an "out" extension, likely a text or tsv file
+        elif "bam" == file_extension:
+            # unaligned BAMs are typed as ubam
+            if "unaligned" in file_name.lower():
+                inferred_type = "ubam"
+            else:
+                inferred_type = "bam"
         elif "dcm" == file_extension:
             inferred_type = "dicom"
         elif "fq" == file_extension:
@@ -1373,7 +1379,10 @@ def check_file_extension_type_match(file_df: DataFrame) -> str:
         else:
             inferred_type = file_extension.lower()
 
-        if file_type.lower() not in inferred_type:
+        inferred_types = (
+            inferred_type if isinstance(inferred_type, list) else [inferred_type]
+        )
+        if file_type.lower() not in inferred_types:
             extension_type_mismatch.append(
                 {
                     "node": row["node"],
