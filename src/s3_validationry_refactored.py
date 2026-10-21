@@ -1316,15 +1316,9 @@ def check_file_extension_type_match(file_df: DataFrame) -> str:
         file_extension = os.path.splitext(file_name)[1].lower().lstrip(".")
 
         # create tbi and bai flag exceptions
-        if ".tbi" in file_extension:
-            tbi_flag = True
-        else:
-            tbi_flag = False
-
-        if ".bai" in file_extension:
-            bai_flag = True
-        else:
-            bai_flag = False
+        # (the extension has no leading period, so compare for equality)
+        tbi_flag = file_extension == "tbi"
+        bai_flag = file_extension == "bai"
 
         # if you pull out a .gz extension
         if file_extension == "gz":
@@ -1370,10 +1364,22 @@ def check_file_extension_type_match(file_df: DataFrame) -> str:
             inferred_type = "nifti"
         elif "tab" == file_extension:
             inferred_type = ["tsv", "txt"]
+        elif "bam" == file_extension:
+            # unaligned BAMs are typed as ubam rather than bam
+            if "unaligned" in file_name.lower():
+                inferred_type = "ubam"
+            else:
+                inferred_type = "bam"
         else:
             inferred_type = file_extension.lower()
 
-        if file_type.lower() not in inferred_type:
+        # normalize to a list so the check is an exact match, not a substring match
+        # (otherwise "bam" in "ubam" would be True and mislabeled files would pass)
+        inferred_types = (
+            inferred_type if isinstance(inferred_type, list) else [inferred_type]
+        )
+
+        if file_type.lower() not in inferred_types:
             extension_type_mismatch.append(
                 {
                     "node": row["node"],
@@ -1388,7 +1394,7 @@ def check_file_extension_type_match(file_df: DataFrame) -> str:
             WARN_FLAG = False
             print_str = (
                 print_str
-                + f"\tERROR: There are files that have a file_type that does not match the inferred type file extension based on the file_name:\n"
+                + "\tERROR: There are files that have a file_type that does not match the inferred type file extension based on the file_name:\n"
             )
             mismatch_df = pd.DataFrame.from_records(extension_type_mismatch)
             mismatch_df["file_name"] = mismatch_df["file_name"].str.wrap(40)
