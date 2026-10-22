@@ -240,7 +240,7 @@ COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	dose	default		d
 COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	dose_unit	default		default			
 COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	dose_route	default		default			
 COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	dose_frequency	default		default			
-COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	protocol	parse	"CNS_TX_CHEMO_CNS.COG_ID_ENUM,Tx Chemo:CNS.COG_ID_ENUM,TX_CHEMO_SOFT_TISSUE_SARCOMA.COG_ID_ENUM,TX_CHEMO_RARE_TUMORS.COG_ID_ENUM,TX_CHEMO_OSTEOSARCOMA.COG_ID_ENUM,TX_CHEMO_EWINGS_SARCOMA.COG_ID_ENUM,TX_CHEMO_GERM_CELL_TUMOR.COG_ID_ENUM,TX_CHEMO_LIVER_TUMORS.COG_ID_ENUM"				
 COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
 COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	participant.participant_id	liftover	upi				
 COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	treatment_chemotherapy_id	liftover	upi	suffix	treatment_chemo_pharma		
@@ -255,7 +255,7 @@ COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	dose	default	
 COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	dose_unit	default		default			
 COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	dose_route	default		default			
 COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	dose_frequency	default		default			
-COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	protocol	parse	"CNS_TX_CHEMO_CNS.COG_ID_ENUM,Tx Chemo:CNS.COG_ID_ENUM,TX_CHEMO_SOFT_TISSUE_SARCOMA.COG_ID_ENUM,TX_CHEMO_RARE_TUMORS.COG_ID_ENUM,TX_CHEMO_OSTEOSARCOMA.COG_ID_ENUM,TX_CHEMO_EWINGS_SARCOMA.COG_ID_ENUM,TX_CHEMO_GERM_CELL_TUMOR.COG_ID_ENUM,TX_CHEMO_LIVER_TUMORS.COG_ID_ENUM"				
 COG	treatment_chemotherapy_chemo		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
 COG	treatment_chemotherapy_chemo		treatment_chemotherapy	participant.participant_id	liftover	upi				
 COG	treatment_chemotherapy_chemo		treatment_chemotherapy	treatment_chemotherapy_id	liftover	upi	suffix	treatment_chemo_chemo		
@@ -270,7 +270,7 @@ COG	treatment_chemotherapy_chemo		treatment_chemotherapy	dose	default		default
 COG	treatment_chemotherapy_chemo		treatment_chemotherapy	dose_unit	default		default			
 COG	treatment_chemotherapy_chemo		treatment_chemotherapy	dose_route	default		default			
 COG	treatment_chemotherapy_chemo		treatment_chemotherapy	dose_frequency	default		default			
-COG	treatment_chemotherapy_chemo		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	protocol	parse	"CNS_TX_CHEMO_CNS.COG_ID_ENUM,Tx Chemo:CNS.COG_ID_ENUM,TX_CHEMO_SOFT_TISSUE_SARCOMA.COG_ID_ENUM,TX_CHEMO_RARE_TUMORS.COG_ID_ENUM,TX_CHEMO_OSTEOSARCOMA.COG_ID_ENUM,TX_CHEMO_EWINGS_SARCOMA.COG_ID_ENUM,TX_CHEMO_GERM_CELL_TUMOR.COG_ID_ENUM,TX_CHEMO_LIVER_TUMORS.COG_ID_ENUM"				
 COG	treatment_chemotherapy_tmt		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
 COG	treatment_chemotherapy_tmt		treatment_chemotherapy	participant.participant_id	liftover	upi				
 COG	treatment_chemotherapy_tmt		treatment_chemotherapy	treatment_chemotherapy_id	liftover	upi	suffix	treatment_chemo_tmt		
@@ -285,7 +285,7 @@ COG	treatment_chemotherapy_tmt		treatment_chemotherapy	dose	default		default
 COG	treatment_chemotherapy_tmt		treatment_chemotherapy	dose_unit	default		default			
 COG	treatment_chemotherapy_tmt		treatment_chemotherapy	dose_route	default		default			
 COG	treatment_chemotherapy_tmt		treatment_chemotherapy	dose_frequency	default		default			
-COG	treatment_chemotherapy_tmt		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	protocol	parse	"CNS_TX_CHEMO_CNS.COG_ID_ENUM,Tx Chemo:CNS.COG_ID_ENUM,TX_CHEMO_SOFT_TISSUE_SARCOMA.COG_ID_ENUM,TX_CHEMO_RARE_TUMORS.COG_ID_ENUM,TX_CHEMO_OSTEOSARCOMA.COG_ID_ENUM,TX_CHEMO_EWINGS_SARCOMA.COG_ID_ENUM,TX_CHEMO_GERM_CELL_TUMOR.COG_ID_ENUM,TX_CHEMO_LIVER_TUMORS.COG_ID_ENUM"				
 COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
 COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	participant.participant_id	liftover	upi				
 COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	treatment_chemotherapy_id	cns_chemo_id	"upi,CNS_TX_CHEMO_CNS.AGT_ADM_NM"				
@@ -300,7 +300,7 @@ COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	dose	default	
 COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	dose_unit	default		default			
 COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	dose_route	default		default			
 COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	dose_frequency	default		default			
-COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	protocol	parse	"CNS_TX_CHEMO_CNS.COG_ID_ENUM,Tx Chemo:CNS.COG_ID_ENUM,TX_CHEMO_SOFT_TISSUE_SARCOMA.COG_ID_ENUM,TX_CHEMO_RARE_TUMORS.COG_ID_ENUM,TX_CHEMO_OSTEOSARCOMA.COG_ID_ENUM,TX_CHEMO_EWINGS_SARCOMA.COG_ID_ENUM,TX_CHEMO_GERM_CELL_TUMOR.COG_ID_ENUM,TX_CHEMO_LIVER_TUMORS.COG_ID_ENUM"				
 COG	cns_dx	TRUE	diagnosis	submitted_diagnosis_category	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
 COG	cns_mets		diagnosis	submitted_diagnosis_category	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
 COG	cns_rel_prog_dx		diagnosis	submitted_diagnosis_category	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
