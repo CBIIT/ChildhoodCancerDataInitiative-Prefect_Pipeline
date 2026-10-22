@@ -197,7 +197,8 @@ def cog_igm_transform(
     if form_parsing in ["cog_only", "cog_and_igm"]:
         if [i for i in os.listdir(f"{output_path}/COG/") if i.startswith('COG_JSON_table_conversion_decoded')]: # check decoded COG TSV exists before running mapping
             rule_source = "COG"
-            rules_file = "docs/mci_cog_igm_rules_dcc.xlsx"
+            #rules_file = "docs/mci_cog_igm_rules_dcc.xlsx"
+            rules_file = "docs/mci_cog_igm_rules_dcc.txt"
             input_file = [i for i in os.listdir(f"{output_path}/COG/") if i.startswith('COG_JSON_table_conversion_decoded')][0]
             manifest_path = local_manifest_path
             output_path = output_path
