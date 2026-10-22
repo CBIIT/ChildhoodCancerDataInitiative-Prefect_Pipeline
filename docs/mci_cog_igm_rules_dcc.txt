@@ -1,0 +1,314 @@
+source	mode	core	node	property	function	inputs	modifier	modifier_value	required_default	notes
+COG	NOTE	NOTE	NOTE	NOTE	mode	"instance or record type (e.g. if differnet mapped records for ggiven source record, e.g. CNS intital dx vs CNS integrated dx)"				
+COG	NOTE	NOTE	NOTE	NOTE	core	"if this source prop contains a non-Null value, generate a mapped record"				
+COG	NOTE	NOTE	NOTE	NOTE	node	destination node in model				
+COG	NOTE	NOTE	NOTE	NOTE	property	destination prop in model				
+COG	NOTE	NOTE	NOTE	NOTE	function	function in Transformer to perform transformation				
+COG	NOTE	NOTE	NOTE	NOTE	inputs	inputs from source record to transform				
+COG	NOTE	NOTE	NOTE	NOTE	modifier	"comma delimited array of modifiers to apply post funciton transformation, eg. Suffix, prefix, default, priority, regex_remove or regex_replace. Requires modifier_value be supplied"				
+COG	NOTE	NOTE	NOTE	NOTE	modifier_value	hash (#) delimited array/list of modifier values that are in same order to  modifiers to be applied. Regex_replace should be % delimited between match value and relacement value (e.g. match_remove%match_replace				
+COG	NOTE	NOTE	NOTE	NOTE	required_default	"if destination prop is a required prop on node in model, what is default value to assign if no value generated from source data"				
+COG	participant		participant	type	default		default	participant		
+COG	participant		participant	participant_id	liftover	upi				
+COG	participant		participant	race	race_eth	"DEMOGRAPHY.DM_CRACE,DEMOGRAPHY.DM_ETHNIC"			Not Reported	
+COG	participant		participant	sex_at_birth	liftover	DEMOGRAPHY.DM_SEX			Not Reported	
+COG	participant		participant	consent_group.consent_group_id	default		default	phs002790_GRU		
+COG	initial_dx		diagnosis	type	default		default	diagnosis		
+COG	initial_dx		diagnosis	participant.participant_id	liftover	upi				
+COG	cns_dx	TRUE	diagnosis	submitted_diagnosis	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_ATRT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CNSOTH,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CPT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CRNPRG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EBYONO,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EPDMM,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GCT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GLNRN,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_HGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_LGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_MEDUBL,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_SARC,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_ATRT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CNSOTH,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CPT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CRNPRG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EBYONO,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EPDMM,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GCT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GLNRN,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_HGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_LGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_MEDUBL,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_SARC"	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
+COG	initial_dx		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,COG_UPR_DX.DATE_DIA"			-999	
+COG	initial_dx		diagnosis	submitted_diagnosis_classification_system	default		default	ICD-O-3.2	Not Reported	
+COG	initial_dx		diagnosis	disease_phase	default		default	Initial Diagnosis		
+COG	initial_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT			Not Reported	"excluding ON_STUDY_DX_SOFT_TISSUE_SARCOMA.PTMETDSZENRPZTIND4 since Y/N binary, no qualitative info on spaital extent"
+COG	initial_dx		diagnosis	submitted_anatomic_site	liftover	COG_UPR_DX.TOPO_TEXT			Not Reported	
+COG	initial_dx		diagnosis	tumor_stage_clinical_t	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_T_STG,THYROID_CARCINOMA.THYROID_CLIN_T_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_T_STG,MELANOMA.MELANM_TUMOR_C_T_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_T_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_T_STG"				
+COG	initial_dx		diagnosis	tumor_stage_clinical_m	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_M_STG,THYROID_CARCINOMA.THYROID_CLIN_M_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_M_STG,MELANOMA.MELANM_TUMOR_C_M_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_M_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_M_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_M_STG,ON_STUDY_DX_CNS.CNSTMRMSTG,CNS_ON_STUDY_INITIAL_DIAGNOSIS.SUPPTU_QVAL_TUPTDZSTG"				
+COG	initial_dx		diagnosis	tumor_stage_clinical_n	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_N_STG,THYROID_CARCINOMA.THYROID_CLIN_N_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_N_STG,MELANOMA.MELANM_TUMOR_C_N_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_N_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_N_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_N_STG"				
+COG	initial_dx		diagnosis	tumor_grade	tumor_grade	"ON_STUDY_DX_CNS.TUMOR_GP_ST,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SA_TUM_FRE_CL_HIS_GD,ON_STUDY_DX_OSTEOGENIC_SARCOMA.NEOHSTGD"			Not Reported	
+COG	initial_dx		diagnosis	laterality	liftover	ON_STUDY_DX_GERM_CELL_TUMOR.PRM_TUMOR_LATERAL_TP				
+COG	initial_dx		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"				
+COG	initial_dx		diagnosis	diagnosis_basis	dx_basis	"CNS_ON_STUDY_INITIAL_DIAGNOSIS.PR_PRTYP_DXMETH_IMG,CNS_ON_STUDY_INITIAL_DIAGNOSIS.PR_PRTYP_DXMETH_TUHSTO,CNS_ON_STUDY_INITIAL_DIAGNOSIS.PR_PRTYP_DXMETH_TUMK,ON_STUDY_DX.PR_PRTYP_DXMETH_PTB,ON_STUDY_DX.PR_PRTYP_DXMETH_BMA,ON_STUDY_DX.PR_PRTYP_DXMETH_CBB,ON_STUDY_DX.PR_PRTYP_DXMETH_NON,ON_STUDY_DX.PR_PRTYP_DXMETH_OTH"			Clinical	
+COG	cns_dx		diagnosis	type	default		default	diagnosis		
+COG	cns_dx		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	cns_mets		diagnosis	submitted_diagnosis	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_ATRT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CNSOTH,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CPT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CRNPRG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EBYONO,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EPDMM,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GCT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GLNRN,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_HGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_LGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_MEDUBL,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_SARC,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_ATRT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CNSOTH,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CPT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CRNPRG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EBYONO,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EPDMM,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GCT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GLNRN,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_HGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_LGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_MEDUBL,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_SARC"	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
+COG	cns_dx		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,COG_UPR_DX.DATE_DIA"			Other	
+COG	cns_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO CNS5	Not Reported	
+COG	cns_dx		diagnosis	disease_phase	default		default	Initial Diagnosis	Not Reported	CNS_ON_STUDY_INITIAL_DIAGNOSIS.TU_TUYN_METDZ_PRESENT is Y/N question about metastases present at study entry but does not provide spatial extent and tracks with what CNS_ON_STUDY_INITIAL_DIAGNOSIS.SUPPTU_QVAL_TUPTDZSTG indicates
+COG	cns_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	CNS_ON_STUDY_INITIAL_DIAGNOSIS.SUPPTU_QVAL_TUPTDZSTG			Not Reported	
+COG	cns_dx		diagnosis	submitted_anatomic_site	liftover	COG_UPR_DX.TOPO_TEXT				
+COG	cns_dx		diagnosis	tumor_stage_clinical_t	default		default	Not Reported	Not Reported	
+COG	cns_dx		diagnosis	tumor_stage_clinical_m	parse	"ON_STUDY_DX_CNS.CNSTMRMSTG,CNS_ON_STUDY_INITIAL_DIAGNOSIS.SUPPTU_QVAL_TUPTDZSTG"				
+COG	cns_dx		diagnosis	tumor_stage_clinical_n	default		default	Not Reported	Not Reported	
+COG	cns_dx		diagnosis	tumor_grade	tumor_grade	ON_STUDY_DX_CNS.TUMOR_GP_ST				
+COG	cns_dx		diagnosis	laterality	liftover					
+COG	cns_dx		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	CNS5		
+COG	cns_dx		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	rare_dx		diagnosis	type	default		default	diagnosis		
+COG	rare_dx		diagnosis	participant.participant_id	liftover	upi				
+COG	cns_rel_prog_dx		diagnosis	submitted_diagnosis	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_ATRT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CNSOTH,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CPT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CRNPRG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EBYONO,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EPDMM,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GCT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GLNRN,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_HGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_LGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_MEDUBL,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_SARC,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_ATRT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CNSOTH,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CPT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CRNPRG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EBYONO,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EPDMM,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GCT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GLNRN,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_HGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_LGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_MEDUBL,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_SARC"	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
+COG	rare_dx		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,COG_UPR_DX.DATE_DIA"				
+COG	rare_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO5 Pediatric Tumor	Not Reported	
+COG	rare_dx		diagnosis	disease_phase	default		default	Initial Diagnosis	Not Reported	
+COG	rare_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT			Not Reported	
+COG	rare_dx		diagnosis	submitted_anatomic_site	liftover	COG_UPR_DX.TOPO_TEXT				
+COG	rare_dx		diagnosis	tumor_stage_clinical_t	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_T_STG,THYROID_CARCINOMA.THYROID_CLIN_T_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_T_STG,MELANOMA.MELANM_TUMOR_C_T_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_T_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_T_STG"				
+COG	rare_dx		diagnosis	tumor_stage_clinical_m	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_M_STG,THYROID_CARCINOMA.THYROID_CLIN_M_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_M_STG,MELANOMA.MELANM_TUMOR_C_M_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_M_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_M_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_M_STG"				
+COG	rare_dx		diagnosis	tumor_stage_clinical_n	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_N_STG,THYROID_CARCINOMA.THYROID_CLIN_N_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_N_STG,MELANOMA.MELANM_TUMOR_C_N_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_N_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_N_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_N_STG"			Not Reported	
+COG	rare_dx		diagnosis	tumor_grade	tumor_grade				Not Reported	
+COG	rare_dx		diagnosis	laterality	default		default	Not Reported		
+COG	rare_dx		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	Rare_WHO5		
+COG	rare_dx		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	cns_rel_prog_dx		diagnosis	type	default		default	diagnosis		
+COG	cns_rel_prog_dx		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	initial_dx		diagnosis	submitted_diagnosis	liftover	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
+COG	cns_rel_prog_dx		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,RLP_PROG_CNS.DZ_RECUR_PROG_DX_DT"			Other	
+COG	cns_rel_prog_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO CNS5	Not Reported	
+COG	cns_rel_prog_dx	TRUE	diagnosis	disease_phase	parse	RLP_PROG_CNS.PROG_REL_STAT			Not Reported	
+COG	cns_rel_prog_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT				
+COG	cns_rel_prog_dx		diagnosis	submitted_anatomic_site	parse	"RLP_PROG_CNS.DZPROG_REL_SITE_TXT,COG_UPR_DX.TOPO_TEXT,RLP_PROG_CNS.MET_REL_PROG_LOC_CATE_A4,RLP_PROG_CNS.MET_REL_PROG_LOC_CATE_A5,RLP_PROG_CNS.MET_REL_PROG_LOC_CATE_A6"				
+COG	cns_rel_prog_dx		diagnosis	tumor_stage_clinical_t	default		default	Not Reported		
+COG	cns_rel_prog_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
+COG	cns_rel_prog_dx		diagnosis	tumor_stage_clinical_n	default		default	Not Reported		
+COG	cns_rel_prog_dx		diagnosis	tumor_grade	default		default	Not Reported		
+COG	cns_rel_prog_dx		diagnosis	laterality	default		default	Not Reported		
+COG	cns_rel_prog_dx		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	ProgRel		
+COG	cns_rel_prog_dx		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	rare_rel_prog_dx		diagnosis	type	default		default	diagnosis		
+COG	rare_rel_prog_dx		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	osteo_rel_prog_dx		diagnosis	submitted_diagnosis	substudy_dx	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
+COG	rare_rel_prog_dx		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,RLP_PROG_RARE_TUMORS.DZ_RECUR_PROG_DX_DT"				
+COG	rare_rel_prog_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO5 Pediatric Tumor	Not Reported	
+COG	rare_rel_prog_dx	TRUE	diagnosis	disease_phase	parse	RLP_PROG_RARE_TUMORS.PROG_REL_STAT			Not Reported	
+COG	rare_rel_prog_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT				
+COG	rare_rel_prog_dx		diagnosis	submitted_anatomic_site	parse	"COG_UPR_DX.TOPO_TEXT,RLP_PROG_RARE_TUMORS.RELPROGLCLCAT_A2"				
+COG	rare_rel_prog_dx		diagnosis	tumor_stage_clinical_t	default		default	Not Reported		
+COG	rare_rel_prog_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
+COG	rare_rel_prog_dx		diagnosis	tumor_stage_clinical_n	default		default	Not Reported		
+COG	rare_rel_prog_dx		diagnosis	tumor_grade	default		default	Not Reported		
+COG	rare_rel_prog_dx		diagnosis	laterality	default		default	Not Reported		
+COG	rare_rel_prog_dx		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	ProgRel		
+COG	rare_rel_prog_dx		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	sts_rel_prog_dx		diagnosis	type	default		default	diagnosis		
+COG	sts_rel_prog_dx		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	rare_dx	TRUE	diagnosis	submitted_diagnosis	liftover	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
+COG	sts_rel_prog_dx		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,RLP_PROG_SOFT_TISSUE_SARCOMA.DZ_RECUR_PROG_DX_DT"			Other	
+COG	sts_rel_prog_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO5 Pediatric Tumor	Not Reported	
+COG	sts_rel_prog_dx	TRUE	diagnosis	disease_phase	parse	RLP_PROG_SOFT_TISSUE_SARCOMA.PROG_REL_STAT			Not Reported	
+COG	sts_rel_prog_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT				
+COG	sts_rel_prog_dx		diagnosis	submitted_anatomic_site	parse	"RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A01,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A02,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A03,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A04,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A05,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A06,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A07,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A08,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A09,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A10,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A11,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A12,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A13,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A14,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_NM_A15,RLP_PROG_SOFT_TISSUE_SARCOMA.DZPROG_REL_SITE_TXT,"				
+COG	sts_rel_prog_dx		diagnosis	tumor_stage_clinical_t	default		default	Not Reported		
+COG	sts_rel_prog_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
+COG	sts_rel_prog_dx		diagnosis	tumor_stage_clinical_n	default		default	Not Reported		
+COG	sts_rel_prog_dx		diagnosis	tumor_grade	default		default	Not Reported		
+COG	sts_rel_prog_dx		diagnosis	laterality	default		default	Not Reported		
+COG	sts_rel_prog_dx		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	ProgRel		
+COG	sts_rel_prog_dx		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	rare_mets		diagnosis	type	default		default	diagnosis		
+COG	rare_mets		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	rare_mets		diagnosis	submitted_diagnosis	substudy_dx	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
+COG	rare_mets		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,COG_UPR_DX.DATE_DIA"				
+COG	rare_mets		diagnosis	submitted_diagnosis_classification_system	default		default	WHO5 Pediatric Tumor	Not Reported	
+COG	rare_mets		diagnosis	disease_phase	default		default	Initial Diagnosis	Not Reported	
+COG	rare_mets		diagnosis	tumor_spatial_extent	default		default	Metastatic		
+COG	rare_mets	TRUE	diagnosis	submitted_anatomic_site	parse	"ADRENOCORTICAL_CARCINOMA.ADRENO_MET_DZ_ANAT_SITE_NM_A1,ADRENOCORTICAL_CARCINOMA.ADRENO_MET_DZ_ANAT_SITE_NM_A2,ADRENOCORTICAL_CARCINOMA.ADRENO_MET_DZ_ANAT_SITE_NM_A3,ADRENOCORTICAL_CARCINOMA.ADRENO_MET_DZ_ANAT_SITE_NM_A4,ADRENOCORTICAL_CARCINOMA.ADRENO_MET_DZ_ANAT_SITE_NM_A5,ADRENOCORTICAL_CARCINOMA.MET_DZ_ANAT_STE_TXT_X1,RETINOBLASTOMA.MET_DZ_ANAT_STE_TXT_X2,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A1,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A2,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A3,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A4,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A5,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A6,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A7,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A8,RETINOBLASTOMA.RET_MET_DZ_ANAT_SITE_NM_A9,"				
+COG	rare_mets		diagnosis	tumor_stage_clinical_t	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_T_STG,THYROID_CARCINOMA.THYROID_CLIN_T_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_T_STG,MELANOMA.MELANM_TUMOR_C_T_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_T_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_T_STG"	default	Not Reported		
+COG	rare_mets		diagnosis	tumor_stage_clinical_m	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_M_STG,THYROID_CARCINOMA.THYROID_CLIN_M_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_M_STG,MELANOMA.MELANM_TUMOR_C_M_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_M_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_M_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_M_STG,ON_STUDY_DX_CNS.CNSTMRMSTG"				
+COG	rare_mets		diagnosis	tumor_stage_clinical_n	parse	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_N_STG,THYROID_CARCINOMA.THYROID_CLIN_N_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_N_STG,MELANOMA.MELANM_TUMOR_C_N_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_N_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_N_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_N_STG"	default	Not Reported		
+COG	rare_mets		diagnosis	tumor_grade	default		default	Not Reported		
+COG	rare_mets		diagnosis	laterality	default		default	Not Reported		
+COG	rare_mets		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	Met		
+COG	rare_mets		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	cns_mets		diagnosis	type	default		default	diagnosis		
+COG	cns_mets		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	rare_rel_prog_dx		diagnosis	submitted_diagnosis	substudy_dx	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
+COG	cns_mets		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,COG_UPR_DX.DATE_DIA"			Other	
+COG	cns_mets		diagnosis	submitted_diagnosis_classification_system	default		default	WHO CNS5	Not Reported	
+COG	cns_mets		diagnosis	disease_phase	default		default	Initial Diagnosis	Not Reported	
+COG	cns_mets		diagnosis	tumor_spatial_extent	default		default	Metastatic		
+COG	cns_mets	TRUE	diagnosis	submitted_anatomic_site	parse	"CNS_ON_STUDY_INITIAL_DIAGNOSIS.TU_TULOC_LOCMETSDZ_BRAIN,CNS_ON_STUDY_INITIAL_DIAGNOSIS.TU_TULOC_LOCMETSDZ_CSF,CNS_ON_STUDY_INITIAL_DIAGNOSIS.TU_TULOC_LOCMETSDZ_EXTRA_CNS,CNS_ON_STUDY_INITIAL_DIAGNOSIS.TU_TULOC_LOCMETSDZ_SPCRD,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_NM_A1,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_NM_A2,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_NM_A3,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_NM_A4,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_NM_A5,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_NM_A6,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_NM_A7,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_NM_A8,ON_STUDY_DX_GERM_CELL_TUMOR.MET_DZ_ANAT_SITE_SP,"				
+COG	cns_mets		diagnosis	tumor_stage_clinical_t	default		default	Not Reported		
+COG	cns_mets		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
+COG	cns_mets		diagnosis	tumor_stage_clinical_n	default		default	Not Reported	Not Reported	
+COG	cns_mets		diagnosis	tumor_grade	tumor_grade	ON_STUDY_DX_CNS.TUMOR_GP_ST				
+COG	cns_mets		diagnosis	laterality	liftover					
+COG	cns_mets		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	Met		
+COG	cns_mets		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	sts_mets		diagnosis	type	default		default	diagnosis		
+COG	sts_mets		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	sts_dx	TRUE	diagnosis	submitted_diagnosis	substudy_dx	"ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X2,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X2,DIAGNOSIS_DETAIL_FORM.MI_MICAT_RMSTYPE,DIAGNOSIS_DETAIL_FORM.MI_MICAT_NRSTSTYPE,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_RMS,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_NRSTS,"	"regex_remove,priority"	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)#1"	Not Reported	
+COG	sts_mets		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,COG_UPR_DX.DATE_DIA"				
+COG	sts_mets		diagnosis	submitted_diagnosis_classification_system	default		default	ICD-O-3.2	Not Reported	
+COG	sts_mets		diagnosis	disease_phase	default		default	Initial Diagnosis	Not Reported	
+COG	sts_mets		diagnosis	tumor_spatial_extent	default		default	Metastatic		
+COG	sts_mets	TRUE	diagnosis	submitted_anatomic_site	parse	"ON_STUDY_DX_OSTEOGENIC_SARCOMA.MET_DZ_ANAT_SITE_NM_A1,ON_STUDY_DX_OSTEOGENIC_SARCOMA.MET_DZ_ANAT_SITE_NM_A2,ON_STUDY_DX_OSTEOGENIC_SARCOMA.MET_DZ_ANAT_SITE_NM_A3,ON_STUDY_DX_OSTEOGENIC_SARCOMA.MET_DZ_ANAT_SITE_NM_A4,ON_STUDY_DX_OSTEOGENIC_SARCOMA.MET_DZ_ANAT_SITE_NM_A5,ON_STUDY_DX_OSTEOGENIC_SARCOMA.MET_DZ_ANAT_SITE_NM_A6,ON_STUDY_DX_OSTEOGENIC_SARCOMA.NE_SPE_ME_ANLCT_SPEC,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.DZ_INVLT_SITE_O_SPEC,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A01,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A02,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A03,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A04,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A05,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A06,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A07,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A08,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A09,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A10,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A11,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A12,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A13,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A14,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MET_DZ_ANAT_SITE_NM_A15,"				
+COG	sts_mets		diagnosis	tumor_stage_clinical_t	default		default	Not Reported		
+COG	sts_mets		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
+COG	sts_mets		diagnosis	tumor_stage_clinical_n	default		default	Not Reported	Not Reported	
+COG	sts_mets		diagnosis	tumor_grade	tumor_grade	"ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SA_TUM_FRE_CL_HIS_GD,ON_STUDY_DX_OSTEOGENIC_SARCOMA.NEOHSTGD"				
+COG	sts_mets		diagnosis	laterality	default		default	Not Reported		
+COG	sts_mets		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	Met		
+COG	sts_mets		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	sts_dx		diagnosis	type	default		default	diagnosis		
+COG	sts_dx		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	sts_mets		diagnosis	submitted_diagnosis	liftover	"ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X2,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X2,DIAGNOSIS_DETAIL_FORM.MI_MICAT_RMSTYPE,DIAGNOSIS_DETAIL_FORM.MI_MICAT_NRSTSTYPE,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_RMS,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_NRSTS,"	"regex_remove,priority"	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)#1"	Not Reported	
+COG	sts_dx		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,COG_UPR_DX.DATE_DIA"			Other	
+COG	sts_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO5 Pediatric Tumor	Not Reported	
+COG	sts_dx		diagnosis	disease_phase	default		default	Initial Diagnosis	Not Reported	
+COG	sts_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT			Not Reported	
+COG	sts_dx		diagnosis	submitted_anatomic_site	liftover	COG_UPR_DX.TOPO_TEXT				
+COG	sts_dx		diagnosis	tumor_stage_clinical_t	default		default	Not Reported		
+COG	sts_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
+COG	sts_dx		diagnosis	tumor_stage_clinical_n	default		default	Not Reported	Not Reported	
+COG	sts_dx		diagnosis	tumor_grade	tumor_grade	"ON_STUDY_DX_CNS.TUMOR_GP_ST,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SA_TUM_FRE_CL_HIS_GD,ON_STUDY_DX_OSTEOGENIC_SARCOMA.NEOHSTGD"				
+COG	sts_dx		diagnosis	laterality	default		default	Not Reported		
+COG	sts_dx		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	STS5		
+COG	sts_dx		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	osteo_rel_prog_dx		diagnosis	type	default		default	diagnosis		
+COG	osteo_rel_prog_dx		diagnosis	participant.participant_id	liftover	upi			Not Reported	
+COG	sts_rel_prog_dx		diagnosis	submitted_diagnosis	substudy_dx	"ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X2,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X2,DIAGNOSIS_DETAIL_FORM.MI_MICAT_RMSTYPE,DIAGNOSIS_DETAIL_FORM.MI_MICAT_NRSTSTYPE,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_RMS,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_NRSTS,"	"regex_remove,priority"	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)#1"	Not Reported	
+COG	osteo_rel_prog_dx		diagnosis	age_at_diagnosis	age_event	"DEMOGRAPHY.DM_BRTHDAT,RLP_PROG_OSTEOSARCOMA.DZ_RECUR_PROG_DX_DT"				
+COG	osteo_rel_prog_dx		diagnosis	submitted_diagnosis_classification_system	default		default	ICD-O-3.2	Not Reported	
+COG	osteo_rel_prog_dx	TRUE	diagnosis	disease_phase	parse	RLP_PROG_OSTEOSARCOMA.PROG_REL_STAT			Not Reported	
+COG	osteo_rel_prog_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT				
+COG	osteo_rel_prog_dx		diagnosis	submitted_anatomic_site	parse	"RLP_PROG_OSTEOSARCOMA.DZPROG_REL_SITE_NM_A1,RLP_PROG_OSTEOSARCOMA.DZPROG_REL_SITE_NM_A2,RLP_PROG_OSTEOSARCOMA.DZPROG_REL_SITE_NM_A3,RLP_PROG_OSTEOSARCOMA.DZPROG_REL_SITE_NM_A4,RLP_PROG_OSTEOSARCOMA.DZPROG_REL_SITE_TXT"				
+COG	osteo_rel_prog_dx		diagnosis	tumor_stage_clinical_t	default		default	Not Reported		
+COG	osteo_rel_prog_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
+COG	osteo_rel_prog_dx		diagnosis	tumor_stage_clinical_n	default		default	Not Reported		
+COG	osteo_rel_prog_dx		diagnosis	tumor_grade	default		default	Not Reported		
+COG	osteo_rel_prog_dx		diagnosis	laterality	default		default	Not Reported		
+COG	osteo_rel_prog_dx		diagnosis	diagnosis_id	concatenation	"upi,COG_UPR_DX.PTDT_IDP"	suffix	ProgRel		
+COG	osteo_rel_prog_dx		diagnosis	diagnosis_basis	default		default	Clinical		
+COG	survival		survival	type	default		default	survival		
+COG	survival		survival	participant.participant_id	liftover	upi				
+COG	survival		survival	survival_id	concatenation	"upi,FOLLOW_UP.REP_EVAL_PD_TP"	regex_replace	[\s()]%_		
+COG	survival	TRUE	survival	last_known_survival_status	liftover	FOLLOW_UP.PT_VST				
+COG	survival		survival	age_at_last_known_survival_status	age_event	"DEMOGRAPHY.DM_BRTHDAT,FOLLOW_UP.PT_FU_END_DT"			-999	
+COG	survival		survival	first_event	parse	"RLP_PROG_CNS.PROG_REL_STAT,RLP_PROG_RARE_TUMORS.PROG_REL_STAT,RLP_PROG_SOFT_TISSUE_SARCOMA.PROG_REL_STAT,RLP_PROG_OSTEOSARCOMA.PROG_REL_STAT"				"check if Prog/Relapse; if so, Not Censored; otherwise Blank"
+COG	survival		survival	event_free_survival_status	efs_status	"RLP_PROG_CNS.PROG_REL_STAT,RLP_PROG_RARE_TUMORS.PROG_REL_STAT,RLP_PROG_SOFT_TISSUE_SARCOMA.PROG_REL_STAT,RLP_PROG_OSTEOSARCOMA.PROG_REL_STAT"				
+COG	survival		survival	age_at_event_free_survival_status	efs_age	"DEMOGRAPHY.DM_BRTHDAT,RLP_PROG_CNS.DZ_RECUR_PROG_DX_DT,RLP_PROG_RARE_TUMORS.DZ_RECUR_PROG_DX_DT,RLP_PROG_SOFT_TISSUE_SARCOMA.DZ_RECUR_PROG_DX_DT,RLP_PROG_OSTEOSARCOMA.DZ_RECUR_PROG_DX_DT"				
+COG	survival		survival	cause_of_death	default		default			
+COG	treatment_response		treatment_response	type	default		default	treatment_response		
+COG	treatment_response		treatment_response	participant.participant_id	liftover	upi				
+COG	treatment_response		treatment_response	treatment_response_id	concatenation	"upi,FOLLOW_UP.REP_EVAL_PD_TP"	"suffix,regex_replace"	response#[\s()]%_	Not Reported	Do post-hoc filtering of Not Reported repsonses
+COG	treatment_response		treatment_response	response	follow_up_treat_response	"FOLLOW_UP.FSTLNTXINIDXADM,FOLLOW_UP.DZ_EXM_REP_IND_2,FOLLOW_UP.COMP_RESP_CONF_IND_3,FOLLOW_UP.DZ_REL_PROG_IND3"				
+COG	treatment_response		treatment_response	age_at_response	default		default	-999		
+COG	treatment_response		treatment_response	response_category	default		default	Not Reported		
+COG	treatment_response		treatment_response	response_system	default		default	Not Reported		
+COG	treatment_radiation		treatment_radiation	type	default		default	treatment_radiation		
+COG	treatment_radiation		treatment_radiation	participant.participant_id	liftover	upi				
+COG	treatment_radiation		treatment_radiation	treatment_radiation_id	liftover	upi	suffix	treatment_radiation		
+COG	treatment_radiation		treatment_radiation	treatment_type	default		default	Radiation		
+COG	treatment_radiation	TRUE	treatment_radiation	radiation_therapy_type	parse	"RADIATION_THERAPY.RT_TX_TP_A1,RADIATION_THERAPY.RT_TX_TP_A2,RADIATION_THERAPY.RT_TX_TP_A3,RADIATION_THERAPY.RT_TX_TP_A4,Tx Chemo:CNS.AGT_ADM_NM_A33,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A33,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A33,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A33,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A33,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A33,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A33"	regex_remove	"\s\([A-Za-z, ]+\)"		
+COG	treatment_radiation		treatment_radiation	age_at_treatment_start	default		default	-999		
+COG	treatment_radiation		treatment_radiation	age_at_treatment_end	default		default	-999	Not Reported	
+COG	treatment_radiation		treatment_radiation	beam_radiation_type	parse	"RADIATION_THERAPY.RT_TX_TP_A2,RADIATION_THERAPY.RT_TX_TP_A3,RADIATION_THERAPY.RT_TX_TP_A4"				
+COG	treatment_radiation		treatment_radiation	total_radiation_dose	default		default			
+COG	treatment_radiation		treatment_radiation	total_radiation_dose_unit	default		default			
+COG	treatment_radiation		treatment_radiation	submitted_anatomic_site	default		default	Not Reported		
+COG	treatment_radiation		treatment_radiation	submitted_anatomic_site	default		default			
+COG	treatment_radiation		treatment_radiation	laterality_of_radiation_field	default		default			
+COG	treatment_radiation		treatment_radiation	radiation_therapy_fraction	default		default			
+COG	treatment_radiation		treatment_radiation	fraction_radiation_dose	default		default			
+COG	treatment_radiation		treatment_radiation	fraction_radiation_dose_unit	default		default			
+COG	treatment_other		treatment_other	type	default		default	treatment_other		
+COG	treatment_other		treatment_other	participant.participant_id	liftover	upi				
+COG	treatment_other		treatment_other	treatment_other_id	liftover	upi	suffix	treatment_other		
+COG	treatment_other		treatment_other	treatment_type	default		default	Other		
+COG	treatment_other	TRUE	treatment_other	other_treatment_type	other_treatment_type	"FOLLOW_UP.FSTLNTXINIDXADMCAT_A3,STEM_CELL_TRANSPLANT.BMSCT_TP,FOLLOW_UP.FSTLNTXINIDXADMCAT_A5"				
+COG	treatment_other		treatment_other	age_at_treatment_start	default		default	-999		
+COG	treatment_other		treatment_other	age_at_treatment_end	default		default	-999		
+COG	treatment_surgery		treatment_surgery	type	default		default	treatment_surgery		
+COG	treatment_surgery		treatment_surgery	participant.participant_id	liftover	upi				
+COG	treatment_surgery		treatment_surgery	treatment_surgery_id	liftover	upi	suffix	treatment_surgery		
+COG	treatment_surgery		treatment_surgery	treatment_type	default		default	Surgery	Not Applicable	
+COG	treatment_surgery	TRUE	treatment_surgery	surgery_type	surgery_type	"ON_STUDY_DX.PR_PRSCAT_EXT,CNS_ON_STUDY_INITIAL_DIAGNOSIS.PR_PRSCAT_EXT_SURGRPT,ON_STUDY_DX_CNS.TUM_RES_EXT_TP,ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MGNSTPTMRCTN,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.RGLMPNDEXCRSLTP,ON_STDY_AT_INITIAL_DIAGNOSIS.PR_PRSCAT_EXT_SURGRPT,ON_STUDY_DX_EWING_SARCOMA.SURG_MARG_RES_FNG_TP,ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2,ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND,SURG_RESECTION_OSTEOSARCOMA.TUM_RES_EXT_TP,SURG_RESECTION_OSTEOSARCOMA.SURG_MARG_RES_FNG_TP,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SURG_RESECT_EXT_TP,SURGERY.SURG_RESECT_EXT_TP"			Not Applicable	
+COG	treatment_surgery		treatment_surgery	age_at_treatment_start	age_event	"DEMOGRAPHY.DM_BRTHDAT,SURG_RESECTION_OSTEOSARCOMA.PT_SURGICAL_RESEC_DT"			-999	
+COG	treatment_surgery		treatment_surgery	age_at_treatment_end	age_event	"DEMOGRAPHY.DM_BRTHDAT,SURG_RESECTION_OSTEOSARCOMA.PT_SURGICAL_RESEC_DT"			-999	
+COG	treatment_surgery		treatment_surgery	submitted_anatomic_site	default		default	Not Reported		
+COG	treatment_surgery		treatment_surgery	resection_margin_status	resection_margin_status	"ON_STUDY_DX.PR_PRSCAT_EXT,CNS_ON_STUDY_INITIAL_DIAGNOSIS.PR_PRSCAT_EXT_SURGRPT,ON_STUDY_DX_CNS.TUM_RES_EXT_TP,ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MGNSTPTMRCTN,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.RGLMPNDEXCRSLTP,ON_STDY_AT_INITIAL_DIAGNOSIS.PR_PRSCAT_EXT_SURGRPT,ON_STUDY_DX_EWING_SARCOMA.SURG_MARG_RES_FNG_TP,SURG_RESECTION_OSTEOSARCOMA.TUM_RES_EXT_TP,SURG_RESECTION_OSTEOSARCOMA.SURG_MARG_RES_FNG_TP,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SURG_RESECT_EXT_TP,SURGERY.SURG_RESECT_EXT_TP"		Not Applicable		
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	participant.participant_id	liftover	upi				
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	treatment_chemotherapy_id	liftover	upi	suffix	treatment_chemo_immuno		
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	treatment_type	default		default	Chemotherapy		
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	chemotherapy_type	default		default	Immunotherapy		
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	age_at_treatment_start	default		default	-999		
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	age_at_treatment_end	default		default	-999		
+COG	treatment_chemotherapy_immunotherapy	TRUE	treatment_chemotherapy	chemotherapy_agent	parse	"Tx Chemo:CNS.AGT_ADM_NM_A02,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A02,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A02,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A02,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A02,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A02,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A02,Tx Chemo:CNS.AGT_ADM_NM_A07,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A07,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A07,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A07,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A07,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A07,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A07,Tx Chemo:CNS.AGT_ADM_NM_A15,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A15,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A15,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A15,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A15,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A15,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A15,Tx Chemo:CNS.AGT_ADM_NM_A22,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A22,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A22,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A22,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A22,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A22,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A22,Tx Chemo:CNS.AGT_ADM_NM_A26,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A26,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A26,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A26,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A26,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A26,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A26,Tx Chemo:CNS.AGT_ADM_NM_A29,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A29,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A29,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A29,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A29,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A29,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A29"				
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	chemotherapy_class	default		default			
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	chemotherapy_subclass	default		default			
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	dose	default		default			
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	dose_unit	default		default			
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	dose_route	default		default			
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	dose_frequency	default		default			
+COG	treatment_chemotherapy_immunotherapy		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	participant.participant_id	liftover	upi				
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	treatment_chemotherapy_id	liftover	upi	suffix	treatment_chemo_pharma		
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	treatment_type	default		default	Chemotherapy		
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	chemotherapy_type	default		default	Pharmacotherapy		
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	age_at_treatment_start	default		default	-999		
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	age_at_treatment_end	default		default	-999		
+COG	treatment_chemotherapy_pharmacotherapy	TRUE	treatment_chemotherapy	chemotherapy_agent	parse	"Tx Chemo:CNS.AGT_ADM_NM_A01,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A01,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A01,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A01,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A01,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A01,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A01,Tx Chemo:CNS.AGT_ADM_NM_A49,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A49,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A49,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A49,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A49,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A49,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A49"				
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	chemotherapy_class	default		default			
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	chemotherapy_subclass	default		default			
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	dose	default		default			
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	dose_unit	default		default			
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	dose_route	default		default			
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	dose_frequency	default		default			
+COG	treatment_chemotherapy_pharmacotherapy		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	participant.participant_id	liftover	upi				
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	treatment_chemotherapy_id	liftover	upi	suffix	treatment_chemo_chemo		
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	treatment_type	default		default	Chemotherapy		
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	chemotherapy_type	default		default	Chemotherapy		
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	age_at_treatment_start	default		default	-999		
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	age_at_treatment_end	default		default	-999		
+COG	treatment_chemotherapy_chemo	TRUE	treatment_chemotherapy	chemotherapy_agent	parse	"Tx Chemo:CNS.AGT_ADM_NM_A03,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A03,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A03,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A03,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A03,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A03,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A03,Tx Chemo:CNS.AGT_ADM_NM_A04,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A04,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A04,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A04,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A04,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A04,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A04,Tx Chemo:CNS.AGT_ADM_NM_A05,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A05,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A05,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A05,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A05,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A05,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A05,Tx Chemo:CNS.AGT_ADM_NM_A06,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A06,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A06,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A06,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A06,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A06,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A06,Tx Chemo:CNS.AGT_ADM_NM_A08,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A08,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A08,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A08,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A08,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A08,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A08,Tx Chemo:CNS.AGT_ADM_NM_A10,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A10,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A10,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A10,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A10,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A10,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A10,Tx Chemo:CNS.AGT_ADM_NM_A11,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A11,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A11,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A11,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A11,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A11,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A11,Tx Chemo:CNS.AGT_ADM_NM_A12,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A12,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A12,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A12,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A12,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A12,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A12,Tx Chemo:CNS.AGT_ADM_NM_A13,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A13,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A13,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A13,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A13,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A13,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A13,Tx Chemo:CNS.AGT_ADM_NM_A14,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A14,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A14,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A14,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A14,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A14,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A14,Tx Chemo:CNS.AGT_ADM_NM_A16,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A16,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A16,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A16,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A16,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A16,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A16,Tx Chemo:CNS.AGT_ADM_NM_A17,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A17,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A17,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A17,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A17,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A17,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A17,Tx Chemo:CNS.AGT_ADM_NM_A18,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A18,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A18,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A18,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A18,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A18,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A18,Tx Chemo:CNS.AGT_ADM_NM_A20,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A20,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A20,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A20,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A20,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A20,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A20,Tx Chemo:CNS.AGT_ADM_NM_A21,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A21,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A21,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A21,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A21,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A21,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A21,Tx Chemo:CNS.AGT_ADM_NM_A24,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A24,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A24,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A24,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A24,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A24,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A24,Tx Chemo:CNS.AGT_ADM_NM_A25,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A25,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A25,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A25,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A25,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A25,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A25,Tx Chemo:CNS.AGT_ADM_NM_A27,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A27,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A27,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A27,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A27,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A27,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A27,Tx Chemo:CNS.AGT_ADM_NM_A30,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A30,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A30,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A30,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A30,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A30,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A30,Tx Chemo:CNS.AGT_ADM_NM_A31,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A31,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A31,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A31,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A31,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A31,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A31,Tx Chemo:CNS.AGT_ADM_NM_A32,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A32,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A32,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A32,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A32,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A32,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A32,Tx Chemo:CNS.AGT_ADM_NM_A35,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A35,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A35,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A35,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A35,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A35,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A35,Tx Chemo:CNS.AGT_ADM_NM_A36,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A36,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A36,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A36,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A36,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A36,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A36,Tx Chemo:CNS.AGT_ADM_NM_A38,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A38,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A38,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A38,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A38,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A38,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A38,Tx Chemo:CNS.AGT_ADM_NM_A42,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A42,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A42,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A42,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A42,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A42,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A42,Tx Chemo:CNS.AGT_ADM_NM_A44,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A44,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A44,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A44,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A44,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A44,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A44,Tx Chemo:CNS.AGT_ADM_NM_A46,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A46,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A46,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A46,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A46,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A46,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A46,Tx Chemo:CNS.AGT_ADM_NM_A47,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A47,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A47,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A47,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A47,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A47,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A47,Tx Chemo:CNS.AGT_ADM_NM_A48,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A48,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A48,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A48,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A48,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A48,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A48"				
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	chemotherapy_class	default		default			
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	chemotherapy_subclass	default		default			
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	dose	default		default			
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	dose_unit	default		default			
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	dose_route	default		default			
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	dose_frequency	default		default			
+COG	treatment_chemotherapy_chemo		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	participant.participant_id	liftover	upi				
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	treatment_chemotherapy_id	liftover	upi	suffix	treatment_chemo_tmt		
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	treatment_type	default		default	Chemotherapy		
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	chemotherapy_type	default		default	Targeted Molecular Therapy		
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	age_at_treatment_start	default		default	-999		
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	age_at_treatment_end	default		default	-999		
+COG	treatment_chemotherapy_tmt	TRUE	treatment_chemotherapy	chemotherapy_agent	parse	"Tx Chemo:CNS.AGT_ADM_NM_A09,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A09,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A09,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A09,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A09,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A09,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A09,Tx Chemo:CNS.AGT_ADM_NM_A19,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A19,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A19,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A19,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A19,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A19,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A19,Tx Chemo:CNS.AGT_ADM_NM_A23,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A23,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A23,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A23,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A23,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A23,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A23,Tx Chemo:CNS.AGT_ADM_NM_A28,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A28,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A28,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A28,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A28,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A28,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A28,Tx Chemo:CNS.AGT_ADM_NM_A37,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A37,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A37,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A37,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A37,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A37,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A37,Tx Chemo:CNS.AGT_ADM_NM_A39,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A39,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A39,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A39,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A39,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A39,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A39,Tx Chemo:CNS.AGT_ADM_NM_A40,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A40,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A40,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A40,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A40,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A40,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A40,Tx Chemo:CNS.AGT_ADM_NM_A41,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A41,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A41,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A41,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A41,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A41,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A41,Tx Chemo:CNS.AGT_ADM_NM_A43,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A43,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A43,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A43,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A43,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A43,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A43,Tx Chemo:CNS.AGT_ADM_NM_A45,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A45,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A45,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A45,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A45,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A45,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A45"				
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	chemotherapy_class	default		default			
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	chemotherapy_subclass	default		default			
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	dose	default		default			
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	dose_unit	default		default			
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	dose_route	default		default			
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	dose_frequency	default		default			
+COG	treatment_chemotherapy_tmt		treatment_chemotherapy	protocol	default		default			
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	type	default		default	treatment_chemotherapy		
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	participant.participant_id	liftover	upi				
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	treatment_chemotherapy_id	cns_chemo_id	"upi,CNS_TX_CHEMO_CNS.AGT_ADM_NM"				
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	treatment_type	default		default	Chemotherapy		
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	chemotherapy_type	cns_chemo_type	CNS_TX_CHEMO_CNS.AGT_ADM_NM				
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	age_at_treatment_start	default		default	-999		
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	age_at_treatment_end	default		default	-999		
+COG	treatment_chemotherapy_cns_tx_cns_form	TRUE	treatment_chemotherapy	chemotherapy_agent	liftover	CNS_TX_CHEMO_CNS.AGT_ADM_NM				
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	chemotherapy_class	default		default			
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	chemotherapy_subclass	default		default			
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	dose	default		default			
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	dose_unit	default		default			
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	dose_route	default		default			
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	dose_frequency	default		default			
+COG	treatment_chemotherapy_cns_tx_cns_form		treatment_chemotherapy	protocol	default		default			
+COG	cns_dx	TRUE	diagnosis	submitted_diagnosis_category	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
+COG	cns_mets		diagnosis	submitted_diagnosis_category	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
+COG	cns_rel_prog_dx		diagnosis	submitted_diagnosis_category	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
+COG	sts_dx	TRUE	diagnosis	submitted_diagnosis_category	substudy_dx	"DIAGNOSIS_DETAIL_STS.STSDXTP,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXTP,DIAGNOSIS_DETAIL_FORM.GF_GFCAT_DXTYPE"			Not Reported	
+COG	sts_mets		diagnosis	submitted_diagnosis_category	substudy_dx	"DIAGNOSIS_DETAIL_STS.STSDXTP,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXTP,DIAGNOSIS_DETAIL_FORM.GF_GFCAT_DXTYPE"			Not Reported	
+COG	sts_rel_prog_dx		diagnosis	submitted_diagnosis_category	substudy_dx	"DIAGNOSIS_DETAIL_STS.STSDXTP,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXTP,DIAGNOSIS_DETAIL_FORM.GF_GFCAT_DXTYPE"			Not Reported	
+COG	rare_dx	TRUE	diagnosis	submitted_diagnosis_category	substudy_dx	ON_STUDY_DX_RARE_TUMOR.CCMARARENEOPDXTP			Not Reported	
+COG	rare_mets		diagnosis	submitted_diagnosis_category	substudy_dx	ON_STUDY_DX_RARE_TUMOR.CCMARARENEOPDXTP			Not Reported	
+COG	rare_rel_prog_dx		diagnosis	submitted_diagnosis_category	substudy_dx	ON_STUDY_DX_RARE_TUMOR.CCMARARENEOPDXTP			Not Reported	
+COG	osteo_rel_prog_dx		diagnosis	submitted_diagnosis_category	default		default	Not Reported	Not Reported	
+COG	initial_dx		diagnosis	submitted_diagnosis_category	default		default	Not Reported	Not Reported	

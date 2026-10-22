@@ -54,11 +54,11 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
         runner_logger.error(f"Invalid rule source: {rule_source}. Valid options are: {valid_rule_sources}")
         raise ValueError(f"Invalid rule source: {rule_source}. Valid options are: {valid_rule_sources}")
     
-    #rules_df = pd.read_csv(sys.argv[1], sep="\t")
-    if rule_source == "COG":
-        rules_df = pd.read_excel(rules_file, sheet_name="cog_rules", engine="openpyxl")
-    elif rule_source == "IGM":
-        rules_df = pd.read_excel(rules_file, sheet_name="igm_rules", engine="openpyxl")
+    rules_df = pd.read_csv(rules_file, sep="\t")
+    #if rule_source == "COG":
+        #rules_df = pd.read_excel(rules_file, sheet_name="cog_rules", engine="openpyxl")
+    #elif rule_source == "IGM":
+        #rules_df = pd.read_excel(rules_file, sheet_name="igm_rules", engine="openpyxl")
     
     # filter rules source
     rules_df = rules_df[rules_df["source"] == rule_source]
