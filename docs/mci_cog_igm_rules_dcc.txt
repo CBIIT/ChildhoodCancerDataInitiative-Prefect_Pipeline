@@ -1,13 +1,13 @@
 source	mode	core	node	property	function	inputs	modifier	modifier_value	required_default	notes
-COG	NOTE	NOTE	NOTE	NOTE	mode	"instance or record type (e.g. if differnet mapped records for ggiven source record, e.g. CNS intital dx vs CNS integrated dx)"				
-COG	NOTE	NOTE	NOTE	NOTE	core	"if this source prop contains a non-Null value, generate a mapped record"				
-COG	NOTE	NOTE	NOTE	NOTE	node	destination node in model				
-COG	NOTE	NOTE	NOTE	NOTE	property	destination prop in model				
-COG	NOTE	NOTE	NOTE	NOTE	function	function in Transformer to perform transformation				
-COG	NOTE	NOTE	NOTE	NOTE	inputs	inputs from source record to transform				
-COG	NOTE	NOTE	NOTE	NOTE	modifier	"comma delimited array of modifiers to apply post funciton transformation, eg. Suffix, prefix, default, priority, regex_remove or regex_replace. Requires modifier_value be supplied"				
-COG	NOTE	NOTE	NOTE	NOTE	modifier_value	hash (#) delimited array/list of modifier values that are in same order to  modifiers to be applied. Regex_replace should be % delimited between match value and relacement value (e.g. match_remove%match_replace				
-COG	NOTE	NOTE	NOTE	NOTE	required_default	"if destination prop is a required prop on node in model, what is default value to assign if no value generated from source data"				
+NOTE	NOTE	NOTE	NOTE	NOTE	mode	"instance or record type (e.g. if differnet mapped records for ggiven source record, e.g. CNS intital dx vs CNS integrated dx)"				
+NOTE	NOTE	NOTE	NOTE	NOTE	core	"if this source prop contains a non-Null value, generate a mapped record"				
+NOTE	NOTE	NOTE	NOTE	NOTE	node	destination node in model				
+NOTE	NOTE	NOTE	NOTE	NOTE	property	destination prop in model				
+NOTE	NOTE	NOTE	NOTE	NOTE	function	function in Transformer to perform transformation				
+NOTE	NOTE	NOTE	NOTE	NOTE	inputs	inputs from source record to transform				
+NOTE	NOTE	NOTE	NOTE	NOTE	modifier	"comma delimited array of modifiers to apply post funciton transformation, eg. Suffix, prefix, default, priority, regex_remove or regex_replace. Requires modifier_value be supplied"				
+NOTE	NOTE	NOTE	NOTE	NOTE	modifier_value	hash (#) delimited array/list of modifier values that are in same order to  modifiers to be applied. Regex_replace should be % delimited between match value and relacement value (e.g. match_remove%match_replace				
+NOTE	NOTE	NOTE	NOTE	NOTE	required_default	"if destination prop is a required prop on node in model, what is default value to assign if no value generated from source data"				
 COG	participant		participant	type	default		default	participant		
 COG	participant		participant	participant_id	liftover	upi				
 COG	participant		participant	race	race_eth	"DEMOGRAPHY.DM_CRACE,DEMOGRAPHY.DM_ETHNIC"			Not Reported	
