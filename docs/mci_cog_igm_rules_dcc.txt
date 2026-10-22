@@ -313,14 +313,20 @@ COG	rare_rel_prog_dx		diagnosis	submitted_diagnosis_category	substudy_dx	ON_STUD
 COG	osteo_rel_prog_dx		diagnosis	submitted_diagnosis_category	default		default	Not Reported	Not Reported	
 COG	initial_dx		diagnosis	submitted_diagnosis_category	default		default	Not Reported	Not Reported	
 COG	medical_history_auto_imm	TRUE	medical_history	medical_history_condition_event	parse	"REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A01,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A02,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A03,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A04,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A05,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A06,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A07,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A08,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A09,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A10,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A11,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A12,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A13,REGISTRY_DATA.AUTO_IMMU_DIS_TYP_A14"				
+COG	medical_history_auto_imm		medical_history	type	default		default	medical_history		
+COG	medical_history_auto_imm		medical_history	participant.participant_id	liftover	upi				
 COG	medical_history_auto_imm		medical_history	age_at_event	default		default	-999		
 COG	medical_history_auto_imm		medical_history	medical_history_category	default		default	Autoimmune Disease		
 COG	medical_history_auto_imm		medical_history	medical_history_id	liftover	upi	suffix	medical_history_auto_imm		
 COG	medical_history_struct	TRUE	medical_history	medical_history_condition_event	parse	"REGISTRY_DATA.PTCGTABNMLTP_A1,REGISTRY_DATA.PTCGTABNMLTP_A2,REGISTRY_DATA.PTCGTABNMLTP_A3,REGISTRY_DATA.PTCGTABNMLTP_A4,REGISTRY_DATA.PTCGTABNMLTP_A5,REGISTRY_DATA.PTCGTABNMLTP_A6"				
+COG	medical_history_struct		medical_history	type	default		default	medical_history		
+COG	medical_history_struct		medical_history	participant.participant_id	liftover	upi				
 COG	medical_history_struct		medical_history	age_at_event	default		default	-999		
 COG	medical_history_struct		medical_history	medical_history_category	default		default	Structural Birth Defect		
 COG	medical_history_struct		medical_history	medical_history_id	liftover	upi	suffix	medical_history_struct		
 COG	medical_history_gen_syn	TRUE	medical_history	medical_history_condition_event	parse	"REGISTRY_DATA.PTGNTCSYDDXTP_A01,REGISTRY_DATA.PTGNTCSYDDXTP_A02,REGISTRY_DATA.PTGNTCSYDDXTP_A03,REGISTRY_DATA.PTGNTCSYDDXTP_A04,REGISTRY_DATA.PTGNTCSYDDXTP_A05,REGISTRY_DATA.PTGNTCSYDDXTP_A06,REGISTRY_DATA.PTGNTCSYDDXTP_A07,REGISTRY_DATA.PTGNTCSYDDXTP_A08,REGISTRY_DATA.PTGNTCSYDDXTP_A09,REGISTRY_DATA.PTGNTCSYDDXTP_A10,REGISTRY_DATA.PTGNTCSYDDXTP_A11,REGISTRY_DATA.PTGNTCSYDDXTP_A12,REGISTRY_DATA.PTGNTCSYDDXTP_A13,REGISTRY_DATA.PTGNTCSYDDXTP_A14,REGISTRY_DATA.PTGNTCSYDDXTP_A15,REGISTRY_DATA.PTGNTCSYDDXTP_A16"				
+COG	medical_history_gen_syn		medical_history	type	default		default	medical_history		
+COG	medical_history_gen_syn		medical_history	participant.participant_id	liftover	upi				
 COG	medical_history_gen_syn		medical_history	age_at_event	default		default	-999		
 COG	medical_history_gen_syn		medical_history	medical_history_category	default		default	Genetic Syndrome		
 COG	medical_history_gen_syn		medical_history	medical_history_id	liftover	upi	suffix	medical_history_gen_syn		
