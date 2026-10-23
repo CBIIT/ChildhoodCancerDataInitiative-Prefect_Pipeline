@@ -17,6 +17,12 @@ class Transformation(ABC):
             return []
         return [c.strip() for c in str(inputs).split(",")]
 
+    def _get_input_values(self, row):
+        return [
+            str(value) if pd.notna(value) else None
+            for value in (row.get(column) for column in self.inputs)
+        ]
+
     @abstractmethod
     def apply(self, row: pd.Series):
         pass
@@ -245,7 +251,7 @@ class EFS_Age(Transformation):
 class Follow_Up_Treatment_Response_Mapper(Transformation):
     """Class for mapping follow-up treatment response based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
-        values = [str(row.get(c)) for c in self.inputs]
+        values = self._get_input_values(row)
         
         # zip values to keys based on order in mapping file
         # e.g. FOLLOW_UP.DZ_EXM_REP_IND_2, FOLLOW_UP.COMP_RESP_CONF_IND_3, FOLLOW_UP.DZ_REL_PROG_IND3 (evaluated, complete remission, progression)
@@ -297,7 +303,7 @@ class Other_Treatment_Type_Mapper(Transformation):
 class Surgery_Type_Mapper(Transformation):
     """Class for mapping surgery type based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
-        values = [str(row.get(c)) for c in self.inputs]
+        values = self._get_input_values(row)
         if not values:
             return None
         
@@ -366,14 +372,16 @@ class Surgery_Type_Mapper(Transformation):
         mapped_values = []
         for k,v in values.items():
             mapped_values.append(mapping_dict.get(v, v))
-        mapped_values_parse = list(set([i for i in mapped_values if i != 'Not Applicable']))
+        mapped_values_parse = list(set(
+            i for i in mapped_values if i is not None and i != 'Not Applicable'
+        ))
         
         return ";".join(mapped_values_parse) if mapped_values_parse else None
         
 class Resection_Margin_Mapper(Transformation):
     """Class for mapping resection margin status based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
-        values = [str(row.get(c)) for c in self.inputs]
+        values = self._get_input_values(row)
         if not values:
             return None
         
@@ -420,7 +428,9 @@ class Resection_Margin_Mapper(Transformation):
         mapped_values = []
         for k,v in values.items():
             mapped_values.append(mapping_dict.get(v, v))
-        mapped_values_parse = list(set([i for i in mapped_values if i != 'Not Applicable']))
+        mapped_values_parse = list(set(
+            i for i in mapped_values if i is not None and i != 'Not Applicable'
+        ))
         
         
         if len(mapped_values_parse) > 1:
