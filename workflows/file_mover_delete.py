@@ -2,7 +2,7 @@ from prefect import flow, task, get_run_logger
 import os
 import sys
 import pandas as pd
-from typing import TypeVar
+from typing import Literal, TypeVar
 from botocore.errorfactory import ClientError
 from prefect.cache_policies import NO_CACHE
 
@@ -278,7 +278,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     log_prints=True,
     flow_run_name="file-mover-delete-alt-{runner}-" + f"{get_time()}",
 )
-def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path: str) -> None:
+def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path: str, overwrite_if_exists: Literal[True, False] = False) -> None:
     """Moves objects listed in a tsv file to a new location based on the tsv input file.
     The tsv contains two columns: original_uri and dest_uri. The dest_uri is the new location of the file. This is a generic file mover worklfow,
     which covers use cases when the runner doesn't want to preserve the original file path strucutre.
@@ -325,19 +325,25 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
 
     # create copy parameter
     copy_parameter_list = []
+    copy_parameter_map = []
     tsv_df.drop_duplicates(inplace=True)
     logger.info(f"After removing duplicates, a total of {tsv_df.shape[0]} objects will be moved")
     runner_logger.info(
         f"After removing duplicates, a total of {tsv_df.shape[0]} objects will be moved"
     )
     for i in list(set(uri_list)):
+        i_map={"original_uri": i}
         # in case one file needs to be moved to multiplei destinations
         i_dest_uri_list = tsv_df[tsv_df["original_uri"] == i]["dest_uri"].values.tolist()
         for dest_uri in i_dest_uri_list:
+            i_map["dest_uri"] = dest_uri
             dest_uri_parameter = generate_copy_parameter(original_uri=i, dest_uri=dest_uri)
+            i_map["copy_parameter"] = dest_uri_parameter
+            copy_parameter_map.append(i_map)
             copy_parameter_list.append(dest_uri_parameter)
 
     # start copy files
+    # copu_status is following the order of copy_parameter_list and copy_parameter_map
     copy_status = []
     for chunk in range(0, len(copy_parameter_list), 500):
         runner_logger.info(f"Copying {chunk} to {chunk+500} files")
@@ -346,8 +352,22 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
             logger=logger,
             runner_logger=runner_logger,
             concurrency_tag="file-mover-delete-alt-copy",
+            overwrite_if_exists=overwrite_if_exists
         )
         copy_status.extend(int_copy_status)
+    # add copy status to copy_parameter_map
+    for i, status in enumerate(copy_status):
+        copy_parameter_map[i]["copy_status"] = status
+    # add "copy_status" to tsv_df
+    copy_status_for_tsv = []
+    for i in range(len(tsv_df)):
+        original_uri = tsv_df.loc[i, "original_uri"]
+        dest_uri = tsv_df.loc[i, "dest_uri"]
+        for item in copy_parameter_map:
+            if item["original_uri"] == original_uri and item["dest_uri"] == dest_uri:
+                copy_status_for_tsv.append(item.get("copy_status", ""))
+                break
+    tsv_df["copy_status"] = copy_status_for_tsv
 
     # compare md5sum
     first_url_list = tsv_df["original_uri"].tolist()
@@ -362,7 +382,7 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
         )
         md5sum_results.extend(int_md5sum_results)
 
-    tsv_df["copy_status"] = copy_status
+    #tsv_df["copy_status"] = copy_status
     tsv_df["original_md5sum"] = [result[1] for result in md5sum_results]
     tsv_df["dest_md5sum"] = [result[2] for result in md5sum_results]
     tsv_df["md5sum_check"] = [result[3] for result in md5sum_results]

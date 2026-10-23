@@ -22,7 +22,7 @@ import json
 from prefect import flow, task, get_run_logger
 from prefect.task_runners import ConcurrentTaskRunner
 from prefect.cache_policies import NO_CACHE
-from typing import TypeVar
+from typing import Literal, TypeVar
 import ast
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
@@ -91,7 +91,7 @@ def dest_object_url(url_in_cds: str, dest_bucket_path: str) -> str:
     return dest_url
 
 
-def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> None:
+def copy_large_file(copy_parameter: dict, file_size: int, s3_client, logger) -> str:
     # collect source bucket, source key, destination bucket, and destination key
     source_bucket, source_key = copy_parameter["CopySource"].split("/", 1)
     copy_source = copy_parameter["CopySource"]
@@ -240,13 +240,20 @@ def copy_file_by_size(
     log_prints=True,
     cache_policy=NO_CACHE,
 )
-def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concurrency_tag) -> str:
+def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concurrency_tag, overwrite_if_exists: Literal[True, False] = False) -> str:
     """Copy objects between two locations defined by copy_parameter
 
     It checks if the file has been transferred (Key and object Content length/size) before trasnfer process
     Function copy_file_by_size is executed only if
         - The file hasn't been transferred
-        - the destination object size doesn't match to the source size
+        - the dest obj exists but the dest obj size doesn't match to the source size
+    
+    If overwrite_if_exists is True, the file will be copied regardless of the destination object status.
+
+    Returns:
+        - "Success" if the file is copied successfully
+        - "Skip" if the file is skipped because it already exists with matching size. (md5sum not checked)
+        - "Fail" if the file copy fails
     """
     copy_source = copy_parameter["CopySource"]
     source_bucket, source_key = copy_source.split("/", 1)
@@ -254,42 +261,48 @@ def copy_file_task(copy_parameter: dict, s3_client, logger, runner_logger, concu
     file_size = object_response["ContentLength"]
 
     # check if the destination object has been copied or no
-    try:
-        dest_object = s3_client.head_object(
-            Bucket=copy_parameter["Bucket"], Key=copy_parameter["Key"]
-        )
-        if dest_object["ContentLength"] == file_size:
-            logger.info(
-                f"File {copy_source} had already been copied to destination bucket path. Skip"
-            )
-            print(
-                f"File {copy_source} had already been copied to destination bucket path. Skip"
-            )
-            transfer_status = "Success"
-        else:
-            # if the destin object size is different from source, copy the object
-            transfer_status = copy_file_by_size(
-                copy_parameter=copy_parameter,
-                file_size=file_size,
-                s3_client=s3_client,
-                logger=logger,
-                runner_logger=runner_logger,
-            )
-
-    except Exception as ex:
-        # if the destin object does not exist, copy oject
-        transfer_status = copy_file_by_size(
+    if overwrite_if_exists:
+        return copy_file_by_size(
             copy_parameter=copy_parameter,
             file_size=file_size,
             s3_client=s3_client,
             logger=logger,
             runner_logger=runner_logger,
         )
-    return transfer_status
+
+    try:
+        dest_object = s3_client.head_object(
+            Bucket=copy_parameter["Bucket"],
+            Key=copy_parameter["Key"],
+        )
+    except ClientError as ex:
+        error_code = ex.response.get("Error", {}).get("Code")
+        if error_code not in {"404", "NoSuchKey", "NotFound"}:
+            raise
+
+        return copy_file_by_size(
+            copy_parameter=copy_parameter,
+            file_size=file_size,
+            s3_client=s3_client,
+            logger=logger,
+            runner_logger=runner_logger,
+        ) # This will return Fail as transfer_status
+
+    if dest_object["ContentLength"] == file_size:
+        logger.info(f"File {copy_source} already exists with matching size. Skip")
+        return "Skip"
+
+    return copy_file_by_size(
+        copy_parameter=copy_parameter,
+        file_size=file_size,
+        s3_client=s3_client,
+        logger=logger,
+        runner_logger=runner_logger,
+    )
 
 
 @flow(task_runner=ConcurrentTaskRunner(), name="Copy Files Concurrently")
-def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concurrency_tag) -> list:
+def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concurrency_tag, overwrite_if_exists: Literal[True, False] = False) -> list:
     """Copy of list of file concurrently"""
     s3_client = set_s3_session_client()
     
@@ -298,7 +311,7 @@ def copy_file_flow(copy_parameter_list: list[dict], logger, runner_logger, concu
     
     for params in copy_parameter_list:
         # Submit the task with a delay of 0.25 seconds
-        transfer_status_list.append(copy_file_task.submit(params, s3_client, logger, runner_logger, concurrency_tag))
+        transfer_status_list.append(copy_file_task.submit(params, s3_client, logger, runner_logger, concurrency_tag, overwrite_if_exists))
         
         # Throttle task submission with a 0.25-second delay
         time.sleep(0.25)
@@ -391,13 +404,13 @@ def add_md5sum_results(
     md5sum_df = pd.DataFrame(
         md5sum_results, columns=["first_md5sum", "second_md5sum", "md5sum_check"]
     )
-    transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_before_cp"] = (
+    transfer_df.loc[transfer_df["transfer_status"].isin(["Success", "Skip"]), "md5sum_before_cp"] = (
         md5sum_df["first_md5sum"].tolist()
     )
-    transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_after_cp"] = (
+    transfer_df.loc[transfer_df["transfer_status"].isin(["Success", "Skip"]), "md5sum_after_cp"] = (
         md5sum_df["second_md5sum"].tolist()
     )
-    transfer_df.loc[transfer_df["transfer_status"] == "Success", "md5sum_check"] = (
+    transfer_df.loc[transfer_df["transfer_status"].isin(["Success", "Skip"]), "md5sum_check"] = (
         md5sum_df["md5sum_check"].tolist()
     )
     return transfer_df
@@ -527,7 +540,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
     transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].astype(str)
     transfer_df.drop_duplicates(ignore_index=True, keep="first", inplace=True)
     transfer_df["cp_object_parameter"] = transfer_df["cp_object_parameter"].apply(ast.literal_eval)
-    
+
     runner_logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
     logger.info(f"unique uri transfer counts: {transfer_df.shape[0]}")
 
@@ -547,7 +560,6 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
         try:
             h_transfer_status_list = copy_file_flow(h, logger, runner_logger, concurrency_tag="ccdi-file-copier-tag")
             transfer_status_list.extend(h_transfer_status_list)
-
 
         except Exception as ex:
             logger.error(f"Error occurred while copying files: {ex}")
@@ -575,10 +587,10 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
         runner_logger.info("Start checking md5sum before and after transfer")
         # only checking md5sum for all success transfers. Tasks will be running concurrently
         urls_before_transfer = transfer_df.loc[
-            transfer_df["transfer_status"] == "Success", "url_before_cp"
+            transfer_df["transfer_status"].isin(["Success", "Skip"]), "url_before_cp"
         ].tolist()
         urls_after_transfer = transfer_df.loc[
-            transfer_df["transfer_status"] == "Success", "url_after_cp"
+            transfer_df["transfer_status"].isin(["Success", "Skip"]), "url_after_cp"
         ].tolist()
         # url list needs to be break into chunks
         chunk_len = 100
@@ -623,7 +635,7 @@ def move_manifest_files(manifest_path: str, dest_bucket_path: str, intermediate_
                     "md5sum_after_cp",
                 ]
             ].to_csv(intermediate_file_name, sep="\t", index=False)
-            
+
             file_ul(
                 bucket=bucket,
                 output_folder=intermediate_out,
