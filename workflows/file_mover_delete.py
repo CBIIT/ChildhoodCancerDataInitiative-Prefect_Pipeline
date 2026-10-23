@@ -2,7 +2,7 @@ from prefect import flow, task, get_run_logger
 import os
 import sys
 import pandas as pd
-from typing import TypeVar
+from typing import Literal, TypeVar
 from botocore.errorfactory import ClientError
 from prefect.cache_policies import NO_CACHE
 
@@ -278,7 +278,7 @@ def file_mover_delete(bucket: str, runner: str, obj_list_tsv_path: str, move_to_
     log_prints=True,
     flow_run_name="file-mover-delete-alt-{runner}-" + f"{get_time()}",
 )
-def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path: str) -> None:
+def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path: str, overwrite_if_exists: Literal[True, False] = False) -> None:
     """Moves objects listed in a tsv file to a new location based on the tsv input file.
     The tsv contains two columns: original_uri and dest_uri. The dest_uri is the new location of the file. This is a generic file mover worklfow,
     which covers use cases when the runner doesn't want to preserve the original file path strucutre.
@@ -346,6 +346,7 @@ def file_mover_delete_complete_input(bucket: str, runner: str, obj_tsv_file_path
             logger=logger,
             runner_logger=runner_logger,
             concurrency_tag="file-mover-delete-alt-copy",
+            overwrite_if_exists=overwrite_if_exists
         )
         copy_status.extend(int_copy_status)
 
