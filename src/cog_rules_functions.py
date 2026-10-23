@@ -108,7 +108,10 @@ class CNS_Tumor_Spatial_Extent_Mapper(Transformation):
         # Map specific combinations to standardized terms
         mapping_dict = {
             "Localized": "Local",
+            "Primary Site": "Local",
+            "Regional lymph nodes": "Regional",
             "Metastatic": "Metastatic",
+            "Metastatic site": "Metastatic",
             "Distant": "Metastatic",
             "Not Answered": "Not Reported",
             "M0": "Local", 
@@ -304,6 +307,19 @@ class Surgery_Type_Mapper(Transformation):
         
         if values['ON_STUDY_DX.PR_PRSCAT_EXT'] == "No Procedure":
             return "Not Applicable"
+        
+        if values['ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1']:
+            values['ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1'] = 'Resection'
+        
+        if values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] == "Yes":
+            values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] = "Biopsy"
+        elif values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] == "No":
+            values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] = "Not Reported"
+
+        if values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] == "Yes":
+            values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] = "Biopsy"
+        elif values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] == "No":
+            values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] = "Not Reported"
         
         if values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "Yes":
             values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Resection"
