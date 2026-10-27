@@ -351,6 +351,11 @@ def single_node_liftover(
             pass
 
     # save the dataframe lift_to_df to a tsv file
+    # if the lift_to_df is empty, skip saving it to a tsv file
+    if lift_to_df.shape[0] == 0:
+        logger.info(f"No data to save for node {lift_to_node}. Skipping TSV file creation.")
+        print(f"No data to save for node {lift_to_node}. Skipping TSV file creation.")
+        return None
     tsv_name = lift_to_node + "_" + get_date() + ".tsv"
     lift_to_df.to_csv(
         os.path.join(output_folder, tsv_name),
@@ -392,7 +397,7 @@ def liftover_to_tsv(
 
     # may be used in the future
     # lift_to_model_read = ReadDataModel(model_file=lift_to_model, prop_file=lift_to_props)
-    
+
     # print a table of submission tsv filee and their types
     lift_from_mapping_dict = identify_file_type(tsv_folder=submission_folder)
     lift_from_mapping_df = lift_from_type_df(type_mapping_dict=lift_from_mapping_dict)
@@ -420,7 +425,11 @@ def liftover_to_tsv(
         header=0,
     )
     mapping_df = mapping_df[
-        mapping_df["lift_from_node"].isin(list(non_empty_props.keys()))
+        mapping_df.apply(
+            lambda r: r["lift_from_node"] in non_empty_props # lift from node must be one of the keys in non_empty_props
+            and r["lift_from_property"] in non_empty_props[r["lift_from_node"]], # lift from property must be not complete empty for the given node in non_empty_props
+            axis=1,
+        )
     ]
     # how many unique lift_to_node found in filtered mapping df
     # these are the nodes we need to be filled with info
