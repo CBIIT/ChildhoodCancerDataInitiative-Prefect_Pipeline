@@ -863,7 +863,7 @@ deployments:
   - name: liftover-generic
     version: null
     tags: [ "Production", "V3", "CCDI", "CDS" ]
-    description: Generic liftover for metadata between projects using a provided mapping file
+    description: Generic liftover for metadata between projects using a provided mapping file. This workflow generates a set of tsv files as output.
     entrypoint: workflows/submission_liftover.py:submission_liftover
     schedule: null
 
@@ -1187,8 +1187,9 @@ deployments:
   - name: liftover-generic-CCDI-DCC
     version: null
     tags: [ "Production", "V3", "CCDI", "DCC" ]
-    description: Liftover pipeline to convert from CCDI-DCC model to another using a mapping file for guidance.
-    entrypoint: workflows/submission_liftover.py:submission_liftover_ccdi_to_dcc
+    description: |
+      Liftover pipeline to lift CCDI or DCC manifest to another CCDI or DCC model using a mapping file for guidance. This workflow generates a manifest as output instead of a set of tsv files.
+    entrypoint: workflows/submission_liftover.py:submission_liftover_for_manifest
     schedule: null
 
     # flow-specific parameters
@@ -1497,10 +1498,10 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: join-tsv-to-manifest-v3-dcc
+  - name: join-exported-tsv-to-manifest-v3-dcc
     version: null
     tags: ["Production","DCC","Centralized Worker","V3"]
-    description: Join the exported model TSV back to the manifest template for CCDI-DCC
+    description: Join the DB exported TSV back to the manifest template for CCDI-DCC
     entrypoint: workflows/db_tsv_to_manifest.py:join_tsv_to_manifest
     schedule: null
 

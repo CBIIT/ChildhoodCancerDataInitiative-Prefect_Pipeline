@@ -300,29 +300,29 @@ def submission_liftover(
     return upload_path, liftover_output
 
 
-@flow(name="Generic liftover from CCDI to DCC", log_prints=True)
-def submission_liftover_ccdi_to_dcc(
+@flow(name="Generic liftover pipeline for manifest", log_prints=True)
+def submission_liftover_for_manifest(
     bucket: str,
     runner: str,
     submission_path: str,
     liftover_mapping_filepath: str,
-    lift_from_acronym: str = "ccdi",
-    lift_from_tag: str = "3.1.0",
-    lift_to_acronym: str = "ccdi_dcc",
-    lift_to_tag: str = "1.0.0",
+    lift_from_acronym: Literal["ccdi", "ccdi_dcc"] = "ccdi_dcc",
+    lift_from_tag: str = "1.0.0",
+    lift_to_acronym: Literal["ccdi", "ccdi_dcc"] = "ccdi_dcc",
+    lift_to_tag: str = "2.1.0",
 ) -> None:
-    """CCDI to DCC liftover ONLY.
-    A liftover pipeline that liftover a CCDI template manifest to a DCC template manifest. 
-    This pipeline is an extension of the generic liftover pipeline which handles CCDI to DCC liftover.
+    """Generic liftover pipeline that works with CCDI or CCDI-DCC manifest
+    A liftover pipeline that liftover a manifest to another manifest. 
+    This pipeline is an extension of the generic liftover pipeline.
     Args:
         bucket (str): bucket name
         runner (str): unique runner identifier
         submission_path (str): folder path contains a set of tsv files under bucket, e.g. "submissions/submission_tsv_files/" OR file path of CCDI metadata manifest (The lift_from_acrynom must be CCDI in this case)
         liftover_mapping_filepath (str): Mapping file path under bucket, e.g., "mapping_files/ccdi_2.1.0_to_cds_6.0.2_mapping.tsv"
-        lift_from_acronym (AcrynomDropDown): lift from acronym. This deployment is designed to liftover from CCDI only.
-        lift_from_tag (str): tag of lift from. Default to 3.1.0
-        lift_to_acronym (AcrynomDropDown): lift to acronym. This deployment is designed to liftover to CCDI-DCC only.
-        lift_to_tag (str): tag of lift to. Default to 1.0.0
+        lift_from_acronym (AcrynomDropDown): lift from acronym. Pick one from "ccdi" or "ccdi_dcc"
+        lift_from_tag (str): tag of lift from. Default to 1.0.0
+        lift_to_acronym (AcrynomDropDown): lift to acronym. Pick one from "ccdi" or "ccdi_dcc"
+        lift_to_tag (str): tag of lift to. Default to 2.1.0
     """
     logger = get_run_logger()
 
