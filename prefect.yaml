@@ -436,34 +436,6 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: join-tsv-to-manifest-v3
-    version: null
-    tags: ["Production","V3"]
-    description: Pipeline to join tsv files into a manifest file for CCDI submission.
-    entrypoint: workflows/db_tsv_to_manifest.py:join_tsv_to_manifest
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-dcc"
-
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
-
   - name: mci-release-manifest-v3
     version: null
     tags: ["Production","V3"]
@@ -863,7 +835,7 @@ deployments:
   - name: liftover-generic
     version: null
     tags: [ "Production", "V3", "CCDI", "CDS" ]
-    description: Generic liftover for metadata between projects using a provided mapping file
+    description: Generic liftover for metadata between projects using a provided mapping file. This workflow generates a set of tsv files as output.
     entrypoint: workflows/submission_liftover.py:submission_liftover
     schedule: null
 
@@ -1187,8 +1159,9 @@ deployments:
   - name: liftover-generic-CCDI-DCC
     version: null
     tags: [ "Production", "V3", "CCDI", "DCC" ]
-    description: Liftover pipeline to convert from CCDI-DCC model to another using a mapping file for guidance.
-    entrypoint: workflows/submission_liftover.py:submission_liftover_ccdi_to_dcc
+    description: |
+      Liftover pipeline to lift CCDI or DCC manifest to another CCDI or DCC model using a mapping file for guidance. This workflow generates a manifest as output instead of a set of tsv files.
+    entrypoint: workflows/submission_liftover.py:submission_liftover_for_manifest
     schedule: null
 
     # flow-specific parameters
@@ -1497,10 +1470,10 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: join-tsv-to-manifest-v3-dcc
+  - name: join-exported-tsv-to-manifest-v3-dcc
     version: null
     tags: ["Production","DCC","Centralized Worker","V3"]
-    description: Join the exported model TSV back to the manifest template for CCDI-DCC
+    description: Join the DB exported TSV back to the manifest template for CCDI-DCC
     entrypoint: workflows/db_tsv_to_manifest.py:join_tsv_to_manifest
     schedule: null
 
