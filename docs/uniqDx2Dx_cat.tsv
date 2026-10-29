@@ -6,7 +6,7 @@ Acinar cell cystadenocarcinoma	Pancreatic tumors	WHO 5th ed. Pediatric Tumor
 Acinic cell carcinoma	Malignant tumors	WHO 5th ed. Pediatric Tumor
 Acute erythroid leukemia	Myeloid leukemias	WHO 5th ed. Pediatric Tumor
 Acute leukemia	Leukemias	ICD-O-3.2
-Acute lymphoblastic leukemia	Lymphoid leukemias	ICD-O-3.2
+Acute lymphoblastic leukemia	Lymphoid neoplasms	ICD-O-3.2
 Acute megakaryoblastic leukemia	Myeloid leukemias	WHO 5th ed. Pediatric Tumor
 Acute monocytic leukemia	Myeloid leukemias	WHO 5th ed. Pediatric Tumor
 Acute myeloid leukemia (AML)	Myeloid leukemias	WHO 5th ed. Pediatric Tumor
@@ -109,7 +109,7 @@ Atypical teratoid/rhabdoid tumor	CNS embryonal tumors	WHO 5th ed. Pediatric Tumo
 Atypical teratoid/rhabdoid tumor MYC	CNS embryonal tumors	WHO 5th ed. CNS Tumor
 Atypical teratoid/rhabdoid tumor SHH	CNS embryonal tumors	WHO 5th ed. CNS Tumor
 Atypical teratoid/rhabdoid tumor TYR	CNS embryonal tumors	WHO 5th ed. CNS Tumor
-B lymphoblastic leukemia/lymphoma with t(v;11q23); MLL rearranged	Lymphoid leukemias	ICD-O-3.2
+B lymphoblastic leukemia/lymphoma with t(v;11q23); MLL rearranged	Lymphoid neoplasms	ICD-O-3.2
 B-lymphoblastic leukemia (B-ALL)	Lymphoid neoplasms	WHO 5th ed. Pediatric Tumor
 B-lymphoblastic leukemia (B-lymphoblastic leukemia) with recurrent genetic alterations	Lymphoid neoplasms	WHO 5th ed. Pediatric Tumor
 B-lymphoblastic leukemia with BCR::ABL1 fusion	Lymphoid neoplasms	WHO 5th ed. Pediatric Tumor
@@ -405,7 +405,7 @@ Follicular adenoma of the thyroid	Thyroid tumors	WHO 5th ed. Pediatric Tumor
 Follicular carcinoma	Adenomas and adenocarcinomas	ICD-O-3.2
 Follicular carcinoma, minimally invasive	Adenomas and adenocarcinomas	ICD-O-3.2
 Follicular carcinoma, well differentiated	Adenomas and adenocarcinomas	ICD-O-3.2
-Follicular lymphoma	Lymphomas - Miscellaneous rare lymphomas in the CNS	WHO 5th ed. CNS Tumor
+Follicular lymphoma	Lymphoid neoplasms	WHO 5th ed. CNS Tumor
 Follicular thyroid adenoma with papillary architecture	Thyroid tumors	WHO 5th ed. Pediatric Tumor
 Follicular variant of papillary thyroid carcinoma	Thyroid tumors	WHO 5th ed. Pediatric Tumor
 Gangliocytoma	Gliomas, glioneuronal tumors, and neuronal tumors	WHO 5th ed. CNS Tumor
@@ -556,7 +556,7 @@ Lymphocyte-depleted CHL	Hodgkin lymphoma	WHO 5th ed. Pediatric Tumor
 Lymphocyte-rich CHL	Hodgkin lymphoma	WHO 5th ed. Pediatric Tumor
 Lymphoepithelial carcinoma	Squamous cell neoplasms	ICD-O-3.2
 Lymphohistiocytic ALK+ ALCL	Lymphoid neoplasms	WHO 5th ed. Pediatric Tumor
-Lymphoid leukemia	Lymphoid leukemias	ICD-O-3.2
+Lymphoid leukemia	Lymphoid neoplasms	ICD-O-3.2
 Lymphoma	Hodgkin and non-Hodgkin lymphomas	ICD-O-3.2
 Lymphomatoid granulomatosis, grade 1	Lymphoid neoplasms	WHO 5th ed. Pediatric Tumor
 Lymphomatoid granulomatosis, grade 2	Lymphoid neoplasms	WHO 5th ed. Pediatric Tumor
@@ -877,8 +877,8 @@ Postpubertal (type II) yolk sac tumor	Non-germinomatous germ cell tumors	WHO 5t
 Postpubertal-type teratoma	Non-germinomatous germ cell tumors	WHO 5th ed. Pediatric Tumor
 Posttransplant lymphoproliferative disorder (PTLD)	Immunodeficiency-associated lymphoproliferative disorders	WHO 5th ed. Pediatric Tumor
 Precancerous melanosis	Nevi and melanomas	ICD-O-3.2
-Precursor B-cell lymphoblastic lymphoma	Lymphoid leukemias	ICD-O-3.2
-Precursor T-cell lymphoblastic leukemia	Lymphoid leukemias	ICD-O-3.2
+Precursor B-cell lymphoblastic lymphoma	Lymphoid neoplasms	ICD-O-3.2
+Precursor T-cell lymphoblastic leukemia	Lymphoid neoplasms	ICD-O-3.2
 Prepubertal (type I) yolk sac tumor	Non-germinomatous germ cell tumors	WHO 5th ed. Pediatric Tumor
 Prepubertal-type testicular teratoma	Non-germinomatous germ cell tumors	WHO 5th ed. Pediatric Tumor
 Primary cutaneous anaplastic large cell lymphoma	Lymphoid neoplasms	WHO 5th ed. Pediatric Tumor
