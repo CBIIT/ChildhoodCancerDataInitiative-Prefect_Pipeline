@@ -42,21 +42,25 @@ def get_study_accession(file_list: list[str]) -> str:
         file_list (list[str]): list of file paths
 
     Returns:
-        str: dbGaP accession number
+        str: study or dbGaP accession number
     """
     for file in file_list:
-        file_df = pd.read_csv(file, sep="\t")
+        file_df = pd.read_csv(file, sep="\t", dtype=str)  # force all columns to str
         if file_df.loc[0, "type"] == "study":
-            dbgap_accession = file_df.loc[0, "dbgap_accession"]
+            if "study_accession" in file_df.columns and file_df.loc[0, "study_accession"] is not pd.NA and file_df.loc[0, "study_accession"] != "":
+                study_accession = file_df.loc[0, "study_accession"]
+            else:
+                study_accession = file_df.loc[0, "dbgap_accession"]
         else:
             pass
     try:
-        dbgap_accession
-        return dbgap_accession
+        study_accession
+        return study_accession
     except NameError as err:
         raise NameError(
             f"Missing the tsv for study node among the file list: {*file_list,}"
         )
+
 
 
 # we need a mapping dictionary that maps id(uuid str) against key property value

@@ -955,8 +955,14 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             return participant_id
 
         # MAIN ACL/AUTHZ GENERATOR BLOCK
-        # pull dbgap_accession from study node
-        dbgap_accession = meta_dfs["study"]["dbgap_accession"][0]
+        # pull study_accession from study node
+        if "study_accession" in meta_dfs["study"].columns:
+            if "study_accession" in meta_dfs["study"].columns and meta_dfs["study"].loc[0, "study_accession"] is not pd.NA and meta_dfs["study"].loc[0, "study_accession"] != "":
+                study_accession = meta_dfs["study"].loc[0, "study_accession"]
+            else:
+                study_accession = meta_dfs["study"]["dbgap_accession"][0]
+        else:
+            study_accession = meta_dfs["study"]["dbgap_accession"][0]
 
         # iterate through each node
         for node in dict_nodes:
@@ -1012,10 +1018,10 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
                         # helper functions to format the acl/authz
                         def format_acl(suffix):
-                            return f"'{dbgap_accession}.{suffix}'"
+                            return f"'{study_accession}.{suffix}'"
 
                         def format_authz(suffix):
-                            return f"'/programs/{dbgap_accession}.{suffix}'"
+                            return f"'/programs/{study_accession}.{suffix}'"
 
                         # construct acl and authz values based on consent number
                         if isinstance(consent_number, list):
