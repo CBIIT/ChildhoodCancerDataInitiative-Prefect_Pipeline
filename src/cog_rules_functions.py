@@ -313,33 +313,39 @@ class Surgery_Type_Mapper(Transformation):
         
         if values['ON_STUDY_DX.PR_PRSCAT_EXT'] == "No Procedure":
             return "Not Applicable"
-        
-        if values['ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1']:
+
+        if 'ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1' in values and values['ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1']:
             values['ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1'] = 'Resection'
         
-        if values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] == "Yes":
-            values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] = "Biopsy"
-        elif values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] == "No":
-            values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] = "Not Reported"
+        if 'ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1' in values and values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1']:
+            if values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] == "Yes":
+                values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] = "Biopsy"
+            elif values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] == "No":
+                values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] = "Not Reported"
 
-        if values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] == "Yes":
-            values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] = "Biopsy"
-        elif values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] == "No":
-            values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] = "Not Reported"
+        if 'ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1' in values and values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1']:
+            if values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] == "Yes":
+                values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] = "Biopsy"
+            elif values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] == "No":
+                values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] = "Not Reported"
         
-        if values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "Yes":
-            values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Resection"
-        elif values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "No":
-            values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Not Reported"
+        if 'ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2' in values and values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2']:
+            if values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "Yes":
+                values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Resection"
+            elif values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "No":
+                values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Not Reported"
         
-        if values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] == 'Yes':
-            values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] = "Biopsy"
-        else:
-            values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] = "Not Applicable"
-        if values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] == 'Yes':
-            values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] = "Resection"
-        else:            
-            values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] = "Not Applicable" #post hoc filtering of NAs that map to surgery/biopsy == No
+        if 'ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2' in values and values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2']:
+            if values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] == 'Yes':
+                values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] = "Biopsy"
+            else:
+                values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] = "Not Reported"
+        
+        if 'ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND' in values and values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND']:
+            if values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] == 'Yes':
+                values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] = "Resection"
+            else:            
+                values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] = "Not Applicable" #post hoc filtering of NAs that map to surgery/biopsy == No
             
         mapping_dict = {
             'nan' : 'Not Applicable',
