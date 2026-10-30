@@ -131,9 +131,9 @@ def validate_new_dcc_model(
             newfile=validation_out_file,
         )
         runner_logger.info(f"Validation report was generated and uploaded to bucket {bucket} at {validation_output_folder}")
-    except:
+    except Exception as E:
         runner_logger.error(
-            f"Validation step FAILED"
+            f"Validation step FAILED: {E}"
         )
 
     runner_logger.info(
