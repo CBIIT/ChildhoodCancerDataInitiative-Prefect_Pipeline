@@ -11,7 +11,13 @@ from src.s3_validationry_refactored import ValidationRy_new
 from src.utils import get_date, get_time, file_ul, file_dl
 from prefect import flow, get_run_logger
 from requests.exceptions import ConnectionError
-from workflows.s3_Prefect_Pipeline_dcc import ModelParser, get_enum_props_dict, get_enum_string_property_array, get_rel_from_mdf
+from workflows.s3_Prefect_Pipeline_dcc import (
+    ModelParser,
+    get_enum_props_dict,
+    get_enum_string_property_array,
+    get_rel_from_mdf,
+    get_enum_list_type_props,
+)
 
 sys.path.insert(0, os.path.abspath("./prefect-toolkit"))
 from workflow.validate_submission import download_model_files
@@ -114,6 +120,7 @@ def validate_new_dcc_model(
         print("dcc mdf model created")
         enum_props_dict = get_enum_props_dict(dcc_model)
         enum_string_props = get_enum_string_property_array(dcc_model)
+        enum_list_type_props = get_enum_list_type_props(dcc_model)
         model_rel_list = get_rel_from_mdf(dcc_model)
 
 
@@ -122,6 +129,7 @@ def validate_new_dcc_model(
             template_path=manifest_file,
             enum_props_dict=enum_props_dict,
             enum_string_props=enum_string_props,
+            enum_list_type_props=enum_list_type_props,
             model_rel_list=model_rel_list,
         )
         file_ul(
@@ -131,14 +139,12 @@ def validate_new_dcc_model(
             newfile=validation_out_file,
         )
         runner_logger.info(f"Validation report was generated and uploaded to bucket {bucket} at {validation_output_folder}")
-    except:
+    except Exception as E:
         runner_logger.error(
-            f"Validation step FAILED"
+            f"Validation step FAILED: {E}"
         )
 
     runner_logger.info(
         f"Workflow new model validation has FINISHED. All outputs can be found in bucket {bucket} at {new_model_validation_out}"
     )
     return None
-
-
