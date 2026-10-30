@@ -577,7 +577,7 @@ def mci_gdc_transform(
     file_dl(bucket, manifest_file)
     
     # if preservation method and methylation platform file provided, download it
-    if preservation_meth_platform_file is not None:
+    if preservation_meth_platform_file is not None and preservation_meth_platform_file != "":
         file_dl(bucket, preservation_meth_platform_file)
         if not os.path.isfile(os.path.basename(preservation_meth_platform_file)):
             print(f"Error: Preservation method and methylation platform file '{preservation_meth_platform_file}' not found.")
