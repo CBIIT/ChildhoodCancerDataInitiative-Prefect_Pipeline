@@ -27,10 +27,10 @@ def pull_guid_meta_nodes_loop(
         out_dir (str): output directory name
         logger (_type_): logger object
     """    
-    phs_accession = study_accession
+    study_accession = study_accession
     guid_meta_query = f"""
 MATCH (s:study)-[*1..7]-(f:{{node_label}})
-WHERE s.dbgap_accession = "{phs_accession}"
+WHERE s.study_accession = "{study_accession}"
 RETURN f.dcf_indexd_guid as guid, f.acl as acl, f.authz as authz, f.file_url as url, f.md5sum as md5sum, f.file_size as file_size
 """
 
@@ -65,14 +65,14 @@ def concatenate_csv_files(folder_name: str) -> str:
             file_df = pd.read_csv(file_list[index])
             combined_df = pd.concat([combined_df, file_df], ignore_index=True)
 
-    phs_accession = folder_name.split("_")[0]
-    print(f"A total of file records in study {phs_accession}: {combined_df.shape[0]}")
+    study_accession = folder_name.split("_")[0]
+    print(f"A total of file records in study {study_accession}: {combined_df.shape[0]}")
     # remove duplicates if any
     combined_df.drop_duplicates(inplace=True)
     print(
-        f"A Total of file records in study {phs_accession} after removing duplicates: {combined_df.shape[0]}"
+        f"A Total of file records in study {study_accession} after removing duplicates: {combined_df.shape[0]}"
     )
-    output_name = phs_accession + "_guid_meta_in_sandbox.tsv"
+    output_name = study_accession + "_guid_meta_in_sandbox.tsv"
     combined_df.to_csv(output_name, sep="\t", index=False)
     return output_name
 

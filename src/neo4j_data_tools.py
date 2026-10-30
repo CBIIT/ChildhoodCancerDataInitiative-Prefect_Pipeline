@@ -55,7 +55,7 @@ RETURN  startNode.id AS startNodeId,
     labels(startNode) AS startNodeLabels,
     propertyName AS startNodePropertyName,
     startNode[propertyName] AS startNodePropertyValue,
-    startNode.study_id as dbgap_accession 
+    startNode.study_id as study_id  
 """
     main_cypher_query_per_study_node: str = """
 MATCH (startNode:{node_label})-[:of_{node_label}]-(linkedNode)-[*0..5]-(study:study {{study_id:"{study_accession}"}})
@@ -67,7 +67,7 @@ RETURN startNode.id AS startNodeId,
     startNode[propertyName] AS startNodePropertyValue, 
     linkedNode.id AS linkedNodeId, 
     labels(linkedNode) AS linkedNodeLabels, 
-    study.study_id AS dbgap_accession
+    study.study_id AS study_id
 """
     unique_nodes_query: str = """
 MATCH (n)
@@ -101,7 +101,7 @@ MATCH (startNode:{node_label} {{study_id: "{study_accession}"}})
 RETURN
     startNode.guid              AS startNodeId,
     labels(startNode)           AS startNodeLabels,
-    startNode.study_id          AS dbgap_accession,
+    startNode.study_id          AS study_id,
     properties(startNode)       AS startNodeProperties
 """
     main_cypher_query_per_study_node: str = """
@@ -112,7 +112,7 @@ RETURN DISTINCT
     labels(startNode)           AS startNodeLabels,
     linkedNode.guid             AS linkedNodeId,
     labels(linkedNode)          AS linkedNodeLabels,
-    study.study_id              AS dbgap_accession,
+    study.study_id              AS study_id,
     properties(startNode)       AS startNodeProperties
 """
     unique_nodes_query: str = """
@@ -501,7 +501,7 @@ def export_to_csv_per_node_per_study(
 #             "startNodePropertyValue",
 #             "linkedNodeId",
 #             "linkedNodeLabels",
-#             "dbgap_accession",
+#             "study_id",
 #         ])
 #         for record in result:
 #             props = record["startNodeProperties"] or {}
@@ -513,7 +513,7 @@ def export_to_csv_per_node_per_study(
 #                     prop_value,
 #                     record["linkedNodeId"],
 #                     record["linkedNodeLabels"],
-#                     record["dbgap_accession"],
+#                     record["study_id"],
 #                 ])
 #     logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
 
@@ -552,7 +552,7 @@ def export_to_csv_per_node_per_study_dcc(
                 "startNodePropertyValue",
                 "linkedNodeId",
                 "linkedNodeLabels",
-                "dbgap_accession",
+                "study_id",
             ]
         )
         for record in result:
@@ -579,7 +579,7 @@ def export_to_csv_per_node_per_study_dcc(
                         format_prop_value(prop_value),
                         linked_node_id,
                         linked_node_labels,
-                        record["dbgap_accession"],
+                        record["study_id"],
                     ]
                 )
     logger.info(f"Exported {len(result)} records for {node_label}/{study_name}")
@@ -626,7 +626,7 @@ def pull_data_per_node(
                 "labels(startNode) AS startNodeLabels, "
                 "propertyName AS startNodePropertyName, "
                 "startNode[propertyName] AS startNodePropertyValue, "
-                "startNode.study_id as dbgap_accession "
+                "startNode.study_id as study_id  "
             )
             session.execute_read(data_to_csv, node_label, cypher, output_dir)
         else:
@@ -804,7 +804,7 @@ def pull_nodes_loop_dcc(
 #         "startNodePropertyValue",
 #         "linkedNodeId",
 #         "linkedNodeLabels",
-#         "dbgap_accession",
+#         "study_id",
 #     ]
 
 #     # OPTIMIZATION 2: Use generator instead of loading all files into memory
@@ -1690,7 +1690,7 @@ def pivot_long_df_wide_clean(file_path: str) -> DataFrame:
             on="startNodeId",
         )
         df_wide = df_wide.merge(
-            df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
+            df_long[["startNodeId", "study_id"]].drop_duplicates(),
             on="startNodeId",
         )
 
@@ -1749,8 +1749,8 @@ def wide_df_setup_link(df_wide: DataFrame) -> DataFrame:
 
         # below should only work for non study nodes
 
-        df_wide["study"] = df_wide["dbgap_accession"]
-        df_wide.drop(columns=["dbgap_accession"], inplace=True)
+        df_wide["study"] = df_wide["study_id"]
+        df_wide.drop(columns=["study_id"], inplace=True)
 
     else:
         # this is only for study node
@@ -2248,15 +2248,15 @@ def pivot_long_df_wide_clean_dcc(file_path: str) -> DataFrame:
             df_wide["linkedNodeLabels"] = None
 
         if (
-            "dbgap_accession" in df_long.columns
-            and df_long["dbgap_accession"].notna().any()
+            "study_id" in df_long.columns
+            and df_long["study_id"].notna().any()
         ):
             df_wide = df_wide.merge(
-                df_long[["startNodeId", "dbgap_accession"]].drop_duplicates(),
+                df_long[["startNodeId", "study_id"]].drop_duplicates(),
                 on="startNodeId",
             )
         else:
-            df_wide["dbgap_accession"] = None
+            df_wide["study_id"] = None
 
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("['")
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"].str.strip("']")
@@ -2289,9 +2289,9 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
             "linkedNodeLabels" not in df_wide.columns
             or df_wide["linkedNodeLabels"].isna().all()
         ):
-            df_wide["study"] = df_wide.get("dbgap_accession", None)
-            if "dbgap_accession" in df_wide.columns:
-                df_wide.drop(columns=["dbgap_accession"], inplace=True)
+            df_wide["study"] = df_wide.get("study_id", None)
+            if "study_id" in df_wide.columns:
+                df_wide.drop(columns=["study_id"], inplace=True)
             return df_wide
 
         df_wide["linkedNodeLabels"] = df_wide["linkedNodeLabels"] + ".guid"
@@ -2318,8 +2318,8 @@ def wide_df_setup_link_dcc(df_wide: DataFrame) -> DataFrame:
             ]
         )
         df_wide = df_wide_links
-        df_wide["study"] = df_wide["dbgap_accession"]
-        df_wide.drop(columns=["dbgap_accession"], inplace=True)
+        df_wide["study"] = df_wide["study_id"]
+        df_wide.drop(columns=["study_id"], inplace=True)
 
     else:
         df_wide["study"] = df_wide["study_id"]
