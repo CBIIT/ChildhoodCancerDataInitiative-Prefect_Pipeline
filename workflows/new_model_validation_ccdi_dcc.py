@@ -103,9 +103,11 @@ def validate_new_dcc_model(
     )
 
     try:
-        model_version = GetDataModel.get_latest_tag(commons_acronym="ccdi_dcc")
+        #model_version = GetDataModel.get_latest_tag(commons_acronym="ccdi_dcc")
+        # get the model files at the main branch
         dcc_model_yml, dcc_props_yml = download_model_files(
-                commons_acronym="ccdi_dcc", tag=model_version
+                #commons_acronym="ccdi_dcc", tag=model_version
+                commons_acronym="ccdi_dcc", tag=""
             )
         print(dcc_model_yml, dcc_props_yml)
         dcc_model = ModelParser(dcc_model_yml, dcc_props_yml, handle="dcc").model
