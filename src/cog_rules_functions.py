@@ -135,6 +135,14 @@ class CNS_Tumor_Spatial_Extent_Mapper(Transformation):
             return ";".join(set(mapped_values))
         return "Not Reported"
 
+class Parse_Single_Value(Transformation):
+    """"Class for parsing from a list columns returning a single value"""
+    def apply(self, row):
+        values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
+        if not values:
+            return None
+        return list(set(values))[0]
+    
 class Parse_List_Values(Transformation):
     """"Class for parsing from a list columns any non-null value and returning it as a concatenated string"""
     def apply(self, row):
@@ -634,6 +642,7 @@ TRANSFORM_REGISTRY = {
     "default": Default_Mapper,
     "tumor_spatial_extent_parse": CNS_Tumor_Spatial_Extent_Mapper,
     "parse" : Parse_List_Values,
+    "parse_single_value" : Parse_Single_Value,
     "dx_basis" : Diagnosis_Basis_Mapper,
     "tumor_grade" : Tumor_Grade_Mapper,
     "substudy_dx" : Substudy_Integrated_Dx_Mapper,
