@@ -392,19 +392,21 @@ def get_time() -> str:
 
 
 def get_manifest_phs(manifest_path: str) -> str:
-    """Return phs accession of ccdi study"""
+    """Return study accession of ccdi study"""
     manifest_excel = pd.ExcelFile(manifest_path)
     warnings.simplefilter(action="ignore", category=UserWarning)
     study_sheet_df = pd.read_excel(manifest_excel, "study", dtype=str)
-    if "phs_accession" in study_sheet_df.columns:
-        phs_accession = study_sheet_df["phs_accession"].tolist()[0]
+    if "study_accession" in study_sheet_df.columns:
+        study_accession = study_sheet_df["study_accession"].tolist()[0]
+    elif "phs_accession" in study_sheet_df.columns:
+        study_accession = study_sheet_df["phs_accession"].tolist()[0]
     elif "dbgap_accession" in study_sheet_df.columns:
-        phs_accession = study_sheet_df["dbgap_accession"].tolist()[0]
+        study_accession = study_sheet_df["dbgap_accession"].tolist()[0]
     else:
         raise KeyError(
-            "Can't find a column phs_accession or dbgap_accession in study sheet. Failed to get the dbgap accession number"
+            "Can't find a column study_accession, phs_accession or dbgap_accession in study sheet. Failed to get the study accession number"
         )
-    return phs_accession
+    return study_accession
 
 
 def set_s3_resource():
@@ -1131,7 +1133,16 @@ class CheckCCDI:
     def get_study_id(self):
         study_df = self.read_sheet(sheetname="study")
         # get accession id from dbgap_accesion since 1.9.1
-        study_id = study_df["dbgap_accession"][0]
+        # get study accession from study sheet, prefer study_accession column if available since DCC 2.2.0
+        # seeing as how this is supposed to be getting study_id AND not necessarily the dbgap accession number, we check for study_id first
+        if "study_id" in study_df.columns:
+            study_id = study_df["study_id"][0]
+        elif "study_accession" in study_df.columns:
+            study_id = study_df["study_accession"][0]
+        elif "phs_accession" in study_df.columns:
+            study_id = study_df["phs_accession"][0]
+        else:
+            study_id = study_df["dbgap_accession"][0]
         return study_id
 
     def get_dict_df(self):
