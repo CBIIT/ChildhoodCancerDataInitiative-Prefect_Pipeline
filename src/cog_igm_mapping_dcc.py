@@ -145,8 +145,6 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
     if "treatment_other" in node_outputs:
         # filter out rows where treatment_other_type is Not Applicable
         treatment_other_df = node_outputs["treatment_other"]
-        treatment_other_df["other_treatment_type"] = treatment_other_df["other_treatment_type"].str.replace(";Not Reported", "")
-        treatment_other_df["other_treatment_type"] = treatment_other_df["other_treatment_type"].str.replace("Not Reported;", "")
         cols_order = treatment_other_df.columns.tolist()
         
         treatment_other_df = treatment_other_df.groupby("treatment_other_id").agg({
@@ -157,6 +155,8 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
             "age_at_treatment_end": "first",
             "other_treatment_type": lambda x: ";".join(set([item for sublist in x.str.split(";") for item in sublist if item])),
         }).reset_index()
+        treatment_other_df["other_treatment_type"] = treatment_other_df["other_treatment_type"].str.replace(";Not Reported", "")
+        treatment_other_df["other_treatment_type"] = treatment_other_df["other_treatment_type"].str.replace("Not Reported;", "")
         node_outputs["treatment_other"] = treatment_other_df[cols_order]
         
     # save transformed datarames to tsv
