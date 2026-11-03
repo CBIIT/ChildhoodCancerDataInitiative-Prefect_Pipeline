@@ -462,6 +462,30 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
+        # Fill in sample_parent_type based on sample mapping
+        #
+        ##############
+        # For each row in the sample node, see if there is a value in the participant.participant_id, pdx.pdx_id or cell_line.cell_line_id columns and map it to sample_parent_type property.
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            if "sample_parent_type" in df.columns and "sample_id" in df.columns:
+                catcherr_logger.info(f"Filling sample_parent_type.")
+                for index, row in df.iterrows():
+                    if pd.notna(row["participant.participant_id"]):
+                        df.at[index, "sample_parent_type"] = "participant"
+                    elif pd.notna(row["pdx.pdx_id"]):
+                        df.at[index, "sample_parent_type"] = "pdx"
+                    elif pd.notna(row["cell_line.cell_line_id"]):
+                        df.at[index, "sample_parent_type"] = "cell_line"
+                    else:
+                        df.at[index, "sample_parent_type"] = None
+                meta_dfs[node] = df
+            else:
+                catcherr_logger.warning(f"Node {node} does not have required columns for filling sample_parent_type.")
+
+
+        ##############
+        #
         # Terms and Value sets checks
         #
         ##############
