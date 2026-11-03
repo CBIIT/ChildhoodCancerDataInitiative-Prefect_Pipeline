@@ -633,7 +633,7 @@ def mci_gdc_transform(
             )
             output_df = engine.transform(
                 mapping["target_node"], input_df
-            )  # input_data is the data for the source node, need to read in from manifest file or from previous transformations
+            ).drop_duplicates()  # input_data is the data for the source node, need to read in from manifest file or from previous transformations
             output_dfs[mapping["target_node"]] = output_df
         except Exception as e:
             print(f"Error during transformation: {e}")
