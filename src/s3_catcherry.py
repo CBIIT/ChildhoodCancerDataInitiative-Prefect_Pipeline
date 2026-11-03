@@ -230,6 +230,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        print("Checking for unique values in each node.\n----------", file=outf)
         catcherr_logger.info("Checking for unique values in each node")
 
         for node in dict_nodes:
@@ -244,8 +245,9 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        print("Cleaning up diagnosis column, removing '###(#)/(#) : ' if present.\n----------", file=outf)
         catcherr_logger.info(
-            "Cleaning up diagnosis column, removing '###(#)/(#) : ' if present\n----------"
+            "Cleaning up diagnosis column, removing '###(#)/(#) : ' if present"
         )
 
         for node in dict_nodes:
@@ -272,6 +274,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # While this applies to mainly MCI data, it can be used for any data as it might clean up anatomic_site values before the uberon mapping is applied.
         #
         ##############
+        
+        print("Cleaning up anatomic_site based on removal of C-codes.\n----------", file=outf)
         catcherr_logger.info(
             "Cleaning up anatomic_site column, removing 'C##.# : ' if present"
         )
