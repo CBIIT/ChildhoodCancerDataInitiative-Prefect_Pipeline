@@ -230,6 +230,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        print("Checking for unique values in each node.\n----------", file=outf)
         catcherr_logger.info("Checking for unique values in each node")
 
         for node in dict_nodes:
@@ -244,6 +245,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        print("Cleaning up diagnosis column, removing '###(#)/(#) : ' if present.\n----------", file=outf)
         catcherr_logger.info(
             "Cleaning up diagnosis column, removing '###(#)/(#) : ' if present"
         )
@@ -272,6 +274,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # While this applies to mainly MCI data, it can be used for any data as it might clean up anatomic_site values before the uberon mapping is applied.
         #
         ##############
+        
+        print("Cleaning up anatomic_site based on removal of C-codes.\n----------", file=outf)
         catcherr_logger.info(
             "Cleaning up anatomic_site column, removing 'C##.# : ' if present"
         )
@@ -308,6 +312,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # MCI submitted_diagnosis to Harmonized diagnosis transformation
         #
         ##############
+
+        print("Cleaning up diagnosis values based on MCI_InvalidDiagnosisMappings.tsv.\n----------", file=outf)
 
         # Clean up diagnosis values based on the MCI_invalidDiagnosisMappings.tsv file found in the docs folder.
         mci_invalid_diagnosis_mapping_path = (
@@ -351,6 +357,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # MCI Anatomic_site to Harmonized Anatomic_site transformation
         #
         ##############
+
+        print("Cleaning up anatomic_site based on MCI_invalidAnatomicSiteMappings.tsv.\n----------", file=outf)
 
         # Clean up anatomic_site values based on the MCI_invalidAnatomicSiteMappings.tsv file found in the docs folder.
         mci_invalid_anatomic_site_mapping_path = (
@@ -421,6 +429,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        print("Filling anatomic_site based on Uberon mapping.\n----------", file=outf)
+
         # read in the anatomic_site_mapping_uberon.tsv file
         anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
         anatomic_site_mapping = pd.read_csv(
@@ -459,6 +469,33 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             )
                             df.at[index, "anatomic_site"] = new_anatomic_site
             meta_dfs[node] = df
+
+        ##############
+        #
+        # Fill in sample_parent_type based on sample mapping
+        #
+        ##############
+        print("Filling sample_parent_type based on sample mapping.\n----------", file=outf)
+        # For each row in the sample node, see if there is a value in the participant.participant_id, pdx.pdx_id or cell_line.cell_line_id columns and map it to sample_parent_type property.
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            if "sample_parent_type" in df.columns and "sample_id" in df.columns:
+                catcherr_logger.info(f"Filling sample_parent_type.")
+                for index, row in df.iterrows():
+                    if pd.notna(row["participant.participant_id"]):
+                        df.at[index, "sample_parent_type"] = "participant"
+                    elif pd.notna(row["pdx.pdx_id"]):
+                        df.at[index, "sample_parent_type"] = "pdx"
+                    elif pd.notna(row["cell_line.cell_line_id"]):
+                        df.at[index, "sample_parent_type"] = "cell_line"
+                    else:
+                        df.at[index, "sample_parent_type"] = None
+                        catcherr_logger.error(f"Row {index} does not have a sample parent.")
+                        print(f"ERROR: Row {index} does not have a sample parent.", file=outf)
+                meta_dfs[node] = df
+            else:
+                pass
+
 
         ##############
         #
