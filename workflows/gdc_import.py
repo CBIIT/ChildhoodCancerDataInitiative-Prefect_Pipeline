@@ -112,8 +112,9 @@ def dbgap_retrieve(phs_id_version: str):
 
     # number of entries to return on a page
     page_size = 500
+    page_num = 1
 
-    url = f"https://www.ncbi.nlm.nih.gov/gap/sstr/api/v1/study/{phs_id_version}/subjects?page=1&page_size={page_size}"
+    url = f"https://www.ncbi.nlm.nih.gov/gap/sstr/api/v1/study/{phs_id_version}/subjects?page={page_num}&page_size={page_size}"
 
     # intial request
     response = requests.get(url)
@@ -129,7 +130,21 @@ def dbgap_retrieve(phs_id_version: str):
     ]
 
     # paginate thru API calls to retrieve cases released in dbGaP
-    while json.loads(response.text)["pagination"]["link"]["next"] != None:
+    for num in range(2, 100):  # Example: paginate through pages 2 to 99
+        page_num = num
+        url = f"https://www.ncbi.nlm.nih.gov/gap/sstr/api/v1/study/{phs_id_version}/subjects?page={page_num}&page_size={page_size}"
+        response = requests.get(url)
+        if not str(response.status_code).startswith("20"):
+            runner_logger.error("ERROR with dbGaP request, check phs ID and url")
+        else:
+            runner_logger.info(f"Response page #: {page_num}")
+        if len(json.loads(response.text)["subjects"]) == 0:
+            break
+        subjects_dbgap += [
+            subject["submitted_subject_id"]
+            for subject in json.loads(response.text)["subjects"]
+        ]
+    """while json.loads(response.text)["pagination"]["link"]["next"] != None:
         response = requests.get(json.loads(response.text)["pagination"]["link"]["next"])
         if not str(response.status_code).startswith("20"):
             runner_logger.error("ERROR with dbGaP request, check phs ID and url")
@@ -140,7 +155,7 @@ def dbgap_retrieve(phs_id_version: str):
         subjects_dbgap += [
             subject["submitted_subject_id"]
             for subject in json.loads(response.text)["subjects"]
-        ]
+        ]"""
 
     return subjects_dbgap
 
