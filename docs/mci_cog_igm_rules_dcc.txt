@@ -370,7 +370,6 @@ COG	treatment_radiation		treatment_radiation	participant.participant_id	liftover
 COG	treatment_radiation		treatment_radiation	radiation_therapy_fraction	default		default			
 COG	treatment_radiation	TRUE	treatment_radiation	radiation_therapy_type	parse	"RADIATION_THERAPY.RT_TX_TP_A1,RADIATION_THERAPY.RT_TX_TP_A2,RADIATION_THERAPY.RT_TX_TP_A3,RADIATION_THERAPY.RT_TX_TP_A4,Tx Chemo:CNS.AGT_ADM_NM_A33,TX_CHEMO_SOFT_TISSUE_SARCOMA.AGT_ADM_NM_A33,TX_CHEMO_RARE_TUMORS.AGT_ADM_NM_A33,TX_CHEMO_OSTEOSARCOMA.AGT_ADM_NM_A33,TX_CHEMO_EWINGS_SARCOMA.AGT_ADM_NM_A33,TX_CHEMO_GERM_CELL_TUMOR.AGT_ADM_NM_A33,TX_CHEMO_LIVER_TUMORS.AGT_ADM_NM_A33"	regex_remove	"\s\([A-Za-z, ]+\)"		
 COG	treatment_radiation		treatment_radiation	submitted_anatomic_site	default		default	Not Reported		
-COG	treatment_radiation		treatment_radiation	submitted_anatomic_site	default		default			
 COG	treatment_radiation		treatment_radiation	total_radiation_dose	default		default			
 COG	treatment_radiation		treatment_radiation	total_radiation_dose_unit	default		default			
 COG	treatment_radiation		treatment_radiation	treatment_radiation_id	liftover	upi	suffix	treatment_radiation		

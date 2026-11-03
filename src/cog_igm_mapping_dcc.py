@@ -94,8 +94,8 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
     if "treatment_radiation" in node_outputs:
         # filter out rows where radiation_type is Not Applicable
         treatment_radiation_df = node_outputs["treatment_radiation"]
-        treatment_radiation_df['radiation_therapy_type'] = treatment_radiation_df['radiation_therapy_type'].str.replace("Therapy", "Radiation Therapy")
-        treatment_radiation_df['radiation_therapy_type'] = treatment_radiation_df['radiation_therapy_type'].str.replace("therapy", "Radiation Therapy")
+        treatment_radiation_df['radiation_therapy_type'] = treatment_radiation_df['radiation_therapy_type'].str.replace("Beam Therapy", "Beam Radiation Therapy")
+        treatment_radiation_df['radiation_therapy_type'] = treatment_radiation_df['radiation_therapy_type'].str.replace("Beam therapy", "Beam Radiation Therapy")
         treatment_radiation_df['beam_radiation_type'] = treatment_radiation_df['beam_radiation_type'].str.replace("Therapy", "Radiation Therapy")
         treatment_radiation_df['beam_radiation_type'] = treatment_radiation_df['beam_radiation_type'].str.replace("therapy", "Radiation Therapy")
         node_outputs["treatment_radiation"] = treatment_radiation_df
