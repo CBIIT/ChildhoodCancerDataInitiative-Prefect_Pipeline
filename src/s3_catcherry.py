@@ -245,7 +245,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         ##############
 
         catcherr_logger.info(
-            "Cleaning up diagnosis column, removing '###(#)/(#) : ' if present"
+            "Cleaning up diagnosis column, removing '###(#)/(#) : ' if present\n----------"
         )
 
         for node in dict_nodes:
@@ -309,6 +309,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        print("Cleaning up diagnosis values based on MCI_InvalidDiagnosisMappings.tsv.\n----------", file=outf)
+
         # Clean up diagnosis values based on the MCI_invalidDiagnosisMappings.tsv file found in the docs folder.
         mci_invalid_diagnosis_mapping_path = (
             "docs/MCI_InvalidDiagnosisMappings.tsv"
@@ -351,6 +353,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # MCI Anatomic_site to Harmonized Anatomic_site transformation
         #
         ##############
+
+        print("Cleaning up anatomic_site based on MCI_invalidAnatomicSiteMappings.tsv.\n----------", file=outf)
 
         # Clean up anatomic_site values based on the MCI_invalidAnatomicSiteMappings.tsv file found in the docs folder.
         mci_invalid_anatomic_site_mapping_path = (
@@ -421,6 +425,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         #
         ##############
 
+        print("Filling anatomic_site based on Uberon mapping.\n----------", file=outf)
+
         # read in the anatomic_site_mapping_uberon.tsv file
         anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
         anatomic_site_mapping = pd.read_csv(
@@ -465,6 +471,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         # Fill in sample_parent_type based on sample mapping
         #
         ##############
+        print("Filling sample_parent_type based on sample mapping.\n----------", file=outf)
         # For each row in the sample node, see if there is a value in the participant.participant_id, pdx.pdx_id or cell_line.cell_line_id columns and map it to sample_parent_type property.
         for node in dict_nodes:
             df = meta_dfs[node]
@@ -479,9 +486,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                         df.at[index, "sample_parent_type"] = "cell_line"
                     else:
                         df.at[index, "sample_parent_type"] = None
+                        catcherr_logger.error(f"Row {index} does not have a sample parent.")
+                        print(f"ERROR: Row {index} does not have a sample parent.", file=outf)
                 meta_dfs[node] = df
             else:
-                catcherr_logger.warning(f"Node {node} does not have required columns for filling sample_parent_type.")
+                pass
 
 
         ##############
