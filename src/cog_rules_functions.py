@@ -17,6 +17,12 @@ class Transformation(ABC):
             return []
         return [c.strip() for c in str(inputs).split(",")]
 
+    def _get_input_values(self, row):
+        return [
+            str(value) if pd.notna(value) else None
+            for value in (row.get(column) for column in self.inputs)
+        ]
+
     @abstractmethod
     def apply(self, row: pd.Series):
         pass
@@ -108,7 +114,10 @@ class CNS_Tumor_Spatial_Extent_Mapper(Transformation):
         # Map specific combinations to standardized terms
         mapping_dict = {
             "Localized": "Local",
+            "Primary Site": "Local",
+            "Regional lymph nodes": "Regional",
             "Metastatic": "Metastatic",
+            "Metastatic site": "Metastatic",
             "Distant": "Metastatic",
             "Not Answered": "Not Reported",
             "M0": "Local", 
@@ -126,6 +135,14 @@ class CNS_Tumor_Spatial_Extent_Mapper(Transformation):
             return ";".join(set(mapped_values))
         return "Not Reported"
 
+class Parse_Single_Value(Transformation):
+    """"Class for parsing from a list columns returning a single value"""
+    def apply(self, row):
+        values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
+        if not values:
+            return None
+        return list(set(values))[0]
+    
 class Parse_List_Values(Transformation):
     """"Class for parsing from a list columns any non-null value and returning it as a concatenated string"""
     def apply(self, row):
@@ -242,7 +259,7 @@ class EFS_Age(Transformation):
 class Follow_Up_Treatment_Response_Mapper(Transformation):
     """Class for mapping follow-up treatment response based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
-        values = [str(row.get(c)) for c in self.inputs]
+        values = self._get_input_values(row)
         
         # zip values to keys based on order in mapping file
         # e.g. FOLLOW_UP.DZ_EXM_REP_IND_2, FOLLOW_UP.COMP_RESP_CONF_IND_3, FOLLOW_UP.DZ_REL_PROG_IND3 (evaluated, complete remission, progression)
@@ -294,30 +311,49 @@ class Other_Treatment_Type_Mapper(Transformation):
 class Surgery_Type_Mapper(Transformation):
     """Class for mapping surgery type based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
-        values = [str(row.get(c)) for c in self.inputs]
+        values = self._get_input_values(row)
         if not values:
             return None
         
-        keys = ["ON_STUDY_DX.PR_PRSCAT_EXT","CNS_ON_STUDY_INITIAL_DIAGNOSIS.PR_PRSCAT_EXT_SURGRPT","ON_STUDY_DX_CNS.TUM_RES_EXT_TP","ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2","ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MGNSTPTMRCTN","ON_STUDY_DX_SOFT_TISSUE_SARCOMA.RGLMPNDEXCRSLTP","ON_STDY_AT_INITIAL_DIAGNOSIS.PR_PRSCAT_EXT_SURGRPT","ON_STUDY_DX_EWING_SARCOMA.SURG_MARG_RES_FNG_TP","ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2","ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND","SURG_RESECTION_OSTEOSARCOMA.TUM_RES_EXT_TP","SURG_RESECTION_OSTEOSARCOMA.SURG_MARG_RES_FNG_TP","ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SURG_RESECT_EXT_TP","SURGERY.SURG_RESECT_EXT_TP", "FSTLNTXINIDXADMCAT_A4"]
+        keys = ["ON_STUDY_DX.PR_PRSCAT_EXT","CNS_ON_STUDY_INITIAL_DIAGNOSIS.PR_PRSCAT_EXT_SURGRPT","ON_STUDY_DX_CNS.TUM_RES_EXT_TP","ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2","ON_STUDY_DX_SOFT_TISSUE_SARCOMA.MGNSTPTMRCTN","ON_STUDY_DX_SOFT_TISSUE_SARCOMA.RGLMPNDEXCRSLTP","ON_STDY_AT_INITIAL_DIAGNOSIS.PR_PRSCAT_EXT_SURGRPT","ON_STUDY_DX_EWING_SARCOMA.SURG_MARG_RES_FNG_TP","ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2","ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND","SURG_RESECTION_OSTEOSARCOMA.TUM_RES_EXT_TP","SURG_RESECTION_OSTEOSARCOMA.SURG_MARG_RES_FNG_TP","ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SURG_RESECT_EXT_TP","SURGERY.SURG_RESECT_EXT_TP", "FSTLNTXINIDXADMCAT_A4", 'ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1', 'ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1', 'ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1']
         
         values = {k:v for k,v in zip(keys, values)}
         
         if values['ON_STUDY_DX.PR_PRSCAT_EXT'] == "No Procedure":
             return "Not Applicable"
+
+        if 'ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1' in values and values['ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1']:
+            values['ON_STUDY_AT_INITIAL_DX.SUPPBS_QVAL_MARG_SXSPC_X1'] = 'Resection'
         
-        if values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "Yes":
-            values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Resection"
-        elif values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "No":
-            values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Not Reported"
+        if 'ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1' in values and values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1']:
+            if values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] == "Yes":
+                values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] = "Biopsy"
+            elif values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] == "No":
+                values['ON_STUDY_AT_INITIAL_DX.PR_PROCCUR_BX_RGNLLN_X1'] = "Not Reported"
+
+        if 'ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1' in values and values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1']:
+            if values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] == "Yes":
+                values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] = "Biopsy"
+            elif values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] == "No":
+                values['ON_STUDY_AT_INITIAL_DX.PR_PRTRT_BX_SENTINELLN_X1'] = "Not Reported"
         
-        if values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] == 'Yes':
-            values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] = "Biopsy"
-        else:
-            values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] = "Not Applicable"
-        if values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] == 'Yes':
-            values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] = "Resection"
-        else:            
-            values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] = "Not Applicable" #post hoc filtering of NAs that map to surgery/biopsy == No
+        if 'ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2' in values and values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2']:
+            if values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "Yes":
+                values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Resection"
+            elif values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] == "No":
+                values['ADRENOCORTICAL_CARCINOMA.SX_EXC_PERF_IND2'] = "Not Reported"
+        
+        if 'ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2' in values and values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2']:
+            if values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] == 'Yes':
+                values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] = "Biopsy"
+            else:
+                values['ON_STUDY_DX_GERM_CELL_TUMOR.LNBX_SMPLG_IND2'] = "Not Reported"
+        
+        if 'ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND' in values and values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND']:
+            if values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] == 'Yes':
+                values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] = "Resection"
+            else:            
+                values['ON_STUDY_DX_GERM_CELL_TUMOR.FRST_DX_SURG_IND'] = "Not Applicable" #post hoc filtering of NAs that map to surgery/biopsy == No
             
         mapping_dict = {
             'nan' : 'Not Applicable',
@@ -350,14 +386,16 @@ class Surgery_Type_Mapper(Transformation):
         mapped_values = []
         for k,v in values.items():
             mapped_values.append(mapping_dict.get(v, v))
-        mapped_values_parse = list(set([i for i in mapped_values if i != 'Not Applicable']))
+        mapped_values_parse = list(set(
+            i for i in mapped_values if i is not None and i != 'Not Applicable'
+        ))
         
         return ";".join(mapped_values_parse) if mapped_values_parse else None
         
 class Resection_Margin_Mapper(Transformation):
     """Class for mapping resection margin status based on the presence of specific combinations of values in a list of input columns, with specific handling for values of 'Other', 'Unknown', and 'Not Reported'"""
     def apply(self, row):
-        values = [str(row.get(c)) for c in self.inputs]
+        values = self._get_input_values(row)
         if not values:
             return None
         
@@ -404,7 +442,9 @@ class Resection_Margin_Mapper(Transformation):
         mapped_values = []
         for k,v in values.items():
             mapped_values.append(mapping_dict.get(v, v))
-        mapped_values_parse = list(set([i for i in mapped_values if i != 'Not Applicable']))
+        mapped_values_parse = list(set(
+            i for i in mapped_values if i is not None and i != 'Not Applicable'
+        ))
         
         
         if len(mapped_values_parse) > 1:
@@ -602,6 +642,7 @@ TRANSFORM_REGISTRY = {
     "default": Default_Mapper,
     "tumor_spatial_extent_parse": CNS_Tumor_Spatial_Extent_Mapper,
     "parse" : Parse_List_Values,
+    "parse_single_value" : Parse_Single_Value,
     "dx_basis" : Diagnosis_Basis_Mapper,
     "tumor_grade" : Tumor_Grade_Mapper,
     "substudy_dx" : Substudy_Integrated_Dx_Mapper,
