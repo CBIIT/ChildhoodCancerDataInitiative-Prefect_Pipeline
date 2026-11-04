@@ -577,7 +577,7 @@ def mci_gdc_transform(
     file_dl(bucket, manifest_file)
     
     # if preservation method and methylation platform file provided, download it
-    if preservation_meth_platform_file is not None:
+    if preservation_meth_platform_file is not None and preservation_meth_platform_file != "":
         file_dl(bucket, preservation_meth_platform_file)
         if not os.path.isfile(os.path.basename(preservation_meth_platform_file)):
             print(f"Error: Preservation method and methylation platform file '{preservation_meth_platform_file}' not found.")
@@ -633,13 +633,54 @@ def mci_gdc_transform(
             )
             output_df = engine.transform(
                 mapping["target_node"], input_df
-            )  # input_data is the data for the source node, need to read in from manifest file or from previous transformations
+            ).drop_duplicates()  # input_data is the data for the source node, need to read in from manifest file or from previous transformations
             output_dfs[mapping["target_node"]] = output_df
         except Exception as e:
             print(f"Error during transformation: {e}")
             logger.error(f"Error during transformation: {e}")
             raise e
 
+    # post hoc edits
+    
+    # fix ; delimited strings in tissue_or_organ_of_origin and primary_site columns if they exist
+    def single_valued(val):
+        val = str(val)
+        vals = val.split(";")
+        if len(vals) == 1:
+            if vals[0] == 'Not Mapped':
+                return 'Unknown'
+            elif vals[0] == 'nan':
+                return 'Not Reported'
+            elif val[0] == 'Not Reported':
+                return 'Not Reported'
+            else:
+                return vals[0]
+        else:
+            for v in vals:
+                if v != 'Not Reported' and v != 'Unknown':
+                        return v
+    
+    if 'case' in output_dfs:
+        case_df = output_dfs['case']
+        case_df['primary_site'] = case_df['primary_site'].fillna("Unknown")
+        case_df['primary_site'] = case_df['primary_site'].replace("None", "Unknown")
+        case_df['primary_site'] = case_df['primary_site'].apply(single_valued)
+        case_df['disease_type'] = case_df['disease_type'].fillna("Neoplasms, NOS")
+        case_df['disease_type'] = case_df['disease_type'].apply(single_valued)
+        output_dfs['case'] = case_df
+    
+    if 'diagnosis' in output_dfs:
+        diagnosis_df = output_dfs['diagnosis']
+        diagnosis_df['primary_diagnosis'] = diagnosis_df['primary_diagnosis'].replace("unknown", "Unknown")
+        diagnosis_df["tissue_or_organ_of_origin"] = diagnosis_df["tissue_or_organ_of_origin"].apply(single_valued)
+        output_dfs['diagnosis'] = diagnosis_df
+
+    if 'demographic' in output_dfs:
+        demographic_df = output_dfs['demographic']
+        demographic_df['race'] = demographic_df['race'].replace("unknown", "Unknown")
+        output_dfs['demographic'] = demographic_df
+
+    
     for node, df in output_dfs.items():
         print(f"Output for node {node}:")
         print(df.head())

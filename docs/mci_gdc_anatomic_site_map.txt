@@ -47,7 +47,7 @@ cardia of stomach	Cardia, NOS	Stomach
 carotid body	Carotid body	Peripheral nerves and autonomic nervous system
 cauda equina	Cauda equina	Spinal cord, cranial nerves, and other parts of central nervous system
 central nervous system	Nervous system, NOS	Spinal cord, cranial nerves, and other parts of central nervous system
-cerebellum	cerebellum	Brain
+cerebellum	Cerebellum, NOS	Brain
 cerebral hemisphere	Cerebrum	Brain
 cerebrospinal fluid	Other ill-defined sites	Other and ill-defined sites
 cervical part of esophagus	Esophagus, NOS	Esophagus
