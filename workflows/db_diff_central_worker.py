@@ -87,25 +87,31 @@ def db_diff(
     logger.info(f"Retrieved counts for DB2")
     count_db2 = counts_DB_all_nodes_all_studies_w_secrets(driver=driver2)
 
-    count_db1.rename(columns={"DB_count": "database_1_count"}, inplace=True)
-    count_db2.rename(columns={"DB_count": "database_2_count"}, inplace=True)
+    #determine database names from secret paths
+    db1 = database_1_secret_path.rsplit("/", 2)[-2]
+    db2 = database_2_secret_path.rsplit("/", 2)[-2]
+
+    count_db1.rename(columns={"DB_count": f"{db1}_count"}, inplace=True)
+    count_db2.rename(columns={"DB_count": f"{db2}_count"}, inplace=True)
 
     # merge two dataframes
     combined_df = count_db1.merge(
         count_db2,
         on=["study_id", "node"],
         how="outer",
-        suffixes=("_database_1_count", "_database_2_count"),
+        suffixes=(f"_{db1}_count", f"_{db2}_count"),
     )
     combined_df.fillna(0, inplace=True)
     combined_df["count_diff"] = (
-        combined_df["database_1_count"] - combined_df["database_2_count"]
+        combined_df[f"{db1}_count"] - combined_df[f"{db2}_count"]
     )
-    output_name = f"neo4j_db_diff_{get_date()}.tsv"
+
+    # determine output file name
+    output_name = f"db_diff_{db1}_{db2}_{get_date()}.tsv"
     combined_df.to_csv(output_name, sep="\t", index=False)
 
     # save output to bucket
-    output_folder = os.path.join(runner, f"db_diff_sandbox_dev_{get_time()}")
+    output_folder = os.path.join(runner, f"db_diff_{get_time()}")
     file_ul(
         bucket=bucket, newfile=output_name, output_folder=output_folder, sub_folder=""
     )
