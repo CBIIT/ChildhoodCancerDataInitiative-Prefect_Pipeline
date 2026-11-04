@@ -662,7 +662,6 @@ def mci_gdc_transform(
     
     if 'case' in output_dfs:
         case_df = output_dfs['case']
-        case_df["race"] = case_df["race"].replace("unknown", "Unknown")
         case_df['primary_site'] = case_df['primary_site'].apply(single_valued)
         case_df['disease_type'] = case_df['disease_type'].fillna("Neoplasms, NOS")
         case_df['disease_type'] = case_df['disease_type'].apply(single_valued)
@@ -673,6 +672,11 @@ def mci_gdc_transform(
         diagnosis_df['primary_site'] = diagnosis_df['primary_site'].replace("unknown", "Unknown")
         diagnosis_df["tissue_or_organ_of_origin"] = diagnosis_df["tissue_or_organ_of_origin"].apply(single_valued)
         output_dfs['diagnosis'] = diagnosis_df
+
+    if 'demographic' in output_dfs:
+        demographic_df = output_dfs['demographic']
+        demographic_df['race'] = demographic_df['race'].replace("unknown", "Unknown")
+        output_dfs['demographic'] = demographic_df
 
     
     for node, df in output_dfs.items():
