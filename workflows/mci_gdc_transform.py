@@ -640,6 +640,41 @@ def mci_gdc_transform(
             logger.error(f"Error during transformation: {e}")
             raise e
 
+    # post hoc edits
+    
+    # fix ; delimited strings in tissue_or_organ_of_origin and primary_site columns if they exist
+    def single_valued(val):
+        val = str(val)
+        vals = val.split(";")
+        if len(vals) == 1:
+            if vals[0] == 'Not Mapped':
+                return 'Unknown'
+            elif vals[0] == 'nan':
+                return 'Not Reported'
+            elif val[0] == 'Not Reported':
+                return 'Not Reported'
+            else:
+                return vals[0]
+        else:
+            for v in vals:
+                if v != 'Not Reported' and v != 'Unknown':
+                        return v
+    
+    if 'case' in output_dfs:
+        case_df = output_dfs['case']
+        case_df["race"] = case_df["race"].replace("unknown", "Unknown")
+        case_df['primary_site'] = case_df['primary_site'].apply(single_valued)
+        case_df['disease_type'] = case_df['disease_type'].fillna("Neoplasms, NOS")
+        case_df['disease_type'] = case_df['disease_type'].apply(single_valued)
+        output_dfs['case'] = case_df
+    
+    if 'diagnosis' in output_dfs:
+        diagnosis_df = output_dfs['diagnosis']
+        diagnosis_df['primary_site'] = diagnosis_df['primary_site'].replace("unknown", "Unknown")
+        diagnosis_df["tissue_or_organ_of_origin"] = diagnosis_df["tissue_or_organ_of_origin"].apply(single_valued)
+        output_dfs['diagnosis'] = diagnosis_df
+
+    
     for node, df in output_dfs.items():
         print(f"Output for node {node}:")
         print(df.head())
