@@ -669,7 +669,7 @@ def mci_gdc_transform(
     
     if 'diagnosis' in output_dfs:
         diagnosis_df = output_dfs['diagnosis']
-        diagnosis_df['primary_site'] = diagnosis_df['primary_site'].replace("unknown", "Unknown")
+        diagnosis_df['primary_diagnosis'] = diagnosis_df['primary_diagnosis'].replace("unknown", "Unknown")
         diagnosis_df["tissue_or_organ_of_origin"] = diagnosis_df["tissue_or_organ_of_origin"].apply(single_valued)
         output_dfs['diagnosis'] = diagnosis_df
 
