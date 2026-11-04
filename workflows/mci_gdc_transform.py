@@ -662,6 +662,7 @@ def mci_gdc_transform(
     
     if 'case' in output_dfs:
         case_df = output_dfs['case']
+        case_df['primary_site'] = case_df['primary_site'].fillna("Unknown")
         case_df['primary_site'] = case_df['primary_site'].replace("None", "Unknown")
         case_df['primary_site'] = case_df['primary_site'].apply(single_valued)
         case_df['disease_type'] = case_df['disease_type'].fillna("Neoplasms, NOS")
