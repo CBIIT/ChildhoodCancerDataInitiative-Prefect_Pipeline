@@ -502,13 +502,13 @@ def json_compare(submit_file_metadata: dict, gdc_node_metadata: dict):
         return False
 
 @flow(name="gdc_import_compare_diff", log_prints=True)
-def compare_diff(nodes: list, project_id: str, node_type: str, secret_name_path: str, secret_key_name: str, check_for_updates: str):
+def compare_diff(file_name: str, node_type: str, project_id: str, secret_name_path: str, secret_key_name: str, check_for_updates: str):
     """Determine if nodes in submission file are new entities or already exist in GDC
 
     Args:
-        nodes (list): List of node entities in submission file to check  
+        file_name (str): Path to the submission file containing node entities to check
+        node_type (str): Node entity type in GDC Data Model
         project_id (str): GDC Project ID
-        node_type (str): Node entity type in GDC Data Model 
         secret_name_path (str): Path to AWS secrets manager where token hash stored
         secret_key_name (str): Authentication token string secret key name for GDC submission
         check_for_updates (str): yes/no indication for checking previously submitted entities in GDC against nodes to be submitted for differences
@@ -518,6 +518,8 @@ def compare_diff(nodes: list, project_id: str, node_type: str, secret_name_path:
     """
 
     runner_logger = get_run_logger()
+
+    nodes = loader(file_name, node_type)
 
     # retrieve node entities already in GDC
     gdc_nodes = retrieve_current_nodes(project_id, node_type, secret_name_path, secret_key_name)
@@ -815,7 +817,7 @@ def runner(
     file_name = os.path.basename(file_path)
 
     # load in nodes file
-    nodes = loader(file_name, node_type)
+    #nodes = loader(file_name, node_type)
 
     # if phs ID provided and node type is case
     # check that cases released already in dbGaP
@@ -824,7 +826,7 @@ def runner(
         nodes = dbgap_compare(sstr, nodes)
 
     # parse nodes into new and update nodes
-    new_nodes, update_nodes = compare_diff(nodes, project_id, node_type, secret_name_path, secret_key_name, check_for_updates)
+    new_nodes, update_nodes = compare_diff(file_name, node_type, project_id, secret_name_path, secret_key_name, check_for_updates)
 
     # get time for file outputs
     dt = get_time()
