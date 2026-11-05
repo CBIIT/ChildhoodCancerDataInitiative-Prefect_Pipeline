@@ -261,37 +261,37 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: pull-neo4j-data-16gb-c3dc-v3
-    version: null
-    tags: ["Production","C3DC", "DEV", "V3"]
-    description: Pipeline to pull data from a Neo4j database.
-    entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
-    schedule: null
+  # - name: pull-neo4j-data-16gb-c3dc-v3
+  #   version: null
+  #   tags: ["Production","C3DC", "DEV", "V3"]
+  #   description: Pipeline to pull data from a Neo4j database.
+  #   entrypoint: workflows/pull_neo4j_data.py:pull_neo4j_data
+  #   schedule: null
 
-    # flow-specific parameters
-    parameters:
-      bucket: "c3dc-curation"
-      uri_parameter: "uri"
-      username_parameter: "username"
-      password_parameter: "password"
+  #   # flow-specific parameters
+  #   parameters:
+  #     bucket: "c3dc-curation"
+  #     uri_parameter: "uri"
+  #     username_parameter: "username"
+  #     password_parameter: "password"
     
 
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
+  #   # pull action to overwrite from file pull action
+  #   pull:
+  #     - prefect.deployments.steps.git_clone:
+  #         id: clone-step
+  #         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+  #         branch: main
+  #     - prefect.deployments.steps.pip_install_requirements:
+  #         requirements_file: requirements_python3.13_prefect3.txt
+  #         directory: "{{ clone-step.directory }}"
+  #         stream_output: False
 
-    # infra-specific fields
-    work_pool:
-      name: ccdi-c3dc-16gb-prefect-3.2.14-python3.9
-      work_queue_name: null
-      job_variables: {}
+  #   # infra-specific fields
+  #   work_pool:
+  #     name: ccdi-c3dc-16gb-prefect-3.2.14-python3.9
+  #     work_queue_name: null
+  #     job_variables: {}
 
   # base metadata
 
@@ -408,27 +408,27 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: get-parameter-v3
-    version: null
-    tags: ["Production","V3"]
-    description: Pipeline to retrieve an AWS parameter. To be deprecated in favor of AWS Secrets Manager for better security practices.
-    entrypoint: workflows/get_aws_parameter.py:get_aws_parameter
-    schedule: null
+  # - name: get-parameter-v3
+  #   version: null
+  #   tags: ["Production","V3"]
+  #   description: Pipeline to retrieve an AWS parameter. To be deprecated in favor of AWS Secrets Manager for better security practices.
+  #   entrypoint: workflows/get_aws_parameter.py:get_aws_parameter
+  #   schedule: null
 
-    # flow-specific parameters
-    parameters:
-      parameter_name: "prefect-test"
+  #   # flow-specific parameters
+  #   parameters:
+  #     parameter_name: "prefect-test"
 
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
+  #   # pull action to overwrite from file pull action
+  #   pull:
+  #     - prefect.deployments.steps.git_clone:
+  #         id: clone-step
+  #         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+  #         branch: main
+  #     - prefect.deployments.steps.pip_install_requirements:
+  #         requirements_file: requirements_python3.13_prefect3.txt
+  #         directory: "{{ clone-step.directory }}"
+  #         stream_output: False
 
     # infra-specific fields
     work_pool:
@@ -494,33 +494,33 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: new-model-validation-v3
-    version: null
-    tags: ["Production","V3"]
-    description: Validation pipeline to validate new models.
-    entrypoint: workflows/new_model_validation.py:validate_new_model
-    schedule: null
+  # - name: new-model-validation-v3
+  #   version: null
+  #   tags: ["Production","V3"]
+  #   description: Validation pipeline to validate new models.
+  #   entrypoint: workflows/new_model_validation.py:validate_new_model
+  #   schedule: null
 
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-dcc"
+  #   # flow-specific parameters
+  #   parameters:
+  #     bucket: "ccdi-dcc"
 
-    # pull action to overwrite from file pull action
-    pull:
-      - prefect.deployments.steps.git_clone:
-          id: clone-step
-          repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-          branch: main
-      - prefect.deployments.steps.pip_install_requirements:
-          requirements_file: requirements_python3.13_prefect3.txt
-          directory: "{{ clone-step.directory }}"
-          stream_output: False
+  #   # pull action to overwrite from file pull action
+  #   pull:
+  #     - prefect.deployments.steps.git_clone:
+  #         id: clone-step
+  #         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+  #         branch: main
+  #     - prefect.deployments.steps.pip_install_requirements:
+  #         requirements_file: requirements_python3.13_prefect3.txt
+  #         directory: "{{ clone-step.directory }}"
+  #         stream_output: False
 
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
+  #   # infra-specific fields
+  #   work_pool:
+  #     name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
+  #     work_queue_name: null
+  #     job_variables: {}
 
   - name: submission-cruncher-v3
     version: null
