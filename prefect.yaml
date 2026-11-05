@@ -430,11 +430,11 @@ deployments:
   #         directory: "{{ clone-step.directory }}"
   #         stream_output: False
 
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
+  #   # infra-specific fields
+  #   work_pool:
+  #     name: ccdi-dcc-2gb-prefect-3.4.19-python3.13
+  #     work_queue_name: null
+  #     job_variables: {}
 
   - name: mci-release-manifest-v3
     version: null
