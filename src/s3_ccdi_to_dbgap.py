@@ -206,9 +206,11 @@ def extract_ssm(manifest_path: str, logger) -> DataFrame:
 
 @task
 def extract_sc(
-    participant_sheet: DataFrame, participant_samples: DataFrame, consent_map: dict, logger
+    participant_sheet: DataFrame, 
+    #participant_samples: DataFrame, # remove 
+    consent_map: dict, logger
 ) -> DataFrame:
-    """Extract subject consent df and only keep subjects that have sample"""
+    """Extract subject consent df"""
 
     # extract participant, sex, and consent columns
     subject_consent = participant_sheet[["participant_id", "sex_at_birth", "consent_group.consent_group_id"]]
@@ -221,7 +223,7 @@ def extract_sc(
 
     subject_consent["SEX"][subject_consent["SEX"].str.contains("Female")] = "2"
     subject_consent["SEX"][subject_consent["SEX"].str.contains("Male")] = "1"
-    subject_consent["SEX"][~subject_consent["SEX"].str.contains("1|2")] = "UNK"
+    subject_consent.loc[~subject_consent["SEX"].isin(["1", "2"]), "SEX"] = "UNK"
     # reorder column names
     subject_consent = subject_consent[["SUBJECT_ID", "CONSENT", "SEX"]]
     # drop rows with empty SUBJECT_ID and drop duplicates
@@ -233,20 +235,21 @@ def extract_sc(
     logger.info(
         f"Number of unique participants in participant sheet: {subject_consent.shape[0]}"
     )
-    subject_w_sample = participant_samples["SUBJECT_ID"].unique().tolist()
-    if subject_consent.shape[0] > len(subject_w_sample):
-        subject_to_remove = subject_consent.loc[
-            ~subject_consent["SUBJECT_ID"].isin(subject_w_sample)
-        ]
-        logger.warning(
-            f"{subject_to_remove.shape[0]} subjects were removed due to lack of sample:\n"
-            + subject_to_remove.to_markdown(tablefmt="fancy_grid", index=False)
-        )
-        subject_consent = subject_consent.loc[
-            subject_consent["SUBJECT_ID"].isin(subject_w_sample)
-        ]
-    else:
-        pass
+    # dbGaP accepts participants without samples. Details in CCDIDC-3219
+    #subject_w_sample = participant_samples["SUBJECT_ID"].unique().tolist()
+    #if subject_consent.shape[0] > len(subject_w_sample):
+    #    subject_to_remove = subject_consent.loc[
+    #        ~subject_consent["SUBJECT_ID"].isin(subject_w_sample)
+    #    ]
+    #    logger.warning(
+    #        f"{subject_to_remove.shape[0]} subjects were removed due to lack of sample:\n"
+    #        + subject_to_remove.to_markdown(tablefmt="fancy_grid", index=False)
+    #    )
+    #    subject_consent = subject_consent.loc[
+    #        subject_consent["SUBJECT_ID"].isin(subject_w_sample)
+    #    ]
+    #else:
+    #    pass
 
     return subject_consent
 
@@ -291,13 +294,14 @@ def check_mapping(
         i for i in subject_consent["SUBJECT_ID"] if i not in unique_participant_ids
     ]
     new_sample_id = [k for k in sample_tumor["SAMPLE_ID"] if k not in unique_sample_ids]
-    # check if all subjects in SC can be found in SSM
-    if len(new_subject_id) > 0:
-        logger.error(
-            f"These subjects in SUBJECT CONSENT can't be found in SUBJECT SAMPLE and please fix this before submission:\n{*new_subject_id,}"
-        )
-    else:
-        pass
+    # comment out this section. CCDIDC-3219: Participant without samples are allowed in dbgap submission.
+    ## check if all subjects in SC can be found in SSM
+    #if len(new_subject_id) > 0:
+    #    logger.error(
+    #        f"These subjects in SUBJECT CONSENT can't be found in SUBJECT SAMPLE and please fix this before submission:\n{*new_subject_id,}"
+    #    )
+    #else:
+    #    pass
     # check if all all samples in SA can be found in SSM
     if len(new_sample_id) > 0:
         logger.error(
@@ -697,7 +701,8 @@ def CCDI_to_dbGaP(manifest: str, pre_submission=None) -> tuple:
     # subject_consent df
     subject_consent = extract_sc(
         participant_sheet=participant_df,
-        participant_samples=subject_sample,
+        # CCDIDC-3219 Keep participants without samples
+        #participant_samples=subject_sample,
         consent_map=consent_map,
         logger=logger,
     )
