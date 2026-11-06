@@ -210,7 +210,7 @@ def extract_sc(
     #participant_samples: DataFrame, # remove 
     consent_map: dict, logger
 ) -> DataFrame:
-    """Extract subject consent df and only keep subjects that have sample"""
+    """Extract subject consent df"""
 
     # extract participant, sex, and consent columns
     subject_consent = participant_sheet[["participant_id", "sex_at_birth", "consent_group.consent_group_id"]]
@@ -223,7 +223,7 @@ def extract_sc(
 
     subject_consent["SEX"][subject_consent["SEX"].str.contains("Female")] = "2"
     subject_consent["SEX"][subject_consent["SEX"].str.contains("Male")] = "1"
-    subject_consent["SEX"][~subject_consent["SEX"].str.contains("1|2")] = "UNK"
+    subject_consent.loc[~subject_consent["SEX"].isin(["1", "2"]), "SEX"] = "UNK"
     # reorder column names
     subject_consent = subject_consent[["SUBJECT_ID", "CONSENT", "SEX"]]
     # drop rows with empty SUBJECT_ID and drop duplicates
