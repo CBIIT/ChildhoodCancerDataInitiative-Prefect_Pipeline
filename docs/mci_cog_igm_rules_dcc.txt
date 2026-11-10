@@ -18,6 +18,7 @@ COG	cns_dx		diagnosis	submitted_anatomic_site	liftover	COG_UPR_DX.TOPO_TEXT
 COG	cns_dx	TRUE	diagnosis	submitted_diagnosis	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_ATRT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CNSOTH,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CPT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CRNPRG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EBYONO,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EPDMM,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GCT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GLNRN,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_HGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_LGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_MEDUBL,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_SARC,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_ATRT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CNSOTH,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CPT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CRNPRG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EBYONO,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EPDMM,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GCT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GLNRN,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_HGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_LGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_MEDUBL,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_SARC"	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
 COG	cns_dx		diagnosis	submitted_diagnosis_category	parse_single_value	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
 COG	cns_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. CNS Tumor	Not Reported	
+COG	cns_dx		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	cns_dx		diagnosis	tumor_grade	tumor_grade	ON_STUDY_DX_CNS.TUMOR_GP_ST				
 COG	cns_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	CNS_ON_STUDY_INITIAL_DIAGNOSIS.SUPPTU_QVAL_TUPTDZSTG			Not Reported	
 COG	cns_dx		diagnosis	tumor_stage_clinical_m	parse_single_value	"ON_STUDY_DX_CNS.CNSTMRMSTG,CNS_ON_STUDY_INITIAL_DIAGNOSIS.SUPPTU_QVAL_TUPTDZSTG"				
@@ -34,6 +35,7 @@ COG	cns_mets	TRUE	diagnosis	submitted_anatomic_site	parse	"CNS_ON_STUDY_INITIAL_
 COG	cns_mets		diagnosis	submitted_diagnosis	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_ATRT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CNSOTH,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CPT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CRNPRG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EBYONO,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EPDMM,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GCT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GLNRN,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_HGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_LGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_MEDUBL,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_SARC,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_ATRT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CNSOTH,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CPT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CRNPRG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EBYONO,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EPDMM,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GCT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GLNRN,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_HGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_LGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_MEDUBL,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_SARC"	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
 COG	cns_mets		diagnosis	submitted_diagnosis_category	parse_single_value	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
 COG	cns_mets		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. CNS Tumor	Not Reported	
+COG	cns_mets		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	cns_mets		diagnosis	tumor_grade	tumor_grade	ON_STUDY_DX_CNS.TUMOR_GP_ST				
 COG	cns_mets		diagnosis	tumor_spatial_extent	default		default	Metastatic		
 COG	cns_mets		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
@@ -50,6 +52,7 @@ COG	cns_rel_prog_dx		diagnosis	submitted_anatomic_site	parse	"RLP_PROG_CNS.DZPRO
 COG	cns_rel_prog_dx		diagnosis	submitted_diagnosis	substudy_dx	"CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_ATRT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CNSOTH,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CPT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_CRNPRG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EBYONO,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_EPDMM,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GCT,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_GLNRN,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_HGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_LGG,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_MEDUBL,CNS_DIAGNOSIS_DETAIL.MH_MHSCAT_CNSDXINTGRT_SARC,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_ATRT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CNSOTH,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CPT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_CRNPRG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EBYONO,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_EPDMM,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GCT,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_GLNRN,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_HGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_LGG,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_MEDUBL,MCI_MOLECULAR_REPORT.MH_MHSCAT_CNSDXINTGRT_SARC"	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
 COG	cns_rel_prog_dx		diagnosis	submitted_diagnosis_category	parse_single_value	"CNS_DIAGNOSIS_DETAIL.MH_MHCAT_CNSDXCAT,MCI_MOLECULAR_REPORT.MH_MHCAT_CNSDXCAT"			Not Reported	
 COG	cns_rel_prog_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. CNS Tumor	Not Reported	
+COG	cns_rel_prog_dx		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	cns_rel_prog_dx		diagnosis	tumor_grade	default		default	Not Reported		
 COG	cns_rel_prog_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT				
 COG	cns_rel_prog_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
@@ -66,6 +69,7 @@ COG	initial_dx		diagnosis	submitted_anatomic_site	liftover	COG_UPR_DX.TOPO_TEXT	
 COG	initial_dx		diagnosis	submitted_diagnosis	liftover	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
 COG	initial_dx		diagnosis	submitted_diagnosis_category	default		default	Not Reported	Not Reported	
 COG	initial_dx		diagnosis	submitted_diagnosis_classification_system	default		default	ICD-O-3.2	Not Reported	
+COG	initial_dx		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	initial_dx		diagnosis	tumor_grade	tumor_grade	"ON_STUDY_DX_CNS.TUMOR_GP_ST,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SA_TUM_FRE_CL_HIS_GD,ON_STUDY_DX_OSTEOGENIC_SARCOMA.NEOHSTGD"			Not Reported	
 COG	initial_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT			Not Reported	"excluding ON_STUDY_DX_SOFT_TISSUE_SARCOMA.PTMETDSZENRPZTIND4 since Y/N binary, no qualitative info on spaital extent"
 COG	initial_dx		diagnosis	tumor_stage_clinical_m	parse_single_value	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_M_STG,THYROID_CARCINOMA.THYROID_CLIN_M_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_M_STG,MELANOMA.MELANM_TUMOR_C_M_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_M_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_M_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_M_STG,ON_STUDY_DX_CNS.CNSTMRMSTG,CNS_ON_STUDY_INITIAL_DIAGNOSIS.SUPPTU_QVAL_TUPTDZSTG"				
@@ -82,6 +86,7 @@ COG	osteo_rel_prog_dx		diagnosis	submitted_anatomic_site	parse	"RLP_PROG_OSTEOSA
 COG	osteo_rel_prog_dx		diagnosis	submitted_diagnosis	substudy_dx	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
 COG	osteo_rel_prog_dx		diagnosis	submitted_diagnosis_category	default		default	Not Reported	Not Reported	
 COG	osteo_rel_prog_dx		diagnosis	submitted_diagnosis_classification_system	default		default	ICD-O-3.2	Not Reported	
+COG	osteo_rel_prog_dx		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	osteo_rel_prog_dx		diagnosis	tumor_grade	default		default	Not Reported		
 COG	osteo_rel_prog_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT				
 COG	osteo_rel_prog_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
@@ -98,6 +103,7 @@ COG	rare_dx		diagnosis	submitted_anatomic_site	liftover	COG_UPR_DX.TOPO_TEXT
 COG	rare_dx	TRUE	diagnosis	submitted_diagnosis	liftover	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
 COG	rare_dx		diagnosis	submitted_diagnosis_category	parse_single_value	ON_STUDY_DX_RARE_TUMOR.CCMARARENEOPDXTP			Not Reported	
 COG	rare_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. Pediatric Tumor	Not Reported	
+COG	rare_dx		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	rare_dx		diagnosis	tumor_grade	tumor_grade				Not Reported	
 COG	rare_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT			Not Reported	
 COG	rare_dx		diagnosis	tumor_stage_clinical_m	parse_single_value	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_M_STG,THYROID_CARCINOMA.THYROID_CLIN_M_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_M_STG,MELANOMA.MELANM_TUMOR_C_M_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_M_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_M_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_M_STG"				
@@ -114,6 +120,7 @@ COG	rare_mets	TRUE	diagnosis	submitted_anatomic_site	parse	"ADRENOCORTICAL_CARCI
 COG	rare_mets		diagnosis	submitted_diagnosis	substudy_dx	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
 COG	rare_mets		diagnosis	submitted_diagnosis_category	parse_single_value	ON_STUDY_DX_RARE_TUMOR.CCMARARENEOPDXTP			Not Reported	
 COG	rare_mets		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. Pediatric Tumor	Not Reported	
+COG	rare_mets		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	rare_mets		diagnosis	tumor_grade	default		default	Not Reported		
 COG	rare_mets		diagnosis	tumor_spatial_extent	default		default	Metastatic		
 COG	rare_mets		diagnosis	tumor_stage_clinical_m	parse_single_value	"ANY_OTHER_CARCINOMAS.OTH_TUMOR_C_M_STG,THYROID_CARCINOMA.THYROID_CLIN_M_STG,NEUROENDOCRINE_TUMORS.NURENDO_TMR_C_M_STG,MELANOMA.MELANM_TUMOR_C_M_STG,GASTROINTESTINAL_STROMAL_TUMOR.GIST_CLIN_M_STG,COLORECTAL_CARCINOMA.COLORECTAL_CLIN_M_STG,PANCREATOBLASTOMA.PANCREATIC_CLIN_M_STG,ON_STUDY_DX_CNS.CNSTMRMSTG"				
@@ -130,6 +137,7 @@ COG	rare_rel_prog_dx		diagnosis	submitted_anatomic_site	parse	"COG_UPR_DX.TOPO_T
 COG	rare_rel_prog_dx		diagnosis	submitted_diagnosis	substudy_dx	COG_UPR_DX.MORPHO_TEXT	regex_remove	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)"	Not Reported	
 COG	rare_rel_prog_dx		diagnosis	submitted_diagnosis_category	parse_single_value	ON_STUDY_DX_RARE_TUMOR.CCMARARENEOPDXTP			Not Reported	
 COG	rare_rel_prog_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. Pediatric Tumor	Not Reported	
+COG	rare_rel_prog_dx		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	rare_rel_prog_dx		diagnosis	tumor_grade	default		default	Not Reported		
 COG	rare_rel_prog_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT				
 COG	rare_rel_prog_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
@@ -146,6 +154,7 @@ COG	sts_dx		diagnosis	submitted_anatomic_site	liftover	COG_UPR_DX.TOPO_TEXT
 COG	sts_dx	TRUE	diagnosis	submitted_diagnosis	substudy_dx	"ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X2,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X2,DIAGNOSIS_DETAIL_FORM.MI_MICAT_RMSTYPE,DIAGNOSIS_DETAIL_FORM.MI_MICAT_NRSTSTYPE,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_RMS,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_NRSTS,"	"regex_remove,priority"	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)#1"	Not Reported	
 COG	sts_dx		diagnosis	submitted_diagnosis_category	parse_single_value	"DIAGNOSIS_DETAIL_STS.STSDXTP,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXTP,DIAGNOSIS_DETAIL_FORM.GF_GFCAT_DXTYPE"			Not Reported	
 COG	sts_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. STS Tumor	Not Reported	
+COG	sts_dx		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	sts_dx		diagnosis	tumor_grade	tumor_grade	"ON_STUDY_DX_CNS.TUMOR_GP_ST,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SA_TUM_FRE_CL_HIS_GD,ON_STUDY_DX_OSTEOGENIC_SARCOMA.NEOHSTGD"				
 COG	sts_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT			Not Reported	
 COG	sts_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
@@ -162,6 +171,7 @@ COG	sts_dx2		diagnosis	submitted_anatomic_site	liftover	ON_STUDY_AT_INITIAL_DX.S
 COG	sts_dx2	TRUE	diagnosis	submitted_diagnosis	substudy_dx	DIAGNOSIS_DETAIL_FORM.GF_GFCAT_DXTYPE	"regex_remove,priority"	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)#1"	Not Reported	
 COG	sts_dx2		diagnosis	submitted_diagnosis_category	parse_single_value	"DIAGNOSIS_DETAIL_FORM.MI_MICAT_NRSTSTYPE,DIAGNOSIS_DETAIL_FORM.MI_MICAT_RMSTYPE"			Not Reported	
 COG	sts_dx2		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. STS Tumor	Not Reported	
+COG	sts_dx2		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	sts_dx2		diagnosis	tumor_grade	tumor_grade	DIAGNOSIS_DETAIL_FORM.MI_MIORRES_FNCLCCGR		Not Reported		
 COG	sts_dx2		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	"ON_STUDY_AT_INITIAL_DX.PR_PRLOC_SX_A1_X1,ON_STUDY_AT_INITIAL_DX.PR_PRLOC_SX_A2_X1,ON_STUDY_AT_INITIAL_DX.PR_PRLOC_SX_A3_X1"			Not Reported	
 COG	sts_dx2		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
@@ -178,6 +188,7 @@ COG	sts_dx2_met		diagnosis	submitted_anatomic_site	parse	"ON_STUDY_AT_INITIAL_DX
 COG	sts_dx2_met	TRUE	diagnosis	submitted_diagnosis	substudy_dx	DIAGNOSIS_DETAIL_FORM.GF_GFCAT_DXTYPE	"regex_remove,priority"	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)#1"	Not Reported	
 COG	sts_dx2_met		diagnosis	submitted_diagnosis_category	parse_single_value	"DIAGNOSIS_DETAIL_FORM.MI_MICAT_NRSTSTYPE,DIAGNOSIS_DETAIL_FORM.MI_MICAT_RMSTYPE"			Not Reported	
 COG	sts_dx2_met		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. STS Tumor	Not Reported	
+COG	sts_dx2_met		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	sts_dx2_met		diagnosis	tumor_grade	tumor_grade	DIAGNOSIS_DETAIL_FORM.MI_MIORRES_FNCLCCGR		Not Reported		
 COG	sts_dx2_met		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	"ON_STUDY_AT_INITIAL_DX.PR_PRLOC_SX_A1_X1,ON_STUDY_AT_INITIAL_DX.PR_PRLOC_SX_A2_X1,ON_STUDY_AT_INITIAL_DX.PR_PRLOC_SX_A3_X1"			Not Reported	
 COG	sts_dx2_met		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
@@ -194,6 +205,7 @@ COG	sts_mets	TRUE	diagnosis	submitted_anatomic_site	parse	"ON_STUDY_DX_OSTEOGENI
 COG	sts_mets		diagnosis	submitted_diagnosis	liftover	"ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X2,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X2,DIAGNOSIS_DETAIL_FORM.MI_MICAT_RMSTYPE,DIAGNOSIS_DETAIL_FORM.MI_MICAT_NRSTSTYPE,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_RMS,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_NRSTS,"	"regex_remove,priority"	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)#1"	Not Reported	
 COG	sts_mets		diagnosis	submitted_diagnosis_category	parse_single_value	"DIAGNOSIS_DETAIL_STS.STSDXTP,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXTP,DIAGNOSIS_DETAIL_FORM.GF_GFCAT_DXTYPE"			Not Reported	
 COG	sts_mets		diagnosis	submitted_diagnosis_classification_system	default		default	ICD-O-3.2	Not Reported	
+COG	sts_mets		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	sts_mets		diagnosis	tumor_grade	tumor_grade	"ON_STUDY_DX_SOFT_TISSUE_SARCOMA.SA_TUM_FRE_CL_HIS_GD,ON_STUDY_DX_OSTEOGENIC_SARCOMA.NEOHSTGD"				
 COG	sts_mets		diagnosis	tumor_spatial_extent	default		default	Metastatic		
 COG	sts_mets		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
@@ -210,6 +222,7 @@ COG	sts_rel_prog_dx		diagnosis	submitted_anatomic_site	parse	"RLP_PROG_SOFT_TISS
 COG	sts_rel_prog_dx		diagnosis	submitted_diagnosis	substudy_dx	"ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXCAT_X2,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X1,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.TUMOR_HIST_CAT_SPEC_X2,DIAGNOSIS_DETAIL_FORM.MI_MICAT_RMSTYPE,DIAGNOSIS_DETAIL_FORM.MI_MICAT_NRSTSTYPE,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_RMS,DIAGNOSIS_DETAIL_STS.MH_MHSCAT_STSDXINTGRT_NRSTS,"	"regex_remove,priority"	"\s?\([Cc]\d+.?[0-9_]?,?\s?[Cc]?\d+?.?[0-9_]?\)#1"	Not Reported	
 COG	sts_rel_prog_dx		diagnosis	submitted_diagnosis_category	parse_single_value	"DIAGNOSIS_DETAIL_STS.STSDXTP,ON_STUDY_DX_SOFT_TISSUE_SARCOMA.STSDXTP,DIAGNOSIS_DETAIL_FORM.GF_GFCAT_DXTYPE"			Not Reported	
 COG	sts_rel_prog_dx		diagnosis	submitted_diagnosis_classification_system	default		default	WHO 5th ed. STS Tumor	Not Reported	
+COG	sts_rel_prog_dx		diagnosis	diagnosis_comment	liftover	FINAL_DIAGNOSIS.PRIMDXDSCAT				
 COG	sts_rel_prog_dx		diagnosis	tumor_grade	default		default	Not Reported		
 COG	sts_rel_prog_dx		diagnosis	tumor_spatial_extent	tumor_spatial_extent_parse	COG_UPR_DX.REG_STAGE_CODE_TEXT				
 COG	sts_rel_prog_dx		diagnosis	tumor_stage_clinical_m	default		default	Not Reported		
