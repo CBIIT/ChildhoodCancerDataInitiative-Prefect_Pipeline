@@ -921,9 +921,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-ccdi-cog_igm-transform-V3
+  - name: ccdi-cog_igm-transform-V3
     version: null
-    tags: ["TEST", "MCI", "V3"]
+    tags: ["PROD", "MCI", "V3"]
     description: Transform from IGM format to CCDI for COG submission using the cog_and_igm form parsing method
     entrypoint: workflows/cog_igm_transformer.py:cog_igm_transform
     schedule: null
@@ -941,7 +941,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: CCDIDC-2622
+        branch: main
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
