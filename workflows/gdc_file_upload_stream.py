@@ -48,7 +48,7 @@ def read_input(file_path: str):
 
     return file_metadata
 
-@task(name="upload_to_gdc_{file_uuid}")
+@task(name="upload_to_gdc", task_run_name=f"upload_to_gdc_{get_time()}")
 def upload_to_gdc(
     bucket,
     key,
@@ -93,7 +93,7 @@ def upload_to_gdc(
                 upload_url,
                 headers=headers,
                 data=body,
-                timeout=(3600, 7200),
+                timeout=(10800, 7200),
                 verify=True
             )
 
