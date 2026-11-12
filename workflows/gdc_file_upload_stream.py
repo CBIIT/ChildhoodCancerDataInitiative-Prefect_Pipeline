@@ -56,31 +56,67 @@ def upload_to_gdc(
     file_uuid,
     gdc_token
 ):
-
     s3 = set_s3_resource()
-    
+    s3_client = s3.meta.client
+
+    # Get S3 object metadata
+    metadata = s3_client.head_object(
+        Bucket=bucket,
+        Key=key
+    )
+
+    file_size = metadata["ContentLength"]
+
+    # GDC upload endpoint
+    upload_url = f"{gdc_url}/files/{file_uuid}"
+
+    headers = {
+        "X-Auth-Token": gdc_token,
+        "Content-Type": "application/octet-stream",
+        "Content-Length": str(file_size),
+        "Connection": "close"
+    }
 
     # Open streaming S3 response
-    response = s3.meta.client.get_object(
+    response = s3_client.get_object(
         Bucket=bucket,
         Key=key
     )
 
     body = response["Body"]
 
-    # Stream directly to GDC
-    result = requests.put(
-        f"{gdc_url}/files/{file_uuid}",
-        headers={
-            "X-Auth-Token": gdc_token,
-        },
-        data=body,
-        timeout=(30, 3600)
-    )
+    try:
+        # Stream directly from S3 to GDC
+        with requests.Session() as session:
 
-    result.raise_for_status()
+            result = session.put(
+                upload_url,
+                headers=headers,
+                data=body,
+                timeout=(60, 7200),
+                verify=True
+            )
 
-    return result.status_code
+            if not result.ok:
+                raise RuntimeError(
+                    f"GDC upload failed: "
+                    f"HTTP {result.status_code}: {result.text}"
+                )
+
+            return result.status_code
+
+    except requests.exceptions.SSLError as exc:
+        raise RuntimeError(
+            f"SSL error during GDC upload: {str(exc)}"
+        ) from None
+
+    except requests.exceptions.RequestException as exc:
+        raise RuntimeError(
+            f"HTTP error during GDC upload: {str(exc)}"
+        ) from None
+
+    finally:
+        body.close()
 
 @flow(
     name="file_upload_handler",
