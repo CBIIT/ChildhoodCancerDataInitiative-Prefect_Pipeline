@@ -184,6 +184,8 @@ def runner(
 
     sub_manifest_results_concat = pd.DataFrame()
 
+    runner_logger.info(f">>> Starting to process file metadata in chunks of {chunk_size} rows.")
+
     for i in range(0, file_metadata.shape[0], chunk_size):
         sub_manifest = file_metadata.iloc[i:i + chunk_size]
         runner_logger.info(f">>> Processing chunk {i // chunk_size + 1} with {sub_manifest.shape[0]} rows.")
