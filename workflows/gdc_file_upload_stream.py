@@ -160,6 +160,7 @@ def runner(
         manifest_path (str): File path of the CSV file upload manifest in bucket. Manifest must contain cols file_url, file_name, and id (GDC file UUID).
         secret_name_path (str): Path to AWS secrets manager where token hash stored
         secret_key_name (str): Authentication token string secret key name for file upload to GDC
+        runner (str): Unique identifier for the current workflow run
     """
 
     # runner_logger setup
