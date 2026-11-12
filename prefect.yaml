@@ -770,7 +770,7 @@ deployments:
     version: null
     tags: [ "TEST","V3" ]
     description: Upload files to GDC using the GDC client.
-    entrypoint: workflows/gdc_file_upload.py:runner
+    entrypoint: workflows/gdc_file_upload_stream.py:runner
     schedule: null
 
     # flow-specific parameters
