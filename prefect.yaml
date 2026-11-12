@@ -769,7 +769,7 @@ deployments:
   - name: TEST-ccdi-gdc-file-upload-v3-stream
     version: null
     tags: [ "TEST","V3" ]
-    description: Upload files to GDC using the GDC client.
+    description: Upload files to GDC using the API stream.
     entrypoint: workflows/gdc_file_upload_stream.py:runner
     schedule: null
 
