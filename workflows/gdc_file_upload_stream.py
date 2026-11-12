@@ -58,9 +58,10 @@ def upload_to_gdc(
 ):
 
     s3 = set_s3_resource()
+    
 
     # Open streaming S3 response
-    response = s3.get_object(
+    response = s3.meta.client.get_object(
         Bucket=bucket,
         Key=key
     )
