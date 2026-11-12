@@ -93,7 +93,7 @@ def upload_to_gdc(
                 upload_url,
                 headers=headers,
                 data=body,
-                timeout=(60, 7200),
+                timeout=(3600, 7200),
                 verify=True
             )
 
