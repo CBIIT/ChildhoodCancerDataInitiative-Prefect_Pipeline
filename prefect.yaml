@@ -780,6 +780,7 @@ deployments:
       manifest_path: ""
       secret_name_path: ""
       secret_key_name: ""
+      runner: ""
 
     # pull action to overwrite from file pull action
     pull:
