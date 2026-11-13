@@ -54,11 +54,7 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
         runner_logger.error(f"Invalid rule source: {rule_source}. Valid options are: {valid_rule_sources}")
         raise ValueError(f"Invalid rule source: {rule_source}. Valid options are: {valid_rule_sources}")
     
-    #rules_df = pd.read_csv(sys.argv[1], sep="\t")
-    if rule_source == "COG":
-        rules_df = pd.read_excel(rules_file, sheet_name="cog_rules", engine="openpyxl")
-    elif rule_source == "IGM":
-        rules_df = pd.read_excel(rules_file, sheet_name="igm_rules", engine="openpyxl")
+    rules_df = pd.read_csv(rules_file, sep="\t")
     
     # filter rules source
     rules_df = rules_df[rules_df["source"] == rule_source]
@@ -86,9 +82,21 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
     # replace with 'Neoplasm, NOS'
     if "diagnosis" in node_outputs:
         diagnosis_df = node_outputs["diagnosis"]
+        diagnosis_df = diagnosis_df.replace("Unknown/Not applicable", "Not Reported")
+        diagnosis_df = diagnosis_df.replace("Unknown/Not Documented", "Not Reported")
         diagnosis_df.loc[diagnosis_df["submitted_diagnosis"] == "Neoplasm, uncertain whether benign or malignant#Neoplasm, NOS", "submitted_diagnosis"] = "Neoplasm, NOS"
         node_outputs["diagnosis"] = diagnosis_df
-        
+    
+    if "treatment_radiation" in node_outputs:
+        # filter out rows where radiation_type is Not Applicable
+        treatment_radiation_df = node_outputs["treatment_radiation"]
+        treatment_radiation_df['radiation_therapy_type'] = treatment_radiation_df['radiation_therapy_type'].str.replace("Beam Therapy", "Beam Radiation Therapy")
+        treatment_radiation_df['radiation_therapy_type'] = treatment_radiation_df['radiation_therapy_type'].str.replace("Beam therapy", "Beam Radiation Therapy")
+        treatment_radiation_df['beam_radiation_type'] = treatment_radiation_df['beam_radiation_type'].str.replace("Therapy", "Radiation Therapy")
+        treatment_radiation_df['beam_radiation_type'] = treatment_radiation_df['beam_radiation_type'].str.replace("therapy", "Radiation Therapy")
+        node_outputs["treatment_radiation"] = treatment_radiation_df
+    
+    
     if "treatment_response" in node_outputs:
         # filter out rows where response is 'Not Reported' and response is not null
         treatment_response_df = node_outputs["treatment_response"]
@@ -99,6 +107,8 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
         # filter out rows where surgery_type is Not Applicable
         treatment_surgery_df = node_outputs["treatment_surgery"]
         treatment_surgery_df = treatment_surgery_df[~((treatment_surgery_df["surgery_type"] == "Not Applicable") & (treatment_surgery_df["surgery_type"].notna() & (treatment_surgery_df["surgery_type"] != "")))]
+        treatment_surgery_df["surgery_type"] = treatment_surgery_df["surgery_type"].str.replace(";Not Reported", "")
+        treatment_surgery_df["surgery_type"] = treatment_surgery_df["surgery_type"].str.replace("Not Reported;", "")
         node_outputs["treatment_surgery"] = treatment_surgery_df
     
     if "treatment_chemotherapy" in node_outputs:
@@ -141,6 +151,8 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
             "age_at_treatment_end": "first",
             "other_treatment_type": lambda x: ";".join(set([item for sublist in x.str.split(";") for item in sublist if item])),
         }).reset_index()
+        treatment_other_df["other_treatment_type"] = treatment_other_df["other_treatment_type"].str.replace(";Not Reported", "")
+        treatment_other_df["other_treatment_type"] = treatment_other_df["other_treatment_type"].str.replace("Not Reported;", "")
         node_outputs["treatment_other"] = treatment_other_df[cols_order]
         
     # save transformed datarames to tsv

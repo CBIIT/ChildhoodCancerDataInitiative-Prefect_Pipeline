@@ -895,7 +895,7 @@ deployments:
 
   - name: ccdi-cog_igm-transform-V3
     version: null
-    tags: ["MCI", "V3"]
+    tags: ["PROD", "MCI", "V3"]
     description: Transform from IGM format to CCDI for COG submission using the cog_and_igm form parsing method
     entrypoint: workflows/cog_igm_transformer.py:cog_igm_transform
     schedule: null
