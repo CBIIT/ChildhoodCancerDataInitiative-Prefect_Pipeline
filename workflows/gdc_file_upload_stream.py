@@ -8,15 +8,12 @@
 
 import requests
 import os
-from prefect.task_runners import ConcurrentTaskRunner
 import pandas as pd
-from time import sleep
-from typing import Literal
 
 # prefect dependencies
-import boto3
-from botocore.exceptions import ClientError
 from prefect import flow, task, get_run_logger
+from prefect.task_runners import ConcurrentTaskRunner
+from prefect.cache_policies import NO_CACHE
 from src.utils import get_time, file_dl, file_ul, get_secret, set_s3_resource
 
 
@@ -62,7 +59,13 @@ class SizedStreamWrapper:
             return self.stream.read()
         return self.stream.read(chunk_size)
 
-@task(name="upload_to_gdc", task_run_name=f"upload_to_gdc_{get_time()}")
+@task(
+    name="upload_to_gdc", 
+    task_run_name=f"upload_to_gdc_{get_time()}",
+    tags=["gdc-upload-tag"],
+    retry_delay_seconds=1,
+    cache_policy=NO_CACHE,
+)
 def upload_to_gdc(
     bucket,
     key,
