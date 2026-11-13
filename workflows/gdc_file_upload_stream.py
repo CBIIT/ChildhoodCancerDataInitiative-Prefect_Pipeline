@@ -213,7 +213,7 @@ def runner(
 
     for i in range(0, file_metadata.shape[0], chunk_size):
         sub_manifest = file_metadata.iloc[i:i + chunk_size]
-        runner_logger.info(f">>> Processing chunk {i // chunk_size + 1} with {sub_manifest.shape[0]} rows.")
+        runner_logger.info(f">>> Processing chunk {i // chunk_size + 1} of {len(file_metadata) // chunk_size + (1 if len(file_metadata) % chunk_size != 0 else 0)} with {sub_manifest.shape[0]} rows.")
 
         sub_manifest_results = uploader_handler(
             sub_manifest=sub_manifest,
