@@ -48,6 +48,20 @@ def read_input(file_path: str):
 
     return file_metadata
 
+class SizedStreamWrapper:
+    def __init__(self, stream, size):
+        self.stream = stream
+        self.size = size
+
+    def __len__(self):
+        return self.size
+
+    def read(self, chunk_size=-1):
+        # boto3 StreamingBody.read() expects amt=None instead of -1 for "read all"
+        if chunk_size == -1:
+            return self.stream.read()
+        return self.stream.read(chunk_size)
+
 @task(name="upload_to_gdc", task_run_name=f"upload_to_gdc_{get_time()}")
 def upload_to_gdc(
     bucket,
@@ -59,64 +73,45 @@ def upload_to_gdc(
     s3 = set_s3_resource()
     s3_client = s3.meta.client
 
-    # Get S3 object metadata
-    metadata = s3_client.head_object(
-        Bucket=bucket,
-        Key=key
-    )
-
+    metadata = s3_client.head_object(Bucket=bucket, Key=key)
     file_size = metadata["ContentLength"]
 
-    # GDC upload endpoint
     upload_url = f"{gdc_url}/files/{file_uuid}"
 
+    # Remove manual Content-Length and Connection headers; requests will set them accurately
     headers = {
         "X-Auth-Token": gdc_token,
         "Content-Type": "application/octet-stream",
-        "Content-Length": str(file_size),
-        "Connection": "close"
     }
 
-    # Open streaming S3 response
-    response = s3_client.get_object(
-        Bucket=bucket,
-        Key=key
-    )
-
+    response = s3_client.get_object(Bucket=bucket, Key=key)
     body = response["Body"]
+    wrapped_body = SizedStreamWrapper(body, file_size)
 
     try:
-        # Stream directly from S3 to GDC
         with requests.Session() as session:
-
             result = session.put(
                 upload_url,
                 headers=headers,
-                data=body,
-                timeout=(10800, 7200),
+                data=wrapped_body,
+                timeout=(30, 300), # 30s connect, 5m read stall timeout
                 verify=True
             )
 
             if not result.ok:
                 raise RuntimeError(
-                    f"GDC upload failed: "
-                    f"HTTP {result.status_code}: {result.text}"
+                    f"GDC upload failed: HTTP {result.status_code}: {result.text}"
                 )
 
             return result.status_code
 
     except requests.exceptions.SSLError as exc:
-        raise RuntimeError(
-            f"SSL error during GDC upload: {str(exc)}"
-        ) from None
-
+        raise RuntimeError(f"SSL error during GDC upload: {exc}") from None
     except requests.exceptions.RequestException as exc:
-        raise RuntimeError(
-            f"HTTP error during GDC upload: {str(exc)}"
-        ) from None
-
+        raise RuntimeError(f"HTTP error during GDC upload: {exc}") from None
     finally:
         body.close()
+
 
 @flow(
     name="file_upload_handler",
