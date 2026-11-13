@@ -236,7 +236,7 @@ def runner(
         #runner_logger.info(f">>> Sub-manifest results: {sub_manifest_results.shape[0]} rows.")
         #sub_manifest_results_concat = pd.concat([sub_manifest_results_concat, sub_manifest_results], ignore_index=True)
 
-    runner_logger.info(f">>> All sub-manifest results concatenated: {sub_manifest_results_concat.shape[0]} rows.")
+    """runner_logger.info(f">>> All sub-manifest results concatenated: {sub_manifest_results_concat.shape[0]} rows.")
     file_upload_results_path = f"{os.path.splitext(file_name)[0]}_upload_results.csv"
     sub_manifest_results_concat.to_csv(file_upload_results_path, index=False)
     runner_logger.info(f">>> File upload results saved to {file_upload_results_path}.")
@@ -246,4 +246,4 @@ def runner(
         output_folder=runner,
         sub_folder="",
         newfile=file_upload_results_path,
-    )
+    )"""
