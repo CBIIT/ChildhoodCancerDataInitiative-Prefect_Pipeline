@@ -53,52 +53,101 @@ def validate_non_parent_cols(
     return conflicts
 
 
+# prefix + trailing number + optional non-digit suffix, e.g. "file_id_243", "53", "file_222"
+_SEQ_PATTERN = re.compile(r"^(?P<prefix>.*?)(?P<num>\d+)(?P<suffix>\D*)$")
+
+
+def _split_ids(id_values: list) -> list[str]:
+    """Flatten ids that may already be ';'-joined and drop blanks/duplicates (order kept)."""
+    flat = []
+    for v in id_values:
+        for part in str(v).split(";"):
+            part = part.strip()
+            if part and part not in flat:
+                flat.append(part)
+    return flat
+
+
+def _sequential_id_choice(ids: list[str], max_gap: int | None = None) -> str | None:
+    """
+    If every id has the same prefix/suffix and differs only by its number
+    (e.g. 53/54/55, file_id_243/file_id_244, file_222/file_221), return the
+    one with the lowest number (original string, so zero-padding is kept).
+    Otherwise return None.
+
+    max_gap: if set, also require the sorted numbers to be no more than
+    max_gap apart from each other (1 = strictly consecutive).
+    """
+    if len(ids) < 2:
+        return None
+
+    parsed = []
+    for i in ids:
+        m = _SEQ_PATTERN.match(i)
+        if not m:
+            return None
+        parsed.append((m["prefix"], m["suffix"], int(m["num"]), i))
+
+    # all ids must share the same template
+    if len({(p, s) for p, s, _, _ in parsed}) != 1:
+        return None
+
+    parsed.sort(key=lambda t: t[2])
+
+    if max_gap is not None:
+        nums = [t[2] for t in parsed]
+        if any(b - a > max_gap for a, b in zip(nums, nums[1:])):
+            return None
+
+    return parsed[0][3]
+
+
 def resolve_node_id(
     group: pd.DataFrame,
     node_id_col: str,
     file_name_col: str = "file_name",
+    max_gap: int | None = None,
 ) -> tuple[str, list]:
     """
     Determine the merged [node]_file_id value.
-    - If all node_id values are just variations of file_name, use file_name.
-    - Otherwise return a list of all unique ids and flag for review.
+        1. If all ids are variations of file_name, use file_name.
+        2. If all ids share a template and differ only by a sequential number
+            (53/54/55, file_id_243/file_id_244, ...), keep the lowest one.
+        3. Otherwise join all ids with ';' and flag for manual review.
 
     Returns (resolved_id, warnings)
     """
     warnings = []
-    id_values = group[node_id_col].dropna().unique().tolist()
+    id_values = _split_ids(group[node_id_col].dropna().unique().tolist())
 
+    # ── 1. file_name variations ──────────────────────────────────────────
     if file_name_col in group.columns:
         file_name_vals = group[file_name_col].dropna().unique()
         file_name = file_name_vals[0] if len(file_name_vals) == 1 else None
 
         if file_name:
-            # Remove the file extension
-            file_name_without_ext = os.path.splitext(str(file_name))[0]
-
-            # Check if all IDs are variations of either:
-            # 1. The full file name
-            # 2. The file name without the extension
-            all_variations = all(
-                (
-                    str(id_val) in str(file_name)
-                    or str(file_name) in str(id_val)
-                    or str(id_val) in file_name_without_ext
-                    or file_name_without_ext in str(id_val)
-                )
+            file_name = str(file_name)
+            stem = os.path.splitext(file_name)[0]
+            if id_values and all(
+                id_val in file_name or file_name in id_val
+                or id_val in stem or stem in id_val
                 for id_val in id_values
-            )
-
-            if all_variations:
+            ):
                 return file_name, warnings
 
-    # IDs are not simple file_name variations — return list and warn
+    # ── 2. sequentially generated ids ────────────────────────────────────
+    chosen = _sequential_id_choice(id_values, max_gap=max_gap)
+    if chosen is not None:
+        print(f"{node_id_col}: sequential ids {id_values} -> kept '{chosen}'")
+        return chosen, warnings
+
+    # ── 3. fall back to manual review ────────────────────────────────────
     warnings.append(
-        f"Could not resolve {node_id_col} to file_name. "
+        f"Could not resolve {node_id_col} to file_name or a sequential id. "
         f"Unique IDs found: {id_values}. Manual review required."
     )
+    return ";".join(id_values), warnings
 
-    return ";".join(str(i) for i in id_values), warnings
 
 @task
 def merge_duplicate_file_rows(
