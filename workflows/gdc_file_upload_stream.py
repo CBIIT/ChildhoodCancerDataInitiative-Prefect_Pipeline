@@ -160,14 +160,6 @@ def uploader_handler(
             runner_logger.warning(f"Failed to upload file {file_id}: {response_status}")
 
         sub_manifest.at[index, "upload_status"] = response_status
-        """response = requests.post(
-            url=f"{url_prefix}{file_id}",
-            headers={"X-Auth-Token": token},
-            files={"file": open(file_url, "rb")},
-        )
-
-        if response.status_code != 200:
-            raise ValueError(f"Failed to upload file {file_name}: {response.text}")"""
 
     return sub_manifest
 
