@@ -11,7 +11,7 @@ import os
 import pandas as pd
 
 # prefect dependencies
-from prefect import flow, task, get_run_logger
+from prefect import flow, task, get_run_logger, unmapped
 from prefect.task_runners import ConcurrentTaskRunner
 from prefect.cache_policies import NO_CACHE
 from src.utils import get_time, file_dl, file_ul, get_secret, set_s3_resource
@@ -27,8 +27,6 @@ def read_input(file_path: str):
     Returns:
         pd.DataFrame: DataFrame with extracted necessary metadata
     """
-
-    runner_logger = get_run_logger()
 
     file_metadata = pd.read_csv(file_path)
 
@@ -67,14 +65,16 @@ class SizedStreamWrapper:
     cache_policy=NO_CACHE,
 )
 def upload_to_gdc(
-    bucket,
-    key,
-    gdc_url,
-    file_uuid,
-    gdc_token
+    ul_parameter: dict,
+    gdc_url: str,
+    gdc_token: str
 ):
     s3 = set_s3_resource()
     s3_client = s3.meta.client
+
+    bucket = ul_parameter["bucket"]
+    key = ul_parameter["key"]
+    file_uuid = ul_parameter["file_uuid"]
 
     metadata = s3_client.head_object(Bucket=bucket, Key=key)
     file_size = metadata["ContentLength"]
@@ -149,23 +149,30 @@ def uploader_handler(
 
     url_prefix = f"https://api.gdc.cancer.gov/v0/submission/{program}/{project}"
 
+    upload_list = []
+
     for index, row in sub_manifest.iterrows():
         bucket = row["file_url"].split("/")[2]
         key = "/".join(row["file_url"].split("/")[3:])
         file_id = row["id"]
-        response_status = upload_to_gdc(
-            bucket=bucket,
-            key=key,
-            gdc_url=url_prefix,
-            file_uuid=file_id,
-            gdc_token=token
-        )
-        if response_status != 200:
-            runner_logger.warning(f"Failed to upload file {file_id}: {response_status}")
 
-        sub_manifest.at[index, "upload_status"] = response_status
+        upload_list.append({"bucket" : bucket, "key" : key, "file_uuid": file_id})
 
-    return sub_manifest
+    uploads = upload_to_gdc.map(upload_list, unmapped(url_prefix), unmapped(token))
+        
+    """response_status = upload_to_gdc(
+        bucket=bucket,
+        key=key,
+        gdc_url=url_prefix,
+        file_uuid=file_id,
+        gdc_token=token
+    )
+    if response_status != 200:
+        runner_logger.warning(f"Failed to upload file {file_id}: {response_status}")
+
+    sub_manifest.at[index, "upload_status"] = response_status"""
+
+    return uploads.result()
 
 @flow(
     name="GDC File Stream Upload",
@@ -219,15 +226,15 @@ def runner(
         sub_manifest = file_metadata.iloc[i:i + chunk_size]
         runner_logger.info(f">>> Processing chunk {i // chunk_size + 1} of {len(file_metadata) // chunk_size + (1 if len(file_metadata) % chunk_size != 0 else 0)} with {sub_manifest.shape[0]} rows.")
 
-        sub_manifest_results = uploader_handler(
+        uploader_handler(
             sub_manifest=sub_manifest,
             project_id=project_id,
             secret_name_path=secret_name_path,
             secret_key_name=secret_key_name,
         )
 
-        runner_logger.info(f">>> Sub-manifest results: {sub_manifest_results.shape[0]} rows.")
-        sub_manifest_results_concat = pd.concat([sub_manifest_results_concat, sub_manifest_results], ignore_index=True)
+        #runner_logger.info(f">>> Sub-manifest results: {sub_manifest_results.shape[0]} rows.")
+        #sub_manifest_results_concat = pd.concat([sub_manifest_results_concat, sub_manifest_results], ignore_index=True)
 
     runner_logger.info(f">>> All sub-manifest results concatenated: {sub_manifest_results_concat.shape[0]} rows.")
     file_upload_results_path = f"{os.path.splitext(file_name)[0]}_upload_results.csv"
