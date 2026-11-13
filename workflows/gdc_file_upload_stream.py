@@ -8,7 +8,7 @@
 
 import requests
 import os
-from prefect_shell import ShellOperation
+from prefect.task_runners import ConcurrentTaskRunner
 import pandas as pd
 from time import sleep
 from typing import Literal
@@ -17,7 +17,7 @@ from typing import Literal
 import boto3
 from botocore.exceptions import ClientError
 from prefect import flow, task, get_run_logger
-from src.utils import get_time, file_dl, folder_ul, file_ul, get_secret, set_s3_resource
+from src.utils import get_time, file_dl, file_ul, get_secret, set_s3_resource
 
 
 @task(name="read_input_manifest_{file_path}")
@@ -117,6 +117,7 @@ def upload_to_gdc(
     name="file_upload_handler",
     log_prints=True,
     flow_run_name="file_upload_handler_" + f"{get_time()}",
+    task_runner=ConcurrentTaskRunner(),
 )
 def uploader_handler(
     sub_manifest: pd.DataFrame,
