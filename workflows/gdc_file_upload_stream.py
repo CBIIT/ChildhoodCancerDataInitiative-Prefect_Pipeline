@@ -62,6 +62,7 @@ class SizedStreamWrapper:
     task_run_name=f"upload_to_gdc_{get_time()}",
     tags=["gdc-upload-tag"],
     retry_delay_seconds=1,
+    retries=3,
     cache_policy=NO_CACHE,
 )
 def upload_to_gdc(
