@@ -135,7 +135,7 @@ non-MCI 2.1 liftover	"CNS embryonal tumor, NOS"	CNS embryonal tumor
 non-MCI 2.1 liftover	"CNS germ cell tumor, NOS or NEC"	Germinoma
 non-MCI 2.1 liftover	CNS Germinoma	Germinoma
 non-MCI 2.1 liftover	"CNS neuroblastoma, FOXR2-activated"	"CNS neuroblastoma, FOXR2-activated"
-non-MCI 2.1 liftover	CNS Non-Germinomatous Germ Cell Tumor	
+non-MCI 2.1 liftover	CNS Non-Germinomatous Germ Cell Tumor	Germinoma
 non-MCI 2.1 liftover	"CNS Sarcoma, NOS or NEC"	Sarcoma
 non-MCI 2.1 liftover	CNS tumor with BCOR internal tandem duplication	CNS tumor with BCOR internal tandem duplication
 non-MCI 2.1 liftover	Composite Hodgkin and non-Hodgkin lymphoma	Composite Hodgkin and non-Hodgkin lymphoma
@@ -194,7 +194,7 @@ non-MCI 2.1 liftover	"Epithelioid Neoplasm, NOS"	Tumor
 non-MCI 2.1 liftover	Epithelioid sarcoma	Epithelioid sarcoma
 non-MCI 2.1 liftover	Extraventricular neurocytoma	Extraventricular neurocytoma
 non-MCI 2.1 liftover	Fibrillary astrocytoma	Fibrillary astrocytoma
-non-MCI 2.1 liftover	Fibroblastic osteosarcoma	Fibroblastic osteosarcoma
+non-MCI 2.1 liftover	Fibroblastic 	Fibroblastic 
 non-MCI 2.1 liftover	Fibrolamellar Variant of Hepatocellular Carcinoma	Fibrolamellar variant of hepatocellular carcinoma
 non-MCI 2.1 liftover	"Fibroma, NOS"	Fibroma
 non-MCI 2.1 liftover	Fibromatosis Colli	Fibromatosis colli
@@ -257,7 +257,7 @@ non-MCI 2.1 liftover	"Hepatocellular carcinoma, NOS"	Hepatocellular carcinoma
 non-MCI 2.1 liftover	Hepatosplenic T-cell lymphoma	Hepatosplenic T-cell lymphoma
 non-MCI 2.1 liftover	HHV8 positive diffuse large B-cell lymphoma	Diffuse large B-cell lymphoma
 non-MCI 2.1 liftover	High Grade Sarcoma	Sarcoma
-non-MCI 2.1 liftover	High grade surface osteosarcoma	High-grade surface osteosarcoma
+non-MCI 2.1 liftover	High grade surface 	High-grade surface 
 non-MCI 2.1 liftover	High-grade astrocytoma with piloid features	High-grade astrocytoma with piloid features
 non-MCI 2.1 liftover	Histiocytic sarcoma	Histiocytic sarcoma
 non-MCI 2.1 liftover	"Histiocytoma, NOS"	Histiocytoma
@@ -432,7 +432,7 @@ non-MCI 2.1 liftover	Ossifying fibromyxoid tumor	Ossifying fibromyxoid tumor
 non-MCI 2.1 liftover	Osteoblastoma	Osteoblastoma
 non-MCI 2.1 liftover	"Osteoblastoma, NOS"	Osteoblastoma
 non-MCI 2.1 liftover	Osteoid Osteoma	Osteoid osteoma
-non-MCI 2.1 liftover	Osteosarcoma	
+non-MCI 2.1 liftover	Osteosarcoma	Osteosarcoma
 non-MCI 2.1 liftover	"Osteosarcoma, NOS"	Osteosarcoma
 non-MCI 2.1 liftover	"Pancreatic neuroendocrine tumor, nonfunctioning"	"Pancreatic neuroendocrine tumor, nonfunctioning"
 non-MCI 2.1 liftover	Pancreatoblastoma	Pancreatoblastoma
@@ -453,8 +453,8 @@ non-MCI 2.1 liftover	Paraganglioma	Paraganglioma
 non-MCI 2.1 liftover	"Paraganglioma, malignant"	Paraganglioma
 non-MCI 2.1 liftover	"Paraganglioma, NOS"	Paraganglioma
 non-MCI 2.1 liftover	Parosteal osteosarcoma	Parosteal osteosarcoma
-non-MCI 2.1 liftover	"Pediatric-type Diffuse High-grade Gliomas, NOS"	
-non-MCI 2.1 liftover	"Pediatric-type Diffuse Low-grade Gliomas, NEC"	
+non-MCI 2.1 liftover	"Pediatric-type Diffuse High-grade Gliomas, NOS"	Glioma
+non-MCI 2.1 liftover	"Pediatric-type Diffuse Low-grade Gliomas, NEC"	Glioma
 non-MCI 2.1 liftover	Periosteal osteosarcoma	Periosteal osteosarcoma
 non-MCI 2.1 liftover	Peripheral neuroectodermal tumor	Peripheral neuroectodermal tumor
 non-MCI 2.1 liftover	"Perivascular epithelioid tumor, malignant"	"Perivascular epithelioid tumor, malignant"
@@ -486,7 +486,7 @@ non-MCI 2.1 liftover	Plexiform fibrohistiocytic tumor	Plexiform fibrohistiocytic
 non-MCI 2.1 liftover	Plexiform neurofibroma	Plexiform neurofibroma
 non-MCI 2.1 liftover	Polymorphous low-grade neuroepithelial tumor of the young	Polymorphous low-grade neuroepithelial tumor of the young
 non-MCI 2.1 liftover	Posterior Fossa Ependymoma	Posterior fossa ependymoma
-non-MCI 2.1 liftover	"Posterior fossa ependymoma, NOS or NEC"	
+non-MCI 2.1 liftover	"Posterior fossa ependymoma, NOS or NEC"	Posterior fossa ependymoma
 non-MCI 2.1 liftover	Posterior Fossa Group A (PFA) Ependymoma	Posterior fossa group A (PFA) ependymoma
 non-MCI 2.1 liftover	Posterior Fossa Group B (PFB) Ependymoma	Posterior fossa group B (PFB) ependymoma
 non-MCI 2.1 liftover	"Precancerous melanosis, NOS"	Precancerous melanosis
@@ -577,8 +577,8 @@ non-MCI 2.1 liftover	"Synovial sarcoma, biphasic"	"Synovial sarcoma, biphasic"
 non-MCI 2.1 liftover	"Synovial sarcoma, NOS"	Synovial sarcoma
 non-MCI 2.1 liftover	"Synovial sarcoma, spindle cell"	"Synovial sarcoma, spindle cell"
 non-MCI 2.1 liftover	T lymphoblastic leukemia/lymphoma	T-lymphoblastic leukemia/lymphoma
-non-MCI 2.1 liftover	"T-Cell Acute Lymphoblastic Leukemia/Lymphoma, NOS"	
-non-MCI 2.1 liftover	T-Cell Lymphoblastic Leukemia	
+non-MCI 2.1 liftover	"T-Cell Acute Lymphoblastic Leukemia/Lymphoma, NOS"	T-lymphoblastic leukemia/lymphoma
+non-MCI 2.1 liftover	T-Cell Lymphoblastic Leukemia	T-lymphoblastic leukemia/lymphoma
 non-MCI 2.1 liftover	T-cell/histiocyte rich large B-cell lymphoma	T-cell/histiocyte rich large B-cell lymphoma
 non-MCI 2.1 liftover	Telangiectatic osteosarcoma	Telangiectatic osteosarcoma
 non-MCI 2.1 liftover	Tenosynovial Giant Cell Tumor	Tenosynovial giant cell tumor
@@ -4162,9 +4162,9 @@ Release 48+49+50 liftover	Pineal anlage tumor with extensive maturation along mu
 Release 47 liftover	4th ventricular brain tumor	Tumor
 Release 59	"Brain, right parietal tumor"	Tumor
 Release 58	Choroid plexus tumor without malignant features	Tumor
-Release 47 liftover	Anaplastic embryonal neoplasm	#REF!
-Release 47 liftover	"Densely cellular small round blue cell lesion, embryonal tumor"	#REF!
-Release 47 liftover	"Densely cellular small round blue cell lesion, embryonal tumor; favor medulloblastoma"	#REF!
+Release 47 liftover	Anaplastic embryonal neoplasm	Neoplasm
+Release 47 liftover	"Densely cellular small round blue cell lesion, embryonal tumor"	Neoplasm
+Release 47 liftover	"Densely cellular small round blue cell lesion, embryonal tumor; favor medulloblastoma"	Medulloblastoma
 Release 47 liftover	Embryonal Tumor	Tumor
 Release 47 liftover	Embryonal tumor consistent with atypical teratoid/rhabdoid tumor (AT/RT)	Tumor
 Release 47 liftover	"Embryonal tumor most consistent with medulloblastoma, classic phenotype"	Tumor
