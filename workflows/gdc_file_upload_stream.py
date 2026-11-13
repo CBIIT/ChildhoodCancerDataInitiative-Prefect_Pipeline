@@ -98,7 +98,7 @@ def upload_to_gdc(
                 upload_url,
                 headers=headers,
                 data=wrapped_body,
-                timeout=(30, 300), # 30s connect, 5m read stall timeout
+                timeout=(30, 900), # 30s connect, 15m read stall timeout
                 verify=True
             )
 
