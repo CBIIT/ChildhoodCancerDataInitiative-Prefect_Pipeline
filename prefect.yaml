@@ -766,6 +766,40 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
+  - name: ccdi-gdc-file-upload-v3-stream
+    version: null
+    tags: [ "PROD","V3", "GDC"]
+    description: Upload files to GDC using the API stream.
+    entrypoint: workflows/gdc_file_upload_stream.py:runner
+    schedule: null
+
+    # flow-specific parameters
+    parameters:
+      bucket: "ccdi-dcc"
+      project_id: "CCDI-MCI"
+      manifest_path: ""
+      secret_name_path: ""
+      secret_key_name: ""
+      runner: ""
+
+    # pull action to overwrite from file pull action
+    pull:
+    - prefect.deployments.steps.git_clone:
+        id: clone-step
+        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
+        branch: main
+    - prefect.deployments.steps.pip_install_requirements:
+        requirements_file: requirements_python3.13_prefect3.txt
+        directory: "{{ clone-step.directory }}"
+        stream_output: False
+      
+    # infra-specific fields
+    work_pool:
+      name: ccdi-dcc-32gb-prefect-3.4.19-python3.13
+      work_queue_name: null
+      job_variables: {}
+
+
   - name: compare-dataframes-v3
     version: null
     tags: ["Production","V3"]
