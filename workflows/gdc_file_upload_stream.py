@@ -70,6 +70,9 @@ def upload_to_gdc(
     gdc_url: str,
     gdc_token: str
 ):
+    runner_logger = get_run_logger()
+    runner_logger.info(f"Starting upload for file UUID: {ul_parameter['file_uuid']}")
+    
     s3 = set_s3_resource()
     s3_client = s3.meta.client
 
@@ -103,16 +106,17 @@ def upload_to_gdc(
             )
 
             if not result.ok:
-                raise RuntimeError(
+                runner_logger.warning(
                     f"GDC upload failed: HTTP {result.status_code}: {result.text}"
                 )
 
             return result.status_code
 
     except requests.exceptions.SSLError as exc:
-        raise RuntimeError(f"SSL error during GDC upload: {exc}") from None
+        # set to warning so that entire flow does not fail on SSL errors
+        runner_logger.warning(f"SSL error during GDC upload: {exc}")
     except requests.exceptions.RequestException as exc:
-        raise RuntimeError(f"HTTP error during GDC upload: {exc}") from None
+        runner_logger.warning   (f"HTTP error during GDC upload: {exc}")
     finally:
         body.close()
 
