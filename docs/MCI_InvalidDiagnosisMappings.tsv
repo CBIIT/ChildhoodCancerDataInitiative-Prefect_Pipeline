@@ -143,7 +143,7 @@ non-MCI 2.1 liftover	"Congenital melanocytic nevus, NOS"	Congenital melanocytic 
 non-MCI 2.1 liftover	"Craniopharyngioma, adamantinomatous"	"Craniopharyngioma, adamantinomatous"
 non-MCI 2.1 liftover	"Craniopharyngioma, NOS"	Craniopharyngioma
 non-MCI 2.1 liftover	"Cribriform carcinoma, NOS"	Cribriform carcinoma
-non-MCI 2.1 liftover	Cribriform neuroepithelial tumor	Cribriform neuroepithelial tumor 
+non-MCI 2.1 liftover	Cribriform neuroepithelial tumor	Cribriform neuroepithelial tumor
 non-MCI 2.1 liftover	"Cutaneous T-cell lymphoma, NOS"	Cutaneous T-cell lymphoma
 non-MCI 2.1 liftover	Dedifferentiated liposarcoma	Dedifferentiated liposarcoma
 non-MCI 2.1 liftover	"Dermatofibroma, NOS"	Dermatofibroma
@@ -157,11 +157,11 @@ non-MCI 2.1 liftover	Desmoplastic fibroma	Desmoplastic fibroma
 non-MCI 2.1 liftover	Desmoplastic infantile astrocytoma	Desmoplastic infantile astrocytoma
 non-MCI 2.1 liftover	Desmoplastic infantile ganglioglioma / desmoplastic infantile astrocytoma	Desmoplastic infantile ganglioglioma
 non-MCI 2.1 liftover	"Desmoplastic melanoma, malignant"	Desmoplastic melanoma
-non-MCI 2.1 liftover	"Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant"	"Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant "
+non-MCI 2.1 liftover	"Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant"	"Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant"
 non-MCI 2.1 liftover	Desmoplastic nodular medulloblastoma	Desmoplastic nodular medulloblastoma
 non-MCI 2.1 liftover	Desmoplastic small round cell tumor	Desmoplastic small round cell tumor
 non-MCI 2.1 liftover	"Diffuse astrocytoma, MYB- or MYBL1-altered"	"Diffuse astrocytoma, MYB- or MYBL1-altered"
-non-MCI 2.1 liftover	Diffuse glioneuronal tumor with oligodendroglioma-like features and nuclear clusters	Diffuse glioneuronal tumor with oligodendroglioma-like features and nuclear clusters 
+non-MCI 2.1 liftover	Diffuse glioneuronal tumor with oligodendroglioma-like features and nuclear clusters	Diffuse glioneuronal tumor with oligodendroglioma-like features and nuclear clusters
 non-MCI 2.1 liftover	"Diffuse Hemispheric Glioma, H3 G34-mutant"	"Diffuse hemispheric glioma, H3 G34-mutant"
 non-MCI 2.1 liftover	Diffuse intrinsic pontine glioma	Diffuse intrinsic pontine glioma
 non-MCI 2.1 liftover	"Diffuse large B-cell lymphoma, NOS"	Diffuse large B-cell lymphoma
@@ -194,7 +194,7 @@ non-MCI 2.1 liftover	"Epithelioid Neoplasm, NOS"	Tumor
 non-MCI 2.1 liftover	Epithelioid sarcoma	Epithelioid sarcoma
 non-MCI 2.1 liftover	Extraventricular neurocytoma	Extraventricular neurocytoma
 non-MCI 2.1 liftover	Fibrillary astrocytoma	Fibrillary astrocytoma
-non-MCI 2.1 liftover	Fibroblastic 	Fibroblastic 
+non-MCI 2.1 liftover	Fibroblastic 	Fibroblastic
 non-MCI 2.1 liftover	Fibrolamellar Variant of Hepatocellular Carcinoma	Fibrolamellar variant of hepatocellular carcinoma
 non-MCI 2.1 liftover	"Fibroma, NOS"	Fibroma
 non-MCI 2.1 liftover	Fibromatosis Colli	Fibromatosis colli
@@ -257,7 +257,7 @@ non-MCI 2.1 liftover	"Hepatocellular carcinoma, NOS"	Hepatocellular carcinoma
 non-MCI 2.1 liftover	Hepatosplenic T-cell lymphoma	Hepatosplenic T-cell lymphoma
 non-MCI 2.1 liftover	HHV8 positive diffuse large B-cell lymphoma	Diffuse large B-cell lymphoma
 non-MCI 2.1 liftover	High Grade Sarcoma	Sarcoma
-non-MCI 2.1 liftover	High grade surface 	High-grade surface 
+non-MCI 2.1 liftover	High grade surface 	High-grade surface
 non-MCI 2.1 liftover	High-grade astrocytoma with piloid features	High-grade astrocytoma with piloid features
 non-MCI 2.1 liftover	Histiocytic sarcoma	Histiocytic sarcoma
 non-MCI 2.1 liftover	"Histiocytoma, NOS"	Histiocytoma
@@ -267,8 +267,8 @@ non-MCI 2.1 liftover	Hypernephroid tumor	Hypernephroid tumor
 non-MCI 2.1 liftover	Immunodeficiency-associated CNS lymphoma	Lymphoma
 non-MCI 2.1 liftover	Infant-type hemispheric glioma	Infant-type hemispheric glioma
 non-MCI 2.1 liftover	Infantile fibrosarcoma	Infantile fibrosarcoma
-non-MCI 2.1 liftover	"Intracranial mesenchymal tumor, FET-CREB fusion-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion–positive "
-non-MCI 2.1 liftover	"Intracranial Mesenchymal Tumors, FET::CREB Fusion-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion–positive "
+non-MCI 2.1 liftover	"Intracranial mesenchymal tumor, FET-CREB fusion-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion–positive"
+non-MCI 2.1 liftover	"Intracranial Mesenchymal Tumors, FET::CREB Fusion-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion–positive"
 non-MCI 2.1 liftover	Juvenile Granulosa Cell Tumor	"Granulosa cell tumor, juvenile"
 non-MCI 2.1 liftover	"Juvenile myelomonocytic leukemia, NOS"	Juvenile myelomonocytic leukemia (Juvenile myelomonocytic leukemia)
 non-MCI 2.1 liftover	Juvenile xanthogranuloma	Juvenile xanthogranuloma
@@ -2103,9 +2103,9 @@ Release 56	"Inflammatory myofibroblastic tumor of bone, osteoclast-rich"	Inflamm
 Release 57 COG clinical	Inflammatory myofibroblastic tumor TPM3::ALK	Inflammatory myofibroblastic tumor
 Release 58	Inflammatory Myofibroblastic Tumor	Inflammatory myofibroblastic tumor
 Release 57 COG clinical	"Insulinoma, NOS"	Insulinoma
-Release 47 liftover	Intracranial mesenchymal tumor with FET:CREB fusion	"Intracranial mesenchymal tumor, FET::CREB fusion-positive "
-Release 47 liftover	"Intracranial mesenchymal tumor, FET: CREB-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion-positive "
-Release 56	"Intracranial mesenchymal tumor, FET::CREB fusion positive"	"Intracranial mesenchymal tumor, FET::CREB fusion-positive "
+Release 47 liftover	Intracranial mesenchymal tumor with FET:CREB fusion	"Intracranial mesenchymal tumor, FET::CREB fusion-positive"
+Release 47 liftover	"Intracranial mesenchymal tumor, FET: CREB-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion-positive"
+Release 56	"Intracranial mesenchymal tumor, FET::CREB fusion positive"	"Intracranial mesenchymal tumor, FET::CREB fusion-positive"
 Release 47 liftover	Juvenile xanthogranuloma-family neoplasm	Juvenile xanthogranuloma
 Release 47 liftover	Juvenile xanthogranuloma-family neoplasm with high grade features	Juvenile xanthogranuloma
 Release 47 liftover	Anaplastic/ large cell medulloblastoma	Large cell medulloblastoma
