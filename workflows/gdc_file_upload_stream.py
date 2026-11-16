@@ -117,8 +117,10 @@ def upload_to_gdc(
     except requests.exceptions.SSLError as exc:
         # set to warning so that entire flow does not fail on SSL errors
         runner_logger.warning(f"SSL error during GDC upload: {exc}")
+        return "400"
     except requests.exceptions.RequestException as exc:
         runner_logger.warning   (f"HTTP error during GDC upload: {exc}")
+        return "400"
     finally:
         body.close()
 
@@ -167,6 +169,7 @@ def uploader_handler(
         upload_list.append({"bucket" : bucket, "key" : key, "file_uuid": file_id, "file_size": file_size})
 
     uploads = upload_to_gdc.map(upload_list, unmapped(url_prefix), unmapped(token))
+    print(uploads.result())
 
     return uploads.result()
 
