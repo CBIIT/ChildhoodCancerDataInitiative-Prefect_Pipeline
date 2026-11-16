@@ -169,7 +169,6 @@ def uploader_handler(
         upload_list.append({"bucket" : bucket, "key" : key, "file_uuid": file_id, "file_size": file_size})
 
     uploads = upload_to_gdc.map(upload_list, unmapped(url_prefix), unmapped(token))
-    print(uploads.result())
 
     return uploads.result()
 
@@ -207,11 +206,11 @@ def runner(
     file_dl(bucket, manifest_path)
 
     # extract file name before the workflow starts
-    file_name = os.path.basename(manifest_path)
+    input_manifest_file_name = os.path.basename(manifest_path)
 
-    runner_logger.info(f">>> Reading input file {file_name} ....")
+    runner_logger.info(f">>> Reading input file {input_manifest_file_name} ....")
 
-    file_metadata = read_input(file_name)
+    file_metadata = read_input(input_manifest_file_name)
 
     runner_logger.info(f">>> Extracted file metadata: {file_metadata.shape[0]} rows.")
 
@@ -225,18 +224,19 @@ def runner(
         sub_manifest = file_metadata.iloc[i:i + chunk_size]
         runner_logger.info(f">>> Processing chunk {i // chunk_size + 1} of {len(file_metadata) // chunk_size + (1 if len(file_metadata) % chunk_size != 0 else 0)} with {sub_manifest.shape[0]} rows.")
 
-        uploader_handler(
+        upload_results = uploader_handler(
             sub_manifest=sub_manifest,
             project_id=project_id,
             secret_name_path=secret_name_path,
             secret_key_name=secret_key_name,
         )
 
-        #runner_logger.info(f">>> Sub-manifest results: {sub_manifest_results.shape[0]} rows.")
-        #sub_manifest_results_concat = pd.concat([sub_manifest_results_concat, sub_manifest_results], ignore_index=True)
+        sub_manifest['result'] = upload_results
 
-    """runner_logger.info(f">>> All sub-manifest results concatenated: {sub_manifest_results_concat.shape[0]} rows.")
-    file_upload_results_path = f"{os.path.splitext(file_name)[0]}_upload_results.csv"
+        sub_manifest_results_concat = pd.concat([sub_manifest_results_concat, sub_manifest], ignore_index=True)
+
+    runner_logger.info(f">>> All sub-manifest results concatenated: {sub_manifest_results_concat.shape[0]} rows.")
+    file_upload_results_path = f"{os.path.splitext(input_manifest_file_name)[0]}_upload_results.csv"
     sub_manifest_results_concat.to_csv(file_upload_results_path, index=False)
     runner_logger.info(f">>> File upload results saved to {file_upload_results_path}.")
 
@@ -245,4 +245,4 @@ def runner(
         output_folder=runner,
         sub_folder="",
         newfile=file_upload_results_path,
-    )"""
+    )
