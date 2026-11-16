@@ -80,7 +80,7 @@ def upload_to_gdc(
     file_uuid = ul_parameter["file_uuid"]
     file_size = ul_parameter["file_size"]
 
-    runner_logger.info(f"Starting upload for file UUID: {file_uuid} with size: {int(file_size)/1024/1024/1024} GB")
+    runner_logger.info(f"Starting upload for file UUID: {file_uuid} with size: {round(int(file_size)/1024/1024/1024, 2)} GB")
 
     metadata = s3_client.head_object(Bucket=bucket, Key=key)
     file_size = metadata["ContentLength"]
