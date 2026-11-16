@@ -30,7 +30,7 @@ def read_input(file_path: str):
 
     file_metadata = pd.read_csv(file_path)
 
-    required_cols = ["file_url", "file_name", "id"]
+    required_cols = ["file_url", "file_name", "file_size", "id"]
 
     # check if required columns exist in the dataframe
     for col in required_cols:
@@ -71,7 +71,6 @@ def upload_to_gdc(
     gdc_token: str
 ):
     runner_logger = get_run_logger()
-    runner_logger.info(f"Starting upload for file UUID: {ul_parameter['file_uuid']}")
     
     s3 = set_s3_resource()
     s3_client = s3.meta.client
@@ -79,6 +78,9 @@ def upload_to_gdc(
     bucket = ul_parameter["bucket"]
     key = ul_parameter["key"]
     file_uuid = ul_parameter["file_uuid"]
+    file_size = ul_parameter["file_size"]
+
+    runner_logger.info(f"Starting upload for file UUID: {file_uuid} with size: {int(file_size)/1024/1024/1024} GB")
 
     metadata = s3_client.head_object(Bucket=bucket, Key=key)
     file_size = metadata["ContentLength"]
@@ -156,26 +158,15 @@ def uploader_handler(
 
     upload_list = []
 
-    for index, row in sub_manifest.iterrows():
+    for _, row in sub_manifest.iterrows():
         bucket = row["file_url"].split("/")[2]
         key = "/".join(row["file_url"].split("/")[3:])
         file_id = row["id"]
+        file_size = row["file_size"]
 
-        upload_list.append({"bucket" : bucket, "key" : key, "file_uuid": file_id})
+        upload_list.append({"bucket" : bucket, "key" : key, "file_uuid": file_id, "file_size": file_size})
 
     uploads = upload_to_gdc.map(upload_list, unmapped(url_prefix), unmapped(token))
-        
-    """response_status = upload_to_gdc(
-        bucket=bucket,
-        key=key,
-        gdc_url=url_prefix,
-        file_uuid=file_id,
-        gdc_token=token
-    )
-    if response_status != 200:
-        runner_logger.warning(f"Failed to upload file {file_id}: {response_status}")
-
-    sub_manifest.at[index, "upload_status"] = response_status"""
 
     return uploads.result()
 
