@@ -766,9 +766,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: TEST-ccdi-gdc-file-upload-v3-stream
+  - name: ccdi-gdc-file-upload-v3-stream
     version: null
-    tags: [ "TEST","V3" ]
+    tags: [ "PROD","V3", "GDC"]
     description: Upload files to GDC using the API stream.
     entrypoint: workflows/gdc_file_upload_stream.py:runner
     schedule: null
@@ -787,7 +787,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: CCDIDC-3289
+        branch: main
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_python3.13_prefect3.txt
         directory: "{{ clone-step.directory }}"
