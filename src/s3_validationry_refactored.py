@@ -1339,6 +1339,8 @@ def check_file_extension_type_match(file_df: DataFrame) -> str:
             inferred_type = "tbi"
         elif bai_flag:
             inferred_type = "bai"
+        elif "parquet" == file_extension:
+            inferred_type = "parquet"
         elif len(file_extension) == 0:
             inferred_type = [
                 "txt",
