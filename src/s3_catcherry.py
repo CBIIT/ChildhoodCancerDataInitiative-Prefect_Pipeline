@@ -361,9 +361,8 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         )
 
         # Set of valid submitted diagnosis values from the cross-reference file
-        DX_CAT_COLUMN = "diagnosis"  # <-- adjust to the real column name
         valid_dx_values = set(
-            diagnosis_mapping_df[DX_CAT_COLUMN].dropna().astype(str).str.strip()
+            diagnosis_mapping_df["diagnosis"].dropna().astype(str).str.strip()
         )
 
         for node in dict_nodes:
