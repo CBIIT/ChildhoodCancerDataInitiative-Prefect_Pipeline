@@ -214,7 +214,7 @@ def runner(
 
     runner_logger.info(f">>> Extracted file metadata: {file_metadata.shape[0]} rows.")
 
-    chunk_size = 50
+    chunk_size = 1000
 
     sub_manifest_results_concat = pd.DataFrame()
 
