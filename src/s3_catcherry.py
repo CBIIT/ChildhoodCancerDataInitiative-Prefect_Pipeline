@@ -309,11 +309,11 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         ##############
         #
-        # MCI submitted_diagnosis to Harmonized diagnosis transformation
+        # READ IN DIAGNOSIS / ANATOMIC SITE FILES
         #
         ##############
 
-        print("Cleaning up diagnosis values based on MCI_InvalidDiagnosisMappings.tsv.\n----------", file=outf)
+        catcherr_logger.info("Reading in diagnosis and anatomic site files.")
 
         # Clean up diagnosis values based on the MCI_invalidDiagnosisMappings.tsv file found in the docs folder.
         mci_invalid_diagnosis_mapping_path = (
@@ -322,6 +322,34 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         mci_invalid_diagnosis_mapping = pd.read_csv(
             mci_invalid_diagnosis_mapping_path, sep="\t", dtype=str
         )
+
+        # Clean up anatomic_site values based on the MCI_invalidAnatomicSiteMappings.tsv file found in the docs folder.
+        mci_invalid_anatomic_site_mapping_path = (
+            "docs/MCI_invalidAnatomicSiteMappings.tsv"
+        )
+        mci_invalid_anatomic_site_mapping = pd.read_csv(
+            mci_invalid_anatomic_site_mapping_path, sep="\t", dtype=str
+        )
+
+        # read in the anatomic_site_mapping_uberon.tsv file
+        anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
+        anatomic_site_mapping = pd.read_csv(
+            anatomic_site_mapping_path, sep="\t", dtype=str
+        )
+
+        # directory path to the cross-reference file
+        diagnosis_mapping_path = "docs/uniqDx2Dx_cat.tsv"
+
+        # read in the cross-reference file
+        diagnosis_mapping_df = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
+
+        ##############
+        #
+        # MCI submitted_diagnosis to Harmonized diagnosis transformation
+        #
+        ##############
+
+        print("Cleaning up diagnosis values based on MCI_InvalidDiagnosisMappings.tsv.\n----------", file=outf)
 
         # create mapping dictionary for submitted_diagnosis to diagnosis
         mci_invalid_diagnosis_dict = mci_invalid_diagnosis_mapping.set_index(
@@ -332,23 +360,34 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
             "Cleaning up diagnosis values based on MCI_InvalidDiagnosisMappings.tsv"
         )
 
+        # Set of valid submitted diagnosis values from the cross-reference file
+        valid_dx_values = set(
+            diagnosis_mapping_df["diagnosis"].dropna().astype(str).str.strip()
+        )
+
         for node in dict_nodes:
             df = meta_dfs[node]
-            if "submitted_diagnosis" in df.columns:
+            if "submitted_diagnosis" in df.columns and "diagnosis" in df.columns:
                 for index, row in df.iterrows():
-                    submitted_diagnosis_value = row["submitted_diagnosis"]
-                    if (
-                        pd.notna(submitted_diagnosis_value)
-                        and submitted_diagnosis_value != ""
-                        and (
-                            pd.isna(row["diagnosis"])
-                            or row["diagnosis"] == ""
-                            )
-                        ):
-                            new_diagnosis = mci_invalid_diagnosis_dict.get(
-                                submitted_diagnosis_value, ""
-                            )
-                            df.at[index, "diagnosis"] = new_diagnosis
+                    # Only touch cells that don't already have a diagnosis
+                    if pd.notna(row["diagnosis"]) and str(row["diagnosis"]).strip() != "":
+                        continue
+
+                    submitted = row["submitted_diagnosis"]
+                    submitted = "" if pd.isna(submitted) else str(submitted).strip()
+
+                    # 1. Bad value found in MCI invalid mapping -> use the corrected value
+                    mapped = mci_invalid_diagnosis_dict.get(submitted)
+                    if submitted != "" and pd.notna(mapped) and str(mapped).strip() != "":
+                        df.at[index, "diagnosis"] = mapped
+
+                    # 2. Not in the MCI mapping, but found in uniqDx2Dx_cat -> carry the value over
+                    elif submitted in valid_dx_values:
+                        df.at[index, "diagnosis"] = submitted
+
+                    # 3. Everything else -> Unknown
+                    else:
+                        df.at[index, "diagnosis"] = "Unknown"
             meta_dfs[node] = df
 
 
@@ -359,15 +398,7 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
         ##############
 
         print("Cleaning up anatomic_site based on MCI_invalidAnatomicSiteMappings.tsv.\n----------", file=outf)
-
-        # Clean up anatomic_site values based on the MCI_invalidAnatomicSiteMappings.tsv file found in the docs folder.
-        mci_invalid_anatomic_site_mapping_path = (
-            "docs/MCI_invalidAnatomicSiteMappings.tsv"
-        )
-        mci_invalid_anatomic_site_mapping = pd.read_csv(
-            mci_invalid_anatomic_site_mapping_path, sep="\t", dtype=str
-        )
-
+        
         # create mapping dictionaries for both anatomic_site and laterality
         mci_invalid_anatomic_site_dict = mci_invalid_anatomic_site_mapping.set_index(
             "submitted_anatomic_site"
@@ -431,11 +462,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
 
         print("Filling anatomic_site based on Uberon mapping.\n----------", file=outf)
 
-        # read in the anatomic_site_mapping_uberon.tsv file
-        anatomic_site_mapping_path = "docs/anatomic_site_mapping_uberon.tsv"
-        anatomic_site_mapping = pd.read_csv(
-            anatomic_site_mapping_path, sep="\t", dtype=str
-        )
         # create a mapping dictionary
         anatomic_site_dict = anatomic_site_mapping.set_index("anatomic_site_term")[
             "uberon_text"
@@ -469,6 +495,57 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                             )
                             df.at[index, "anatomic_site"] = new_anatomic_site
             meta_dfs[node] = df
+
+        ##############
+        #
+        # Diagnosis to Diagnosis category transformation
+        #
+        ##############
+
+        # This section will use information found in the diagnosis.diagnosis property and based on the cross-reference file
+        # found on GitHub, it will create the diagnosis category and diagnosis classification system values.
+
+        # Create a mapping dictionary for diagnosis to diagnosis category, with diagnosis as the key and diagnosis category as the value.
+        diagnosis_mapping = diagnosis_mapping_df.set_index("diagnosis")[
+            "diagnosis_category"
+        ].to_dict()
+
+        # Create a mapping dictionary for diagnosis to diagnosis classification system, with diagnosis as the key and diagnosis classification system as the value.
+        diagnosis_classification_mapping = diagnosis_mapping_df.set_index("diagnosis")[
+            "diagnosis_classification_system"
+        ].to_dict()
+
+        catcherr_logger.info("Transforming diagnosis to diagnosis category")
+        for node in dict_nodes:
+            df = meta_dfs[node]
+            # for the diagnosis node
+            if "diagnosis" in df.columns:
+                # map the diagnosis column to the diagnosis_category column, based on the dataframe diagnosis_mapping,
+                # which has the same column headers found in the df object, diagnosis and diagnosis_category.
+                # Only update where diagnosis_category is null
+                df["diagnosis_category"] = df.apply(
+                    lambda row: (
+                        diagnosis_mapping.get(row["diagnosis"], "Not Reported")
+                        if pd.isna(row["diagnosis_category"])
+                        else row["diagnosis_category"]
+                    ),
+                    axis=1,
+                )
+                # map the diagnosis column to the diagnosis_classification_system column, based on the dataframe diagnosis_mapping,
+                # which has the same column headers found in the df object, diagnosis and diagnosis_classification_system.
+                # Only update where diagnosis_classification_system is null
+                df["diagnosis_classification_system"] = df.apply(
+                    lambda row: (
+                        diagnosis_classification_mapping.get(
+                            row["diagnosis"], "Not Reported"
+                        )
+                        if pd.isna(row["diagnosis_classification_system"])
+                        else row["diagnosis_classification_system"]
+                    ),
+                    axis=1,
+                )
+            meta_dfs[node] = df
+
 
         ##############
         #
@@ -723,62 +800,6 @@ def CatchERRy(file_path: str, template_path: str):  # removed profile
                     else x
                 )
             )
-            meta_dfs[node] = df
-
-        ##############
-        #
-        # Diagnosis to Diagnosis category transformation
-        #
-        ##############
-
-        # This section will use information found in the diagnosis.diagnosis property and based on the cross-reference file
-        # found on GitHub, it will create the diagnosis category and diagnosis classification system values.
-
-        # directory path to the cross-reference file
-        diagnosis_mapping_path = "docs/uniqDx2Dx_cat.tsv"
-
-        # read in the cross-reference file
-        diagnosis_mapping_df = pd.read_csv(diagnosis_mapping_path, sep="\t", dtype=str)
-
-        # Create a mapping dictionary for diagnosis to diagnosis category, with diagnosis as the key and diagnosis category as the value.
-        diagnosis_mapping = diagnosis_mapping_df.set_index("diagnosis")[
-            "diagnosis_category"
-        ].to_dict()
-
-        # Create a mapping dictionary for diagnosis to diagnosis classification system, with diagnosis as the key and diagnosis classification system as the value.
-        diagnosis_classification_mapping = diagnosis_mapping_df.set_index("diagnosis")[
-            "diagnosis_classification_system"
-        ].to_dict()
-
-        catcherr_logger.info("Transforming diagnosis to diagnosis category")
-        for node in dict_nodes:
-            df = meta_dfs[node]
-            # for the diagnosis node
-            if "diagnosis" in df.columns:
-                # map the diagnosis column to the diagnosis_category column, based on the dataframe diagnosis_mapping,
-                # which has the same column headers found in the df object, diagnosis and diagnosis_category.
-                # Only update where diagnosis_category is null
-                df["diagnosis_category"] = df.apply(
-                    lambda row: (
-                        diagnosis_mapping.get(row["diagnosis"], "Not Reported")
-                        if pd.isna(row["diagnosis_category"])
-                        else row["diagnosis_category"]
-                    ),
-                    axis=1,
-                )
-                # map the diagnosis column to the diagnosis_classification_system column, based on the dataframe diagnosis_mapping,
-                # which has the same column headers found in the df object, diagnosis and diagnosis_classification_system.
-                # Only update where diagnosis_classification_system is null
-                df["diagnosis_classification_system"] = df.apply(
-                    lambda row: (
-                        diagnosis_classification_mapping.get(
-                            row["diagnosis"], "Not Reported"
-                        )
-                        if pd.isna(row["diagnosis_classification_system"])
-                        else row["diagnosis_classification_system"]
-                    ),
-                    axis=1,
-                )
             meta_dfs[node] = df
 
         ##############
