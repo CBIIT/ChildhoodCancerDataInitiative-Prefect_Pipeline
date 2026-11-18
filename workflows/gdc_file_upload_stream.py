@@ -12,7 +12,7 @@ import pandas as pd
 
 # prefect dependencies
 from prefect import flow, task, get_run_logger, unmapped
-from prefect.task_runners import ConcurrentTaskRunner
+from prefect.task_runners import ConcurrentTaskRunner, ThreadPoolTaskRunner
 from prefect.cache_policies import NO_CACHE
 from src.utils import get_time, file_dl, file_ul, get_secret, set_s3_resource
 
@@ -129,7 +129,7 @@ def upload_to_gdc(
     name="file_upload_handler",
     log_prints=True,
     flow_run_name="file_upload_handler_" + f"{get_time()}",
-    task_runner=ConcurrentTaskRunner(),
+    task_runner=ThreadPoolTaskRunner(max_workers=35),
 )
 def uploader_handler(
     sub_manifest: pd.DataFrame,
