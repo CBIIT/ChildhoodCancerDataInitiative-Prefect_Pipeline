@@ -7,14 +7,15 @@ non-MCI 2.1 liftover	Acute Leukemias of Ambiguous Lineage	Acute leukemia
 non-MCI 2.1 liftover	"Acute lymphoblastic leukemia, NOS"	Acute lymphoblastic leukemia
 non-MCI 2.1 liftover	Acute megakaryoblastic leukemia	Acute megakaryoblastic leukemia
 non-MCI 2.1 liftover	Acute monocytic leukemia	Acute monocytic leukemia
-non-MCI 2.1 liftover	Acute myeloid leukemia (megakaryoblastic) with t(1;22)(p13;q13); RBM15-MKL1	Acute myeloid leukemia with RBM15::MRTFA fusion
+non-MCI 2.1 liftover	Acute myeloid leukemia (megakaryoblastic) with t(1;22)(p13;q13); RBM15-MKL1	Acute myeloid leukemia with RBM15::MRTFA fusion
 non-MCI 2.1 liftover	Acute myeloid leukemia with abnormal marrow eosinophils	Acute myeloid leukemia with abnormal marrow eosinophils
 non-MCI 2.1 liftover	Acute myeloid leukemia with biallelic mutation of CEBPA	Acute myeloid leukemia with biallelic mutation of CEBPA
-non-MCI 2.1 liftover	Acute myeloid leukemia with mutated NPM1	Acute myeloid leukemia with NPM1 mutation
+non-MCI 2.1 liftover	Acute myeloid leukemia with mutated NPM1	Acute myeloid leukemia with NPM1 mutation
 non-MCI 2.1 liftover	Acute myeloid leukemia with myelodysplasia-related changes	Acute myeloid leukemia with myelodysplasia-related changes
 non-MCI 2.1 liftover	Acute myeloid leukemia without maturation	Acute myeloid leukemia without maturation
 non-MCI 2.1 liftover	"Acute myeloid leukemia, 11q23 abnormalities"	"Acute myeloid leukemia, 11q23 abnormalities"
 non-MCI 2.1 liftover	"Acute myeloid leukemia, minimal differentiation"	Acute myeloid leukemia with minimal differentiation
+non-MCI 2.1 liftover	"Acute myeloid leukemia"	Acute myeloid leukemia (AML)
 non-MCI 2.1 liftover	"Acute myeloid leukemia, NOS"	Acute myeloid leukemia (AML)
 non-MCI 2.1 liftover	"Acute myeloid leukemia, t(8;21)(q22;q22)"	"Acute myeloid leukemia, t(8;21)(q22;q22)"
 non-MCI 2.1 liftover	"Acute myelomonocytic leukemia, NOS"	Acute myelomonocytic leukemia
@@ -52,7 +53,7 @@ non-MCI 2.1 liftover	Angiomyofibroblastoma	Angiomyofibroblastoma
 non-MCI 2.1 liftover	Angiomyosarcoma	Angiomyosarcoma
 non-MCI 2.1 liftover	Angiosarcoma	Angiosarcoma
 non-MCI 2.1 liftover	Astroblastoma	Astroblastoma
-non-MCI 2.1 liftover	"Astroblastoma, MN1-altered"	"Astroblastoma, MN1-altered"
+non-MCI 2.1 liftover	"Astroblastoma, MN1-altered"	"Astroblastoma, MN1-altered"
 non-MCI 2.1 liftover	"Astrocytoma, anaplastic"	"Astrocytoma, anaplastic"
 non-MCI 2.1 liftover	"Astrocytoma, anaplastic, NOS"	"Astrocytoma, anaplastic"
 non-MCI 2.1 liftover	"Astrocytoma, benign"	Astrocytoma
@@ -64,13 +65,14 @@ non-MCI 2.1 liftover	ATRT-TYR	Atypical teratoid/rhabdoid tumor TYR
 non-MCI 2.1 liftover	"ATRT, NOS or NEC"	Atypical teratoid/rhabdoid tumor
 non-MCI 2.1 liftover	Atypical choroid plexus papilloma	Atypical choroid plexus papilloma
 non-MCI 2.1 liftover	Atypical meningioma	Atypical meningioma
+non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma	B-lymphoblastic leukemia (B-ALL)
 non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with hyperdiploidy	B-lymphoblastic leukemia with high hyperdiploidy
 non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with hypodiploidy (Hypodiploid ALL)	B-lymphoblastic leukemia with high hypodiploidy
-non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with t(1;19)(q23;p13.3); E2A-PBX1 (TCF3-PBX1)	B-lymphoblastic leukemia with TCF3::PBX1 fusion
-non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with t(12;21)(p13;q22); TEL-AML1 (ETV6-RUNX1)	B-lymphoblastic leukemia with ETV6::RUNX1 fusion
-non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with t(9;22)(q34;q11.2); BCR-ABL1	B-lymphoblastic leukemia with BCR::ABL1 fusion
+non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with t(1;19)(q23;p13.3); E2A-PBX1 (TCF3-PBX1)	B-lymphoblastic leukemia with TCF3::PBX1 fusion
+non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with t(12;21)(p13;q22); TEL-AML1 (ETV6-RUNX1)	B-lymphoblastic leukemia with ETV6::RUNX1 fusion
+non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with t(9;22)(q34;q11.2); BCR-ABL1	B-lymphoblastic leukemia with BCR::ABL1 fusion
 non-MCI 2.1 liftover	B lymphoblastic leukemia/lymphoma with t(v;11q23); MLL rearranged	B lymphoblastic leukemia/lymphoma with t(v;11q23); MLL rearranged
-non-MCI 2.1 liftover	"B lymphoblastic leukemia/lymphoma, BCR-ABL1-like"	B-lymphoblastic leukemia with BCR::ABL1-like (Ph-like) features
+non-MCI 2.1 liftover	"B lymphoblastic leukemia/lymphoma, BCR-ABL1-like"	B-lymphoblastic leukemia with BCR::ABL1-like (Ph-like) features
 non-MCI 2.1 liftover	"B lymphoblastic leukemia/lymphoma, NOS"	B-lymphoblastic leukemia (B-ALL)
 non-MCI 2.1 liftover	"B-Cell Acute Lymphoblastic Leukemia, NOS"	B-lymphoblastic leukemia (B-ALL)
 non-MCI 2.1 liftover	Basal cell adenocarcinoma	Basal cell adenocarcinoma
@@ -117,7 +119,7 @@ non-MCI 2.1 liftover	"Choroid plexus papilloma, NOS"	Choroid plexus papilloma
 non-MCI 2.1 liftover	Choroid plexus tumor	Choroid plexus papilloma
 non-MCI 2.1 liftover	"Choroid Plexus Tumors, NOS"	Choroid plexus papilloma
 non-MCI 2.1 liftover	Chronic eosinophilic leukemia	Chronic eosinophilic leukemia
-non-MCI 2.1 liftover	"Chronic myelogenous leukemia, BCR/ABL positive"	"Chronic myeloid leukemia (CML), BCR::ABL1"
+non-MCI 2.1 liftover	"Chronic myelogenous leukemia, BCR/ABL positive"	"Chronic myeloid leukemia (CML), BCR::ABL1"
 non-MCI 2.1 liftover	"Chronic myeloid leukemia, NOS"	Chronic myeloid leukemia
 non-MCI 2.1 liftover	CIC-rearranged sarcoma	CIC-rearranged sarcoma
 non-MCI 2.1 liftover	Circumscribed Astrocytic Gliomas	Astrocytic glioma
@@ -132,18 +134,19 @@ non-MCI 2.1 liftover	CNS CIC-rearranged Sarcoma	CIC-rearranged sarcoma
 non-MCI 2.1 liftover	CNS embryonal tumor with rhabdoid features	CNS embryonal tumor with rhabdoid features
 non-MCI 2.1 liftover	"CNS Embryonal Tumor, NEC/NOS"	CNS embryonal tumor
 non-MCI 2.1 liftover	"CNS embryonal tumor, NOS"	CNS embryonal tumor
+non-MCI 2.1 liftover	CNS Germ Cell Tumors	Germinoma
 non-MCI 2.1 liftover	"CNS germ cell tumor, NOS or NEC"	Germinoma
 non-MCI 2.1 liftover	CNS Germinoma	Germinoma
-non-MCI 2.1 liftover	"CNS neuroblastoma, FOXR2-activated"	"CNS neuroblastoma, FOXR2-activated"
-non-MCI 2.1 liftover	CNS Non-Germinomatous Germ Cell Tumor	
+non-MCI 2.1 liftover	"CNS neuroblastoma, FOXR2-activated"	"CNS neuroblastoma, FOXR2-activated"
+non-MCI 2.1 liftover	CNS Non-Germinomatous Germ Cell Tumor	Germinoma
 non-MCI 2.1 liftover	"CNS Sarcoma, NOS or NEC"	Sarcoma
-non-MCI 2.1 liftover	CNS tumor with BCOR internal tandem duplication	CNS tumor with BCOR internal tandem duplication
+non-MCI 2.1 liftover	CNS tumor with BCOR internal tandem duplication	CNS tumor with BCOR internal tandem duplication
 non-MCI 2.1 liftover	Composite Hodgkin and non-Hodgkin lymphoma	Composite Hodgkin and non-Hodgkin lymphoma
 non-MCI 2.1 liftover	"Congenital melanocytic nevus, NOS"	Congenital melanocytic nevus
 non-MCI 2.1 liftover	"Craniopharyngioma, adamantinomatous"	"Craniopharyngioma, adamantinomatous"
 non-MCI 2.1 liftover	"Craniopharyngioma, NOS"	Craniopharyngioma
 non-MCI 2.1 liftover	"Cribriform carcinoma, NOS"	Cribriform carcinoma
-non-MCI 2.1 liftover	Cribriform neuroepithelial tumor	Cribriform neuroepithelial tumor 
+non-MCI 2.1 liftover	Cribriform neuroepithelial tumor	Cribriform neuroepithelial tumor
 non-MCI 2.1 liftover	"Cutaneous T-cell lymphoma, NOS"	Cutaneous T-cell lymphoma
 non-MCI 2.1 liftover	Dedifferentiated liposarcoma	Dedifferentiated liposarcoma
 non-MCI 2.1 liftover	"Dermatofibroma, NOS"	Dermatofibroma
@@ -157,11 +160,11 @@ non-MCI 2.1 liftover	Desmoplastic fibroma	Desmoplastic fibroma
 non-MCI 2.1 liftover	Desmoplastic infantile astrocytoma	Desmoplastic infantile astrocytoma
 non-MCI 2.1 liftover	Desmoplastic infantile ganglioglioma / desmoplastic infantile astrocytoma	Desmoplastic infantile ganglioglioma
 non-MCI 2.1 liftover	"Desmoplastic melanoma, malignant"	Desmoplastic melanoma
-non-MCI 2.1 liftover	"Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant"	"Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant "
+non-MCI 2.1 liftover	"Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant"	"Desmoplastic myxoid tumor of the pineal region, SMARCB1-mutant"
 non-MCI 2.1 liftover	Desmoplastic nodular medulloblastoma	Desmoplastic nodular medulloblastoma
 non-MCI 2.1 liftover	Desmoplastic small round cell tumor	Desmoplastic small round cell tumor
-non-MCI 2.1 liftover	"Diffuse astrocytoma, MYB- or MYBL1-altered"	"Diffuse astrocytoma, MYB- or MYBL1-altered"
-non-MCI 2.1 liftover	Diffuse glioneuronal tumor with oligodendroglioma-like features and nuclear clusters	Diffuse glioneuronal tumor with oligodendroglioma-like features and nuclear clusters 
+non-MCI 2.1 liftover	"Diffuse astrocytoma, MYB- or MYBL1-altered"	"Diffuse astrocytoma, MYB- or MYBL1-altered"
+non-MCI 2.1 liftover	Diffuse glioneuronal tumor with oligodendroglioma-like features and nuclear clusters	Diffuse glioneuronal tumor with oligodendroglioma-like features and nuclear clusters
 non-MCI 2.1 liftover	"Diffuse Hemispheric Glioma, H3 G34-mutant"	"Diffuse hemispheric glioma, H3 G34-mutant"
 non-MCI 2.1 liftover	Diffuse intrinsic pontine glioma	Diffuse intrinsic pontine glioma
 non-MCI 2.1 liftover	"Diffuse large B-cell lymphoma, NOS"	Diffuse large B-cell lymphoma
@@ -194,7 +197,7 @@ non-MCI 2.1 liftover	"Epithelioid Neoplasm, NOS"	Tumor
 non-MCI 2.1 liftover	Epithelioid sarcoma	Epithelioid sarcoma
 non-MCI 2.1 liftover	Extraventricular neurocytoma	Extraventricular neurocytoma
 non-MCI 2.1 liftover	Fibrillary astrocytoma	Fibrillary astrocytoma
-non-MCI 2.1 liftover	Fibroblastic osteosarcoma	Fibroblastic osteosarcoma
+non-MCI 2.1 liftover	Fibroblastic 	Fibroblastic
 non-MCI 2.1 liftover	Fibrolamellar Variant of Hepatocellular Carcinoma	Fibrolamellar variant of hepatocellular carcinoma
 non-MCI 2.1 liftover	"Fibroma, NOS"	Fibroma
 non-MCI 2.1 liftover	Fibromatosis Colli	Fibromatosis colli
@@ -257,20 +260,22 @@ non-MCI 2.1 liftover	"Hepatocellular carcinoma, NOS"	Hepatocellular carcinoma
 non-MCI 2.1 liftover	Hepatosplenic T-cell lymphoma	Hepatosplenic T-cell lymphoma
 non-MCI 2.1 liftover	HHV8 positive diffuse large B-cell lymphoma	Diffuse large B-cell lymphoma
 non-MCI 2.1 liftover	High Grade Sarcoma	Sarcoma
-non-MCI 2.1 liftover	High grade surface osteosarcoma	High-grade surface osteosarcoma
+non-MCI 2.1 liftover	High grade surface 	High-grade surface
 non-MCI 2.1 liftover	High-grade astrocytoma with piloid features	High-grade astrocytoma with piloid features
 non-MCI 2.1 liftover	Histiocytic sarcoma	Histiocytic sarcoma
 non-MCI 2.1 liftover	"Histiocytoma, NOS"	Histiocytoma
 non-MCI 2.1 liftover	"Hodgkin lymphoma, nodular sclerosis, NOS"	"Hodgkin lymphoma, nodular sclerosis"
+non-MCI 2.1 liftover	Hodgkin lymphoma	Classic Hodgkin lymphoma (CHL)
 non-MCI 2.1 liftover	"Hodgkin lymphoma, NOS"	Classic Hodgkin lymphoma (CHL)
 non-MCI 2.1 liftover	Hypernephroid tumor	Hypernephroid tumor
 non-MCI 2.1 liftover	Immunodeficiency-associated CNS lymphoma	Lymphoma
 non-MCI 2.1 liftover	Infant-type hemispheric glioma	Infant-type hemispheric glioma
 non-MCI 2.1 liftover	Infantile fibrosarcoma	Infantile fibrosarcoma
-non-MCI 2.1 liftover	"Intracranial mesenchymal tumor, FET-CREB fusion-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion–positive "
-non-MCI 2.1 liftover	"Intracranial Mesenchymal Tumors, FET::CREB Fusion-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion–positive "
+non-MCI 2.1 liftover	"Intracranial mesenchymal tumor, FET-CREB fusion-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion–positive"
+non-MCI 2.1 liftover	"Intracranial Mesenchymal Tumors, FET::CREB Fusion-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion–positive"
 non-MCI 2.1 liftover	Juvenile Granulosa Cell Tumor	"Granulosa cell tumor, juvenile"
-non-MCI 2.1 liftover	"Juvenile myelomonocytic leukemia, NOS"	Juvenile myelomonocytic leukemia (Juvenile myelomonocytic leukemia)
+non-MCI 2.1 liftover	Juvenile myelomonocytic leukemia	Juvenile myelomonocytic leukemia (JMML)
+non-MCI 2.1 liftover	"Juvenile myelomonocytic leukemia, NOS"	Juvenile myelomonocytic leukemia (JMML)
 non-MCI 2.1 liftover	Juvenile xanthogranuloma	Juvenile xanthogranuloma
 non-MCI 2.1 liftover	"Kidney Tumor, NOS"	Tumor
 non-MCI 2.1 liftover	Lactotroph adenoma	Lactotroph adenoma
@@ -294,6 +299,8 @@ non-MCI 2.1 liftover	"Liposarcoma, NOS"	Liposarcoma
 non-MCI 2.1 liftover	"Lobular carcinoma in situ, NOS"	Lobular carcinoma in situ
 non-MCI 2.1 liftover	Low cumulative sun damage melanoma	Low cumulative sun damage melanoma
 non-MCI 2.1 liftover	Low-grade Fibromyxoid Sarcoma	Low-grade fibromyxoid sarcoma
+non-MCI 2.1 liftover	Low-Grade Glioma	Glioma
+non-MCI 2.1 liftover	Low-grade glioma or NEC	Glioma
 non-MCI 2.1 liftover	"Low-grade glioma, NOS or NEC"	Glioma
 non-MCI 2.1 liftover	"Lymphangioma, NOS"	Lymphangioma
 non-MCI 2.1 liftover	Lymphoepithelial carcinoma	Lymphoepithelial carcinoma
@@ -328,8 +335,8 @@ non-MCI 2.1 liftover	"Medulloblastoma, Group 4"	"Medulloblastoma, group 4"
 non-MCI 2.1 liftover	"Medulloblastoma, non-WNT/non-SHH"	"Medulloblastoma, non-WNT/non-SHH"
 non-MCI 2.1 liftover	"Medulloblastoma, NOS"	Medulloblastoma
 non-MCI 2.1 liftover	"Medulloblastoma, SHH activated, NOS"	"Medulloblastoma, SHH activated"
-non-MCI 2.1 liftover	"Medulloblastoma, SHH-activated and TP53-mutant"	"Medulloblastoma, SHH-activated and TP53-mutant"
-non-MCI 2.1 liftover	"Medulloblastoma, SHH-activated and TP53-wildtype"	"Medulloblastoma, SHH-activated and TP53-wildtype"
+non-MCI 2.1 liftover	"Medulloblastoma, SHH-activated and TP53-mutant"	"Medulloblastoma, SHH-activated and TP53-mutant"
+non-MCI 2.1 liftover	"Medulloblastoma, SHH-activated and TP53-wildtype"	"Medulloblastoma, SHH-activated and TP53-wildtype"
 non-MCI 2.1 liftover	"Medulloblastoma, WNT-activated"	"Medulloblastoma, WNT-activated"
 non-MCI 2.1 liftover	"Medulloblastoma, WNT-activated, NOS"	"Medulloblastoma, WNT-activated"
 non-MCI 2.1 liftover	"Medulloepithelioma, NOS"	Medulloepithelioma
@@ -347,6 +354,7 @@ non-MCI 2.1 liftover	"Meningiomatosis, NOS"	Meningioma
 non-MCI 2.1 liftover	Meningothelial meningioma	Meningothelial meningioma
 non-MCI 2.1 liftover	Merkel cell carcinoma	Merkel cell carcinoma
 non-MCI 2.1 liftover	"Mesenchymal Tumor, NOS"	Sarcoma
+non-MCI 2.1 liftover	Mesenchymoma	Mesenchymoma
 non-MCI 2.1 liftover	"Mesenchymoma, malignant"	"Mesenchymoma, malignant"
 non-MCI 2.1 liftover	Mesoblastic nephroma	Mesoblastic nephroma
 non-MCI 2.1 liftover	"Mesothelioma, biphasic, malignant"	"Mesothelioma, biphasic, malignant"
@@ -407,8 +415,10 @@ non-MCI 2.1 liftover	"Neuroendocrine tumor, NOS"	Neuroendocrine tumor
 non-MCI 2.1 liftover	"Neuroepithelioma, NOS"	Neuroepithelioma
 non-MCI 2.1 liftover	Neurofibroma	Neurofibroma
 non-MCI 2.1 liftover	"Neurofibroma, NOS"	Neurofibroma
+non-MCI 2.1 liftover	Neurofibromatosis	Neurofibroma/schwannoma
 non-MCI 2.1 liftover	"Neurofibromatosis, NOS"	Neurofibroma/schwannoma
 non-MCI 2.1 liftover	"Neuroma, NOS"	Neuroma
+non-MCI 2.1 liftover	Neurothekeoma	Neurothekeoma
 non-MCI 2.1 liftover	"NK/T-cell lymphoma, nasal and nasal type"	"NK/T-cell lymphoma, nasal and nasal type"
 non-MCI 2.1 liftover	No Known/Reported Cancer Diagnosis	No Known/Reported Cancer Diagnosis
 non-MCI 2.1 liftover	Nodular melanoma	Nodular melanoma
@@ -432,7 +442,7 @@ non-MCI 2.1 liftover	Ossifying fibromyxoid tumor	Ossifying fibromyxoid tumor
 non-MCI 2.1 liftover	Osteoblastoma	Osteoblastoma
 non-MCI 2.1 liftover	"Osteoblastoma, NOS"	Osteoblastoma
 non-MCI 2.1 liftover	Osteoid Osteoma	Osteoid osteoma
-non-MCI 2.1 liftover	Osteosarcoma	
+non-MCI 2.1 liftover	Osteosarcoma	Osteosarcoma
 non-MCI 2.1 liftover	"Osteosarcoma, NOS"	Osteosarcoma
 non-MCI 2.1 liftover	"Pancreatic neuroendocrine tumor, nonfunctioning"	"Pancreatic neuroendocrine tumor, nonfunctioning"
 non-MCI 2.1 liftover	Pancreatoblastoma	Pancreatoblastoma
@@ -453,8 +463,8 @@ non-MCI 2.1 liftover	Paraganglioma	Paraganglioma
 non-MCI 2.1 liftover	"Paraganglioma, malignant"	Paraganglioma
 non-MCI 2.1 liftover	"Paraganglioma, NOS"	Paraganglioma
 non-MCI 2.1 liftover	Parosteal osteosarcoma	Parosteal osteosarcoma
-non-MCI 2.1 liftover	"Pediatric-type Diffuse High-grade Gliomas, NOS"	
-non-MCI 2.1 liftover	"Pediatric-type Diffuse Low-grade Gliomas, NEC"	
+non-MCI 2.1 liftover	"Pediatric-type Diffuse High-grade Gliomas, NOS"	Glioma
+non-MCI 2.1 liftover	"Pediatric-type Diffuse Low-grade Gliomas, NEC"	Glioma
 non-MCI 2.1 liftover	Periosteal osteosarcoma	Periosteal osteosarcoma
 non-MCI 2.1 liftover	Peripheral neuroectodermal tumor	Peripheral neuroectodermal tumor
 non-MCI 2.1 liftover	"Perivascular epithelioid tumor, malignant"	"Perivascular epithelioid tumor, malignant"
@@ -471,9 +481,10 @@ non-MCI 2.1 liftover	Pineal parenchymal tumor of intermediate differentiation	Pi
 non-MCI 2.1 liftover	Pinealoma	Pinealoma
 non-MCI 2.1 liftover	Pineoblastoma	Pineoblastoma
 non-MCI 2.1 liftover	Pineocytoma	Pineocytoma
-non-MCI 2.1 liftover	Pituitary Adenoma / Pituitary Neuroendocrine Tumour	Pituitary adenoma / pituitary neuroendocrine tumor (PitNET)
-non-MCI 2.1 liftover	"Pituitary adenoma, NOS"	Pituitary adenoma / pituitary neuroendocrine tumor (PitNET)
-non-MCI 2.1 liftover	Pituitary adenoma/PitNET	Pituitary adenoma / pituitary neuroendocrine tumor (PitNET)
+non-MCI 2.1 liftover	Pituitary Adenoma / Pituitary Neuroendocrine Tumour	Pituitary adenoma / pituitary neuroendocrine tumor (PitNET)
+non-MCI 2.1 liftover	Pituitary adenoma	Pituitary adenoma / pituitary neuroendocrine tumor (PitNET)
+non-MCI 2.1 liftover	"Pituitary adenoma, NOS"	Pituitary adenoma / pituitary neuroendocrine tumor (PitNET)
+non-MCI 2.1 liftover	Pituitary adenoma/PitNET	Pituitary adenoma / pituitary neuroendocrine tumor (PitNET)
 non-MCI 2.1 liftover	"Pituitary carcinoma, NOS"	Pituitary carcinoma
 non-MCI 2.1 liftover	"Plasmacytoma, extramedullary"	"Plasmacytoma, extramedullary"
 non-MCI 2.1 liftover	Pleomorphic liposarcoma	Pleomorphic liposarcoma
@@ -486,9 +497,9 @@ non-MCI 2.1 liftover	Plexiform fibrohistiocytic tumor	Plexiform fibrohistiocytic
 non-MCI 2.1 liftover	Plexiform neurofibroma	Plexiform neurofibroma
 non-MCI 2.1 liftover	Polymorphous low-grade neuroepithelial tumor of the young	Polymorphous low-grade neuroepithelial tumor of the young
 non-MCI 2.1 liftover	Posterior Fossa Ependymoma	Posterior fossa ependymoma
-non-MCI 2.1 liftover	"Posterior fossa ependymoma, NOS or NEC"	
-non-MCI 2.1 liftover	Posterior Fossa Group A (PFA) Ependymoma	Posterior fossa group A (PFA) ependymoma
-non-MCI 2.1 liftover	Posterior Fossa Group B (PFB) Ependymoma	Posterior fossa group B (PFB) ependymoma
+non-MCI 2.1 liftover	"Posterior fossa ependymoma, NOS or NEC"	Posterior fossa ependymoma
+non-MCI 2.1 liftover	Posterior Fossa Group A (PFA) Ependymoma	Posterior fossa group A (PFA) ependymoma
+non-MCI 2.1 liftover	Posterior Fossa Group B (PFB) Ependymoma	Posterior fossa group B (PFB) ependymoma
 non-MCI 2.1 liftover	"Precancerous melanosis, NOS"	Precancerous melanosis
 non-MCI 2.1 liftover	Precursor B-cell lymphoblastic leukemia	Precursor B-cell lymphoblastic lymphoma
 non-MCI 2.1 liftover	"Precursor cell lymphoblastic leukemia, NOS"	Precursor B-cell lymphoblastic lymphoma
@@ -512,7 +523,7 @@ non-MCI 2.1 liftover	"Rhabdomyosarcoma, NOS"	Rhabdomyosarcoma
 non-MCI 2.1 liftover	Rosette-forming glioneuronal tumor	Rosette-forming glioneuronal tumor
 non-MCI 2.1 liftover	Rosette-forming Glioneuronal Tumors	Rosette-forming glioneuronal tumor
 non-MCI 2.1 liftover	"Round Cell Sarcoma, NOS"	Round cell sarcoma
-non-MCI 2.1 liftover	Sarcoma with BCOR genetic alterations	Sarcoma with BCOR genetic alterations
+non-MCI 2.1 liftover	Sarcoma with BCOR genetic alterations	Sarcoma with BCOR genetic alterations
 non-MCI 2.1 liftover	"Sarcoma, NEC"	Sarcoma
 non-MCI 2.1 liftover	"Sarcoma, NOS"	Sarcoma
 non-MCI 2.1 liftover	"Schwannoma, NOS"	Schwannoma
@@ -551,13 +562,13 @@ non-MCI 2.1 liftover	"Solitary fibrous tumor, malignant"	"Solitary fibrous tumor
 non-MCI 2.1 liftover	"Solitary fibrous tumor, NOS"	Solitary fibrous tumor
 non-MCI 2.1 liftover	"Solitary fibrous tumor/Hemangiopericytoma, grade 1"	"Solitary fibrous tumor/Hemangiopericytoma, grade 1"
 non-MCI 2.1 liftover	Spinal Ependymoma	Spinal ependymoma
-non-MCI 2.1 liftover	"Spinal ependymoma, MYCN-amplified"	"Spinal ependymoma, MYCN-amplified"
+non-MCI 2.1 liftover	"Spinal ependymoma, MYCN-amplified"	"Spinal ependymoma, MYCN-amplified"
 non-MCI 2.1 liftover	"Spinal ependymoma, NOS or NEC"	Spinal ependymoma
 non-MCI 2.1 liftover	"Spindle cell carcinoma, NOS"	Spindle cell carcinoma
 non-MCI 2.1 liftover	Spindle cell rhabdomyosarcoma	Spindle cell rhabdomyosarcoma
 non-MCI 2.1 liftover	Spindle cell sarcoma	Spindle cell sarcoma
 non-MCI 2.1 liftover	"Spindle Cell Sarcoma, NOS"	Spindle cell sarcoma
-non-MCI 2.1 liftover	Spindle Cell/Sclerosing Rhabdomyosarcoma	Spindle cell / sclerosing rhabdomyosarcoma
+non-MCI 2.1 liftover	Spindle Cell/Sclerosing Rhabdomyosarcoma	Spindle cell / sclerosing rhabdomyosarcoma
 non-MCI 2.1 liftover	Spitz Melanocytoma	Spitz melanoma
 non-MCI 2.1 liftover	"Squamous cell carcinoma, large cell, nonkeratinizing, NOS"	"Squamous cell carcinoma, large cell, nonkeratinizing"
 non-MCI 2.1 liftover	"Squamous cell carcinoma, metastatic, NOS"	"Squamous cell carcinoma, metastatic"
@@ -569,16 +580,17 @@ non-MCI 2.1 liftover	Subependymal giant cell astrocytoma	Subependymal giant cell
 non-MCI 2.1 liftover	Subependymoma	Subependymoma
 non-MCI 2.1 liftover	Superficial spreading melanoma	Superficial spreading melanoma
 non-MCI 2.1 liftover	"Supratentorial ependymoma, NOS or NEC"	Supratentorial ependymoma
-non-MCI 2.1 liftover	"Supratentorial ependymoma, YAP1 fusion-positive"	"Supratentorial ependymoma, YAP1 fusion-positive"
-non-MCI 2.1 liftover	"Supratentorial ependymoma, ZFTA fusion-positive"	"Supratentorial ependymoma, ZFTA fusion-positive"
+non-MCI 2.1 liftover	"Supratentorial ependymoma, YAP1 fusion-positive"	"Supratentorial ependymoma, YAP1 fusion-positive"
+non-MCI 2.1 liftover	"Supratentorial ependymoma, ZFTA fusion-positive"	"Supratentorial ependymoma, ZFTA fusion-positive"
 non-MCI 2.1 liftover	Sympathetic paraganglioma	Sympathetic paraganglioma
 non-MCI 2.1 liftover	Synovial Sarcoma	Synovial sarcoma
 non-MCI 2.1 liftover	"Synovial sarcoma, biphasic"	"Synovial sarcoma, biphasic"
 non-MCI 2.1 liftover	"Synovial sarcoma, NOS"	Synovial sarcoma
 non-MCI 2.1 liftover	"Synovial sarcoma, spindle cell"	"Synovial sarcoma, spindle cell"
 non-MCI 2.1 liftover	T lymphoblastic leukemia/lymphoma	T-lymphoblastic leukemia/lymphoma
-non-MCI 2.1 liftover	"T-Cell Acute Lymphoblastic Leukemia/Lymphoma, NOS"	
-non-MCI 2.1 liftover	T-Cell Lymphoblastic Leukemia	
+non-MCI 2.1 liftover	T-Cell Acute Lymphoblastic Leukemia	T-lymphoblastic leukemia/lymphoma
+non-MCI 2.1 liftover	"T-Cell Acute Lymphoblastic Leukemia/Lymphoma, NOS"	T-lymphoblastic leukemia/lymphoma
+non-MCI 2.1 liftover	T-Cell Lymphoblastic Leukemia	T-lymphoblastic leukemia/lymphoma
 non-MCI 2.1 liftover	T-cell/histiocyte rich large B-cell lymphoma	T-cell/histiocyte rich large B-cell lymphoma
 non-MCI 2.1 liftover	Telangiectatic osteosarcoma	Telangiectatic osteosarcoma
 non-MCI 2.1 liftover	Tenosynovial Giant Cell Tumor	Tenosynovial giant cell tumor
@@ -606,6 +618,7 @@ non-MCI 2.1 liftover	Undifferentiated Round Cell Sarcoma	Sarcoma
 non-MCI 2.1 liftover	Undifferentiated sarcoma	Undifferentiated sarcoma
 non-MCI 2.1 liftover	Unknown	Unknown
 non-MCI 2.1 liftover	Vipoma	Vipoma
+non-MCI 2.1 liftover	Wilms	Nephroblastoma
 non-MCI 2.1 liftover	Wilms Tumor	Nephroblastoma
 non-MCI 2.1 liftover	Yolk Sac Tumor	Yolk sac tumor
 non-MCI 2.1 liftover	"Yolk sac tumor, NOS"	Yolk sac tumor
@@ -2101,9 +2114,9 @@ Release 56	"Inflammatory myofibroblastic tumor of bone, osteoclast-rich"	Inflamm
 Release 57 COG clinical	Inflammatory myofibroblastic tumor TPM3::ALK	Inflammatory myofibroblastic tumor
 Release 58	Inflammatory Myofibroblastic Tumor	Inflammatory myofibroblastic tumor
 Release 57 COG clinical	"Insulinoma, NOS"	Insulinoma
-Release 47 liftover	Intracranial mesenchymal tumor with FET:CREB fusion	"Intracranial mesenchymal tumor, FET::CREB fusion-positive "
-Release 47 liftover	"Intracranial mesenchymal tumor, FET: CREB-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion-positive "
-Release 56	"Intracranial mesenchymal tumor, FET::CREB fusion positive"	"Intracranial mesenchymal tumor, FET::CREB fusion-positive "
+Release 47 liftover	Intracranial mesenchymal tumor with FET:CREB fusion	"Intracranial mesenchymal tumor, FET::CREB fusion-positive"
+Release 47 liftover	"Intracranial mesenchymal tumor, FET: CREB-positive"	"Intracranial mesenchymal tumor, FET::CREB fusion-positive"
+Release 56	"Intracranial mesenchymal tumor, FET::CREB fusion positive"	"Intracranial mesenchymal tumor, FET::CREB fusion-positive"
 Release 47 liftover	Juvenile xanthogranuloma-family neoplasm	Juvenile xanthogranuloma
 Release 47 liftover	Juvenile xanthogranuloma-family neoplasm with high grade features	Juvenile xanthogranuloma
 Release 47 liftover	Anaplastic/ large cell medulloblastoma	Large cell medulloblastoma
@@ -4162,9 +4175,9 @@ Release 48+49+50 liftover	Pineal anlage tumor with extensive maturation along mu
 Release 47 liftover	4th ventricular brain tumor	Tumor
 Release 59	"Brain, right parietal tumor"	Tumor
 Release 58	Choroid plexus tumor without malignant features	Tumor
-Release 47 liftover	Anaplastic embryonal neoplasm	#REF!
-Release 47 liftover	"Densely cellular small round blue cell lesion, embryonal tumor"	#REF!
-Release 47 liftover	"Densely cellular small round blue cell lesion, embryonal tumor; favor medulloblastoma"	#REF!
+Release 47 liftover	Anaplastic embryonal neoplasm	Neoplasm
+Release 47 liftover	"Densely cellular small round blue cell lesion, embryonal tumor"	Neoplasm
+Release 47 liftover	"Densely cellular small round blue cell lesion, embryonal tumor; favor medulloblastoma"	Medulloblastoma
 Release 47 liftover	Embryonal Tumor	Tumor
 Release 47 liftover	Embryonal tumor consistent with atypical teratoid/rhabdoid tumor (AT/RT)	Tumor
 Release 47 liftover	"Embryonal tumor most consistent with medulloblastoma, classic phenotype"	Tumor
@@ -4197,16 +4210,16 @@ Release 47 liftover	Primitive/embryonal tumor with high-grade features	Tumor
 Release 47 liftover	Primitive/embryonal tumor with high-grade features; compatible with medulloblastoma	Tumor
 Release 48+49+50 liftover	CNS Embryonal neoplasm	Tumor
 Release 48+49+50 liftover	Embryonal tumor with with atypical features	Tumor
-Release 48+49+50 liftover	"Embryonal tumor, consistent with medulloblastoma"	Tumor
+Release 48+49+50 liftover	"Embryonal tumor, consistent with medulloblastoma"	Classic medulloblastoma
 Release 48+49+50 liftover	"Embryonal tumor, consistent with Medulloblastoma, CNS WHO Grade 4. Histologically: Classic type. Non-WNT/Non-SHH activated by IHC"	Tumor
-Release 48+49+50 liftover	"Embryonal tumor, morphologic features most consistent with Medulloblastoma, WHO grade IV"	Tumor
+Release 48+49+50 liftover	"Embryonal tumor, morphologic features most consistent with Medulloblastoma, WHO grade IV"	Classic medulloblastoma
 Release 48+49+50 liftover	"High grade embryonal neoplasm, CNS-WHO grade 4"	Tumor
 Release 54	"Embryonal tumor, morphologically and phenotypically most suggestive of desmoplastic/nodular medulloblastoma"	Tumor
 Release 54	Primitive embryonal tumor with rosettes	Tumor
 Release 58	"Embryonal tumor, consistent with medulloblastoma with desmoplastic/nodular features"	Tumor
 Release 58	High grade embryonal tumor	Tumor
 Release 58	"High grade embryonal neoplasm, pending additional studies"	Tumor
-Release 47 liftover	Germ cell tumor with features of germinoma	Tumor
+Release 47 liftover	Germ cell tumor with features of germinoma	Germinoma
 Release 47 liftover	Germ-cell tumor	Tumor
 Release 48+49+50 liftover	Germ cell tumor	Tumor
 Release 48+49+50 liftover	Germ cell tumor consistent with Germinoma as sampled	Tumor
@@ -4291,7 +4304,7 @@ Release 47 liftover	"Consistent with Oligodendroglioma, IDH mutant"	Unknown
 Release 47 liftover	"Consistent with pilocytic astrocytoma, CNS WHO Grade 1"	Unknown
 Release 47 liftover	"Consistent with pilocytic astrocytoma, WHO Grade 1"	Unknown
 Release 47 liftover	"Consistent with Pineoblastoma, WHO Grade 4"	Unknown
-Release 47 liftover	Consistent with primitive neuroectodermal tumor (PNET).	Unknown
+Release 47 liftover	Consistent with primitive neuroectodermal tumor (PNET).	Primitive neuroectodermal tumor
 Release 47 liftover	consistent with rhabdomyosarcoma	Unknown
 Release 47 liftover	Consistent with thymoma	Unknown
 Release 47 liftover	Consistent with vascular anomaly	Unknown
