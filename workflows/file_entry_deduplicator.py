@@ -149,6 +149,16 @@ def resolve_node_id(
     return ";".join(id_values), warnings
 
 
+def test_if_df_empty(df: pd.DataFrame) -> bool:
+    """
+    Check if the given DataFrame is empty after removing "type" column. "type" column name is hardcoded in this case
+
+    Returns True if the DataFrame is empty, False otherwise.
+    """
+    clean_df = df.drop(columns=["type"], errors="ignore")
+    is_empty = clean_df.isna().all().all()
+    return is_empty
+
 @task
 def merge_duplicate_file_rows(
     df: pd.DataFrame,
@@ -334,28 +344,32 @@ def process_manifest(
     for tab in file_tabs:
         log(f"\nProcessing tab: {tab}")
         df = all_sheets[tab]
-        original_row_count = len(df)
-        log(f"[{tab}] Total rows before deduplication: {original_row_count}")
+        if not test_if_df_empty(df):
+            original_row_count = len(df)
+            log(f"[{tab}] Total rows before deduplication: {original_row_count}")
 
-        df_merged, warnings = merge_duplicate_file_rows(df=df, tab_name=tab)
-        merged_row_count = len(df_merged)
-        all_sheets[tab] = df_merged
-        all_warnings.extend(warnings)
+            df_merged, warnings = merge_duplicate_file_rows(df=df, tab_name=tab)
+            merged_row_count = len(df_merged)
+            all_sheets[tab] = df_merged # if duplicates were found, all_sheets[tab] will be replaced with the merged df
+            all_warnings.extend(warnings)
 
-        # capture per-tab summary
-        duplicated_mask = df.duplicated(subset=["md5sum", "file_url", "dcf_indexd_guid"], keep=False)
-        dupe_count = duplicated_mask.sum()
-        if dupe_count > 0:
-            group_count = df[duplicated_mask].groupby(
-                [k for k in ["md5sum", "file_url", "dcf_indexd_guid"] if k in df.columns],
-                dropna=False
-            ).ngroups
-            log(f"[{tab}] Found {dupe_count} duplicate rows across {group_count} groups.")
-            log(f"[{tab}] Reduced {dupe_count} duplicate rows to {merged_row_count - (original_row_count - dupe_count)} merged rows.")
+            # capture per-tab summary
+            duplicated_mask = df.duplicated(subset=["md5sum", "file_url", "dcf_indexd_guid"], keep=False)
+            dupe_count = duplicated_mask.sum()
+            if dupe_count > 0:
+                group_count = df[duplicated_mask].groupby(
+                    [k for k in ["md5sum", "file_url", "dcf_indexd_guid"] if k in df.columns],
+                    dropna=False
+                ).ngroups
+                log(f"[{tab}] Found {dupe_count} duplicate rows across {group_count} groups.")
+                log(f"[{tab}] Reduced {dupe_count} duplicate rows to {merged_row_count - (original_row_count - dupe_count)} merged rows.")
+            else:
+                log(f"[{tab}] No duplicate rows found.")
+
+            log(f"[{tab}] Total rows after deduplication: {merged_row_count}")
         else:
-            log(f"[{tab}] No duplicate rows found.")
-
-        log(f"[{tab}] Total rows after deduplication: {merged_row_count}")
+            # the df is empty after removing type columns
+            log(f"[{tab}] No records found. Skipping deduplication for this tab.")
 
     log(f"\nDeduplication complete. Writing output to: {output_file}")
     write_sheets_preserve_formatting(
