@@ -926,38 +926,6 @@ deployments:
       name: ccdi-dcc-8gb-prefect-3.4.19-python3.13
       work_queue_name: null
       job_variables: {}
-
-  - name: TEST-ccdi-cog_igm-transform-V3
-    version: null
-    tags: ["TEST", "MCI", "V3"]
-    description: Transform from IGM format to CCDI for COG submission using the cog_and_igm form parsing method
-    entrypoint: workflows/cog_igm_transformer.py:cog_igm_transform
-    schedule: null
-
-    # flow-specific parameters
-    parameters:
-      bucket: "ccdi-dcc"
-      runner: ""
-      manifest_path: ""
-      form_parsing: "cog_and_igm"
-      file_path: ""
-
-    # pull action to overwrite from file pull action
-    pull:
-    - prefect.deployments.steps.git_clone:
-        id: clone-step
-        repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: CCDIDC-3302
-    - prefect.deployments.steps.pip_install_requirements:
-        requirements_file: requirements_python3.13_prefect3.txt
-        directory: "{{ clone-step.directory }}"
-        stream_output: False
-
-    # infra-specific fields
-    work_pool:
-      name: ccdi-dcc-16gb-prefect-3.4.19-python3.13
-      work_queue_name: null
-      job_variables: {}
       
   - name: ccdi-data-catalog-counts
     version: null
@@ -1414,9 +1382,9 @@ deployments:
       work_queue_name: null
       job_variables: {}
 
-  - name: ccdi-cog_igm-transform-V3_v2
+  - name: TEST-ccdi-cog_igm-transform-V3_v2
     version: null
-    tags: ["PROD", "MCI", "V3"]
+    tags: ["TEST", "MCI", "V3"]
     description: Transform CCDI COG and IGM data to DCC format
     entrypoint: workflows/cog_igm_transformer_v2.py:cog_igm_transform
     
@@ -1436,7 +1404,7 @@ deployments:
     - prefect.deployments.steps.git_clone:
         id: clone-step
         repository: https://github.com/CBIIT/ChildhoodCancerDataInitiative-Prefect_Pipeline.git
-        branch: main
+        branch: CCDIDC-3302
         include_submodules: True
     - prefect.deployments.steps.pip_install_requirements:
         requirements_file: requirements_python3.13_prefect3.txt
