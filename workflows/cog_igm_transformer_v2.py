@@ -211,6 +211,29 @@ def cog_igm_transform(
         if os.path.exists(f"{output_path}/IGM/") and len([i for i in os.listdir(f"{output_path}/IGM/") if i.endswith('.tsv')]) > 0: # check decoded IGM TSV exists before running fill in step
             percent_files = [f"{output_path}/IGM/{i}" for i in os.listdir(f"{output_path}/IGM/") if i.endswith('.tsv') and '_JSON_table_conversion' in i]
             percent_necrosis_tumor_fill_in(output_path, local_manifest_path, percent_files, runner_logger)
+
+            manifest_path = local_manifest_path
+            rules_file = "docs/mci_cog_igm_rules_dcc.txt"
+            output_path = output_path
+
+            # archer fusion 
+            if os.path.exists(f"{output_path}/IGM/IGM_results_level_TSVs_{dt}/IGM_archer_fusion_fusion_tier_one_or_two_result_variant_data_{dt}"):
+                input_file = f"{output_path}/IGM/IGM_results_level_TSVs_{dt}/IGM_archer_fusion_fusion_tier_one_or_two_result_variant_data_{dt}"
+                rule_source = "IGM_Archer_Fusion"
+                cog_igm_dcc_mapping_transform(rule_source, rules_file, input_file, manifest_path, output_path)
+            else:
+                runner_logger.warning(f"Decoded IGM TSV for Archer fusion tier one or two not found in {output_path}/IGM/IGM_results_level_TSVs_{dt}, cannot run COG mapping to DCC model.")
+                logger.warning(f"Decoded IGM TSV for Archer fusion tier one or two not found in {output_path}/IGM/IGM_results_level_TSVs_{dt}, cannot run COG mapping to DCC model.")
+
+            if os.path.exists(f"{output_path}/IGM/IGM_results_level_TSVs_{dt}/IGM_archer_fusion_fusion_tier_three_result_variant_data_{dt}"):
+                input_file = f"{output_path}/IGM/IGM_results_level_TSVs_{dt}/IGM_archer_fusion_fusion_tier_three_result_variant_data_{dt}"
+                rule_source = "IGM_Archer_Fusion"
+                cog_igm_dcc_mapping_transform(rule_source, rules_file, input_file, manifest_path, output_path)
+            else:
+                runner_logger.warning(f"Decoded IGM TSV for Archer fusion tier three not found in {output_path}/IGM/IGM_results_level_TSVs_{dt}, cannot run COG mapping to DCC model.")
+                logger.warning(f"Decoded IGM TSV for Archer fusion tier three not found in {output_path}/IGM/IGM_results_level_TSVs_{dt}, cannot run COG mapping to DCC model.")
+            
+            
         else:
             runner_logger.warning(f"Decoded IGM TSVs not found in {output_path}/IGM/, cannot run percent necrosis and tumor content fill in.")
             logger.warning(f"Decoded IGM TSVs not found in {output_path}/IGM/, cannot run percent necrosis and tumor content fill in.")
