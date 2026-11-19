@@ -156,7 +156,7 @@ def test_if_df_empty(df: pd.DataFrame) -> bool:
     Returns True if the DataFrame is empty, False otherwise.
     """
     clean_df = df.drop(columns=["type"], errors="ignore")
-    is_empty = clean_df.empty
+    is_empty = clean_df.isna().all().all()
     return is_empty
 
 @task
