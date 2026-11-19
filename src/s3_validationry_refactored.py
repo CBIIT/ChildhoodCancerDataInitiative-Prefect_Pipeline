@@ -2234,39 +2234,95 @@ def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -
         outf.write(return_str)
     return None
 
+@task(
+    name="Count unique files of a single sheet",
+    log_prints=True,
+    task_run_name="Count unique files of sheet {sheet_name}",
+)
+def summarize_file_sheet(sheet_name, df):
+    """Returns the sheet name, number of rows, unique files, and total size of the unique files."""
 
-@flow(name="Validate acl and authz", log_prints=True)
-def validate_acl_authz(file_path: str, output_file: str, node_list: list[str]) -> None:
-    """Performs acl/authz validation between nodes of entire manifest file"""
+    id_cols = ["dcf_indexd_guid", "guid", "file_url"]
+    for id_col in id_cols:
+        if id_col in df.columns:
+            unique = df.dropna(subset=[id_col]).drop_duplicates(subset=id_col)
+            if len(unique):
+                size = pd.to_numeric(unique["file_size"], errors="coerce").sum()
+                return sheet_name, len(df), len(unique), int(size)
+            
+    return sheet_name, len(df), 0, 0
+
+
+@flow(
+    name="Validate study status counts",
+    log_prints=True,
+)
+def validate_study_status(file_path: str, output_file: str, template_sheets: list[str]) -> None:
+    """Calculates the number of participants, samples, unique files, total file size for entire manifest"""
+    logger = get_run_logger()
+
+    # the template always has these sheets (they may be empty), so skip count if missing
+    required_sheets = [
+        sheet for sheet in template_sheets
+        if sheet in ("participant", "sample") or "file" in sheet
+    ]
+
+    file_object = CheckCCDI(ccdi_manifest=file_path)
+    sheets = file_object.get_sheetnames()
+    missing_sheets = set(required_sheets) - set(sheets)
+    
+    if missing_sheets:
+        logger.error(f"Study status counts were not calculated. These required sheets are missing from the manifest: {', '.join(sorted(missing_sheets))}")
+        return None
+
     section_title = (
         "\n\n"
-        + header_str("ACL/AUTHZ Regex Check")
-        + "\nIf there are unexpected or missing values in the acl/authz property between nodes, they will be reported below:\n----------\n"
+        + header_str("Study Status Check")
+        + "\nCounts for the study_status fields, calculated from this manifest. File counts and sizes are for unique files only.\n----------\n"
     )
 
-    # prepare the list of sheets with acl/authz values to check
-    file_object = CheckCCDI(ccdi_manifest=file_path)
-    filtered_list = []
-    for node_name in node_list:
-        node_df = file_object.read_sheet_na(sheetname=node_name)
-        if "file_access" in node_df.columns:
-            filtered_list.append(node_name)
-    node_list = filtered_list
+    # read the required sheets
+    sheets_df = {sheet: file_object.read_sheet_na(sheetname=sheet) for sheet in required_sheets}
 
-    if not node_list:
-        acl_authz_validate_str = "No sheets with acl/authz values found for validation."
-    
-    #send each node for acl/authz validation
-    else:
-        acl_authz_validate_future = validate_acl_authz_single_sheet.map(
-            node_list, file_object
-        )
-        acl_authz_validate_str = "".join([i.result() for i in acl_authz_validate_future])
-    
-    # print results to output file
-    return_str = section_title + acl_authz_validate_str
+    # strip whitespace from every cell, convert blanks to NA
+    for name, df in sheets_df.items():
+        df = df.apply(lambda col: col.str.strip())
+        sheets_df[name] = df.replace("", pd.NA)
+
+    n_participants = sheets_df["participant"]["participant_id"].nunique()
+    n_samples = sheets_df["sample"]["sample_id"].nunique()
+
+    # summarize the unique files of each file sheet
+    file_results = [
+        summarize_file_sheet(sheet, df) for sheet, df in sheets_df.items() if "file" in sheet
+    ]
+
+    # add up the unique files and sizes across file sheets
+    total_files = 0
+    total_size = 0
+    breakdown = []
+    for name, n_rows, n_files, size in file_results:
+        total_files += n_files
+        total_size += size
+        if n_files == 0:  # empty sheet
+            continue
+        breakdown.append(f"{name:<24}rows={n_rows:>6}  unique={n_files:>6}  size={size:>16}")
+
+    return_str = (
+        "MANIFEST SUMMARY REPORT\n"
+        + "-" * 24 + "\n"
+        + f"number_of_participants  : {n_participants}\n"
+        + f"number_of_samples       : {n_samples}\n"
+        + f"number_of_files(unique) : {total_files}\n"
+        + f"total_size_of_data_files: {total_size}\n"
+        + "\n\nPER-SHEET FILE BREAKDOWN\n"
+        + "-" * 24 + "\n"
+        + "\n".join(breakdown)
+        + "\n"
+    )
+
     with open(output_file, "a+") as outf:
-        outf.write(return_str)
+        outf.write(section_title + return_str)
     return None
 
 @flow(
@@ -2326,6 +2382,10 @@ def ValidationRy_new(file_path: str,
         logger=validation_logger,
     )
     validation_logger.info(f"Nodes will be validated: {*nodes_to_validate,}")
+
+    # print number of participants, samples, files, and total size of files
+    validation_logger.info("Calculating study_status counts")
+    validate_study_status(file_path, output_file, template_node_list)
 
     # starts validation of unempty node sheets
     validation_logger.info("Checking if required properties were filled")
