@@ -259,7 +259,7 @@ def merge_duplicate_file_rows(
 
 @task
 def write_sheets_preserve_formatting(
-    all_sheets: dict, input_file: str, output_file: str
+    all_sheets: dict, sheetname_rewrite: list[str], input_file: str, output_file: str
 ) -> None:
     """
     Write updated dataframes back to the workbook starting at row 2,
@@ -267,31 +267,31 @@ def write_sheets_preserve_formatting(
     """
     logger = get_run_logger()
 
-    wb = load_workbook(input_file)
+    missing = set(sheetname_rewrite or []) - set(all_sheets)
+    if missing:
+        raise KeyError(f"sheetname_rewrite not found in all_sheets: {sorted(missing)}")
 
-    for sheet_name, df in all_sheets.items():
-        if sheet_name not in wb.sheetnames:
-            ws = wb.create_sheet(sheet_name)
-            for r in dataframe_to_rows(df, index=False, header=True):
-                ws.append(r)
-            continue
+    to_write = {
+        name: df for name, df in all_sheets.items()
+        if sheetname_rewrite is None or name in set(sheetname_rewrite)
+    }
 
-        ws = wb[sheet_name]
+    shutil.copyfile(input_file, output_file)
 
-        # clear existing data rows only (row 2 onwards)
-        for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
-            for cell in row:
-                cell.value = None
+    with pd.ExcelWriter(
+        output_file, engine="openpyxl", mode="a", if_sheet_exists="overlay"
+    ) as writer:
+        for sheet_name, df in to_write.items():
+            if sheet_name in writer.book.sheetnames:
+                ws = writer.book[sheet_name]
+                if ws.max_row > 1:
+                    ws.delete_rows(2, ws.max_row)
+                df.to_excel(writer, sheet_name=sheet_name,
+                            startrow=1, header=False, index=False)
+            else:
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        # write new data starting at row 2, skipping the header
-        for row_idx, row_data in enumerate(
-            dataframe_to_rows(df, index=False, header=False), start=2
-        ):
-            for col_idx, value in enumerate(row_data, start=1):
-                ws.cell(row=row_idx, column=col_idx).value = value
-
-    wb.save(output_file)
-    logger.info(f"Saved with formatting preserved: {output_file}")
+    logger.info(f"Rewrote {list(to_write)} -> {output_file}")
 
 
 @flow(name="Manifest Deduplicator",
@@ -341,6 +341,7 @@ def process_manifest(
     log(f"Reading Excel file: {file_name}")
     all_sheets = pd.read_excel(file_name, sheet_name=None, dtype=str)
 
+    sheetname_rewrite =[]
     for tab in file_tabs:
         log(f"\nProcessing tab: {tab}")
         df = all_sheets[tab]
@@ -363,6 +364,7 @@ def process_manifest(
                 ).ngroups
                 log(f"[{tab}] Found {dupe_count} duplicate rows across {group_count} groups.")
                 log(f"[{tab}] Reduced {dupe_count} duplicate rows to {merged_row_count - (original_row_count - dupe_count)} merged rows.")
+                sheetname_rewrite.append(tab)
             else:
                 log(f"[{tab}] No duplicate rows found.")
 
@@ -372,11 +374,18 @@ def process_manifest(
             log(f"[{tab}] No records found. Skipping deduplication for this tab.")
 
     log(f"\nDeduplication complete. Writing output to: {output_file}")
-    write_sheets_preserve_formatting(
-        all_sheets=all_sheets,
-        input_file=file_name,
-        output_file=output_file,
-    )
+    if len(sheetname_rewrite) > 0:
+        log(f"Tabs rewritten due to deduplication: {', '.join(sheetname_rewrite)}")
+        write_sheets_preserve_formatting(
+            all_sheets=all_sheets,
+            sheetname_rewrite = sheetname_rewrite,
+            input_file=file_name,
+            output_file=output_file,
+        )
+    else:
+        log("No tabs required rewriting due to deduplication.")
+        # copy the original file to the output location
+        shutil.copy(file_name, output_file)
 
     log(f"Writing warnings log to: {output_file_log}")
     with open(output_file_log, "w") as log_file:
