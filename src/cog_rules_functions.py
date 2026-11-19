@@ -1,3 +1,5 @@
+import hashlib
+
 import pandas as pd
 import re
 from abc import ABC, abstractmethod
@@ -634,6 +636,106 @@ class CNS_Chemo_Type_Mapper(Transformation):
         
         return mapped_value
 
+
+class AF_ID_Mapper(Transformation):
+    """Class for generating archer fusion genetic analysis record ID"""
+    def apply(self, row):
+        values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
+
+        if not values:
+            return None
+
+        keys = ["form_name","version","five_prime_gene_partner.five_prime_gene","three_prime_gene_partner.three_prime_gene","five_prime_gene_partner.five_prime_exon","three_prime_gene_partner.three_prime_exon"]
+                
+        values = {k:v for k,v in zip(keys, values)}
+
+        def text_to_short_id(text, length=6):
+            """Convert a text string into a short hash-based ID of specified length for graph node IDs."""
+            hash_object = hashlib.sha256(text.encode())
+            hex_digest = hash_object.hexdigest()
+            # Convert hex to integer and take the last `length` digits
+            short_id = str(int(hex_digest, 16))[:length]
+            return short_id
+
+        hash_id = text_to_short_id("_".join(values.values()))
+
+        p_s = re.search(values.get("form_name"), "P[A-Z]{5}-0[A-Z0-9]{5}").group() if re.search(values.get("form_name"), "P[A-Z]{5}-0[A-Z0-9]{5}") else None
+
+        return f"{p_s}_Archer_v{values.get('version')}_genetic_analysis_{hash_id}"
+
+class Variant_Significance_Mapper(Transformation):
+    """Class for mapping variant significance"""
+    def apply(self, row):
+        values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
+
+        if not values:
+            return "Not Reported"
+
+        keys = ["system_id", "value"]
+
+        values = {k:v for k,v in zip(keys, values)}
+
+        return f"{values.get('system_id')}: {values.get('value')}"
+
+class Alteration_Region_Mapper(Transformation):
+    """Class for mapping alteration region"""
+    def apply(self, row):
+        values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))][0]
+
+        if not values:
+            return "Not Reported"
+
+        if 'intron' in values.lower():
+            return "Intron"
+        else:
+            return "Exon"
+
+class Alteration_Region_Number_Mapper(Transformation):
+    """Class for mapping alteration region number"""
+    def apply(self, row):
+        values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))][0]
+
+        if not values:
+            return "Not Reported"
+
+        match = re.search(r'\d+', values) 
+
+        return match.group() if match else "Not Reported"
+
+class Fusion_Alteration_Mapper(Transformation):
+    """Class for mapping alteration name"""
+    def apply(self, row):
+        values = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))]
+
+        if not values:
+            return "Not Reported"
+
+        keys = ["five_prime", "three_prime"]
+
+        values = {k:v for k,v in zip(keys, values)}
+
+        if values.get('five_prime') == values.get('three_prime'):
+            return "Intragenic Fusion"
+        else:
+            return f"{values.get('five_prime')}::{values.get('three_prime')}"
+
+class Sample_ID_Parser(Transformation):
+    """Class for parsing sample ID"""
+    def apply(self, row):
+        value = [str(row.get(c)) for c in self.inputs if pd.notna(row.get(c))][0]
+
+        if not value:
+            return "Not Reported"
+
+        p_s = re.search("P[A-Z]{5}-0[A-Z0-9]{5}", value).group() if re.search("P[A-Z]{5}-0[A-Z0-9]{5}", value) else None
+
+        if p_s:
+            sample_id = p_s.split("-")[1]
+            return sample_id
+        else:
+            return "Not Reported"
+
+
 TRANSFORM_REGISTRY = {
     "liftover": Liftover,
     "concatenation": Concatenation,
@@ -655,6 +757,12 @@ TRANSFORM_REGISTRY = {
     "resection_margin_status" : Resection_Margin_Mapper,
     "cns_chemo_id" : CNS_Chemo_ID_Mapper,
     "cns_chemo_type" : CNS_Chemo_Type_Mapper,
+    "af_id" : AF_ID_Mapper,
+    "var_sig" : Variant_Significance_Mapper,
+    "alt_region" : Alteration_Region_Mapper,
+    "alt_region_num" : Alteration_Region_Number_Mapper,
+    "fusion_alteration" : Fusion_Alteration_Mapper,
+    "sample_id_parse" : Sample_ID_Parser
     
 }
 

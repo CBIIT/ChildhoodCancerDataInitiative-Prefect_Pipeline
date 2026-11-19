@@ -404,3 +404,35 @@ COG	treatment_surgery	TRUE	treatment_surgery	surgery_type	surgery_type	"ON_STUDY
 COG	treatment_surgery		treatment_surgery	treatment_surgery_id	liftover	upi	suffix	treatment_surgery		
 COG	treatment_surgery		treatment_surgery	treatment_type	default		default	Surgery	Not Applicable	
 COG	treatment_surgery		treatment_surgery	type	default		default	treatment_surgery		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	type	default		defaullt	genetic_analysis		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	participant.participant_id	default		default			
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	sample.sample_id	sample_id_parse	form_name				
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	genetic_analysis_id	af_id	"form_name,version,five_prime_gene_partner.five_prime_gene,three_prime_gene_partner.three_prime_gene,five_prime_gene_partner.five_prime_exon,three_prime_gene_partner.three_prime_exon"	suffix	A		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	age_at_genetic_analysis	default		default	-999		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	status	default		default	Present		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	alteration_category	default		default	Somatic		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	reported_significance	var_sig	"classification.guideline,classification.value"			Not Reported: Not Reported	
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	platform	default		default	Archer Fusion		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	analysis_type	default		defaullt	Gene Fusion Analysis		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	analysis_method	default		defaullt	Solid Tumor Fusion Analysis		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	reference_genome	default		defaullt	grch37		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	chromosome	liftover	five_prime_gene_partner.genomic_location.chromosone			Not Reported	
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	cytoband	default		default			
+IGM_Archer_Fusion	genetic_analysis_five_prime	TRUE	genetic_analysis	gene_symbol	liftover	five_prime_gene_partner.five_prime_gene				
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	alteration_region	alt_region	five_prime_gene_partner.five_prime_exon			Not Reported	
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	alteration_region_number	alt_region_num	five_prime_gene_partner.five_prime_exon			Not Reported	
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	alteration_location_role	default		default	Five Prime Partner		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	transcript	liftover	five_prime_gene_partner.five_prime_transcript				
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	hgvs_coding	default		default	Not Applicable		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	hgvs_protein	default		default	Not Applicable		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	hgvs_genome	default		default	Not Applicable		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	allelic_ratio	default		default			
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	vaf_numeric	default		default			
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	alteration	fusion_alteration	three_prime_gene_partner.three_prime_exon			Not Reported	
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	alteration_type	default		default	Not Reported		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	alteration_effect	default		default	Gene Fusion		
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	dna_index_numeric	default		default			
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	iscn	default		default			
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	zygosity	default		default			
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	external_references	default		default			
+IGM_Archer_Fusion	genetic_analysis_five_prime		genetic_analysis	alteration_description	default		default			
