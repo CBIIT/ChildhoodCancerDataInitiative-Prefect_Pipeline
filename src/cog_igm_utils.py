@@ -187,9 +187,11 @@ def manifest_reader(manifest_path: str, form_parsing: str):
     file_name = os.path.basename(manifest_path)
     
     # perform sample mapping for clin files
-    if form_parsing in ['igm_only', 'cog_and_igm']:
-        sample_mapper(file_name)
-
+    ########## TESTING 
+    #if form_parsing in ['igm_only', 'cog_and_igm']:
+    #    sample_mapper(file_name)
+    ############
+    
     try:
         manifest_df = pd.read_excel(
             file_name, sheet_name="clinical_measure_file", engine="openpyxl"

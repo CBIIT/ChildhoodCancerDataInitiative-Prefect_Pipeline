@@ -209,9 +209,11 @@ def cog_igm_transform(
     # percent_tumor and percent_necrosis fill in 
     if form_parsing in ["igm_only", "cog_and_igm"]:
         if os.path.exists(f"{output_path}/IGM/") and len([i for i in os.listdir(f"{output_path}/IGM/") if i.endswith('.tsv')]) > 0: # check decoded IGM TSV exists before running fill in step
-            percent_files = [f"{output_path}/IGM/{i}" for i in os.listdir(f"{output_path}/IGM/") if i.endswith('.tsv') and '_JSON_table_conversion' in i]
-            percent_necrosis_tumor_fill_in(output_path, local_manifest_path, percent_files, runner_logger)
-
+            ####### TESTING
+            #percent_files = [f"{output_path}/IGM/{i}" for i in os.listdir(f"{output_path}/IGM/") if i.endswith('.tsv') and '_JSON_table_conversion' in i]
+            #percent_necrosis_tumor_fill_in(output_path, local_manifest_path, percent_files, runner_logger)
+            #############
+            
             manifest_path = local_manifest_path
             rules_file = "docs/mci_cog_igm_rules_dcc.txt"
             output_path = output_path
