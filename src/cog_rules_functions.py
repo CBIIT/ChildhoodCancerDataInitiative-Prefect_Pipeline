@@ -659,7 +659,10 @@ class AF_ID_Mapper(Transformation):
 
         hash_id = text_to_short_id("_".join(values.values()))
 
-        p_s = re.search(values.get("form_name"), "P[A-Z]{5}-0[A-Z0-9]{5}").group() if re.search(values.get("form_name"), "P[A-Z]{5}-0[A-Z0-9]{5}") else None
+        p_s = re.search("P[A-Z]{5}-0[A-Z0-9]{5}", values.get("form_name")).group() if re.search("P[A-Z]{5}-0[A-Z0-9]{5}", values.get("form_name")) else None
+
+        if not p_s:
+            p_s = re.search("P[A-Z]{5}", values.get("form_name")).group() if re.search("P[A-Z]{5}", values.get("form_name")) else "Not Reported"
 
         return f"{p_s}_Archer_v{values.get('version')}_genetic_analysis_{hash_id}"
 
@@ -795,7 +798,7 @@ def apply_modifier(value, modifiers, modifier_values):
             value = ";".join(value_list[:priority])
         if modifier == "regex_replace":
             pat_match = modifier_value.split("%")[0]
-            pat_replace = modifier_value.split("%")[1]
+            pat_replace = modifier_value.split("%")[1].replace('"', '')
             value = re.sub(pat_match, pat_replace, str(value)).strip(pat_replace)
             # replace any 2+ instances of replace value with a single instance
             value = re.sub(f"{re.escape(pat_replace)}{{2,}}", pat_replace, value)
