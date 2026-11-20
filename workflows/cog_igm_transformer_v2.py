@@ -214,12 +214,18 @@ def cog_igm_transform(
             #percent_necrosis_tumor_fill_in(output_path, local_manifest_path, percent_files, runner_logger)
             #############
             
+            #testing
+            runner_logger.info(f"Files in {output_path}/IGM/: {os.listdir(f'{output_path}/IGM/')}")
+            
             manifest_path = local_manifest_path
             rules_file = "docs/mci_cog_igm_rules_dcc.txt"
             output_path = output_path
 
             igm_results_level = [i for i in os.listdir(f"{output_path}/IGM/") if i.startswith(f"IGM_results_level_TSVs")]
 
+            #testing
+            runner_logger.info(f"Files in {output_path}/IGM/{igm_results_level[0]}: {os.listdir(f'{output_path}/IGM/{igm_results_level[0]}')}")
+    
             if len(igm_results_level) == 0:
                 runner_logger.warning(f"No IGM results level TSVs found in {output_path}/IGM/, cannot run IGM mapping to DCC model.")
                 logger.warning(f"No IGM results level TSVs found in {output_path}/IGM/, cannot run IGM mapping to DCC model.")
