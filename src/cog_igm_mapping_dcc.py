@@ -47,7 +47,7 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
     
     # Load mapping rules
     # check that rules source is valid
-    valid_rule_sources = ["COG", "IGM"]
+    valid_rule_sources = ["COG", "IGM_Archer_Fusion"]
     
     if rule_source not in valid_rule_sources:
         logger.error(f"Invalid rule source: {rule_source}. Valid options are: {valid_rule_sources}")
