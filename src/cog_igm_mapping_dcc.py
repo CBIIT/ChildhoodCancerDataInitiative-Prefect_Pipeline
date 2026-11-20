@@ -65,8 +65,11 @@ def cog_igm_dcc_mapping_transform(rule_source: str, rules_file: str, input_file:
     # Example input dataframe
     input_df = pd.read_csv(input_file, sep="\t", low_memory=False)
     
-    # filter out rows where upi isna()
-    input_df = input_df[~input_df["upi"].isna()]
+    # filter out rows where upi isna() for COG
+    if rule_source == "COG":
+        input_df = input_df[~input_df["upi"].isna()]
+    else: # filter out rows where classification.guideline isna() for IGM
+        input_df = input_df[~input_df["classification.guideline"].isna()]
 
     try:
         engine = TransformerEngine(rules_df)
