@@ -5,6 +5,7 @@ import shutil
 import sys
 import copy
 from pathlib import Path
+import zipfile
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from prefect import task, flow, get_run_logger
@@ -159,6 +160,66 @@ def test_if_df_empty(df: pd.DataFrame) -> bool:
     is_empty = clean_df.isna().all().all()
     return is_empty
 
+_CELL = re.compile(
+    rb'<c ([^>]*?)t="inlineStr"([^>]*)><is><t(?: [^>]*)?>(.*?)</t></is></c>',
+    re.S,
+)
+
+def inline_to_shared_strings(src: str, dst: str) -> None:
+    """Rewrite an xlsx so inline strings become a shared-strings table."""
+    table, order = {}, []
+
+    def sst_index(b: bytes) -> int:
+        if b not in table:
+            table[b] = len(order)
+            order.append(b)
+        return table[b]
+
+    def sub(m):
+        return b'<c %st="s"%s><v>%d</v></c>' % (
+            m.group(1), m.group(2), sst_index(m.group(3))
+        )
+
+    with zipfile.ZipFile(src) as zi:
+        names = zi.namelist()
+        if "xl/sharedStrings.xml" in names:      # already uses shared strings
+            shutil.copyfile(src, dst)
+            return
+
+        with zipfile.ZipFile(
+            dst, "w", zipfile.ZIP_DEFLATED, compresslevel=9
+        ) as zo:
+            for n in names:
+                data = zi.read(n)
+                if n.startswith("xl/worksheets/sheet"):
+                    data = _CELL.sub(sub, data)
+                elif n == "[Content_Types].xml":
+                    data = data.replace(
+                        b"</Types>",
+                        b'<Override PartName="/xl/sharedStrings.xml" '
+                        b'ContentType="application/vnd.openxmlformats-officedocument.'
+                        b'spreadsheetml.sharedStrings+xml"/></Types>',
+                    )
+                elif n == "xl/_rels/workbook.xml.rels":
+                    data = data.replace(
+                        b"</Relationships>",
+                        b'<Relationship Id="rIdSST" '
+                        b'Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+                        b'relationships/sharedStrings" Target="sharedStrings.xml"/>'
+                        b"</Relationships>",
+                    )
+                zo.writestr(n, data)
+
+            body = b"".join(
+                b'<si><t xml:space="preserve">%s</t></si>' % s for s in order
+            )
+            zo.writestr(
+                "xl/sharedStrings.xml",
+                b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                b'<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+                b'count="%d" uniqueCount="%d">%s</sst>' % (len(order), len(order), body),
+            )
+
 @task
 def merge_duplicate_file_rows(
     df: pd.DataFrame,
@@ -266,6 +327,7 @@ def write_sheets_preserve_formatting(
     leaving the formatted header row 1 completely untouched.
     """
     logger = get_run_logger()
+    logger.info(f"writing {sheetname_rewrite} to {output_file}")
 
     missing = set(sheetname_rewrite or []) - set(all_sheets)
     if missing:
@@ -276,10 +338,11 @@ def write_sheets_preserve_formatting(
         if sheetname_rewrite is None or name in set(sheetname_rewrite)
     }
 
-    shutil.copyfile(input_file, output_file)
+    tmp = output_file + ".tmp.xlsx"          # pandas needs the .xlsx extension
+    shutil.copyfile(input_file, tmp)
 
     with pd.ExcelWriter(
-        output_file, engine="openpyxl", mode="a", if_sheet_exists="overlay"
+        tmp, engine="openpyxl", mode="a", if_sheet_exists="overlay"
     ) as writer:
         for sheet_name, df in to_write.items():
             if sheet_name in writer.book.sheetnames:
@@ -291,7 +354,10 @@ def write_sheets_preserve_formatting(
             else:
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
 
+    inline_to_shared_strings(tmp, output_file)   # the size fix
+    os.remove(tmp) # remove the tmp file
     logger.info(f"Rewrote {list(to_write)} -> {output_file}")
+    return None
 
 
 @flow(name="Manifest Deduplicator",
@@ -324,8 +390,9 @@ def process_manifest(
     file_dl(bucket=bucket, filename=file_path)
 
     file_name = Path(file_path).name
-    output_file = f"{file_name}_deduped_{timestamp}.xlsx"
-    output_file_log = f"{file_name}_deduped_{timestamp}.log"
+    file_name_base = file_name.rsplit(".", 1)[0]
+    output_file = f"{file_name_base}_deduped_{timestamp}.xlsx"
+    output_file_log = f"{file_name_base}_deduped_{timestamp}.log"
 
     log(f"Input file: {file_name}")
 
