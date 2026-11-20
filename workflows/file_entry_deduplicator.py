@@ -5,6 +5,7 @@ import shutil
 import sys
 import copy
 from pathlib import Path
+import zipfile
 from openpyxl import load_workbook
 from openpyxl.utils.dataframe import dataframe_to_rows
 from prefect import task, flow, get_run_logger
@@ -159,6 +160,66 @@ def test_if_df_empty(df: pd.DataFrame) -> bool:
     is_empty = clean_df.isna().all().all()
     return is_empty
 
+_CELL = re.compile(
+    rb'<c ([^>]*?)t="inlineStr"([^>]*)><is><t(?: [^>]*)?>(.*?)</t></is></c>',
+    re.S,
+)
+
+def inline_to_shared_strings(src: str, dst: str) -> None:
+    """Rewrite an xlsx so inline strings become a shared-strings table."""
+    table, order = {}, []
+
+    def sst_index(b: bytes) -> int:
+        if b not in table:
+            table[b] = len(order)
+            order.append(b)
+        return table[b]
+
+    def sub(m):
+        return b'<c %st="s"%s><v>%d</v></c>' % (
+            m.group(1), m.group(2), sst_index(m.group(3))
+        )
+
+    with zipfile.ZipFile(src) as zi:
+        names = zi.namelist()
+        if "xl/sharedStrings.xml" in names:      # already uses shared strings
+            shutil.copyfile(src, dst)
+            return
+
+        with zipfile.ZipFile(
+            dst, "w", zipfile.ZIP_DEFLATED, compresslevel=9
+        ) as zo:
+            for n in names:
+                data = zi.read(n)
+                if n.startswith("xl/worksheets/sheet"):
+                    data = _CELL.sub(sub, data)
+                elif n == "[Content_Types].xml":
+                    data = data.replace(
+                        b"</Types>",
+                        b'<Override PartName="/xl/sharedStrings.xml" '
+                        b'ContentType="application/vnd.openxmlformats-officedocument.'
+                        b'spreadsheetml.sharedStrings+xml"/></Types>',
+                    )
+                elif n == "xl/_rels/workbook.xml.rels":
+                    data = data.replace(
+                        b"</Relationships>",
+                        b'<Relationship Id="rIdSST" '
+                        b'Type="http://schemas.openxmlformats.org/officeDocument/2006/'
+                        b'relationships/sharedStrings" Target="sharedStrings.xml"/>'
+                        b"</Relationships>",
+                    )
+                zo.writestr(n, data)
+
+            body = b"".join(
+                b'<si><t xml:space="preserve">%s</t></si>' % s for s in order
+            )
+            zo.writestr(
+                "xl/sharedStrings.xml",
+                b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
+                b'<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" '
+                b'count="%d" uniqueCount="%d">%s</sst>' % (len(order), len(order), body),
+            )
+
 @task
 def merge_duplicate_file_rows(
     df: pd.DataFrame,
@@ -259,39 +320,44 @@ def merge_duplicate_file_rows(
 
 @task
 def write_sheets_preserve_formatting(
-    all_sheets: dict, input_file: str, output_file: str
+    all_sheets: dict, sheetname_rewrite: list[str], input_file: str, output_file: str
 ) -> None:
     """
     Write updated dataframes back to the workbook starting at row 2,
     leaving the formatted header row 1 completely untouched.
     """
     logger = get_run_logger()
+    logger.info(f"writing {sheetname_rewrite} to {output_file}")
 
-    wb = load_workbook(input_file)
+    missing = set(sheetname_rewrite or []) - set(all_sheets)
+    if missing:
+        raise KeyError(f"sheetname_rewrite not found in all_sheets: {sorted(missing)}")
 
-    for sheet_name, df in all_sheets.items():
-        if sheet_name not in wb.sheetnames:
-            ws = wb.create_sheet(sheet_name)
-            for r in dataframe_to_rows(df, index=False, header=True):
-                ws.append(r)
-            continue
+    to_write = {
+        name: df for name, df in all_sheets.items()
+        if sheetname_rewrite is None or name in set(sheetname_rewrite)
+    }
 
-        ws = wb[sheet_name]
+    tmp = output_file + ".tmp.xlsx"          # pandas needs the .xlsx extension
+    shutil.copyfile(input_file, tmp)
 
-        # clear existing data rows only (row 2 onwards)
-        for row in ws.iter_rows(min_row=2, max_row=ws.max_row):
-            for cell in row:
-                cell.value = None
+    with pd.ExcelWriter(
+        tmp, engine="openpyxl", mode="a", if_sheet_exists="overlay"
+    ) as writer:
+        for sheet_name, df in to_write.items():
+            if sheet_name in writer.book.sheetnames:
+                ws = writer.book[sheet_name]
+                if ws.max_row > 1:
+                    ws.delete_rows(2, ws.max_row)
+                df.to_excel(writer, sheet_name=sheet_name,
+                            startrow=1, header=False, index=False)
+            else:
+                df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        # write new data starting at row 2, skipping the header
-        for row_idx, row_data in enumerate(
-            dataframe_to_rows(df, index=False, header=False), start=2
-        ):
-            for col_idx, value in enumerate(row_data, start=1):
-                ws.cell(row=row_idx, column=col_idx).value = value
-
-    wb.save(output_file)
-    logger.info(f"Saved with formatting preserved: {output_file}")
+    inline_to_shared_strings(tmp, output_file)   # the size fix
+    os.remove(tmp) # remove the tmp file
+    logger.info(f"Rewrote {list(to_write)} -> {output_file}")
+    return None
 
 
 @flow(name="Manifest Deduplicator",
@@ -324,8 +390,9 @@ def process_manifest(
     file_dl(bucket=bucket, filename=file_path)
 
     file_name = Path(file_path).name
-    output_file = f"{file_name}_deduped_{timestamp}.xlsx"
-    output_file_log = f"{file_name}_deduped_{timestamp}.log"
+    file_name_base = file_name.rsplit(".", 1)[0]
+    output_file = f"{file_name_base}_deduped_{timestamp}.xlsx"
+    output_file_log = f"{file_name_base}_deduped_{timestamp}.log"
 
     log(f"Input file: {file_name}")
 
@@ -341,6 +408,7 @@ def process_manifest(
     log(f"Reading Excel file: {file_name}")
     all_sheets = pd.read_excel(file_name, sheet_name=None, dtype=str)
 
+    sheetname_rewrite =[]
     for tab in file_tabs:
         log(f"\nProcessing tab: {tab}")
         df = all_sheets[tab]
@@ -363,6 +431,7 @@ def process_manifest(
                 ).ngroups
                 log(f"[{tab}] Found {dupe_count} duplicate rows across {group_count} groups.")
                 log(f"[{tab}] Reduced {dupe_count} duplicate rows to {merged_row_count - (original_row_count - dupe_count)} merged rows.")
+                sheetname_rewrite.append(tab)
             else:
                 log(f"[{tab}] No duplicate rows found.")
 
@@ -372,11 +441,18 @@ def process_manifest(
             log(f"[{tab}] No records found. Skipping deduplication for this tab.")
 
     log(f"\nDeduplication complete. Writing output to: {output_file}")
-    write_sheets_preserve_formatting(
-        all_sheets=all_sheets,
-        input_file=file_name,
-        output_file=output_file,
-    )
+    if len(sheetname_rewrite) > 0:
+        log(f"Tabs rewritten due to deduplication: {', '.join(sheetname_rewrite)}")
+        write_sheets_preserve_formatting(
+            all_sheets=all_sheets,
+            sheetname_rewrite = sheetname_rewrite,
+            input_file=file_name,
+            output_file=output_file,
+        )
+    else:
+        log("No tabs required rewriting due to deduplication.")
+        # copy the original file to the output location
+        shutil.copy(file_name, output_file)
 
     log(f"Writing warnings log to: {output_file_log}")
     with open(output_file_log, "w") as log_file:
