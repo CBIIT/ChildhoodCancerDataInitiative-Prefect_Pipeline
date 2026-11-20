@@ -216,22 +216,30 @@ def cog_igm_transform(
             rules_file = "docs/mci_cog_igm_rules_dcc.txt"
             output_path = output_path
 
-            # archer fusion 
-            if os.path.exists(f"{output_path}/IGM/IGM_results_level_TSVs_{dt}/IGM_archer_fusion_fusion_tier_one_or_two_result_variant_data_{dt}"):
-                input_file = f"{output_path}/IGM/IGM_results_level_TSVs_{dt}/IGM_archer_fusion_fusion_tier_one_or_two_result_variant_data_{dt}"
-                rule_source = "IGM_Archer_Fusion"
-                cog_igm_dcc_mapping_transform(rule_source, rules_file, input_file, manifest_path, output_path)
-            else:
-                runner_logger.warning(f"Decoded IGM TSV for Archer fusion tier one or two not found in {output_path}/IGM/IGM_results_level_TSVs_{dt}, cannot run COG mapping to DCC model.")
-                logger.warning(f"Decoded IGM TSV for Archer fusion tier one or two not found in {output_path}/IGM/IGM_results_level_TSVs_{dt}, cannot run COG mapping to DCC model.")
+            igm_results_level = [i for i in os.listdir(f"{output_path}/IGM/") if i.startswith(f"IGM_results_level_TSVs")]
 
-            if os.path.exists(f"{output_path}/IGM/IGM_results_level_TSVs_{dt}/IGM_archer_fusion_fusion_tier_three_result_variant_data_{dt}"):
-                input_file = f"{output_path}/IGM/IGM_results_level_TSVs_{dt}/IGM_archer_fusion_fusion_tier_three_result_variant_data_{dt}"
+            if len(igm_results_level) == 0:
+                runner_logger.warning(f"No IGM results level TSVs found in {output_path}/IGM/, cannot run IGM mapping to DCC model.")
+                logger.warning(f"No IGM results level TSVs found in {output_path}/IGM/, cannot run IGM mapping to DCC model.")
+            else:
+                igm_dt = igm_results_level[0].split("_")[-1]
+
+            # archer fusion gene fusion
+            if os.path.exists(f"{output_path}/IGM/{igm_results_level[0]}/IGM_archer_fusion_fusion_tier_one_or_two_result_variant_data_{igm_dt}"):
+                input_file = f"{output_path}/IGM/{igm_results_level[0]}/IGM_archer_fusion_fusion_tier_one_or_two_result_variant_data_{igm_dt}"
                 rule_source = "IGM_Archer_Fusion"
                 cog_igm_dcc_mapping_transform(rule_source, rules_file, input_file, manifest_path, output_path)
             else:
-                runner_logger.warning(f"Decoded IGM TSV for Archer fusion tier three not found in {output_path}/IGM/IGM_results_level_TSVs_{dt}, cannot run COG mapping to DCC model.")
-                logger.warning(f"Decoded IGM TSV for Archer fusion tier three not found in {output_path}/IGM/IGM_results_level_TSVs_{dt}, cannot run COG mapping to DCC model.")
+                runner_logger.warning(f"Decoded IGM TSV for Archer fusion tier one or two not found in {output_path}/IGM/{igm_results_level[0]}, cannot run COG mapping to DCC model.")
+                logger.warning(f"Decoded IGM TSV for Archer fusion tier one or two not found in {output_path}/IGM/{igm_results_level[0]}, cannot run COG mapping to DCC model.")
+
+            if os.path.exists(f"{output_path}/IGM/{igm_results_level[0]}/IGM_archer_fusion_fusion_tier_three_result_variant_data_{igm_dt}"):
+                input_file = f"{output_path}/IGM/{igm_results_level[0]}/IGM_archer_fusion_fusion_tier_three_result_variant_data_{igm_dt}"
+                rule_source = "IGM_Archer_Fusion"
+                cog_igm_dcc_mapping_transform(rule_source, rules_file, input_file, manifest_path, output_path)
+            else:
+                runner_logger.warning(f"Decoded IGM TSV for Archer fusion tier three not found in {output_path}/IGM/{igm_results_level[0]}, cannot run IGM mapping to DCC model.")
+                logger.warning(f"Decoded IGM TSV for Archer fusion tier three not found in {output_path}/IGM/{igm_results_level[0]}, cannot run IGM mapping to DCC model.")
             
             
         else:
